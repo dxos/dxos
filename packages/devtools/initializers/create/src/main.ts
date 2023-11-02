@@ -5,7 +5,7 @@
 import minimist from 'minimist';
 
 import template from '@dxos/hello-template';
-import { InputOf } from '@dxos/plate';
+import { type InputOf } from '@dxos/plate';
 
 void (async () => {
   const args = minimist(process.argv.slice(2));
@@ -25,7 +25,7 @@ void (async () => {
     tailwind: true,
     storybook: false,
     pwa: false,
-    proto: true,
+    proto: false,
     ...(name ? { name, createFolder: true } : {}),
   };
 

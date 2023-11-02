@@ -2,46 +2,46 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Table as TableType } from '@braneframe/types';
-import { ColumnProps, TableDef } from '@dxos/aurora-table';
-import { Schema as SchemaType } from '@dxos/client/echo';
-import { PublicKey } from '@dxos/keys';
+import { type Table as TableType } from '@braneframe/types';
+import { PublicKey } from '@dxos/react-client';
+import { Schema } from '@dxos/react-client/echo';
+import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 
-export const getPropType = (type?: SchemaType.PropType): ColumnProps['type'] => {
+export const getPropType = (type?: Schema.PropType): ColumnProps['type'] => {
   switch (type) {
-    case SchemaType.PropType.REF:
+    case Schema.PropType.REF:
       return 'ref';
-    case SchemaType.PropType.BOOLEAN:
+    case Schema.PropType.BOOLEAN:
       return 'boolean';
-    case SchemaType.PropType.NUMBER:
+    case Schema.PropType.NUMBER:
       return 'number';
-    case SchemaType.PropType.DATE:
+    case Schema.PropType.DATE:
       return 'date';
-    case SchemaType.PropType.STRING:
+    case Schema.PropType.STRING:
     default:
       return 'string';
   }
 };
 
-export const getSchemaType = (type?: ColumnProps['type']): SchemaType.PropType => {
+export const getSchema = (type?: ColumnProps['type']): Schema.PropType => {
   switch (type) {
     case 'ref':
-      return SchemaType.PropType.REF;
+      return Schema.PropType.REF;
     case 'boolean':
-      return SchemaType.PropType.BOOLEAN;
+      return Schema.PropType.BOOLEAN;
     case 'number':
-      return SchemaType.PropType.NUMBER;
+      return Schema.PropType.NUMBER;
     case 'date':
-      return SchemaType.PropType.DATE;
+      return Schema.PropType.DATE;
     case 'string':
     default:
-      return SchemaType.PropType.STRING;
+      return Schema.PropType.STRING;
   }
 };
 
 export const schemaPropMapper =
   (table: TableType) =>
-  ({ id, type, digits, ref }: SchemaType.Prop): ColumnProps => {
+  ({ id, type, digits, ref }: Schema.Prop): ColumnProps => {
     const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
     return {
       id: id!,

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExecutorContext, logger, runExecutor } from '@nx/devkit';
+import { type ExecutorContext, logger, runExecutor } from '@nx/devkit';
 import assert from 'node:assert';
 
 export interface ServeWithVaultExecutorOptions {

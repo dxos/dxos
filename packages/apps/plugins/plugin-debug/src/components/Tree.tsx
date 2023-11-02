@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, HTMLAttributes, useState } from 'react';
+import React, { type FC, type HTMLAttributes, useState } from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { ThemeMode } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { type ThemeMode } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { arrayToBuffer } from '@dxos/util';
 
 // TODO(burdon): Copied form devtools.

@@ -6,7 +6,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { RESOURCE_LOCK_TIMEOUT } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 
-import { ResourceLock, ResourceLockOptions } from './resource-lock';
+import { type ResourceLock, type ResourceLockOptions } from './resource-lock';
 
 enum Message {
   ACQUIRING = 'acquiring',

@@ -4,7 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
-import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
+import { type ClientServicesProvider, ClientServicesProxy, type ShellRuntime } from '@dxos/client/services';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
 import { Context } from '@dxos/context';
@@ -18,15 +18,15 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const { createElement, StrictMode } = await import('react');
   const { createRoot } = await import('react-dom/client');
   const { registerSignalFactory } = await import('@dxos/echo-signals/react');
-  const { ThemeProvider, Tooltip } = await import('@dxos/aurora');
-  const { bindTheme, auroraTheme, dialogMotion, mx, surfaceElevation } = await import('@dxos/aurora-theme');
+  const { ThemeProvider, Tooltip } = await import('@dxos/react-ui');
+  const { bindTheme, defaultTheme, dialogMotion, mx, surfaceElevation } = await import('@dxos/react-ui-theme');
   const { ClientContext } = await import('@dxos/react-client');
   const { osTranslations, Shell } = await import('@dxos/react-shell');
 
   const shellTx = bindTheme({
-    ...auroraTheme,
+    ...defaultTheme,
     dialog: {
-      ...auroraTheme.dialog,
+      ...defaultTheme.dialog,
       content: ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
         mx(
           'flex flex-col',

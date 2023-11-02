@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { KubeStatus } from './KubeStatus';
-import { MenuItem, Module, Panel } from '../util';
+import { type MenuItem, Module, Panel } from '../util';
 
 export const createKubeMenu = (): MenuItem => {
   return {

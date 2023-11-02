@@ -6,7 +6,7 @@ import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
@@ -58,7 +58,7 @@ export default class Join extends BaseCommand<typeof Join> {
       await done.wait();
 
       ux.log();
-      ux.log(chalk`{green Joined}: ${invitation.identityKey!.truncate()}`);
+      ux.log(chalk`{green Joined successfully.}`);
 
       return {
         identityKey: invitation.identityKey,

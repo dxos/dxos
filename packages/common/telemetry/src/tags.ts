@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ConfigProto } from '@dxos/config';
-import { log } from '@dxos/log';
+import { scheduleMicroTask } from '@dxos/async';
+import { type ConfigProto } from '@dxos/config';
+import { Context } from '@dxos/context';
+import { log, LogLevel, type LogProcessor, getContextFromEntry } from '@dxos/log';
+import { humanize } from '@dxos/util';
 
 /**
  * Fetches the local kube config and returns the telemetry tags.
@@ -24,3 +27,41 @@ export const getLocalTelemetryTags = async (): Promise<string[]> => {
     return [];
   }
 };
+
+export const tags: any = {};
+
+const ctx = new Context();
+
+export const addTag = (k: any, v: any) => {
+  tags[k] = v;
+};
+
+const TAGS_PROCESSOR: LogProcessor = (config, entry) => {
+  const { message, level } = entry;
+  const context = getContextFromEntry(entry);
+
+  if (level !== LogLevel.TRACE) {
+    return;
+  }
+
+  scheduleMicroTask(ctx, async () => {
+    switch (message) {
+      case 'dxos.halo.identity':
+        if (context?.identityKey) {
+          tags.identityKey = context.identityKey.truncate();
+          tags.username = context.displayName ?? humanize(context.identityKey);
+        }
+        break;
+      case 'dxos.halo.device':
+        if (context?.deviceKey) {
+          tags.deviceKey = context.deviceKey.truncate();
+        }
+        if (context?.profile) {
+          tags.deviceProfile = context.profile;
+        }
+        break;
+    }
+  });
+};
+
+log.runtimeConfig.processors.push(TAGS_PROCESSOR);

@@ -5,8 +5,8 @@
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
-import { LatLngExpression, LatLngLiteral } from 'leaflet';
-import React, { FC, useEffect } from 'react';
+import { type LatLngExpression, type LatLngLiteral } from 'leaflet';
+import React, { type FC, useEffect } from 'react';
 import { Marker, TileLayer, useMap } from 'react-leaflet';
 import { useResizeDetector } from 'react-resize-detector';
 

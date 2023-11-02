@@ -6,9 +6,9 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
-import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
+import { SingleInputStep, type SingleInputStepProps } from './SingleInputStep';
 import { Group } from '../Group';
 
 export default {

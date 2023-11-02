@@ -2,27 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Editor, Tldraw } from '@tldraw/tldraw';
-import React, { FC, useEffect, useState } from 'react';
+import { type Editor, Tldraw } from '@tldraw/tldraw';
+import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Sketch as SketchType } from '@braneframe/types';
+import { type Sketch as SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
-import { Main, useThemeContext } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
+import { Main, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
 import { useSketchStore } from '../hooks';
 
-export type SketchMainParams = {
-  readonly?: boolean;
-  data: SketchType;
+const styles = {
+  background: '[&>div>span>div>div]:bg-white dark:[&>div>span>div>div]:bg-black',
 };
 
-export const SketchMain: FC<SketchMainParams> = ({ data: object }) => {
+export type SketchMainParams = {
+  readonly?: boolean;
+  sketch: SketchType;
+};
+
+export const SketchMain: FC<SketchMainParams> = ({ sketch }) => {
   const { themeMode } = useThemeContext();
-  const store = useSketchStore(object.data);
+  const store = useSketchStore(sketch.data);
 
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
@@ -57,6 +61,7 @@ export const SketchMain: FC<SketchMainParams> = ({ data: object }) => {
           '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(3)]:hidden',
           // TODO(burdon): Hide .tlui-debug-panel
           '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
+          styles.background,
         )}
       >
         <Tldraw autoFocus store={store} onMount={setEditor} />
@@ -65,7 +70,19 @@ export const SketchMain: FC<SketchMainParams> = ({ data: object }) => {
   );
 };
 
-export const SketchSection: FC<SketchMainParams> = ({ data: sketch }) => {
+export const SketchSection: FC<SketchMainParams> = ({ sketch }) => {
+  return <SketchReadonly sketch={sketch} maxHeight={400} />;
+};
+
+export const SketchSlide: FC<SketchMainParams> = ({ sketch }) => {
+  return <SketchReadonly sketch={sketch} maxZoom={1.5} />;
+};
+
+export const SketchReadonly: FC<SketchMainParams & { maxHeight?: number; maxZoom?: number }> = ({
+  sketch,
+  maxHeight,
+  maxZoom = 1,
+}) => {
   const { themeMode } = useThemeContext();
   const store = useSketchStore(sketch.data);
   const [editor, setEditor] = useState<Editor>();
@@ -78,18 +95,25 @@ export const SketchSection: FC<SketchMainParams> = ({ data: sketch }) => {
 
   // Zoom to fit.
   // TODO(burdon): Update height within range.
-  const { ref: containerRef, width } = useResizeDetector();
-  const [height] = useState<number>(400);
+  const { ref: containerRef, width = 0, height: _height = 0 } = useResizeDetector();
+  const height = maxHeight ?? _height;
   const [ready, setReady] = useState(false);
   useEffect(() => {
     editor?.updateViewportScreenBounds();
-  }, [editor, width]);
+  }, [editor, width, height]);
+
+  // Zoom to fit.
   useEffect(() => {
     const zoomToFit = (animate = true) => {
       const commonBounds = editor?.allShapesCommonBounds;
-      if (editor && width && commonBounds?.width && commonBounds?.height) {
+      if (editor && width && height && commonBounds?.width && commonBounds?.height) {
         const padding = 40;
-        const zoom = Math.min(1, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+        // TODO(burdon): Objects culled (unstyled) if outside of bounds.
+        const zoom = Math.min(
+          maxZoom,
+          (width - padding) / commonBounds.width,
+          (height - padding) / commonBounds.height,
+        );
         const center = {
           x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
           y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
@@ -103,11 +127,16 @@ export const SketchSection: FC<SketchMainParams> = ({ data: sketch }) => {
     const onUpdate = debounce(zoomToFit, 200);
     const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
     zoomToFit(false);
+
     return () => subscription();
-  }, [editor, width]);
+  }, [editor, width, height]);
 
   return (
-    <div ref={containerRef} style={{ height, visibility: ready ? 'visible' : 'hidden' }}>
+    <div
+      ref={containerRef}
+      className={mx('flex w-full h-full', styles.background)}
+      style={{ height: maxHeight, visibility: ready ? 'visible' : 'hidden' }}
+    >
       <Tldraw store={store} onMount={setEditor} hideUi={true} />
     </div>
   );

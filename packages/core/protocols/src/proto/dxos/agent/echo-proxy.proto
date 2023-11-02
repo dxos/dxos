@@ -1,0 +1,11 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.agent.echoproxy;
+
+message EchoProxyConfig {
+  optional int32 port = 1;
+}

@@ -3,29 +3,36 @@
 //
 
 import { Users } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { SplitViewPluginProvides } from '@braneframe/plugin-splitview';
-import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import {
+  parseGraphPlugin,
+  parseIntentPlugin,
+  parseLayoutPlugin,
+  usePlugin,
+  useResolvePlugin,
+} from '@dxos/app-framework';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { usePlugin } from '@dxos/react-surface';
+import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN, SpaceAction, SpacePluginProvides, ObjectViewer } from '../types';
+import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
+import { getActiveSpace } from '../util';
 
 export const SpacePresence = () => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
-  const intentPlugin = usePlugin<IntentPluginProvides>('dxos.org/plugin/intent');
-  const splitViewPlugin = usePlugin<SplitViewPluginProvides>('dxos.org/plugin/splitview');
-  const space = spacePlugin?.provides.space.active;
+  const intentPlugin = useResolvePlugin(parseIntentPlugin);
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const defaultSpace = useSpace();
   const identity = useIdentity();
 
-  if (!identity || !spacePlugin) {
+  if (!identity || !spacePlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
     return null;
   }
+
+  const space = getActiveSpace(graphPlugin.provides.graph, layoutPlugin.provides.layout.active);
 
   // TODO(burdon): Error when popup appears (BUT DOES NOT GET CAUGHT BY DebugStatus!)
   //  Warning: React does not recognize the `labelId` prop on a DOM element.
@@ -46,7 +53,7 @@ export const SpacePresence = () => {
   const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
     return (
       space.key.equals(viewer.spaceKey) &&
-      splitViewPlugin?.provides.splitView.active === viewer.objectId &&
+      layoutPlugin?.provides.layout.active === viewer.objectId &&
       Date.now() - viewer.lastSeen < 30_000
     );
   });

@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
+import { useReducer, type Reducer, useMemo, useCallback, useEffect } from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
+  type CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
 } from '@dxos/client/invitations';
@@ -60,7 +60,8 @@ export type InvitationStatus = {
   id?: string;
   invitationCode?: string;
   authCode?: string;
-  authMethod?: Invitation['authMethod'];
+  authMethod?: Invitation.AuthMethod;
+  type?: Invitation.Type;
   status: Invitation.State;
   haltedAt?: Invitation.State;
   result: InvitationResult;
@@ -179,6 +180,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
       authCode: invitation?.authCode,
       authMethod: invitation?.authMethod,
+      type: invitation?.type,
     };
 
     return result;

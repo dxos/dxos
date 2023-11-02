@@ -3,7 +3,7 @@
 //
 
 import { deepSignal } from 'deepsignal/react';
-import React, { FC, useEffect } from 'react';
+import React, { type FC, useEffect } from 'react';
 import { HashRouter, useLocation } from 'react-router-dom';
 
 import {
@@ -12,9 +12,9 @@ import {
   setupTelemetryListeners,
   withTelemetry,
 } from '@braneframe/plugin-telemetry/headless';
-import { DensityProvider, ThemeMode, ThemeProvider } from '@dxos/aurora';
-import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
-import { Client, ClientContext, ClientServices, useClient } from '@dxos/react-client';
+import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
+import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/react-ui-theme';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
@@ -66,7 +66,7 @@ export const Devtools: FC<{ client: Client; services: ClientServices; namespace?
 }) => {
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
   const devtoolsTx = bindTheme({
-    ...auroraTheme,
+    ...defaultTheme,
     toolbar: {
       root: (props, ...etc) => {
         return toolbarRoot(props, 'p-2', ...etc);

@@ -151,33 +151,14 @@ message Runtime {
   }
 
   message Agent {
-    message Plugins {
-      message Functions {
-        int32 port = 1;
-      }
-
-      /// Automatic epoch creation.
-      message EpochMontior {
-        optional bool enabled = 5;
-
-        /// Number of mutations required since last epoch to trigger a new epoch.
-        optional int32 minMessagesBetweenEpochs = 1;
-
-        /// Amount of time (in milliseconds) required to pass since last epoch to trigger a new epoch.
-        optional int32 minTimeBetweenEpochs = 2;
-
-        /// Amount of time (in milliseconds) required to pass since last mutation to trigger a new epoch.
-        optional int32 minInactivityBeforeEpoch = 3;
-
-        /// Maximum amount of time (in milliseconds) to wait for an inactivity period before triggering a new epoch.
-        optional int32 maxInactivityDelay = 4;
-      }
-
-      optional Functions functions = 1;
-      optional EpochMontior epoch_monitor = 2;
+    message Plugin {
+      string id = 1;
+      optional string name = 2;
+      optional bool enabled = 3;
+      optional google.protobuf.Any config = 10; 
     }
 
-    optional Plugins plugins = 1;
+    repeated Plugin plugins = 1;
   }
 
   // CLI configuration

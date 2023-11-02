@@ -2,17 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium } from '@phosphor-icons/react';
-import get from 'lodash.get';
-import React from 'react';
+import { type Document } from '@braneframe/types';
+import { type Plugin } from '@dxos/app-framework';
+import { isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
+import { type ComposerModel, YText } from '@dxos/react-ui-editor';
 
-import { Node } from '@braneframe/plugin-graph';
-import { Document } from '@braneframe/types';
-import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { EchoObject, Space } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
-import { Plugin } from '@dxos/react-surface';
-
-import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
+import { type MarkdownProperties, type MarkdownProvides } from './types';
 
 // TODO(burdon): These tests clash with Diagram.content.
 //  Uncaught Error: Type with the name content has already been defined with a different constructor.
@@ -50,7 +45,7 @@ export const isMarkdownPlaceholder = (data: unknown): data is ComposerModel =>
     : false;
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
-  data instanceof EchoObject
+  isTypedObject(data)
     ? true
     : data && typeof data === 'object'
     ? 'title' in data && typeof data.title === 'string'
@@ -64,35 +59,6 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 
 const nonTitleChars = /[^\w ]/g;
 
-const getFallbackTitle = (document: Document) => {
-  return document.content?.content?.toString().substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
-};
-
-export const documentToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
-  const fallbackProps = document.title
-    ? {}
-    : (() => {
-        const fallbackTitle = getFallbackTitle(document);
-        return fallbackTitle?.length && fallbackTitle?.length > 0
-          ? {
-              fallbackTitle,
-              preferFallbackTitle: true,
-            }
-          : {};
-      })();
-
-  const [child] = parent.addNode(MARKDOWN_PLUGIN, {
-    id: document.id,
-    label: document.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-    icon: (props) =>
-      document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />,
-    data: document,
-    properties: {
-      index: get(document, 'meta.index', index),
-      persistenceClass: 'spaceObject',
-      ...fallbackProps,
-    },
-  });
-
-  return child;
+export const getFallbackTitle = (document: Document) => {
+  return document.content.content?.toString().substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };

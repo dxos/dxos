@@ -7,20 +7,20 @@ Here is how the UI system is organized into separate packages:
 @dxos/react-{…}
 packages/ui/primitives/react-{…}
 
-## Aurora UI
+## DXOS UI
 > Look-ful, pure components.
-@dxos/aurora
-packages/ui/aurora
+@dxos/react-ui
+packages/ui/react-ui
 
 > theme elements and tokens that can be applied to primitives
-@dxos/aurora-theme
-packages/ui/aurora-theme
+@dxos/react-ui-theme
+packages/ui/react-ui-theme
 
-## Aurora X
-> Other big pieces that are congruent with Aurora and separately packaged. e.g.: aurora-composer, aurora-datagrid.
+## DXOS UI X
+> Other big pieces that are congruent with DXOS UI and separately packaged. e.g.: react-ui-editor, react-ui-datagrid.
 > These are always provided in pure form, and with an "optional" ECHO adapter if necessary.
-@dxos/aurora-* 
-packages/ui/aurora-*
+@dxos/react-ui-* 
+packages/ui/react-ui-*
 
 ## Shell
 > HALO Button and shell panels and popovers

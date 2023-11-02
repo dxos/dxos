@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './ThreadBlock';
-export * from './ThreadChannel';
+export * from './Thread';
 export * from './ThreadMain';
-export * from './ThreadInput';
+export * from './ThreadSidebar';

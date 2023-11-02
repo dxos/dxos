@@ -8,11 +8,11 @@ import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
-import { DatabaseHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
-import { DataPipeline } from '../space';
+import { DatabaseHost, type DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
+import { type DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();

@@ -2,15 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  type Context,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { Document } from '@braneframe/types';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
-import { Space, SpaceState, useQuery, useSpaces, Text } from '@dxos/react-client/echo';
+import { type Space, SpaceState, TextObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { DocumentResolverProps, SpaceResolverProps } from './ResolverProps';
+import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
 import { displayName, matchSpace } from './spaceResolvers';
 
 const getLocationIdentifier = () => {
@@ -85,7 +93,7 @@ const DocumentResolverProviderImpl = ({
       if (event.data.type === 'initial-data') {
         const nextDocument = new Document(
           {
-            content: new Text(event.data.content),
+            content: new TextObject(event.data.content),
             title: defaultDisplayName,
           },
           {

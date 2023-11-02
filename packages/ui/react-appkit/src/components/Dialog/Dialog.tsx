@@ -4,18 +4,18 @@
 
 import { X } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { ComponentProps, ReactNode } from 'react';
+import React, { type ComponentProps, type ReactNode } from 'react';
 
 import {
   Dialog as NaturalDialog,
-  DialogCloseProps,
-  DialogContentProps,
-  DialogDescriptionProps,
-  DialogOverlayProps,
-  DialogRootProps,
-  DialogTitleProps,
-} from '@dxos/aurora';
-import { focusRing, hoverColors, getSize, mx } from '@dxos/aurora-theme';
+  type DialogCloseProps,
+  type DialogContentProps,
+  type DialogDescriptionProps,
+  type DialogOverlayProps,
+  type DialogRootProps,
+  type DialogTitleProps,
+} from '@dxos/react-ui';
+import { focusRing, hoverColors, getSize, mx } from '@dxos/react-ui-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 
@@ -42,7 +42,7 @@ export interface DialogProps extends Pick<DialogRootProps, 'open' | 'defaultOpen
 }
 
 /**
- * @deprecated please use the components from @dxos/aurora directly
+ * @deprecated please use the components from @dxos/react-ui directly
  */
 export const Dialog = ({
   title,

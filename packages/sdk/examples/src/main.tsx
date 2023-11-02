@@ -8,13 +8,13 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Document } from '@braneframe/types';
-import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/aurora';
-import { auroraTx } from '@dxos/aurora-theme';
+import { types, Document } from '@braneframe/types';
 import { ClientContext } from '@dxos/react-client';
-import { Text } from '@dxos/react-client/echo';
+import { TextObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPeersInSpace } from '@dxos/react-client/testing';
+import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import { EditorExample } from './examples';
 
@@ -24,10 +24,11 @@ const root = createRoot(document.getElementById('root')!);
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
+    schema: types,
     onCreateSpace: (space) => {
       space.db.add(
         new Document({
-          content: new Text('## Type here...\n\ntry the airplane mode switch.'),
+          content: new TextObject('## Type here...\n\ntry the airplane mode switch.'),
         }),
       );
     },
@@ -53,7 +54,7 @@ const main = async () => {
     const [batching, setBatching] = useState(false);
 
     return (
-      <ThemeProvider tx={auroraTx} themeMode='light'>
+      <ThemeProvider tx={defaultTx} themeMode='light'>
         <div className='demo'>
           <Tooltip.Provider>
             <div className='buttons'>

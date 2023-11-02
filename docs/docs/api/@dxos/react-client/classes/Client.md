@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.3.0"</code>
+Type: <code>"0.3.4"</code>
 
 The version of this client API.
 
@@ -28,6 +28,11 @@ The version of this client API.
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 Current configuration object.
+
+### [experimental]()
+Type: <code>object</code>
+
+
 
 ### [halo]()
 Type: <code>HaloProxy</code>
@@ -76,6 +81,30 @@ Returns: <code>string</code>
 Arguments: none
 
 
+
+
+### [addSchema(types)]()
+
+
+
+
+Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+
+Arguments: 
+
+`types`: <code>TypeCollection</code>
+
+
+### [addTypes(types)]()
+
+
+
+
+Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+
+Arguments: 
+
+`types`: <code>TypeCollection</code>
 
 
 ### [destroy()]()

@@ -18,7 +18,7 @@
       "options": {
         "entryPoints": [
           "packages/core/echo/echo-schema/src/index.ts",
-          "packages/core/echo/echo-schema/src/testing.ts"
+          "packages/core/echo/echo-schema/src/testing/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/core/echo/echo-schema/dist/lib"
@@ -49,7 +49,8 @@
         ]
       },
       "outputs": [
-        "packages/core/echo/echo-schema/src/test/proto/gen"
+        "packages/core/echo/echo-schema/src/proto/gen",
+        "packages/core/echo/echo-schema/src/tests/proto/gen"
       ]
     },
     "test": {

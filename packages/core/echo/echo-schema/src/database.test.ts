@@ -6,16 +6,23 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { inspect } from 'node:util';
 
 import { Trigger } from '@dxos/async';
-import { BatchUpdate } from '@dxos/echo-db';
+import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
-import { data } from './defs';
-import { createDatabase } from './testing';
-import { TypedObject } from './typed-object';
+import { data, Expando, TypedObject } from './object';
+import { Schema } from './proto';
+import { TestBuilder, createDatabase } from './testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
 describe('Database', () => {
+  test('flush with test builder', async () => {
+    const testBuilder = new TestBuilder();
+    const peer = await testBuilder.createPeer();
+    peer.db.add(new Expando({ str: 'test' }));
+    await testBuilder.flushAll();
+  });
+
   test('inspect', async () => {
     const { db } = await createDatabase();
 
@@ -75,7 +82,6 @@ describe('Database', () => {
 
     const update = new Trigger<BatchUpdate>();
     db.pendingBatch.on((event) => {
-      console.log('????', event);
       update.wake(event);
     });
 
@@ -269,5 +275,38 @@ describe('Database', () => {
         keys: [{ id: 'test-key', source: 'test' }],
       },
     });
+  });
+
+  test('query by id', async () => {
+    const { db } = await createDatabase();
+
+    const title = 'Test title';
+    const obj = new TypedObject({ title });
+    db.add(obj);
+    await db.flush();
+
+    const { objects } = db.query({ id: obj.id });
+    expect(objects).toHaveLength(1);
+    expect(objects[0].title).toEqual(title);
+  });
+
+  test('schema gets automatically added to the database', async () => {
+    const testBuilder = new TestBuilder();
+    const peer = await testBuilder.createPeer();
+
+    const schema = new Schema({
+      typename: 'example.Task',
+      props: [
+        {
+          id: 'title',
+          type: Schema.PropType.STRING,
+        },
+      ],
+    });
+
+    const obj = new Expando({ title: 'Test title' }, { schema });
+    expect(obj.__schema).toEqual(schema);
+    peer.db.add(obj);
+    expect(obj.__schema).toEqual(schema);
   });
 });

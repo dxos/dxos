@@ -4,23 +4,27 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { AppState } from '@braneframe/types';
-import { EchoSchema } from '@dxos/client/echo';
+import type { Plugin, PluginDefinition } from '@dxos/app-framework';
+import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { Client, ClientContext, ClientOptions, SystemStatus } from '@dxos/react-client';
-import { PluginDefinition } from '@dxos/react-surface';
+import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
-import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
+import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: EchoSchema };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection };
+
+export const parseClientPlugin = (plugin?: Plugin) =>
+  (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<{}, ClientPluginProvides> => {
+  // TODO(burdon): Document.
   registerSignalFactory();
+
   const client = new Client(options);
 
   return {
@@ -32,11 +36,11 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
-        if (options.schema) {
-          client.addSchema(options.schema);
-        }
-
         await client.initialize();
+
+        if (options.types) {
+          client.addTypes(options.types);
+        }
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
@@ -76,6 +80,7 @@ export const ClientPlugin = (
         }
       }
 
+      // TODO(burdon): Timeout.
       if (client.halo.identity.get()) {
         await client.spaces.isReady.wait();
       }
@@ -83,43 +88,25 @@ export const ClientPlugin = (
       return {
         client,
         firstRun,
-        // TODO(wittjosiah): Is there a better place for this?
-        dnd: {
-          appState: () => {
-            const defaultSpace = client.spaces.default;
-            const appStates = defaultSpace.db.query(AppState.filter()).objects;
-            if (appStates.length < 1) {
-              const appState = new AppState();
-              defaultSpace.db.add(appState);
-              return appState;
-            } else {
-              return (appStates as AppState[])[0];
-            }
-          },
-        },
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
-
           useEffect(() => {
             if (!client) {
               return;
             }
 
             const subscription = client.status.subscribe((status) => setStatus(status));
-
             return () => subscription.unsubscribe();
           }, [client, setStatus]);
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        components: {
-          default: () => {
-            if (error) {
-              throw error;
-            }
+        root: () => {
+          if (error) {
+            throw error;
+          }
 
-            return null;
-          },
+          return null;
         },
       };
     },

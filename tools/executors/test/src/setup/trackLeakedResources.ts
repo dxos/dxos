@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import wtf from 'wtfnode';
+import wtf from '../node-util/wtfnode';
 
 type MochaHooks = {
   afterAll: () => Promise<void>;

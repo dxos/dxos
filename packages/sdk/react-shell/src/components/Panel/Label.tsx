@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import { descriptionText, mx } from '@dxos/aurora-theme';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 export type LabelProps = PropsWithChildren<{}>;
 

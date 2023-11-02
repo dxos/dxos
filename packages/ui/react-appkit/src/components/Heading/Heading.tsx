@@ -2,9 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { createElement, PropsWithChildren, ReactNode } from 'react';
+import type React from 'react';
+import { type PropsWithChildren, type ReactNode } from 'react';
+import { createElement } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export interface HeadingProps extends React.ComponentProps<'h1'> {
   level?: 1 | 2 | 3 | 4 | 5 | 6;

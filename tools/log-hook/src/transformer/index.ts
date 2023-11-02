@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 
 import { transformSourceFile } from './source-transformer';
 

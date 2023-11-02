@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import {
-  ThemeProvider as AuroraThemeProvider,
-  ThemeProviderProps as AuroraThemeProviderProps,
+  ThemeProvider as UiThemeProvider,
+  type ThemeProviderProps as UiThemeProviderProps,
   Toast,
   Tooltip,
-  TooltipProviderProps,
-  ToastProviderProps,
-  ToastViewportProps,
-} from '@dxos/aurora';
-import { auroraTx } from '@dxos/aurora-theme';
+  type TooltipProviderProps,
+  type ToastProviderProps,
+  type ToastViewportProps,
+} from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
-export type ThemeProviderProps = AuroraThemeProviderProps &
+export type ThemeProviderProps = UiThemeProviderProps &
   PropsWithChildren<{
     themeVariant?: 'app' | 'os';
     tooltipProviderProps?: Omit<TooltipProviderProps, 'children'>;
@@ -28,16 +28,16 @@ export const ThemeProvider = ({
   tooltipProviderProps,
   toastProviderProps,
   toastViewportProps,
-  ...auroraThemeProviderProps
+  ...uiThemeProviderProps
 }: ThemeProviderProps) => {
   return (
-    <AuroraThemeProvider tx={auroraTx} {...auroraThemeProviderProps}>
+    <UiThemeProvider tx={defaultTx} {...uiThemeProviderProps}>
       <Toast.Provider {...toastProviderProps}>
         <Tooltip.Provider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
           {children}
         </Tooltip.Provider>
         <Toast.Viewport {...toastViewportProps} classNames={toastViewportProps?.classNames} />
       </Toast.Provider>
-    </AuroraThemeProvider>
+    </UiThemeProvider>
   );
 };

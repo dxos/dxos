@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { DialogContentProps, Dialog, useId } from '@dxos/aurora';
+import { type DialogContentProps, Dialog, useId } from '@dxos/react-ui';
 
 import { ClipboardProvider } from '../../components';
-import { IdentityPanel, IdentityPanelProps } from '../../panels';
+import { IdentityPanel, type IdentityPanelProps } from '../../panels';
 
 export interface IdentityDialogProps
   extends Omit<DialogContentProps, 'children'>,

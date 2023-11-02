@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { JSONTree } from 'react-json-tree';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
+import { mx } from '@dxos/react-ui-theme';
 import { arrayToBuffer } from '@dxos/util';
 
 export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {

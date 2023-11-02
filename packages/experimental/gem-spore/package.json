@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "0.3.0",
+  "version": "0.3.4",
   "private": true,
   "description": "Gem spore.",
   "homepage": "https://dxos.org",
@@ -28,7 +28,7 @@
     "@emotion/react": "^11.9.0",
     "assert": "^2.0.0",
     "clsx": "^1.1.1",
-    "d3": "^7.4.4",
+    "d3": "^7.8.5",
     "d3-force": "~3.0.0",
     "immutability-helper": "^3.0.2",
     "react": "^18.2.0",
@@ -36,9 +36,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/aurora": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@faker-js/faker": "^8.0.2",
-    "@types/d3": "^7.1.0",
+    "@types/d3": "^7.4.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "postcss": "^8.4.21"

@@ -1,0 +1,26 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "stripInternal": true,
+    "types": [
+      "@dxos/test",
+      "@dxos/typings"
+    ]
+  },
+  "exclude": [],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../echo-db"
+    },
+    {
+      "path": "../echo-generator"
+    }
+  ]
+}

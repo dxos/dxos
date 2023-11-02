@@ -2,20 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
+import { type Duplex } from 'node:stream';
 
-import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask, Event } from '@dxos/async';
+import {
+  asyncTimeout,
+  scheduleTaskInterval,
+  runInContextAsync,
+  synchronized,
+  scheduleTask,
+  type Event,
+} from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, RpcClosedError, TimeoutError } from '@dxos/protocols';
-import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { CreateChannelOpts, Muxer, MuxerStats, RpcPort } from './muxing';
+import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing';
 
 export type TeleportParams = {
   initiator: boolean;
@@ -181,7 +188,7 @@ export class Teleport {
       }
     }
 
-    await this._muxer.destroy(err);
+    await this._muxer.close();
   }
 
   addExtension(name: string, extension: TeleportExtension) {

@@ -4,23 +4,23 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Toolbar } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
 import { SVG, SVGContextProvider, createSvgContext } from '@dxos/gem-core';
 import {
   Graph,
-  GraphData,
+  type GraphData,
   GraphForceProjector,
-  GraphLayoutNode,
-  GraphLink,
+  type GraphLayoutNode,
+  type GraphLink,
   GraphModel,
   emptyGraph,
   Markers,
   defaultStyles,
 } from '@dxos/gem-spore';
-import { PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
-import { SpaceMember, useMembers } from '@dxos/react-client/echo';
+import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { defaultMap } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
@@ -158,7 +158,6 @@ export const NetworkPanel = () => {
                   node.data!.member?.identity.identityKey.truncate();
 
                 const peer = node.data!.peer?.peerId?.truncate();
-
                 return `${peer} [${identity}]`;
               },
             }}

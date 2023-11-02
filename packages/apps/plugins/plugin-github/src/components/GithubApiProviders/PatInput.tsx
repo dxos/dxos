@@ -3,10 +3,10 @@
 //
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Link, Input, Trans, useTranslation, useId } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './OctokitProvider';
 import { GITHUB_PLUGIN } from '../../props';

@@ -8,12 +8,12 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
 
-import { Button, Main, useSidebars } from '@dxos/aurora';
 import { frameDefs, frameModules, FrameRegistryContextProvider } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
+import { Button, Main, useSidebars } from '@dxos/react-ui';
 
 import { Sidebar } from './Sidebar';
 import { AppStateProvider, createPath, defaultFrames } from '../../hooks';

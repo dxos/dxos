@@ -2,79 +2,77 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { type IconProps, ShieldChevron } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder } from '@braneframe/types';
+import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Game } from '@dxos/chess-app';
-import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
 
 import { ChessMain } from './components';
 import translations from './translations';
-import { isObject, CHESS_PLUGIN, ChessAction, ChessPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { CHESS_PLUGIN, ChessAction, type ChessPluginProvides, isObject } from './types';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[Game.name] = Game;
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: Game.filter(), adapter: objectToGraphNode });
-
   return {
     meta: {
       id: CHESS_PLUGIN,
     },
-    unload: async () => {
-      adapter.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [Game.schema.typename]: {
+            placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
+            icon: (props: IconProps) => <ShieldChevron {...props} />,
+          },
+        },
+      },
       graph: {
-        nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${CHESS_PLUGIN}/create`,
             label: ['create game label', { ns: CHESS_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: CHESS_PLUGIN,
-                action: ChessAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            icon: (props) => <ShieldChevron {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: CHESS_PLUGIN,
+                  action: ChessAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
-              testId: 'chessPlugin.createKanban',
+              testId: 'chessPlugin.createObject',
             },
           });
-
-          return adapter.createNodes(space, parent);
         },
       },
       translations,
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            if (isObject(data)) {
-              return ChessMain;
-            }
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isObject(data.active) ? <ChessMain game={data.active} /> : null;
+            default:
+              return null;
           }
-        }
-
-        return null;
+        },
       },
       intent: {
         resolver: (intent) => {

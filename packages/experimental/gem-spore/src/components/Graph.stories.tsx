@@ -8,8 +8,8 @@ import { createSvgContext, FullScreen, Grid, SVG, SVGContextProvider, Zoom } fro
 
 import { Graph } from './Graph';
 import { Markers } from './Markers';
-import { GraphForceProjector, GraphLayoutNode } from '../graph';
-import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, TestNode } from '../testing';
+import { GraphForceProjector, type GraphLayoutNode } from '../graph';
+import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
 
 export default {
   title: 'gem-spore/Graph',

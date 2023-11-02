@@ -4,9 +4,12 @@
 
 import { ux } from '@oclif/core';
 
-import { Client } from '@dxos/client';
+import { asyncTimeout } from '@dxos/async';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
+import { IdentityWaitTimeoutError } from '../../errors';
+import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
 import { printDevices } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
@@ -19,6 +22,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
+      await asyncTimeout(client.spaces.isReady.wait(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
       const devices = client.halo.devices.get();
       printDevices(devices, this.flags);
       return devices;

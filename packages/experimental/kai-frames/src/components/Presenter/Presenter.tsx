@@ -3,7 +3,7 @@
 //
 
 import { h } from 'hastscript';
-import React, { ReactNode, useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useResizeDetector } from 'react-resize-detector';
 import addClasses from 'rehype-add-classes';
@@ -11,7 +11,7 @@ import highlight from 'rehype-highlight';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { defaultClasses, defaultPadding, defaultSlideClasses } from './styles';
 

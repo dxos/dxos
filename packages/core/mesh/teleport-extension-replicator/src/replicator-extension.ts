@@ -3,19 +3,19 @@
 //
 
 import type { ProtocolStream } from 'hypercore-protocol';
-import { Duplex } from 'node:stream';
+import { type Duplex } from 'node:stream';
 
 import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { FeedWrapper } from '@dxos/feed-store';
+import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { schema, RpcClosedError } from '@dxos/protocols';
-import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
+import { schema, RpcClosedError, TimeoutError } from '@dxos/protocols';
+import { type FeedInfo, type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 export type ReplicationOptions = {
@@ -251,10 +251,16 @@ export class ReplicatorExtension implements TeleportExtension {
     // }
 
     replicationStream.on('error', (err) => {
+      if (err instanceof TimeoutError) {
+        log.info('replication stream timeout', { err, info });
+        return;
+      }
+      // TODO(nf): use sentinel errors
       if (
         err?.message === 'Writable stream closed prematurely' ||
         err?.message === 'Cannot call write after a stream was destroyed'
       ) {
+        log('replication stream closed', { err, info });
         return;
       }
 

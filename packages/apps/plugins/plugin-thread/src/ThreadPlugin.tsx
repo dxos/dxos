@@ -2,83 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Chat, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { Thread as ThreadType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/react-client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Thread as ThreadType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
-import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: ThreadType.filter(), adapter: objectToGraphNode });
-
   return {
     meta: {
       id: THREAD_PLUGIN,
     },
-    unload: async () => {
-      adapter.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [ThreadType.schema.typename]: {
+            placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
+            icon: (props: IconProps) => <Chat {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${THREAD_PLUGIN}/create`,
             label: ['create thread label', { ns: THREAD_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: THREAD_PLUGIN,
-                action: ThreadAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            icon: (props) => <Chat {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: THREAD_PLUGIN,
+                  action: ThreadAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
-              testId: 'threadPlugin.createThread',
+              testId: 'threadPlugin.createObject',
             },
           });
-          return adapter.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        switch (role) {
-          case 'main': {
-            if (!data || typeof data !== 'object' || !isThread(data)) {
-              return null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
             }
-            return ThreadMain;
-          }
 
-          case 'complementary':
-            return ThreadSidebar;
-        }
-      },
-      components: {
-        ThreadMain,
+            case 'context-thread':
+              return <ThreadSidebar />;
+
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

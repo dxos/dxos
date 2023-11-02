@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { DevServer, FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionsManifest, TriggerManager } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
@@ -52,8 +52,11 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
-      invariant(config.values.runtime?.agent?.plugins?.functions?.port, 'Port not set.');
-      const endpoint = `http://localhost:${config.values.runtime?.agent?.plugins?.functions?.port}`;
+      const functionsConfig = config.values.runtime?.agent?.plugins?.find(
+        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions',
+      );
+      invariant(functionsConfig?.config?.port, 'Port not set.');
+      const endpoint = `http://localhost:${functionsConfig?.config?.port}`;
       const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
       await triggers.start();
 

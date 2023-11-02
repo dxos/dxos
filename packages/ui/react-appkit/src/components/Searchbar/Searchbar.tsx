@@ -3,11 +3,11 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
-import { Input, InputProps } from '../Input';
+import { Input, type InputProps } from '../Input';
 
 // TODO(burdon): Differentiate slots applied to Input vs slots spread into Input slots?
 type SearchbarSlots = {

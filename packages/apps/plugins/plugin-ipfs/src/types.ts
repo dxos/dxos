@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { File as FileType } from '@braneframe/types';
-import { isTypedObject, TypedObject } from '@dxos/client/echo';
+import type { SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
+import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 
 export const IPFS_PLUGIN = 'dxos.org/plugin/template';
 
@@ -17,8 +16,8 @@ export enum IpfsAction {
 
 export type IpfsProvides = {};
 
-export type IpfsPluginProvides = GraphProvides & TranslationsProvides;
+export type IpfsPluginProvides = SurfaceProvides & TranslationsProvides;
 
 export const isFile = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && FileType.type.name === object.__typename;
+  return isTypedObject(object) && FileType.schema.typename === object.__typename;
 };

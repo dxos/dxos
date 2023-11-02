@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { levels, LogLevel } from '@dxos/log';
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 
 // Deliberately not using the common components export to aid in code-splitting.
 

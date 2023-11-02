@@ -3,7 +3,7 @@
 //
 
 import { DeferredTask } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
+import { type Client, type PublicKey } from '@dxos/client';
 import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { createSubscription } from '@dxos/echo-schema';
@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { FunctionTrigger } from '../function';
+import { type FunctionTrigger } from '../function';
 
 // TODO(burdon): Rename.
 export type InvokeOptions = {
@@ -60,6 +60,7 @@ export class TriggerManager {
         return;
       }
 
+      // TODO(burdon): Trigger binding.
       // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
       const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {

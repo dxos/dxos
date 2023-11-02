@@ -3,15 +3,15 @@
 //
 
 import { unrefTimeout } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { LogLevel, LogProcessor, getContextFromEntry, log } from '@dxos/log';
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
-import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
-import { Metric, Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type Context } from '@dxos/context';
+import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
+import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
+import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions } from './api';
-import { BaseCounter } from './metrics';
+import { type BaseCounter } from './metrics';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
@@ -52,7 +52,7 @@ export type TraceSubscription = {
   newLogs: LogEntry[];
 };
 
-const MAX_RESOURCE_RECORDS = 500;
+const MAX_RESOURCE_RECORDS = 2_000;
 const MAX_SPAN_RECORDS = 1_000;
 const MAX_LOG_RECORDS = 1_000;
 

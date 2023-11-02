@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServicesProvider } from '@dxos/client-protocol';
-import { Config, ConfigProto } from '@dxos/config';
+import { type ClientServicesProvider } from '@dxos/client-protocol';
+import { type Config, type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 
 import { fromSocket } from './socket';
@@ -37,6 +37,7 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
  */
 export const createClientServices = async (config: Config): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
+
   if (remote) {
     const url = new URL(remote);
     const protocol = url.protocol.slice(0, -1);

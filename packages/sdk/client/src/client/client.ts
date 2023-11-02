@@ -5,22 +5,26 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, schema$, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { types as clientSchema, type ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { DatabaseRouter, schemaBuiltin } from '@dxos/echo-schema';
+import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
-import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
+import {
+  GetDiagnosticsRequest,
+  type QueryStatusResponse,
+  SystemStatus,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { isNode, type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import type { EchoSchema, SpaceList } from '../echo';
+import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
@@ -62,7 +66,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
-  private readonly _schemaRegistry = new DatabaseRouter();
+  private readonly _graph = new Hypergraph();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -88,8 +92,8 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this.addSchema(schemaBuiltin);
-    this.addSchema(schema$);
+    this.addTypes(schemaBuiltin);
+    this.addTypes(clientSchema);
   }
 
   [inspect.custom]() {
@@ -163,6 +167,29 @@ export class Client {
     return this._runtime.shell;
   }
 
+  get experimental() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    return {
+      get types() {
+        return self._graph.types;
+      },
+    };
+  }
+
+  // TODO(dmaretskyi): Expose `graph` directly?
+  addTypes(types: TypeCollection) {
+    this._graph.addTypes(types);
+    return this;
+  }
+
+  /**
+   * @deprecated Replaced by addTypes.
+   */
+  addSchema(types: TypeCollection) {
+    return this.addTypes(types);
+  }
+
   /**
    * Get client diagnostics data.
    */
@@ -197,7 +224,7 @@ export class Client {
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    await this._services.open(new Context());
+    await this._services!.open(new Context());
 
     const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
@@ -210,7 +237,7 @@ export class Client {
     const spaces = new SpaceList(
       this._services,
       modelFactory,
-      this._schemaRegistry,
+      this._graph,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -235,7 +262,7 @@ export class Client {
     }
 
     const trigger = new Trigger<Error | undefined>();
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {
@@ -306,9 +333,5 @@ export class Client {
     await this.destroy();
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
-  }
-
-  addSchema(schema: EchoSchema) {
-    this._schemaRegistry.addSchema(schema);
   }
 }

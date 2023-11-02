@@ -3,13 +3,13 @@
 //
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
+import { DensityProvider, useId, useThemeContext } from '@dxos/react-ui';
 
 import { JoinHeading } from './JoinHeading';
-import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
+import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
   AdditionMethodChooser,

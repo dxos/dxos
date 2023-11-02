@@ -4,24 +4,30 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/aurora';
-import { ComposerModel } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
+import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/react-ui';
+import { type ComposerModel } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
-import { ExportViewState, GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier } from '../props';
+import { type ExportViewState, GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier } from '../props';
 
 export const ExportDialog = ({
-  data: [_, [initialExportViewState, initialResponseUrl], model, docGhId],
+  type,
+  target,
+  model,
+  docGhId,
 }: {
-  data: [string, [ExportViewState, string | null], ComposerModel, GhIdentifier];
+  type: ExportViewState;
+  target: string | null;
+  model: ComposerModel;
+  docGhId: GhIdentifier;
 }) => {
   const content = model.content;
 
   const { octokit } = useOctokitContext();
   const { t } = useTranslation(GITHUB_PLUGIN);
-  const [exportViewState, setExportViewState] = useState<ExportViewState>(initialExportViewState);
-  const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(initialResponseUrl);
+  const [exportViewState, setExportViewState] = useState<ExportViewState>(type);
+  const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(target);
   const [ghBranchValue, setGhBranchValue] = useState('');
   const [ghMessageValue, setGhMessageValue] = useState('');
 

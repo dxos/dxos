@@ -15,21 +15,11 @@ const reservedFieldNames = ['id', '__typename', '__deleted', 'meta'];
 // Types that are injected from `importNamespace`.
 // prettier-ignore
 const injectedTypes = [
-  '.dxos.schema.Text',
   '.dxos.schema.Expando',
+  '.dxos.schema.Schema',
+  '.dxos.schema.Text', // TODO(burdon): Matches TextObject.
   '.dxos.schema.TypedObject',
-  '.dxos.schema.Schema'
 ];
-
-/**
- * Protobuf schema as JSON object.
- */
-// TODO(burdon): Missing name.
-export const createSchema = (schema: pb.NamespaceBase) => {
-  const json = JSON.stringify(JSON.stringify(schema.toJSON()));
-  const str = json.replace(/\\"/g, '"').replace(/(^"|"$)/g, '');
-  return `const schemaJson = '${str}';`;
-};
 
 /**
  * Type definition generator.
@@ -131,11 +121,11 @@ export const generate = (root: pb.NamespaceBase, options: CodegenOptions): strin
   return plate`
   import * as ${importNamespace} from '${options.schemaPackage}';
 
-  ${createSchema(root)}
-
-  export const schema$ = ${importNamespace}.EchoSchema.fromJson(schemaJson);
+  export const types = new ${importNamespace}.TypeCollection();
 
   ${declarations}
+
+  types.link();
   `;
 };
 
@@ -173,6 +163,7 @@ export const createObjectClass = (type: pb.Type) => {
   if (reservedTypeNames.includes(type.name)) {
     throw new Error(`Reserved type name: ${type.name}`);
   }
+
   for (const field of type.fieldsArray) {
     if (reservedFieldNames.includes(field.name)) {
       throw new Error(`Reserved field name: ${field.name}`);
@@ -189,19 +180,19 @@ export const createObjectClass = (type: pb.Type) => {
     export type ${name}Props = {\n${initializer}\n};
 
     export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
-      static readonly type = schema$.getType('${fullName}');
+      declare static readonly schema: ${importNamespace}.Schema;
 
-      static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
-      return ${name}.type.createFilter(opts);
+      static filter(filter?: Partial<${name}Props> | ${importNamespace}.OperatorFilter<${name}>): ${importNamespace}.Filter<${name}> {
+        return ${importNamespace}.Filter.typename('${fullName}', filter);
       }
   
       constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOptions) {
-        super({ ...initValues}, { schema: ${name}.type, ...opts });
+        super({ ...initValues}, { schema: ${name}.schema, ...opts });
       }
       ${fields}
     }
 
-    schema$.registerPrototype(${name});
+    types.registerPrototype(${name}, ${JSON.stringify(createProtoSchema(type))});
   `;
 };
 
@@ -241,4 +232,85 @@ export const createEnum = (type: pb.Enum) => {
       ${values}
     }
   `;
+};
+
+// Copied from packages/core/echo/echo-schema/src/proto/gen/schema.ts
+
+export enum PropType {
+  NONE = 0,
+  STRING = 1,
+  NUMBER = 2,
+  BOOLEAN = 3,
+  DATE = 4,
+  REF = 5,
+  RECORD = 6,
+}
+
+export type SchemaProps = {
+  typename: string;
+  props: Prop[];
+};
+
+export interface Prop {
+  id?: string;
+  type?: PropType;
+  refName?: string;
+  refModelType?: string;
+  repeated?: boolean;
+  digits?: number;
+}
+
+export const createProtoSchema = (type: pb.Type): SchemaProps => {
+  type.fieldsArray.forEach((field) => field.resolve());
+  return {
+    typename: type.fullName.slice(1),
+    props: type.fieldsArray.map((field) => ({
+      id: field.name,
+      type: getPropType(field),
+      repeated: field.repeated,
+      refName: field.resolvedType?.fullName.slice(1),
+      refModelType: getRefModel(field),
+    })),
+  };
+};
+
+const getPropType = (field: pb.Field): PropType => {
+  if (field.resolvedType) {
+    return PropType.REF;
+  }
+
+  switch (field.type) {
+    case 'double':
+    case 'float':
+    case 'int32':
+    case 'uint32':
+    case 'sint32':
+    case 'fixed32':
+    case 'sfixed32':
+    case 'int64':
+    case 'uint64':
+    case 'sint64':
+    case 'fixed64':
+    case 'sfixed64':
+      return PropType.NUMBER;
+    case 'string':
+      return PropType.STRING;
+    case 'bool':
+      return PropType.BOOLEAN;
+    case 'bytes':
+    default:
+      return PropType.NONE;
+  }
+};
+
+const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'Text';
+
+const getRefModel = (field: pb.Field): string | undefined => {
+  if (isTextObject(field.type)) {
+    return 'dxos.org/model/text';
+  } else if (field.resolvedType && field.resolvedType.options && field.resolvedType.options['(object)']) {
+    return 'dxos.org/model/document';
+  } else {
+    return undefined;
+  }
 };

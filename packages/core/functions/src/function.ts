@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 export interface Response {
   status(code: number): Response;
@@ -14,9 +14,19 @@ export interface FunctionContext {
   status(code: number): Response;
 }
 
-export interface FunctionHandler {
-  (event: any, context: FunctionContext): Promise<Response>;
-}
+// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
+// https://www.npmjs.com/package/aws-lambda
+
+// TODO(burdon): Types.
+export type FunctionSubscriptionEvent = {
+  space: string;
+  objects: string[];
+};
+
+export type FunctionHandler<T extends {}> = (params: {
+  event: T;
+  context: FunctionContext;
+}) => Promise<Response | void>;
 
 export type FunctionsManifest = {
   functions: Record<string, FunctionConfig>;

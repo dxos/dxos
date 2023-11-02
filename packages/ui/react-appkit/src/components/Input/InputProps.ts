@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from 'react';
+import { type ComponentPropsWithoutRef, type ComponentPropsWithRef, type ReactNode } from 'react';
 
-import type { Density, Elevation, MessageValence } from '@dxos/aurora';
+import type { Density, Elevation, MessageValence } from '@dxos/react-ui';
 
 export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 

@@ -3,13 +3,13 @@
 //
 
 import { Event, MulticastObservable } from '@dxos/async';
-import { ClientServicesProvider } from '@dxos/client-protocol';
+import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Public API for MESH services.

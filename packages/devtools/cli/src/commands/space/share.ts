@@ -5,7 +5,7 @@
 import { ux, Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -57,6 +57,7 @@ export default class Share extends BaseCommand<typeof Share> {
       ux.action.start('Waiting for peer to connect');
       await invitationSuccess;
       ux.action.stop();
+      ux.log(chalk`{green Joined successfully.}`);
     });
   }
 }

@@ -3,7 +3,7 @@
 //
 
 import * as fc from 'fast-check';
-import { ModelRunSetup } from 'fast-check';
+import { type ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { todo } from '@dxos/debug';
@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { test } from '@dxos/test';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
-import { NetworkManager } from '../network-manager';
+import { type NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 
 /**

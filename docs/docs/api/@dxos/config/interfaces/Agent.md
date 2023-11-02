@@ -5,9 +5,8 @@ Defined in:
    file://./../../dxos/config.proto
 ## Properties
 ### [plugins]()
-Type: <code>[Plugins](/api/@dxos/config/interfaces/Plugins)</code>
+Type: <code>[Plugin](/api/@dxos/config/interfaces/Plugin)[]</code>
 
-Options:
-  - proto3_optional = true
+
 
     

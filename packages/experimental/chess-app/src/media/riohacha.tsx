@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 const style = {
   white: { c1: '#f8f8f8', c2: '#d3d3d3' },

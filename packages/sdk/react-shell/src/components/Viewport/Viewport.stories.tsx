@@ -6,9 +6,9 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { AlertDialog } from '@dxos/aurora';
+import { AlertDialog } from '@dxos/react-ui';
 
-import { useViewportContext, Viewport, ViewportScopedProps } from './Viewport';
+import { useViewportContext, Viewport, type ViewportScopedProps } from './Viewport';
 import { Action } from '../Panel';
 
 type StorybookViewportProps = {};

@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentProps, useMemo } from 'react';
+import React, { type ComponentProps, useMemo } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { strongShimmer, getSize, mx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/react-client/invitations';
+import { useTranslation } from '@dxos/react-ui';
+import { strongShimmer, getSize, mx } from '@dxos/react-ui-theme';
 
 const pip = mx('rounded-full flex-none', getSize(2));
 const stripe = mx('rounded-full grow', getSize(2));

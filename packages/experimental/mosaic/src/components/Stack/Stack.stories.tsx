@@ -5,17 +5,17 @@
 import '@dxosTheme';
 
 import { Info, Plus, Trash, X } from '@phosphor-icons/react';
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { getSize } from '@dxos/aurora-theme';
 import { invariant } from '@dxos/invariant';
+import { getSize } from '@dxos/react-ui-theme';
 import { range } from '@dxos/util';
 
 import { Stack } from './Stack';
 import { StackAction, StackMenu } from './StackMenu';
 import { StackRow } from './StackRow';
-import { Item } from '../../layout';
-import { createItem, SeedDecorator, TestData } from '../../testing';
+import { type Item } from '../../layout';
+import { createItem, SeedDecorator, type TestData } from '../../testing';
 import { ScrollContainer } from '../ScrollContainer';
 
 const num = 8;

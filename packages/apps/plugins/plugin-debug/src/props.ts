@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, createContext } from 'react';
+import { type Context, createContext } from 'react';
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { TimerCallback, TimerOptions } from '@dxos/async';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import type { TimerCallback, TimerOptions } from '@dxos/async';
 
 export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
 
@@ -25,8 +28,9 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 
 export type DebugSettingsProps = { devtools?: boolean; debug?: boolean };
 
-export type DebugPluginProvides = IntentProvides &
-  GraphProvides &
+export type DebugPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
   TranslationsProvides & {
     settings: DebugSettingsProps;
   };

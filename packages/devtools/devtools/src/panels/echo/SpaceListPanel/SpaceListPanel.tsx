@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Table, TableColumnDef, createColumnBuilder } from '@dxos/aurora-table';
-import { PublicKey } from '@dxos/keys';
-import { Space, useSpaces } from '@dxos/react-client/echo';
+import { type PublicKey } from '@dxos/keys';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { Table, type TableColumnDef, createColumnBuilder } from '@dxos/react-ui-table';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
@@ -65,8 +65,6 @@ export const SpaceListPanel: FC = () => {
       ),
     }),
   ];
-
-  console.log(spaces);
 
   return (
     <PanelContainer className='overflow-auto'>

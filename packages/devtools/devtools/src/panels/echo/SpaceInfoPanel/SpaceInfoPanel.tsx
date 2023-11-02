@@ -3,17 +3,17 @@
 //
 
 import { ArrowClockwise } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
-import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
-import { getSize } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { Toolbar } from '@dxos/react-ui';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { PipelineTable } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';

@@ -7,8 +7,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState } from './connection';
-import { Swarm } from './swarm';
+import { type ConnectionState } from './connection';
+import { type Swarm } from './swarm';
 
 /**
  * State of the connection to the remote peer with additional info derived from network mapping.

@@ -25,7 +25,7 @@ test.describe('Single-player tests', () => {
   test('create space, which is displayed in tree', async () => {
     await host.createSpace();
     await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(1);
+      expect(await host.getSpaceItemsCount()).to.equal(2);
     });
   });
 
@@ -34,7 +34,7 @@ test.describe('Single-player tests', () => {
     await host.createDocument();
     const textBox = await host.getMarkdownTextbox();
     await waitForExpect(async () => {
-      expect(await host.getDocumentItemsCount()).to.equal(1);
+      expect(await host.getDocumentItemsCount()).to.equal(2);
       expect(await textBox.isEditable()).to.be.true;
     });
   });

@@ -2,83 +2,81 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Compass, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { Expando } from '@dxos/react-client/echo';
 
 import { MapMain } from './components';
 import translations from './translations';
-import { isObject, MAP_PLUGIN, MapAction, MapPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { MAP_PLUGIN, MapAction, type MapPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
 
-export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
-  const adapter = new GraphNodeAdapter({
-    filter: (object: TypedObject) => isObject(object),
-    adapter: objectToGraphNode,
-  });
+const typename = 'map';
 
+export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
     meta: {
       id: MAP_PLUGIN,
     },
-    unload: async () => {
-      adapter.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [typename]: {
+            placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
+            icon: (props: IconProps) => <Compass {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${MAP_PLUGIN}/create`,
             label: ['create object label', { ns: MAP_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: MAP_PLUGIN,
-                action: MapAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            icon: (props) => <Compass {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: MAP_PLUGIN,
+                  action: MapAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { spaceKey: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
-              testId: 'mapPlugin.createMap',
+              testId: 'mapPlugin.createObject',
             },
           });
-
-          return adapter.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            return isObject(data) ? MapMain : null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isObject(data.active) ? <MapMain map={data.active} /> : null;
+            }
           }
-        }
 
-        return null;
+          return null;
+        },
       },
       intent: {
         resolver: (intent) => {

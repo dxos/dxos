@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.3.0",
+  "version": "0.3.4",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
@@ -40,8 +40,10 @@
     "@faker-js/faker": "^8.0.2",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
+    "js-yaml": "^4.1.0",
     "redis": "^4.6.6",
-    "seedrandom": "^3.0.5"
+    "seedrandom": "^3.0.5",
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.5",

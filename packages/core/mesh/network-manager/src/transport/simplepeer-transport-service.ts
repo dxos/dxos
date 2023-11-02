@@ -9,13 +9,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  BridgeService,
-  ConnectionRequest,
-  SignalRequest,
-  DataRequest,
-  BridgeEvent,
+  type BridgeService,
+  type ConnectionRequest,
+  type SignalRequest,
+  type DataRequest,
+  type BridgeEvent,
   ConnectionState,
-  CloseRequest,
+  type CloseRequest,
 } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
 

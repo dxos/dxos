@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import { Main } from '@dxos/aurora';
+import { Main } from '@dxos/react-ui';
 
 export const EmbeddedLayout = ({ children }: PropsWithChildren<{}>) => {
   return <Main.Content classNames='min-bs-[100dvh] flex flex-col p-0.5'>{children}</Main.Content>;

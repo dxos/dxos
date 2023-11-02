@@ -10,8 +10,8 @@ import React, { useMemo, useState } from 'react';
 import { range } from '@dxos/util';
 
 import { Grid } from './Grid';
-import { GridLayout, Item, Location } from '../../layout';
-import { createItem, SeedDecorator, TestData, TestTileContent } from '../../testing';
+import { GridLayout, type Item, type Location } from '../../layout';
+import { createItem, SeedDecorator, type TestData, TestTileContent } from '../../testing';
 
 // TODO(burdon): Layout for columns (as sorted list) vs positional grid.
 

@@ -16,11 +16,11 @@ import {
   UnknownProtocolError,
   trace,
 } from '@dxos/protocols';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage, SignalMessenger } from '../signal';
-import { Transport, TransportFactory } from '../transport';
-import { WireProtocol } from '../wire-protocol';
+import { type SignalMessage, type SignalMessenger } from '../signal';
+import { type Transport, type TransportFactory } from '../transport';
+import { type WireProtocol } from '../wire-protocol';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.
@@ -177,7 +177,7 @@ export class Connection {
     scheduleTask(
       this.connectedTimeoutContext,
       async () => {
-        log.warn('timeout waiting for transport to connect, aborting');
+        log.info('timeout waiting for transport to connect, aborting');
         await this.abort().catch((err) => this.errors.raise(err));
       },
       TRANSPORT_CONNECTION_TIMEOUT,
@@ -210,10 +210,10 @@ export class Connection {
 
       // TODO(nf): fix ErrorStream so instanceof works here
       if (err instanceof ConnectionResetError) {
-        log.warn('aborting due to transport ConnectionResetError');
+        log.info('aborting due to transport ConnectionResetError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err instanceof ConnectivityError) {
-        log.warn('aborting due to transport ConnectivityError');
+        log.info('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err instanceof UnknownProtocolError) {
         log.warn('unsure what to do with UnknownProtocolError, will keep on truckin', { err });
@@ -255,7 +255,7 @@ export class Connection {
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
-      log('aborting protocol... ', { proto: this._protocol });
+      log('aborting protocol... ');
       await this._protocol.abort();
     } catch (err: any) {
       log.catch(err);
@@ -352,7 +352,7 @@ export class Connection {
       }
 
       // If signal fails treat connection as failed
-      log.warn('signal failed', { err });
+      log.info('signal message failed to deliver', { err });
       await this.close();
     }
   }

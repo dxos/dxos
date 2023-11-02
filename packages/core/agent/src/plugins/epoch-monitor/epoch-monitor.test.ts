@@ -26,7 +26,7 @@ describe('EpochMonitor', () => {
     await client.halo.createIdentity();
 
     monitor = new EpochMonitor();
-    await monitor.initialize(client, client.services);
+    await monitor.initialize({ client, clientServices: client.services, plugins: [] });
 
     ctx.onDispose(async () => {
       await client.destroy();
@@ -52,4 +52,8 @@ describe('EpochMonitor', () => {
 
     await monitor.close();
   }).tag('flaky');
+
+  test('id', async () => {
+    expect(monitor.id).to.equal('dxos.org/agent/plugin/epoch-monitor');
+  });
 });

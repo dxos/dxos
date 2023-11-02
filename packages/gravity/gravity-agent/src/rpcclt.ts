@@ -4,7 +4,7 @@
 
 import ipc from 'node-ipc';
 
-import { Config } from './rpcsrv';
+import { type Config } from './rpcsrv';
 
 enum On {
   CONNECT = 'connect',

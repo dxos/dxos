@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DependencyList, useState, useEffect } from 'react';
+import { type DependencyList, useState, useEffect } from 'react';
 
-import { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 
 /**

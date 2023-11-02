@@ -3,7 +3,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
+import SimplePeerConstructor, { type Instance as SimplePeer } from 'simple-peer';
 import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
@@ -11,9 +11,9 @@ import { ErrorStream, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Transport, TransportFactory } from './transport';
+import { type Transport, type TransportFactory } from './transport';
 import { wrtc } from './webrtc';
 
 export type SimplePeerTransportParams = {
@@ -107,7 +107,7 @@ export class SimplePeerTransport implements Transport {
       try {
         if (typeof (this._peer as any)?._pc?.getStats === 'function') {
           (this._peer as any)._pc.getStats().then((stats: any) => {
-            log.warn('report after webrtc error', {
+            log.info('report after webrtc error', {
               config: this.params.webrtcConfig,
               stats,
             });

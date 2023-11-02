@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 
-import { ActionStatus, StatusState, TextInput, Panel } from '../util';
+import { ActionStatus, type StatusState, TextInput, Panel } from '../util';
 
 export const RecoverProfile = () => {
   const [recoveryPhrase, setRecoveryPhrase] = useState<string>();

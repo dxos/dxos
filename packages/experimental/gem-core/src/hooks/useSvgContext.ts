@@ -4,7 +4,7 @@
 
 import { createContext, useContext, useMemo } from 'react';
 
-import { Scale, SVGContext } from '../context';
+import { type Scale, SVGContext } from '../context';
 
 export const SVGContextDef = createContext<SVGContext | undefined>(undefined);
 

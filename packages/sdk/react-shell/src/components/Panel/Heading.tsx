@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, PropsWithChildren, ReactNode } from 'react';
+import React, { forwardRef, type PropsWithChildren, type ReactNode } from 'react';
 
-import { descriptionText, mx } from '@dxos/aurora-theme';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 export type PanelHeadingProps = PropsWithChildren<{
   titleId: string;

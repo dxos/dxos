@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Config } from '@dxos/client';
-import { Space } from '@dxos/client/echo';
+import { type Config } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
-import { Bot } from './bot';
+import { type Bot } from './bot';
 
 export type BotConstructor = () => Bot;
 

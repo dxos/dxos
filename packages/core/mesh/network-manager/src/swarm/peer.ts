@@ -8,13 +8,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Connection, ConnectionState } from './connection';
-import { ConnectionLimiter } from './connection-limiter';
-import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
-import { TransportFactory } from '../transport';
-import { WireProtocolProvider } from '../wire-protocol';
+import { type ConnectionLimiter } from './connection-limiter';
+import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
+import { type TransportFactory } from '../transport';
+import { type WireProtocolProvider } from '../wire-protocol';
 
 export class ConnectionDisplacedError extends SystemError {
   constructor() {
@@ -151,7 +151,7 @@ export class Peer {
           await connection.openConnection();
         } catch (err: any) {
           if (!(err instanceof CancelledError)) {
-            log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+            log.info('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
           }
 
           // Calls `onStateChange` with CLOSED state.
@@ -327,7 +327,7 @@ export class Peer {
     this._connectionCtx = this._ctx.derive();
 
     connection.errors.handle((err) => {
-      log.warn('connection error, closing', {
+      log.info('connection error, closing', {
         topic: this.topic,
         peerId: this.localPeerId,
         remoteId: this.id,

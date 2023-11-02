@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Signer, subtleCrypto } from '@dxos/crypto';
+import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { TypedMessage } from '@dxos/protocols';
-import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type TypedMessage } from '@dxos/protocols';
+import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';

@@ -4,7 +4,7 @@
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
+import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
@@ -14,11 +14,19 @@ describe('WebSocketSignalManager', () => {
   let broker2: SignalServerRunner;
 
   beforeAll(async () => {
+    if (!mochaExecutor.tags.includes('e2e')) {
+      return;
+    }
+
     broker1 = await runTestSignalServer({ port: 5001 });
     broker2 = await runTestSignalServer({ port: 5002 });
   });
 
   afterAll(() => {
+    if (!mochaExecutor.tags.includes('e2e')) {
+      return;
+    }
+
     void broker1.stop();
     void broker2.stop();
   });
@@ -58,7 +66,8 @@ describe('WebSocketSignalManager', () => {
     await Promise.all([joined12, joined13, joined21, joined31]);
   })
     .timeout(1_000)
-    .retries(2);
+    .retries(2)
+    .tag('e2e');
 
   test('join single swarm with doubled brokers', async () => {
     const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
@@ -89,7 +98,8 @@ describe('WebSocketSignalManager', () => {
     await asyncTimeout(received, 1_000);
   })
     .timeout(1_000)
-    .retries(2);
+    .retries(2)
+    .tag('e2e');
 
   test('works with one broken server', async () => {
     const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
@@ -107,7 +117,8 @@ describe('WebSocketSignalManager', () => {
     await Promise.all([joined12, joined21]);
   })
     .timeout(1_000)
-    .retries(2);
+    .retries(2)
+    .tag('e2e');
 
   test('join two swarms with a broken signal server', async () => {
     const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
@@ -131,5 +142,6 @@ describe('WebSocketSignalManager', () => {
     await Promise.all([joined212, joined221]);
   })
     .timeout(1_000)
-    .retries(2);
+    .retries(2)
+    .tag('e2e');
 });

@@ -3,22 +3,20 @@
 //
 
 import { scheduleTask } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
-import { Space } from '@dxos/client-protocol';
+import { type Client, PublicKey } from '@dxos/client';
+import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type EpochMonitorConfig } from '@dxos/protocols/proto/dxos/agent/epoch';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin } from '../plugin';
-
-type Options = Required<Runtime.Agent.Plugins.EpochMontior>;
+import { Plugin } from '../plugin';
 
 // TODO(dmaretskyi): Review defaults.
-const DEFAULT_OPTIONS: Options = {
-  enabled: true,
+const DEFAULT_OPTIONS: Required<EpochMonitorConfig> & { '@type': string } = {
+  '@type': 'dxos.agent.epoch.EpochMonitorConfig',
   minMessagesBetweenEpochs: 10_000,
   minTimeBetweenEpochs: 120_000,
   minInactivityBeforeEpoch: 30_000,
@@ -31,36 +29,38 @@ const DEFAULT_OPTIONS: Options = {
  * - Updates address book.
  */
 // TODO(burdon): Create test.
-export class EpochMonitor extends AbstractPlugin {
-  private _ctx = new Context();
+export class EpochMonitor extends Plugin {
+  public readonly id = 'dxos.org/agent/plugin/epoch-monitor';
+  private _ctx?: Context = undefined;
   private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
-
-  private _options?: Options = undefined;
 
   /**
    * Monitor spaces for which the agent is the leader.
    */
   async open() {
-    invariant(this._client);
+    invariant(this._pluginCtx);
 
-    const config = this._client.config.values.runtime?.agent?.plugins?.epochMonitor;
-    if (!config || config.enabled === false) {
+    if (!this._config.enabled) {
       log.info('epoch monitor disabled from config');
       return;
     }
+    this._ctx = new Context();
+    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
 
-    this._options = { ...DEFAULT_OPTIONS, ...config };
-    log.info('epoch monitor open', { options: this._options });
+    log.info('epoch monitor open', { config: this._config });
 
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!this._monitors.has(space.key)) {
-          invariant(this._options);
-          const monitor = new SpaceMonitor(this._client!, space, this._options);
+          invariant(this._config.config);
+          const monitor = new SpaceMonitor(this._pluginCtx!.client, space, this._config.config);
           this._monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
 
+          if (!this._ctx) {
+            return;
+          }
           // Process asynchronously.
           scheduleTask(this._ctx, async () => {
             await monitor.open();
@@ -69,17 +69,20 @@ export class EpochMonitor extends AbstractPlugin {
       });
     };
 
-    const sub = this._client.spaces.subscribe(process);
-    process(this._client.spaces.get());
+    const sub = this._pluginCtx.client.spaces.subscribe(process);
+    process(this._pluginCtx.client.spaces.get());
     this._ctx.onDispose(() => sub.unsubscribe());
+    this.statusUpdate.emit();
   }
 
   async close() {
-    await this._ctx.dispose();
+    await this._ctx?.dispose();
+    this._ctx = undefined;
     this._monitors.forEach((monitor) => {
       void monitor.close();
     });
     this._monitors.clear();
+    this.statusUpdate.emit();
   }
 }
 
@@ -91,7 +94,11 @@ class SpaceMonitor {
   private _creatingEpoch = false;
   private _previousEpochNumber = -1;
 
-  constructor(private readonly _client: Client, private readonly _space: Space, private readonly _options: Options) {}
+  constructor(
+    private readonly _client: Client,
+    private readonly _space: Space,
+    private readonly _options: Required<EpochMonitorConfig>,
+  ) {}
 
   async open() {
     await this._space.waitUntilReady();

@@ -56,8 +56,9 @@ export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T)
 /**
  * Swap position of element within array.
  */
-export const arrayMove = <T>(array: Array<T>, from: number, to: number) => {
-  return array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
+export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
+  array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
+  return array;
 };
 
 export const safeParseInt = (value: string | undefined, defaultValue?: number) => {

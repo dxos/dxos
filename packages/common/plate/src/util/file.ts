@@ -6,9 +6,9 @@ import mkdirp from 'mkdirp';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-import { Effect } from './effect';
+import { type Effect } from './effect';
 import { fileExists } from './fileExists';
-import { Slot, Slots, Context, SlotValues, FileApplyResult } from './template';
+import { type Slot, type Slots, type Context, type SlotValues, type FileApplyResult } from './template';
 
 export type Path = string;
 

@@ -57,7 +57,6 @@ export type ListenerOptions = {
  *   }
  * }
  *
- *
  * model.update.on(data => {
  *   ...
  * });
@@ -112,6 +111,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * If provided callback was already registered as once-listener, it is made permanent.
    *
    * @param callback
+   * @param options.weak If true, the callback will be weakly referenced and will be garbage collected if no other references to it exist.
    * @returns function that unsubscribes this event listener
    */
   on(callback: (data: T) => void): UnsubscribeCallback;

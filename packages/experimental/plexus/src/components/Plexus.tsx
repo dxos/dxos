@@ -7,11 +7,11 @@ import * as d3 from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
 import { useSvgContext } from '@dxos/gem-core';
-import { GraphLayoutNode, GraphModel, GraphRenderer, GraphRendererOptions } from '@dxos/gem-spore';
+import { type GraphLayoutNode, type GraphModel, GraphRenderer, type GraphRendererOptions } from '@dxos/gem-spore';
+import { mx } from '@dxos/react-ui-theme';
 
-import { TreeProjector, TreeProjectorOptions } from './tree-projector';
+import { TreeProjector, type TreeProjectorOptions } from './tree-projector';
 import { useTimeout } from './util';
 
 const transitionDuration = 300;

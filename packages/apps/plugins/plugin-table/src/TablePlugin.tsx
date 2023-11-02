@@ -2,94 +2,92 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { type IconProps, Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { Table as TableType } from '@braneframe/types';
-import { SpaceProxy, Expando, TypedObject, Schema as SchemaType } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Table as TableType, Folder } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { Schema } from '@dxos/react-client/echo';
 
-import { TableMain } from './components';
+import { TableMain, TableSection, TableSlide } from './components';
 import translations from './translations';
-import { isObject, TABLE_PLUGIN, TableAction, TablePluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { TABLE_PLUGIN, TableAction, type TablePluginProvides, isTable } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Expando.name] = Expando;
+(globalThis as any)[TableType.name] = TableType;
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
-  const adapter = new GraphNodeAdapter({
-    filter: (object: TypedObject) => isObject(object),
-    adapter: objectToGraphNode,
-  });
-
   return {
     meta: {
       id: TABLE_PLUGIN,
     },
-    unload: async () => {
-      adapter.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [TableType.schema.typename]: {
+            placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
+            icon: (props: IconProps) => <Table {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${TABLE_PLUGIN}/create`,
             label: ['create object label', { ns: TABLE_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: TABLE_PLUGIN,
-                action: TableAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            icon: (props) => <Table {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: TABLE_PLUGIN,
+                  action: TableAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
-              testId: 'tablePlugin.createKanban',
+              testId: 'tablePlugin.createObject',
             },
           });
-
-          return adapter.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            return isObject(data) ? TableMain : null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isTable(data.active) ? <TableMain table={data.active} /> : null;
+            case 'section':
+              return isTable(data.object) ? <TableSection table={data.object} /> : null;
+            case 'slide':
+              return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
+            default:
+              return null;
           }
-        }
-
-        return null;
+        },
       },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              const schema = new SchemaType({
+              const schema = new Schema({
                 props: [
                   {
                     id: 'title',
-                    type: SchemaType.PropType.STRING,
+                    type: Schema.PropType.STRING,
                   },
                 ],
               });

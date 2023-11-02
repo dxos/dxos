@@ -6,13 +6,13 @@ import {
   DX_RUNTIME,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
-  ClientServices,
-  ClientServicesProvider,
+  type ClientServices,
+  type ClientServicesProvider,
   clientServiceBundle,
   getProfilePath,
 } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
-import { ServiceBundle } from '@dxos/rpc';
+import { type ServiceBundle } from '@dxos/rpc';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export const getUnixSocket = (profile: string, protocol = 'unix') =>

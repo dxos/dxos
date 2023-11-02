@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentProps } from 'react';
+import React, { type ComponentProps } from 'react';
 
-import { useId } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { useId } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl';
 

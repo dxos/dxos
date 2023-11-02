@@ -4,12 +4,12 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Button, Input, Popover, useTranslation } from '@dxos/aurora';
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
+import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../types';
 
-export const PopoverRenameSpace = ({ data: [_, space] }: { data: [string, Space] }) => {
+export const PopoverRenameSpace = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(space.properties.name ?? '');
@@ -26,7 +26,7 @@ export const PopoverRenameSpace = ({ data: [_, space] }: { data: [string, Space]
           <Input.Label srOnly>{t('space name label')}</Input.Label>
           <Input.TextInput
             defaultValue={space.properties.name ?? ''}
-            placeholder={t('untitled space title')}
+            placeholder={t('unnamed space label')}
             onChange={({ target: { value } }) => setName(value)}
             // TODO(wittjosiah): Ideally this should access the popover context to close the popover.
             //   Currently this is not possible because Radix does not expose the popover context.

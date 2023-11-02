@@ -2,11 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Table as TableType } from '@braneframe/types';
-import { isTypedObject, TypedObject } from '@dxos/client/echo';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 export const TABLE_PLUGIN = 'dxos.org/plugin/table';
 
@@ -18,8 +22,12 @@ export enum TableAction {
 
 export type TableProvides = {};
 
-export type TablePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type TablePluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides;
 
-export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && TableType.type.name === object.__typename;
+export const isTable = (object: unknown): object is TableType => {
+  return isTypedObject(object) && TableType.schema.typename === object.__typename;
 };

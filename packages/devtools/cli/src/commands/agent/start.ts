@@ -6,7 +6,15 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { rmSync } from 'node:fs';
 
-import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } from '@dxos/agent';
+import {
+  Agent,
+  DashboardPlugin,
+  EchoProxyServer,
+  EpochMonitor,
+  FunctionsPlugin,
+  QueryPlugin,
+  parseAddress,
+} from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -24,14 +32,14 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Run in foreground.',
       default: false,
     }),
+    system: Flags.boolean({
+      description: 'Run as system daemon.',
+      default: false,
+    }),
     ws: Flags.integer({
       description: 'Expose web socket port.',
       helpValue: 'port',
       aliases: ['web-socket'],
-    }),
-    echo: Flags.integer({
-      description: 'Expose ECHO REST API.',
-      helpValue: 'port',
     }),
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
@@ -52,7 +60,7 @@ export default class Start extends BaseCommand<typeof Start> {
       // NOTE: This is invoked by the agent's forever daemon.
       await this._runInForeground();
     } else {
-      await this._runAsDaemon();
+      await this._runAsDaemon(this.flags.system);
     }
   }
 
@@ -78,15 +86,17 @@ export default class Start extends BaseCommand<typeof Start> {
         // Epoch monitoring.
         new EpochMonitor(),
 
+        // Query plugin.
+        new QueryPlugin(),
+
+        // Dashboard.
+        new DashboardPlugin({ configPath: this.flags.config }),
+
         // ECHO API.
-        // TODO(burdon): Config.
-        this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
+        new EchoProxyServer(),
 
         // Functions.
-        this.clientConfig.values.runtime?.agent?.plugins?.functions &&
-          new FunctionsPlugin({
-            port: this.clientConfig.values.runtime?.agent?.plugins?.functions?.port,
-          }),
+        new FunctionsPlugin(),
       ],
     });
 
@@ -100,7 +110,7 @@ export default class Start extends BaseCommand<typeof Start> {
     }
   }
 
-  private async _runAsDaemon() {
+  private async _runAsDaemon(system: boolean) {
     return await this.execWithDaemon(async (daemon) => {
       if (await daemon.isRunning(this.flags.profile)) {
         this.log(chalk`{red Warning}: '${this.flags.profile}' is already running.`);
@@ -112,6 +122,7 @@ export default class Start extends BaseCommand<typeof Start> {
           config: this.flags.config,
           metrics: this.flags.metrics,
           ws: this.flags.ws,
+          timeout: this.flags.timeout,
         });
         if (process) {
           this.log('Agent started.');
@@ -119,7 +130,7 @@ export default class Start extends BaseCommand<typeof Start> {
       } catch (err: any) {
         this.error(err);
       }
-    });
+    }, system);
   }
 
   private _sendTelemetry() {

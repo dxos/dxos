@@ -5,7 +5,7 @@
 import { ux } from '@oclif/core';
 import { formatDistance } from 'date-fns';
 
-import { ProcessInfo } from '@dxos/agent';
+import { type ProcessInfo } from '@dxos/agent';
 
 export const printAgents = (daemons: ProcessInfo[], flags = {}) => {
   ux.table(

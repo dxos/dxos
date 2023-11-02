@@ -3,7 +3,7 @@
 //
 
 import { Readable } from 'readable-stream';
-import { Readable as StreamXReadable } from 'streamx';
+import { type Readable as StreamXReadable } from 'streamx';
 
 /**
  * Wraps streamx.Readable (hypercore.createReadStream) to a standard Readable stream.

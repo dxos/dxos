@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Move to tailwind.
 import { css } from '@emotion/css';
 import React from 'react';
 

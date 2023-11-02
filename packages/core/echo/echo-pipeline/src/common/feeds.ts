@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FeedWriter } from '@dxos/feed-store';
+import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 /**
  * Maps the written arguments onto a different message type.

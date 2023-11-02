@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { MutableRefObject, useMemo } from 'react';
-import { CellProps, Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
+import React, { type MutableRefObject, useMemo } from 'react';
+import { type CellProps, type Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Think about re-exports.
 export type TableCellProps<T extends object = {}> = CellProps<T>;

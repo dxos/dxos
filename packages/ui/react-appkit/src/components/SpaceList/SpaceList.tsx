@@ -5,9 +5,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { useTranslation } from '@dxos/aurora';
-import { group, hoverColors, focusRing, staticDisabled, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
+import { useTranslation } from '@dxos/react-ui';
+import { group, hoverColors, focusRing, staticDisabled, mx } from '@dxos/react-ui-theme';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';

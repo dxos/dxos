@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentPropsWithoutRef, forwardRef, ReactNode } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, type ReactNode } from 'react';
 
-import { ThemedClassName } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 type ActionsProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
   children: ReactNode | ReactNode[];

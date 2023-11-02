@@ -5,17 +5,17 @@
 import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
+import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
 import {
   AlertDialog,
   Button,
   Message,
   useTranslation,
   DropdownMenu,
-  AlertDialogRootProps,
+  type AlertDialogRootProps,
   Tooltip,
-} from '@dxos/aurora';
-import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
-import { Provider, getAsyncValue, safariCheck } from '@dxos/util';
+} from '@dxos/react-ui';
+import { type Provider, getAsyncValue, safariCheck } from '@dxos/util';
 
 import { ERROR_PLUGIN } from '../../constants';
 

@@ -10,29 +10,38 @@ import { createRoot } from 'react-dom/client';
 import { ChessPlugin } from '@braneframe/plugin-chess';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DebugPlugin } from '@braneframe/plugin-debug';
-import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
+import { ExplorerPlugin } from '@braneframe/plugin-explorer';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
-import { IntentPlugin } from '@braneframe/plugin-intent';
+import { GridPlugin } from '@braneframe/plugin-grid';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
+import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { MetadataPlugin } from '@braneframe/plugin-metadata';
+import { NavTreePlugin } from '@braneframe/plugin-navtree';
+import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
+import { SearchPlugin } from '@braneframe/plugin-search';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
-import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
 import { TablePlugin } from '@braneframe/plugin-table';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
-import { TreeViewPlugin } from '@braneframe/plugin-treeview';
-import { schema$ } from '@braneframe/types';
+import { types } from '@braneframe/types';
+import { createApp } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/client/echo';
+import { createClientServices, Remote } from '@dxos/client/services';
+import { Config, Envs, Local } from '@dxos/config';
+import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
+import { Defaults } from '@dxos/react-client';
 import {
-  auroraTheme,
+  defaultTheme,
   bindTheme,
   focusRing,
   groupBorder,
@@ -40,13 +49,7 @@ import {
   mx,
   popperMotion,
   surfaceElevation,
-} from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
-import { createClientServices, Remote } from '@dxos/client/services';
-import { Config, Envs, Local } from '@dxos/config';
-import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { Defaults } from '@dxos/react-client';
-import { PluginProvider } from '@dxos/react-surface';
+} from '@dxos/react-ui-theme';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -56,20 +59,20 @@ import { PluginProvider } from '@dxos/react-surface';
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
+  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
   const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
   const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
 
   // TODO(burdon): Custom theme (e.g., primary).
   const labsTx = bindTheme({
-    ...auroraTheme,
+    ...defaultTheme,
     popover: {
-      ...auroraTheme.popover,
+      ...defaultTheme.popover,
       content: (_props, ...etc) =>
         mx(
           'z-[30] rounded-xl',
           popperMotion,
-          // 'bg-orange-200',
           groupSurface,
           groupBorder,
           surfaceElevation({ elevation: 'group' }),
@@ -79,45 +82,51 @@ const main = async () => {
     },
   });
 
+  const App = createApp({
+    plugins: [
+      TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
+      ThemePlugin({ appName: 'Labs', tx: labsTx }),
+
+      // Outside of error boundary so that updates are not blocked by errors.
+      PwaPlugin(),
+
+      // Core framework.
+      ErrorPlugin(),
+      GraphPlugin(),
+      MetadataPlugin(),
+      ClientPlugin({ config, services, debugIdentity: debug, types }),
+
+      // Core UX.
+      LayoutPlugin({ showComplementarySidebar: true }),
+      NavTreePlugin(),
+
+      SpacePlugin(),
+      DebugPlugin(),
+      FilesPlugin(),
+      GithubPlugin(),
+      IpfsPlugin(),
+
+      // Presentation plugins.
+      MarkdownPlugin(),
+      GridPlugin(),
+      KanbanPlugin(),
+      MapPlugin(),
+      PresenterPlugin(), // Before Stack.
+      SketchPlugin(),
+      StackPlugin(),
+      TablePlugin(),
+      ThreadPlugin(),
+      ExplorerPlugin(),
+      ChessPlugin(),
+
+      // TODO(burdon): Currently last so that action are added at end of dropdown menu.
+      SearchPlugin(),
+    ],
+  });
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <PluginProvider
-        plugins={[
-          // TODO(burdon): Document ordering requirements and normalize with composer-app.
-          // TODO(burdon): Normalize namespace across apps.
-          TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
-          ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
-          IntentPlugin(),
-          ThemePlugin({ appName: 'Labs', tx: labsTx }),
-
-          // Outside of error boundary so that updates are not blocked by errors.
-          PwaPlugin(),
-          ErrorPlugin(),
-
-          // Inside theme provider so that errors are styled.
-          GraphPlugin(),
-          DndPlugin(),
-          TreeViewPlugin(),
-          SplitViewPlugin({ showComplementarySidebar: true }),
-          SpacePlugin(),
-
-          // Composer
-          FilesPlugin(),
-          GithubPlugin(),
-          MarkdownPlugin(),
-          StackPlugin(),
-
-          // Labs
-          ChessPlugin(),
-          DebugPlugin(),
-          TablePlugin(),
-          IpfsPlugin(),
-          KanbanPlugin(),
-          MapPlugin(),
-          SketchPlugin(),
-          ThreadPlugin(),
-        ]}
-      />
+      <App />
     </StrictMode>,
   );
 };

@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter, SVGContext } from '@dxos/gem-core';
+import { EventEmitter, type SVGContext } from '@dxos/gem-core';
 
-import { defaultIdAccessor, IdAccessor } from './types';
+import { defaultIdAccessor, type IdAccessor } from './types';
 
 export type ProjectorOptions = {
   idAccessor: IdAccessor;
@@ -20,6 +20,7 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> 
 
   // prettier-ignore
   constructor(
+    // TODO(burdon): Should set by container (not constructor).
     private readonly _context: SVGContext,
     options?: Partial<OPTIONS>,
   ) {

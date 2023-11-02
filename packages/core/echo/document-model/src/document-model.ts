@@ -5,11 +5,15 @@
 import get from 'lodash.get';
 
 import { invariant } from '@dxos/invariant';
-import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
+import { type ModelMeta, Model, type StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
-import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import {
+  ObjectMutation,
+  type ObjectMutationSet,
+  type ObjectSnapshot,
+} from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { DocumentModelState, MutationUtil, ValueUtil } from './mutation';
+import { type DocumentModelState, MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { validateKey } from './util';
@@ -35,7 +39,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
     ValueUtil.applyValue(object, 'meta', snapshot.meta ?? DEFAULT_META_SNAPSHOT);
     this._object = object;
     if (snapshot.type) {
-      this._object.type = Reference.fromLegacyTypeName(snapshot.type);
+      this._object.type = Reference.fromLegacyTypename(snapshot.type);
     } else if (snapshot.typeRef) {
       this._object.type = Reference.fromValue(snapshot.typeRef);
     }

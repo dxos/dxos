@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { Table, TableColumnDef } from '@dxos/aurora-table';
-import { mx } from '@dxos/aurora-theme';
+import { Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { mx } from '@dxos/react-ui-theme';
 
 import { JsonView } from './JsonView';
 

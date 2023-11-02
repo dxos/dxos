@@ -5,17 +5,17 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
-import { mx } from '@dxos/aurora-theme';
-import { Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { mx } from '@dxos/react-ui-theme';
 import { isNotNullOrUndefined } from '@dxos/util';
 
 import { LogView } from './LogView';
 import { MetricsView } from './MetricsView';
 import { ResourceName } from './Resource';
 import { TraceView } from './TraceView';
-import { ResourceState, State } from './types';
+import { type ResourceState, type State } from './types';
 import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
 
 const { helper } = createColumnBuilder<ResourceState>();
