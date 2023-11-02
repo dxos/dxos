@@ -21,12 +21,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../../common/util"
     },
     {
@@ -34,9 +28,6 @@
     },
     {
       "path": "../../../sdk/app-framework"
-    },
-    {
-      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"
@@ -54,28 +45,10 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-layout"
-    },
-    {
       "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

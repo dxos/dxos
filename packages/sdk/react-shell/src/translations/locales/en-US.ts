@@ -84,4 +84,13 @@ export const os = {
   'auth code message': 'Enter the following auth code on the joining device.',
   'display name input label': 'Display name',
   'display name input placeholder': 'Enter a display name',
+  'invite one label': 'Invite one',
+  'invite one description': 'Only one user may join.',
+  'invite one qr label': 'Single-use',
+  'invite one list item label': 'Active single-use invitation',
+  'invite many label': 'Invite many',
+  'invite many description': 'Anyone with the link can join.',
+  'invite many qr label': 'Multiple-use',
+  'invite many list item label': 'Active multiple-use invitation',
+  'invite options label': 'Change the active invite option.',
 };

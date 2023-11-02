@@ -23,6 +23,8 @@ import translations from './translations';
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
 
+const APP = 'halo.dxos.org';
+
 const App = createApp({
   fallback: (
     <div className='flex h-screen justify-center items-center'>
@@ -36,7 +38,7 @@ const App = createApp({
     PwaPlugin(),
     // Inside theme provider so that errors are styled.
     ErrorPlugin(),
-    ClientPlugin(),
+    ClientPlugin({ appKey: APP }),
     {
       meta: {
         id: 'dxos.org/plugin/halo-app',

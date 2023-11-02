@@ -6,8 +6,7 @@ import React, { type FC, useMemo, useState } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { Table as TableType } from '@braneframe/types';
-import { getSpaceForObject, Expando, type TypedObject, type Schema } from '@dxos/client/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { Expando, type TypedObject, type Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';

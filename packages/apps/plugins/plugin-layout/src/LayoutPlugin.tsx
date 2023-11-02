@@ -193,7 +193,9 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
                 sidebar: {
                   data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                 },
-                main: { data: { component: `${LAYOUT_PLUGIN}/ContentEmpty` } },
+                main: {
+                  data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
+                },
                 // TODO(wittjosiah): This plugin should own document title.
                 documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
               },
