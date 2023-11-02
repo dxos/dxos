@@ -50,6 +50,9 @@ export class Filter<T extends EchoObject = EchoObject> {
         },
         options,
       );
+    } else if (typeof source === 'object' && source['@type']) {
+      const { '@type': typename, ...properties } = source;
+      return Filter.typename(typename, properties);
     } else if (typeof source === 'object') {
       return new Filter(
         {
