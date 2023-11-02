@@ -21,6 +21,7 @@ import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { MetadataPlugin } from '@braneframe/plugin-metadata';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
@@ -92,6 +93,7 @@ const main = async () => {
       // Core framework.
       ErrorPlugin(),
       GraphPlugin(),
+      MetadataPlugin(),
       ClientPlugin({ config, services, debugIdentity: debug, types }),
 
       // Core UX.
