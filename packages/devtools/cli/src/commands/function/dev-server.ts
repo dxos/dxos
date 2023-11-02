@@ -62,7 +62,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       this.log(`Function dev-server: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
-        await triggers.start();
+        await triggers.stop();
         await server.stop();
         process.exit();
       });
