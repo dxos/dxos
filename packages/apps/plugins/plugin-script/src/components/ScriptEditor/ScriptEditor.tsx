@@ -87,9 +87,10 @@ export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProp
     <div className={mx('grow overflow-hidden', className)}>
       {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
       <MonacoEditor
-        language='typescript'
+        theme={themeMode === 'dark' ? 'vs-dark' : 'light'}
         loading={<div />}
         options={options}
+        language='typescript'
         path='main.tsx' // Required to support JSX.
         beforeMount={handleWillMount}
         onMount={handleMount}
