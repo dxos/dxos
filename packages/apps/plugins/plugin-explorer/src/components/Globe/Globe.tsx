@@ -13,7 +13,7 @@ import world from '../../../public/countries-110m.json?json';
 
 const defaultOptions: DotOptions = {
   r: 4,
-  fill: 'darkgreen',
+  fill: '#003300',
 };
 
 // TODO(burdon): Factor out definition.

@@ -91,6 +91,15 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
                 <ScriptMain source={(data.active as any).source} mainUrl={mainUrl} />
               ) : null;
+            case 'slide':
+              return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
+                <ScriptMain
+                  source={(data.slide as any).source}
+                  mainUrl={mainUrl}
+                  view={'preview-only'}
+                  className={'p-24'}
+                />
+              ) : null;
             case 'section':
               return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
                 <ScriptSection source={(data.object as any).source} mainUrl={mainUrl} className={'h-[500px] py-2'} />

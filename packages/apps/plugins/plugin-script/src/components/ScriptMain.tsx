@@ -16,7 +16,10 @@ import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
+export type View = 'editor' | 'preview' | 'split' | 'preview-only';
+
 export type ScriptMainProps = {
+  view?: View;
   source: TextObject;
   mainUrl: string;
   className?: string;
@@ -30,10 +33,18 @@ export const ScriptMain = (props: ScriptMainProps) => {
   );
 };
 
-export const ScriptSection = ({ source, mainUrl, className }: ScriptMainProps) => {
-  const { themeMode } = useThemeContext();
-  const [view, setView] = useState<'editor' | 'preview' | 'split'>('editor');
+export const ScriptSection = ({ view: controlledView, source, mainUrl, className }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
+
+  const { themeMode } = useThemeContext();
+  const [view, setView] = useState<View>(controlledView ?? 'editor');
+  useEffect(() => {
+    setView(controlledView ?? 'editor');
+    if (!result && (controlledView === 'preview' || controlledView === 'preview-only')) {
+      void handleExec();
+    }
+  }, [controlledView]);
+
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
@@ -54,27 +65,29 @@ export const ScriptSection = ({ source, mainUrl, className }: ScriptMainProps) =
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', className)}>
-      <DensityProvider density={'fine'}>
-        <Toolbar.Root classNames='p-2'>
-          <ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as any)}>
-            <ToggleGroupItem value='editor'>
-              <Code />
-            </ToggleGroupItem>
-            <ToggleGroupItem value='split'>
-              <SquareSplitHorizontal />
-            </ToggleGroupItem>
-            <ToggleGroupItem value='preview'>
-              <PresentationChart />
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <div className='grow' />
-          <Button variant={'ghost'} onClick={handleExec}>
-            <Play />
-          </Button>
-        </Toolbar.Root>
-      </DensityProvider>
+      {view !== 'preview-only' && (
+        <DensityProvider density={'fine'}>
+          <Toolbar.Root classNames='p-2'>
+            <ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as any)}>
+              <ToggleGroupItem value='editor'>
+                <Code />
+              </ToggleGroupItem>
+              <ToggleGroupItem value='split'>
+                <SquareSplitHorizontal />
+              </ToggleGroupItem>
+              <ToggleGroupItem value='preview'>
+                <PresentationChart />
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <div className='grow' />
+            <Button variant={'ghost'} onClick={handleExec}>
+              <Play />
+            </Button>
+          </Toolbar.Root>
+        </DensityProvider>
+      )}
       <div className='flex overflow-hidden grow'>
-        {view !== 'preview' && (
+        {view !== 'preview' && view !== 'preview-only' && (
           <div className={mx('flex flex-1 shrink-0 overflow-x-auto')}>
             <ScriptEditor content={source.content as YText} themeMode={themeMode} />
           </div>

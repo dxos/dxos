@@ -13,6 +13,8 @@ import { type YText } from '@dxos/text-model';
 
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructionOptions;
+// @ts-ignore
+import ThemeLight from './themes/GitHubLight.json?json';
 
 export type ScriptEditorProps = {
   content: YText;
@@ -23,6 +25,7 @@ export type ScriptEditorProps = {
 /**
  * Monaco script editor.
  * https://www.npmjs.com/package/@monaco-editor
+ * https://microsoft.github.io/monaco-editor/playground.html
  */
 export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
@@ -45,17 +48,19 @@ export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProp
 
   // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
   const monaco = useMonaco();
-  useEffect(() => {}, [monaco]);
+  useEffect(() => {
+    // https://github.com/brijeshb42/monaco-themes/tree/master/themes
+    monaco?.editor.defineTheme('light', ThemeLight);
+    monaco?.editor.setTheme(themeMode === 'dark' ? 'vs-dark' : 'light');
+  }, [monaco, themeMode]);
 
   const handleWillMount = (monaco: Monaco) => {
-    // TODO(burdon): Module resolution.
-    // TODO(burdon): https://github.com/lukasbach/monaco-editor-auto-typings
-    // monaco.languages.typescript.typescriptDefaults.addExtraLib(content, '');
-
-    // TODO(burdon): Temporarily disable diagnostics (to hide import errors).
+    // TODO(burdon): Module resolution: https://github.com/lukasbach/monaco-editor-auto-typings
+    //  https://stackoverflow.com/questions/52290727/adding-typescript-type-declarations-to-monaco-editor
+    //  https://stackoverflow.com/questions/43058191/how-to-use-addextralib-in-monaco-with-an-external-type-definition
+    //  Temporarily disable diagnostics (to hide import errors).
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
-      noSyntaxValidation: true,
     });
 
     // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
@@ -63,6 +68,7 @@ export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProp
       // module: monaco.languages.typescript.ModuleKind.CommonJS,
       // moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
       // noEmit: true,
+      // noLib: true,
       // target: monaco.languages.typescript.ScriptTarget.ESNext,
       // typeRoots: ['node_modules/@types'],
       jsx: monaco.languages.typescript.JsxEmit.React,
@@ -81,7 +87,6 @@ export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProp
     <div className={mx('grow overflow-hidden', className)}>
       {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
       <MonacoEditor
-        theme={themeMode === 'dark' ? 'vs-dark' : 'light'}
         language='typescript'
         loading={<div />}
         options={options}
