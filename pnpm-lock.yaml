@@ -3801,9 +3801,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
-      '@dxos/echo-generator':
-        specifier: workspace:*
-        version: link:../echo/echo-generator
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
@@ -3853,6 +3850,9 @@ importers:
         specifier: ^2.1.3
         version: 2.2.2
     devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../echo/echo-generator
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
