@@ -19,7 +19,7 @@ export class Generator {
   createTables(options: Partial<Record<TestSchemaType, number>> = { organization: 30, project: 20, person: 200 }) {
     const generator = createSpaceObjectGenerator(this._space);
 
-    const tables: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
+    const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
       {
         type: 'organization',
         title: 'Organizations',
@@ -41,18 +41,19 @@ export class Generator {
     ];
 
     // Generate tables.
-    tables.forEach(({ type, title, props }) => {
+    const tables = tableDefs.map(({ type, title, props }) => {
       const schema = generator.schema[type];
       this._space.db.add(schema);
-      this._space.db.add(new TableType({ title, schema, props }));
+      return this._space.db.add(new TableType({ title, schema, props }));
     });
 
     // Generate objects.
-    tables.forEach(({ type }) => {
+    tableDefs.forEach(({ type }) => {
       generator.createObjects({ types: [type], count: options[type] ?? 0 });
     });
 
     log('created objects', options);
+    return tables;
   }
 
   createDocument() {
