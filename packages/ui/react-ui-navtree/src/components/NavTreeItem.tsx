@@ -43,13 +43,9 @@ const NavTreeEmptyBranchPlaceholder: MosaicTileComponent<NavTreeItemData, HTMLDi
   ({ item: { level } }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
-      <div className={mx(levelPadding(level))} ref={forwardedRef}>
+      <div className={mx(levelPadding(level), fineBlockSize, 'pie-1 flex items-center')} ref={forwardedRef}>
         <p
-          className={mx(
-            descriptionText,
-            fineBlockSize,
-            'flex items-center justify-center border border-dashed border-neutral-500/20 mlb-1 p-1 rounded',
-          )}
+          className={mx(descriptionText, 'grow border border-dashed border-neutral-500/20 p-1 text-center rounded-sm')}
         >
           <span>{t('empty branch message')}</span>
         </p>
@@ -117,6 +113,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
 
+    const isOverCurrent = isOver(path);
+
     return (
       <DensityProvider density='fine'>
         <Root>
@@ -125,12 +123,13 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             open={!forceCollapse && open}
             onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
             classNames={[
-              'rounded block',
+              'rounded block relative',
               hoverableFocusedKeyboardControls,
               'transition-opacity',
               active && active !== 'overlay' && 'opacity-0',
               focusRing,
-              isOver(path) && dropRing,
+              isOverCurrent && dropRing,
+              isOverCurrent && 'z-[1]',
               level === 0 && 'mbs-4 first:mbs-0',
             ]}
             {...draggableProps}
