@@ -59,6 +59,8 @@ import {
   objectToGraphNode,
 } from './util';
 
+const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
+
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
@@ -178,7 +180,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
           };
 
-          setInterval(() => send(), 5_000);
+          setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
           send();
         }),
       );

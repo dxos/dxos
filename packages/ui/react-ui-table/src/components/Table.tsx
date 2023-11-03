@@ -489,7 +489,11 @@ const TableBody = <TData extends RowData>({
               return (
                 <td
                   key={cell.id}
-                  className={mx(border && groupBorder, cell.column.columnDef.meta?.slots?.cell?.className)}
+                  className={mx(
+                    border && groupBorder,
+                    slots?.cell?.className,
+                    cell.column.columnDef.meta?.slots?.cell?.className,
+                  )}
                 >
                   {flexRender(cell.column.columnDef.cell, { className: 'px-2', ...cell.getContext() })}
                 </td>
