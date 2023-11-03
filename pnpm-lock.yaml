@@ -3801,6 +3801,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../echo/echo-generator
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
