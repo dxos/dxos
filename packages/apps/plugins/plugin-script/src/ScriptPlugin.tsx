@@ -122,12 +122,12 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
 
 const code = [
   "import React from 'react';",
-  "import { useSpace, useQuery } from '@dxos/react-client/echo';",
+  "import { Filter, useSpace, useQuery } from '@dxos/react-client/echo';",
   "import { Chart } from '@braneframe/plugin-explorer';",
   '',
   'const Component = () => {',
   '  const space = useSpace();',
-  "  const objects = useQuery(space, obj => obj.__typename === 'dxos.org/schema/person');",
+  "  const objects = useQuery(space, Filter._typename('dxos.org/schema/person'));",
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
   '',
