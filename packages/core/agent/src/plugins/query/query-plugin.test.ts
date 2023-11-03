@@ -199,7 +199,7 @@ describe('QueryPlugin', () => {
     const waitForQueryResults = async (query: Query) => {
       const results = new Trigger<TypedObject[]>();
       query.subscribe((query) => {
-        if (query.results.some((r) => r.resolution?.source === 'remote')) {
+        if (query.results.some((result) => result.resolution?.source === 'remote')) {
           results.wake(query.objects);
         }
       });
