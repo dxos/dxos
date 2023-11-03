@@ -36,6 +36,7 @@ type AvatarContextValue = {
   status?: AvatarStatus;
   animation?: AvatarAnimation;
   inGroup?: boolean;
+  color?: string;
 };
 const AVATAR_NAME = 'Avatar';
 const [AvatarProvider, useAvatarContext] = createContext<AvatarContextValue>(AVATAR_NAME);
@@ -64,7 +65,7 @@ const AvatarRoot = ({
 type AvatarFrameProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
 const strokeWidth = 2;
-const rx = 8;
+const rx = '0.25rem';
 
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
@@ -98,72 +99,51 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
               {variant === 'circle' ? (
                 <circle fill='white' cx='50%' cy='50%' r={r} />
               ) : (
-                <rect fill='white' width={2 * r} height={2 * r} x={ringGap + ringWidth} y={ringGap + ringWidth} />
+                <rect
+                  fill='white'
+                  width={2 * r}
+                  height={2 * r}
+                  x={ringGap + ringWidth}
+                  y={ringGap + ringWidth}
+                  rx={rx}
+                />
               )}
             </mask>
           </defs>
           {variant === 'circle' ? (
-            <g>
-              <circle fill='#999' stroke='none' opacity={0.1} cx='50%' cy='50%' r={r} />
-              <circle stroke='#888' fill='none' opacity={0.3} cx='50%' cy='50%' r={r} />
-            </g>
+            <circle className='avatarFrameFill fill-[var(--surface-bg)]' cx='50%' cy='50%' r={r} />
           ) : (
-            <g>
-              <rect
-                fill='#999'
-                stroke='none'
-                opacity={0.1}
-                width={2 * r}
-                height={2 * r}
-                x={ringGap + ringWidth}
-                y={ringGap + ringWidth}
-                rx={2}
-              />
-              <rect
-                fill='none'
-                stroke='#333'
-                opacity={0.15}
-                width={2 * r}
-                height={2 * r}
-                x={ringGap + ringWidth}
-                y={ringGap + ringWidth}
-                rx={2}
-              />
-            </g>
-            //   <circle
-            //     className='avatarFrameFill fill-[var(--surface-bg)]'
-            //     cx={imageSizeNumber / 2}
-            //     cy={imageSizeNumber / 2}
-            //     r={imageSizeNumber / 2}
-            //   />
-            // ) : (
-            //   <rect
-            //     className='avatarFrameFill fill-[var(--surface-bg)]'
-            //     width={imageSizeNumber}
-            //     height={imageSizeNumber}
-            //     rx={rx}
-            //   />
+            <rect
+              className='avatarFrameFill fill-[var(--surface-bg)]'
+              x={ringGap + ringWidth}
+              y={ringGap + ringWidth}
+              width={2 * r}
+              height={2 * r}
+              rx={rx}
+            />
           )}
           {children}
           {variant === 'circle' ? (
             <circle
-              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
+              className='avatarFrameStroke fill-transparent stroke-[var(--surface-text)]'
               strokeWidth={strokeWidth}
               fill='none'
-              cx={imageSizeNumber / 2}
-              cy={imageSizeNumber / 2}
-              r={imageSizeNumber / 2 - strokeWidth / 4}
+              opacity={0.1}
+              cx={'50%'}
+              cy={'50%'}
+              r={r}
             />
           ) : (
             <rect
-              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
+              className='avatarFrameStroke fill-transparent stroke-[var(--surface-text)]'
               strokeWidth={strokeWidth}
-              x={strokeWidth / 4}
-              y={strokeWidth / 4}
+              opacity={0.1}
               fill='none'
+              x={ringGap + ringWidth}
+              y={ringGap + ringWidth}
+              width={2 * r}
+              height={2 * r}
               rx={rx}
-              width={imageSizeNumber - strokeWidth / 4}
-              height={imageSizeNumber - strokeWidth / 4}
             />
           )}
         </svg>

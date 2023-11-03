@@ -11,6 +11,8 @@
 // NOTE: This should align with theme's root --surface-bg.
 export const baseSurface = 'bg-neutral-12 dark:bg-neutral-900';
 
+export const baseSurfaceBorder = 'border-neutral-12 dark:border-neutral-900';
+
 // Sidebars, main heading (“topbar”), and nothing else.
 export const fixedSurface = 'bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur';
 

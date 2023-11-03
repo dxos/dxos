@@ -10,6 +10,21 @@ import { type Size } from '@dxos/react-ui-types';
 
 import { Avatar, useJdenticonHref, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 
+
+const cursorColors = [
+  { color: '#30bced', light: '#30bced33' },
+  { color: '#6eeb83', light: '#6eeb8333' },
+  { color: '#ffbc42', light: '#ffbc4233' },
+  { color: '#ecd444', light: '#ecd44433' },
+  { color: '#ee6352', light: '#ee635233' },
+  { color: '#9ac2c9', light: '#9ac2c933' },
+  { color: '#8acb88', light: '#8acb8833' },
+  { color: '#1be7ff', light: '#1be7ff33' },
+];
+
+const randomColor = () => cursorColors[Math.round(Math.random() * cursorColors.length)];
+
+
 type StorybookAvatarProps = {
   imgSrc?: string;
   fallbackValue?: string;
@@ -20,6 +35,7 @@ type StorybookAvatarProps = {
   variant?: AvatarVariant;
   animation?: AvatarAnimation;
   size?: Size;
+  color?: string;
 };
 
 const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
@@ -33,13 +49,14 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
     fallbackText = '',
     animation,
     imgSrc,
+    color = randomColor()
   } = props;
   const jdenticon = useJdenticonHref(fallbackValue ?? '', size);
   return (
     <Avatar.Root {...{ size, variant, status, animation }}>
       <Avatar.Frame>
-        <Avatar.Image href={imgSrc} />
-        <Avatar.Fallback href={fallbackValue ? jdenticon : ''} text={fallbackText} />
+        {!imgSrc && <Avatar.Fallback href={fallbackValue ? jdenticon : ''} text={fallbackText} />}
+        {imgSrc && <Avatar.Image href={imgSrc} />}
       </Avatar.Frame>
       <div>
         <Avatar.Label classNames='block'>{label}</Avatar.Label>
@@ -53,12 +70,39 @@ export default {
   component: StorybookAvatar,
 };
 
+const sampleImage =
+  'https://png.pngtree.com/thumb_back/fh260/background/20230614/pngtree-the-photo-of-a-woman-with-red-sunglasses-is-surrounded-by-image_2931163.jpg';
+
 export const Default = () => (
-  <div className='flex flex-row gap-4'>
-    <StorybookAvatar description='Offline' />
-    <StorybookAvatar status='active' />
-    <StorybookAvatar status='error' description='Error' />
-    <StorybookAvatar status='warning' description='Warning' />
+  <div className='flex flex-col gap-6'>
+    <div className='flex flex-row gap-4'>
+      <StorybookAvatar description='Offline' />
+      <StorybookAvatar status='active' />
+      <StorybookAvatar status='error' description='Error' />
+      <StorybookAvatar status='warning' description='Warning' />
+      <StorybookAvatar status='active' imgSrc={sampleImage} />
+    </div>
+    <div className='flex flex-row gap-4'>
+      <StorybookAvatar size={8} description='Offline' />
+      <StorybookAvatar size={8} status='active' />
+      <StorybookAvatar size={8} status='error' description='Error' />
+      <StorybookAvatar size={8} status='warning' description='Warning' />
+      <StorybookAvatar size={8} status='active' imgSrc={sampleImage} />
+    </div>
+    <div className='flex flex-row gap-4'>
+      <StorybookAvatar size={5} description='Offline' />
+      <StorybookAvatar size={5} status='active' />
+      <StorybookAvatar size={5} status='error' description='Error' />
+      <StorybookAvatar size={5} status='warning' description='Warning' />
+      <StorybookAvatar size={5} status='active' imgSrc={sampleImage} />
+    </div>
+    <div className='flex flex-row gap-4'>
+      <StorybookAvatar size={3} description='Offline' />
+      <StorybookAvatar size={3} status='active' />
+      <StorybookAvatar size={3} status='error' description='Error' />
+      <StorybookAvatar size={3} status='warning' description='Warning' />
+      <StorybookAvatar size={3} status='active' imgSrc={sampleImage} />
+    </div>
   </div>
 );
 

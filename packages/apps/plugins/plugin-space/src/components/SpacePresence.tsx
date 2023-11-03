@@ -58,10 +58,20 @@ export const SpacePresence = () => {
     );
   });
 
+  return <ObjectPresence onShareClick={handleShare} viewers={viewers} />;
+};
+
+export type ObjectPresenceProps = {
+  viewers?: ObjectViewer[];
+  onShareClick?: () => void;
+};
+
+export const ObjectPresence = (props: ObjectPresenceProps) => {
+  const { onShareClick, viewers } = props;
   return (
     <div className='flex items-center'>
-      {intentPlugin && (
-        <Button variant='ghost' onClick={handleShare}>
+      {onShareClick && (
+        <Button variant='ghost' onClick={onShareClick}>
           <Users className={getSize(5)} />
         </Button>
       )}
@@ -77,7 +87,7 @@ export const ObjectViewers: FC<{ viewers?: ObjectViewer[] }> = ({ viewers = [] }
       <Tooltip.Trigger className='flex items-center'>
         <AvatarGroup.Root size={4} classNames='mie-5'>
           <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
-          {viewers.map((viewer) => (
+          {viewers.slice(0, 3).map((viewer) => (
             <AvatarGroupItem.Root key={viewer.identityKey.toHex()}>
               <Avatar.Frame>
                 {/* TODO(burdon): Why `href`? */}
