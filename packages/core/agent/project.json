@@ -29,7 +29,7 @@
         "{options.outputPath}"
       ]
     },
-    "test": {
+    "e2e": {
       "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
