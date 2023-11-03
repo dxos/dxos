@@ -316,8 +316,14 @@ function setupAsyncHooks() {
                         enumerable: false,
                         configurable: false,
                         writable: false,
-                        value: findCallsite(getStack())
-                    }
+                        value: findCallsite(getStack()),
+                    },
+                    __fullStack: {
+                        enumerable: false,
+                        configurable: false,
+                        writable: false,
+                        value: getStack(),
+                    },
                 });
             }
 
@@ -366,7 +372,13 @@ function setupAsyncHooks() {
                                 configurable: false,
                                 writable: false,
                                 value: callSite
-                            }
+                            },
+                            __fullStack: {
+                                enumerable: false,
+                                configurable: false,
+                                writable: false,
+                                value: getStack(),
+                            },
                         });
                         listener = listener.listener;
                     }
@@ -619,7 +631,8 @@ function dump() {
                 log('info', '    - Listeners:');
                 listeners.forEach(function (fn) {
                     var callSite = getCallsite(fn);
-                    log('info', '      - %s: %s @ %s:%d', eventType, fn.name || fn.__name || callSite.name || '(anonymous)', callSite.file, callSite.line);
+
+                    log('info', '      - %s: %s', eventType, printStack(fn));
                 });
             }
         });
@@ -684,7 +697,7 @@ function dump() {
 
             const stack = fn.__fullStack;
 
-            log('info', '  - (%d ~ %s) %s', t._idleTimeout, formatTime(t._idleTimeout), `\n:${stack.map(x => `${x.name} at ${x.file}:${x.line}`).join('\n')}\n`);
+            log('info', '  - (%d ~ %s) %s', t._idleTimeout, formatTime(t._idleTimeout), printStack(fn));
         });
     }
 
@@ -758,4 +771,13 @@ if (module === require.main) {
     var Module = require('module');
     process.argv = newArgv;
     Module.runMain();
+}
+
+function printStack(fn) {
+    const stack = fn?.__fullStack;
+    if(!stack) {
+        return '<unknown>'
+    }
+
+    return `:\n${stack.map(x => `    at ${x.name} (${x.file}:${x.line})`).join('\n')}\n`
 }

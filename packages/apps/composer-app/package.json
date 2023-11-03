@@ -18,6 +18,7 @@
     "@braneframe/plugin-ipfs": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-metadata": "workspace:*",
     "@braneframe/plugin-navtree": "workspace:*",
     "@braneframe/plugin-presenter": "workspace:*",
     "@braneframe/plugin-pwa": "workspace:*",

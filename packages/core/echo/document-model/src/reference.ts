@@ -19,7 +19,12 @@ export class Reference {
     return new Reference(type, 'protobuf', 'dxos.org');
   }
 
-  constructor(public readonly itemId: ItemID, public readonly protocol?: string, public readonly host?: string) {}
+  // prettier-ignore
+  constructor(
+    public readonly itemId: ItemID,
+    public readonly protocol?: string,
+    public readonly host?: string
+  ) {}
 
   encode(): ReferenceValue {
     return { itemId: this.itemId, host: this.host, protocol: this.protocol };

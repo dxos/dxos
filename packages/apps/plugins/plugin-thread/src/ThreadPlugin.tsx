@@ -2,52 +2,45 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat } from '@phosphor-icons/react';
+import { Chat, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { Thread as ThreadType } from '@braneframe/types';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Thread as ThreadType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
-import { isThread, THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  let adapter: GraphNodeAdapter<ThreadType> | undefined;
-
   return {
     meta: {
       id: THREAD_PLUGIN,
     },
-    ready: async (plugins) => {
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides.intent.dispatch;
-      if (dispatch) {
-        adapter = new GraphNodeAdapter({ dispatch, filter: ThreadType.filter(), adapter: objectToGraphNode });
-      }
-    },
-    unload: async () => {
-      adapter?.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [ThreadType.schema.typename]: {
+            placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
+            icon: (props: IconProps) => <Chat {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${THREAD_PLUGIN}/create`,
             label: ['create thread label', { ns: THREAD_PLUGIN }],
             icon: (props) => <Chat {...props} />,
@@ -58,8 +51,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   action: ThreadAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -69,8 +62,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               testId: 'threadPlugin.createObject',
             },
           });
-
-          return adapter?.createNodes(space, parent);
         },
       },
       surface: {

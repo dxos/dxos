@@ -39,16 +39,19 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     },
     ready: async (plugins) => {
       // Dispatch intent to associated plugin.
-      const dispatch = (intent: Intent) => {
+      const dispatch = async (intent: Intent) => {
         if (intent.plugin) {
           const plugin = findPlugin<IntentResolverProvides>(plugins, intent.plugin);
           return plugin?.provides.intent.resolver(intent, plugins);
         }
 
         // Return resolved value from first plugin that handles the intent.
-        return filterPlugins(plugins, parseIntentResolverPlugin).reduce((acc, plugin) => {
-          return acc ?? plugin.provides.intent.resolver(intent, plugins);
-        }, undefined);
+        for (const plugin of filterPlugins(plugins, parseIntentResolverPlugin)) {
+          const result = await plugin.provides.intent.resolver(intent, plugins);
+          if (result) {
+            return result;
+          }
+        }
       };
 
       // Sequentially dispatch array of invents.

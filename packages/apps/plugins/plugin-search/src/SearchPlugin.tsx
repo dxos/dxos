@@ -6,12 +6,12 @@ import { MagnifyingGlass, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/client/echo';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
 import translations from './translations';
-import { SEARCH_PLUGIN, type SearchPluginProvides, SearchAction } from './types';
+import { SEARCH_PLUGIN, SearchAction, type SearchPluginProvides } from './types';
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
   return {

@@ -24,6 +24,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/keys"
     },
     {
@@ -72,10 +75,7 @@
       "path": "../plugin-layout"
     },
     {
-      "path": "../plugin-navtree"
-    },
-    {
-      "path": "../plugin-theme"
+      "path": "../plugin-metadata"
     }
   ]
 }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema, TextObject } from '@dxos/client/echo';
+import { type Schema, TextObject } from '@dxos/react-client/echo';
 
 // TODO(burdon): Type name registry linked to schema?
 const getIcon = (schema: Schema): string | undefined => {
