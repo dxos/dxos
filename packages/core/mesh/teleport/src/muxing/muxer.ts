@@ -103,9 +103,10 @@ export class Muxer {
   private readonly _ctx = new Context();
 
   private _nextId = 1;
-  private _destroyed = false;
-  private _destroying = false;
+
   private _closing = false;
+  private _destroying = false;
+  private _disposed = false;
 
   private _lastStats?: MuxerStats = undefined;
   private readonly _lastChannelStats = new Map<number, Channel['stats']>();
@@ -120,8 +121,6 @@ export class Muxer {
     this._balancer.incomingData.on(async (msg) => {
       await this._handleCommand(Command.decode(msg));
     });
-
-    scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
   }
 
   /**
@@ -312,7 +311,7 @@ export class Muxer {
   // complete the termination, graceful or otherwise
 
   async dispose(err?: Error) {
-    if (this._destroyed) {
+    if (this._disposed) {
       log('already destroyed, ignoring dispose request');
       return;
     }
@@ -324,7 +323,7 @@ export class Muxer {
     for (const channel of this._channelsByTag.values()) {
       channel.destroy?.(err);
     }
-    this._destroyed = true;
+    this._disposed = true;
 
     this.afterClosed.emit(err);
 
@@ -334,7 +333,7 @@ export class Muxer {
   }
 
   private async _handleCommand(cmd: Command) {
-    if (this._destroyed) {
+    if (this._disposed) {
       log.warn('Received command after destroy', { cmd });
       return;
     }
@@ -391,6 +390,10 @@ export class Muxer {
   }
 
   private _getOrCreateStream(params: CreateChannelInternalParams): Channel {
+    if (this._channelsByTag.size === 0) {
+      log.warn('enabling stats');
+      scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
+    }
     let channel = this._channelsByTag.get(params.tag);
     if (!channel) {
       channel = {
@@ -446,7 +449,7 @@ export class Muxer {
   }
 
   private async _emitStats() {
-    if (this._destroyed || this._destroying) {
+    if (this._disposed || this._destroying) {
       this._lastStats = undefined;
       this._lastChannelStats.clear();
       return;
