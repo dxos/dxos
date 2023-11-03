@@ -16,6 +16,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@faker-js/faker": "^8.0.2"
