@@ -6,10 +6,18 @@ import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { LayoutAction, useIntent } from '@dxos/app-framework';
-import { type Graph } from '@dxos/app-graph';
+import type { Node, Graph } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DensityProvider,
+  ElevationProvider,
+  Tooltip,
+  useMediaQuery,
+  useSidebars,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { NavTree, type NavTreeContextType, type TreeNode, type NavTreeProps } from '@dxos/react-ui-navtree';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -39,18 +47,25 @@ export const TreeViewContainer = ({
   const identity = useIdentity();
 
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
+  const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+  const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatch } = useIntent();
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
+    if (!(node as Node).data) {
+      return;
+    }
+
     await dispatch({
       action: LayoutAction.ACTIVATE,
       data: {
         id: node.id,
       },
     });
-    // void defaultAction?.invoke();
-    // !isLg && closeNavigationSidebar();
+
+    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
+    void defaultAction?.invoke();
+    !isLg && closeNavigationSidebar();
   };
 
   const currentPath = (activeId && getMosaicPath(graph, activeId)) ?? 'never';

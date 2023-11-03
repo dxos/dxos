@@ -29,7 +29,7 @@ export const TableSection: FC<{ table: TableType }> = ({ table }) => {
 
 export const TableSlide: FC<{ table: TableType }> = ({ table }) => {
   return (
-    <div className={'flex m-8 overflow-hidden'}>
+    <div className={'flex p-24 overflow-hidden'}>
       <TableComponent table={table} />
     </div>
   );

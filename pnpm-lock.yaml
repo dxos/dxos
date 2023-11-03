@@ -3850,6 +3850,9 @@ importers:
         specifier: ^2.1.3
         version: 2.2.2
     devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../echo/echo-generator
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
@@ -19049,7 +19052,7 @@ packages:
       '@tensorflow/tfjs-layers': 3.21.0(@tensorflow/tfjs-core@3.21.0)
       argparse: 1.0.10
       chalk: 4.1.2
-      core-js: 3.29.0
+      core-js: 3.33.2
       regenerator-runtime: 0.13.11
       yargs: 16.2.0
     transitivePeerDependencies:
@@ -19489,7 +19492,7 @@ packages:
       '@tldraw/tlschema': 2.0.0-alpha.14(react@18.2.0)
       '@tldraw/utils': 2.0.0-alpha.14
       '@tldraw/validate': 2.0.0-alpha.14
-      '@types/canvas-size': 1.2.0
+      '@types/canvas-size': 1.2.1
       '@use-gesture/react': 10.2.27(react@18.2.0)
       canvas-size: 1.2.6
       classnames: 2.3.2
@@ -19511,7 +19514,7 @@ packages:
   /@tldraw/polyfills@2.0.0-alpha.14:
     resolution: {integrity: sha512-/vdbB7udZpyUygKLfKLgBjbqUNhHPer52aeAXFxF+rf3Uj3wUpEnN7ViQQIx3whXc/e17zdeONOp4xaFGaxmIg==}
     dependencies:
-      core-js: 3.29.0
+      core-js: 3.33.2
     dev: false
 
   /@tldraw/primitives@2.0.0-alpha.14(react@18.2.0):
@@ -19592,7 +19595,7 @@ packages:
       '@tldraw/utils': 2.0.0-alpha.14
       browser-fs-access: 0.31.2
       classnames: 2.3.2
-      hotkeys-js: 3.11.1
+      hotkeys-js: 3.12.0
       idb: 7.1.1
       lz-string: 1.4.4
       react: 18.2.0
@@ -19734,8 +19737,8 @@ packages:
     resolution: {integrity: sha512-jrKmIHhuZVGUpOR1s4TgY9BTt/Eh9CFCjHVZ2FsrKmHSo3J/vpl6EpK08SfMLrX2IY1ZEFA+BPRTJQGg4xIHsA==}
     dev: true
 
-  /@types/canvas-size@1.2.0:
-    resolution: {integrity: sha512-s0q6dNwuCT33836UAkAT30OfTDGlhnqPYFREw16/UBSSiaUHO9mBC+kR/e6AL5Rdo9XzV0jMBW7W1S2vyclWTw==}
+  /@types/canvas-size@1.2.1:
+    resolution: {integrity: sha512-JrznqpoIH2NsddfhP36WWfr7JKbVfiUjBqjFW/Y1DKe5lDfuX40uXjAklC7siXzY5sv2bnVofel4NdOIP2gkKA==}
     dev: false
 
   /@types/chai-as-promised@7.1.5:
@@ -24764,6 +24767,11 @@ packages:
   /core-js@3.29.0:
     resolution: {integrity: sha512-VG23vuEisJNkGl6XQmFJd3rEG/so/CNatqeE+7uZAwTSwFeB/qaO0be8xZYUNWprJ/GIwL8aMt9cj1kvbpTZhg==}
     requiresBuild: true
+    dev: true
+
+  /core-js@3.33.2:
+    resolution: {integrity: sha512-XeBzWI6QL3nJQiHmdzbAOiMYqjrb7hwU7A39Qhvd/POSa/t9E1AeZyEZx3fNvp/vtM8zXwhoL0FsiS0hD0pruQ==}
+    requiresBuild: true
 
   /core-util-is@1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
@@ -29205,8 +29213,8 @@ packages:
       lru-cache: 6.0.0
     dev: true
 
-  /hotkeys-js@3.11.1:
-    resolution: {integrity: sha512-RLdQm7eMJey1gNAiMTCGg738YSh3YdKkmwYGMSWY2vgNz4KFw0LpvouHDq0IZEflcWvEDVPKhYLgniu2+rz8tA==}
+  /hotkeys-js@3.12.0:
+    resolution: {integrity: sha512-Z+N573ycUKIGwFYS3ID1RzMJiGmtWMGKMiaNLyJS8B1ei+MllF4ZYmKS2T0kMWBktOz+WZLVNikftEgnukOrXg==}
     dev: false
 
   /hsl-to-hex@1.0.0:
@@ -35872,7 +35880,7 @@ packages:
   /plyr@3.7.7:
     resolution: {integrity: sha512-8B2b0HP+j/jKM7GrYdEuSi1hIF3BnNzjaBsBa3bx4/SO9omX3EfhCi78ZFh/0QuCKlwpTBusTMMZ3Hq6bJ5d/g==}
     dependencies:
-      core-js: 3.29.0
+      core-js: 3.33.2
       custom-event-polyfill: 1.0.7
       loadjs: 4.2.0
       rangetouch: 2.0.1
