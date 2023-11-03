@@ -27,7 +27,11 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { TextModel } from '@dxos/text-model';
 
 export class AgentQuerySourceProvider implements QuerySourceProvider {
-  private readonly _responsePromises = new Map<string, { resolve: (response: QueryResponse) => void }>();
+  private readonly _responsePromises = new Map<
+    string,
+    { resolve: (response: QueryResponse) => void; reject: (error: Error) => void }
+  >();
+
   private _unsubscribe?: () => void = undefined;
 
   /**
@@ -42,6 +46,8 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 
   async close() {
     this._unsubscribe?.();
+    this._responsePromises.forEach((promise) => promise.reject(new Error('Close.')));
+    this._responsePromises.clear();
   }
 
   private _sendRequest(filter: FilterProto) {
@@ -58,7 +64,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
     let cancelRequest: () => void;
     return {
       response: new Promise<QueryResponse>((resolve, reject) => {
-        this._responsePromises.set(request.queryId, { resolve });
+        this._responsePromises.set(request.queryId, { resolve, reject });
         cancelRequest = () => {
           reject(new Error('Request cancelled.'));
           this._responsePromises.delete(request.queryId);

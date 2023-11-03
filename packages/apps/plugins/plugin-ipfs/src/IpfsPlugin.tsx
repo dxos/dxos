@@ -22,10 +22,10 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           switch (role) {
             case 'main':
               return isFile(data.active) ? <FileMain file={data.active} /> : null;
-            case 'section':
-              return isFile(data.object) ? <FileSection file={data.object} /> : null;
             case 'slide':
               return isFile(data.slide) ? <FileSlide file={data.slide} cover={false} /> : null;
+            case 'section':
+              return isFile(data.object) ? <FileSection file={data.object} /> : null;
             default:
               return null;
           }
