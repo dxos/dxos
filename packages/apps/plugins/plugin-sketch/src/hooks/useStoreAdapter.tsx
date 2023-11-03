@@ -22,7 +22,6 @@ export class StoreAdapter {
 
   constructor(private readonly _options = { timeout: 250 }) {
     this._store = createTLStore({ shapes: defaultShapes });
-    console.log('###', this._store.id.slice(0, 8));
   }
 
   get store() {
