@@ -147,7 +147,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               {actions.length > 0 && (
                 <NavTreeItemActionMenu
                   id={node.id}
-                  label={t('tree item actions label')}
+                  // label={t('tree item actions label')}
                   icon={DotsThreeVertical}
                   actions={actions}
                   level={level}

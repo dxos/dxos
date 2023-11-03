@@ -7,7 +7,7 @@ import { type DotOptions } from '@observablehq/plot';
 import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-export type Point = { x: number; y: number };
+import { type Accessor, createAdapter, type Point } from '../plot';
 
 const defaultOptions: DotOptions = {
   r: 4,
@@ -18,7 +18,7 @@ const defaultOptions: DotOptions = {
 
 export type CharProps = {
   items?: any[];
-  accessor?: (object: any) => Point;
+  accessor?: Accessor<Point>;
   options?: DotOptions;
 };
 
@@ -39,16 +39,8 @@ export const Chart = ({ items = [], accessor, options = defaultOptions }: CharPr
       marks: [
         Plot.frame(),
         Plot.dot(items, {
-          x: accessor
-            ? {
-                transform: (values) => values.map((value) => accessor(value).x),
-              }
-            : 'x',
-          y: accessor
-            ? {
-                transform: (values) => values.map((value) => accessor(value).y),
-              }
-            : 'y',
+          x: createAdapter('x', accessor),
+          y: createAdapter('y', accessor),
           ...options,
         }),
       ],

@@ -20,12 +20,15 @@ const styles = {
 };
 
 export type SketchMainParams = {
-  readonly?: boolean;
   sketch: SketchType;
+  readonly?: boolean;
 };
 
 export const SketchMain: FC<SketchMainParams> = ({ sketch }) => {
+  // return <div>Sketch</div>;
+
   const { themeMode } = useThemeContext();
+
   const store = useSketchStore(sketch.data);
 
   const [editor, setEditor] = useState<Editor>();
@@ -87,10 +90,8 @@ export const SketchReadonly: FC<SketchMainParams & { maxHeight?: number; maxZoom
   const store = useSketchStore(sketch.data);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
-    if (editor) {
-      editor.setReadOnly(true);
-      editor.setDarkMode(themeMode === 'dark');
-    }
+    editor?.setReadOnly(true);
+    editor?.setDarkMode(themeMode === 'dark');
   }, [editor, themeMode]);
 
   // Zoom to fit.

@@ -15,7 +15,7 @@ import { keyString } from '../util';
 
 type NavTreeItemActionMenuProps = {
   id: string;
-  label: string;
+  label?: string;
   icon: FC<IconProps>;
   action?: TreeNodeAction;
   actions?: TreeNodeAction[];
@@ -57,12 +57,14 @@ export const NavTreeItemActionMenu = ({
           }
         }}
       >
-        <Tooltip.Portal>
-          <Tooltip.Content classNames='z-[31]' side='bottom'>
-            {label}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
+        {label && (
+          <Tooltip.Portal>
+            <Tooltip.Content classNames='z-[31]' side='bottom'>
+              {label}
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        )}
         {action ? (
           <Tooltip.Trigger asChild>
             <Button
