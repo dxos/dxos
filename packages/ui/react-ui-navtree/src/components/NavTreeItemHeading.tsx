@@ -37,10 +37,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
     { id, level, label, icon: Icon, open, current, branch, disabled, error, modified, palette, onSelect },
     forwardedRef,
   ) => {
-    // const [isLg] = useMediaQuery('lg', { ssr: false });
-
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
-    // const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
 
     return (
       <div
