@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Code, Play, SquareSplitHorizontal, PresentationChart } from '@phosphor-icons/react';
+import { Code, Play, SquareSplitHorizontal, Eye } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
 import { Main, Button, DensityProvider, ToggleGroup, ToggleGroupItem, Toolbar, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
 import { FrameContainer } from './FrameContainer';
@@ -70,18 +70,18 @@ export const ScriptSection = ({ view: controlledView, source, mainUrl, className
           <Toolbar.Root classNames='p-2'>
             <ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as any)}>
               <ToggleGroupItem value='editor'>
-                <Code />
+                <Code className={getSize(5)} />
               </ToggleGroupItem>
               <ToggleGroupItem value='split'>
-                <SquareSplitHorizontal />
+                <SquareSplitHorizontal className={getSize(5)} />
               </ToggleGroupItem>
               <ToggleGroupItem value='preview'>
-                <PresentationChart />
+                <Eye className={getSize(5)} />
               </ToggleGroupItem>
             </ToggleGroup>
             <div className='grow' />
             <Button variant={'ghost'} onClick={handleExec}>
-              <Play />
+              <Play className={getSize(5)} />
             </Button>
           </Toolbar.Root>
         </DensityProvider>
