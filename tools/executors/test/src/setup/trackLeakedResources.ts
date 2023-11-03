@@ -10,6 +10,7 @@ type MochaHooks = {
 
 export const mochaHooks: MochaHooks = {
   afterAll: async () => {
+    console.log('Will check for leaks in 1000ms...');
     setTimeout(() => {
       (global as any).dxDumpLeaks?.();
       console.log('\n\n');

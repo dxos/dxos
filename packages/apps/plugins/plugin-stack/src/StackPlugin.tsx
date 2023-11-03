@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StackSimple } from '@phosphor-icons/react';
+import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { Stack as StackType } from '@braneframe/types';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Stack as StackType } from '@braneframe/types';
 import {
   resolvePlugin,
   type Plugin,
@@ -15,12 +15,17 @@ import {
   parseIntentPlugin,
   LayoutAction,
 } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/client/echo';
 
 import { StackMain } from './components';
 import translations from './translations';
-import { STACK_PLUGIN, StackAction, type StackState, type StackPluginProvides, type StackProvides } from './types';
-import { isStack, stackToGraphNode } from './util';
+import {
+  STACK_PLUGIN,
+  StackAction,
+  isStack,
+  type StackPluginProvides,
+  type StackProvides,
+  type StackState,
+} from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -28,19 +33,12 @@ import { isStack, stackToGraphNode } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const stackState: StackState = deepSignal({ creators: [] });
-  let adapter: GraphNodeAdapter<StackType> | undefined;
 
   return {
     meta: {
       id: STACK_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides?.intent?.dispatch;
-      if (dispatch) {
-        adapter = new GraphNodeAdapter({ dispatch, filter: StackType.filter(), adapter: stackToGraphNode });
-      }
-
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {
           continue;
@@ -51,21 +49,25 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       }
     },
-    unload: async () => {
-      adapter?.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [StackType.schema.typename]: {
+            placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
+            icon: (props: IconProps) => <StackSimple {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const space = parent.data;
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${STACK_PLUGIN}/create`,
             label: ['create stack label', { ns: STACK_PLUGIN }],
             icon: (props) => <StackSimple {...props} />,
@@ -76,8 +78,8 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   action: StackAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -87,8 +89,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               testId: 'stackPlugin.createObject',
             },
           });
-
-          return adapter?.createNodes(space, parent);
         },
       },
       surface: {

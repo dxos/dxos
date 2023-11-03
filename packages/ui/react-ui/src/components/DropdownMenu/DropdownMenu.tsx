@@ -16,6 +16,10 @@ import {
   type DropdownMenuGroupProps as DropdownMenuGroupPrimitiveProps,
   DropdownMenuItem as DropdownMenuItemPrimitive,
   type DropdownMenuItemProps as DropdownMenuItemPrimitiveProps,
+  DropdownMenuCheckboxItem as DropdownMenuCheckboxItemPrimitive,
+  type DropdownMenuCheckboxItemProps as DropdownMenuCheckboxItemPrimitiveProps,
+  DropdownMenuItemIndicator as DropdownMenuItemIndicatorPrimitive,
+  type DropdownMenuItemIndicatorProps as DropdownMenuItemIndicatorPrimitiveProps,
   DropdownMenuSeparator as DropdownMenuSeparatorPrimitive,
   type DropdownMenuSeparatorProps as DropdownMenuSeparatorPrimitiveProps,
   DropdownMenuLabel as DropdownMenuLabelPrimitive,
@@ -99,6 +103,10 @@ type DropdownMenuGroupProps = DropdownMenuGroupPrimitiveProps;
 
 const DropdownMenuGroup = DropdownMenuGroupPrimitive;
 
+type DropdownMenuItemIndicatorProps = DropdownMenuItemIndicatorPrimitiveProps;
+
+const DropdownMenuItemIndicator = DropdownMenuItemIndicatorPrimitive;
+
 type DropdownMenuItemProps = ThemedClassName<DropdownMenuItemPrimitiveProps>;
 
 const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
@@ -108,6 +116,21 @@ const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
       <DropdownMenuItemPrimitive
         {...props}
         className={tx('dropdownMenu.item', 'dropdown-menu__item', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+type DropdownMenuCheckboxItemProps = ThemedClassName<DropdownMenuCheckboxItemPrimitiveProps>;
+
+const DropdownMenuCheckboxItem = forwardRef<HTMLDivElement, DropdownMenuCheckboxItemProps>(
+  ({ classNames, ...props }: DropdownMenuItemProps, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <DropdownMenuCheckboxItemPrimitive
+        {...props}
+        className={tx('dropdownMenu.item', 'dropdown-menu__item--checkbox', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -153,6 +176,8 @@ export const DropdownMenu = {
   Arrow: DropdownMenuArrow,
   Group: DropdownMenuGroup,
   Item: DropdownMenuItem,
+  CheckboxItem: DropdownMenuCheckboxItem,
+  ItemIndicator: DropdownMenuItemIndicator,
   Separator: DropdownMenuSeparator,
   GroupLabel: DropdownMenuGroupLabel,
 };
@@ -166,6 +191,8 @@ export type {
   DropdownMenuArrowProps,
   DropdownMenuGroupProps,
   DropdownMenuItemProps,
+  DropdownMenuCheckboxItemProps,
+  DropdownMenuItemIndicatorProps,
   DropdownMenuSeparatorProps,
   DropdownMenuGroupLabelProps,
 };

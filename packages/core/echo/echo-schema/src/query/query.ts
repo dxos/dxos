@@ -102,7 +102,7 @@ export class Query<T extends TypedObject = TypedObject> {
 
     this._queryContext.added.on((source) => {
       this._sources.add(source);
-      source.changed.on(() => {
+      source.changed.on(this._ctx, () => {
         this._resultCache = undefined;
         this._objectCache = undefined;
         this._signal?.notifyWrite();

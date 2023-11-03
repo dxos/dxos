@@ -31,6 +31,7 @@ export class TestObjectGenerator<T extends string> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this.schema) as T[]));
     const factory = this._generators[type];
     const data = factory(this._provider);
+    // TODO(burdon): Runtime type check via: https://github.com/Effect-TS/schema (or zod).
     return new Expando(data, { schema: this.schema[type] });
   }
 

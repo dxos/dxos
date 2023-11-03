@@ -2,39 +2,42 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Intersect, Plus } from '@phosphor-icons/react';
+import { Folder as FolderIcon, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { type LayoutState } from '@braneframe/plugin-layout';
-import { ObjectOrder } from '@braneframe/types';
+import { Folder } from '@braneframe/types';
 import {
   type PluginDefinition,
   resolvePlugin,
   parseIntentPlugin,
-  parseGraphPlugin,
   parseLayoutPlugin,
   LayoutAction,
+  type DispatchIntent,
+  parseGraphPlugin,
+  parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { isTypedObject, subscribe } from '@dxos/echo-schema';
+import { TypedObject, isTypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
-import { inferRecordOrder } from '@dxos/util';
+import { type Client, PublicKey } from '@dxos/react-client';
+import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { backupSpace } from './backup';
 import {
+  AwaitingObject,
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
-  SpaceMain,
-  SpacePresence,
+  FolderMain,
+  MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
+  SpaceMain,
+  SpacePresence,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
 import translations from './translations';
@@ -44,26 +47,57 @@ import {
   SpaceAction,
   type SpacePluginProvides,
   type SpaceSettingsProps,
-  type SpaceState,
+  type PluginState,
 } from './types';
-import { createNodeId, isSpace, spaceToGraphNode } from './util';
+import {
+  ROOT,
+  SHARED,
+  getActiveSpace,
+  hiddenSpacesToGraphNodes,
+  indexSpaceFolder,
+  isSpace,
+  objectToGraphNode,
+} from './util';
+
+const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 (globalThis as any)[PublicKey.name] = PublicKey;
+(globalThis as any)[Folder.name] = Folder;
 
-export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
+export type SpacePluginOptions = {
+  /**
+   * Root folder structure is created on application first run if it does not yet exist.
+   * This callback is invoked immediately following the creation of the root folder structure.
+   *
+   * @param params.client DXOS Client
+   * @param params.defaultSpace Default space
+   * @param params.rootFolder Root of identity's folder structure, stored in default space
+   * @param params.personalSpaceFolder Folder representing the contents of the default space
+   * @param params.sharedSpacesFolder Folder grouping all other space folders, stored in default space where contents is cross-space references
+   * @param params.dispatch Function to dispatch intents
+   */
+  onFirstRun?: (params: {
+    client: Client;
+    defaultSpace: Space;
+    rootFolder: Folder;
+    personalSpaceFolder: Folder;
+    sharedSpacesFolder: Folder;
+    dispatch: DispatchIntent;
+  }) => void;
+};
+
+export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  // TODO(wittjosiah): Plugin exposed state should be marked as read-only.
-  const state = deepSignal<SpaceState>({
-    active: undefined,
+  const state = deepSignal<PluginState>({
+    awaiting: undefined,
     viewers: [],
-  }) as RevertDeepSignal<SpaceState>;
-  const graphSubscriptions = new EventSubscriptions();
-  const spaceSubscriptions = new EventSubscriptions();
+  }) as RevertDeepSignal<PluginState>;
   const subscriptions = new EventSubscriptions();
-  const orderSubscriptions: Record<string, UnsubscribeCallback> = {};
+  const spaceSubscriptions = new EventSubscriptions();
+  const graphSubscriptions = new Map<string, UnsubscribeCallback>();
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
@@ -77,13 +111,32 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-      if (!clientPlugin || !layoutPlugin) {
+      if (!clientPlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-      // TODO(wittjosiah): Remove once space can be computed directly from an object.
-      const layout = layoutPlugin.provides.layout as LayoutState;
+      const graph = graphPlugin.provides.graph;
+      const layout = layoutPlugin.provides.layout;
+      const dispatch = intentPlugin.provides.intent.dispatch;
+
+      // Create root folder structure.
+      const defaultSpace = client.spaces.default;
+      const query = defaultSpace.db.query(Folder.filter({ name: ROOT }));
+      if (clientPlugin.provides.firstRun && query.objects.length === 0) {
+        const personalSpaceFolder = new Folder({ name: client.spaces.default.key.toHex() });
+        const sharedSpacesFolder = new Folder({ name: SHARED });
+        const rootFolder = new Folder({ name: ROOT, objects: [personalSpaceFolder, sharedSpacesFolder] });
+        client.spaces.default.db.add(rootFolder);
+        onFirstRun?.({
+          client,
+          defaultSpace,
+          rootFolder,
+          personalSpaceFolder,
+          sharedSpacesFolder,
+          dispatch,
+        });
+      }
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(location.search);
@@ -102,42 +155,21 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             history.replaceState({}, document.title, url.href);
           }
 
-          await intentPlugin?.provides.intent.dispatch({
+          const folder = await indexSpaceFolder({ space, defaultSpace });
+
+          await dispatch({
             action: LayoutAction.ACTIVATE,
-            data: { id: createNodeId(space.key) },
+            data: { id: folder.id },
           });
         });
       }
-
-      // Calculate the active space based on the graph and active node.
-      subscriptions.add(
-        effect(async () => {
-          if (!layout.activeNode) {
-            return;
-          }
-
-          state.active = await new Promise<Space | undefined>((resolve) => {
-            graphPlugin?.provides.graph.traverse({
-              node: layout.activeNode,
-              direction: 'up',
-              visitor: (node) => {
-                if (isSpace(node.data)) {
-                  resolve(node.data);
-                }
-              },
-            });
-
-            resolve(undefined);
-          });
-        }),
-      );
 
       // Broadcast active node to other peers in the space.
       subscriptions.add(
         effect(() => {
           const send = () => {
             const identity = client.halo.identity.get();
-            const space = state.active;
+            const space = getActiveSpace(graph, layout.active);
             if (identity && space && layout.active) {
               void space.postMessage('viewing', {
                 identityKey: identity.identityKey.toHex(),
@@ -148,7 +180,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
           };
 
-          setInterval(() => send(), 5_000);
+          setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
           send();
         }),
       );
@@ -196,9 +228,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         if (event.key === '>' && event.shiftKey && modifier) {
           void client.shell.open();
         } else if (event.key === '.' && modifier) {
-          const spaceKey = state.active?.key as PublicKey;
-          if (spaceKey) {
-            void client.shell.shareSpace({ spaceKey });
+          const space = getActiveSpace(graph, layout.active);
+          if (space) {
+            void client.shell.shareSpace({ spaceKey: space.key });
           }
         }
       };
@@ -206,20 +238,37 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
     },
     unload: async () => {
       settings.close();
-      graphSubscriptions.clear();
       spaceSubscriptions.clear();
       subscriptions.clear();
+      graphSubscriptions.forEach((cb) => cb());
+      graphSubscriptions.clear();
       window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
-      space: state,
+      space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
       translations,
+      root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
+      metadata: {
+        records: {
+          [Folder.schema.typename]: {
+            placeholder: ['unnamed folder label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <FolderIcon {...props} />,
+          },
+        },
+      },
       surface: {
         component: (data, role) => {
           switch (role) {
             case 'main':
-              return isSpace(data.active) ? <SpaceMain space={data.active} /> : null;
+              // TODO(wittjosiah): ItemID length constant.
+              return isSpace(data.active) ? (
+                <SpaceMain space={data.active} />
+              ) : data.active instanceof Folder ? (
+                <FolderMain folder={data.active} />
+              ) : typeof data.active === 'string' && data.active.length === 64 ? (
+                <MissingObject id={data.active} />
+              ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
               switch (true) {
@@ -263,126 +312,59 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const dispatch = intentPlugin?.provides.intent.dispatch;
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-          const client = clientPlugin?.provides.client;
+          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
 
-          if (!dispatch || !client || !client.spaces.isReady.get()) {
+          const client = clientPlugin?.provides.client;
+          const dispatch = intentPlugin?.provides.intent.dispatch;
+          const resolve = metadataPlugin?.provides.metadata.resolver;
+
+          if (!dispatch || !resolve || !client) {
             return;
           }
 
-          // Ensure default space is always first.
-          spaceToGraphNode({ space: client.spaces.default, parent, dispatch, settings: settings.values });
-
-          // Shared spaces section.
-          const allSpacesId = createNodeId('all-spaces');
-
-          const spacesOrderQuery = client.spaces.default.db.query(ObjectOrder.filter({ scope: allSpacesId }));
-
-          let spacesOrder: ObjectOrder | undefined;
-
-          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
-            id: allSpacesId,
-            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-            properties: {
-              // TODO(burdon): Factor out palette constants.
-              palette: 'pink',
-              testId: 'spacePlugin.allSpaces',
-              acceptPersistenceClass: new Set(['appState']),
-              childrenPersistenceClass: 'appState',
-              onRearrangeChildren: (nextOrder: string[]) => {
-                if (!spacesOrder) {
-                  const nextObjectOrder = new ObjectOrder({
-                    scope: allSpacesId,
-                    order: nextOrder,
-                  });
-                  client.spaces.default.db.add(nextObjectOrder);
-                  spacesOrder = nextObjectOrder;
-                } else {
-                  spacesOrder.order = nextOrder;
-                }
-                updateSpacesOrder({ objects: [spacesOrder] });
-              },
-            },
-          });
-
-          const updateSpace = (space: Space) => {
-            const {
-              node: { id },
-              subscription,
-            } = client.spaces.default.key.equals(space.key)
-              ? spaceToGraphNode({ space, parent, dispatch, settings: settings.values })
-              : spaceToGraphNode({
-                  space,
-                  parent: groupNode,
-                  dispatch,
-                  settings: settings.values,
-                });
-            orderSubscriptions[id]?.();
-            orderSubscriptions[id] = subscription;
+          const update = (rootFolder?: Folder) => {
+            rootFolder?.objects.forEach((object) => {
+              graphSubscriptions.get(object.id)?.();
+              graphSubscriptions.set(object.id, objectToGraphNode({ object, parent, dispatch, resolve }));
+            });
           };
+          const rootQuery = client.spaces.default.db.query(Folder.filter({ name: ROOT }));
+          update(rootQuery.objects[0]);
+          const unsubscribe = rootQuery.subscribe(({ objects }) => update(objects[0]));
 
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            graphSubscriptions.clear();
-            spaces.forEach((space, index) => {
-              graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space)));
-              updateSpace(space);
+          const spacesSubscription = client.spaces.subscribe(() => {
+            const {
+              objects: [sharedSpacesFolder],
+            } = client.spaces.default.db.query(Folder.filter({ name: SHARED }));
+            graphSubscriptions.get(sharedSpacesFolder.id)?.();
+            graphSubscriptions.set(
+              sharedSpacesFolder.id,
+              objectToGraphNode({ object: sharedSpacesFolder, parent, dispatch, resolve }),
+            );
+
+            hiddenSpacesToGraphNodes({
+              parent,
+              hidden: settings.values.showHidden,
+              spaces: client.spaces.get(),
+              dispatch,
             });
           });
 
           const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
-            const spaces = client.spaces.get();
-            spaces.forEach((space) => updateSpace(space));
+            hiddenSpacesToGraphNodes({
+              parent,
+              hidden: settings.values.showHidden,
+              spaces: client.spaces.get(),
+              dispatch,
+            });
           });
-
-          groupNode.addAction(
-            {
-              id: 'create-space',
-              label: ['create space label', { ns: 'os' }],
-              icon: (props) => <Plus {...props} />,
-              properties: {
-                disposition: 'toolbar',
-                testId: 'spacePlugin.createSpace',
-              },
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.CREATE,
-                }),
-            },
-            {
-              id: 'join-space',
-              label: ['join space label', { ns: 'os' }],
-              icon: (props) => <Intersect {...props} />,
-              properties: {
-                testId: 'spacePlugin.joinSpace',
-              },
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.JOIN,
-                  },
-                  {
-                    action: LayoutAction.ACTIVATE,
-                  },
-                ]),
-            },
-          );
-
-          const updateSpacesOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
-            spacesOrder = spacesOrders[0];
-            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder?.order);
-          };
-
-          updateSpacesOrder(spacesOrderQuery);
-
-          orderSubscriptions[allSpacesId] = spacesOrderQuery.subscribe(updateSpacesOrder);
 
           return () => {
             unsubscribe();
-            Object.values(orderSubscriptions).forEach((cb) => cb());
             unsubscribeHidden();
+            spacesSubscription.unsubscribe();
+            graphSubscriptions.forEach((cb) => cb());
             graphSubscriptions.clear();
           };
         },
@@ -390,34 +372,44 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       intent: {
         resolver: async (intent, plugins) => {
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+          const client = clientPlugin?.provides.client;
           switch (intent.action) {
             case SpaceAction.CREATE: {
-              if (!clientPlugin) {
+              if (!client) {
                 return;
               }
-              const space = await clientPlugin.provides.client.spaces.create(intent.data);
-              return { space, id: createNodeId(space.key) };
+              const defaultSpace = client.spaces.default;
+              const {
+                objects: [sharedSpacesFolder],
+              } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
+              const space = await client.spaces.create(intent.data);
+              const folder = new Folder({ name: space.key.toHex() });
+              space.db.add(folder);
+              sharedSpacesFolder.objects.push(folder);
+              return { space, id: space.key.toHex() };
             }
 
             case SpaceAction.JOIN: {
-              if (!clientPlugin) {
+              if (!client) {
                 return;
               }
-              const { space } = await clientPlugin.provides.client.shell.joinSpace();
-              return space && { space, id: createNodeId(space.key) };
+              const defaultSpace = client.spaces.default;
+              const { space } = await client.shell.joinSpace();
+              if (space) {
+                const folder = await indexSpaceFolder({ space, defaultSpace });
+                return { space, id: folder.id };
+              }
+              break;
             }
-          }
 
-          // TODO(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
-          const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
-          if (!spaceKey) {
-            return;
-          }
+            case SpaceAction.WAIT_FOR_OBJECT: {
+              state.awaiting = intent.data.id;
+              return true;
+            }
 
-          const space = clientPlugin?.provides.client.spaces.get(spaceKey);
-          switch (intent.action) {
             case SpaceAction.SHARE: {
-              if (clientPlugin) {
+              const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
+              if (clientPlugin && spaceKey) {
                 const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey });
                 return members && { members };
               }
@@ -429,28 +421,28 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${createNodeId(spaceKey)}`,
+                  anchorId: `dxos.org/ui/navtree/${intent.data.id}`,
                   component: 'dxos.org/plugin/space/RenameSpacePopover',
-                  subject: space,
+                  subject: intent.data.space,
                 },
               });
             }
-
             case SpaceAction.OPEN: {
-              void space?.internal.open();
+              void intent.data.space.internal.open();
               break;
             }
 
             case SpaceAction.CLOSE: {
-              void space?.internal.close();
+              void intent.data.space.internal.close();
               break;
             }
 
             case SpaceAction.BACKUP: {
-              if (space) {
+              const space = intent.data.space;
+              if (space instanceof SpaceProxy) {
                 // TODO(wittjosiah): Expose translations helper from theme plugin provides.
-                const backupBlob = await backupSpace(space, 'untitled document');
-                const spaceName = space.properties.name || 'untitled space';
+                const backupBlob = await backupSpace(space, 'unnamed document');
+                const spaceName = space.properties.name || 'unnamed space';
                 const url = URL.createObjectURL(backupBlob);
                 // TODO(burdon): See DebugMain useFileDownload
                 const element = document.createElement('a');
@@ -469,12 +461,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 action: LayoutAction.OPEN_DIALOG,
                 data: {
                   component: 'dxos.org/plugin/space/RestoreSpaceDialog',
-                  subject: space,
+                  subject: intent.data.space,
                 },
               });
             }
 
             case SpaceAction.ADD_OBJECT: {
+              const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
+              const space = spaceKey && clientPlugin?.provides.client.spaces.get(spaceKey);
               if (space && intent.data.object) {
                 return space.db.add(intent.data.object);
               }
@@ -482,10 +476,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.REMOVE_OBJECT: {
-              const object =
-                typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
-              if (space && object) {
-                space.db.remove(object);
+              const space = getSpaceForObject(intent.data.object);
+              if (space) {
+                space.db.remove(intent.data.object);
                 return true;
               }
               break;
@@ -493,16 +486,40 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             case SpaceAction.RENAME_OBJECT: {
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              const subject =
-                typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${intent.data.objectId}`,
+                  anchorId: `dxos.org/ui/navtree/${intent.data.object.id}`,
                   component: 'dxos.org/plugin/space/RenameObjectPopover',
-                  subject,
+                  subject: intent.data.object,
                 },
               });
+            }
+
+            case SpaceAction.ADD_TO_FOLDER: {
+              const folder = intent.data.folder;
+              const object = intent.data.object;
+              if (folder instanceof Folder && object instanceof TypedObject) {
+                folder.objects.push(intent.data.object);
+                return { id: object.id };
+              }
+              break;
+            }
+
+            case SpaceAction.REMOVE_FROM_FOLDER: {
+              const folder = intent.data.folder;
+              const object = intent.data.object;
+              if (folder instanceof Folder && object instanceof TypedObject) {
+                const index = folder.objects.indexOf(object);
+                folder.objects.splice(index, 1);
+                return true;
+              }
+              break;
+            }
+
+            case SpaceAction.TOGGLE_HIDDEN: {
+              settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
+              return true;
             }
           }
         },

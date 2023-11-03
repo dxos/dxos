@@ -55,6 +55,16 @@ message Document {
   dxos.schema.Text content = 2;
 }
 
+/**
+ *
+ */
+message Script {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text source = 2;
+}
+
 // TODO(burdon): Lightweight document (not visible in sidebar).
 message Note {
   option (object) = true;
@@ -185,11 +195,11 @@ message View {
 }
 
 /**
- * Portable source of truth for canonical/presentational order of objects within a certain scope.
+ *
  */
-message ObjectOrder {
+message Folder {
   option (object) = true;
 
-  string scope = 1;
-  repeated string order = 2;
+  optional string name = 1;
+  repeated dxos.schema.TypedObject objects = 2;
 }

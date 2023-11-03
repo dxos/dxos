@@ -26,7 +26,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/node": "^18.11.9",
-    "yjs": "^13.6.7"
+    "yjs": "^13.6.8"
   },
   "devDependencies": {
     "@dxos/document-model": "workspace:*",

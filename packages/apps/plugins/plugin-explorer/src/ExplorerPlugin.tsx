@@ -2,46 +2,46 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Graph } from '@phosphor-icons/react';
+import { Graph, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { View as ViewType } from '@braneframe/types';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, View as ViewType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/client/echo';
 
 import { ExplorerMain } from './components';
 import translations from './translations';
 import { EXPLORER_PLUGIN, ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
-import { objectToGraphNode } from './util';
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[ViewType.name] = ViewType;
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
-  let adapter: GraphNodeAdapter<ViewType> | undefined;
-
   return {
     meta: {
       id: EXPLORER_PLUGIN,
     },
-    ready: async (plugins) => {
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides.intent.dispatch;
-      if (dispatch) {
-        adapter = new GraphNodeAdapter({ dispatch, filter: ViewType.filter(), adapter: objectToGraphNode });
-      }
-    },
     provides: {
+      metadata: {
+        records: {
+          [ViewType.schema.typename]: {
+            placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
+            icon: (props: IconProps) => <Graph {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           // TODO(burdon): Util.
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${EXPLORER_PLUGIN}/create`,
             label: ['create object label', { ns: EXPLORER_PLUGIN }],
             icon: (props) => <Graph {...props} />,
@@ -52,8 +52,8 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                   action: ExplorerAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -63,15 +63,13 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
               testId: 'explorerPlugin.createObject',
             },
           });
-
-          return adapter?.createNodes(space, parent);
         },
       },
       surface: {
         component: (data, role) => {
           switch (role) {
             case 'main':
-              return isExplorer(data.active) ? <ExplorerMain /> : null;
+              return isExplorer(data.active) ? <ExplorerMain view={data.active} /> : null;
             default:
               return null;
           }

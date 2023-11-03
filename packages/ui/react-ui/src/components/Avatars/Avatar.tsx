@@ -91,7 +91,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
           viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
           width={imageSizeNumber}
           height={imageSizeNumber}
-          className={tx('avatar.frame', 'avatar__frame', {})}
+          className={tx('avatar.frame', 'avatar__frame', { variant })}
         >
           <defs>
             <mask id={maskId}>
@@ -167,7 +167,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             />
           )}
         </svg>
-        <span className={tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })}></span>
+        <span role='none' className={tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })} />
       </AvatarRootPrimitive>
     );
   },

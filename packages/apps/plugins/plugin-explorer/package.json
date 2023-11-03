@@ -15,8 +15,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-layout": "workspace:*",
-    "@braneframe/plugin-search": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/gem-core": "workspace:*",
@@ -30,10 +28,8 @@
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-search": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -51,10 +47,8 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
+    "@braneframe/plugin-search": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

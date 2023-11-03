@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/client/echo';
+import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
