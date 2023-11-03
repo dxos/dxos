@@ -25,6 +25,7 @@ import { MetadataPlugin } from '@braneframe/plugin-metadata';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
+import { ScriptPlugin } from '@braneframe/plugin-script';
 import { SearchPlugin } from '@braneframe/plugin-search';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -50,6 +51,9 @@ import {
   popperMotion,
   surfaceElevation,
 } from '@dxos/react-ui-theme';
+
+// @ts-ignore
+import mainUrl from './frame?url';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -114,6 +118,7 @@ const main = async () => {
       KanbanPlugin(),
       MapPlugin(),
       PresenterPlugin(), // Before Stack.
+      ScriptPlugin({ mainUrl }),
       SketchPlugin(),
       StackPlugin(),
       TablePlugin(),
