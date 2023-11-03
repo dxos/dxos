@@ -14,39 +14,42 @@ import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@d
 
 import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection };
+const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
+
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
 
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
-export const ClientPlugin = (
-  options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
-): PluginDefinition<{}, ClientPluginProvides> => {
+export const ClientPlugin = ({
+  debugIdentity,
+  types,
+  appKey,
+  ...options
+}: ClientPluginOptions): PluginDefinition<{}, ClientPluginProvides> => {
   // TODO(burdon): Document.
   registerSignalFactory();
 
-  const client = new Client(options);
+  const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
 
   return {
     meta: {
       id: CLIENT_PLUGIN,
     },
     initialize: async () => {
-      let firstRun = false;
       let error: unknown = null;
 
       try {
         await client.initialize();
 
-        if (options.types) {
-          client.addTypes(options.types);
+        if (types) {
+          client.addTypes(types);
         }
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
-          firstRun = true;
           await client.halo.createIdentity();
         } else if (client.halo.identity.get() && deviceInvitationCode) {
           // Ignore device invitation if identity already exists.
@@ -61,7 +64,7 @@ export const ClientPlugin = (
       }
 
       // Debugging (e.g., for monolithic mode).
-      if (options.debugIdentity) {
+      if (debugIdentity) {
         if (!client.halo.identity.get()) {
           await client.halo.createIdentity();
         }
@@ -80,12 +83,9 @@ export const ClientPlugin = (
         }
       }
 
-      // TODO(burdon): Timeout.
-      if (client.halo.identity.get()) {
-        console.log('### waiting...');
-        await client.spaces.isReady.wait();
-        console.log('### ok');
-      }
+      await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+      const firstRun = !client.spaces.default.properties[appKey];
+      client.spaces.default.properties[appKey] = true;
 
       return {
         client,
@@ -103,14 +103,12 @@ export const ClientPlugin = (
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        components: {
-          default: () => {
-            if (error) {
-              throw error;
-            }
+        root: () => {
+          if (error) {
+            throw error;
+          }
 
-            return null;
-          },
+          return null;
         },
       };
     },

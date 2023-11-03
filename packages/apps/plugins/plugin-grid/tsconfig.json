@@ -24,9 +24,6 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/client"
-    },
-    {
       "path": "../../../sdk/react-client"
     },
     {
@@ -45,22 +42,7 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-layout"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-stack"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

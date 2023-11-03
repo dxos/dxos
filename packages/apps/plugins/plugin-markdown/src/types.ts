@@ -6,10 +6,11 @@ import type { Document } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { ObjectMeta } from '@dxos/client/echo';
+import type { ObjectMeta } from '@dxos/react-client/echo';
 import type { EditorMode, MarkdownComposerProps } from '@dxos/react-ui-editor';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
@@ -54,6 +55,7 @@ export type MarkdownSettingsProps = { editorMode?: EditorMode };
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides &
   StackProvides & {
     settings: MarkdownSettingsProps;

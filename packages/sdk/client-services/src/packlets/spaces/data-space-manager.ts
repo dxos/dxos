@@ -24,6 +24,9 @@ import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 
+const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
+const PRESENCE_OFFLINE_TIMEOUT = 20_000;
+
 export interface SigningContext {
   identityKey: PublicKey;
   deviceKey: PublicKey;
@@ -187,8 +190,8 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: 1_000,
-      offlineTimeout: 5_000, // TODO(burdon): Config.
+      announceInterval: PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: PRESENCE_OFFLINE_TIMEOUT, // TODO(burdon): Config.
       identityKey: this._signingContext.identityKey,
       gossip,
     });

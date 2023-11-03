@@ -15,19 +15,12 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-layout": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
-    "lodash.get": "^4.4.2",
     "react-markdown": "^8.0.5"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -36,7 +29,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -44,8 +36,6 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
