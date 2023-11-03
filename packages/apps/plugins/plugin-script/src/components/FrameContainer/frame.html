@@ -1,26 +1,26 @@
 <html>
-  <head>
-    <script type="importmap">
-      __IMPORT_MAP__
-    </script>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+  <script type="importmap">
+    __IMPORT_MAP__
+  </script>
 
-    <!-- Required for vite. -->
-    <script type="module">
-      import RefreshRuntime from "/@react-refresh"
-      RefreshRuntime.injectIntoGlobalHook(window)
-      window.$RefreshReg$ = () => {}
-      window.$RefreshSig$ = () => (type) => type
-      window.__vite_plugin_react_preamble_installed__ = true
-    </script>
-    <script type="module" src="/@vite/client"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module">
-      // Trick vite into not compiling this code.
-      eval('import("@frame/main")');
-    </script>
-  </body>
+  <script type="module">
+    import RefreshRuntime from '/@react-refresh';
+    RefreshRuntime.injectIntoGlobalHook(window);
+    window.$RefreshReg$ = () => {};
+    window.$RefreshSig$ = () => (type) => type;
+    window.__vite_plugin_react_preamble_installed__ = true;
+  </script>
+  <script type="module" src="/@vite/client"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    // Prevent vite from compiling this.
+    eval('import("@frame/main")');
+  </script>
+</body>
 </html>
