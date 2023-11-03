@@ -25,11 +25,7 @@ export type SketchMainParams = {
 };
 
 export const SketchMain: FC<SketchMainParams> = ({ sketch }) => {
-  // return <div>Sketch</div>;
-
   const { themeMode } = useThemeContext();
-
-  const store = useSketchStore(sketch.data);
 
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
@@ -42,9 +38,10 @@ export const SketchMain: FC<SketchMainParams> = ({ sketch }) => {
     }
   }, [editor, themeMode]);
 
-  if (!store) {
-    return null;
-  }
+  // const store = useSketchStore(sketch.data);
+  // if (!store) {
+  //   return null;
+  // }
 
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
@@ -67,12 +64,12 @@ export const SketchMain: FC<SketchMainParams> = ({ sketch }) => {
           styles.background,
         )}
       >
-        <Tldraw autoFocus store={store} onMount={setEditor} />
+        <Tldraw autoFocus onMount={setEditor} />
       </div>
     </Main.Content>
   );
 };
-
+// store={store}
 export const SketchSection: FC<SketchMainParams> = ({ sketch }) => {
   return <SketchReadonly sketch={sketch} maxHeight={400} />;
 };
@@ -81,6 +78,7 @@ export const SketchSlide: FC<SketchMainParams> = ({ sketch }) => {
   return <SketchReadonly sketch={sketch} maxZoom={1.5} />;
 };
 
+// TODO(burdon): Generalize maxHeight as class.
 export const SketchReadonly: FC<SketchMainParams & { maxHeight?: number; maxZoom?: number }> = ({
   sketch,
   maxHeight,
