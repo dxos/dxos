@@ -3975,6 +3975,9 @@ importers:
 
   packages/core/echo/echo-generator:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
