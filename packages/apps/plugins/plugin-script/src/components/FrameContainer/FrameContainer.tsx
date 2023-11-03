@@ -54,7 +54,7 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
     }),
   );
 
-  return <iframe ref={iframeRef} srcDoc={html} sandbox='allow-scripts' style={{ width: '100%', height: '100%' }} />;
+  return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
 };
 
 // TODO(burdon): Comment.
