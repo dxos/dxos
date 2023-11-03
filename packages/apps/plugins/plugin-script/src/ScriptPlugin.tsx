@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Code } from '@phosphor-icons/react';
+import { Code, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -33,7 +33,7 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
         records: {
           [ScriptType.schema.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
-            icon: (props) => <Code {...props} />,
+            icon: (props: IconProps) => <Code {...props} />,
           },
         },
       },
