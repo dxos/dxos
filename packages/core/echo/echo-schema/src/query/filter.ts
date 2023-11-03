@@ -16,7 +16,7 @@ export type PropertyFilter = Record<string, any>;
 
 export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
 
-export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T>;
+export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
@@ -40,6 +40,13 @@ export class Filter<T extends EchoObject = EchoObject> {
       return new Filter(
         {
           predicate: source as any,
+        },
+        options,
+      );
+    } else if (typeof source === 'string') {
+      return new Filter(
+        {
+          text: source,
         },
         options,
       );
@@ -241,7 +248,16 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   }
 
   if (filter.text !== undefined) {
-    throw new Error('Text based search not implemented.');
+    if (!isTypedObject(object)) {
+      return false;
+    }
+
+    const text = filter.text.toLowerCase();
+    if (!JSON.stringify(object.toJSON()).toLowerCase().includes(text)) {
+      return false;
+    }
+
+    match = true;
   }
 
   if (filter.predicate && !filter.predicate(object)) {
