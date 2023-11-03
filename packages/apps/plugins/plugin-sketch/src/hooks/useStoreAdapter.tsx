@@ -3,17 +3,9 @@
 //
 
 import { transact } from '@tldraw/state';
-import {
-  createTLStore,
-  defaultShapes,
-  DocumentRecordType,
-  PageRecordType,
-  type TLDocument,
-  type TLPageId,
-  type TLRecord,
-} from '@tldraw/tldraw';
+import { createTLStore, defaultShapes, type TLRecord } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { type Transaction, type YEvent } from 'yjs';
 
 import { type TextObject } from '@dxos/react-client/echo';
@@ -24,42 +16,33 @@ type Unsubscribe = () => void;
  * Constructs store from ECHO object.
  * Derived from tldraw example: https://github.com/tldraw/tldraw/blob/main/apps/examples/src/yjs/useYjsStore.ts
  */
-export class EchoStore {
-  private readonly _subscriptions: Unsubscribe[] = [];
+export class StoreAdapter {
   private readonly _store: TLStore;
+  private readonly _subscriptions: Unsubscribe[] = [];
 
-  constructor(private readonly _data: TextObject, private readonly _options = { timeout: 250 }) {
+  constructor(private readonly _options = { timeout: 250 }) {
     this._store = createTLStore({ shapes: defaultShapes });
+    console.log('###', this._store.id.slice(0, 8));
   }
 
   get store() {
     return this._store;
   }
 
-  open() {
+  open(data: TextObject) {
     if (this._subscriptions.length) {
-      return this;
+      this.close();
     }
 
     // TODO(burdon): Schema document type.
     // TODO(burdon): Garbage collection (gc)?
-    const doc = this._data.doc!; // ?? new Doc({ gc: true });
-    const yRecords = doc.getMap<TLRecord>('content');
-
     // TODO(burdon): Capture mouse-up event to trigger save.
+    const doc = data.doc!; // ?? new Doc({ gc: true });
+    const yRecords = doc.getMap<TLRecord>('content');
 
     // Initialize the store with the yjs doc records.
     // If the yjs doc is empty, initialize the yjs doc with the default store records.
     if (yRecords.size === 0) {
-      // Create the initial store records.
-      transact(() => {
-        this._store.clear();
-        this._store.put([
-          PageRecordType.create({ id: 'page:page' as TLPageId, name: 'Page 1', index: 'a1' }),
-          DocumentRecordType.create({ id: 'document:document' as TLDocument['id'] }),
-        ]);
-      });
-
       // Sync the store records to the yjs doc.
       doc.transact(() => {
         for (const record of this._store.allRecords()) {
@@ -113,7 +96,6 @@ export class EchoStore {
     };
 
     yRecords.observeDeep(handleChange);
-
     this._subscriptions.push(() => yRecords.unobserveDeep(handleChange));
 
     //
@@ -167,25 +149,24 @@ export class EchoStore {
         { source: 'user', scope: 'document' },
       ),
     );
-
-    return this;
   }
 
   close() {
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.length = 0;
-    return this;
+    this._store.clear();
   }
 }
 
-export const useSketchStore = (data: TextObject, options = { timeout: 250 }): TLStore => {
-  const store = useMemo(() => new EchoStore(data, options), [data.id]);
+export const useStoreAdapter = (data: TextObject, options = { timeout: 250 }): TLStore => {
+  const [adapter] = useState(() => new StoreAdapter(options));
   useEffect(() => {
-    store.open();
+    adapter.open(data);
     return () => {
-      store.close();
+      // TODO(burdon): Throws error if still mounted.
+      // adapter.close();
     };
-  }, [store]);
+  }, [data]);
 
-  return store?.store;
+  return adapter.store;
 };
