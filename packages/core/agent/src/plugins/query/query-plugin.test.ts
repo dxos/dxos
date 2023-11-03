@@ -8,11 +8,12 @@ import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { type EchoObject, Expando, Filter } from '@dxos/echo-schema';
+import { createSpaceObjectGenerator, testSchemas } from '@dxos/echo-generator';
+import { Expando, Filter, base, type TypedObject, type Query } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { QueryPlugin } from './query-plugin';
 
@@ -36,11 +37,11 @@ describe('QueryPlugin', () => {
     //
     // 1. Test topology:
     //
-    // client 1 (with indexing plugin)
+    // agent (with query plugin)
     //    |
     //    | (device invitation)
     //    |
-    // client 2
+    // client
     //
     // 2. Test scenario:
     //   a. client 1 creates few spaces and propagates it with data.
@@ -63,7 +64,6 @@ describe('QueryPlugin', () => {
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
     {
-      // Create one space before indexing is initialized.
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
       space.db.add(new Expando(documents[0]));
@@ -123,56 +123,122 @@ describe('QueryPlugin', () => {
     await asyncTimeout(results.wait(), 1000);
   });
 
-  test('remote query', async () => {
-    const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+  describe('Remote query', () => {
+    let builder: TestBuilder;
+    let agent: Client;
+    let plugin: QueryPlugin;
+    let client: Client;
+    let testName: string;
 
-    const services1 = builder.createLocal();
-    const client1 = new Client({
-      services: services1,
-      config: new Config({
-        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query', enabled: true }] } },
-      }),
+    beforeAll(async () => {
+      // Setup topology:
+      //
+      // agent (with query plugin)
+      //    |
+      //    | (device invitation)
+      //    |
+      // client
+
+      builder = new TestBuilder();
+
+      {
+        // Init agent (client with a plugin).
+        const services = builder.createLocal();
+        agent = new Client({
+          services,
+          config: new Config({
+            runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query', enabled: true }] } },
+          }),
+        });
+        await agent.initialize();
+        await agent.halo.createIdentity({ displayName: 'user-with-index-plugin' });
+
+        plugin = new QueryPlugin();
+        await plugin.initialize({ client: agent, clientServices: services, plugins: [] });
+        await plugin.open();
+      }
+
+      {
+        // Propagate data to agent.
+        const space = await agent.spaces.create({ name: 'first space' });
+        await space.waitUntilReady();
+        const generator = createSpaceObjectGenerator(space);
+        generator.addSchemas();
+
+        generator.createObject({ types: ['organization'] });
+        const objects = generator.createObjects({ types: ['person'], count: 10 });
+        testName = objects[0].name;
+        await space.db.flush();
+      }
+
+      {
+        const services = builder.createLocal();
+        client = new Client({ services });
+        await client.initialize();
+      }
+
+      {
+        // Join client to agent.
+        await asyncTimeout(Promise.all(performInvitation({ host: agent.halo, guest: client.halo })), 1000);
+      }
+
+      {
+        // Wait for client to be ready.
+        await asyncTimeout(client.spaces.isReady.wait(), 1000);
+        await asyncTimeout(client.spaces.default.waitUntilReady(), 1000);
+      }
     });
-    await client1.initialize();
-    afterTest(() => client1.destroy());
-    await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    {
-      // Create one space before indexing is initialized.
-      const space = await client1.spaces.create({ name: 'first space' });
-      await space.waitUntilReady();
-      space.db.add(new Expando(documents[0]));
-      space.db.add(new Expando(documents[1]));
-      await space.db.flush();
-    }
-    const plugin = new QueryPlugin();
-    await plugin.initialize({ client: client1, clientServices: services1, plugins: [] });
+    afterAll(async () => {
+      await plugin.close();
+      await client.destroy();
+      await agent.destroy();
+      await builder.destroy();
+    });
 
-    await plugin.open();
-    afterTest(() => plugin.close());
-
-    const services2 = builder.createLocal();
-    const client2 = new Client({ services: services2 });
-    await client2.initialize();
-    afterTest(() => client2.destroy());
-
-    await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
-
-    const results = new Trigger<EchoObject[]>();
-    {
-      await asyncTimeout(client2.spaces.isReady.wait(), 1000);
-
-      await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
-      const query = client2.spaces.query({ foo: 'bar' }, { dataLocation: QueryOptions.DataLocation.REMOTE });
+    const waitForQueryResults = async (query: Query) => {
+      const results = new Trigger<TypedObject[]>();
       query.subscribe((query) => {
         if (query.results.some((r) => r.resolution?.source === 'remote')) {
           results.wake(query.objects);
         }
       });
+      return asyncTimeout(results.wait(), 1000);
+    };
 
-      await asyncTimeout(results.wait(), 5000);
-      expect(await results.wait()).to.have.lengthOf(2);
-    }
+    test('Text query', async () => {
+      const results = (await waitForQueryResults(
+        client.spaces.query(testName, {
+          dataLocation: QueryOptions.DataLocation.REMOTE,
+        }),
+      )) as TypedObject[];
+
+      expect(results.length >= 0).to.be.true;
+      expect(results[0].name).to.equal(testName);
+    });
+
+    // TODO(mykola): Will not work because @dxos/echo-generator fo not register types
+    test.skip('Schema query', async () => {
+      const orgSchema = client.experimental.types.getSchema(testSchemas().organization.typename)!;
+      const query = client.spaces.query(Filter.schema(orgSchema), {
+        dataLocation: QueryOptions.DataLocation.REMOTE,
+      });
+      const results = await waitForQueryResults(query);
+      expect(results.length).to.equal(1);
+      expect(results[0][base].__typename).to.equal(orgSchema.typename);
+    });
+
+    test('Property query', async () => {
+      const query = client.spaces.query(
+        { name: testName },
+        {
+          dataLocation: QueryOptions.DataLocation.REMOTE,
+        },
+      );
+      const results = await waitForQueryResults(query);
+
+      expect(results.length >= 0).to.be.true;
+      expect(results[0].name).to.equal(testName);
+    });
   });
 });
