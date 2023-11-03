@@ -17,8 +17,8 @@ export type FilePreviewProps = {
  */
 export const FilePreview: FC<FilePreviewProps> = ({ type, url, className }) => {
   if (!type.startsWith('image')) {
-    return <iframe className={mx('max-w-full h-full overflow-auto', className)} src={url} />;
+    return <iframe className={mx('w-full h-full overflow-auto', className)} src={url} />;
   }
 
-  return <img className={mx('max-w-full h-full', className ?? 'object-contain')} src={url} />;
+  return <img className={mx('w-full h-full', className ?? 'object-contain')} src={url} />;
 };
