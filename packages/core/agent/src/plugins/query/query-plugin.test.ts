@@ -4,12 +4,12 @@
 
 import { expect } from 'chai';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { createSpaceObjectGenerator, testSchemas } from '@dxos/echo-generator';
-import { Expando, Filter, base, type TypedObject, type Query } from '@dxos/echo-schema';
+import { Filter, base, type TypedObject, type Query } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -18,21 +18,6 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 import { QueryPlugin } from './query-plugin';
 
 describe('QueryPlugin', () => {
-  const documents = [
-    {
-      idx: 1,
-      hello: 'world',
-      foo: 'bar',
-    },
-    {
-      idx: 2,
-      foo: 'bar',
-      nested: {
-        deep: { foo: 'asdf bar' },
-      },
-    },
-  ];
-
   test('search request/response', async () => {
     //
     // 1. Test topology:
@@ -63,10 +48,14 @@ describe('QueryPlugin', () => {
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
+    let org: TypedObject;
     {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
-      space.db.add(new Expando(documents[0]));
+      const generator = createSpaceObjectGenerator(space);
+      generator.addSchemas();
+
+      org = generator.createObject({ types: ['organization'] });
       await space.db.flush();
     }
     const plugin = new QueryPlugin();
@@ -74,13 +63,6 @@ describe('QueryPlugin', () => {
 
     await plugin.open();
     afterTest(() => plugin.close());
-
-    {
-      const space = await client1.spaces.create({ name: 'second space' });
-      await space.waitUntilReady();
-      space.db.add(new Expando(documents[1]));
-      await space.db.flush();
-    }
 
     const services2 = builder.createLocal();
     const client2 = new Client({ services: services2 });
@@ -97,7 +79,7 @@ describe('QueryPlugin', () => {
       await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
 
       const subs = client2.spaces.default.listen(QUERY_CHANNEL, (message) => {
-        expect(message.payload.results).to.have.lengthOf(2);
+        expect(message.payload.results).to.have.lengthOf(1);
         results.wake(message);
       });
       afterTest(() => subs());
@@ -107,13 +89,12 @@ describe('QueryPlugin', () => {
     {
       const request: QueryRequest = {
         filter: Filter.from(
-          { foo: 'bar' },
+          { name: org.name },
           { models: ['*'], spaces: client1.spaces.get().map((s) => s.key) },
         ).toProto(),
         queryId: 'test-query-id',
       };
 
-      await sleep(500);
       await client2.spaces.default.postMessage(QUERY_CHANNEL, {
         '@type': 'dxos.agent.query.QueryRequest',
         ...request,
