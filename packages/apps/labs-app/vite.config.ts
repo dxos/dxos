@@ -42,6 +42,7 @@ export default defineConfig({
     alias: {
       'node-fetch': 'isomorphic-fetch',
     },
+    extensions: ['.js','.mjs'],
   },
   plugins: [
     // mkcert(),

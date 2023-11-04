@@ -763,6 +763,9 @@ importers:
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
+      '@braneframe/plugin-script':
+        specifier: workspace:*
+        version: link:../plugins/plugin-script
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugins/plugin-search
@@ -817,6 +820,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc-tunnel
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -1322,7 +1328,7 @@ importers:
         version: 4.4.7
       '@types/lodash.update':
         specifier: ^4.10.7
-        version: 4.10.8
+        version: 4.10.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -1990,6 +1996,115 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-script:
+    dependencies:
+      '@braneframe/plugin-explorer':
+        specifier: workspace:*
+        version: link:../plugin-explorer
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../../sdk/client-protocol
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../../common/crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../../core/mesh/rpc
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../../core/mesh/rpc-tunnel
+      '@dxos/text-model':
+        specifier: workspace:*
+        version: link:../../../core/echo/text-model
+      '@monaco-editor/react':
+        specifier: ^4.4.6
+        version: 4.4.6(monaco-editor@0.25.2)(react-dom@18.2.0)(react@18.2.0)
+      esbuild-wasm:
+        specifier: ^0.16.14
+        version: 0.16.17
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      monaco-editor:
+        specifier: ^0.25.0
+        version: 0.25.2
+      y-monaco:
+        specifier: ^0.1.0
+        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.8)
+      yjs:
+        specifier: ^13.6.8
+        version: 13.6.8
+    devDependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.2.0
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-search:
     dependencies:
       '@dxos/debug':
@@ -2072,8 +2187,8 @@ importers:
         specifier: ^0.1.4
         version: 0.1.4(react@18.2.0)
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -2987,7 +3102,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
     devDependencies:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
@@ -3735,6 +3850,9 @@ importers:
         specifier: ^2.1.3
         version: 2.2.2
     devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../echo/echo-generator
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
@@ -3787,8 +3905,8 @@ importers:
         specifier: ^3.0.2
         version: 3.3.0
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
@@ -4072,7 +4190,7 @@ importers:
         version: link:../echo-schema
       '@preact/signals':
         specifier: ^1.2.1
-        version: 1.2.1(preact@10.11.2)
+        version: 1.2.1(preact@10.18.1)
       '@preact/signals-core':
         specifier: ^1.5.0
         version: 1.5.0
@@ -4082,7 +4200,7 @@ importers:
     optionalDependencies:
       preact:
         specifier: ^10.11.0
-        version: 10.11.2
+        version: 10.18.1
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -4214,8 +4332,8 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@dxos/document-model':
         specifier: workspace:*
@@ -5625,7 +5743,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -5719,10 +5837,10 @@ importers:
         version: 1.8.0(react@18.2.0)
       y-monaco:
         specifier: ^0.1.0
-        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.7)
+        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.8)
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -5959,7 +6077,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
     devDependencies:
       '@dxos/agent':
         specifier: workspace:*
@@ -6208,7 +6326,7 @@ importers:
         version: 3.1.0(vite@4.3.9)
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       postcss:
         specifier: ^8.4.21
         version: 8.4.24
@@ -7103,7 +7221,7 @@ importers:
         version: 3.1.0(vite@4.3.9)
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7167,10 +7285,10 @@ importers:
         version: link:../../core/echo/text-model
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@dxos/react-ui-theme':
         specifier: workspace:*
@@ -7286,7 +7404,7 @@ importers:
         version: 3.1.0(vite@4.3.9)
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7772,7 +7890,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7907,16 +8025,16 @@ importers:
         version: 1.30.1
       y-codemirror.next:
         specifier: ^0.3.2
-        version: 0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.7)
+        version: 0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.8)
       y-prosemirror:
         specifier: ~1.0.20
-        version: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7)
+        version: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
       y-protocols:
         specifier: ^1.0.5
         version: 1.0.5
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -8035,7 +8153,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       d3:
         specifier: ^7.8.5
         version: 7.8.5
@@ -8090,7 +8208,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8136,7 +8254,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8203,7 +8321,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.4
+        version: 7.5.0
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -12758,6 +12876,11 @@ packages:
     resolution: {integrity: sha512-Uo3pGspElQW91PCvKSIAXoEgAUlRnH29sX2/p89kg7sP1m2PzCufHINd0FhTXQf6DYGiUlVncdSPa2F9wxed2A==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
 
+  /@faker-js/faker@8.2.0:
+    resolution: {integrity: sha512-VacmzZqVxdWdf9y64lDOMZNDMM/FQdtM9IsaOPKOm2suYwEatb8VkdHqOzXcDnZbk7YDE2BmsJmy/2Hmkn563g==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
+    requiresBuild: true
+
   /@fal-works/esbuild-plugin-global-externals@2.1.2:
     resolution: {integrity: sha512-cEee/Z+I12mZcFJshKcCqC8tuX5hG3s+d+9nZ3LabqKF1vKdF41B92pJVCBggjAGORAeOzyyDDKrZwIkLffeOQ==}
     dev: true
@@ -15584,13 +15707,13 @@ packages:
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
 
-  /@preact/signals@1.2.1(preact@10.11.2):
+  /@preact/signals@1.2.1(preact@10.18.1):
     resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
     peerDependencies:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.5.0
-      preact: 10.11.2
+      preact: 10.18.1
     dev: false
 
   /@protobufjs/aspromise@1.1.2:
@@ -18929,7 +19052,7 @@ packages:
       '@tensorflow/tfjs-layers': 3.21.0(@tensorflow/tfjs-core@3.21.0)
       argparse: 1.0.10
       chalk: 4.1.2
-      core-js: 3.29.0
+      core-js: 3.33.2
       regenerator-runtime: 0.13.11
       yargs: 16.2.0
     transitivePeerDependencies:
@@ -19134,7 +19257,7 @@ packages:
       y-prosemirror: 1.0.20
     dependencies:
       '@tiptap/core': 2.0.0-beta.220(@tiptap/pm@2.0.0-beta.220)
-      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7)
+      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
     dev: false
 
   /@tiptap/extension-collaboration@2.0.0-beta.220(@tiptap/core@2.0.0-beta.220)(@tiptap/pm@2.0.0-beta.220)(y-prosemirror@1.0.20):
@@ -19146,7 +19269,7 @@ packages:
     dependencies:
       '@tiptap/core': 2.0.0-beta.220(@tiptap/pm@2.0.0-beta.220)
       '@tiptap/pm': 2.0.0-beta.220(@tiptap/core@2.0.0-beta.220)
-      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7)
+      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
     dev: false
 
   /@tiptap/extension-document@2.0.0-beta.220(@tiptap/core@2.0.0-beta.220):
@@ -19369,7 +19492,7 @@ packages:
       '@tldraw/tlschema': 2.0.0-alpha.14(react@18.2.0)
       '@tldraw/utils': 2.0.0-alpha.14
       '@tldraw/validate': 2.0.0-alpha.14
-      '@types/canvas-size': 1.2.0
+      '@types/canvas-size': 1.2.1
       '@use-gesture/react': 10.2.27(react@18.2.0)
       canvas-size: 1.2.6
       classnames: 2.3.2
@@ -19391,7 +19514,7 @@ packages:
   /@tldraw/polyfills@2.0.0-alpha.14:
     resolution: {integrity: sha512-/vdbB7udZpyUygKLfKLgBjbqUNhHPer52aeAXFxF+rf3Uj3wUpEnN7ViQQIx3whXc/e17zdeONOp4xaFGaxmIg==}
     dependencies:
-      core-js: 3.29.0
+      core-js: 3.33.2
     dev: false
 
   /@tldraw/primitives@2.0.0-alpha.14(react@18.2.0):
@@ -19472,7 +19595,7 @@ packages:
       '@tldraw/utils': 2.0.0-alpha.14
       browser-fs-access: 0.31.2
       classnames: 2.3.2
-      hotkeys-js: 3.11.1
+      hotkeys-js: 3.12.0
       idb: 7.1.1
       lz-string: 1.4.4
       react: 18.2.0
@@ -19614,8 +19737,8 @@ packages:
     resolution: {integrity: sha512-jrKmIHhuZVGUpOR1s4TgY9BTt/Eh9CFCjHVZ2FsrKmHSo3J/vpl6EpK08SfMLrX2IY1ZEFA+BPRTJQGg4xIHsA==}
     dev: true
 
-  /@types/canvas-size@1.2.0:
-    resolution: {integrity: sha512-s0q6dNwuCT33836UAkAT30OfTDGlhnqPYFREw16/UBSSiaUHO9mBC+kR/e6AL5Rdo9XzV0jMBW7W1S2vyclWTw==}
+  /@types/canvas-size@1.2.1:
+    resolution: {integrity: sha512-JrznqpoIH2NsddfhP36WWfr7JKbVfiUjBqjFW/Y1DKe5lDfuX40uXjAklC7siXzY5sv2bnVofel4NdOIP2gkKA==}
     dev: false
 
   /@types/chai-as-promised@7.1.5:
@@ -20247,8 +20370,8 @@ packages:
       '@types/lodash': 4.14.191
     dev: true
 
-  /@types/lodash.update@4.10.8:
-    resolution: {integrity: sha512-oTnV851O5Qmma3yi+6Gvid/qP7dMll++SnCsgif7ZWu0f2GqejArtQ9sQpy25N8nC5esTKL6bV/vxFHpifwAoA==}
+  /@types/lodash.update@4.10.7:
+    resolution: {integrity: sha512-S+s8ORbtkYZl+9EfhVyRZ7TAr7wEl/YRUzNdoTbjiiL2Ef8U/4mjiFo/J5bhWLJ8b8/GCnujXRCAv8EN9BI1VA==}
     dependencies:
       '@types/lodash': 4.14.191
     dev: true
@@ -23929,8 +24052,8 @@ packages:
     resolution: {integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==}
     engines: {node: '>=10'}
 
-  /chromatic@7.5.4:
-    resolution: {integrity: sha512-DiBwsn8yABN6SFSeEf5gTbwGIqhfP+rjrAQENgeLFDUV3vX3tGdI8oVgseaeCwk8tn08ZukrmB/k3ZG9RPJPTA==}
+  /chromatic@7.5.0:
+    resolution: {integrity: sha512-9B1rT8/L71BZTmAGXFBvKGrudnVZ4uBcGFckx0ZEMvOXboI0DOyr1/ehmSB1YmPOhu+r/7dy2jfTEzPmYcpXJg==}
     hasBin: true
     dev: true
 
@@ -24644,6 +24767,11 @@ packages:
   /core-js@3.29.0:
     resolution: {integrity: sha512-VG23vuEisJNkGl6XQmFJd3rEG/so/CNatqeE+7uZAwTSwFeB/qaO0be8xZYUNWprJ/GIwL8aMt9cj1kvbpTZhg==}
     requiresBuild: true
+    dev: true
+
+  /core-js@3.33.2:
+    resolution: {integrity: sha512-XeBzWI6QL3nJQiHmdzbAOiMYqjrb7hwU7A39Qhvd/POSa/t9E1AeZyEZx3fNvp/vtM8zXwhoL0FsiS0hD0pruQ==}
+    requiresBuild: true
 
   /core-util-is@1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
@@ -24943,8 +25071,8 @@ packages:
       internmap: 1.0.1
     dev: false
 
-  /d3-array@3.2.0:
-    resolution: {integrity: sha512-3yXFQo0oG3QCxbF06rMPFyGRMGJNS7NvsV1+2joOjbBE+9xvWQ8+GcMJAjRCzw06zQ3/arXeJgbPYcjUCuC+3g==}
+  /d3-array@3.2.4:
+    resolution: {integrity: sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==}
     engines: {node: '>=12'}
     dependencies:
       internmap: 2.0.3
@@ -24967,7 +25095,7 @@ packages:
     resolution: {integrity: sha512-VE5S6TNa+j8msksl7HwjxMHDM2yNK3XCkusIlpX5kwauBfXuyLAtNg9jCp/iHH61tgI4sb6R/EIMWCqEIdjT/g==}
     engines: {node: '>=12'}
     dependencies:
-      d3-path: 3.0.1
+      d3-path: 3.1.0
 
   /d3-collection@1.0.7:
     resolution: {integrity: sha512-ii0/r5f4sjKNTfh84Di+DpztYwqKhEyUlKoPrzUFfeSkWxjW49xU2QzO9qrPrNkpdI0XJkfzvmTu8V2Zylln6A==}
@@ -24987,11 +25115,11 @@ packages:
       d3-array: 1.2.4
     dev: false
 
-  /d3-contour@4.0.0:
-    resolution: {integrity: sha512-7aQo0QHUTu/Ko3cP9YK9yUTxtoDEiDGwnBHyLxG5M4vqlBkO/uixMRele3nfsfj6UXOcuReVpVXzAboGraYIJw==}
+  /d3-contour@4.0.2:
+    resolution: {integrity: sha512-4EzFTRIikzs47RGmdxbeUvLWtGedDUNkTcmzoeyg4sP/dvCexO47AaQL7VKy/gul85TOxw+IBgA8US2xwbToNA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
 
   /d3-delaunay@5.3.0:
     resolution: {integrity: sha512-amALSrOllWVLaHTnDLHwMIiz0d1bBu9gZXd1FiLfXf8sHcX9jrcj81TVZOqD4UX7MgBZZ07c8GxzEgBpJqc74w==}
@@ -24999,8 +25127,8 @@ packages:
       delaunator: 4.0.1
     dev: false
 
-  /d3-delaunay@6.0.2:
-    resolution: {integrity: sha512-IMLNldruDQScrcfT+MWnazhHbDJhcRJyOEBAJfwQnHle1RPh6WDuLvxNArUju2VSMSUuKlY5BGHRJ2cYyoFLQQ==}
+  /d3-delaunay@6.0.4:
+    resolution: {integrity: sha512-mdjtIZ1XLAM8bm/hx3WwjfHt6Sggek7qH043O8KEjDXN40xi3vx/6pYSVTwLjEgiXQTbvaouWKynLBiUZ6SK6A==}
     engines: {node: '>=12'}
     dependencies:
       delaunator: 5.0.0
@@ -25057,11 +25185,11 @@ packages:
       d3-array: 1.2.4
     dev: false
 
-  /d3-geo@3.0.1:
-    resolution: {integrity: sha512-Wt23xBych5tSy9IYAM1FR2rWIBFWa52B/oF/GYe5zbdHrg08FU8+BuI6X4PvTwPDdqdAdq04fuWJpELtsaEjeA==}
+  /d3-geo@3.1.0:
+    resolution: {integrity: sha512-JEo5HxXDdDYXCaWdwLRt79y7giK8SbhZJbFWXqbRTolCHFI5jRqteLzCsq51NKbUoX0PjBVSohxrx+NoOUujYA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
 
   /d3-hexbin@0.2.2:
     resolution: {integrity: sha512-KS3fUT2ReD4RlGCjvCEm1RgMtp2NFZumdMu4DBzQK8AZv3fXRM6Xm8I4fSU07UXvH4xxg03NwWKWdvxfS/yc4w==}
@@ -25091,8 +25219,12 @@ packages:
     resolution: {integrity: sha512-VLaYcn81dtHVTjEHd8B+pbe9yHWpXKZUC87PzoFmsFrJqgFwDe/qxfp5MlfsfM1V5E/iVt0MmEbWQ7FVIXh/bg==}
     dev: false
 
-  /d3-path@3.0.1:
-    resolution: {integrity: sha512-gq6gZom9AFZby0YLduxT1qmrp4xpBA1YZr19OI717WIdKE2OM5ETq5qrHLb301IgxhLwcuxvGZVLeeWc/k1I6w==}
+  /d3-path@2.0.0:
+    resolution: {integrity: sha512-ZwZQxKhBnv9yHaiWd6ZU4x5BtCQ7pXszEV9CU6kRgwIQVQGLMv1oiL4M+MK/n79sYzsj+gcgpPQSctJUsLN7fA==}
+    dev: false
+
+  /d3-path@3.1.0:
+    resolution: {integrity: sha512-p3KP5HCf/bvjBSSKuXid6Zqijx7wIfNW+J/maPs+iwR35at5JCbLUT0LzF1cnjbCHWhqzQTIN2Jpe8pRebIEFQ==}
     engines: {node: '>=12'}
 
   /d3-polygon@3.0.1:
@@ -25148,10 +25280,10 @@ packages:
     resolution: {integrity: sha512-GZW464g1SH7ag3Y7hXjf8RoUuAFIqklOAq3MRl4OaWabTFJY9PN/E1YklhXLh+OQ3fM9yS2nOkCoS+WLZ6kvxQ==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
       d3-format: 3.1.0
       d3-interpolate: 3.0.1
-      d3-time: 3.0.0
+      d3-time: 3.1.0
       d3-time-format: 4.1.0
 
   /d3-selection@3.0.0:
@@ -25167,14 +25299,14 @@ packages:
   /d3-shape@2.1.0:
     resolution: {integrity: sha512-PnjUqfM2PpskbSLTJvAzp2Wv4CZsnAgTfcVRTwW03QR3MkXF8Uo7B1y/lWkAsmbKwuecto++4NlsYcvYpXpTHA==}
     dependencies:
-      d3-path: 1.0.9
+      d3-path: 2.0.0
     dev: false
 
-  /d3-shape@3.1.0:
-    resolution: {integrity: sha512-tGDh1Muf8kWjEDT/LswZJ8WF85yDZLvVJpYU9Nq+8+yW1Z5enxrmXOhTArlkaElU+CTn0OTVNli+/i+HP45QEQ==}
+  /d3-shape@3.2.0:
+    resolution: {integrity: sha512-SaLBuwGm3MOViRq2ABk3eLoxwZELpH6zhl3FbAoJ7Vm1gofKx6El1Ib5z23NUEhF9AsGl7y+dzLe5Cw2AArGTA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-path: 3.0.1
+      d3-path: 3.1.0
 
   /d3-time-format@2.3.0:
     resolution: {integrity: sha512-guv6b2H37s2Uq/GefleCDtbe0XZAuy7Wa49VGkPVPMfLL9qObgBST3lEHJBMUp8S7NdLQAGIvr2KXk8Hc98iKQ==}
@@ -25186,7 +25318,7 @@ packages:
     resolution: {integrity: sha512-dJxPBlzC7NugB2PDLwo9Q8JiTR3M3e4/XANkreKSUxF8vvXKqm1Yfq4Q5dl8budlunRVlUUaDUgFt7eA8D6NLg==}
     engines: {node: '>=12'}
     dependencies:
-      d3-time: 3.0.0
+      d3-time: 3.1.0
 
   /d3-time@1.1.0:
     resolution: {integrity: sha512-Xh0isrZ5rPYYdqhAVk8VLnMEidhz5aP7htAADH6MfzgmmicPkTo8LhkLxci61/lCB7n7UmE3bN0leRt+qvkLxA==}
@@ -25198,11 +25330,11 @@ packages:
       d3-array: 2.12.1
     dev: false
 
-  /d3-time@3.0.0:
-    resolution: {integrity: sha512-zmV3lRnlaLI08y9IMRXSDshQb5Nj77smnfpnd2LrBa/2K281Jijactokeak14QacHs/kKq0AQ121nidNYlarbQ==}
+  /d3-time@3.1.0:
+    resolution: {integrity: sha512-VqKjzBLejbSMT4IgbmVgDjpkYrNWUYJnbCGo874u7MMKIWsILRX+OpX/gTk8MqjpT1A/c6HY2dCA77ZN0lkQ2Q==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
 
   /d3-timer@3.0.1:
     resolution: {integrity: sha512-ndfJ/JxxMd3nw31uyKoY2naivF+r29V+Lc0svZxe1JvvIRmi8hUsrMvdOwgS1o6uBHmiz91geQ0ylPP0aj1VUA==}
@@ -25239,13 +25371,13 @@ packages:
     resolution: {integrity: sha512-JgoahDG51ncUfJu6wX/1vWQEqOflgXyl4MaHqlcSruTez7yhaRKR9i8VjjcQGeS2en/jnFivXuaIMnseMMt0XA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
       d3-axis: 3.0.0
       d3-brush: 3.0.0
       d3-chord: 3.0.1
       d3-color: 3.1.0
-      d3-contour: 4.0.0
-      d3-delaunay: 6.0.2
+      d3-contour: 4.0.2
+      d3-delaunay: 6.0.4
       d3-dispatch: 3.0.1
       d3-drag: 3.0.0
       d3-dsv: 3.0.1
@@ -25253,18 +25385,18 @@ packages:
       d3-fetch: 3.0.1
       d3-force: 3.0.0
       d3-format: 3.1.0
-      d3-geo: 3.0.1
+      d3-geo: 3.1.0
       d3-hierarchy: 3.1.2
       d3-interpolate: 3.0.1
-      d3-path: 3.0.1
+      d3-path: 3.1.0
       d3-polygon: 3.0.1
       d3-quadtree: 3.0.1
       d3-random: 3.0.1
       d3-scale: 4.0.2
       d3-scale-chromatic: 3.0.0
       d3-selection: 3.0.0
-      d3-shape: 3.1.0
-      d3-time: 3.0.0
+      d3-shape: 3.2.0
+      d3-time: 3.1.0
       d3-time-format: 4.1.0
       d3-timer: 3.0.1
       d3-transition: 3.0.1(d3-selection@3.0.0)
@@ -29081,8 +29213,8 @@ packages:
       lru-cache: 6.0.0
     dev: true
 
-  /hotkeys-js@3.11.1:
-    resolution: {integrity: sha512-RLdQm7eMJey1gNAiMTCGg738YSh3YdKkmwYGMSWY2vgNz4KFw0LpvouHDq0IZEflcWvEDVPKhYLgniu2+rz8tA==}
+  /hotkeys-js@3.12.0:
+    resolution: {integrity: sha512-Z+N573ycUKIGwFYS3ID1RzMJiGmtWMGKMiaNLyJS8B1ei+MllF4ZYmKS2T0kMWBktOz+WZLVNikftEgnukOrXg==}
     dev: false
 
   /hsl-to-hex@1.0.0:
@@ -35748,7 +35880,7 @@ packages:
   /plyr@3.7.7:
     resolution: {integrity: sha512-8B2b0HP+j/jKM7GrYdEuSi1hIF3BnNzjaBsBa3bx4/SO9omX3EfhCi78ZFh/0QuCKlwpTBusTMMZ3Hq6bJ5d/g==}
     dependencies:
-      core-js: 3.29.0
+      core-js: 3.33.2
       custom-event-polyfill: 1.0.7
       loadjs: 4.2.0
       rangetouch: 2.0.1
@@ -35963,6 +36095,11 @@ packages:
 
   /preact@10.11.2:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
+    dev: false
+
+  /preact@10.18.1:
+    resolution: {integrity: sha512-mKUD7RRkQQM6s7Rkmi7IFkoEHjuFqRQUaXamO61E6Nn7vqF/bo7EZCmSyrUnp2UWHw0O7XjZ2eeXis+m7tf4lg==}
+    requiresBuild: true
     dev: false
 
   /prebuild-install@7.1.1:
@@ -43005,7 +43142,7 @@ packages:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
 
-  /y-codemirror.next@0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.7):
+  /y-codemirror.next@0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.8):
     resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
     peerDependencies:
       '@codemirror/state': ^6.0.0
@@ -43015,10 +43152,10 @@ packages:
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
       lib0: 0.2.78
-      yjs: 13.6.7
+      yjs: 13.6.8
     dev: false
 
-  /y-monaco@0.1.4(monaco-editor@0.25.2)(yjs@13.6.7):
+  /y-monaco@0.1.4(monaco-editor@0.25.2)(yjs@13.6.8):
     resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
     peerDependencies:
       monaco-editor: '>=0.20.0'
@@ -43026,10 +43163,10 @@ packages:
     dependencies:
       lib0: 0.2.78
       monaco-editor: 0.25.2
-      yjs: 13.6.7
+      yjs: 13.6.8
     dev: false
 
-  /y-prosemirror@1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7):
+  /y-prosemirror@1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8):
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -43043,7 +43180,7 @@ packages:
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
-      yjs: 13.6.7
+      yjs: 13.6.8
     dev: false
 
   /y-protocols@1.0.5:
@@ -43258,9 +43395,10 @@ packages:
       - supports-color
     dev: true
 
-  /yjs@13.6.7:
-    resolution: {integrity: sha512-mCZTh4kjvUS2DnaktsYN6wLH3WZCJBLqrTdkWh1bIDpA/sB/GNFaLA/dyVJj2Hc7KwONuuoC/vWe9bwBBosZLQ==}
+  /yjs@13.6.8:
+    resolution: {integrity: sha512-ZPq0hpJQb6f59B++Ngg4cKexDJTvfOgeiv0sBc4sUm8CaBWH7OQC4kcCgrqbjJ/B2+6vO49exvTmYfdlPtcjbg==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    requiresBuild: true
     dependencies:
       lib0: 0.2.78
     dev: false

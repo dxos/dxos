@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Remove?
+// TODO(burdon): Reconcile with dxos.sdk.client.Properties.
 export const TYPE_PROPERTIES = 'dxos.org/type/space-properties';
 
 export * from './batch';
