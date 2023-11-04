@@ -85,7 +85,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
             case 'slide':
               return isSketch(data.slide) ? (
-                <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} />
+                <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
               ) : null;
             case 'section':
               return isSketch(data.object) ? (
