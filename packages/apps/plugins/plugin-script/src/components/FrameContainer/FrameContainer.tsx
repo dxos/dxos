@@ -54,7 +54,12 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
   return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
 };
 
-// TODO(burdon): Comment.
+/**
+ * Create import map used to resolve modules in the browser.
+ * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap
+ * @param mainUrl
+ * @param result
+ */
 const createImportMap = (mainUrl: string, result: CompilerResult) => {
   const createReexportingModule = (namedImports: string[], key: string) => {
     const code = `

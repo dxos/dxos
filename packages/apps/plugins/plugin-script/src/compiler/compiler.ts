@@ -16,8 +16,8 @@ export type Import = {
 
 export type CompilerResult = {
   sourceHash: Buffer;
-  bundle: string;
   imports: Import[];
+  bundle: string;
 };
 
 export type CompilerOptions = {
@@ -73,8 +73,8 @@ export class Compiler {
 
     return {
       sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
-      bundle: result.outputFiles![0].text,
       imports: this.analyzeImports(result),
+      bundle: result.outputFiles![0].text,
     };
   }
 
