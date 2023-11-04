@@ -9,7 +9,7 @@ import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-
 import { mx } from '@dxos/react-ui-theme';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
-import { NavTreeItem } from './NavTreeItem';
+import { NavTreeMosaicComponent } from './NavTreeItem';
 import type { TreeNode } from '../types';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
@@ -55,7 +55,7 @@ export const NavTree = ({
     <Mosaic.Container
       {...{
         id: node.id,
-        Component: NavTreeItem,
+        Component: NavTreeMosaicComponent,
         onOver,
         onDrop,
       }}
