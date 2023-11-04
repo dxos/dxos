@@ -10,7 +10,6 @@ import { type Size } from '@dxos/react-ui-types';
 
 import { Avatar, useJdenticonHref, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 
-
 const cursorColors = [
   { color: '#30bced', light: '#30bced33' },
   { color: '#6eeb83', light: '#6eeb8333' },
@@ -23,8 +22,6 @@ const cursorColors = [
 ];
 
 const randomColor = () => cursorColors[Math.round(Math.random() * cursorColors.length)];
-
-
 type StorybookAvatarProps = {
   imgSrc?: string;
   fallbackValue?: string;
@@ -49,13 +46,15 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
     fallbackText = '',
     animation,
     imgSrc,
-    color = randomColor()
+    color = randomColor(),
   } = props;
   const jdenticon = useJdenticonHref(fallbackValue ?? '', size);
   return (
     <Avatar.Root {...{ size, variant, status, animation }}>
       <Avatar.Frame>
-        {!imgSrc && <Avatar.Fallback href={fallbackValue ? jdenticon : ''} text={fallbackText} />}
+        {!imgSrc && (fallbackValue || fallbackText) && (
+          <Avatar.Fallback href={fallbackValue ? jdenticon : ''} text={fallbackText} />
+        )}
         {imgSrc && <Avatar.Image href={imgSrc} />}
       </Avatar.Frame>
       <div>
@@ -103,6 +102,12 @@ export const Default = () => (
       <StorybookAvatar size={3} status='warning' description='Warning' />
       <StorybookAvatar size={3} status='active' imgSrc={sampleImage} />
     </div>
+  </div>
+);
+
+export const Image = () => (
+  <div>
+    <StorybookAvatar variant='circle' imgSrc={sampleImage} />
   </div>
 );
 

@@ -5,7 +5,6 @@
 import {
   Root as AvatarRootPrimitive,
   type AvatarProps as AvatarRootPrimitiveProps,
-  Image as AvatarImagePrimitive,
   type ImageLoadingStatus,
   Fallback as AvatarFallbackPrimitive,
 } from '@radix-ui/react-avatar';
@@ -199,7 +198,7 @@ type AvatarMaskedImageProps = ComponentPropsWithRef<'image'>;
 
 const AvatarMaskedImage = forwardRef<SVGImageElement, AvatarMaskedImageProps>((props, forwardedRef) => {
   const { maskId } = useAvatarContext('AvatarFallback');
-  return <image width='100%' height='100%' {...props} mask={`url(#${maskId})`} ref={forwardedRef} />;
+  return <image width='100%' height='100%' {...props} mask={`url(#${maskId})`} ref={forwardedRef} preserveAspectRatio='xMidYMid slice' />;
 });
 
 type AvatarMaskedTextProps = PropsWithChildren<{ large?: boolean }>;
@@ -231,9 +230,9 @@ type AvatarImageProps = ComponentPropsWithRef<'image'> & {
 const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
   ({ onLoadingStatusChange, ...props }, forwardedRef) => {
     return (
-      <AvatarImagePrimitive onLoadingStatusChange={onLoadingStatusChange} asChild>
+      <AvatarFallbackPrimitive asChild>
         <AvatarMaskedImage {...props} ref={forwardedRef} />
-      </AvatarImagePrimitive>
+      </AvatarFallbackPrimitive>
     );
   },
 );
