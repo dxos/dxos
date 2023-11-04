@@ -16,6 +16,10 @@ npm init @dxos@latest
 npm init @dxos/bare@latest
 ```
 
+::: note
+If you encounter an error with `EINVALIDPACKAGENAME` it's likely the npm/node versions are out of date. Ensure `node -v` is 18 or higher and `npm -v` is 9 or higher.
+:::
+
 These can also be used from the `dx` CLI:
 
 ```bash
