@@ -14,7 +14,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
   server: {
     host: true,
@@ -42,7 +42,6 @@ export default defineConfig({
     alias: {
       'node-fetch': 'isomorphic-fetch',
     },
-    extensions: ['.js','.mjs'],
   },
   plugins: [
     // mkcert(),
