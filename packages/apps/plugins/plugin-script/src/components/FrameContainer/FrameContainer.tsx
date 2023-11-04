@@ -22,22 +22,19 @@ export type FrameContainerProps = {
  * IFrame container for the compiled script.
  */
 export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Connect iframe to client.
   const client = useClient();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
     if (iframeRef.current) {
-      const port = createIFramePort({
-        channel: 'frame',
-        iframe: iframeRef.current,
-        origin: '*',
-      });
-
+      // Connect iframe to client.
       const rpc = createProtoRpcPeer({
         exposed: clientServiceBundle,
         handlers: (client as any)._services.services, // TODO(burdon): Remove cast.
-        port,
+        port: createIFramePort({
+          channel: 'frame',
+          iframe: iframeRef.current,
+          origin: '*',
+        }),
       });
 
       rpc.open().catch(console.error);
@@ -57,12 +54,17 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
   return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
 };
 
-// TODO(burdon): Comment.
+/**
+ * Create import map used to resolve modules in the browser.
+ * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap
+ * @param mainUrl
+ * @param result
+ */
 const createImportMap = (mainUrl: string, result: CompilerResult) => {
   const createReexportingModule = (namedImports: string[], key: string) => {
     const code = `
       const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}];
-      export { ${namedImports.join(',')} }
+      export { ${namedImports.join(',')} };
       export default window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}].default;
     `;
 
