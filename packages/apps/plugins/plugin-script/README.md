@@ -1,5 +1,4 @@
 # @braneframe/plugin-script
 
-Surface plugin for notebook.
-
+Surface plugin for script editor.
 
