@@ -33,35 +33,35 @@ export const initializeCompiler = async (options: { wasmURL: string }) => {
 
 /**
  * ESBuild compiler.
- * https://esbuild.github.io/api/#build
  */
 export class Compiler {
   constructor(private readonly _options: CompilerOptions) {}
 
+  // TODO(burdon): Error handling.
   async compile(source: string): Promise<CompilerResult> {
     if (this._options.platform === 'browser') {
       invariant(initialized, 'Compiler not initialized.');
       await initialized;
     }
 
+    // https://esbuild.github.io/api/#build
     const result = await build({
-      format: 'esm',
+      ...this._options,
       metafile: true,
       write: false,
-      ...this._options,
-      entryPoints: ['echofs:main.tsx'],
-      outdir: 'dist',
+      entryPoints: ['memory:main.tsx'],
       plugins: [
         {
-          name: 'echofs',
+          name: 'memory',
           setup: (build) => {
-            build.onResolve({ filter: /^echofs:/ }, (args) => {
-              return { path: args.path.slice(7), namespace: 'echofs' };
+            build.onResolve({ filter: /^memory:/ }, ({ path }) => {
+              return { path: path.split(':')[1], namespace: 'memory' };
             });
-            build.onLoad({ filter: /.*/, namespace: 'echofs' }, async (args) => {
-              if (args.path === 'main.tsx') {
+            build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
+              const imports = ["import React from 'react';"];
+              if (path === 'main.tsx') {
                 return {
-                  contents: source,
+                  contents: [...imports, source].join('\n'),
                   loader: 'tsx',
                 };
               }
@@ -70,6 +70,8 @@ export class Compiler {
         },
       ],
     });
+
+    // console.log(result.outputFiles![0].text);
 
     return {
       sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
