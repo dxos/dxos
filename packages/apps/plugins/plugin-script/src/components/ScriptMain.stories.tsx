@@ -17,20 +17,14 @@ import mainUrl from './FrameContainer/frame?url';
 import { ScriptMain, ScriptSection } from './ScriptMain';
 
 const code = [
-  "import React from 'react';",
-  "import { useSpace, useQuery } from '@dxos/react-client/echo';",
-  "//import { Globe } from '@braneframe/plugin-explorer';",
+  "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
   "import { Chart } from '@braneframe/plugin-explorer';",
   '',
-  'const Component = () => {',
-  '  const space = useSpace();',
-  // TODO(burdon): Change to Filter.typename().
-  "  const objects = useQuery(space, obj => obj.__typename === 'dxos.org/schema/person');",
-  '  //return <Globe items={objects} />',
+  'export default () => {',
+  '  const spaces = useSpaces();',
+  "  const objects = useQuery(spaces[0], Filter._typename('dxos.org/schema/person'));",
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
-  '',
-  'export default Component;',
 ].join('\n');
 
 const Story = () => {
