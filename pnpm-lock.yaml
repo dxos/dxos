@@ -2571,6 +2571,9 @@ importers:
 
   packages/apps/plugins/plugin-thread:
     dependencies:
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name

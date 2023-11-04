@@ -5,9 +5,19 @@
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { type LayoutPluginProvides } from '@braneframe/plugin-layout';
+import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type GraphPluginProvides,
+  type Plugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+  parseLayoutPlugin,
+  parseGraphPlugin,
+} from '@dxos/app-framework';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
@@ -18,9 +28,16 @@ import { THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides, isThread } from
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
+  let graphPlugin: Plugin<GraphPluginProvides>;
+  let layoutPlugin: Plugin<LayoutPluginProvides>;
+
   return {
     meta: {
       id: THREAD_PLUGIN,
+    },
+    ready: async (plugins) => {
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
     },
     provides: {
       metadata: {
@@ -71,8 +88,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
             }
 
-            case 'context-thread':
-              return <ThreadSidebar />;
+            // TODO(burdon): Better way to get this?
+            case 'context-thread': {
+              const graph = graphPlugin?.provides.graph;
+              const layout = layoutPlugin?.provides.layout;
+              const space = getActiveSpace(graph, layout.active);
+              return <ThreadSidebar space={space} />;
+            }
 
             default:
               return null;

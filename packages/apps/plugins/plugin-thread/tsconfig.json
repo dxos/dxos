@@ -45,6 +45,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-layout"
+    },
+    {
       "path": "../plugin-space"
     }
   ]

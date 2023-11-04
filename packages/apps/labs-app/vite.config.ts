@@ -16,7 +16,7 @@ const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://vitejs.dev/config
 export default defineConfig({
-  // base: process.env.BASE_URL ?? './',
+  base: process.env.BASE_URL ?? './packages/apps/labs-app/out/labs',
   server: {
     host: true,
     // https: true,

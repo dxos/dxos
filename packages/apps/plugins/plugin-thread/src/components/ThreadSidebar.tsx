@@ -7,14 +7,14 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
 import { parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { ThreadContainer } from './ThreadContainer';
 import { THREAD_PLUGIN } from '../types';
 
-export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThread }) => {
+export const ThreadSidebar: FC<{ space?: Space; thread?: ThreadType }> = ({ space, thread: initialThread }) => {
   const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const { t } = useTranslation('os');
 
@@ -23,11 +23,13 @@ export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThre
   // console.log('layout:', layoutPlugin?.provides.layout.active);
 
   const [thread, setThread] = useState(initialThread);
-  const space = thread && getSpaceForObject(thread);
+  // const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  // const space = thread && spacePlugin?.provides.space;
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.
       const { objects: threads } = space.db.query(ThreadType.filter());
+      console.log('::::', threads);
       if (threads.length) {
         setThread(threads[0] as ThreadType);
       }
