@@ -5,18 +5,18 @@
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type LayoutPluginProvides } from '@braneframe/plugin-layout';
 import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
-  resolvePlugin,
+  LayoutAction,
   type GraphPluginProvides,
+  type LayoutProvides,
   type Plugin,
   type PluginDefinition,
   parseIntentPlugin,
-  LayoutAction,
   parseLayoutPlugin,
   parseGraphPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 
 import { ThreadMain, ThreadSidebar } from './components';
@@ -28,8 +28,8 @@ import { THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides, isThread } from
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  let graphPlugin: Plugin<GraphPluginProvides>;
-  let layoutPlugin: Plugin<LayoutPluginProvides>;
+  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
   return {
     meta: {
@@ -92,7 +92,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'context-thread': {
               const graph = graphPlugin?.provides.graph;
               const layout = layoutPlugin?.provides.layout;
-              const space = getActiveSpace(graph, layout.active);
+              const space = getActiveSpace(graph!, layout!.active);
               return <ThreadSidebar space={space} />;
             }
 

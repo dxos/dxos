@@ -15,7 +15,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-layout": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
