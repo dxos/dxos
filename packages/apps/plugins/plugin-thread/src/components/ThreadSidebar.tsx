@@ -29,7 +29,6 @@ export const ThreadSidebar: FC<{ space?: Space; thread?: ThreadType }> = ({ spac
     if (space) {
       // TODO(burdon): Get thread appropriate for context.
       const { objects: threads } = space.db.query(ThreadType.filter());
-      console.log('::::', threads);
       if (threads.length) {
         setThread(threads[0] as ThreadType);
       }
