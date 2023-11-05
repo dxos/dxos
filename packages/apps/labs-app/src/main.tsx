@@ -111,23 +111,22 @@ const main = async () => {
       FilesPlugin(),
       GithubPlugin(),
       IpfsPlugin(),
+      SearchPlugin(),
+      PresenterPlugin(), // Before Stack.
 
       // Presentation plugins.
+      // TODO(burdon): Alphabetize menu?
       MarkdownPlugin(),
+      ExplorerPlugin(),
       GridPlugin(),
       KanbanPlugin(),
       MapPlugin(),
-      PresenterPlugin(), // Before Stack.
       ScriptPlugin({ mainUrl }),
       SketchPlugin(),
       StackPlugin(),
       TablePlugin(),
       ThreadPlugin(),
-      ExplorerPlugin(),
       ChessPlugin(),
-
-      // TODO(burdon): Currently last so that action are added at end of dropdown menu.
-      SearchPlugin(),
     ],
   });
 

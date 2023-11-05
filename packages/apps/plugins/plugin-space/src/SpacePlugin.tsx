@@ -12,11 +12,11 @@ import { isGraphNode } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import {
   type PluginDefinition,
+  type DispatchIntent,
+  LayoutAction,
   resolvePlugin,
   parseIntentPlugin,
   parseLayoutPlugin,
-  LayoutAction,
-  type DispatchIntent,
   parseGraphPlugin,
   parseMetadataResolverPlugin,
 } from '@dxos/app-framework';

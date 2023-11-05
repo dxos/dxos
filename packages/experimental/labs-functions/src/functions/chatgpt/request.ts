@@ -82,6 +82,7 @@ export const createRequest = (
     ...block.messages.map((message): ChatCompletionRequestMessage => {
       // TODO(burdon): Add context to message block; use ref.
       const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
+      console.log('request', { contextObject });
 
       let content = '';
       if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
