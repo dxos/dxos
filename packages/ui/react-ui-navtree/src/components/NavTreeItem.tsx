@@ -3,12 +3,14 @@
 //
 
 import { DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { forwardRef, Fragment, useEffect, useState } from 'react';
+import React, { type ForwardedRef, forwardRef, Fragment, useEffect, useState } from 'react';
 
 import { DensityProvider, Tree, TreeItem as TreeItemComponent, TreeItem, useTranslation } from '@dxos/react-ui';
 import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
 import {
+  descriptionText,
   dropRing,
+  fineBlockSize,
   focusRing,
   hoverableControls,
   hoverableFocusedKeyboardControls,
@@ -25,6 +27,32 @@ import type { TreeNode } from '../types';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
+
+export const emptyBranchDroppableId = '__placeholder__';
+
+const NavTreeEmptyBranch = ({ path, level }: { path: string; level: number }) => {
+  const { Component } = useContainer();
+  return (
+    <TreeItemComponent.Body>
+      <Mosaic.DroppableTile path={path} item={{ id: emptyBranchDroppableId, level }} Component={Component!} />
+    </TreeItemComponent.Body>
+  );
+};
+
+const NavTreeEmptyBranchPlaceholder: MosaicTileComponent<NavTreeItemData, HTMLDivElement> = forwardRef(
+  ({ item: { level } }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    return (
+      <div className={mx(levelPadding(level), fineBlockSize, 'pie-1 flex items-center')} ref={forwardedRef}>
+        <p
+          className={mx(descriptionText, 'grow border border-dashed border-neutral-500/20 p-1 text-center rounded-sm')}
+        >
+          <span>{t('empty branch message')}</span>
+        </p>
+      </div>
+    );
+  },
+);
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
   const { Component } = useContainer();
@@ -49,6 +77,14 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
     </TreeItemComponent.Body>
   );
 };
+
+export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef((props, ref) => {
+  if (props.item.id.endsWith(emptyBranchDroppableId)) {
+    return <NavTreeEmptyBranchPlaceholder {...props} ref={ref as ForwardedRef<HTMLDivElement>} />;
+  } else {
+    return <NavTreeItem {...props} ref={ref} />;
+  }
+});
 
 // TODO(wittjosiah): Spread node?
 export type NavTreeItemData = { id: TreeNode['id']; node: TreeNode; level: number };
@@ -77,6 +113,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
 
+    const isOverCurrent = isOver(path);
+
     return (
       <DensityProvider density='fine'>
         <Root>
@@ -85,12 +123,13 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             open={!forceCollapse && open}
             onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
             classNames={[
-              'rounded block',
+              'rounded block relative',
               hoverableFocusedKeyboardControls,
               'transition-opacity',
               active && active !== 'overlay' && 'opacity-0',
               focusRing,
-              isOver(path) && dropRing,
+              isOverCurrent && dropRing,
+              isOverCurrent && 'z-[1]',
               level === 0 && 'mbs-4 first:mbs-0',
             ]}
             {...draggableProps}
@@ -157,7 +196,13 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 />
               )}
             </div>
-            {!active && isBranch && <NavTreeBranch path={path} nodes={node.children} level={level + 1} />}
+            {!active &&
+              isBranch &&
+              (node.children?.length > 0 ? (
+                <NavTreeBranch path={path} nodes={node.children} level={level + 1} />
+              ) : (
+                <NavTreeEmptyBranch path={path} level={level + 1} />
+              ))}
           </TreeItem.Root>
         </Root>
       </DensityProvider>
