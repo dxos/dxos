@@ -16,6 +16,14 @@ export type SchemaConfig = {
   fields: string[];
 };
 
+// TODO(burdon): Generate based on context.
+const schemaConfigs: SchemaConfig[] = [
+  {
+    typename: 'braneframe.Grid.Item',
+    fields: ['title', 'content'],
+  },
+];
+
 const formatSchema = (config: SchemaConfig, schema: Schema) => {
   const props =
     !config || config.fields.length === 0
@@ -30,14 +38,7 @@ const formatSchema = (config: SchemaConfig, schema: Schema) => {
   `;
 };
 
-// TODO(burdon): Generate based on context.
-const schemaConfigs: SchemaConfig[] = [
-  {
-    typename: 'braneframe.Grid.Item',
-    fields: ['title', 'content'],
-  },
-];
-
+// TODO(burdon): Request builder.
 export const createRequest = (client: Client, space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
   let contextObject: TypedObject | undefined;
   if (block?.context.object) {
@@ -45,7 +46,6 @@ export const createRequest = (client: Client, space: Space, block: Thread.Block)
     contextObject = objects[0];
   }
 
-  console.log('request', { contextObject }, contextObject?.__typename);
   const messages: ChatCompletionRequestMessage[] = [
     {
       role: 'system',
@@ -53,7 +53,9 @@ export const createRequest = (client: Client, space: Space, block: Thread.Block)
     },
   ];
 
-  // Output format.
+  //
+  // Grid
+  //
   // TODO(burdon): Get schema from context.
   if (contextObject?.__typename === 'braneframe.Grid') {
     messages.push({
@@ -89,21 +91,21 @@ export const createRequest = (client: Client, space: Space, block: Thread.Block)
     });
   }
 
-  // Context.
-  messages.push(
-    ...block.messages.map((message): ChatCompletionRequestMessage => {
-      let content = '';
-      if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
-        content += '\n' + 'I am playing chess and current game history is: ' + contextObject.pgn + '.\n';
-      }
+  //
+  // Chess
+  //
+  if (contextObject?.__typename === 'dxos.experimental.chess.Game') {
+    messages.push({
+      role: 'user',
+      content: `I am playing chess and the current game history is: [${contextObject.pgn}]`,
+    });
+  }
 
-      if (message.text) {
-        content += message.text + '\n';
-      }
-
-      return { role: 'user', content };
-    }),
-  );
+  block.messages.forEach((message) => {
+    if (message.text) {
+      messages.push({ role: 'user', content: message.text });
+    }
+  });
 
   return messages;
 };
