@@ -9,6 +9,26 @@ import "dxos/schema.proto";
 package braneframe;
 
 /**
+ *
+ */
+message Folder {
+  option (object) = true;
+
+  optional string name = 1;
+  repeated dxos.schema.TypedObject objects = 2;
+}
+
+/**
+ * Generic data view.
+ */
+message View {
+  option (object) = true;
+
+  string title = 1;
+  string type = 2;
+}
+
+/**
  * Table view.
  */
 message Table {
@@ -191,22 +211,21 @@ message Thread {
   repeated Block blocks = 2;
 }
 
-//
-// Generic data view.
-//
-message View {
+message Message {
   option (object) = true;
 
-  string title = 1;
-  string type = 2;
-}
+  message Recipient {
+    option (object) = true; // TODO(burdon): REMOVE.
+    string email = 1;
+    string name = 2;
+  }
 
-/**
- *
- */
-message Folder {
-  option (object) = true;
-
-  optional string name = 1;
-  repeated dxos.schema.TypedObject objects = 2;
+  // TODO(burdon): Type.
+  // TODO(burdon): Timestamp (across all objects).
+  string date = 2;
+  Recipient from = 3;
+  repeated Recipient to = 4;
+  string subject = 5;
+  string body = 6;
+  string ref = 7; // TODO(burdon): Implement as link.
 }
