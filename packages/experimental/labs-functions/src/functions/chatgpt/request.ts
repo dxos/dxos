@@ -9,8 +9,6 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Schema, type TypedObject } from '@dxos/echo-schema';
 
-// TODO(burdon): Tests.
-
 export type SchemaConfig = {
   typename: string;
   fields: string[];
