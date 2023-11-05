@@ -163,8 +163,9 @@ message Thread {
   option (object) = true;
 
   message Context {
-    dxos.schema.Schema schema = 1;
-    string object = 2;
+    string space = 1;
+    string schema = 2;
+    string object = 3;
   }
 
   message Message {

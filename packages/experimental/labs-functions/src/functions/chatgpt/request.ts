@@ -109,3 +109,19 @@ export const createRequest = (client: Client, space: Space, block: Thread.Block)
 
   return messages;
 };
+
+// TODO(burdon): Plugin rules.
+export class RequestBuilder {
+  private readonly _messages: ChatCompletionRequestMessage[] = [
+    {
+      role: 'system',
+      content: 'you are a helpful assistant.',
+    },
+  ];
+
+  constructor(private readonly _client: Client) {}
+
+  build(): ChatCompletionRequestMessage[] {
+    return this._messages;
+  }
+}
