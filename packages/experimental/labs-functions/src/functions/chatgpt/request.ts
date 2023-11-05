@@ -7,7 +7,7 @@ import { type ChatCompletionRequestMessage } from 'openai';
 import { type Thread } from '@braneframe/types';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type Schema } from '@dxos/echo-schema';
+import { type Schema, type TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Tests.
 
@@ -30,12 +30,22 @@ const formatSchema = (config: SchemaConfig, schema: Schema) => {
   `;
 };
 
-export const createRequest = (
-  client: Client,
-  space: Space,
-  block: Thread.Block,
-  schemaConfigs: SchemaConfig[],
-): ChatCompletionRequestMessage[] => {
+// TODO(burdon): Generate based on context.
+const schemaConfigs: SchemaConfig[] = [
+  {
+    typename: 'braneframe.Grid.Item',
+    fields: ['title', 'content'],
+  },
+];
+
+export const createRequest = (client: Client, space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
+  let contextObject: TypedObject | undefined;
+  if (block?.context.object) {
+    const { objects } = space.db.query({ id: block.context.object });
+    contextObject = objects[0];
+  }
+
+  console.log('request', { contextObject }, contextObject?.__typename);
   const messages: ChatCompletionRequestMessage[] = [
     {
       role: 'system',
@@ -44,7 +54,8 @@ export const createRequest = (
   ];
 
   // Output format.
-  if (schemaConfigs.length) {
+  // TODO(burdon): Get schema from context.
+  if (contextObject?.__typename === 'braneframe.Grid') {
     messages.push({
       role: 'system',
       content: `
@@ -64,6 +75,7 @@ export const createRequest = (
       Available schema types:
       ${schemaConfigs
         .map((config) => {
+          // TODO(burdon): ???
           const schema = client.experimental.types.getSchema(config.typename);
           if (schema) {
             return formatSchema(config, schema);
@@ -80,10 +92,6 @@ export const createRequest = (
   // Context.
   messages.push(
     ...block.messages.map((message): ChatCompletionRequestMessage => {
-      // TODO(burdon): Add context to message block; use ref.
-      const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
-      console.log('request', { contextObject });
-
       let content = '';
       if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
         content += '\n' + 'I am playing chess and current game history is: ' + contextObject.pgn + '.\n';

@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [translationKey]: {
         'tree item actions label': 'More actions',
-        'empty branch message': 'Empty',
+        'empty branch message': ' ',
       },
     },
   },

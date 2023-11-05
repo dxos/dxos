@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Thread } from '@braneframe/types';
+import { type Thread as ThreadType } from '@braneframe/types';
 import { type Client } from '@dxos/client';
 import { TextObject } from '@dxos/echo-schema';
 
@@ -18,7 +18,7 @@ export const createResponse = (client: Client, content: string) => {
     pre && messages.push({ timestamp, text: pre });
     const dataArray = Array.isArray(data) ? data : [data];
     messages.push(
-      ...dataArray.map((data): Thread.Message => {
+      ...dataArray.map((data): ThreadType.Message => {
         if (typeof data['@type'] === 'string') {
           const Proto = client.experimental.types.getPrototype(data['@type']);
           const schema = client.experimental.types.getSchema(data['@type']);
@@ -38,6 +38,7 @@ export const createResponse = (client: Client, content: string) => {
           }
         }
 
+        // TODO(burdon): Create ref?
         return { timestamp, data: JSON.stringify(data) };
       }),
     );
