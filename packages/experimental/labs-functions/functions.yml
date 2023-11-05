@@ -1,18 +1,19 @@
+# TODO(burdon): Convert to array.
 functions:
-  chatgpt:
-    description: "Chat GPT"
+  - id: 'chatgpt'
+    description: 'Chat GPT'
 
-  chess:
-    description: "Chess"
+  - id: 'chess'
+    description: 'Chess'
 
-  hello:
-    description: "Test"
+  - id: 'hello'
+    description: 'Test'
 
 triggers:
-  - function: chatgpt
+  - function: 'chatgpt'
     subscription:
-      type: braneframe.Thread.Block
+      type: 'braneframe.Thread.Block'
 
-  - function: chess
+  - function: 'chess'
     subscription:
-      type: dxos.experimental.chess.Game
+      type: 'dxos.experimental.chess.Game'

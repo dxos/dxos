@@ -56,16 +56,20 @@ describe('Chess', () => {
     const functionsManifest = load(
       await readFile(join(__dirname, '../../../functions.yml'), 'utf8'),
     ) as FunctionsManifest;
+
     const devServer = new DevServer(client, {
       directory: join(__dirname, '../../functions'),
       manifest: functionsManifest,
     });
+
     await devServer.initialize();
     await devServer.start();
     afterTest(() => devServer.stop());
 
-    const endpoint = `http://localhost:${HUB_PORT}`;
-    const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
+    const triggers = new TriggerManager(client, functionsManifest.triggers, {
+      runtime: 'dev',
+      endpoint: `http://localhost:${HUB_PORT}`,
+    });
     await triggers.start();
     afterTest(() => triggers.stop());
 
@@ -76,11 +80,12 @@ describe('Chess', () => {
 
     const { Chess } = await import('chess.js');
 
+    const done = new Trigger();
     const advanceGame = () => {
       const chess = new Chess();
       chess.loadPgn(game.pgn ?? '');
       if (chess.isGameOver() || chess.history().length > 50) {
-        over.wake();
+        done.wake();
       }
 
       if (chess.turn() === 'w') {
@@ -94,11 +99,10 @@ describe('Chess', () => {
       }
     };
 
-    const over = new Trigger();
     const cleanup = game[subscribe](advanceGame);
     afterTest(cleanup);
     advanceGame();
 
-    await over.wait();
+    await done.wait();
   });
 });
