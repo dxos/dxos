@@ -148,7 +148,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             id: 'all-files',
             label: ['plugin name', { ns: FILES_PLUGIN }],
             // TODO(burdon): Factor out palette constants.
-            properties: { palette: 'yellow' },
+            properties: { palette: 'yellow', role: 'branch' },
           });
 
           groupNode.addAction({
