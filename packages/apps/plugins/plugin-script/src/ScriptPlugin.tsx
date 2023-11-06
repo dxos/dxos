@@ -101,8 +101,8 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                   id={(data.slide as any).id}
                   source={(data.slide as any).source}
                   containerUrl={containerUrl}
-                  view={'preview-only'}
                   className={'p-24'}
+                  view={'preview-only'}
                 />
               ) : null;
             case 'section':
