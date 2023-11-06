@@ -31,7 +31,7 @@ import { arrayMove } from '@dxos/util';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
-import { NAVTREE_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
 
 const getMosaicPath = (graph: Graph, id: string) => {

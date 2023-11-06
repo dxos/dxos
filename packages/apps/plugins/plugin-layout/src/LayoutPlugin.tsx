@@ -32,11 +32,11 @@ import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, useLayout } from './LayoutContext';
+import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
 import { MainLayout, ContextView, ContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
+import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
-import { LAYOUT_PLUGIN, type LayoutState } from './types';
 
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.
@@ -80,9 +80,7 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
   });
 
   return {
-    meta: {
-      id: LAYOUT_PLUGIN,
-    },
+    meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 

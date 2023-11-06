@@ -12,7 +12,7 @@ import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { restoreSpace } from '../backup';
-import { SPACE_PLUGIN } from '../types';
+import { SPACE_PLUGIN } from '../meta';
 
 export const DialogRestoreSpace = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);

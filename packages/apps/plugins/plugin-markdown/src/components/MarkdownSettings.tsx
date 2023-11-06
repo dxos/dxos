@@ -8,7 +8,8 @@ import { usePlugin } from '@dxos/app-framework';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { EditorModes } from '@dxos/react-ui-editor';
 
-import { MARKDOWN_PLUGIN, type MarkdownPluginProvides } from '../types';
+import { MARKDOWN_PLUGIN } from '../meta';
+import type { MarkdownPluginProvides } from '../types';
 
 export const MarkdownSettings = () => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);

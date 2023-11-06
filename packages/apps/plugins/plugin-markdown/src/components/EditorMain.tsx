@@ -15,7 +15,8 @@ import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { MARKDOWN_PLUGIN, type MarkdownProperties } from '../types';
+import { MARKDOWN_PLUGIN } from '../meta';
+import type { MarkdownProperties } from '../types';
 
 export const EditorMain = ({
   model,

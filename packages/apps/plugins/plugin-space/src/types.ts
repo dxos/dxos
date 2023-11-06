@@ -12,8 +12,7 @@ import type {
 import type { PublicKey } from '@dxos/react-client';
 import type { ItemID } from '@dxos/react-client/echo';
 
-export const SPACE_PLUGIN = 'dxos.org/plugin/space';
-export const SPACE_PLUGIN_SHORT_ID = 'space';
+import { SPACE_PLUGIN } from './meta';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {

@@ -27,7 +27,8 @@ import { type Query, clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN, SpaceAction } from './types';
+import { SPACE_PLUGIN } from './meta';
+import { SpaceAction } from './types';
 
 export const ROOT = 'root';
 export const SHARED = 'shared-spaces';

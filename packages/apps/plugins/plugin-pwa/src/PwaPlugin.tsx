@@ -10,11 +10,10 @@ import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
 import { ServiceWorkerToast } from './components';
+import meta from './meta';
 
 export const PwaPlugin = (): PluginDefinition => ({
-  meta: {
-    id: 'dxos.org/plugin/pwa',
-  },
+  meta,
   provides: {
     context: ({ children }) => {
       const {

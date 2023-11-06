@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui';
 import { type Provider, getAsyncValue, safariCheck } from '@dxos/util';
 
-import { ERROR_PLUGIN } from '../../constants';
+import { ERROR_PLUGIN } from '../meta';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {

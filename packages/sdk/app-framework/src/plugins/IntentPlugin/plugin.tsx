@@ -6,37 +6,21 @@ import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { type IntentContext, IntentProvider } from './IntentContext';
-import { type Intent } from './intent';
-import { type PluginDefinition, type Plugin } from '../PluginHost';
+import type { Intent } from './intent';
+import IntentMeta from './meta';
+import { type IntentPluginProvides, type IntentResolverProvides, parseIntentResolverPlugin } from './provides';
+import type { PluginDefinition } from '../PluginHost';
 import { filterPlugins, findPlugin } from '../helpers';
-
-export type IntentResolverProvides = {
-  intent: {
-    resolver: (intent: Intent, plugins: Plugin[]) => any;
-  };
-};
-
-export type IntentPluginProvides = {
-  intent: IntentContext;
-};
-
-export const parseIntentPlugin = (plugin: Plugin) =>
-  (plugin.provides as any).intent?.dispatch ? (plugin as Plugin<IntentPluginProvides>) : undefined;
-
-export const parseIntentResolverPlugin = (plugin: Plugin) =>
-  (plugin.provides as any).intent?.resolver ? (plugin as Plugin<IntentResolverProvides>) : undefined;
 
 /**
  * Allows plugins to register intent handlers and routes sent intents to the appropriate plugin.
  * Inspired by https://developer.android.com/reference/android/content/Intent.
  */
-export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
+const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
   const state = deepSignal<IntentContext>({ dispatch: async () => {} });
 
   return {
-    meta: {
-      id: 'dxos.org/plugin/intent',
-    },
+    meta: IntentMeta,
     ready: async (plugins) => {
       // Dispatch intent to associated plugin.
       const dispatch = async (intent: Intent) => {
@@ -70,3 +54,5 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     },
   };
 };
+
+export default IntentPlugin;

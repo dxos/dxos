@@ -494,6 +494,9 @@ importers:
 
   packages/apps/composer-app:
     dependencies:
+      '@braneframe/plugin-chess':
+        specifier: workspace:*
+        version: link:../plugins/plugin-chess
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugins/plugin-client
@@ -503,6 +506,9 @@ importers:
       '@braneframe/plugin-error':
         specifier: workspace:*
         version: link:../plugins/plugin-error
+      '@braneframe/plugin-explorer':
+        specifier: workspace:*
+        version: link:../plugins/plugin-explorer
       '@braneframe/plugin-files':
         specifier: workspace:*
         version: link:../plugins/plugin-files
@@ -512,12 +518,21 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugins/plugin-graph
+      '@braneframe/plugin-grid':
+        specifier: workspace:*
+        version: link:../plugins/plugin-grid
       '@braneframe/plugin-ipfs':
         specifier: workspace:*
         version: link:../plugins/plugin-ipfs
+      '@braneframe/plugin-kanban':
+        specifier: workspace:*
+        version: link:../plugins/plugin-kanban
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugins/plugin-layout
+      '@braneframe/plugin-map':
+        specifier: workspace:*
+        version: link:../plugins/plugin-map
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
@@ -533,6 +548,15 @@ importers:
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
+      '@braneframe/plugin-registry':
+        specifier: workspace:*
+        version: link:../plugins/plugin-registry
+      '@braneframe/plugin-script':
+        specifier: workspace:*
+        version: link:../plugins/plugin-script
+      '@braneframe/plugin-search':
+        specifier: workspace:*
+        version: link:../plugins/plugin-search
       '@braneframe/plugin-sketch':
         specifier: workspace:*
         version: link:../plugins/plugin-sketch
@@ -542,12 +566,21 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
+      '@braneframe/plugin-table':
+        specifier: workspace:*
+        version: link:../plugins/plugin-table
       '@braneframe/plugin-telemetry':
         specifier: workspace:*
         version: link:../plugins/plugin-telemetry
+      '@braneframe/plugin-template':
+        specifier: workspace:*
+        version: link:../plugins/plugin-template
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugins/plugin-theme
+      '@braneframe/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugins/plugin-thread
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
@@ -569,6 +602,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc-tunnel
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -1936,32 +1972,7 @@ importers:
         version: 4.3.9(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
-    dependencies:
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../../sdk/client
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-layout':
-        specifier: workspace:*
-        version: link:../plugin-layout
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1976,7 +1987,7 @@ importers:
         version: link:../../../ui/react-ui-theme
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -6772,6 +6783,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

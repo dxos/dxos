@@ -17,7 +17,8 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
+import { SPACE_PLUGIN } from '../meta';
+import { SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
 import { getActiveSpace } from '../util';
 
 export const SpacePresence = () => {

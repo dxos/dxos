@@ -42,6 +42,22 @@ export type Plugin<TProvides = {}> = {
      */
     // TODO(wittjosiah): How should these be managed?
     shortId?: string;
+
+    /**
+     * Human readable name.
+     */
+    name?: string;
+
+    /**
+     * Short description of plugin functionality.
+     */
+    description?: string;
+
+    /**
+     * Component to render icon for the plugin when displayed in a list.
+     */
+    // TODO(wittjosiah): Convert to `icon` and make serializable.
+    iconComponent?: FC;
   };
 
   /**
@@ -80,3 +96,14 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    */
   unload?: () => Promise<void>;
 };
+
+type LazyPlugin<T> = () => Promise<{ default: (props: T) => PluginDefinition }>;
+
+export namespace Plugin {
+  export const lazy = <T>(p: LazyPlugin<T>, props?: T) => {
+    return () =>
+      p().then(({ default: definition }) => {
+        return definition(props as T);
+      });
+  };
+}
