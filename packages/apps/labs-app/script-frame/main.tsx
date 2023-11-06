@@ -9,7 +9,6 @@ import { ClientServicesProxy } from '@dxos/client/services';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-
 // TODO(burdon): The script main frame currently must be part of the vite applications.
 //  Import file as resource from package?
 

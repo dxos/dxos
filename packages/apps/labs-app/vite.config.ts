@@ -51,12 +51,13 @@ export default defineConfig({
     },
   },
   plugins: [
-    {
+    { 
+      // Required for the script plugin.
       name: "sandbox-importmap-integration",
       transformIndexHtml() {
         return [{
           tag: 'script',
-          injectTo: 'head-prepend',
+          injectTo: 'head-prepend', // Inject before vite's built-in scripts.
           children: `
             if(window.location.hash.includes('importMap')) {
               const urlParams = new URLSearchParams(window.location.hash.slice(1));

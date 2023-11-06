@@ -120,7 +120,7 @@ const main = async () => {
       GridPlugin(),
       KanbanPlugin(),
       MapPlugin(),
-      ScriptPlugin({ mainUrl: '/script-frame/index.html' }),
+      ScriptPlugin({ containerUrl: '/script-frame/index.html' }),
       SketchPlugin(),
       StackPlugin(),
       TablePlugin(),

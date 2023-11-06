@@ -12,14 +12,14 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { type CompilerResult } from '../../compiler';
 
 export type FrameContainerProps = {
-  mainUrl: string;
+  containerUrl: string;
   result: CompilerResult;
 };
 
 /**
  * IFrame container for the compiled script.
  */
-export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
+export const FrameContainer = ({ containerUrl, result }: FrameContainerProps) => {
   const client = useClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
@@ -42,9 +42,11 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
     }
   }, [iframeRef]);
 
-  const src = `${mainUrl}#importMap=${encodeURIComponent(JSON.stringify({
-    imports: createImportMap(result),
-  }))}`
+  const src = `${containerUrl}#importMap=${encodeURIComponent(
+    JSON.stringify({
+      imports: createImportMap(result),
+    }),
+  )}`;
 
   return <iframe ref={iframeRef} sandbox='allow-scripts' src={src} style={{ width: '100%', height: '100%' }} />;
 };

@@ -35,7 +35,7 @@ export const initializeCompiler = async (options: { wasmURL: string }) => {
  * ESBuild compiler.
  */
 export class Compiler {
-  constructor(private readonly _options: CompilerOptions) { }
+  constructor(private readonly _options: CompilerOptions) {}
 
   // TODO(burdon): Error handling.
   async compile(source: string): Promise<CompilerResult> {
