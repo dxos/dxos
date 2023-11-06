@@ -22,7 +22,6 @@ import {
   type Size,
   Tooltip,
   useTranslation,
-  Button,
 } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
