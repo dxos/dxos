@@ -353,7 +353,7 @@ export class Connection {
 
       // If signal fails treat connection as failed
       log.info('signal message failed to deliver', { err });
-      await this.close();
+      await this.close(new ConnectivityError('signal message failed to deliver', err));
     }
   }
 
