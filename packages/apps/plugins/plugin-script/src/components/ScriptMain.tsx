@@ -22,7 +22,9 @@ export type ScriptMainProps = {
   id: string;
   view?: View;
   source: TextObject;
-  mainUrl: string;
+
+  // Url to the page used to host the script in the iframe.
+  containerUrl: string;
   className?: string;
 };
 
@@ -34,7 +36,11 @@ export const ScriptMain = (props: ScriptMainProps) => {
   );
 };
 
+<<<<<<< HEAD
 export const ScriptSection = ({ id, view: controlledView, source, mainUrl, className }: ScriptMainProps) => {
+=======
+export const ScriptSection = ({ view: controlledView, source, containerUrl, className }: ScriptMainProps) => {
+>>>>>>> origin/main
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
   useEffect(() => {
@@ -111,7 +117,7 @@ export const ScriptSection = ({ id, view: controlledView, source, mainUrl, class
         )}
         {view !== 'editor' && result && (
           <div className='flex flex-1 shrink-0 overflow-hidden'>
-            <FrameContainer result={result} mainUrl={mainUrl} />
+            <FrameContainer result={result} containerUrl={containerUrl} />
           </div>
         )}
       </div>

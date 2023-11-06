@@ -1,4 +1,3 @@
-# TODO(burdon): Convert to array.
 functions:
   - id: 'assistant'
     description: 'AI Chat'

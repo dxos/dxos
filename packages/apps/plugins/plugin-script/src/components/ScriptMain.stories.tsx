@@ -45,9 +45,14 @@ const Story = () => {
     return null;
   }
 
+  // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in labs-app.
   return (
     <div className={'flex fixed inset-0'}>
+<<<<<<< HEAD
       <ScriptSection id='test' source={source} mainUrl={mainUrl} />
+=======
+      <ScriptSection source={source} containerUrl={mainUrl} />
+>>>>>>> origin/main
     </div>
   );
 };
