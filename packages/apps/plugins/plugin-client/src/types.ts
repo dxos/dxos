@@ -10,8 +10,7 @@ export type ClientPluginProvides = {
   client: Client;
 
   /**
-   * True if this is the first time this device has been used.
-   * Indicates that the identity was created during startup.
+   * True if this is the first time the current app has been used by this identity.
    */
   firstRun: boolean;
 };

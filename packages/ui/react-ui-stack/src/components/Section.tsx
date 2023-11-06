@@ -71,9 +71,12 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 className={mx(getSize(5), hoverableControlItem, 'transition-opacity')}
               />
             </div>
-            <div role='none' className='flex-1 min-is-0'>
+
+            {/* Main content. */}
+            <div role='none' className='flex flex-1 min-is-0 overflow-hidden'>
               {children}
             </div>
+
             <Button
               variant='ghost'
               classNames={[

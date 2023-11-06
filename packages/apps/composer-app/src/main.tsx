@@ -41,6 +41,8 @@ import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
+const APP = 'composer.dxos.org';
+
 const main = async () => {
   const config = new Config(Envs(), Local(), Defaults());
   const services = await createClientServices(config);
@@ -51,23 +53,26 @@ const main = async () => {
       </div>
     ),
     plugins: [
+      // Needs to run ASAP on startup (but not blocking).
       // TODO(burdon): Normalize namespace across apps (composer.dxos.org).
       TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
+
+      // Outside of error boundary so error dialog is styled.
       ThemePlugin({ appName: 'Composer' }),
 
       // Outside of error boundary so that updates are not blocked by errors.
       PwaPlugin(),
 
       // Core framework.
+      // TODO(wittjosiah): Factor out to app framework.
       ErrorPlugin(),
-      GraphPlugin(),
-      MetadataPlugin(),
-      ClientPlugin({ config, services, types }),
 
       // Core UX.
       LayoutPlugin(),
       NavTreePlugin(),
 
+      // Application data integrations.
+      ClientPlugin({ appKey: APP, config, services, types }),
       SpacePlugin({
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
           const document = new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) });
@@ -89,6 +94,12 @@ const main = async () => {
       PresenterPlugin(), // Before Stack.
       StackPlugin(),
       SketchPlugin(),
+
+      // App framework extensions.
+      // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
+      //  Root folder needs to be created before the graph is built or else it's not ordered first.
+      GraphPlugin(),
+      MetadataPlugin(),
     ],
   });
 

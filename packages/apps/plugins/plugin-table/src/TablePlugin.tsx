@@ -70,10 +70,10 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (role) {
             case 'main':
               return isTable(data.active) ? <TableMain table={data.active} /> : null;
-            case 'section':
-              return isTable(data.object) ? <TableSection table={data.object} /> : null;
             case 'slide':
               return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
+            case 'section':
+              return isTable(data.object) ? <TableSection table={data.object} /> : null;
             default:
               return null;
           }

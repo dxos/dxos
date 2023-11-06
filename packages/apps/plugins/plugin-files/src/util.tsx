@@ -137,7 +137,7 @@ const localDirectoryToGraphNode = (
     label: directory.title,
     icon: (props) => <Folder {...props} />,
     data: directory,
-    properties: {},
+    properties: { role: 'branch' },
   });
 
   if (directory.permission !== 'granted') {

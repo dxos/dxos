@@ -21,6 +21,7 @@
       <w>dxos</w>
       <w>dxos's</w>
       <w>dxrpc</w>
+      <w>echofs</w>
       <w>endcap</w>
       <w>faas</w>
       <w>faasd</w>
@@ -66,6 +67,7 @@
       <w>onwant</w>
       <w>openfaas</w>
       <w>orgs</w>
+      <w>outdir</w>
       <w>packlets</w>
       <w>permissionless</w>
       <w>prefs</w>

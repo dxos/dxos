@@ -15,11 +15,15 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "script-frame"
   ],
   "references": [
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
     },
     {
       "path": "../../core/protocols"
@@ -97,6 +101,9 @@
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-metadata"
+    },
+    {
       "path": "../plugins/plugin-navtree"
     },
     {
@@ -104,6 +111,9 @@
     },
     {
       "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-script"
     },
     {
       "path": "../plugins/plugin-search"

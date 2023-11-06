@@ -279,9 +279,6 @@ export class InvitationsHandler {
               );
               log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
-              if (introductionResponse.spaceKey) {
-                invitation.spaceKey = introductionResponse.spaceKey;
-              }
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {
