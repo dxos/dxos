@@ -9,8 +9,6 @@ import { useClient } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-// @ts-ignore
-import frameSrc from './frame.html?raw';
 import { type CompilerResult } from '../../compiler';
 
 export type FrameContainerProps = {
@@ -44,14 +42,11 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
     }
   }, [iframeRef]);
 
-  const html = frameSrc.replace(
-    '__IMPORT_MAP__',
-    JSON.stringify({
-      imports: createImportMap(mainUrl, result),
-    }),
-  );
+  const src = `${mainUrl}#importMap=${encodeURIComponent(JSON.stringify({
+    imports: createImportMap(result),
+  }))}`
 
-  return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
+  return <iframe ref={iframeRef} sandbox='allow-scripts' src={src} style={{ width: '100%', height: '100%' }} />;
 };
 
 /**
@@ -60,7 +55,7 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
  * @param mainUrl
  * @param result
  */
-const createImportMap = (mainUrl: string, result: CompilerResult) => {
+const createImportMap = (result: CompilerResult) => {
   const createReexportingModule = (namedImports: string[], key: string) => {
     const code = `
       const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}];
@@ -72,7 +67,6 @@ const createImportMap = (mainUrl: string, result: CompilerResult) => {
   };
 
   return {
-    '@frame/main': mainUrl,
     '@frame/bundle': `data:text/javascript;base64,${btoa(result.bundle)}`,
     ...Object.fromEntries(
       result.imports
