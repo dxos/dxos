@@ -39,6 +39,7 @@ export type ObjectViewer = {
   spaceKey: PublicKey;
   objectId: string;
   lastSeen: number;
+  color?: string;
 };
 
 export type PluginState = {

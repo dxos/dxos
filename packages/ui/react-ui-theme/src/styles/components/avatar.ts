@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Size, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, getSize, getSizeHeight, glassSurface } from '../fragments';
+import { baseSurfaceBorder, descriptionText, getSize, getSizeHeight } from '../fragments';
 
 export type AvatarStyleProps = Partial<{
   size: Size;
@@ -17,7 +17,12 @@ export type AvatarStyleProps = Partial<{
 }>;
 
 export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inGroup }, ...etc) =>
-  mx('relative inline-flex flex-row-reverse shrink-0', getSize(size), inGroup && '-mie-2', ...etc);
+  mx(
+    'relative inline-flex shrink-0',
+    getSize(size),
+    inGroup && (size == 'px' || size <= 3 ? '-mie-1' : '-mie-2'),
+    ...etc,
+  );
 
 export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
 
@@ -25,7 +30,7 @@ export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly 
   mx(descriptionText, srOnly && 'sr-only', ...etc);
 
 export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
-  mx('is-full bs-full', glassSurface, variant === 'circle' ? 'rounded-full' : 'rounded', ...etc);
+  mx('is-full bs-full bg-[--surface-bg]', variant === 'circle' ? 'rounded-full' : 'rounded', ...etc);
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
@@ -41,21 +46,22 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
 
 export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
   mx(
-    'absolute inset-0 border-2 border-neutral-300 dark:border-neutral-600',
+    'absolute inset-0 border-2',
+    baseSurfaceBorder,
     variant === 'circle' ? 'rounded-full' : 'rounded',
     status === 'active'
       ? 'border-success-400 dark:border-success-400'
       : status === 'error'
       ? 'border-error-400 dark:border-error-500'
       : status === 'warning'
-      ? 'border-warning-300 dark:border-warning-300'
+      ? 'border-warning-400 dark:border-warning-500'
       : '',
     animation === 'pulse' ? 'animate-halo-pulse' : '',
     ...etc,
   );
 
 export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
-  mx('fill-neutral-600 dark:fill-neutral-600', ...etc);
+  mx('fill-neutral-600 dark:fill-neutral-300', ...etc);
 
 export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
   mx('inline-flex items-center', ...etc);

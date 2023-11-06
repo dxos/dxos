@@ -16,7 +16,8 @@ export const baseSurfaceBorder = 'border-neutral-12 dark:border-neutral-900';
 // Sidebars, main heading (“topbar”), and nothing else.
 export const fixedSurface = 'bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur-md';
 
-export const glassSurface = 'bg-neutral-12/30 dark:bg-neutral-800/30 backdrop-blur-md border border-neutral-50 dark:border-neutral-800';
+export const glassSurface =
+  'bg-neutral-12/30 dark:bg-neutral-800/30 backdrop-blur-md border border-neutral-50 dark:border-neutral-800';
 
 // Cards, dialogs, other such groups.
 export const groupSurface = 'bg-neutral-50 dark:bg-neutral-850';

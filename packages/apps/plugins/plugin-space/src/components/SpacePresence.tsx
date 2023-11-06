@@ -14,8 +14,17 @@ import {
 } from '@dxos/app-framework';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Avatar, AvatarGroup, AvatarGroupItem, Button, DensityProvider, Tooltip, useTranslation } from '@dxos/react-ui';
-import { getSize, mx, glassSurface } from '@dxos/react-ui-theme';
+import {
+  Avatar,
+  AvatarGroup,
+  AvatarGroupItem,
+  DensityProvider,
+  type Size,
+  Tooltip,
+  useTranslation,
+  Button,
+} from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
 import { getActiveSpace } from '../util';
@@ -62,31 +71,36 @@ export const SpacePresence = () => {
 };
 
 export type ObjectPresenceProps = {
+  size?: Size;
   viewers?: ObjectViewer[];
+  showCount?: boolean;
   onShareClick?: () => void;
 };
 
 export const ObjectPresence = (props: ObjectPresenceProps) => {
-  const { onShareClick, viewers = [] } = props;
+  const {
+    onShareClick,
+    viewers = [],
+    size = 4,
+    showCount = !props?.size || (props.size !== 'px' && props.size > 4),
+  } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
       <Tooltip.Trigger className={mx('px-1 m-1 flex items-center')} onClick={onShareClick}>
         {onShareClick && viewers.length === 0 && (
           <DensityProvider density={'fine'}>
-            <Button variant='ghost' onClick={onShareClick}>
-              <Users className={getSize(5)} />
-            </Button>
+            <Users className={getSize(5)} />
           </DensityProvider>
         )}
         {viewers.length > 0 && (
-          <AvatarGroup.Root size={4} classNames='m-2 mie-5' >
-            {viewers.length > 3 && (
+          <AvatarGroup.Root size={size} classNames='m-2 mie-5'>
+            {viewers.length > 3 && showCount && (
               <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
             )}
             {viewers.slice(0, 3).map((viewer, i) => (
-              <AvatarGroupItem.Root key={viewer.identityKey.toHex()}>
-                <Avatar.Frame style={{ zIndex: -i }}>
+              <AvatarGroupItem.Root key={viewer.identityKey.toHex()} color={viewer.color}>
+                <Avatar.Frame style={{ zIndex: viewers.length - i }}>
                   <Avatar.Fallback href={viewer.identityKey.toHex()} />
                 </Avatar.Frame>
               </AvatarGroupItem.Root>
