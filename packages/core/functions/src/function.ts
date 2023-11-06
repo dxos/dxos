@@ -14,8 +14,8 @@ export interface FunctionContext {
   status(code: number): Response;
 }
 
-// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 // https://www.npmjs.com/package/aws-lambda
+// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 
 // TODO(burdon): Types.
 export type FunctionSubscriptionEvent = {
@@ -29,11 +29,12 @@ export type FunctionHandler<T extends {}> = (params: {
 }) => Promise<Response | void>;
 
 export type FunctionsManifest = {
-  functions: Record<string, FunctionConfig>;
+  functions: FunctionConfig[];
   triggers: FunctionTrigger[];
 };
 
 export type FunctionConfig = {
+  id: string;
   description?: string;
 };
 

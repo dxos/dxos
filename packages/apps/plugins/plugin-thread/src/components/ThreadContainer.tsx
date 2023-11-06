@@ -3,7 +3,7 @@
 //
 
 import differenceInSeconds from 'date-fns/differenceInSeconds';
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
@@ -49,11 +49,14 @@ export const blockPropertiesProvider = (identity: Identity, members: SpaceMember
   };
 };
 
-export const ThreadContainer: FC<{ space: Space; thread: ThreadType; activeObjectId?: string }> = ({
-  space,
-  thread,
-  activeObjectId,
-}) => {
+export type ThreadContainerProps = {
+  space: Space;
+  thread: ThreadType;
+  activeObjectId?: string;
+  fullWidth?: boolean;
+};
+
+export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
 
@@ -62,7 +65,6 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType; activeObjec
     const message = {
       timestamp: new Date().toISOString(),
       text,
-      data: activeObjectId,
     };
 
     // Update current block if same user and time > 3m.
@@ -82,6 +84,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType; activeObjec
     thread.blocks.push(
       new ThreadType.Block({
         identityKey: identity.identityKey.toHex(),
+        context: { object: activeObjectId },
         messages: [message],
       }),
     );
@@ -106,6 +109,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType; activeObjec
       identityKey={identity.identityKey}
       thread={thread}
       getBlockProperties={blockPropertiesProvider(identity, members)}
+      fullWidth={fullWidth}
       onSubmit={handleSubmit}
       onDelete={handleDelete}
     />

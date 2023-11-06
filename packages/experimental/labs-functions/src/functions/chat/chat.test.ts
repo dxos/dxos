@@ -4,27 +4,19 @@
 
 import { expect } from 'chai';
 
-import { type Config } from '@dxos/config';
 import { describe, test } from '@dxos/test';
 
 import { Chat } from './chat';
 import { type Entity, type SchemaMap } from './schema';
-import { getConfig, loadJson } from '../../util';
-
-// TODO(burdon): Move to config.
-const getKey = (config: Config, name: string) => {
-  const keys = config.values?.runtime?.keys;
-  const key = keys?.find((key) => key.name === name);
-  return key?.value;
-};
+import { getConfig, getKey, loadJson } from '../../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('ChatModel', () => {
   const createChatModel = (): Chat => {
     const config = getConfig()!;
     return new Chat({
-      orgId: getKey(config, 'com.openai.org_id')!,
-      apiKey: getKey(config, 'com.openai.api_key')!,
+      orgId: getKey(config, 'openai.com/org_id')!,
+      apiKey: getKey(config, 'openai.com/api_key')!,
     });
   };
 
