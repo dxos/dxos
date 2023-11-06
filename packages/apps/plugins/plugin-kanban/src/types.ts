@@ -21,7 +21,6 @@ import { isTypedObject } from '@dxos/react-client/echo';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-// TODO(burdon): Make id consistent with other plugins.
 export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 
 const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
