@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 import { parseMessage } from './parser';
 
 describe('Parser', () => {
-  test.skip('JSON text', () => {
+  test('JSON text', () => {
     // TODO(burdon): Multiple JSON blocks.
     const content =
       "Certainly! Here's an example of a JSON document listing\n the founders of Blue Yard:" +
