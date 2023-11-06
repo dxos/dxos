@@ -14,8 +14,9 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
+  base: process.env.BASE_URL ?? './packages/apps/labs-app/out/labs',
   server: {
     host: true,
     // https: true,
@@ -23,9 +24,9 @@ export default defineConfig({
     https:
       process.env.HTTPS === 'true'
         ? {
-            key: './key.pem',
-            cert: './cert.pem',
-          }
+          key: './key.pem',
+          cert: './cert.pem',
+        }
         : false,
     fs: {
       allow: [
@@ -37,6 +38,12 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, './index.html'),
+        'script-frame': resolve(__dirname, './script-frame/index.html'),
+      }
+    }
   },
   resolve: {
     alias: {
@@ -44,6 +51,30 @@ export default defineConfig({
     },
   },
   plugins: [
+    { 
+      // Required for the script plugin.
+      name: "sandbox-importmap-integration",
+      transformIndexHtml() {
+        return [{
+          tag: 'script',
+          injectTo: 'head-prepend', // Inject before vite's built-in scripts.
+          children: `
+            if(window.location.hash.includes('importMap')) {
+              const urlParams = new URLSearchParams(window.location.hash.slice(1));
+              if(urlParams.get('importMap')) {
+                const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
+                
+                const mapElement = document.createElement('script');
+                mapElement.type = 'importmap';
+                mapElement.textContent = JSON.stringify(importMap, null, 2);
+                document.head.appendChild(mapElement);
+              }
+            }
+          `
+        }];
+      }
+    },
+
     // mkcert(),
     ConfigPlugin({
       env: [
@@ -110,7 +141,7 @@ export default defineConfig({
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({
       org: 'dxos',
-      project: 'labs-app',
+      project: 'labs-app', // TODO(burdon): Consistent naming (e.g., labs.dxos.org?)
       sourcemaps: {
         assets: './packages/apps/labs-app/out/labs/**',
       },

@@ -9,7 +9,7 @@ import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Sketch as SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
-import { SketchMain, SketchSection, SketchSlide } from './components';
+import { SketchMain, SketchComponent } from './components';
 import translations from './translations';
 import { SKETCH_PLUGIN, SketchAction, type SketchPluginProvides, isSketch } from './types';
 
@@ -84,9 +84,13 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case 'main':
               return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
             case 'slide':
-              return isSketch(data.slide) ? <SketchSlide sketch={data.slide} /> : null;
+              return isSketch(data.slide) ? (
+                <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
+              ) : null;
             case 'section':
-              return isSketch(data.object) ? <SketchSection sketch={data.object} /> : null;
+              return isSketch(data.object) ? (
+                <SketchComponent sketch={data.object} readonly={true} autoZoom={true} className={'h-[400px]'} />
+              ) : null;
             default:
               return null;
           }

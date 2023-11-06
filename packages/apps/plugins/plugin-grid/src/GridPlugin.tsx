@@ -52,7 +52,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                 },
                 {
                   action: SpaceAction.ADD_TO_FOLDER,
-                  data: { spaceKey: parent.data },
+                  data: { folder: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,

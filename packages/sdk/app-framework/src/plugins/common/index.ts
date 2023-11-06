@@ -3,6 +3,6 @@
 //
 
 export * from './graph';
-export * from './metadata';
 export * from './layout';
+export * from './metadata';
 export * from './translations';

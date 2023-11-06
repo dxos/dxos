@@ -21,7 +21,9 @@ export type View = 'editor' | 'preview' | 'split' | 'preview-only';
 export type ScriptMainProps = {
   view?: View;
   source: TextObject;
-  mainUrl: string;
+
+  // Url to the page used to host the script in the iframe.
+  containerUrl: string;
   className?: string;
 };
 
@@ -33,7 +35,7 @@ export const ScriptMain = (props: ScriptMainProps) => {
   );
 };
 
-export const ScriptSection = ({ view: controlledView, source, mainUrl, className }: ScriptMainProps) => {
+export const ScriptSection = ({ view: controlledView, source, containerUrl, className }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
 
   const { themeMode } = useThemeContext();
@@ -94,7 +96,7 @@ export const ScriptSection = ({ view: controlledView, source, mainUrl, className
         )}
         {view !== 'editor' && result && (
           <div className='flex flex-1 shrink-0 overflow-hidden'>
-            <FrameContainer result={result} mainUrl={mainUrl} />
+            <FrameContainer result={result} containerUrl={containerUrl} />
           </div>
         )}
       </div>

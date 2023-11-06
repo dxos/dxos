@@ -36,6 +36,7 @@ const services = new ClientServicesProxy(
   }),
 );
 
+// TODO(burdon): Error handling.
 createRoot(document.getElementById('root')!).render(
   <ClientProvider services={() => services}>
     <div className='flex fixed inset-0'>
