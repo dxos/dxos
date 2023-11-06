@@ -61,7 +61,12 @@ export const ThreadSidebar: FC<{ space?: Space; thread?: ThreadType }> = ({ spac
         </Tooltip.Portal>
       </Tooltip.Root>
 
-      <ThreadContainer space={space} thread={thread} activeObjectId={layoutPlugin?.provides.layout.active} />
+      <ThreadContainer
+        space={space}
+        thread={thread}
+        activeObjectId={layoutPlugin?.provides.layout.active}
+        fullWidth={true}
+      />
     </div>
   );
 };

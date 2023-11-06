@@ -15,6 +15,7 @@ export type Import = {
 };
 
 export type CompilerResult = {
+  timestamp: number;
   sourceHash: Buffer;
   imports: Import[];
   bundle: string;
@@ -74,6 +75,7 @@ export class Compiler {
     // console.log(result.outputFiles![0].text);
 
     return {
+      timestamp: Date.now(),
       sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
       imports: this.analyzeImports(result),
       bundle: result.outputFiles![0].text,

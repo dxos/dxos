@@ -27,6 +27,10 @@ export class TestObjectGenerator<T extends string> {
     return Object.values(this.schema);
   }
 
+  getSchema(typename: string) {
+    return this.schemas.find((schema) => schema.typename === typename);
+  }
+
   createObject({ types }: { types?: T[] } = {}): Expando {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this.schema) as T[]));
     const factory = this._generators[type];
