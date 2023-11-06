@@ -25,7 +25,7 @@ import { SpacePlugin } from '@braneframe/plugin-space';
 import { StackPlugin } from '@braneframe/plugin-stack';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { types, Document } from '@braneframe/types';
+import { types, Document, Folder, File, Table, Sketch, Stack } from '@braneframe/types';
 import { createApp, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy, Text, TypedObject } from '@dxos/client/echo';
 import { createClientServices } from '@dxos/client/services';
@@ -40,6 +40,16 @@ import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 (globalThis as any)[TypedObject.name] = TypedObject;
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
+
+// TODO(wittjosiah): Remove. Used to be able to access types from the console.
+(window as any).dxos.types = {
+  Document,
+  File,
+  Folder,
+  Sketch,
+  Stack,
+  Table,
+};
 
 const APP = 'composer.dxos.org';
 
