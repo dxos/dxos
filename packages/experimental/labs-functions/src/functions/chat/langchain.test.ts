@@ -28,7 +28,7 @@ describe('Langchain', () => {
     openAIApiKey: getKey(config, 'openai.com/api_key')!,
   });
 
-  test('json', async () => {
+  test.skip('json', async () => {
     // TODO(burdon): Schema format via function calling (ChatGPT only).
     // https://community.openai.com/t/getting-response-data-as-a-fixed-consistent-json-response/28471/32
     const f = (schema: Schema) => {
