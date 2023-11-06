@@ -3,6 +3,7 @@
 //
 
 import { type BaseChatModel } from 'langchain/chat_models/base';
+import { FakeListChatModel } from 'langchain/chat_models/fake';
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { ChatMessage } from 'langchain/schema';
 
@@ -20,12 +21,14 @@ type Schema = {
 
 describe('Langchain', () => {
   // TODO(burdon): Testing.
-  // const model = new FakeListChatModel({ responses: ['fake resposne!'] });
+  let model: BaseChatModel = new FakeListChatModel({ responses: ['fake response!'] });
 
-  const config = getConfig(`${process.env.HOME}/.config/dx/profile/default.yml`)!;
-  const model: BaseChatModel = new ChatOpenAI({
-    temperature: 0.9,
-    openAIApiKey: getKey(config, 'openai.com/api_key')!,
+  beforeEach(() => {
+    const config = getConfig(`${process.env.HOME}/.config/dx/profile/default.yml`)!;
+    model = new ChatOpenAI({
+      temperature: 0.9,
+      openAIApiKey: getKey(config, 'openai.com/api_key')!,
+    });
   });
 
   test.skip('json', async () => {
