@@ -5,14 +5,8 @@
 import { Users } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  parseGraphPlugin,
-  parseIntentPlugin,
-  parseLayoutPlugin,
-  usePlugin,
-  useResolvePlugin,
-} from '@dxos/app-framework';
-import { useSpace } from '@dxos/react-client/echo';
+import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
+import { type TypedObject, getSpaceForObject, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -26,26 +20,19 @@ import {
 import { getColorForValue, getSize, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
-import { getActiveSpace } from '../util';
 
-export const SpacePresence = () => {
+export const SpacePresence = ({ object }: { object: TypedObject }) => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const defaultSpace = useSpace();
   const identity = useIdentity();
 
-  if (!identity || !spacePlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
+  if (!identity || !spacePlugin || !intentPlugin) {
     return null;
   }
 
-  const space = getActiveSpace(graphPlugin.provides.graph, layoutPlugin.provides.layout.active);
+  const space = getSpaceForObject(object);
 
-  // TODO(burdon): Error when popup appears (BUT DOES NOT GET CAUGHT BY DebugStatus!)
-  //  Warning: React does not recognize the `labelId` prop on a DOM element.
-  //  If you intentionally want it to appear in the DOM as a custom attribute,
-  //  spell it as lowercase `labelid` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
   const handleShare = () => {
     void intentPlugin!.provides.intent.dispatch({
       plugin: SPACE_PLUGIN,
@@ -59,11 +46,7 @@ export const SpacePresence = () => {
   }
 
   const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
-    return (
-      space.key.equals(viewer.spaceKey) &&
-      layoutPlugin?.provides.layout.active === viewer.objectId &&
-      Date.now() - viewer.lastSeen < 30_000
-    );
+    return space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000;
   });
 
   return <ObjectPresence onShareClick={handleShare} viewers={viewers} />;
