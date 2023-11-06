@@ -14,6 +14,7 @@ import { exponentialBackoffInterval } from '@dxos/util';
 import { decodeRpcError } from './errors';
 
 const DEFAULT_TIMEOUT = 3000;
+const BYE_SEND_TIMEOUT = 2_000;
 
 type MaybePromise<T> = Promise<T> | T;
 
@@ -34,7 +35,7 @@ export interface RpcPeerOptions {
  * Interface for a transport-agnostic port to send/receive binary messages.
  */
 export interface RpcPort {
-  send: (msg: Uint8Array) => MaybePromise<void>;
+  send: (msg: Uint8Array, timeout?: number) => MaybePromise<void>;
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
 
@@ -194,8 +195,12 @@ export class RpcPeer {
     if (this._state === RpcState.OPENED && !this._params.noHandshake) {
       try {
         this._state = RpcState.CLOSING;
-        await this._sendMessage({ bye: {} });
-
+        await this._sendMessage({ bye: {} }, BYE_SEND_TIMEOUT);
+      } catch (err: any) {
+        log('error closing peer, sending bye', { err });
+      }
+      try {
+        log('closing waiting on bye');
         await this._byeTrigger.wait({ timeout });
       } catch (err: any) {
         log('error closing peer', { err });
@@ -459,9 +464,9 @@ export class RpcPeer {
     });
   }
 
-  private async _sendMessage(message: RpcMessage) {
+  private async _sendMessage(message: RpcMessage, timeout?: number) {
     log('sending message', { type: Object.keys(message)[0] });
-    await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }));
+    await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }), timeout);
   }
 
   private async _callHandler(req: Request): Promise<Response> {
