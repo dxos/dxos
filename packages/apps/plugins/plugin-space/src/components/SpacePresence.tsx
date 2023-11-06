@@ -23,7 +23,7 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getColorForValue, getSize, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
 import { getActiveSpace } from '../util';
@@ -98,7 +98,10 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
               <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
             )}
             {viewers.slice(0, 3).map((viewer, i) => (
-              <AvatarGroupItem.Root key={viewer.identityKey.toHex()} color={viewer.color}>
+              <AvatarGroupItem.Root
+                key={viewer.identityKey.toHex()}
+                color={getColorForValue({ value: viewer.identityKey.toHex(), type: 'color' })}
+              >
                 <Avatar.Frame style={{ zIndex: viewers.length - i }}>
                   <Avatar.Fallback href={viewer.identityKey.toHex()} />
                 </Avatar.Frame>
