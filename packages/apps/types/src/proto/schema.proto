@@ -8,6 +8,28 @@ import "dxos/schema.proto";
 
 package braneframe;
 
+//option echo_namespace = 'braneframe.com/schema';
+
+/**
+ *
+ */
+message Folder {
+  option (object) = true;
+
+  optional string name = 1;
+  repeated dxos.schema.TypedObject objects = 2;
+}
+
+/**
+ * Generic data view.
+ */
+message View {
+  option (object) = true;
+
+  string title = 1;
+  string type = 2;
+}
+
 /**
  * Table view.
  */
@@ -63,14 +85,6 @@ message Script {
 
   string title = 1;
   dxos.schema.Text source = 2;
-}
-
-// TODO(burdon): Lightweight document (not visible in sidebar).
-message Note {
-  option (object) = true;
-
-  string title = 1;
-  dxos.schema.Text content = 2;
 }
 
 /**
@@ -131,12 +145,9 @@ message Grid {
     option (object) = true;
 
     dxos.schema.TypedObject object = 1;
-    string title = 2;
-    dxos.schema.Text content = 3;
 
-    // TODO(burdon): Properties.
-    string position = 11; // TODO(burdon): Replace layout object?
-    string color = 12;
+    string position = 10; // TODO(burdon): Replace layout object?
+    string color = 11;
   }
 
   string title = 1;
@@ -162,11 +173,17 @@ message Sketch {
 message Thread {
   option (object) = true;
 
+  message Context {
+    string space = 1;
+    string schema = 2;
+    string object = 3;
+  }
+
   message Message {
     string timestamp = 1;
     string text = 2;
     string data = 3; // JSON.
-    dxos.schema.Expando ref = 4;
+    dxos.schema.Expando ref = 4; // TODO(burdon): Change to TypedObject.
   }
 
   // TODO(burdon): Meta (e.g., source).
@@ -177,29 +194,29 @@ message Thread {
     // TODO(burdon): Import key.
     // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
-    repeated Message messages = 2;
+    Context context = 2;
+    repeated Message messages = 3;
   }
 
   string title = 1;
   repeated Block blocks = 2;
 }
 
-//
-// Generic data view.
-//
-message View {
+message Message {
   option (object) = true;
 
-  string title = 1;
-  string type = 2;
-}
+  message Recipient {
+    option (object) = true; // TODO(burdon): REMOVE.
+    string email = 1;
+    string name = 2;
+  }
 
-/**
- *
- */
-message Folder {
-  option (object) = true;
-
-  optional string name = 1;
-  repeated dxos.schema.TypedObject objects = 2;
+  // TODO(burdon): Type.
+  // TODO(burdon): Timestamp (across all objects).
+  string date = 2;
+  Recipient from = 3;
+  repeated Recipient to = 4;
+  string subject = 5;
+  string body = 6;
+  string ref = 7; // TODO(burdon): Implement as link.
 }

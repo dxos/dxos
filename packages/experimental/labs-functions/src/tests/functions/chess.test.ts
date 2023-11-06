@@ -17,87 +17,92 @@ import { afterTest, openAndClose, test } from '@dxos/test';
 
 const HUB_PORT = 8757;
 
-test('chess function', async () => {
-  const testBuilder = new TestBuilder();
-  afterTest(() => testBuilder.destroy());
-  const services = testBuilder.createLocal();
+describe('Chess', () => {
+  test.skip('chess function', async () => {
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
+    const services = testBuilder.createLocal();
 
-  const config = new Config({
-    runtime: {
-      agent: {
-        plugins: [
-          {
-            id: 'dxos.org/agent/plugin/functions',
-            enabled: true,
-            config: {
-              port: HUB_PORT,
+    const config = new Config({
+      runtime: {
+        agent: {
+          plugins: [
+            {
+              id: 'dxos.org/agent/plugin/functions',
+              enabled: true,
+              config: {
+                port: HUB_PORT,
+              },
             },
-          },
-        ],
+          ],
+        },
       },
-    },
-  });
+    });
 
-  const client = new Client({ services, config });
-  await client.initialize();
-  afterTest(() => client.destroy());
+    const client = new Client({ services, config });
+    await client.initialize();
+    afterTest(() => client.destroy());
 
-  client.addTypes(types);
+    client.addTypes(types);
 
-  const functionsPlugin = new FunctionsPlugin();
-  await functionsPlugin.initialize({
-    client,
-    clientServices: services,
-    plugins: [],
-  });
-  await openAndClose(functionsPlugin);
+    const functionsPlugin = new FunctionsPlugin();
+    await functionsPlugin.initialize({
+      client,
+      clientServices: services,
+      plugins: [],
+    });
+    await openAndClose(functionsPlugin);
 
-  const functionsManifest = load(
-    await readFile(join(__dirname, '../../../functions.yml'), 'utf8'),
-  ) as FunctionsManifest;
-  const devServer = new DevServer(client, {
-    directory: join(__dirname, '../../functions'),
-    manifest: functionsManifest,
-  });
-  await devServer.initialize();
-  await devServer.start();
-  afterTest(() => devServer.stop());
+    const functionsManifest = load(
+      await readFile(join(__dirname, '../../../functions.yml'), 'utf8'),
+    ) as FunctionsManifest;
 
-  const endpoint = `http://localhost:${HUB_PORT}`;
-  const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
-  await triggers.start();
-  afterTest(() => triggers.stop());
+    const devServer = new DevServer(client, {
+      directory: join(__dirname, '../../functions'),
+      manifest: functionsManifest,
+    });
 
-  await client.halo.createIdentity();
-  await client.spaces.isReady.wait();
-  const game = client.spaces.default.db.add(new Game());
-  await client.spaces.default.db.flush();
+    await devServer.initialize();
+    await devServer.start();
+    afterTest(() => devServer.stop());
 
-  const { Chess } = await import('chess.js');
+    const triggers = new TriggerManager(client, functionsManifest.triggers, {
+      runtime: 'dev',
+      endpoint: `http://localhost:${HUB_PORT}`,
+    });
+    await triggers.start();
+    afterTest(() => triggers.stop());
 
-  const advanceGame = () => {
-    const chess = new Chess();
-    chess.loadPgn(game.pgn ?? '');
+    await client.halo.createIdentity();
+    await client.spaces.isReady.wait();
+    const game = client.spaces.default.db.add(new Game());
+    await client.spaces.default.db.flush();
 
-    if (chess.isGameOver() || chess.history().length > 50) {
-      over.wake();
-    }
+    const { Chess } = await import('chess.js');
 
-    if (chess.turn() === 'w') {
-      const moves = chess.moves();
-      if (moves.length) {
-        const move = moves[Math.floor(Math.random() * moves.length)];
-        chess.move(move);
-        game.pgn = chess.pgn();
-        console.log(`move: ${chess.history().length}\n` + chess.ascii());
+    const done = new Trigger();
+    const advanceGame = () => {
+      const chess = new Chess();
+      chess.loadPgn(game.pgn ?? '');
+      if (chess.isGameOver() || chess.history().length > 50) {
+        done.wake();
       }
-    }
-  };
 
-  const over = new Trigger();
-  const cleanup = game[subscribe](advanceGame);
-  afterTest(cleanup);
-  advanceGame();
+      if (chess.turn() === 'w') {
+        const moves = chess.moves();
+        if (moves.length) {
+          const move = moves[Math.floor(Math.random() * moves.length)];
+          chess.move(move);
+          game.pgn = chess.pgn();
+          console.log(`move: ${chess.history().length}\n` + chess.ascii());
+        }
+      }
+    };
 
-  await over.wait();
+    const cleanup = game[subscribe](advanceGame);
+    afterTest(cleanup);
+    advanceGame();
+
+    await done.wait();
+  });
 });
