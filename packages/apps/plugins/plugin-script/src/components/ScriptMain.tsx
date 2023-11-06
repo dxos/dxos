@@ -22,10 +22,10 @@ export type ScriptMainProps = {
   id: string;
   view?: View;
   source: TextObject;
+  className?: string;
 
   // Url to the page used to host the script in the iframe.
   containerUrl: string;
-  className?: string;
 };
 
 export const ScriptMain = (props: ScriptMainProps) => {
@@ -36,11 +36,7 @@ export const ScriptMain = (props: ScriptMainProps) => {
   );
 };
 
-<<<<<<< HEAD
-export const ScriptSection = ({ id, view: controlledView, source, mainUrl, className }: ScriptMainProps) => {
-=======
-export const ScriptSection = ({ view: controlledView, source, containerUrl, className }: ScriptMainProps) => {
->>>>>>> origin/main
+export const ScriptSection = ({ id, view: controlledView, source, containerUrl, className }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
   useEffect(() => {

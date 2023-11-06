@@ -48,17 +48,13 @@ export const FrameContainer = ({ containerUrl, result }: FrameContainerProps) =>
     }),
   )}`;
 
-<<<<<<< HEAD
   // return (
   //   <pre className='text-xs p-2 whitespace-break-spaces'>
   //     <code>{html}</code>
   //   </pre>
   // );
 
-  return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
-=======
   return <iframe ref={iframeRef} sandbox='allow-scripts' src={src} style={{ width: '100%', height: '100%' }} />;
->>>>>>> origin/main
 };
 
 /**
