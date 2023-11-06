@@ -12,7 +12,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { getSize, mx, inputSurface } from '@dxos/react-ui-theme';
 
-import { KANBAN_PLUGIN } from '../types';
+import { KANBAN_PLUGIN } from '../meta';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);

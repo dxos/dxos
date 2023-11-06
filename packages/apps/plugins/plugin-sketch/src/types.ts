@@ -15,7 +15,7 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/react-client/echo';
 
-export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
+import { SKETCH_PLUGIN } from './meta';
 
 const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;
 

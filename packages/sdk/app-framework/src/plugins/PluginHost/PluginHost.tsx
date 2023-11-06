@@ -40,7 +40,7 @@ export const PluginHost = ({
 }: BootstrapPluginsParams): PluginDefinition<PluginHostProvides> => {
   const state = new LocalStorageStore<PluginContext>(PLUGIN_HOST, {
     ready: false,
-    enabled: [...core, ...defaults],
+    enabled: [...defaults],
     plugins: [],
     available: order.filter(({ id }) => !core.includes(id)),
     enablePlugin: (id: string) => {
@@ -64,12 +64,12 @@ export const PluginHost = ({
         useEffect(() => {
           log('initializing plugins', { enabled: state.values.enabled });
           const timeout = setTimeout(async () => {
-            const enabledIds = [...state.values.enabled].sort((a, b) => {
+            const enabledIds = [...core, ...state.values.enabled].sort((a, b) => {
               const indexA = order.findIndex(({ id }) => id === a);
               const indexB = order.findIndex(({ id }) => id === b);
               return indexA - indexB;
             });
-            console.log({ enabledIds, definitions });
+
             const enabled = await Promise.all(
               enabledIds
                 .map((id) => definitions[id])

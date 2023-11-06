@@ -11,7 +11,7 @@ import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { type BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
-import { THREAD_PLUGIN } from '../../types';
+import { THREAD_PLUGIN } from '../../meta';
 
 // TODO(burdon): Create storybook.
 

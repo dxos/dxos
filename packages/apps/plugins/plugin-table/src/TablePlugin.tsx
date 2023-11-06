@@ -11,8 +11,9 @@ import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction }
 import { Schema } from '@dxos/react-client/echo';
 
 import { TableMain, TableSection, TableSlide } from './components';
+import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
-import { TABLE_PLUGIN, TableAction, type TablePluginProvides, isTable } from './types';
+import { TableAction, type TablePluginProvides, isTable } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -20,9 +21,7 @@ import { TABLE_PLUGIN, TableAction, type TablePluginProvides, isTable } from './
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
-    meta: {
-      id: TABLE_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {

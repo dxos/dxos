@@ -12,7 +12,7 @@ import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { ThreadContainer } from './ThreadContainer';
-import { THREAD_PLUGIN } from '../types';
+import { THREAD_PLUGIN } from '../meta';
 
 export const ThreadSidebar: FC<{ space?: Space; thread?: ThreadType }> = ({ space, thread: initialThread }) => {
   const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
