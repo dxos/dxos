@@ -72,7 +72,7 @@ export class Balancer {
 
   pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
     this._enqueueChunk(data, trigger, channelId);
-    this._sendChunks(channelId).catch((err) => log.catch(err));
+    this._sendChunks().catch((err) => log.catch(err));
   }
 
   destroy() {
@@ -166,7 +166,7 @@ export class Balancer {
     return null;
   }
 
-  private async _sendChunks(channelId: number) {
+  private async _sendChunks() {
     if (this._sending) {
       return;
     }
@@ -174,7 +174,7 @@ export class Balancer {
     let chunk: ChunkEnvelope | null;
     chunk = this._getNextChunk();
     while (chunk) {
-      // this is not needed since we await the chunk send
+      // TODO(nf): determine whether this is needed since we await the chunk send
       if (!this._framer.writable) {
         log('PAUSE for drain');
         await this._framer.drain.waitForCount(1);
