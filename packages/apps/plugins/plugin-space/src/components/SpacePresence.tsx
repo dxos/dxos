@@ -71,7 +71,7 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
-      <Tooltip.Trigger className={mx('px-1 m-1 flex items-center')}>
+      <Tooltip.Trigger className={mx('px-1 m-1 flex items-center')} onClick={onShareClick}>
         {onShareClick && viewers.length === 0 && (
           <DensityProvider density={'fine'}>
             <Button variant='ghost' onClick={onShareClick}>
@@ -80,7 +80,7 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
           </DensityProvider>
         )}
         {viewers.length > 0 && (
-          <AvatarGroup.Root size={4} classNames='m-2 mie-5' onClick={onShareClick}>
+          <AvatarGroup.Root size={4} classNames='m-2 mie-5' >
             {viewers.length > 3 && (
               <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
             )}
