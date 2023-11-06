@@ -34,7 +34,7 @@ import { TablePlugin } from '@braneframe/plugin-table';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
-import { types } from '@braneframe/types';
+import { Document, File, Folder, Sketch, Stack, Table, types } from '@braneframe/types';
 import { createApp } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices, Remote } from '@dxos/client/services';
@@ -52,7 +52,15 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
-// @ts-ignore
+// TODO(wittjosiah): Remove. Used to be able to access types from the console.
+(window as any).dxos.types = {
+  Document,
+  File,
+  Folder,
+  Sketch,
+  Stack,
+  Table,
+};
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
