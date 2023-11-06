@@ -14,8 +14,9 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
+  base: process.env.BASE_URL ?? './packages/apps/labs-app/out/labs',
   server: {
     host: true,
     // https: true,
@@ -110,7 +111,7 @@ export default defineConfig({
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({
       org: 'dxos',
-      project: 'labs-app',
+      project: 'labs-app', // TODO(burdon): Consistent naming (e.g., labs.dxos.org?)
       sourcemaps: {
         assets: './packages/apps/labs-app/out/labs/**',
       },

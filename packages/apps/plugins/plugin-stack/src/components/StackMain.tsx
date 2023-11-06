@@ -29,7 +29,11 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
 
   const id = `stack-${stack.id}`;
-  const items = stack.sections.map(({ object }) => object as TypedObject<StackSectionItem>);
+  const items = stack.sections
+    .map(({ object }) => object as TypedObject<StackSectionItem>)
+    // TODO(wittjosiah): Should the database handle this differently?
+    // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
+    .filter((object) => Boolean(object));
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.

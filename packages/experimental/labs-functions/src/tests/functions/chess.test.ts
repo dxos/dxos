@@ -1,14 +1,19 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { readFile } from 'fs/promises';
+import { load } from 'js-yaml';
+import { join } from 'path';
+
 import { FunctionsPlugin } from '@dxos/agent';
 import { Trigger } from '@dxos/async';
 import { Game, types } from '@dxos/chess-app/proto';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { subscribe } from '@dxos/echo-schema';
-import { DevServer, FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionsManifest, TriggerManager } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
-import { readFile } from 'fs/promises';
-import { load } from 'js-yaml';
-import { join } from 'path';
 
 const HUB_PORT = 8757;
 
@@ -20,22 +25,24 @@ test('chess function', async () => {
   const config = new Config({
     runtime: {
       agent: {
-        plugins: [{
-          id: 'dxos.org/agent/plugin/functions',
-          enabled: true,
-          config: {
-            port: HUB_PORT,
-          }
-        }]
-      }
-    }
-  })
+        plugins: [
+          {
+            id: 'dxos.org/agent/plugin/functions',
+            enabled: true,
+            config: {
+              port: HUB_PORT,
+            },
+          },
+        ],
+      },
+    },
+  });
 
   const client = new Client({ services, config });
   await client.initialize();
   afterTest(() => client.destroy());
 
-  client.addTypes(types)
+  client.addTypes(types);
 
   const functionsPlugin = new FunctionsPlugin();
   await functionsPlugin.initialize({
@@ -61,18 +68,18 @@ test('chess function', async () => {
   await triggers.start();
   afterTest(() => triggers.stop());
 
-  await client.halo.createIdentity();  
+  await client.halo.createIdentity();
   await client.spaces.isReady.wait();
-  const game = client.spaces.default.db.add(new Game())
+  const game = client.spaces.default.db.add(new Game());
   await client.spaces.default.db.flush();
-  
+
   const { Chess } = await import('chess.js');
 
   const advanceGame = () => {
     const chess = new Chess();
     chess.loadPgn(game.pgn ?? '');
 
-    if(chess.isGameOver() || chess.history().length > 50) {
+    if (chess.isGameOver() || chess.history().length > 50) {
       over.wake();
     }
 
@@ -85,10 +92,10 @@ test('chess function', async () => {
         console.log(`move: ${chess.history().length}\n` + chess.ascii());
       }
     }
-  }
+  };
 
-  const over = new Trigger()
-  const cleanup = game[subscribe](advanceGame)
+  const over = new Trigger();
+  const cleanup = game[subscribe](advanceGame);
   afterTest(cleanup);
   advanceGame();
 

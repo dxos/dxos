@@ -12,11 +12,11 @@ import { isGraphNode } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import {
   type PluginDefinition,
+  type DispatchIntent,
+  LayoutAction,
   resolvePlugin,
   parseIntentPlugin,
   parseLayoutPlugin,
-  LayoutAction,
-  type DispatchIntent,
   parseGraphPlugin,
   parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
@@ -510,6 +510,15 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               const folder = intent.data.folder;
               const object = intent.data.object;
               if (folder instanceof Folder && object instanceof TypedObject) {
+                const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+                if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
+                  await intentPlugin?.provides.intent.dispatch({
+                    action: LayoutAction.ACTIVATE,
+                    data: { id: undefined },
+                  });
+                }
+
                 const index = folder.objects.indexOf(object);
                 folder.objects.splice(index, 1);
                 return true;
