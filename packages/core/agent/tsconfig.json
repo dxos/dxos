@@ -52,6 +52,9 @@
       "path": "../echo/echo-db"
     },
     {
+      "path": "../echo/echo-generator"
+    },
+    {
       "path": "../echo/echo-schema"
     },
     {

@@ -29,6 +29,7 @@ type InvitationKindContext = Partial<{
   invitationObservable: AuthenticatingInvitationObservable;
   invitation: Invitation;
   invitationSubscribable: Subscribable<InvitationEvent>;
+  succeededKeys: Set<string>;
 }>;
 
 type JoinMachineContext = {
@@ -46,6 +47,7 @@ type SelectIdentityEvent = {
 type SetInvitationCodeEvent = {
   type: 'setHaloInvitationCode' | 'setSpaceInvitationCode';
   code: string;
+  succeededKeys?: Set<string>;
 };
 
 type SetInvitationEvent = {
@@ -172,6 +174,19 @@ const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
             always: [
               {
                 cond: (context) => {
+                  if (Kind !== 'Space') {
+                    return false;
+                  } else {
+                    const spaceKey = context.space.invitation?.spaceKey?.toHex();
+                    const succeededKeys = context.space.succeededKeys;
+                    return spaceKey ? !!succeededKeys?.has(spaceKey) : false;
+                  }
+                },
+                target: successTarget,
+                actions: 'log',
+              },
+              {
+                cond: (context) => {
                   const invitation = context[Kind.toLowerCase() as Lowercase<Kind>].invitation;
                   return !invitation || invitation?.state === Invitation.State.CONNECTING;
                 },
@@ -243,6 +258,7 @@ const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
             [Kind.toLowerCase()]: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
               ...context[Kind.toLowerCase() as Lowercase<Kind>],
               unredeemedCode: event.code,
+              succeededKeys: event.succeededKeys,
             }),
           }),
           `redeem${Kind}InvitationCode`,
@@ -438,14 +454,21 @@ const useJoinMachine = (
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
         try {
-          const invitationObservable = client.spaces.join(
-            InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode)),
-          );
-          return {
-            ...space,
-            invitationObservable,
-            invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
-          };
+          const invitation = InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode));
+          // Don’t join with the invitation if it has already succeeded.
+          if (space.succeededKeys?.has(invitation.spaceKey?.toHex() ?? 'never')) {
+            return {
+              ...space,
+              invitation,
+            };
+          } else {
+            const invitationObservable = client.spaces.join(invitation);
+            return {
+              ...space,
+              invitationObservable,
+              invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
+            };
+          }
         } catch (err) {
           log.error('Could not redeem space invitation code', err);
           return space;

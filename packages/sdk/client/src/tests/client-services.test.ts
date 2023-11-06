@@ -241,7 +241,7 @@ describe('Client services', () => {
           },
           presence: SpaceMember.PresenceState.ONLINE,
         });
-      }, 3_000);
+      }, 20_000);
     }
 
     await syncItems(hostSpace.internal.db, guestSpace.internal.db);

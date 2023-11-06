@@ -4,7 +4,7 @@
 
 import { QueryOptions } from '@dxos/client/echo';
 import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { getStateMachineFromItem } from '@dxos/echo-db';
 import { getEchoObjectItem } from '@dxos/echo-schema';
 import { type EchoObject, Filter, base } from '@dxos/echo-schema';
@@ -53,6 +53,7 @@ export class QueryPlugin extends Plugin {
 
   async close(): Promise<void> {
     void this._ctx?.dispose();
+    this._ctx = undefined;
     this.statusUpdate.emit();
   }
 
@@ -61,6 +62,7 @@ export class QueryPlugin extends Plugin {
       log('Indexing plugin received unexpected message type.', { type: message.payload['@type'] });
       return;
     }
+    invariant(this._ctx, 'Plugin not opened.');
 
     await this._initialized.wait();
 
@@ -83,10 +85,13 @@ export class QueryPlugin extends Plugin {
       objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
     };
 
-    await this._pluginCtx!.client!.spaces.default.postMessage(QUERY_CHANNEL, {
-      '@type': 'dxos.agent.query.QueryResponse',
-      ...response,
-    });
+    await cancelWithContext(
+      this._ctx,
+      this._pluginCtx!.client!.spaces.default.postMessage(QUERY_CHANNEL, {
+        '@type': 'dxos.agent.query.QueryResponse',
+        ...response,
+      }),
+    );
   }
 }
 

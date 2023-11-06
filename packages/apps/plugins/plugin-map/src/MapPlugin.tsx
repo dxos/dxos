@@ -55,7 +55,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                 },
                 {
                   action: SpaceAction.ADD_TO_FOLDER,
-                  data: { spaceKey: parent.data },
+                  data: { folder: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,

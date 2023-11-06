@@ -6,12 +6,26 @@ import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { LayoutAction, useIntent } from '@dxos/app-framework';
-import { type Graph } from '@dxos/app-graph';
+import type { Node, Graph } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DensityProvider,
+  ElevationProvider,
+  Tooltip,
+  useMediaQuery,
+  useSidebars,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
-import { NavTree, type NavTreeContextType, type TreeNode, type NavTreeProps } from '@dxos/react-ui-navtree';
+import {
+  NavTree,
+  type NavTreeContextType,
+  type TreeNode,
+  type NavTreeProps,
+  emptyBranchDroppableId,
+} from '@dxos/react-ui-navtree';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -24,6 +38,8 @@ const getMosaicPath = (graph: Graph, id: string) => {
   const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
   return parts ? Path.create('root', ...parts) : undefined;
 };
+
+const trimPlaceholder = (path: string) => (Path.last(path) === emptyBranchDroppableId ? Path.parent(path) : path);
 
 export const TreeViewContainer = ({
   graph,
@@ -39,25 +55,32 @@ export const TreeViewContainer = ({
   const identity = useIdentity();
 
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
+  const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+  const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatch } = useIntent();
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
+    if (!(node as Node).data) {
+      return;
+    }
+
     await dispatch({
       action: LayoutAction.ACTIVATE,
       data: {
         id: node.id,
       },
     });
-    // void defaultAction?.invoke();
-    // !isLg && closeNavigationSidebar();
+
+    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
+    void defaultAction?.invoke();
+    !isLg && closeNavigationSidebar();
   };
 
   const currentPath = (activeId && getMosaicPath(graph, activeId)) ?? 'never';
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && graph.findNode(Path.last(activeItem.path));
-    const overNode = overItem && graph.findNode(Path.last(overItem.path));
+    const overNode = overItem && graph.findNode(Path.last(trimPlaceholder(overItem.path)));
     if (
       !activeNode ||
       !overNode ||
@@ -69,7 +92,7 @@ export const TreeViewContainer = ({
 
     const activeClass = activeNode.properties.persistenceClass;
     if (overNode.properties.acceptPersistenceClass?.has(activeClass)) {
-      return overItem.path === path;
+      return trimPlaceholder(overItem.path) === path;
     } else {
       const overAcceptParent = getPersistenceParent(overNode, activeClass);
       return overAcceptParent ? getMosaicPath(graph, overAcceptParent.id) === path : false;
@@ -94,7 +117,9 @@ export const TreeViewContainer = ({
       }
       // Check if transfer is supported
       else {
-        const overNode = graph.findNode(Path.last(over.path));
+        // Adjust overPath if over is empty placeholder.
+        const overPath = trimPlaceholder(over.path);
+        const overNode = graph.findNode(Path.last(overPath));
         const activeNode = graph.findNode(Path.last(active.path));
         if (overNode && activeNode && activeNode.properties.persistenceClass) {
           const activeClass = activeNode.properties.persistenceClass;
@@ -112,8 +137,9 @@ export const TreeViewContainer = ({
 
   const handleDrop = useCallback(
     ({ operation, active, over }: MosaicDropEvent<number>) => {
+      const overPath = trimPlaceholder(over.path);
       const activeNode = graph.findNode(Path.last(active.path));
-      const overNode = graph.findNode(Path.last(over.path));
+      const overNode = graph.findNode(Path.last(overPath));
       if (activeNode && overNode) {
         const activeClass = activeNode.properties.persistenceClass;
         if (operation === 'rearrange') {

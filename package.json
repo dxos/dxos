@@ -25,7 +25,8 @@
     "prepare": "husky install",
     "serve": "serve",
     "test": "nx run-many --target=test",
-    "watch": "./node_modules/.bin/nx watch --all -- pnpm -w nx compile \"\\$NX_PROJECT_NAME\""
+    "watch": "./node_modules/.bin/nx watch --all -- pnpm -w nx compile \"\\$NX_PROJECT_NAME\"",
+    "watch-build": "./node_modules/.bin/nx watch --all -- pnpm -w nx build \"\\$NX_PROJECT_NAME\""
   },
   "dependencies": {
     "@dxos/conform": "workspace:*",
