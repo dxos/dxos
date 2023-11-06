@@ -8,6 +8,8 @@ import "dxos/schema.proto";
 
 package braneframe;
 
+//option echo_namespace = 'braneframe.com/schema';
+
 /**
  *
  */
@@ -83,14 +85,6 @@ message Script {
 
   string title = 1;
   dxos.schema.Text source = 2;
-}
-
-// TODO(burdon): Lightweight document (not visible in sidebar).
-message Note {
-  option (object) = true;
-
-  string title = 1;
-  dxos.schema.Text content = 2;
 }
 
 /**

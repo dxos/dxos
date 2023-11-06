@@ -29,7 +29,7 @@ describe.skip('RequestBuilder', () => {
 
       const builder = new RequestBuilder(client);
 
-      builder.setContext(generator.getSchema('dxos.org/schema/project')!);
+      builder.setContext(generator.getSchema('example.com/schema/project')!);
 
       console.log(JSON.stringify(builder.build(), null, 2));
     }

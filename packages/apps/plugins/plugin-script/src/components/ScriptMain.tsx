@@ -36,6 +36,7 @@ export const ScriptMain = (props: ScriptMainProps) => {
   );
 };
 
+// TODO(burdon): Cache result in context.
 export const ScriptSection = ({ id, view: controlledView, source, containerUrl, className }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
@@ -105,6 +106,7 @@ export const ScriptSection = ({ id, view: controlledView, source, containerUrl, 
           </Toolbar.Root>
         </DensityProvider>
       )}
+
       <div className='flex overflow-hidden grow'>
         {view !== 'preview' && view !== 'preview-only' && (
           <div className={mx('flex flex-1 shrink-0 overflow-x-auto')}>
@@ -113,7 +115,7 @@ export const ScriptSection = ({ id, view: controlledView, source, containerUrl, 
         )}
         {view !== 'editor' && result && (
           <div className='flex flex-1 shrink-0 overflow-hidden'>
-            <FrameContainer result={result} containerUrl={containerUrl} />
+            <FrameContainer key={id} result={result} containerUrl={containerUrl} />
           </div>
         )}
       </div>
