@@ -20,7 +20,7 @@ export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inG
   mx(
     'relative inline-flex shrink-0',
     getSize(size),
-    inGroup && (size == 'px' || size <= 3 ? '-mie-1' : '-mie-2'),
+    inGroup && (size === 'px' || size <= 3 ? '-mie-1' : '-mie-2'),
     ...etc,
   );
 
