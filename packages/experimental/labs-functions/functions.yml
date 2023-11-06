@@ -1,18 +1,18 @@
 functions:
-  chatgpt:
-    description: "Chat GPT"
+  - id: 'assistant'
+    description: 'AI Chat'
 
-  chess:
-    description: "Chess"
+  - id: 'chess'
+    description: 'Chess'
 
-  hello:
-    description: "Test"
+  - id: 'hello'
+    description: 'Test'
 
 triggers:
-  - function: chatgpt
+  - function: 'assistant'
     subscription:
-      type: braneframe.Thread.Block
+      type: 'braneframe.Thread.Block'
 
-  - function: chess
+  - function: 'chess'
     subscription:
-      type: dxos.experimental.chess.Game
+      type: 'dxos.experimental.chess.Game'
