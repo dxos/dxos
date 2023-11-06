@@ -15,7 +15,7 @@ import { type CompilerResult } from '../../compiler';
 export type FrameContainerProps = {
   containerUrl: string;
   result: CompilerResult;
-  debg?: boolean;
+  debug?: boolean;
 };
 
 /**
