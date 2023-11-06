@@ -391,7 +391,6 @@ export class Muxer {
 
   private _getOrCreateStream(params: CreateChannelInternalParams): Channel {
     if (this._channelsByTag.size === 0) {
-      log.warn('enabling stats');
       scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
     }
     let channel = this._channelsByTag.get(params.tag);
