@@ -92,14 +92,13 @@ const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onD
   return (
     <div className='flex overflow-hidden px-2 py-1 group'>
       {message.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{message.text}</div>}
-
-      {/* Disable for a demo.
       {message.data && (
         // TODO(burdon): Colorize (reuse codemirror or hljs?)
         <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
           <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
         </pre>
-      )} */}
+      )}
+
       {onDelete && (
         <button className='invisible group-hover:visible' onClick={onDelete}>
           <X />
@@ -117,8 +116,10 @@ const Pill: MosaicTileComponent<Expando> = forwardRef(
       title = title.text;
     }
 
+    console.log('>>>>>>>>>', JSON.stringify(item));
+
     return (
-      <Card.Root ref={forwardRef} style={draggableStyle} classNames='w-full bg-neutral-50'>
+      <Card.Root ref={forwardRef} style={draggableStyle} classNames='w-full bg-neutral-50 m-1 ring'>
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
           <Card.Title title={title} />

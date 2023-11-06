@@ -23,9 +23,8 @@ export type DevServerOptions = {
 /**
  * Functions dev server provides a local HTTP server for testing functions.
  */
-// TODO(burdon): Not secure.
 export class DevServer {
-  private readonly _functionHandlers: Record<string, FunctionHandler<any>> = {};
+  private readonly _handlers: Record<string, FunctionHandler<any>> = {};
 
   private _server?: http.Server;
   private _port?: number;
@@ -46,20 +45,20 @@ export class DevServer {
   }
 
   get functions() {
-    return Object.keys(this._functionHandlers);
+    return Object.keys(this._handlers);
   }
 
   async initialize() {
-    for (const [name, _] of Object.entries(this._options.manifest.functions)) {
+    for (const { id } of this._options.manifest.functions) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const module = require(join(this._options.directory, name));
+        const module = require(join(this._options.directory, id));
         const handler = module.default;
         if (typeof handler !== 'function') {
-          throw new Error(`Handler must export default function: ${name}`);
+          throw new Error(`Handler must export default function: ${id}`);
         }
 
-        this._functionHandlers[name] = handler;
+        this._handlers[id] = handler;
       } catch (err) {
         log.error('parsing function (check functions.yml manifest)', err);
       }
@@ -93,7 +92,7 @@ export class DevServer {
       void (async () => {
         try {
           // TODO(burdon): Typed event handler.
-          await this._functionHandlers[functionName]({ event: req.body, context });
+          await this._handlers[functionName]({ event: req.body, context });
         } catch (err: any) {
           res.statusCode = 500;
           res.end(err.message);
