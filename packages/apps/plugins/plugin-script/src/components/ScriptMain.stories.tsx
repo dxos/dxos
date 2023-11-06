@@ -18,11 +18,12 @@ import { ScriptMain, ScriptSection } from './ScriptMain';
 
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
-  "import { Chart } from '@braneframe/plugin-explorer';",
+  "import { Chart, Explorer, Globe } from '@braneframe/plugin-explorer';",
   '',
   'export default () => {',
   '  const spaces = useSpaces();',
-  "  const objects = useQuery(spaces[0], Filter._typename('dxos.org/schema/person'));",
+  '  const space = spaces[1]',
+  "  const objects = useQuery(space, Filter._typename('dxos.org/schema/person'));",
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
 ].join('\n');

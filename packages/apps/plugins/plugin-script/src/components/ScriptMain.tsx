@@ -19,6 +19,7 @@ import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 export type View = 'editor' | 'preview' | 'split' | 'preview-only';
 
 export type ScriptMainProps = {
+  id: string;
   view?: View;
   source: TextObject;
   mainUrl: string;
@@ -33,13 +34,20 @@ export const ScriptMain = (props: ScriptMainProps) => {
   );
 };
 
-export const ScriptSection = ({ view: controlledView, source, mainUrl, className }: ScriptMainProps) => {
+export const ScriptSection = ({ id, view: controlledView, source, mainUrl, className }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
     void initializeCompiler({ wasmURL: esbuildWasmURL });
   }, []);
+
+  useEffect(() => {
+    setTimeout(async () => {
+      const result = await compiler.compile(String(source.content));
+      setResult(result);
+    });
+  }, [source, id]);
 
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<View>(controlledView ?? 'editor');
@@ -65,7 +73,7 @@ export const ScriptSection = ({ view: controlledView, source, mainUrl, className
         setView('preview');
       }
     },
-    [view],
+    [source, view],
   );
 
   if (!source) {
@@ -98,7 +106,7 @@ export const ScriptSection = ({ view: controlledView, source, mainUrl, className
       <div className='flex overflow-hidden grow'>
         {view !== 'preview' && view !== 'preview-only' && (
           <div className={mx('flex flex-1 shrink-0 overflow-x-auto')}>
-            <ScriptEditor content={source.content as YText} themeMode={themeMode} />
+            <ScriptEditor id={id} content={source.content as YText} themeMode={themeMode} />
           </div>
         )}
         {view !== 'editor' && result && (

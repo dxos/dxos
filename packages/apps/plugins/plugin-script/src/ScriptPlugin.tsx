@@ -89,11 +89,12 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
           switch (role) {
             case 'main':
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptMain source={(data.active as any).source} mainUrl={mainUrl} />
+                <ScriptMain id={(data.active as any).id} source={(data.active as any).source} mainUrl={mainUrl} />
               ) : null;
             case 'slide':
               return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
                 <ScriptMain
+                  id={(data.slide as any).id}
                   source={(data.slide as any).source}
                   mainUrl={mainUrl}
                   view={'preview-only'}
@@ -102,7 +103,12 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
               ) : null;
             case 'section':
               return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptSection source={(data.object as any).source} mainUrl={mainUrl} className={'h-[500px] py-2'} />
+                <ScriptSection
+                  id={(data.object as any).id}
+                  source={(data.object as any).source}
+                  mainUrl={mainUrl}
+                  className={'h-[500px] py-2'}
+                />
               ) : null;
           }
         },

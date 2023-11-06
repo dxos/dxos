@@ -51,6 +51,13 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
     }),
   );
 
+  // return (
+  //   <pre className='text-xs p-2 whitespace-break-spaces'>
+  //     <code>{html}</code>
+  //   </pre>
+  // );
+
+  // TODO(burdon): Bug when switching between slides.
   return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
 };
 
