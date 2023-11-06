@@ -8,13 +8,15 @@ const hexadecimalPaletteSeries: (keyof typeof configColors)[] = [
   'red' as const,
   'orange' as const,
   'amber' as const,
-  'yellow' as const,
+  // Yellow is hard to make look good.
+  // 'yellow' as const,
   'lime' as const,
   'green' as const,
   'emerald' as const,
   'teal' as const,
   'cyan' as const,
   'sky' as const,
+  'blue' as const,
   'indigo' as const,
   'violet' as const,
   'purple' as const,
@@ -24,7 +26,7 @@ const hexadecimalPaletteSeries: (keyof typeof configColors)[] = [
 ];
 
 const shadeKeys = {
-  color: '450' as const,
+  color: '400' as const,
   highlightDark: '800' as const,
   highlightLight: '100' as const,
 };
