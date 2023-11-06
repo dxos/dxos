@@ -20,10 +20,11 @@ const defaultOptions: DotOptions = {
 export type GlobeProps = {
   items?: any[];
   accessor?: Accessor<GeoLocation>;
+  projection?: Plot.ProjectionName;
   options?: DotOptions;
 };
 
-export const Globe = ({ items = [], accessor, options = defaultOptions }: GlobeProps) => {
+export const Globe = ({ items = [], accessor, projection = 'orthographic', options = defaultOptions }: GlobeProps) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   const land = topojson.feature(world, world.objects.land);
 
@@ -36,7 +37,7 @@ export const Globe = ({ items = [], accessor, options = defaultOptions }: GlobeP
     // https://observablehq.com/@observablehq/plot-earthquake-globe?intent=fork
     const plot = Plot.plot({
       // https://observablehq.com/plot/features/projections
-      projection: { type: 'orthographic', rotate: [-100, -20] },
+      projection: { type: projection, rotate: [-100, -20] },
       // projection: { type: 'equirectangular', rotate: [-140, -30] },
       width,
       height,
