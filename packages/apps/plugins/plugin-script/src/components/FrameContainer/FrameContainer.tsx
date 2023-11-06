@@ -21,7 +21,7 @@ export type FrameContainerProps = {
 /**
  * IFrame container for the compiled script.
  */
-export const FrameContainer = ({ containerUrl, result, debug = true }: FrameContainerProps) => {
+export const FrameContainer = ({ containerUrl, result, debug = false }: FrameContainerProps) => {
   const client = useClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {

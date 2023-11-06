@@ -36,7 +36,7 @@ export const ScriptMain = (props: ScriptMainProps) => {
   );
 };
 
-// TODO(burdon): Cache result in context.
+// TODO(burdon): Cache compiled results in context.
 export const ScriptSection = ({ id, view: controlledView, source, containerUrl, className }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
