@@ -138,7 +138,7 @@ export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col grow __m-4 overflow-hidden'>
+      <div className='flex flex-col grow overflow-hidden'>
         <Table<TypedObject>
           keyAccessor={(row) => row.id ?? '__new'}
           columns={columns}

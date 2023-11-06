@@ -44,7 +44,9 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
     }
   }, [iframeRef]);
 
-  const src = `${containerUrl}#importMap=${encodeURIComponent(
+  // Encodes compiled code via URL.
+  const sourceHash = Buffer.from(result.sourceHash).toString('hex');
+  const src = `${containerUrl}?ts=${sourceHash}#importMap=${encodeURIComponent(
     JSON.stringify({
       imports: createImportMap(result),
     }),
@@ -52,13 +54,7 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
 
   return (
     <>
-      <iframe
-        // key={Buffer.from(result.sourceHash).toString('hex')}
-        ref={iframeRef}
-        sandbox='allow-scripts'
-        src={src}
-        style={{ width: '100%', height: '100%' }}
-      />
+      <iframe ref={iframeRef} sandbox='allow-scripts' src={src} style={{ width: '100%', height: '100%' }} />
 
       {debug && (
         <div className='relative'>
@@ -72,7 +68,7 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
               {JSON.stringify(
                 {
                   timestamp: result.timestamp,
-                  sourceHash: Buffer.from(result.sourceHash).toString('hex'),
+                  sourceHash,
                   src,
                 },
                 undefined,
