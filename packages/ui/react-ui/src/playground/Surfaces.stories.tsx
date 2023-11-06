@@ -6,16 +6,30 @@ import '@dxosTheme';
 
 import React, { type PropsWithChildren } from 'react';
 
-import { baseSurface, chromeSurface, groupSurface, glassSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  chromeSurface,
+  groupSurface,
+  mx,
+  surfaceElevation,
+  fixedSurface,
+  fixedBorder,
+  inputSurface,
+} from '@dxos/react-ui-theme';
 
-const Surface = ({ children, level }: PropsWithChildren & { level: 'base' | 'group' | 'chrome' | 'glass' }) => {
+const Surface = ({
+  children,
+  level,
+}: PropsWithChildren & { level: 'base' | 'group' | 'chrome' | 'fixed' | 'input' }) => {
   const surface =
     level === 'chrome'
       ? [chromeSurface, surfaceElevation({ elevation: 'chrome' })]
       : level === 'group'
       ? [groupSurface, surfaceElevation({ elevation: 'group' })]
-      : level === 'glass'
-      ? [glassSurface, surfaceElevation({ elevation: 'chrome' })]
+      : level === 'input'
+      ? [inputSurface, surfaceElevation({ elevation: 'group' })]
+      : level === 'fixed'
+      ? [fixedSurface, fixedBorder, 'border', surfaceElevation({ elevation: 'chrome' })]
       : [baseSurface];
 
   return (
@@ -32,10 +46,11 @@ const Surface = ({ children, level }: PropsWithChildren & { level: 'base' | 'gro
 const SurfacesStory = () => {
   return (
     <div className='bg-cubes p-10 m-0'>
+      <Surface level='fixed' />
       <Surface level='base' />
       <Surface level='group' />
       <Surface level='chrome' />
-      <Surface level='glass' />
+      <Surface level='input' />
     </div>
   );
 };
