@@ -90,11 +90,11 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
       <Tooltip.Trigger className={mx('px-1 m-1 flex items-center')} onClick={onShareClick}>
         {onShareClick && viewers.length === 0 && (
           <DensityProvider density={'fine'}>
-            <Users className={getSize(5)} />
+            <Users className={mx(getSize(5), 'm-1')} />
           </DensityProvider>
         )}
         {viewers.length > 0 && (
-          <AvatarGroup.Root size={size} classNames='m-2 mie-5'>
+          <AvatarGroup.Root size={size} classNames={'' + (size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2')}>
             {viewers.length > 3 && showCount && (
               <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
             )}
