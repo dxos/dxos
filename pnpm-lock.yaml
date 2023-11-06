@@ -579,15 +579,27 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
     devDependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/react-shell':
         specifier: workspace:*
         version: link:../../sdk/react-shell
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-navtree':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-navtree
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
       '@dxos/vault':
         specifier: workspace:*
         version: link:../../sdk/vault
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.2.0
       '@sentry/vite-plugin':
         specifier: ^0.7.2
         version: 0.7.2
