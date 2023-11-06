@@ -32,7 +32,7 @@ const Story = () => {
 
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptEditor id='editor' content={content.content as YText} />
+      <ScriptEditor id='test' content={content.content as YText} />
     </div>
   );
 };

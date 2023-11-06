@@ -47,7 +47,7 @@ const Story = () => {
 
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptSection source={source} mainUrl={mainUrl} />
+      <ScriptSection id='test' source={source} mainUrl={mainUrl} />
     </div>
   );
 };
