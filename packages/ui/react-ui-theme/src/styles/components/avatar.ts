@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Size, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { baseSurfaceBorder, descriptionText, getSize, getSizeHeight } from '../fragments';
+import { descriptionText, getSize, getSizeHeight } from '../fragments';
 
 export type AvatarStyleProps = Partial<{
   size: Size;
@@ -47,7 +47,7 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
 export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
   mx(
     'absolute inset-0 border-2',
-    baseSurfaceBorder,
+    'border-[color:var(--surface-bg)]',
     variant === 'circle' ? 'rounded-full' : 'rounded',
     status === 'active'
       ? 'border-success-400 dark:border-success-400'

@@ -45,7 +45,7 @@ export const Normal = (props: ObjectPresenceProps) => {
 
   return (
     <Tooltip.Provider>
-      <div className='bg-cubes p-4'>
+      <div className='p-4'>
         <div className='p-3'>
           <ObjectPresence {...p} />
         </div>
@@ -81,7 +81,7 @@ export const SmallPresence = (props: ObjectPresenceProps) => {
   };
   return (
     <Tooltip.Provider>
-      <div className='bg-cubes p-4'>
+      <div className='p-4'>
         <div className='p-3'>
           <ObjectPresence {...p} />
         </div>
