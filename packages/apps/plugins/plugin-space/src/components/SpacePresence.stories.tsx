@@ -32,29 +32,31 @@ export const Normal = (props: ObjectPresenceProps) => {
     }));
   return (
     <Tooltip.Provider>
-      <div className='p-3'>
-        <ObjectPresence {...p} />
-      </div>
-      <div className='p-3'>
-        <ObjectPresence viewers={nViewers(1)} {...p} />
-      </div>
-      <div className='p-3'>
-        <ObjectPresence viewers={nViewers(2)} {...p} />
-      </div>
-      <div className='p-3'>
-        <ObjectPresence viewers={nViewers(3)} {...p} />
-      </div>
-      <div className='p-3'>
-        <ObjectPresence viewers={nViewers(4)} {...p} />
-      </div>
-      <div className='p-3'>
-        <ObjectPresence viewers={nViewers(5)} {...p} />
-      </div>
-      <div className='p-3'>
-        <ObjectPresence viewers={nViewers(10)} {...p} />
-      </div>
-      <div className='p-3'>
-        <ObjectPresence viewers={nViewers(100)} {...p} />
+      <div className='bg-cubes p-4'>
+        <div className='p-3'>
+          <ObjectPresence {...p} />
+        </div>
+        <div className='p-3'>
+          <ObjectPresence viewers={nViewers(1)} {...p} />
+        </div>
+        <div className='p-3'>
+          <ObjectPresence viewers={nViewers(2)} {...p} />
+        </div>
+        <div className='p-3'>
+          <ObjectPresence viewers={nViewers(3)} {...p} />
+        </div>
+        <div className='p-3'>
+          <ObjectPresence viewers={nViewers(4)} {...p} />
+        </div>
+        <div className='p-3'>
+          <ObjectPresence viewers={nViewers(5)} {...p} />
+        </div>
+        <div className='p-3'>
+          <ObjectPresence viewers={nViewers(10)} {...p} />
+        </div>
+        <div className='p-3'>
+          <ObjectPresence viewers={nViewers(100)} {...p} />
+        </div>
       </div>
     </Tooltip.Provider>
   );

@@ -21,7 +21,8 @@ const cursorColors = [
   { color: '#1be7ff', light: '#1be7ff33' },
 ];
 
-const randomColor = () => cursorColors[Math.round(Math.random() * cursorColors.length)];
+const randomColor = () => cursorColors[Math.round(Math.random() * cursorColors.length)]?.color;
+
 type StorybookAvatarProps = {
   imgSrc?: string;
   fallbackValue?: string;
@@ -50,18 +51,22 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
   } = props;
   const jdenticon = useJdenticonHref(fallbackValue ?? '', size);
   return (
-    <Avatar.Root {...{ size, variant, status, animation }}>
-      <Avatar.Frame>
-        {!imgSrc && (fallbackValue || fallbackText) && (
-          <Avatar.Fallback href={fallbackValue ? jdenticon : ''} text={fallbackText} />
-        )}
-        {imgSrc && <Avatar.Image href={imgSrc} />}
-      </Avatar.Frame>
-      <div>
-        <Avatar.Label classNames='block'>{label}</Avatar.Label>
-        <Avatar.Description classNames='block'>{description}</Avatar.Description>
-      </div>
-    </Avatar.Root>
+    <div className='flex flex-row gap-3 align-middle items-center'>
+      <Avatar.Root {...{ size, variant, status, animation, color }}>
+        <Avatar.Frame>
+          {!imgSrc && (fallbackValue || fallbackText) && (
+            <Avatar.Fallback href={fallbackValue ? jdenticon : ''} text={fallbackText} />
+          )}
+          {imgSrc && <Avatar.Image href={imgSrc} />}
+        </Avatar.Frame>
+        <div>
+          <Avatar.Label classNames='block'>{label}</Avatar.Label>
+          <Avatar.Description classNames='block'>
+            {description} ({size})
+          </Avatar.Description>
+        </div>
+      </Avatar.Root>
+    </div>
   );
 };
 
@@ -72,36 +77,28 @@ export default {
 const sampleImage =
   'https://png.pngtree.com/thumb_back/fh260/background/20230614/pngtree-the-photo-of-a-woman-with-red-sunglasses-is-surrounded-by-image_2931163.jpg';
 
+const row = (size: Size) => (
+  <>
+    <StorybookAvatar size={size} description='Offline' color={''} />
+    <StorybookAvatar size={size} status='active' />
+    <StorybookAvatar size={size} status='active' imgSrc={sampleImage} />
+  </>
+);
+
 export const Default = () => (
-  <div className='flex flex-col gap-6'>
-    <div className='flex flex-row gap-4'>
-      <StorybookAvatar description='Offline' />
-      <StorybookAvatar status='active' />
-      <StorybookAvatar status='error' description='Error' />
-      <StorybookAvatar status='warning' description='Warning' />
-      <StorybookAvatar status='active' imgSrc={sampleImage} />
-    </div>
-    <div className='flex flex-row gap-4'>
-      <StorybookAvatar size={8} description='Offline' />
-      <StorybookAvatar size={8} status='active' />
-      <StorybookAvatar size={8} status='error' description='Error' />
-      <StorybookAvatar size={8} status='warning' description='Warning' />
-      <StorybookAvatar size={8} status='active' imgSrc={sampleImage} />
-    </div>
-    <div className='flex flex-row gap-4'>
-      <StorybookAvatar size={5} description='Offline' />
-      <StorybookAvatar size={5} status='active' />
-      <StorybookAvatar size={5} status='error' description='Error' />
-      <StorybookAvatar size={5} status='warning' description='Warning' />
-      <StorybookAvatar size={5} status='active' imgSrc={sampleImage} />
-    </div>
-    <div className='flex flex-row gap-4'>
-      <StorybookAvatar size={3} description='Offline' />
-      <StorybookAvatar size={3} status='active' />
-      <StorybookAvatar size={3} status='error' description='Error' />
-      <StorybookAvatar size={3} status='warning' description='Warning' />
-      <StorybookAvatar size={3} status='active' imgSrc={sampleImage} />
-    </div>
+  <div className='grid grid-cols-3 gap-6 p-[4rem] min-h-screen bg-cubes'>
+    {row(28)}
+    {row(20)}
+    {row(16)}
+    {row(12)}
+    {row(10)}
+    {row(8)}
+    {row(6)}
+    {row(5)}
+    {row(4)}
+    {row(3)}
+    {row(2)}
+    {row(1)}
   </div>
 );
 

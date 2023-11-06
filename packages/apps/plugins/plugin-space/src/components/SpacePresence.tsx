@@ -3,7 +3,7 @@
 //
 
 import { Users } from '@phosphor-icons/react';
-import React, { type FC } from 'react';
+import React from 'react';
 
 import {
   parseGraphPlugin,
@@ -14,8 +14,8 @@ import {
 } from '@dxos/app-framework';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Avatar, AvatarGroup, AvatarGroupItem, Button, DensityProvider, Tooltip, useTranslation } from '@dxos/react-ui';
+import { getSize, mx, glassSurface } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
 import { getActiveSpace } from '../util';
@@ -67,38 +67,35 @@ export type ObjectPresenceProps = {
 };
 
 export const ObjectPresence = (props: ObjectPresenceProps) => {
-  const { onShareClick, viewers } = props;
-  return (
-    <div className='flex items-center'>
-      {onShareClick && (
-        <Button variant='ghost' onClick={onShareClick}>
-          <Users className={getSize(5)} />
-        </Button>
-      )}
-      <ObjectViewers viewers={viewers} />
-    </div>
-  );
-};
-
-export const ObjectViewers: FC<{ viewers?: ObjectViewer[] }> = ({ viewers = [] }) => {
+  const { onShareClick, viewers = [] } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
-      <Tooltip.Trigger className='flex items-center'>
-        <AvatarGroup.Root size={4} classNames='mie-5'>
-          <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
-          {viewers.slice(0, 3).map((viewer) => (
-            <AvatarGroupItem.Root key={viewer.identityKey.toHex()}>
-              <Avatar.Frame>
-                {/* TODO(burdon): Why `href`? */}
-                <Avatar.Fallback href={viewer.identityKey.toHex()} />
-              </Avatar.Frame>
-            </AvatarGroupItem.Root>
-          ))}
-        </AvatarGroup.Root>
+      <Tooltip.Trigger className={mx('px-1 m-1 flex items-center')}>
+        {onShareClick && viewers.length === 0 && (
+          <DensityProvider density={'fine'}>
+            <Button variant='ghost' onClick={onShareClick}>
+              <Users className={getSize(5)} />
+            </Button>
+          </DensityProvider>
+        )}
+        {viewers.length > 0 && (
+          <AvatarGroup.Root size={4} classNames='m-2 mie-5' onClick={onShareClick}>
+            {viewers.length > 3 && (
+              <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
+            )}
+            {viewers.slice(0, 3).map((viewer, i) => (
+              <AvatarGroupItem.Root key={viewer.identityKey.toHex()}>
+                <Avatar.Frame style={{ zIndex: -i }}>
+                  <Avatar.Fallback href={viewer.identityKey.toHex()} />
+                </Avatar.Frame>
+              </AvatarGroupItem.Root>
+            ))}
+          </AvatarGroup.Root>
+        )}
       </Tooltip.Trigger>
       <Tooltip.Content collisionPadding={4}>
-        <span>{t('presence label')}</span>
+        <span>{viewers.length > 0 ? viewers.length + ' ' + t('presence label') : t('share space')}</span>
         <Tooltip.Arrow />
       </Tooltip.Content>
     </Tooltip.Root>

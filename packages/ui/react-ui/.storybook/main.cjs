@@ -23,6 +23,7 @@ module.exports = {
     name: '@storybook/react-vite',
     options: {}
   },
+  staticDirs: [ './public' ],
   viteFinal: async (config) => mergeConfig(config, {
     plugins: [
       ThemePlugin({

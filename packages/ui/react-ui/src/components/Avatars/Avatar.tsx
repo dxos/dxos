@@ -50,12 +50,13 @@ const AvatarRoot = ({
   descriptionId: propsDescriptionId,
   maskId: propsMaskId,
   inGroup,
+  color,
 }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
   const descriptionId = useId('avatar__description', propsDescriptionId);
   const maskId = useId('avatar__mask', propsMaskId);
   return (
-    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup }}>
+    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup, color }}>
       {children}
     </AvatarProvider>
   );
@@ -63,19 +64,19 @@ const AvatarRoot = ({
 
 type AvatarFrameProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
-const strokeWidth = 2;
 const rx = '0.25rem';
 
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
-    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation } =
+    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation, color } =
       useAvatarContext('AvatarFrame');
 
     const { tx } = useThemeContext();
-    const imageSizeNumber = size === 'px' ? 1 : size * 4;
-    const ringGap = 3;
-    const ringWidth = 2;
-    const r = imageSizeNumber / 2 - ringGap - ringWidth;
+    const numericSize = size === 'px' ? 1 : Number(size);
+    const sizePx = numericSize * 4;
+    const ringWidth = numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0;
+    const ringGap = numericSize > 12 ? 3 : numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0;
+    const r = sizePx / 2 - ringGap - ringWidth;
     return (
       <AvatarRootPrimitive
         role='img'
@@ -88,9 +89,9 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
         })}
       >
         <svg
-          viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
-          width={imageSizeNumber}
-          height={imageSizeNumber}
+          viewBox={`0 0 ${sizePx} ${sizePx}`}
+          width={sizePx}
+          height={sizePx}
           className={tx('avatar.frame', 'avatar__frame', { variant })}
         >
           <defs>
@@ -110,7 +111,13 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             </mask>
           </defs>
           {variant === 'circle' ? (
-            <circle className='avatarFrameFill fill-[var(--surface-bg)]' cx='50%' cy='50%' r={r} />
+            <circle
+              className={`avatarFrameFill${color ? '' : ' fill-[var(--surface-bg)]'}`}
+              cx='50%'
+              cy='50%'
+              r={r}
+              {...(color ? { fill: color } : {})}
+            />
           ) : (
             <rect
               className='avatarFrameFill fill-[var(--surface-bg)]'
@@ -122,7 +129,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             />
           )}
           {children}
-          {variant === 'circle' ? (
+          {/* {variant === 'circle' ? (
             <circle
               className='avatarFrameStroke fill-transparent stroke-[var(--surface-text)]'
               strokeWidth={strokeWidth}
@@ -130,7 +137,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
               opacity={0.1}
               cx={'50%'}
               cy={'50%'}
-              r={r}
+              r={r - 0.5 * strokeWidth}
             />
           ) : (
             <rect
@@ -144,9 +151,13 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
               height={2 * r}
               rx={rx}
             />
-          )}
+          )} */}
         </svg>
-        <span role='none' className={tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })} />
+        <span
+          role='none'
+          className={tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })}
+          style={{ borderWidth: ringWidth + 'px' }}
+        />
       </AvatarRootPrimitive>
     );
   },
@@ -198,7 +209,16 @@ type AvatarMaskedImageProps = ComponentPropsWithRef<'image'>;
 
 const AvatarMaskedImage = forwardRef<SVGImageElement, AvatarMaskedImageProps>((props, forwardedRef) => {
   const { maskId } = useAvatarContext('AvatarFallback');
-  return <image width='100%' height='100%' {...props} mask={`url(#${maskId})`} ref={forwardedRef} preserveAspectRatio='xMidYMid slice' />;
+  return (
+    <image
+      width='100%'
+      height='100%'
+      {...props}
+      mask={`url(#${maskId})`}
+      ref={forwardedRef}
+      preserveAspectRatio='xMidYMid slice'
+    />
+  );
 });
 
 type AvatarMaskedTextProps = PropsWithChildren<{ large?: boolean }>;
@@ -229,6 +249,11 @@ type AvatarImageProps = ComponentPropsWithRef<'image'> & {
 
 const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
   ({ onLoadingStatusChange, ...props }, forwardedRef) => {
+    const { size } = useAvatarContext('AvatarImage');
+    const pxSize = size === 'px' ? 1 : size * 4;
+    if (pxSize <= 20) {
+      return null;
+    }
     return (
       <AvatarFallbackPrimitive asChild>
         <AvatarMaskedImage {...props} ref={forwardedRef} />
@@ -244,10 +269,12 @@ type AvatarFallbackProps = ComponentPropsWithRef<'image'> & {
 
 const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delayMs, text, ...props }, forwardedRef) => {
   const isTextOnly = Boolean(text && /[0-9a-zA-Z]+/.test(text));
+  const { size } = useAvatarContext('AvatarFallback');
+  const numericSize = size === 'px' ? 1 : Number(size);
   return (
     <AvatarFallbackPrimitive delayMs={delayMs} asChild>
       <>
-        <AvatarMaskedImage {...props} ref={forwardedRef} />
+        {numericSize >= 6 && <AvatarMaskedImage {...props} ref={forwardedRef} />}
         {text && <AvatarMaskedText large={!isTextOnly}>{text.toLocaleUpperCase()}</AvatarMaskedText>}
       </>
     </AvatarFallbackPrimitive>
