@@ -53,7 +53,6 @@ import {
 } from '@dxos/react-ui-theme';
 
 // @ts-ignore
-import mainUrl from './frame?url';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -121,7 +120,7 @@ const main = async () => {
       GridPlugin(),
       KanbanPlugin(),
       MapPlugin(),
-      ScriptPlugin({ mainUrl }),
+      ScriptPlugin({ containerUrl: '/script-frame/index.html' }),
       SketchPlugin(),
       StackPlugin(),
       TablePlugin(),
