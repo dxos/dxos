@@ -82,9 +82,7 @@ test.describe('Basic test', () => {
       });
     });
 
-    // TODO(wittjosiah): Replication is failing for parts[2].
-    //  https://github.com/dxos/dxos/issues/4512
-    test.skip('host and guest can see each others’ changes in same document', async () => {
+    test.only('host and guest can see each others’ changes in same document', async () => {
       test.slow();
 
       await host.createSpace();
