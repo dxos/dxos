@@ -53,7 +53,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 // TODO(wittjosiah): Remove. Used to be able to access types from the console.
-(window as any).dxos.types = {
+(window as any).dxos_types = {
   Document,
   File,
   Folder,
