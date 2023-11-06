@@ -93,7 +93,7 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
               ) : null;
             case 'slide':
               return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptMain
+                <ScriptSection
                   id={(data.slide as any).id}
                   source={(data.slide as any).source}
                   mainUrl={mainUrl}
@@ -107,7 +107,7 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
                   id={(data.object as any).id}
                   source={(data.object as any).source}
                   mainUrl={mainUrl}
-                  className={'h-[500px] py-2'}
+                  className={'h-[400px] py-2'}
                 />
               ) : null;
           }

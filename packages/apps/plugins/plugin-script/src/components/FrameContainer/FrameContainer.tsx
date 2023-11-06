@@ -57,7 +57,6 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
   //   </pre>
   // );
 
-  // TODO(burdon): Bug when switching between slides.
   return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
 };
 
