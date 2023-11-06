@@ -67,11 +67,14 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
         const { content } = (await chat.request(messages)) ?? {};
         log.info('response', { content });
         if (content) {
+          const messages = createResponse(client, content);
+          console.log('response', { messages });
+
           thread.blocks.push(
             new Thread.Block(
               {
                 identityKey,
-                messages: createResponse(client, content),
+                messages,
               },
               {
                 meta: {

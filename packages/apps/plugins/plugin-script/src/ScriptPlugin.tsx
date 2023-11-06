@@ -20,10 +20,10 @@ const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter:
 };
 
 export type ScriptPluginProps = {
-  mainUrl: string;
+  containerUrl: string;
 };
 
-export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
+export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
   return {
     meta: {
       id: SCRIPT_PLUGIN,
@@ -89,20 +89,24 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
           switch (role) {
             case 'main':
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptMain source={(data.active as any).source} mainUrl={mainUrl} />
+                <ScriptMain source={(data.active as any).source} containerUrl={containerUrl} />
               ) : null;
             case 'slide':
               return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
                 <ScriptMain
                   source={(data.slide as any).source}
-                  mainUrl={mainUrl}
+                  containerUrl={containerUrl}
                   view={'preview-only'}
                   className={'p-24'}
                 />
               ) : null;
             case 'section':
               return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptSection source={(data.object as any).source} mainUrl={mainUrl} className={'h-[500px] py-2'} />
+                <ScriptSection
+                  source={(data.object as any).source}
+                  containerUrl={containerUrl}
+                  className={'h-[500px] py-2'}
+                />
               ) : null;
           }
         },
