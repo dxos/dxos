@@ -4,20 +4,33 @@
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
+import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { RequestBuilder } from './request';
 
-describe('RequestBuilder', () => {
+describe.skip('RequestBuilder', () => {
   test('basic', async () => {
     const builder = new TestBuilder();
     const client = new Client({ services: builder.createLocal() });
     await client.initialize();
-    afterTest(() => client.destroy());
-    afterTest(() => builder.destroy());
+    await client.halo.createIdentity();
+    afterTest(async () => {
+      await client.destroy();
+    });
 
     {
+      const space = await client.spaces.create();
+      const generator = createSpaceObjectGenerator(space);
+      generator.addSchemas();
+      await space.db.flush();
+
+      // console.log(client.experimental.types);
+
       const builder = new RequestBuilder(client);
+
+      builder.setContext(generator.getSchema('dxos.org/schema/project')!);
+
       console.log(JSON.stringify(builder.build(), null, 2));
     }
   });

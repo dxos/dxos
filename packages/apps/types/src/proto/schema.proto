@@ -151,12 +151,9 @@ message Grid {
     option (object) = true;
 
     dxos.schema.TypedObject object = 1;
-    string title = 2;
-    dxos.schema.Text content = 3;
 
-    // TODO(burdon): Properties.
-    string position = 11; // TODO(burdon): Replace layout object?
-    string color = 12;
+    string position = 10; // TODO(burdon): Replace layout object?
+    string color = 11;
   }
 
   string title = 1;

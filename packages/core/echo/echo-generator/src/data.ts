@@ -87,6 +87,10 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         type: Schema.PropType.STRING,
       },
       {
+        id: 'description',
+        type: Schema.PropType.STRING, // TODO(burdon): Text.
+      },
+      {
         id: 'repo',
         type: Schema.PropType.STRING,
       },

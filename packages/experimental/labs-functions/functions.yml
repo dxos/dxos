@@ -1,7 +1,7 @@
 # TODO(burdon): Convert to array.
 functions:
-  - id: 'chatgpt'
-    description: 'Chat GPT'
+  - id: 'assistant'
+    description: 'AI Chat'
 
   - id: 'chess'
     description: 'Chess'
@@ -10,7 +10,7 @@ functions:
     description: 'Test'
 
 triggers:
-  - function: 'chatgpt'
+  - function: 'assistant'
     subscription:
       type: 'braneframe.Thread.Block'
 

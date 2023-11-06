@@ -20,6 +20,8 @@ export const createResponse = (client: Client, content: string) => {
     messages.push(
       ...dataArray.map((data): ThreadType.Message => {
         if (typeof data['@type'] === 'string') {
+          // TODO(burdon): Experimental?
+          console.log(JSON.stringify({ types: client.experimental.types }, undefined, 2));
           const Proto = client.experimental.types.getPrototype(data['@type']);
           const schema = client.experimental.types.getSchema(data['@type']);
           if (Proto && schema) {
