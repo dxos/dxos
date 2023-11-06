@@ -5,7 +5,7 @@
 import { Code, Play, SquareSplitHorizontal, Eye } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
 import { Main, Button, DensityProvider, ToggleGroup, ToggleGroupItem, Toolbar, useThemeContext } from '@dxos/react-ui';
@@ -35,29 +35,38 @@ export const ScriptMain = (props: ScriptMainProps) => {
 
 export const ScriptSection = ({ view: controlledView, source, mainUrl, className }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
-
-  const { themeMode } = useThemeContext();
-  const [view, setView] = useState<View>(controlledView ?? 'editor');
-  useEffect(() => {
-    setView(controlledView ?? 'editor');
-    if (!result && (controlledView === 'preview' || controlledView === 'preview-only')) {
-      void handleExec();
-    }
-  }, [controlledView]);
-
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
     void initializeCompiler({ wasmURL: esbuildWasmURL });
   }, []);
 
-  const handleExec = async () => {
-    const result = await compiler.compile(String(source.content));
-    setResult(result);
-    if (view === 'editor') {
-      setView('preview');
-    }
-  };
+  const { themeMode } = useThemeContext();
+  const [view, setView] = useState<View>(controlledView ?? 'editor');
+  useEffect(() => {
+    handleSetView(controlledView ?? 'editor');
+  }, [controlledView]);
+
+  const handleSetView = useCallback(
+    (view: View) => {
+      setView(view);
+      if (!result && view !== 'editor') {
+        void handleExec(false);
+      }
+    },
+    [result],
+  );
+
+  const handleExec = useCallback(
+    async (auto = true) => {
+      const result = await compiler.compile(String(source.content));
+      setResult(result);
+      if (auto && view === 'editor') {
+        setView('preview');
+      }
+    },
+    [view],
+  );
 
   if (!source) {
     return null;
@@ -68,7 +77,7 @@ export const ScriptSection = ({ view: controlledView, source, mainUrl, className
       {view !== 'preview-only' && (
         <DensityProvider density={'fine'}>
           <Toolbar.Root classNames='p-2'>
-            <ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as any)}>
+            <ToggleGroup type='single' value={view} onValueChange={(value) => handleSetView(value as View)}>
               <ToggleGroupItem value='editor'>
                 <Code className={getSize(5)} />
               </ToggleGroupItem>
@@ -80,7 +89,7 @@ export const ScriptSection = ({ view: controlledView, source, mainUrl, className
               </ToggleGroupItem>
             </ToggleGroup>
             <div className='grow' />
-            <Button variant={'ghost'} onClick={handleExec}>
+            <Button variant={'ghost'} onClick={() => handleExec()}>
               <Play className={getSize(5)} />
             </Button>
           </Toolbar.Root>
