@@ -9,16 +9,17 @@
 
 // Main background.
 // NOTE: This should align with theme's root --surface-bg.
-export const baseSurface = 'bg-neutral-12 dark:bg-neutral-900';
+export const baseSurface = 'base-surface';
 
 // Sidebars, main heading (“topbar”), and nothing else.
-export const fixedSurface = 'bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur';
+export const fixedSurface = 'fixed-surface backdrop-blur-md dark:backdrop-blur-lg';
+export const fixedBorder = 'border-neutral-50 dark:border-neutral-800';
 
 // Cards, dialogs, other such groups.
-export const groupSurface = 'bg-neutral-50 dark:bg-neutral-850';
+export const groupSurface = 'group-surface';
 
 // Tooltips, popovers, menus, etc. – not dialogs.
-export const chromeSurface = 'bg-neutral-12 dark:bg-neutral-800';
+export const chromeSurface = 'chrome-surface';
 
 // Elements that benefit from higher contrast, e.g. inputs, textareas, etc
-export const inputSurface = 'bg-white dark:bg-neutral-925';
+export const inputSurface = 'input-surface';
