@@ -85,11 +85,6 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
-  // TODO(burdon): Remove and reconcile with below.
-  static _typename(typename: string) {
-    return Filter.from((object) => object.__typename === typename);
-  }
-
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>) {
     const type = Reference.fromLegacyTypename(typename); // TODO(burdon): ???
 
