@@ -34,7 +34,7 @@ const PLUGIN_HOST = 'dxos.org/plugin/host';
 export const PluginHost = ({
   order,
   plugins: definitions,
-  core = [],
+  core = order.map(({ id }) => id),
   defaults = [],
   fallback = null,
 }: BootstrapPluginsParams): PluginDefinition<PluginHostProvides> => {
