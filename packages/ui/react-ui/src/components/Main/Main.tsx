@@ -152,6 +152,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
             { isLg, [side === 'inline-end' ? 'inlineEndSidebarOpen' : 'inlineStartSidebarOpen']: open, side },
             classNames,
           )}
+          {...(!open && { inert: 'true' })}
           ref={ref}
         >
           <ElevationProvider elevation='group'>{children}</ElevationProvider>
