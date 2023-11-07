@@ -4,70 +4,79 @@
 
 import React from 'react';
 
-import { Invitation } from '@dxos/react-client/invitations';
+import { type Invitation } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionText } from '@dxos/react-ui-theme';
 
 import { Action, Actions, StepHeading } from '../../../components';
+import { type FailReason } from '../../../types';
 import { type JoinStepProps } from '../JoinPanelProps';
 
-export interface InvitationConnectorProps extends JoinStepProps {
+export interface InvitationRescuerProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
   invitationState?: Invitation.State;
   onInvitationCancel?: () => Promise<void> | undefined;
+  failReason?: FailReason | null;
 }
 
-const InvitationActions = ({ invitationState, onInvitationCancel, active, send, Kind }: InvitationConnectorProps) => {
+const InvitationActions = ({
+  // `invitationState` does report correct state, but here we evaluate whether `failReason` is a better source of truth
+  // for the UI in particular.
+  invitationState,
+  onInvitationCancel,
+  active,
+  send,
+  Kind,
+  failReason,
+}: InvitationRescuerProps) => {
   const { t } = useTranslation('os');
-  switch (invitationState) {
-    case Invitation.State.CONNECTING:
-      return (
-        <>
-          <StepHeading className={descriptionText}>{t('connecting status label')}</StepHeading>
-          <div role='none' className='grow' />
-          <Actions>
-            <Action disabled classNames='order-2' data-testid='next'>
-              {t('next label')}
-            </Action>
-            <Action disabled={!active} onClick={onInvitationCancel} data-testid='invitation-rescuer-cancel'>
-              {t('cancel label')}
-            </Action>
-          </Actions>
-        </>
-      );
-    case Invitation.State.TIMEOUT:
-    case Invitation.State.CANCELLED:
-    case Invitation.State.ERROR:
-    default:
-      return (
-        <>
-          <StepHeading className={descriptionText}>
-            {t(
-              invitationState === Invitation.State.TIMEOUT
-                ? 'timeout status label'
-                : invitationState === Invitation.State.CANCELLED
-                ? 'cancelled status label'
-                : 'error status label',
-            )}
-          </StepHeading>
-          <div role='none' className='grow' />
-          <Actions>
-            <Action
-              disabled={!active}
-              onClick={() => send({ type: `reset${Kind}Invitation` })}
-              data-testid='invitation-rescuer-reset'
-            >
-              {t('reset label')}
-            </Action>
-          </Actions>
-        </>
-      );
+
+  if (failReason) {
+    return (
+      <>
+        <StepHeading className={descriptionText}>
+          {t(
+            failReason === 'timeout'
+              ? 'timeout status label'
+              : failReason === 'cancelled'
+              ? 'cancelled status label'
+              : 'error status label',
+          )}
+        </StepHeading>
+        <div role='none' className='grow' />
+        <Actions>
+          <Action
+            disabled={!active}
+            onClick={() => send({ type: `reset${Kind}Invitation` })}
+            data-testid='invitation-rescuer-reset'
+          >
+            {t('reset label')}
+          </Action>
+        </Actions>
+      </>
+    );
+  } else {
+    return (
+      <>
+        <StepHeading className={descriptionText}>{t('connecting status label')}</StepHeading>
+        <div role='none' className='grow' />
+        <Actions>
+          <Action disabled classNames='order-2' data-testid='next'>
+            {t('next label')}
+          </Action>
+          <Action disabled={!active} onClick={onInvitationCancel} data-testid='invitation-rescuer-cancel'>
+            {t('cancel label')}
+          </Action>
+        </Actions>
+      </>
+    );
   }
 };
 
-export const InvitationRescuer = (props: InvitationConnectorProps) => {
+export const InvitationRescuer = (props: InvitationRescuerProps) => {
   const { Kind, invitationState, active, send } = props;
   const { t } = useTranslation('os');
+
   return (
     <>
       {typeof invitationState === 'undefined' ? (
