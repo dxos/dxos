@@ -68,9 +68,9 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
     const object = ((active.item as any).node?.data ?? active.item) as TypedObject;
     if (over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, new TypedObject({ object }));
+      stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
     } else if (over.path === id) {
-      stack.sections.push(new TypedObject({ object }));
+      stack.sections.push(new StackType.Section({ object }));
     }
   };
 
