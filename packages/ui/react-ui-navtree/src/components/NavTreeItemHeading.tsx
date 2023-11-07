@@ -78,7 +78,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             onClick={onSelect}
             density='fine'
             variant='ghost'
-            classNames={['grow gap-1', branch && '-mis-6']}
+            classNames={['grow gap-1 hover:bg-transparent dark:hover:bg-transparent', branch && '-mis-6']}
             disabled={disabled}
             {...(current && { 'aria-current': 'page' })}
             ref={forwardedRef}
