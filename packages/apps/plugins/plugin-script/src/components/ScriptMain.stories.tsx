@@ -17,20 +17,15 @@ import mainUrl from './FrameContainer/frame?url';
 import { ScriptMain, ScriptSection } from './ScriptMain';
 
 const code = [
-  "import React from 'react';",
-  "import { useSpace, useQuery } from '@dxos/react-client/echo';",
-  "//import { Globe } from '@braneframe/plugin-explorer';",
-  "import { Chart } from '@braneframe/plugin-explorer';",
+  "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
+  "import { Chart, Explorer, Globe } from '@braneframe/plugin-explorer';",
   '',
-  'const Component = () => {',
-  '  const space = useSpace();',
-  // TODO(burdon): Change to Filter.typename().
-  "  const objects = useQuery(space, obj => obj.__typename === 'dxos.org/schema/person');",
-  '  //return <Globe items={objects} />',
+  'export default () => {',
+  '  const spaces = useSpaces();',
+  '  const space = spaces[1]',
+  "  const objects = useQuery(space, Filter._typename('example.com/schema/person'));",
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
-  '',
-  'export default Component;',
 ].join('\n');
 
 const Story = () => {
@@ -50,9 +45,10 @@ const Story = () => {
     return null;
   }
 
+  // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in labs-app.
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptSection source={source} mainUrl={mainUrl} />
+      <ScriptSection id='test' source={source} containerUrl={mainUrl} />
     </div>
   );
 };

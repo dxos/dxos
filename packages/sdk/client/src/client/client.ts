@@ -167,6 +167,9 @@ export class Client {
     return this._runtime.shell;
   }
 
+  /**
+   * @deprecated Temporary.
+   */
   get experimental() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;

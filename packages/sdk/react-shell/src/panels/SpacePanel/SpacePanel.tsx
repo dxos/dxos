@@ -26,7 +26,7 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       title={t('space panel heading')}
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
-      <Avatar.Root variant='square' size={8}>
+      <Avatar.Root variant='square' size={8} status='active'>
         <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
           <Avatar.Frame>
             <Avatar.Fallback href={fallbackHref} />

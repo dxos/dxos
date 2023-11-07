@@ -29,7 +29,7 @@ export const TableSection: FC<{ table: TableType }> = ({ table }) => {
 
 export const TableSlide: FC<{ table: TableType }> = ({ table }) => {
   return (
-    <div className={'flex m-8 overflow-hidden'}>
+    <div className={'flex p-24 overflow-hidden'}>
       <TableComponent table={table} />
     </div>
   );
@@ -138,7 +138,7 @@ export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col grow __m-4 overflow-hidden'>
+      <div className='flex flex-col grow overflow-hidden'>
         <Table<TypedObject>
           keyAccessor={(row) => row.id ?? '__new'}
           columns={columns}

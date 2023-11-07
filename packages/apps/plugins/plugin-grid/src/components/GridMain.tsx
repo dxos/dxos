@@ -4,14 +4,14 @@
 
 import React, { type FC, useEffect } from 'react';
 
-import { Grid as GridType } from '@braneframe/types';
+import { Document as DocumentType, Grid as GridType } from '@braneframe/types';
 import { Expando, getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   Grid,
   type MosaicDropEvent,
-  type MosaicTileAction,
   type MosaicOperation,
+  type MosaicTileAction,
   type Position,
 } from '@dxos/react-ui-mosaic';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -66,7 +66,7 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   };
 
   const handleCreate = (position: Position) => {
-    const item = new GridType.Item();
+    const item = new GridType.Item({ object: new DocumentType() });
     grid.layout.position[item.id] = position;
     grid.items.push(item);
   };

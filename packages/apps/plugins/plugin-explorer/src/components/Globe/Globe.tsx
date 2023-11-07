@@ -10,22 +10,21 @@ import * as topojson from 'topojson-client';
 
 // @ts-ignore
 import world from '../../../public/countries-110m.json?json';
+import { type Accessor, createAdapter, type GeoLocation } from '../plot';
 
 const defaultOptions: DotOptions = {
   r: 4,
   fill: '#003300',
 };
 
-// TODO(burdon): Factor out definition.
-export type GeoLocation = { lat: number; lng: number };
-
 export type GlobeProps = {
   items?: any[];
-  accessor?: (object: any) => GeoLocation;
+  accessor?: Accessor<GeoLocation>;
+  projection?: Plot.ProjectionName;
   options?: DotOptions;
 };
 
-export const Globe = ({ items = [], accessor, options = defaultOptions }: GlobeProps) => {
+export const Globe = ({ items = [], accessor, projection = 'orthographic', options = defaultOptions }: GlobeProps) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   const land = topojson.feature(world, world.objects.land);
 
@@ -38,7 +37,7 @@ export const Globe = ({ items = [], accessor, options = defaultOptions }: GlobeP
     // https://observablehq.com/@observablehq/plot-earthquake-globe?intent=fork
     const plot = Plot.plot({
       // https://observablehq.com/plot/features/projections
-      projection: { type: 'orthographic', rotate: [30, -20] },
+      projection: { type: projection, rotate: [-100, -20] },
       // projection: { type: 'equirectangular', rotate: [-140, -30] },
       width,
       height,
@@ -51,16 +50,8 @@ export const Globe = ({ items = [], accessor, options = defaultOptions }: GlobeP
         Plot.geo(land, { fill: 'darkgreen', fillOpacity: 0.5 }),
         Plot.graticule(),
         Plot.dot(items, {
-          x: accessor
-            ? {
-                transform: (values) => values.map((value) => accessor(value).lat),
-              }
-            : 'lat',
-          y: accessor
-            ? {
-                transform: (values) => values.map((value) => accessor(value).lng),
-              }
-            : 'lng',
+          x: createAdapter('lat', accessor),
+          y: createAdapter('lng', accessor),
           ...options,
         }),
       ],

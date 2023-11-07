@@ -12,11 +12,11 @@ import { isGraphNode } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import {
   type PluginDefinition,
+  type DispatchIntent,
+  LayoutAction,
   resolvePlugin,
   parseIntentPlugin,
   parseLayoutPlugin,
-  LayoutAction,
-  type DispatchIntent,
   parseGraphPlugin,
   parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
@@ -297,7 +297,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
             case 'presence':
-              return <SpacePresence />;
+              return isTypedObject(data.object) ? <SpacePresence object={data.object} /> : null;
             case 'settings':
               return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <SpaceSettings /> : null;
             default:

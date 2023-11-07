@@ -12,15 +12,12 @@ import { type YText } from '@dxos/text-model';
 
 import { ScriptEditor } from './ScriptEditor';
 
+// prettier-ignore
 const code = [
-  "import React from 'react';",
-  '',
-  'const Component = () => {',
+  'export default function() {',
   '  const value = 100',
   '  return <div>{value}</div>;',
   '}',
-  '',
-  'export default Component;',
 ].join('\n');
 
 const Story = () => {
@@ -35,7 +32,7 @@ const Story = () => {
 
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptEditor content={content.content as YText} />
+      <ScriptEditor id='test' content={content.content as YText} />
     </div>
   );
 };

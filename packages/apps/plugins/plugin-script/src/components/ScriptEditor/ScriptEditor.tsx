@@ -17,6 +17,7 @@ import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructi
 import ThemeLight from './themes/GitHubLight.json?json';
 
 export type ScriptEditorProps = {
+  id: string;
   content: YText;
   themeMode?: ThemeMode;
   className?: string;
@@ -27,7 +28,7 @@ export type ScriptEditorProps = {
  * https://www.npmjs.com/package/@monaco-editor
  * https://microsoft.github.io/monaco-editor/playground.html
  */
-export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProps) => {
+export const ScriptEditor = ({ id, content, themeMode, className }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
@@ -75,11 +76,10 @@ export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProp
     });
   };
 
-  const handleMount = (editor: IStandaloneCodeEditor, monaco: Monaco) => {
+  const handleMount = (editor: IStandaloneCodeEditor, _: Monaco) => {
     if (content) {
       // Connect editor model to YJS.
-      const models = monaco.editor.getModels();
-      const _ = new MonacoBinding(content, models[0], new Set([editor]));
+      const _ = new MonacoBinding(content, editor.getModel()!, new Set([editor]));
     }
   };
 
@@ -87,10 +87,13 @@ export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProp
     <div className={mx('grow overflow-hidden', className)}>
       {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
       <MonacoEditor
-        language='typescript'
+        key={id}
+        theme={themeMode === 'dark' ? 'vs-dark' : 'light'}
         loading={<div />}
         options={options}
-        path='main.tsx' // Required to support JSX.
+        language='typescript'
+        value={String(content)}
+        path={`${id}.tsx`} // Required to support JSX.
         beforeMount={handleWillMount}
         onMount={handleMount}
       />

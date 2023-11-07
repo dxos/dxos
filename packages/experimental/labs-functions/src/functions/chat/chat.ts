@@ -21,6 +21,7 @@ export type ChatModelOptions = {
  * NOTE: The current (2023-03-02) cost model is $0.002 per 1000 tokens (roughly 1c per large query).
  * We are being billed for this -- use with caution.
  */
+// TODO(burdon): Replace with generic langchain model.
 export class Chat {
   private readonly _api: OpenAIApi;
 
