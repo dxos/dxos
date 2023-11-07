@@ -4,10 +4,10 @@
 
 import React from 'react';
 
+import '@dxosTheme';
+
 import { PublicKey } from '@dxos/keys';
 import { Tooltip } from '@dxos/react-ui';
-
-import '@dxosTheme';
 import { getColorForValue } from '@dxos/react-ui-theme';
 
 import { ObjectPresence, type ObjectPresenceProps } from './SpacePresence';
