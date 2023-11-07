@@ -95,7 +95,9 @@ export const Demo = {
               components: {
                 // @ts-ignore
                 presence: ({ object }: { object: any }) => {
-                  return <ObjectPresence size={2} viewers={object?.viewers ?? []} classNames={fineBlockSize} />;
+                  return (
+                    <ObjectPresence size={2} viewers={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
+                  );
                 },
               },
             }}

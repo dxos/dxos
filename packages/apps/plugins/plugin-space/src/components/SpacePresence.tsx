@@ -19,7 +19,7 @@ import {
   useDensityContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { getColorForValue, getSize } from '@dxos/react-ui-theme';
+import { getColorForValue, getSize, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
 
@@ -52,7 +52,14 @@ export const SpacePresence = ({ object }: { object: TypedObject }) => {
     return space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000;
   });
 
-  return <ObjectPresence size={density === 'fine' ? 2 : 4} onShareClick={handleShare} viewers={viewers} />;
+  return (
+    <ObjectPresence
+      size={density === 'fine' ? 2 : 4}
+      classNames={density === 'fine' ? 'is-6' : 'pli-4'}
+      onShareClick={handleShare}
+      viewers={viewers}
+    />
+  );
 };
 
 export type ObjectPresenceProps = ThemedClassName<{
@@ -72,11 +79,13 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
   } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
   const density = useDensityContext();
-  return density === 'fine' && viewers.length === 0 ? null : (
+  return density === 'fine' && viewers.length === 0 ? (
+    <div role='none' className={mx(classNames)} />
+  ) : (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <Button variant='ghost' classNames={classNames} onClick={onShareClick}>
-          {onShareClick && viewers.length === 0 && <Users className={getSize(size)} />}
+        <Button variant='ghost' classNames={['pli-0', classNames]} onClick={onShareClick}>
+          {onShareClick && viewers.length === 0 && <Users className={getSize(4)} />}
           {viewers.length > 0 && (
             <AvatarGroup.Root size={size} classNames={size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2'}>
               {viewers.length > 3 && showCount && (
