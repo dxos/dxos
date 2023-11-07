@@ -11,6 +11,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { importMaps } from 'vite-plugin-import-maps'
 
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
@@ -38,6 +39,7 @@ export default defineConfig({
   build: {
     sourcemap: true,
     rollupOptions: {
+      external: /^\/@import-maps/,
       input: {
         main: resolve(__dirname, './index.html'),
         'script-frame': resolve(__dirname, './script-frame/index.html'),
@@ -50,29 +52,90 @@ export default defineConfig({
     },
   },
   plugins: [
+
+
     {
       // Required for the script plugin.
+      // MUST be placed below the other import-maps plugin.
       name: "sandbox-importmap-integration",
-      transformIndexHtml() {
-        return [{
-          tag: 'script',
-          injectTo: 'head-prepend', // Inject before vite's built-in scripts.
-          children: `
-            if(window.location.hash.includes('importMap')) {
-              const urlParams = new URLSearchParams(window.location.hash.slice(1));
-              if(urlParams.get('importMap')) {
-                const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
-                
-                const mapElement = document.createElement('script');
-                mapElement.type = 'importmap';
-                mapElement.textContent = JSON.stringify(importMap, null, 2);
-                document.head.appendChild(mapElement);
-              }
-            }
-          `
-        }];
+      transformIndexHtml: {
+        enforce: 'pre',
+        config: function () {
+          return {};
+        },
+        transform: function (html) {
+          return {
+            html,
+            tags: [{
+              tag: 'script',
+              injectTo: 'head', // Inject before vite's built-in scripts.
+              children: `
+                if(window.location.hash.includes('importMap')) {
+                  const urlParams = new URLSearchParams(window.location.hash.slice(1));
+                  if(urlParams.get('importMap')) {
+                    const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
+
+                    const existingMap =Array.from(document.getElementsByTagName('script')).filter(script => script.type === 'importmap')[0]
+                    if(!existingMap) {
+                      const mapElement = document.createElement('script');
+                      mapElement.type = 'importmap';
+                      mapElement.textContent = JSON.stringify(importMap, null, 2);
+                      document.head.appendChild(mapElement);
+                    } else {
+                      const existingMapJson = JSON.parse(existingMap.textContent);
+                      existingMapJson.imports = {
+                        imports: {
+                          ...existingMapJson.imports,
+                          ...importMap.imports
+                        }
+                      };
+                      existingMap.textContent = JSON.stringify(existingMapJson, null, 2);
+                    }
+                  }
+                }
+              `
+            }]
+          };
+        }
       }
     },
+
+    importMaps([{
+      imports: {
+        '@faker-js/faker': 'https://esm.sh/@faker-js/faker@8.2.0',
+        'react-syntax-highlighter': 'https://esm.sh/react-syntax-highlighter@15.5.0',
+        'monaco-editor': 'https://esm.sh/monaco-editor@0.25.2',
+        'd3': 'https://esm.sh/d3',
+        'd3-array': 'https://esm.sh/d3-array',
+        'd3-axis': 'https://esm.sh/d3-axis',
+        'd3-brush': 'https://esm.sh/d3-brush',
+        'd3-chord': 'https://esm.sh/d3-chord',
+        'd3-color': 'https://esm.sh/d3-color',
+        'd3-contour': 'https://esm.sh/d3-contour',
+        'd3-delaunay': 'https://esm.sh/d3-delaunay',
+        'd3-dispatch': 'https://esm.sh/d3-dispatch',
+        'd3-drag': 'https://esm.sh/d3-drag',
+        'd3-dsv': 'https://esm.sh/d3-dsv',
+        'd3-ease': 'https://esm.sh/d3-ease',
+        'd3-fetch': 'https://esm.sh/d3-fetch',
+        'd3-force': 'https://esm.sh/d3-force',
+        'd3-format': 'https://esm.sh/d3-format',
+        'd3-geo': 'https://esm.sh/d3-geo',
+        'd3-hierarchy': 'https://esm.sh/d3-hierarchy',
+        'd3-interpolate': 'https://esm.sh/d3-interpolate',
+        'd3-path': 'https://esm.sh/d3-path',
+        'd3-polygon': 'https://esm.sh/d3-polygon',
+        'd3-quadtree': 'https://esm.sh/d3-quadtree',
+        'd3-random': 'https://esm.sh/d3-random',
+        'd3-scale': 'https://esm.sh/d3-scale',
+        'd3-selection': 'https://esm.sh/d3-selection',
+        'd3-shape': 'https://esm.sh/d3-shape',
+        'd3-time': 'https://esm.sh/d3-time',
+        'd3-timer': 'https://esm.sh/d3-timer',
+        'd3-transition': 'https://esm.sh/d3-transition',
+        'd3-zoom': 'https://esm.sh/d3-zoom',
+      },
+    }]),
 
     // mkcert(),
     ConfigPlugin({
