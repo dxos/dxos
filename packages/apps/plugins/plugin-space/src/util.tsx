@@ -169,7 +169,7 @@ export const objectToGraphNode = ({
         {
           id: 'create-space',
           label: ['create space label', { ns: 'os' }],
-          icon: (props) => <Planet {...props} />,
+          icon: (props) => <Plus {...props} />,
           properties: {
             disposition: 'toolbar',
             testId: 'spacePlugin.createSpace',
@@ -228,7 +228,7 @@ export const objectToGraphNode = ({
     if (isSpaceFolder) {
       node.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
         id: 'folder/create',
-        label: ['add folder label', { ns: SPACE_PLUGIN }],
+        label: ['create folder label', { ns: SPACE_PLUGIN }],
         icon: (props) => <FolderPlus {...props} />,
         invoke: () =>
           dispatch({
