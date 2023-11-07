@@ -99,7 +99,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     );
     const actions = primaryAction?.properties.disposition === 'toolbar' ? secondaryActions : node.actions;
     const { t } = useTranslation(translationKey);
-    const { current, popoverAnchorId, onSelect, isOver } = useNavTree();
+    const { current, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
 
     useEffect(() => {
@@ -195,6 +195,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   testId={`navtree.treeItem.actionsLevel${level}`}
                 />
               )}
+              {renderPresence?.(node)}
             </div>
             {!active &&
               isBranch &&
