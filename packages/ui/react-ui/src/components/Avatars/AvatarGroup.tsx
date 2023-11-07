@@ -46,7 +46,7 @@ const AvatarGroupRoot = forwardRef<HTMLDivElement, AvatarGroupRootProps>(
 
 type AvatarGroupItemRootProps = Omit<AvatarRootProps, 'labelId' | 'descriptionId' | 'inGroup'>;
 
-const AvatarGroupItemRoot = ({ maskId, size, variant, status, children }: AvatarGroupItemRootProps) => {
+const AvatarGroupItemRoot = ({ maskId, size, variant, status, children, ...rest }: AvatarGroupItemRootProps) => {
   const {
     labelId,
     descriptionId,
@@ -63,6 +63,7 @@ const AvatarGroupItemRoot = ({ maskId, size, variant, status, children }: Avatar
         size: size ?? contextSize,
         variant: variant ?? contextVariant,
         inGroup: true,
+        ...rest,
       }}
     >
       {children}
