@@ -5,9 +5,9 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
-import { type Stack as StackType, type File as FileType } from '@braneframe/types';
+import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
 import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
-import { TypedObject, isTypedObject } from '@dxos/react-client/echo';
+import { TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
@@ -35,6 +35,8 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter((object) => Boolean(object));
+  const space = getSpaceForObject(stack);
+  const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
@@ -82,12 +84,9 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
 
   const handleAdd = useCallback(
     (sectionObject: StackType['sections'][0]['object']) => {
-      stack.sections.push(
-        new TypedObject({
-          id: sectionObject.id,
-          object: sectionObject,
-        }),
-      );
+      stack.sections.push(new StackType.Section({ object: sectionObject }));
+      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
+      folder?.objects.push(sectionObject);
     },
     [stack, stack.sections],
   );

@@ -28,6 +28,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -44,6 +47,12 @@
     },
     {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-navtree"
     },
     {
       "path": "../../ui/react-ui-theme"

@@ -5,8 +5,8 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, useIntent } from '@dxos/app-framework';
-import type { Node, Graph } from '@dxos/app-graph';
+import { LayoutAction, Surface, useIntent } from '@dxos/app-framework';
+import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
@@ -40,6 +40,14 @@ const getMosaicPath = (graph: Graph, id: string) => {
 };
 
 const trimPlaceholder = (path: string) => (Path.last(path) === emptyBranchDroppableId ? Path.parent(path) : path);
+
+const renderPresence = (node: TreeNode) => {
+  if (isGraphNode(node)) {
+    return <Surface role='presence' data={{ object: node.data }} />;
+  }
+
+  return null;
+};
 
 export const TreeViewContainer = ({
   graph,
@@ -243,6 +251,7 @@ export const TreeViewContainer = ({
               onOver={handleOver}
               onDrop={handleDrop}
               popoverAnchorId={popoverAnchorId}
+              renderPresence={renderPresence}
             />
           </div>
           <VersionInfo config={config} />
