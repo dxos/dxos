@@ -181,7 +181,7 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
                     data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
                   },
                   main: { data: { active: layout.activeNode.data } },
-                  presence: { data: { active: layout.activeNode.data } },
+                  presence: { data: { object: layout.activeNode.data } },
                   status: { data: { active: layout.activeNode.data } },
                   heading: { data: { activeNode: layout.activeNode } },
                   documentTitle: { data: { activeNode: layout.activeNode } },

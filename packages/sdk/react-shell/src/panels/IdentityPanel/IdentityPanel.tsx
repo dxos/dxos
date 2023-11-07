@@ -27,7 +27,7 @@ const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHead
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={12} variant='circle'>
+      <Avatar.Root size={12} variant='circle' status='active'>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
         </Avatar.Frame>

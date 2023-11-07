@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { createElement, useEffect } from 'react';
 import { defaultTx } from '@dxos/react-ui-theme';
+
+import React, { createElement, useEffect } from 'react';
 import { ThemeProvider } from '@dxos/react-ui';
-import {translations as spaceTranslations} from '@braneframe/plugin-space';
 
 export const parameters = {
   actions: {argTypesRegex: "^on[A-Z].*"},
@@ -45,7 +45,6 @@ const withTheme = (StoryFn, context) => {
   return createElement(ThemeProvider, {
     children: createElement(StoryFn),
     tx: defaultTx,
-    resourceExtensions: [...spaceTranslations],
   });
 }
 
