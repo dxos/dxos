@@ -1,7 +1,7 @@
 {
   "name": "@braneframe/plugin-presenter",
   "version": "0.3.4",
-  "description": "Braneframe sketch plugin",
+  "description": "Braneframe presenter plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

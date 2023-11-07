@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 
 import { describe, test } from '@dxos/test';
 
-describe('search', () => {
+describe('Search', () => {
   test.skip('search', async () => {
     // eslint-disable-next-line no-eval
     const { TextEmbedder, FilesetResolver } = await eval("import('@mediapipe/tasks-text')");

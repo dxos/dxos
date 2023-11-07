@@ -35,7 +35,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
-import { types, Document } from '@braneframe/types';
+import { types, Document, Folder, File, Table, Sketch, Stack } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
 import { createClientServices, Config, Defaults, Envs, Local } from '@dxos/react-client';
 import { EchoDatabase, SpaceProxy, TextObject, TypedObject } from '@dxos/react-client/echo';
@@ -50,6 +50,16 @@ import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 (globalThis as any)[TypedObject.name] = TypedObject;
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
+
+// TODO(wittjosiah): Remove. Used to be able to access types from the console.
+(window as any).dxos_types = {
+  Document,
+  File,
+  Folder,
+  Sketch,
+  Stack,
+  Table,
+};
 
 const appKey = 'composer.dxos.org';
 

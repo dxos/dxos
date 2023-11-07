@@ -15,10 +15,11 @@ import { GRID_PLUGIN } from '../meta';
 
 export const colors: Record<string, string> = {
   gray: 'bg-neutral-50',
-  red: 'bg-indigo-50',
-  orange: 'bg-orange-50',
-  green: 'bg-teal-50',
-  blue: 'bg-cyan-50',
+  red: 'bg-rose-100',
+  indigo: 'bg-indigo-100',
+  yellow: 'bg-yellow-50',
+  green: 'bg-teal-100',
+  blue: 'bg-cyan-100',
 };
 
 // TODO(burdon): Need lenses (which should be normalized outside of card).

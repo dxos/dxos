@@ -15,6 +15,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "script-frame",
     "src"
   ],
   "references": [
