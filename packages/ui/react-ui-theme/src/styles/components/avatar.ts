@@ -17,7 +17,12 @@ export type AvatarStyleProps = Partial<{
 }>;
 
 export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inGroup }, ...etc) =>
-  mx('relative inline-flex shrink-0', getSize(size), inGroup && '-mie-2', ...etc);
+  mx(
+    'relative inline-flex shrink-0',
+    getSize(size),
+    inGroup && (size === 'px' || size <= 3 ? '-mie-1' : '-mie-2'),
+    ...etc,
+  );
 
 export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
 
@@ -41,7 +46,8 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
 
 export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
   mx(
-    'absolute inset-0 border-2 border-neutral-400 dark:border-neutral-600',
+    'absolute inset-0 border-2',
+    'border-[color:var(--surface-bg)]',
     variant === 'circle' ? 'rounded-full' : 'rounded',
     status === 'active'
       ? 'border-success-400 dark:border-success-400'

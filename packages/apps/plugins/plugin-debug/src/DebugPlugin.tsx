@@ -33,7 +33,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN);
 
   let intentPlugin: Plugin<IntentPluginProvides>;
-  let rootFolder: Folder;
 
   return {
     meta: {
@@ -74,10 +73,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         builder: ({ parent, plugins }) => {
-          if (parent.data instanceof Folder) {
-            rootFolder = parent.data;
-          }
-
           if (parent.id !== 'root') {
             return;
           }
@@ -200,10 +195,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 <DebugSpace
                   space={active.space}
                   onAddObjects={(objects) => {
+                    // TODO(burdon): Check root folder.
+                    const { objects: folders } = (active.space as SpaceProxy).db.query(Folder.filter());
                     void intentPlugin?.provides.intent.dispatch(
                       objects.map((object) => ({
                         action: SpaceAction.ADD_TO_FOLDER,
-                        data: { folder: rootFolder, object },
+                        data: { folder: folders[0], object },
                       })),
                     );
                   }}
