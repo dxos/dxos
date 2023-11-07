@@ -32,7 +32,8 @@ export interface SigningContext {
   deviceKey: PublicKey;
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
   recordCredential: (credential: Credential) => Promise<void>;
-  profile?: ProfileDocument;
+  // TODO(dmaretskyi): Should be a getter.
+  getProfile: () => ProfileDocument | undefined;
 }
 
 export type AcceptSpaceOptions = {
