@@ -15,7 +15,7 @@ import { CancelledError, SystemError } from '@dxos/protocols';
 import { SpaceState, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
@@ -336,6 +336,18 @@ export class DataSpace {
       // Set this after credentials are notarized so that on failure we will retry.
       await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
     }
+  }
+
+  // TODO(dmaretskyi): Use profile from signing context.
+  async updateOwnProfile(profile: ProfileDocument) {
+    const credential = await this._signingContext.credentialSigner.createCredential({
+      subject: this._signingContext.identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.MemberProfile',
+        profile,
+      },
+    });
+    await this.inner.controlPipeline.writer.write({ credential: { credential } });
   }
 
   async createEpoch() {

@@ -198,6 +198,16 @@ export class SpaceStateMachine implements SpaceState {
         break;
       }
 
+      case 'dxos.halo.credentials.MemberProfile': {
+        if (!this._genesisCredential) {
+          log.warn('Space must have a genesis credential before adding members.');
+          return false;
+        }
+
+        await this._members.process(credential);
+        break;
+      }
+
       case 'dxos.halo.credentials.AdmittedFeed': {
         if (!this._genesisCredential) {
           log.warn('Space must have a genesis credential before admitting feeds.');
