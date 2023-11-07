@@ -4,7 +4,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
-import { useClient } from '@dxos/react-client';
+import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { DensityProvider, useId, useThemeContext } from '@dxos/react-ui';
 
@@ -32,6 +32,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     mode,
     unredeemedCodes,
     invitationStates,
+    succeededKeys,
     onExit,
     onHaloDone,
     onSpaceDone,
@@ -71,6 +72,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               Kind='Halo'
               active={activeView === 'halo invitation input'}
               {...(unredeemedCodes?.Halo && { unredeemedCode: unredeemedCodes.Halo })}
+              {...(succeededKeys?.Halo && { succeededKeys: succeededKeys.Halo })}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='halo invitation rescuer'>
@@ -114,6 +116,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               Kind='Space'
               active={activeView === 'space invitation input'}
               {...(unredeemedCodes?.Space && { unredeemedCode: unredeemedCodes.Space })}
+              {...(succeededKeys?.Space && { succeededKeys: succeededKeys.Space })}
               onExit={onExit}
               exitActionParent={exitActionParent}
             />
@@ -319,6 +322,15 @@ export const JoinPanel = ({
     [joinState],
   );
 
+  const spaces = useMulticastObservable(client.spaces);
+
+  const succeededKeys = useMemo(
+    () => ({
+      Space: spaces ? new Set(spaces.map(({ key }) => key.toHex())) : undefined,
+    }),
+    [spaces],
+  );
+
   const invitationStates = useMemo(
     () => ({
       Halo: joinState.context.halo.invitation?.state,
@@ -354,6 +366,7 @@ export const JoinPanel = ({
         pending: ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str)),
         unredeemedCodes,
         invitationStates,
+        succeededKeys,
         identity,
         onExit,
         exitActionParent,
