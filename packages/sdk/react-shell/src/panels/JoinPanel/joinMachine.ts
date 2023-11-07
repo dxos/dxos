@@ -20,8 +20,7 @@ import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { type JoinPanelMode } from './JoinPanelProps';
-
-type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
+import { type FailReason } from '../../types';
 
 type InvitationKindContext = Partial<{
   failReason: FailReason | null;
