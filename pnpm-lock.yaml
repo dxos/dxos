@@ -600,6 +600,9 @@ importers:
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.2.0
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@sentry/vite-plugin':
         specifier: ^0.7.2
         version: 0.7.2

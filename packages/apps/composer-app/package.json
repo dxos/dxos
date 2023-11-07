@@ -46,6 +46,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@faker-js/faker": "^8.0.2",
+    "@phosphor-icons/react": "^2.0.5",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

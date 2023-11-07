@@ -14,6 +14,7 @@ import {
   AvatarGroupItem,
   DensityProvider,
   type Size,
+  type ThemedClassName,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
@@ -52,12 +53,12 @@ export const SpacePresence = ({ object }: { object: TypedObject }) => {
   return <ObjectPresence onShareClick={handleShare} viewers={viewers} />;
 };
 
-export type ObjectPresenceProps = {
+export type ObjectPresenceProps = ThemedClassName<{
   size?: Size;
   viewers?: ObjectViewer[];
   showCount?: boolean;
   onShareClick?: () => void;
-};
+}>;
 
 export const ObjectPresence = (props: ObjectPresenceProps) => {
   const {
@@ -65,11 +66,12 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
     viewers = [],
     size = 4,
     showCount = !props?.size || (props.size !== 'px' && props.size > 4),
+    classNames,
   } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
-      <Tooltip.Trigger className='px-1 m-1 flex items-center' onClick={onShareClick}>
+      <Tooltip.Trigger className={mx('flex items-center', classNames)} onClick={onShareClick}>
         {onShareClick && viewers.length === 0 && (
           <DensityProvider density={'fine'}>
             <Users className={mx(getSize(5), 'm-1')} />
@@ -93,8 +95,8 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
           </AvatarGroup.Root>
         )}
       </Tooltip.Trigger>
-      <Tooltip.Content collisionPadding={4}>
-        <span>{viewers.length > 0 ? viewers.length + ' ' + t('presence label') : t('share space')}</span>
+      <Tooltip.Content collisionPadding={4} classNames='z-[70]'>
+        <span>{viewers.length > 0 ? t('presence label', { count: viewers.length }) : t('share space')}</span>
         <Tooltip.Arrow />
       </Tooltip.Content>
     </Tooltip.Root>
