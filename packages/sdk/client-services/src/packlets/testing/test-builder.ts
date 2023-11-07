@@ -211,5 +211,6 @@ export const createSigningContext = async (keyring: Keyring): Promise<SigningCon
       deviceKey,
     ),
     recordCredential: async () => {}, // No-op.
+    getProfile: () => undefined,
   };
 };

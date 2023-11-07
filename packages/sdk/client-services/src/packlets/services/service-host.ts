@@ -263,6 +263,7 @@ export class ClientServicesHost {
         (params) => this._createIdentity(params),
         this._serviceContext.identityManager,
         this._serviceContext.keyring,
+        (profile) => this._serviceContext.broadcastProfileUpdate(profile),
       ),
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>

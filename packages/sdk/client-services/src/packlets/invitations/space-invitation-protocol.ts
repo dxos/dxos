@@ -78,7 +78,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   createIntroduction(): IntroductionRequest {
     return {
-      profile: this._signingContext.profile,
+      profile: this._signingContext.getProfile(),
     };
   }
 

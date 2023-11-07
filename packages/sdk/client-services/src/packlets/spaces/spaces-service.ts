@@ -216,7 +216,7 @@ export class SpacesServiceImpl implements SpacesService {
           identity: {
             identityKey: member.key,
             profile: {
-              displayName: member.assertion.profile?.displayName,
+              displayName: member.profile?.displayName,
             },
           },
           presence: member.removed
