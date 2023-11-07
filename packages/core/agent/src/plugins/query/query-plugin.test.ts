@@ -102,7 +102,7 @@ describe('QueryPlugin', () => {
     }
 
     await asyncTimeout(results.wait(), 1000);
-  });
+  }).tag('e2e');
 
   describe('Remote query', () => {
     let builder: TestBuilder;
