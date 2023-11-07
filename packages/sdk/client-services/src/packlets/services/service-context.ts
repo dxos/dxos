@@ -24,7 +24,7 @@ import { type NetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
@@ -169,6 +169,16 @@ export class ServiceContext {
     return factory(invitation);
   }
 
+  async broadcastProfileUpdate(profile: ProfileDocument | undefined) {
+    if (!profile || !this.dataSpaceManager) {
+      return;
+    }
+
+    for (const space of this.dataSpaceManager.spaces.values()) {
+      await space.updateOwnProfile(profile);
+    }
+  }
+
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
     await this._initialize(new Context());
@@ -192,7 +202,7 @@ export class ServiceContext {
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,
-      profile: identity.profileDocument,
+      getProfile: () => identity.profileDocument,
       recordCredential: async (credential) => {
         await identity.controlPipeline.writer.write({ credential: { credential } });
       },
