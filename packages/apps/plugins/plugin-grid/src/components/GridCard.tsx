@@ -14,18 +14,18 @@ import { mx } from '@dxos/react-ui-theme';
 import { GRID_PLUGIN } from '../types';
 
 export const colors: Record<string, string> = {
-  gray: 'bg-neutral-50',
-  red: 'bg-rose-50',
-  indigo: 'bg-indigo-50',
-  yellow: 'bg-orange-50',
-  green: 'bg-teal-50',
-  blue: 'bg-cyan-50',
-  // gray: 'bg-neutral-50 border-neutral-200 border shadow-none',
-  // red: 'bg-rose-50 border-rose-200 border shadow-none',
-  // indigo: 'bg-indigo-50 border-indigo-200 border shadow-none',
-  // yellow: 'bg-yellow-50 border-yellow-200 border shadow-none',
-  // green: 'bg-teal-50 border-teal-200 border shadow-none',
-  // blue: 'bg-cyan-50 border-cyan-200 border shadow-none',
+  gray: '!bg-neutral-50',
+  red: '!bg-rose-50',
+  indigo: '!bg-indigo-50',
+  yellow: '!bg-orange-50',
+  green: '!bg-teal-50',
+  blue: '!bg-cyan-50',
+  // gray: '!bg-neutral-50 border-neutral-200 border shadow-none',
+  // red: '!bg-rose-50 border-rose-200 border shadow-none',
+  // indigo: '!bg-indigo-50 border-indigo-200 border shadow-none',
+  // yellow: '!bg-yellow-50 border-yellow-200 border shadow-none',
+  // green: '!bg-teal-50 border-teal-200 border shadow-none',
+  // blue: '!bg-cyan-50 border-cyan-200 border shadow-none',
 };
 
 // TODO(burdon): Need lenses (which should be normalized outside of card).

@@ -58,8 +58,6 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   // Fallback is always to the active (origin) container.
   const FallbackComponent = (activeItem && containers[Path.first(activeItem.path)])?.Component ?? DefaultComponent;
 
-  console.log(container?.getOverlayStyle?.());
-
   // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
     // TODO(burdon): Set custom animations (e.g., in/out/around).
