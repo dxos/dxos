@@ -7,9 +7,10 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
-import { immutable, Expando } from '../object';
+import { immutable, Expando, data } from '../object';
 import { Schema } from '../proto';
 import { TestBuilder, createDatabase } from '../testing';
+import { Filter } from '../query';
 
 // TODO(burdon): Test with database.
 // TODO(burdon): Implement Task.from to deserialize JSON string.
@@ -124,6 +125,9 @@ describe('static schema', () => {
     expect(org.website).to.eq('dxos.org');
     expect(org.__schema).to.eq(orgSchema);
     expect(org.__schema?.[immutable]).to.eq(false);
+    expect(org.__typename).to.eq('example.Org');
+
+    expect(database.query(Filter.typename('example.Org')).objects).to.deep.eq([org]);
   });
 
   test('restart with static schema', async () => {
