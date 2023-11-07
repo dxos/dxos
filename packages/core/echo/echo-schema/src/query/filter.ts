@@ -120,6 +120,7 @@ export class Filter<T extends EchoObject = EchoObject> {
       spaces: proto.options?.spaces?.length === 0 ? undefined : proto.options?.spaces,
       models: proto.options?.models?.length === 0 ? undefined : proto.options?.models,
     };
+
     return new Filter(
       {
         type: proto.type && Reference.fromValue(proto.type),

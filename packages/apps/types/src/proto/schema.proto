@@ -4,17 +4,28 @@
 
 syntax = "proto3";
 
-import "dxos/schema.proto";
-
 package braneframe;
 
-//option echo_namespace = 'braneframe.com/schema';
+import "google/protobuf/descriptor.proto";
+import "dxos/schema.proto";
+
+extend google.protobuf.FileOptions {
+  optional string namespace = 50000;
+}
+
+extend google.protobuf.MessageOptions {
+  optional dxos.schema.MessageOptions schema_options = 50000;
+  optional bool object = 50001;
+}
+
+option (namespace) = 'braneframe.com/schema';
 
 /**
  *
  */
 message Folder {
-  option (object) = true;
+  option (schema_options).object = true;
+  option (object) = true; // TODO(burdon): Deprecated.
 
   optional string name = 1;
   repeated dxos.schema.TypedObject objects = 2;

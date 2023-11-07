@@ -1,0 +1,27 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.schema;
+
+import "google/protobuf/descriptor.proto";
+
+//message Expando {}
+//message Schema {}
+//message Text {}
+//message TypedObject {}
+
+extend google.protobuf.FileOptions {
+  optional string namespace = 50000;
+}
+
+message MessageOptions {
+  optional bool object = 1; // [targets = TARGET_TYPE_MESSAGE];
+}
+
+extend google.protobuf.MessageOptions {
+  optional MessageOptions schema_options = 50000;
+  optional bool object = 50001; // TODO(burdon): Deprecated.
+}
