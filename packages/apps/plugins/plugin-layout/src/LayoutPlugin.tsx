@@ -33,17 +33,10 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextView, ContentEmpty } from './components';
+import { MainLayout, ContextView, ContentEmpty, LayoutSettings } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
-
-/**
- * Root application layout that controls sidebars, popovers, and dialogs.
- */
-export type LayoutPluginOptions = {
-  showComplementarySidebar?: boolean;
-};
 
 export type LayoutPluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -51,14 +44,13 @@ export type LayoutPluginProvides = SurfaceProvides &
   TranslationsProvides &
   LayoutProvides;
 
-export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<LayoutPluginProvides> => {
+export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
-  const { showComplementarySidebar = false } = { ...options };
-
   const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
+    enableComplementarySidebar: false,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -86,7 +78,8 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
 
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
-        .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+        .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
+        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
     },
     unload: async () => {
       state.close();
@@ -207,11 +200,18 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         );
       },
       surface: {
-        component: ({ component }) => {
+        component: ({ component }, role) => {
+          if (role === 'settings') {
+            return <LayoutSettings />;
+          }
+
           switch (component) {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
-                <MainLayout fullscreen={state.values.fullscreen} showComplementarySidebar={showComplementarySidebar} />
+                <MainLayout
+                  fullscreen={state.values.fullscreen}
+                  showComplementarySidebar={state.values.enableComplementarySidebar}
+                />
               );
 
             case `${LAYOUT_PLUGIN}/ContentEmpty`:
@@ -228,6 +228,12 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
+            // TODO(wittjosiah): Remove this.
+            case 'dxos.org/plugin/layout/enable-complementary-sidebar': {
+              state.values.enableComplementarySidebar = intent.data.state ?? !state.values.enableComplementarySidebar;
+              return true;
+            }
+
             case LayoutAction.TOGGLE_FULLSCREEN: {
               state.values.fullscreen =
                 (intent.data as LayoutAction.ToggleFullscreen)?.state ?? !state.values.fullscreen;

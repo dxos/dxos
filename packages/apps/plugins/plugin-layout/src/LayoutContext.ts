@@ -9,6 +9,7 @@ import type { Layout } from '@dxos/app-framework';
 import { raise } from '@dxos/debug';
 
 export type LayoutState = Layout & {
+  enableComplementarySidebar: boolean;
   activeNode: Node | undefined;
   previousNode: Node | undefined;
 };

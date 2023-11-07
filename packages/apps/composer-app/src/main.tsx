@@ -37,12 +37,11 @@ import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import { types, Document, Folder, File, Table, Sketch, Stack } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { createClientServices, Config, Defaults, Envs, Local } from '@dxos/react-client';
+import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
 import { EchoDatabase, SpaceProxy, TextObject, TypedObject } from '@dxos/react-client/echo';
 import { ProgressBar } from '@dxos/react-ui';
 
 // @ts-ignore
-import mainUrl from './frame?url';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -64,8 +63,12 @@ import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 const appKey = 'composer.dxos.org';
 
 const main = async () => {
-  const config = new Config(Envs(), Local(), Defaults());
+  const searchParams = new URLSearchParams(window.location.search);
+  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
+  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
+  const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
+
   const App = createApp({
     fallback: (
       <div className='flex h-screen justify-center items-center'>
@@ -119,7 +122,13 @@ const main = async () => {
     ],
     plugins: {
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
-      [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), { appKey, config, services, types }),
+      [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
+        appKey,
+        config,
+        services,
+        types,
+        debugIdentity,
+      }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
@@ -137,7 +146,9 @@ const main = async () => {
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
       [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
-      [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), { mainUrl }),
+      [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
+        containerUrl: '/script-frame/index.html',
+      }),
       [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {

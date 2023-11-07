@@ -38,8 +38,8 @@ import {
   PopoverRenameSpace,
   SpaceMain,
   SpacePresence,
+  SpaceSettings,
 } from './components';
-import SpaceSettings from './components/SpaceSettings';
 import meta, { SPACE_PLUGIN } from './meta';
 import translations from './translations';
 import { SpaceAction, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';

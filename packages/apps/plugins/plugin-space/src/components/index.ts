@@ -12,3 +12,4 @@ export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
 export * from './SpaceMain';
 export * from './SpacePresence';
+export * from './SpaceSettings';
