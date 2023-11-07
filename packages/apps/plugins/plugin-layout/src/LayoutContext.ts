@@ -9,6 +9,7 @@ import type { Layout } from '@dxos/app-framework';
 import { raise } from '@dxos/debug';
 
 export type LayoutState = Layout & {
+  // TODO(wittjosiah): Remove this once the sidebar is used by default plugins.
   enableComplementarySidebar: boolean;
   activeNode: Node | undefined;
   previousNode: Node | undefined;
