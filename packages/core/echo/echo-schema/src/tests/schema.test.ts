@@ -7,10 +7,10 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
-import { immutable, Expando, data } from '../object';
+import { immutable, Expando } from '../object';
 import { Schema } from '../proto';
-import { TestBuilder, createDatabase } from '../testing';
 import { Filter } from '../query';
+import { TestBuilder, createDatabase } from '../testing';
 
 // TODO(burdon): Test with database.
 // TODO(burdon): Implement Task.from to deserialize JSON string.

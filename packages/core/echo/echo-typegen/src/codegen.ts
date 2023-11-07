@@ -280,11 +280,17 @@ const getProps = (type: pb.Type, depth = 2): Prop[] => {
       refName: field.resolvedType?.fullName.slice(1),
       refModelType: getRefModel(field),
       // Inline nested props for records only.
-      props: type === PropType.RECORD && field.resolvedType instanceof pb.Type && !isObject(field.resolvedType) && depth > 0 ? getProps(field.resolvedType, depth - 1) : undefined,
-      variants: field.resolvedType instanceof pb.Enum ? Object.entries(field.resolvedType.values).map(([name, tag]) => ({ name, tag })) : undefined,
-    }
+      props:
+        type === PropType.RECORD && field.resolvedType instanceof pb.Type && !isObject(field.resolvedType) && depth > 0
+          ? getProps(field.resolvedType, depth - 1)
+          : undefined,
+      variants:
+        field.resolvedType instanceof pb.Enum
+          ? Object.entries(field.resolvedType.values).map(([name, tag]) => ({ name, tag }))
+          : undefined,
+    };
   });
-}
+};
 
 export const createProtoSchema = (type: pb.Type): SchemaProps => {
   return {

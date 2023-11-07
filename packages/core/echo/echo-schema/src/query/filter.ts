@@ -7,7 +7,15 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { base, getDatabaseFromObject, isTypedObject, type EchoObject, type Expando, type TypedObject, immutable } from '../object';
+import {
+  base,
+  getDatabaseFromObject,
+  isTypedObject,
+  type EchoObject,
+  type Expando,
+  type TypedObject,
+  immutable,
+} from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
 

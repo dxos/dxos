@@ -7,7 +7,7 @@ import React, { useCallback, type FC } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
 import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
-import { TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import { type TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
