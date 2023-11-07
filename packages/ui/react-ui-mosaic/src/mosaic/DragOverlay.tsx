@@ -5,8 +5,6 @@
 import { DragOverlay } from '@dnd-kit/core';
 import React, { Component, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { DensityProvider } from '@dxos/react-ui';
-
 import { type MosaicContainerProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -60,45 +58,45 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   // Fallback is always to the active (origin) container.
   const FallbackComponent = (activeItem && containers[Path.first(activeItem.path)])?.Component ?? DefaultComponent;
 
+  console.log(container?.getOverlayStyle?.());
+
   // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
     // TODO(burdon): Set custom animations (e.g., in/out/around).
     <DragOverlay adjustScale={false} {...overlayProps} style={{ ...container?.getOverlayStyle?.() }}>
       {/* TODO(burdon): Configure density via getOverlayProps. */}
       {activeItem?.path && container && OverlayComponent && (
-        <DensityProvider density='fine'>
-          <OverlayErrorBoundary
-            fallback={
-              <FallbackComponent
-                {...container.getOverlayProps?.()}
-                item={activeItem.item}
-                path={activeItem.path}
-                operation={operation}
-                active='overlay'
-              />
-            }
-          >
-            <OverlayComponent
+        <OverlayErrorBoundary
+          fallback={
+            <FallbackComponent
               {...container.getOverlayProps?.()}
               item={activeItem.item}
               path={activeItem.path}
               operation={operation}
               active='overlay'
             />
-            {debug && (
-              <div className='flex flex-wrap mt-1 p-1 bg-neutral-50 dark:bg-neutral-700 text-xs border rounded overflow-hidden gap-1'>
-                <span className='truncate'>
-                  <span className='text-neutral-400'>container </span>
-                  {container.id}
-                </span>
-                <span className='truncate'>
-                  <span className='text-neutral-400'>item </span>
-                  {activeItem.item.id.slice(0, 8)}
-                </span>
-              </div>
-            )}
-          </OverlayErrorBoundary>
-        </DensityProvider>
+          }
+        >
+          <OverlayComponent
+            {...container.getOverlayProps?.()}
+            item={activeItem.item}
+            path={activeItem.path}
+            operation={operation}
+            active='overlay'
+          />
+          {debug && (
+            <div className='flex flex-wrap mt-1 p-1 bg-neutral-50 dark:bg-neutral-700 text-xs border rounded overflow-hidden gap-1'>
+              <span className='truncate'>
+                <span className='text-neutral-400'>container </span>
+                {container.id}
+              </span>
+              <span className='truncate'>
+                <span className='text-neutral-400'>item </span>
+                {activeItem.item.id.slice(0, 8)}
+              </span>
+            </div>
+          )}
+        </OverlayErrorBoundary>
       )}
     </DragOverlay>
   );
