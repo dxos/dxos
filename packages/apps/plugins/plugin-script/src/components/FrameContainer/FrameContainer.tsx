@@ -6,22 +6,22 @@ import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
 import { useClient } from '@dxos/react-client';
+import { mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-// @ts-ignore
-import frameSrc from './frame.html?raw';
 import { type CompilerResult } from '../../compiler';
 
 export type FrameContainerProps = {
-  mainUrl: string;
+  containerUrl: string;
   result: CompilerResult;
+  debug?: boolean;
 };
 
 /**
  * IFrame container for the compiled script.
  */
-export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
+export const FrameContainer = ({ containerUrl, result, debug = false }: FrameContainerProps) => {
   const client = useClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
@@ -29,7 +29,7 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
       // Connect iframe to client.
       const rpc = createProtoRpcPeer({
         exposed: clientServiceBundle,
-        handlers: (client as any)._services.services, // TODO(burdon): Remove cast.
+        handlers: (client as any)._services.services, // TODO(burdon): Remove cast?
         port: createIFramePort({
           channel: 'frame',
           iframe: iframeRef.current,
@@ -44,14 +44,42 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
     }
   }, [iframeRef]);
 
-  const html = frameSrc.replace(
-    '__IMPORT_MAP__',
+  // Encodes compiled code via URL.
+  const sourceHash = Buffer.from(result.sourceHash).toString('hex');
+  const src = `${containerUrl}?ts=${sourceHash}#importMap=${encodeURIComponent(
     JSON.stringify({
-      imports: createImportMap(mainUrl, result),
+      imports: createImportMap(result),
     }),
-  );
+  )}`;
 
-  return <iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} style={{ width: '100%', height: '100%' }} />;
+  return (
+    <>
+      <iframe ref={iframeRef} sandbox='allow-scripts' src={src} style={{ width: '100%', height: '100%' }} />
+
+      {debug && (
+        <div className='relative'>
+          <div
+            className={mx(
+              'flex absolute right-2 bottom-2 w-[400px] h-[200px] ring rounded bg-white',
+              'z-[100] overflow-x-hidden overflow-y-auto',
+            )}
+          >
+            <pre className='text-xs whitespace-break-spaces break-all p-2'>
+              {JSON.stringify(
+                {
+                  timestamp: result.timestamp,
+                  sourceHash,
+                  src,
+                },
+                undefined,
+                2,
+              )}
+            </pre>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 /**
@@ -60,7 +88,7 @@ export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
  * @param mainUrl
  * @param result
  */
-const createImportMap = (mainUrl: string, result: CompilerResult) => {
+const createImportMap = (result: CompilerResult) => {
   const createReexportingModule = (namedImports: string[], key: string) => {
     const code = `
       const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}];
@@ -72,7 +100,6 @@ const createImportMap = (mainUrl: string, result: CompilerResult) => {
   };
 
   return {
-    '@frame/main': mainUrl,
     '@frame/bundle': `data:text/javascript;base64,${btoa(result.bundle)}`,
     ...Object.fromEntries(
       result.imports

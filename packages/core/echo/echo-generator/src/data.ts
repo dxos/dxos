@@ -24,6 +24,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       {
         id: 'name',
         type: Schema.PropType.STRING,
+        // TODO(burdon): primary: true,
       },
       {
         id: 'content',
@@ -33,9 +34,8 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   });
 
   const organization = new Schema({
-    typename: 'dxos.org/schema/organization',
+    typename: 'example.com/schema/organization',
     props: [
-      // TODO(burdon): Add metadata for default label.
       {
         id: 'name',
         type: Schema.PropType.STRING,
@@ -45,14 +45,14 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         type: Schema.PropType.STRING,
       },
       {
-        id: 'active',
-        type: Schema.PropType.BOOLEAN,
+        id: 'description',
+        type: Schema.PropType.STRING,
       },
     ],
   });
 
   const person = new Schema({
-    typename: 'dxos.org/schema/person',
+    typename: 'example.com/schema/person',
     props: [
       {
         id: 'name',
@@ -67,7 +67,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         type: Schema.PropType.REF,
         ref: organization,
       },
-      // TODO(burdon): Convert to object.
+      // TODO(burdon): Convert to object with nested props.
       {
         id: 'lat',
         type: Schema.PropType.NUMBER,
@@ -80,11 +80,15 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   });
 
   const project = new Schema({
-    typename: 'dxos.org/schema/project',
+    typename: 'example.com/schema/project',
     props: [
       {
         id: 'title',
         type: Schema.PropType.STRING,
+      },
+      {
+        id: 'description',
+        type: Schema.PropType.STRING, // TODO(burdon): Text.
       },
       {
         id: 'repo',
@@ -97,6 +101,10 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       {
         id: 'priority',
         type: Schema.PropType.NUMBER,
+      },
+      {
+        id: 'active',
+        type: Schema.PropType.BOOLEAN,
       },
     ],
   });
@@ -135,6 +143,7 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
     repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
     status: faker.helpers.arrayElement(Status),
     priority: faker.helpers.arrayElement(Priority),
+    active: faker.datatype.boolean(),
   }),
 };
 

@@ -19,7 +19,7 @@ export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <ThreadContainer space={space} thread={thread} />
+      <ThreadContainer space={space} thread={thread} fullWidth={false} />
     </Main.Content>
   );
 };

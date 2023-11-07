@@ -23,7 +23,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
             case 'main':
               return isFile(data.active) ? <FileMain file={data.active} /> : null;
             case 'slide':
-              return isFile(data.slide) ? <FileSlide file={data.slide} /> : null;
+              return isFile(data.slide) ? <FileSlide file={data.slide} cover={false} /> : null;
             case 'section':
               return isFile(data.object) ? <FileSection file={data.object} /> : null;
             default:
