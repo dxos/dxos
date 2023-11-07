@@ -148,9 +148,9 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
   },
   primary: {
     keyColor: '#1662d9',
-    darkCp: 1,
+    darkCp: 0.86,
     lightCp: 1,
-    hueTorsion: -34.5 * dtor,
+    hueTorsion: -30 * dtor,
   },
 };
 
