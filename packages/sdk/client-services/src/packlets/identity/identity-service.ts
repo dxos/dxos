@@ -23,6 +23,7 @@ export class IdentityServiceImpl implements IdentityService {
     private readonly _createIdentity: (params?: CreateIdentityOptions) => Promise<Identity>,
     private readonly _identityManager: IdentityManager,
     private readonly _keyring: Keyring,
+    private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {}
 
   async createIdentity(request: ProfileDocument): Promise<Identity> {
@@ -58,6 +59,7 @@ export class IdentityServiceImpl implements IdentityService {
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
     await this._identityManager.updateProfile(profile);
+    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
     return this._getIdentity()!;
   }
 
