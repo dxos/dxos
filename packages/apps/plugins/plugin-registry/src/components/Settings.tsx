@@ -21,10 +21,7 @@ export const Settings = () => {
         plugins={available}
         loaded={plugins.map(({ meta }) => meta.id)}
         enabled={enabled}
-        onChange={(id, enabled) => {
-          console.log({ id, enabled });
-          enabled ? enablePlugin(id) : disablePlugin(id);
-        }}
+        onChange={(id, enabled) => (enabled ? enablePlugin(id) : disablePlugin(id))}
       />
     </Input.Root>
   );

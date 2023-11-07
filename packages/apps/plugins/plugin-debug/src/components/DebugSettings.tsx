@@ -36,5 +36,3 @@ export const DebugSettings = () => {
     </div>
   );
 };
-
-export default DebugSettings;
