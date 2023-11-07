@@ -52,6 +52,7 @@ describe('static schema', () => {
           '@meta': { keys: [] },
           subTasks: [],
           description: { '@id': task1.description.id },
+          todos: [],
           title: 'Task 1',
           assignee: { '@id': contact.id },
         },
