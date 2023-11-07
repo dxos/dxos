@@ -240,7 +240,7 @@ const GridCell: FC<{
           'group/cell flex group-hover:flex w-full h-full items-center justify-center',
           'box-border border-dashed border-4 border-neutral-75 dark:border-neutral-850 rounded-lg',
           'transition ease-in-out duration-300',
-          isOver && 'flex bg-neutral-75 dark:bg-neutral-850 border-neutral-400 dark:border-neutral-800',
+          isOver && 'flex bg-neutral-75 dark:bg-neutral-850 border-neutral-200 dark:border-neutral-800',
         )}
       >
         <div

@@ -147,10 +147,10 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
     hueTorsion: 0,
   },
   primary: {
-    keyColor: '#00e0e0',
-    darkCp: 1,
+    keyColor: '#1662d9',
+    darkCp: 0.86,
     lightCp: 1,
-    hueTorsion: -73.5 * dtor,
+    hueTorsion: -30 * dtor,
   },
 };
 

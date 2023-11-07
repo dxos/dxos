@@ -1,5 +1,5 @@
-@import '@fontsource/roboto-flex/variable-full.css';
 @import '@fontsource/fira-code/variable.css';
+@import '@fontsource/roboto-flex/variable-full.css';
 @import '@fontsource/space-grotesk/variable.css';
 
 @tailwind base;
@@ -75,6 +75,56 @@
   --surface-bg: theme(colors.neutral.900);
   --surface-text: theme(colors.neutral.50);
   --description-text: theme(colors.neutral.300);
+}
+
+.base-surface {
+  background-color: theme(colors.neutral.12);
+  --surface-bg: theme(colors.neutral.12);
+}
+
+.dark .base-surface {
+  background-color: theme(colors.neutral.900);
+  --surface-bg: theme(colors.neutral.900);
+}
+
+.fixed-surface {
+  background-color: theme(colors.neutral.12 / 30%);
+  --surface-bg: theme(colors.neutral.12);
+}
+
+.dark .fixed-surface {
+  background-color: theme(colors.neutral.900 / 40%);
+  --surface-bg: theme(colors.neutral.900);
+}
+
+.group-surface {
+  background-color: theme(colors.neutral.50);
+  --surface-bg: theme(colors.neutral.50);
+}
+
+.dark .group-surface {
+  background-color: theme(colors.neutral.850);
+  --surface-bg: theme(colors.neutral.850);
+}
+
+.chrome-surface {
+  background-color: theme(colors.neutral.12);
+  --surface-bg: theme(colors.neutral.12);
+}
+
+.dark .chrome-surface {
+  background-color: theme(colors.neutral.800);
+  --surface-bg: theme(colors.neutral.800);
+}
+
+.input-surface {
+  background-color: white;
+  --surface-bg: white;
+}
+
+.dark .input-surface {
+  background-color: theme(colors.neutral.925);
+  --surface-bg: theme(colors.neutral.925);
 }
 
 html {
