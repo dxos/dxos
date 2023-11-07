@@ -24,6 +24,8 @@ module.exports = {
         root: __dirname,
         content: [
           resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
+          resolve(__dirname, '../node_modules/@dxos/react-ui-*/dist/lib/browser') + '/*.mjs',
+          resolve(__dirname, '../node_modules/@braneframe/plugin-*/dist/lib/browser') + '/*.mjs',
         ]
       }),
       turbosnap({ rootDir: config.root }),
