@@ -21,7 +21,7 @@ functions:
 
   - id: 'dxos.org/function/github'
     endpoint: 'github'
-    handler: 'emgithubail'
+    handler: 'github'
     description: 'Github'
 
   - id: 'dxos.org/function/email'
@@ -38,6 +38,6 @@ triggers:
     subscription:
       type: 'dxos.experimental.chess.Game'
     
-  - function: 'github'
+  - function: 'dxos.org/function/github'
     subscription:
       type: 'example.com/schema/project'
