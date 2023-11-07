@@ -46,6 +46,10 @@ export type JoinPanelImplProps = Pick<
     Halo: Invitation.State;
     Space: Invitation.State;
   }>;
+  succeededKeys?: Partial<{
+    Halo: Set<string>;
+    Space: Set<string>;
+  }>;
   onHaloDone?: () => void;
   onSpaceDone?: () => void;
   onHaloInvitationCancel?: () => Promise<void> | undefined;
