@@ -49,9 +49,6 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
       "path": "../../core/functions"
     },
     {
