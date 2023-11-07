@@ -14,6 +14,9 @@
     "testing.js",
     "dist"
   ],
+  "scripts": {
+    "prebuild": "dxtype src/functions/github/proto/schema.proto src/functions/github/proto/gen/schema.ts"
+  },
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
