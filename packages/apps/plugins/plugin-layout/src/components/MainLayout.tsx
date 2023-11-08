@@ -73,7 +73,11 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
           <div aria-label={t('main header label')} role='none'>
             <div role='none' className={mx('flex gap-1 p-1', coarseBlockSize)}>
               <DensityProvider density='coarse'>
-                <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost'>
+                <Button
+                  onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
+                  variant='ghost'
+                  classNames='pli-2.5'
+                >
                   <span className='sr-only'>{t('open navigation sidebar label')}</span>
                   <MenuIcon weight='light' className={getSize(4)} />
                 </Button>

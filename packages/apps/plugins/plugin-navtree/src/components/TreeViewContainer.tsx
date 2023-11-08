@@ -180,7 +180,7 @@ export const TreeViewContainer = ({
         <DensityProvider density='coarse'>
           {identity && (
             <>
-              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 plb-1'>
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1'>
                 <HaloButton
                   size={6}
                   identityKey={identity?.identityKey.toHex()}
@@ -191,7 +191,7 @@ export const TreeViewContainer = ({
                   <Tooltip.Trigger asChild>
                     <Button
                       variant='ghost'
-                      classNames='pli-2 pointer-fine:pli-1'
+                      classNames='pli-2.5'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
