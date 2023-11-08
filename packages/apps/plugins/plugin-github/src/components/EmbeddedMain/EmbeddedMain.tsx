@@ -13,9 +13,9 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
-import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
+import { Surface, useIntent } from '@dxos/app-framework';
+import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -53,7 +53,7 @@ const EmbeddedLayoutImpl = () => {
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
   const { dispatch } = useIntent();
-  const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
+  const client = useClient();
 
   const handleCloseEmbed = useCallback(() => {
     window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
@@ -67,10 +67,10 @@ const EmbeddedLayoutImpl = () => {
   const handleJoinSpace = () => dispatch({ action: SpaceAction.JOIN });
 
   const handleInvite = useCallback(() => {
-    if (clientPlugin && space) {
-      void clientPlugin.provides.client.shell.shareSpace({ spaceKey: space.key });
+    if (client && space) {
+      void client.shell.shareSpace({ spaceKey: space.key });
     }
-  }, [clientPlugin, space]);
+  }, [client, space]);
 
   const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
   const isPreviewing = editorViewState === 'preview';

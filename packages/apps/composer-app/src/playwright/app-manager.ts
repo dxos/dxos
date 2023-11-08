@@ -67,8 +67,8 @@ export class AppManager {
     return openCount + closedCount;
   }
 
-  getDocumentItemsCount() {
-    return this.page.getByTestId('markdownPlugin.document').count();
+  getObjectsCount() {
+    return this.page.getByTestId('spacePlugin.object').count();
   }
 
   getMarkdownTextbox() {
@@ -90,8 +90,8 @@ export class AppManager {
     return this.page.getByTestId('composer.documentTitle');
   }
 
-  getDocumentLinks() {
-    return this.page.getByTestId('markdownPlugin.document');
+  getObjectLinks() {
+    return this.page.getByTestId('spacePlugin.object');
   }
 
   getCollaboratorCursors() {

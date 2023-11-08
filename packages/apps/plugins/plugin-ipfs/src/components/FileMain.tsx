@@ -43,13 +43,13 @@ export const FileSection: FC<{ file: TypedObject }> = ({ file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <div style={{ height }} className='p-2'>
+    <div style={{ height }} className='p-2 flex justify-center align-center'>
       <FilePreview type={file.type} url={url} className='object-contain' />
     </div>
   );
 };
 
-export const FileSlide: FC<{ file: TypedObject }> = ({ file }) => {
+export const FileSlide: FC<{ file: TypedObject; cover?: boolean }> = ({ file, cover }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;
@@ -59,8 +59,8 @@ export const FileSlide: FC<{ file: TypedObject }> = ({ file }) => {
 
   // TODO(burdon): Config object-container/-fit.
   return (
-    <div className='h-full'>
-      <FilePreview type={file.type} url={url} className='object-cover' />
+    <div className='h-full flex justify-center align-center'>
+      <FilePreview type={file.type} url={url} className={`object-${cover ? 'cover' : 'contain'}`} />
     </div>
   );
 };

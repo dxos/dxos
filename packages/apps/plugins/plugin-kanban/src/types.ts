@@ -6,10 +6,11 @@ import { Kanban as KanbanType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 /**
  * Kanban data model.
@@ -20,7 +21,6 @@ import { isTypedObject } from '@dxos/client/echo';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-// TODO(burdon): Make id consistent with other plugins.
 export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 
 const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
@@ -32,6 +32,7 @@ export enum KanbanAction {
 export type KanbanPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides;
 
 // TODO(burdon): Undo?

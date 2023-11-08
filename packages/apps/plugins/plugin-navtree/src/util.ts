@@ -29,13 +29,7 @@ export const sortActions = (actions: Action[]): Action[] =>
 
 // TODO(wittjosiah): Why fallbackTitle?
 export const getTreeItemLabel = (node: Node, t: TFunction) =>
-  node.properties?.preferFallbackTitle
-    ? Array.isArray(node.properties.fallbackTitle)
-      ? t(...(node.properties.fallbackTitle as [string, { ns: string }]))
-      : node.properties.fallbackTitle
-    : Array.isArray(node.label)
-    ? t(...node.label)
-    : node.label;
+  Array.isArray(node.label) ? t(...node.label) : node.label;
 
 export const getPersistenceParent = (node: Node, persistenceClass: string): Node | null => {
   if (!node || !node.parent) {

@@ -8,10 +8,14 @@ import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
+import { Folder } from '@braneframe/types';
 import {
   getPlugin,
   resolvePlugin,
+  type Plugin,
   type PluginDefinition,
+  type IntentPluginProvides,
   parseGraphPlugin,
   parseIntentPlugin,
 } from '@dxos/app-framework';
@@ -27,6 +31,8 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN);
+
+  let intentPlugin: Plugin<IntentPluginProvides>;
 
   return {
     meta: {
@@ -90,7 +96,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           );
 
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
 
           // Root debug node.
           subscriptions.push(
@@ -110,7 +116,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   invoke: () =>
                     intentPlugin?.provides.intent.dispatch({
                       plugin: DEBUG_PLUGIN,
-                      action: 'open-devtools',
+                      action: 'open-devtools', // TODO(burdon): Definition.
                     }),
                   keyBinding: 'shift+meta+\\',
                   properties: {
@@ -186,7 +192,19 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 <DevtoolsMain />
               ) : !active || typeof active !== 'object' ? null : 'space' in active &&
                 active.space instanceof SpaceProxy ? (
-                <DebugSpace space={active.space} />
+                <DebugSpace
+                  space={active.space}
+                  onAddObjects={(objects) => {
+                    // TODO(burdon): Check root folder.
+                    const { objects: folders } = (active.space as SpaceProxy).db.query(Folder.filter());
+                    void intentPlugin?.provides.intent.dispatch(
+                      objects.map((object) => ({
+                        action: SpaceAction.ADD_TO_FOLDER,
+                        data: { folder: folders[0], object },
+                      })),
+                    );
+                  }}
+                />
               ) : 'graph' in active && active.graph instanceof Graph ? (
                 <DebugGlobal graph={active.graph} />
               ) : null;

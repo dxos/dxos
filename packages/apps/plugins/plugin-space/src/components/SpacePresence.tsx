@@ -3,32 +3,39 @@
 //
 
 import { Users } from '@phosphor-icons/react';
-import React, { type FC } from 'react';
+import React from 'react';
 
-import { parseIntentPlugin, parseLayoutPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
-import { useSpace } from '@dxos/react-client/echo';
+import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
+import { type TypedObject, getSpaceForObject, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import {
+  Avatar,
+  AvatarGroup,
+  AvatarGroupItem,
+  Button,
+  type Size,
+  type ThemedClassName,
+  Tooltip,
+  useDensityContext,
+  useTranslation,
+} from '@dxos/react-ui';
+import { getColorForValue, getSize, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
 
-export const SpacePresence = () => {
+export const SpacePresence = ({ object }: { object: TypedObject }) => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const space = spacePlugin?.provides.space.active;
+  const density = useDensityContext();
   const defaultSpace = useSpace();
   const identity = useIdentity();
 
-  if (!identity || !spacePlugin) {
+  if (!identity || !spacePlugin || !intentPlugin) {
     return null;
   }
 
-  // TODO(burdon): Error when popup appears (BUT DOES NOT GET CAUGHT BY DebugStatus!)
-  //  Warning: React does not recognize the `labelId` prop on a DOM element.
-  //  If you intentionally want it to appear in the DOM as a custom attribute,
-  //  spell it as lowercase `labelid` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+  const space = getSpaceForObject(object);
+
   const handleShare = () => {
     void intentPlugin!.provides.intent.dispatch({
       plugin: SPACE_PLUGIN,
@@ -42,46 +49,73 @@ export const SpacePresence = () => {
   }
 
   const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
-    return (
-      space.key.equals(viewer.spaceKey) &&
-      layoutPlugin?.provides.layout.active === viewer.objectId &&
-      Date.now() - viewer.lastSeen < 30_000
-    );
+    return space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000;
   });
 
   return (
-    <div className='flex items-center'>
-      {intentPlugin && (
-        <Button variant='ghost' onClick={handleShare}>
-          <Users className={getSize(5)} />
-        </Button>
-      )}
-      <ObjectViewers viewers={viewers} />
-    </div>
+    <ObjectPresence
+      size={density === 'fine' ? 2 : 4}
+      classNames={density === 'fine' ? 'is-6' : 'pli-2.5'}
+      onShareClick={handleShare}
+      viewers={viewers}
+    />
   );
 };
 
-const ObjectViewers: FC<{ viewers: ObjectViewer[] }> = ({ viewers }) => {
+export type ObjectPresenceProps = ThemedClassName<{
+  size?: Size;
+  viewers?: ObjectViewer[];
+  showCount?: boolean;
+  onShareClick?: () => void;
+}>;
+
+export const ObjectPresence = (props: ObjectPresenceProps) => {
+  const {
+    onShareClick,
+    viewers = [],
+    size = 4,
+    showCount = !props?.size || (props.size !== 'px' && props.size > 4),
+    classNames,
+  } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
-  return (
+  const density = useDensityContext();
+  return density === 'fine' && viewers.length === 0 ? (
+    <div role='none' className={mx(classNames)} />
+  ) : (
     <Tooltip.Root>
-      <Tooltip.Trigger className='flex items-center'>
-        <AvatarGroup.Root size={4} classNames='mie-5'>
-          <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
-          {viewers.map((viewer) => (
-            <AvatarGroupItem.Root key={viewer.identityKey.toHex()}>
-              <Avatar.Frame>
-                {/* TODO(burdon): Why `href`? */}
-                <Avatar.Fallback href={viewer.identityKey.toHex()} />
-              </Avatar.Frame>
-            </AvatarGroupItem.Root>
-          ))}
-        </AvatarGroup.Root>
+      <Tooltip.Trigger asChild>
+        <Button variant='ghost' classNames={['pli-0', classNames]} onClick={onShareClick}>
+          {onShareClick && viewers.length === 0 && (
+            <>
+              <Users className={getSize(4)} />
+              <span className='sr-only'>{t('share space')}</span>
+            </>
+          )}
+          {viewers.length > 0 && (
+            <AvatarGroup.Root size={size} classNames={size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2'}>
+              {viewers.length > 3 && showCount && (
+                <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
+              )}
+              {viewers.slice(0, 3).map((viewer, i) => {
+                const viewerHex = viewer.identityKey.toHex();
+                return (
+                  <AvatarGroupItem.Root key={viewerHex} color={getColorForValue({ value: viewerHex, type: 'color' })}>
+                    <Avatar.Frame style={{ zIndex: viewers.length - i }}>
+                      <Avatar.Fallback href={viewerHex} />
+                    </Avatar.Frame>
+                  </AvatarGroupItem.Root>
+                );
+              })}
+            </AvatarGroup.Root>
+          )}
+        </Button>
       </Tooltip.Trigger>
-      <Tooltip.Content collisionPadding={4}>
-        <span>{t('presence label')}</span>
-        <Tooltip.Arrow />
-      </Tooltip.Content>
+      <Tooltip.Portal>
+        <Tooltip.Content side='bottom' classNames='z-[70]'>
+          <span>{viewers.length > 0 ? t('presence label', { count: viewers.length }) : t('share space')}</span>
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
     </Tooltip.Root>
   );
 };

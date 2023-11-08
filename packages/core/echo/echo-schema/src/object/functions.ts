@@ -5,12 +5,13 @@
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { type AbstractEchoObject } from './object';
 import { base, type EchoObject } from './types';
 import type { EchoDatabase } from '../database';
 
-export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot) => {
+export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
   invariant(obj[base]._stateMachine);
   obj[base]._stateMachine.reset(snapshot);
 };

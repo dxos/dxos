@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { createSubscription } from '@dxos/echo-schema';
+import { createSubscription } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out.
 export const useSubscription = (data: any) => {

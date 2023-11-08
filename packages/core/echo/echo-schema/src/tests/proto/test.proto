@@ -34,12 +34,19 @@ message Contact {
 message Task {
   option (object) = true;
 
+  message Todo {
+    option (object) = true;
+
+    string name = 1;
+  }
+  
   string title = 1;
   bool completed = 2;
   Contact assignee = 3;
   Task previous = 4;
   repeated Task sub_tasks = 5;
   dxos.schema.Text description = 6;
+  repeated Todo todos = 7;
 }
 
 message Container {

@@ -30,6 +30,9 @@ export type TeleportParams = {
   remotePeerId: PublicKey;
 };
 
+const CONTROL_HEARTBEAT_INTERVAL = 10_000;
+const CONTROL_HEARTBEAT_TIMEOUT = 60_000;
+
 /**
  * TODO(burdon): Comment: what is this?
  */
@@ -49,15 +52,15 @@ export class Teleport {
   private readonly _muxer = new Muxer();
 
   private readonly _control = new ControlExtension({
-    heartbeatInterval: 10_000,
-    heartbeatTimeout: 10_000,
+    heartbeatInterval: CONTROL_HEARTBEAT_INTERVAL,
+    heartbeatTimeout: CONTROL_HEARTBEAT_TIMEOUT,
     onTimeout: () => {
       if (this._destroying || this._aborting) {
         return;
       }
       // TODO(egorgripasov): Evaluate use of abort instead of destroy.
-      log('destroy teleport due to onTimeout in ControlExtension');
-      this.destroy(new TimeoutError('control extension')).catch((err) => log.catch(err));
+      log('abort teleport due to onTimeout in ControlExtension');
+      this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
     },
   });
 
@@ -188,7 +191,7 @@ export class Teleport {
       }
     }
 
-    await this._muxer.destroy(err);
+    await this._muxer.close();
   }
 
   addExtension(name: string, extension: TeleportExtension) {

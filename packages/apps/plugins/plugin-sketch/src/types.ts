@@ -9,10 +9,11 @@ import { Sketch as SketchType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
 
@@ -25,6 +26,7 @@ export enum SketchAction {
 export type SketchPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides &
   StackProvides;
 

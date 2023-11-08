@@ -18,6 +18,7 @@ import React, { type FC, useContext, useEffect, useMemo, useState } from 'react'
 
 import { type Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
+import { type TypedObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
@@ -34,7 +35,8 @@ import { Generator } from '../testing';
 export const DEFAULT_COUNT = 100;
 export const DEFAULT_PERIOD = 500;
 export const DEFAULT_JITTER = 50;
-const DebugSpace: FC<{ space: Space }> = ({ space }) => {
+
+const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({ space, onAddObjects }) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
@@ -87,7 +89,8 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
 
   const handleCreateObject = async (createTables: boolean) => {
     if (createTables) {
-      generator.createTables();
+      const tables = generator.createTables();
+      onAddObjects?.(tables);
     } else {
       generator.createDocument();
     }

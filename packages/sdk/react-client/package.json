@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -87,7 +87,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "yjs": "^13.6.7"
+    "yjs": "^13.6.8"
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
@@ -108,7 +108,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@faker-js/faker": "^8.0.2",
-    "yjs": "^13.6.7"
+    "yjs": "^13.6.8"
   },
   "publishConfig": {
     "access": "public"

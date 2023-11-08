@@ -30,7 +30,7 @@ export type SerializedSpace = {
 // TODO(burdon): Sort JSON keys (npm canonical serialize util).
 export class Serializer {
   async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const { objects } = database.query(undefined, { models: null });
+    const { objects } = database.query(undefined, { models: ['*'] });
     const data = {
       objects: objects.map((object) => {
         return stripUndefinedValues({

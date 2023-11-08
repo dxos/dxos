@@ -6,6 +6,7 @@ import { Thread as ThreadType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -21,6 +22,7 @@ export enum ThreadAction {
 export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides;
 
 export interface ThreadModel {
