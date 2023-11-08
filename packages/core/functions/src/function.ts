@@ -35,6 +35,7 @@ export type FunctionsManifest = {
 
 export type FunctionConfig = {
   id: string;
+  path?: string;
   description?: string;
 };
 

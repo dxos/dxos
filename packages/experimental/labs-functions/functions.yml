@@ -1,5 +1,5 @@
 functions:
-  - id: 'assistant'
+  - id: 'chat'
     description: 'AI Chat'
 
   - id: 'chess'
@@ -9,7 +9,7 @@ functions:
     description: 'Test'
 
 triggers:
-  - function: 'assistant'
+  - function: 'chat'
     subscription:
       type: 'braneframe.Thread.Block'
 

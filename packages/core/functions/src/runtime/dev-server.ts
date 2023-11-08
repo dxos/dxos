@@ -49,10 +49,10 @@ export class DevServer {
   }
 
   async initialize() {
-    for (const { id } of this._options.manifest.functions) {
+    for (const { id, path } of this._options.manifest.functions) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const module = require(join(this._options.directory, id));
+        const module = require(join(this._options.directory, path ?? id));
         const handler = module.default;
         if (typeof handler !== 'function') {
           throw new Error(`Handler must export default function: ${id}`);
