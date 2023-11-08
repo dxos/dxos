@@ -26,9 +26,9 @@ const hexadecimalPaletteSeries: (keyof typeof configColors)[] = [
 ];
 
 const shadeKeys = {
-  color: '400' as const,
-  highlightDark: '800' as const,
-  highlightLight: '100' as const,
+  color: '450' as const,
+  highlightDark: '900' as const,
+  highlightLight: '50' as const,
 };
 
 /**
