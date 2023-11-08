@@ -4,8 +4,9 @@
 
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
-import { Reference } from '@dxos/document-model';
-import { TypedObject } from '@dxos/echo-schema';
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { type Schema, TypedObject } from '@dxos/echo-schema';
 import { type FunctionSubscriptionEvent, type FunctionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -15,40 +16,57 @@ type GithubContributors = RestEndpointMethodTypes['repos']['listContributors']['
 type GithubUser = RestEndpointMethodTypes['users']['getByUsername']['response']['data'];
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context }) => {
-  log.info('Event', event);
-  const octokit = new Octokit();
-  for (const objectId of event.objects) {
-    const project = context.client.spaces.query({ id: objectId }).objects[0];
-    if (project && project.repo) {
-      log.info('Fetching contributors for', project.repo);
-      const response = await octokit.repos.listContributors({ owner: 'dxos', repo: 'dxos' });
-      const contributors: GithubContributors = response.data;
-      log.info('Contributors', { length: contributors.length });
-      const space = context.client.spaces.get(PublicKey.from(event.space));
-      invariant(space, 'Missing space.');
-      await space.waitUntilReady();
-      await Promise.all(
-        contributors.map(async (contributor) => {
-          if (!contributor.login) {
-            log.warn('Missing contributor login.');
-            return;
-          }
-          const response = await octokit.users.getByUsername({ username: contributor.login });
-          const user: GithubUser = response.data;
-          space.db.add(
-            new TypedObject(
-              {
-                name: user.name,
-                email: user.email,
-              },
-              { type: Reference.fromLegacyTypename('dxos.org/schema/person') },
-            ),
-          );
-        }),
-      );
-      await space.db.flush();
+  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+  scheduleTask(new Context(), async () => {
+    for (const objectId of event.objects) {
+      const project = context.client.spaces.query({ id: objectId }).objects[0];
+
+      if (project && project.repo && project.repo.includes('github.com') && project.__meta.keys.length === 0) {
+        project.__meta.keys.push({ source: 'github' });
+
+        const [owner, repo] = new URL(project.repo).pathname.split('/').slice(1, 3);
+        const response = await octokit.repos.listContributors({ owner, repo });
+        const contributors: GithubContributors = response.data;
+        log.info('Contributors', { repo: project.repo, amount: contributors.length });
+
+        const space = context.client.spaces.get(PublicKey.from(event.space));
+        invariant(space, 'Missing space.');
+        await space.waitUntilReady();
+
+        const personSchema = space.db.query({ typename: 'example.com/schema/person' }).objects[0] as Schema;
+
+        await Promise.all(
+          contributors.map(async (contributor) => {
+            if (!contributor.login) {
+              log.warn('Missing contributor login.');
+              return;
+            }
+            const response = await octokit.users.getByUsername({ username: contributor.login });
+            const user: GithubUser = response.data;
+            if (!user.name) {
+              log.warn('Missing user name.');
+              return;
+            }
+            const existing = space.db.query({ name: user.name }).objects;
+            if (existing.length !== 0) {
+              log.info('User already exists', { name: user.name });
+            }
+            space.db.add(
+              new TypedObject(
+                {
+                  name: user.name,
+                  email: user.email,
+                },
+                { schema: personSchema },
+              ),
+            );
+          }),
+        );
+        await space.db.flush();
+      }
     }
-  }
+  });
 
   context.status(200).succeed({});
 };
