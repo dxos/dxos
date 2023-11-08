@@ -1,0 +1,52 @@
+{
+  "name": "arena-app",
+  "version": "0.1.0",
+  "description": "arena-app - a DXOS application",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "deploy": "dx app publish",
+    "preview": "npm run prebuild && vite preview",
+    "serve": "npm run prebuild && vite",
+    "storybook": "start-storybook -p 9009 --no-open",
+    "gen-schema": "dxtype src/proto/schema.proto src/proto/gen/schema.ts",
+    "prebuild": "npm run gen-schema"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/vault": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "react-router-dom": "^6.4.0",
+    "@dxos/echo-schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "@dxos/cli": "workspace:*",
+    "typescript": "^5.2.2",
+    "vite": "^4.3.9",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^3.0.1",
+    "vite-plugin-pwa": "^0.14.1",
+    "workbox-window": "^6.5.4",
+    "@dxos/react-ui-theme": "workspace:*",
+    "tailwindcss": "~3.3.2",
+    "autoprefixer": "^10.4.12",
+    "postcss": "^8.4.21",
+    "@storybook/addon-essentials": "^7.0.6",
+    "@storybook/addon-interactions": "^7.0.6",
+    "@storybook/addon-links": "^7.0.6",
+    "@storybook/builder-vite": "^7.0.6",
+    "@storybook/core-server": "^7.0.6",
+    "@storybook/mdx2-csf": "^1.0.0",
+    "@storybook/react": "^7.0.6",
+    "@storybook/react-vite": "^7.0.6",
+    "@dxos/echo-typegen": "workspace:*"
+  }
+}

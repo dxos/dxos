@@ -1,0 +1,60 @@
+{
+  "sourceRoot": "packages/apps/arena-app/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/apps/arena-app/src/main.ts",
+        "outputPath": "packages/apps/arena-app/dist",
+        "tsConfig": "packages/apps/arena-app/tsconfig.json"
+      },
+      "outputs": ["{options.outputPath}"],
+      "transformers": ["@dxos/log-hook/transformer"]
+    },
+    "bundle": {
+      "executor": "@nx/vite:build",
+      "options": {
+        "outputPath": "packages/apps/arena-app/out/arena-app"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": ["packages/apps/arena-app/**/*.{ts,js}?(x)"],
+        "quiet": true
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "preview": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "arena-app:bundle",
+        "staticFilePath": "packages/apps/arena-app/out/composer"
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "arena-app:bundle"
+      }
+    },
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/arena-app/.storybook"
+      }
+    }
+  },
+  "implicitDependencies": ["serve-with-vault"]
+}
