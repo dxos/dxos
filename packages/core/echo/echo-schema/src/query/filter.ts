@@ -7,7 +7,15 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { base, getDatabaseFromObject, isTypedObject, type EchoObject, type Expando, type TypedObject } from '../object';
+import {
+  base,
+  getDatabaseFromObject,
+  isTypedObject,
+  type EchoObject,
+  type Expando,
+  type TypedObject,
+  immutable,
+} from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
 
@@ -75,11 +83,6 @@ export class Filter<T extends EchoObject = EchoObject> {
     return new Filter({
       type: ref,
     });
-  }
-
-  // TODO(burdon): Remove and reconcile with below.
-  static _typename(typename: string) {
-    return Filter.from((object) => object.__typename === typename);
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>) {
@@ -214,25 +217,28 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     return false;
   }
 
-  // TODO(burdon): Should match by default?
-  let match = true;
-
   if (filter.type) {
     if (!isTypedObject(object)) {
       return false;
     }
 
-    const type = object[base]._getType();
-    if (!type) {
-      return false;
-    }
+    // Separate branch for objects with dynamic schema and typename filters.
+    // TODO(dmaretskyi): Better way to check if schema is dynamic.
+    if (filter.type.protocol === 'protobuf' && object.__schema && !object.__schema[immutable]) {
+      if (object.__schema.typename !== filter.type.itemId) {
+        return false;
+      }
+    } else {
+      const type = object[base]._getType();
+      if (!type) {
+        return false;
+      }
 
-    // TODO(burdon): Comment.
-    if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend.spaceKey)) {
-      return false;
+      // TODO(burdon): Comment.
+      if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend.spaceKey)) {
+        return false;
+      }
     }
-
-    match = true;
   }
 
   if (filter.properties) {
@@ -243,8 +249,6 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
         return false;
       }
     }
-
-    match = true;
   }
 
   if (filter.text !== undefined) {
@@ -256,8 +260,6 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     if (!JSON.stringify(object.toJSON()).toLowerCase().includes(text)) {
       return false;
     }
-
-    match = true;
   }
 
   if (filter.predicate && !filter.predicate(object)) {
@@ -268,11 +270,9 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     if (!filterMatch(andFilter, object)) {
       return false;
     }
-
-    match = true;
   }
 
-  return match;
+  return true;
 };
 
 // Type comparison is a bit weird due to backwards compatibility requirements.
