@@ -55,7 +55,7 @@ export const SpacePresence = ({ object }: { object: TypedObject }) => {
   return (
     <ObjectPresence
       size={density === 'fine' ? 2 : 4}
-      classNames={density === 'fine' ? 'is-6' : 'pli-4'}
+      classNames={density === 'fine' ? 'is-6' : 'pli-2.5'}
       onShareClick={handleShare}
       viewers={viewers}
     />
@@ -85,7 +85,12 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
         <Button variant='ghost' classNames={['pli-0', classNames]} onClick={onShareClick}>
-          {onShareClick && viewers.length === 0 && <Users className={getSize(4)} />}
+          {onShareClick && viewers.length === 0 && (
+            <>
+              <Users className={getSize(4)} />
+              <span className='sr-only'>{t('share space')}</span>
+            </>
+          )}
           {viewers.length > 0 && (
             <AvatarGroup.Root size={size} classNames={size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2'}>
               {viewers.length > 3 && showCount && (
