@@ -141,13 +141,15 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             <div
               role='none'
               className={mx(
+                'flex items-start rounded',
                 levelPadding(level),
                 hoverableControls,
                 hoverableFocusedWithinControls,
                 hoverableDescriptionIcons,
                 level < 1 && topLevelCollapsibleSpacing,
-                ((active && active !== 'overlay') || path === current) && 'bg-neutral-75 dark:bg-neutral-850',
-                'flex items-start rounded hover:bg-neutral-450/5 dark:hover:bg-25/5',
+                (active && active !== 'overlay') || path === current
+                  ? 'bg-neutral-75 dark:bg-neutral-850'
+                  : 'hover:bg-neutral-450/5 dark:hover:bg-25/5',
               )}
             >
               <NavTreeItemHeading
