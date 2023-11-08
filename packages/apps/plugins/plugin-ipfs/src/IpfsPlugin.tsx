@@ -17,7 +17,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
     provides: {
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isFile(data.active) ? <FileMain file={data.active} /> : null;
