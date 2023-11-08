@@ -494,6 +494,48 @@ importers:
 
   packages/apps/arena-app:
     dependencies:
+      '@braneframe/plugin-chess':
+        specifier: workspace:*
+        version: link:../plugins/plugin-chess
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugins/plugin-client
+      '@braneframe/plugin-debug':
+        specifier: workspace:*
+        version: link:../plugins/plugin-debug
+      '@braneframe/plugin-error':
+        specifier: workspace:*
+        version: link:../plugins/plugin-error
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugins/plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugins/plugin-layout
+      '@braneframe/plugin-metadata':
+        specifier: workspace:*
+        version: link:../plugins/plugin-metadata
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugins/plugin-navtree
+      '@braneframe/plugin-pwa':
+        specifier: workspace:*
+        version: link:../plugins/plugin-pwa
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugins/plugin-space
+      '@braneframe/plugin-telemetry':
+        specifier: workspace:*
+        version: link:../plugins/plugin-telemetry
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugins/plugin-theme
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
