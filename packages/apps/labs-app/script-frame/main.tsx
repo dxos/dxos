@@ -12,22 +12,27 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 // TODO(burdon): The script main frame currently must be part of the vite applications.
 //  Import file as resource from package?
 
-const init = async (f: () => Promise<Record<string, any>>) =>
-  Object.entries(await f()).reduce<Record<string, any>>((map, [key, module]) => {
-    map[key] = module;
-    return map;
-  }, {});
 
-// @ts-ignore
-window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
-  // prettier-ignore
-  'react': await import('react'),
-  'react-dom/client': await import('react-dom/client'),
-  '@dxos/client': await import('@dxos/client'),
-  '@dxos/react-client': await import('@dxos/react-client'),
-  '@dxos/react-client/echo': await import('@dxos/react-client/echo'),
-  '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
-}));
+(window as any).__DXOS_SANDBOX_MODULES__ = {
+  modules: {
+    // prettier-ignore
+    'react': await import('react'),
+    'react-dom/client': await import('react-dom/client'),
+    '@dxos/client': await import('@dxos/client'),
+    '@dxos/react-client': await import('@dxos/react-client'),
+    '@dxos/react-client/echo': await import('@dxos/react-client/echo'),
+    '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
+  },
+  resolve: (name: string) => {
+    const { modules } = (window as any).__DXOS_SANDBOX_MODULES__;
+    if(!modules[name]) {
+      throw new Error(`Module not found: ${name}`);
+    }
+    return modules[name];
+  }
+}
+
+
 
 // eslint-disable-next-line no-new-func
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);

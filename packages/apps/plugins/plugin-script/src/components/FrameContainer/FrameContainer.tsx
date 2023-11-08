@@ -91,9 +91,10 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
 const createImportMap = (result: CompilerResult) => {
   const createReexportingModule = (namedImports: string[], key: string) => {
     const code = `
-      const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}];
+      const __$module = window.__DXOS_SANDBOX_MODULES__.resolve(${JSON.stringify(key)});
+      const { ${namedImports.join(',')} } = __$module;
       export { ${namedImports.join(',')} };
-      export default window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}].default;
+      export default __$module.default;
     `;
 
     return `data:text/javascript;base64,${btoa(code)}`;
