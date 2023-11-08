@@ -55,7 +55,7 @@ for APP in "${APPS[@]}"; do
   if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
     export REMOTE_SOURCE=https://halo.dxos.org/vault.html
-    DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
+    DX_CONFIG="$ROOT/.circleci/publish-config/config-production.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
     eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
@@ -70,7 +70,7 @@ for APP in "${APPS[@]}"; do
   elif [ $BRANCH = "staging" ]; then
     export DX_ENVIRONMENT=staging
     export REMOTE_SOURCE=https://halo.staging.dxos.org/vault.html
-    DX_CONFIG="$ROOT/packages/devtools/cli/config/config-staging.yml"
+    DX_CONFIG="$ROOT/.circleci/publish-config/config-staging.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
     $ROOT/packages/devtools/cli/bin/run app publish \
@@ -81,7 +81,7 @@ for APP in "${APPS[@]}"; do
   else
     export DX_ENVIRONMENT=development
     export REMOTE_SOURCE=https://halo.dev.dxos.org/vault.html
-    DX_CONFIG="$ROOT/packages/devtools/cli/config/config-dev.yml"
+    DX_CONFIG="$ROOT/.circleci/publish-config/config-development.yml"
 
     $ROOT/packages/devtools/cli/bin/run app publish \
       --config=$DX_CONFIG \
