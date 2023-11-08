@@ -5,7 +5,7 @@
 import { type ComponentFunction } from '@dxos/react-ui-types/src';
 
 import { mx } from '../../util';
-import { bounceLayout, fixedSurface } from '../fragments';
+import { bounceLayout, fixedBorder, fixedSurface } from '../fragments';
 
 export type MainStyleProps = Partial<{
   isLg: boolean;
@@ -37,8 +37,7 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
   mx(
     'fixed block-start-0 block-end-0 is-[100vw] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
     'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-    // TODO(burdon): Coordinate with groupBorder.
-    'border-neutral-100 dark:border-neutral-800',
+    fixedBorder,
     side === 'inline-start' ? sidebarSlots.start.width : sidebarSlots.end.width,
     side === 'inline-start'
       ? inlineStartSidebarOpen

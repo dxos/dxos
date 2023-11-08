@@ -4,16 +4,14 @@
 
 import React, { type FC, useEffect } from 'react';
 
-import type { SpacePluginProvides } from '@braneframe/plugin-space';
-import { Grid as GridType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { Expando, type TypedObject } from '@dxos/client/echo';
+import { Document as DocumentType, Grid as GridType } from '@braneframe/types';
+import { Expando, getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   Grid,
   type MosaicDropEvent,
-  type MosaicTileAction,
   type MosaicOperation,
+  type MosaicTileAction,
   type Position,
 } from '@dxos/react-ui-mosaic';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -21,11 +19,7 @@ import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 import { colors, getObject, GridCard } from './GridCard';
 
 export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
-  const { plugins } = usePlugins();
-
-  // TODO(burdon): Get from properties?
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
+  const space = getSpaceForObject(grid);
 
   useEffect(() => {
     if (!grid.layout) {
@@ -72,7 +66,7 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   };
 
   const handleCreate = (position: Position) => {
-    const item = new GridType.Item();
+    const item = new GridType.Item({ object: new DocumentType() });
     grid.layout.position[item.id] = position;
     grid.items.push(item);
   };

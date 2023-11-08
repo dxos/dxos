@@ -49,6 +49,12 @@
       "path": "../../sdk/client-services"
     },
     {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-generator"
+    },
+    {
       "path": "../echo/echo-schema"
     },
     {

@@ -30,6 +30,7 @@ export class InvitationEncoder {
         swarmKey: invitation.swarmKey,
         state: invitation.state,
         timeout: invitation.timeout,
+        ...(invitation.spaceKey ? { spaceKey: invitation.spaceKey } : {}),
       }),
     );
   }

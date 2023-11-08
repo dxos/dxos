@@ -9,7 +9,7 @@ import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-
 import { mx } from '@dxos/react-ui-theme';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
-import { NavTreeItem } from './NavTreeItem';
+import { NavTreeMosaicComponent } from './NavTreeItem';
 import type { TreeNode } from '../types';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
@@ -39,6 +39,7 @@ export type NavTreeProps = {
   popoverAnchorId?: NavTreeProviderProps['popoverAnchorId'];
   onSelect?: NavTreeProviderProps['onSelect'];
   isOver?: NavTreeProviderProps['isOver'];
+  renderPresence?: NavTreeProviderProps['renderPresence'];
 } & Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component' | 'id'>;
 
 export const NavTree = ({
@@ -47,6 +48,7 @@ export const NavTree = ({
   popoverAnchorId,
   onSelect,
   isOver = defaultIsOver,
+  renderPresence,
   onOver,
   onDrop,
   className,
@@ -55,13 +57,19 @@ export const NavTree = ({
     <Mosaic.Container
       {...{
         id: node.id,
-        Component: NavTreeItem,
+        Component: NavTreeMosaicComponent,
         onOver,
         onDrop,
       }}
     >
       <Tree.Root classNames={mx('flex flex-col', className)}>
-        <NavTreeProvider current={current} popoverAnchorId={popoverAnchorId} onSelect={onSelect} isOver={isOver}>
+        <NavTreeProvider
+          current={current}
+          popoverAnchorId={popoverAnchorId}
+          onSelect={onSelect}
+          isOver={isOver}
+          renderPresence={renderPresence}
+        >
           <NavTreeImpl node={node} />
         </NavTreeProvider>
       </Tree.Root>

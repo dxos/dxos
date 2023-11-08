@@ -10,6 +10,7 @@ import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
 import { Expando } from '../object';
+import { Schema } from '../proto';
 
 describe('Filter', () => {
   test('properties', () => {
@@ -93,5 +94,22 @@ describe('Filter', () => {
         spaceKey,
       ),
     ).to.be.true;
+  });
+
+  test('dynamic schema', () => {
+    const schema = new Schema({
+      typename: 'example.TestSchema',
+    });
+
+    const object = new Expando(
+      {
+        title: 'test',
+      },
+      { schema },
+    );
+    expect(object.__schema).to.eq(schema);
+
+    const filter = Filter.typename('example.TestSchema');
+    expect(filterMatch(filter, object)).to.be.true;
   });
 });

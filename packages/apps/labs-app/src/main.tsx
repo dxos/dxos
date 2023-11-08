@@ -21,9 +21,11 @@ import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { MetadataPlugin } from '@braneframe/plugin-metadata';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
+import { ScriptPlugin } from '@braneframe/plugin-script';
 import { SearchPlugin } from '@braneframe/plugin-search';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -50,11 +52,15 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
+import './globals';
+
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
+
+const APP = 'labs.dxos.org';
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -83,7 +89,7 @@ const main = async () => {
 
   const App = createApp({
     plugins: [
-      TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
+      TelemetryPlugin({ namespace: APP, config: new Config(Defaults()) }),
       ThemePlugin({ appName: 'Labs', tx: labsTx }),
 
       // Outside of error boundary so that updates are not blocked by errors.
@@ -92,7 +98,8 @@ const main = async () => {
       // Core framework.
       ErrorPlugin(),
       GraphPlugin(),
-      ClientPlugin({ config, services, debugIdentity: debug, types }),
+      MetadataPlugin(),
+      ClientPlugin({ appKey: APP, config, services, debugIdentity: debug, types }),
 
       // Core UX.
       LayoutPlugin({ showComplementarySidebar: true }),
@@ -103,22 +110,22 @@ const main = async () => {
       FilesPlugin(),
       GithubPlugin(),
       IpfsPlugin(),
+      SearchPlugin(),
+      PresenterPlugin(), // Before Stack.
 
       // Presentation plugins.
+      // TODO(burdon): Alphabetize menu?
       MarkdownPlugin(),
+      ExplorerPlugin(),
       GridPlugin(),
       KanbanPlugin(),
       MapPlugin(),
-      PresenterPlugin(), // Before Stack.
+      ScriptPlugin({ containerUrl: '/script-frame/index.html' }),
       SketchPlugin(),
       StackPlugin(),
       TablePlugin(),
       ThreadPlugin(),
-      ExplorerPlugin(),
       ChessPlugin(),
-
-      // TODO(burdon): Currently last so that action are added at end of dropdown menu.
-      SearchPlugin(),
     ],
   });
 

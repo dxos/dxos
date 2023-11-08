@@ -6,6 +6,7 @@ import { Duplex } from 'node:stream';
 
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { type RpcPort } from './rpc-port';
 
@@ -135,6 +136,12 @@ export class Framer {
 
   destroy() {
     // TODO(dmaretskyi): Call stream.end() instead?
+    if (this._stream.readableLength > 0) {
+      log.warn('framer destroyed while there are still read bytes in the buffer.');
+    }
+    if (this._stream.writableLength > 0) {
+      log.warn('framer destroyed while there are still write bytes in the buffer.');
+    }
     this._stream.destroy();
   }
 }

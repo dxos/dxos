@@ -48,22 +48,10 @@
       "path": "../../types"
     },
     {
-      "path": "../../types"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-layout"
-    },
-    {
       "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

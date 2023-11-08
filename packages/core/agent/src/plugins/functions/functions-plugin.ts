@@ -14,7 +14,7 @@ import { Plugin } from '../plugin';
 
 const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   '@type': 'dxos.agent.functions.FunctionsConfig',
-  port: 7000,
+  port: 7000, // TODO(burdon): Change default (clashes with OS/X).
 };
 
 export class FunctionsPlugin extends Plugin {

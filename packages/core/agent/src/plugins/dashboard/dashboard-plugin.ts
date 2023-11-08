@@ -71,13 +71,13 @@ export class DashboardPlugin extends Plugin {
       this._ctx.onDispose(() => this._rpc!.close());
     });
 
-    this.statusUpdate.emit();
     this._ctx.onDispose(() => subscription.unsubscribe());
+    this.statusUpdate.emit();
   }
 
   async close(): Promise<void> {
-    this.statusUpdate.emit();
     void this._ctx.dispose();
+    this.statusUpdate.emit();
   }
 
   private _handleStatus(): Stream<AgentStatus> {
@@ -139,7 +139,7 @@ export class DashboardPlugin extends Plugin {
       const plugin = this._pluginCtx!.plugins.find((plugin) => plugin.id === request.id);
       invariant(plugin, `Plugin ${request.id} not found.`);
       await plugin.close();
-      await plugin.setConfig(request.config);
+      plugin.setConfig(request.config);
       await plugin.open();
       this.statusUpdate.emit();
     }

@@ -6,10 +6,12 @@ import type { IconProps } from '@phosphor-icons/react';
 import type { DeepSignal } from 'deepsignal';
 import type { FC } from 'react';
 
+import type { Stack as StackType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   Intent,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -47,4 +49,14 @@ export type StackState = DeepSignal<{
 export type StackPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides & { stack: StackState };
+
+// TODO(wittjosiah): Assume typed object and just check for typename?
+export const isStack = (data: unknown): data is StackType =>
+  data && typeof data === 'object'
+    ? 'id' in data &&
+      typeof data.id === 'string' &&
+      typeof (data as { [key: string]: any }).sections === 'object' &&
+      typeof (data as { [key: string]: any }).sections?.length === 'number'
+    : false;

@@ -115,7 +115,6 @@ export class InvitationHostExtension extends RpcExtension<
 
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
           return {
-            spaceKey: this.invitation.authMethod === Invitation.AuthMethod.NONE ? this.invitation.spaceKey : undefined,
             authMethod: this.invitation.authMethod,
           };
         },
