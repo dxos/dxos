@@ -69,37 +69,36 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         )}
 
         {/* Top (header) bar. */}
-        <Main.Content
-          asChild
-          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, baseSurface]}
-        >
-          <div role='none' aria-label={t('main header label')}>
-            <DensityProvider density='coarse'>
-              <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
-                <span className='sr-only'>{t('open navigation sidebar label')}</span>
-                <MenuIcon weight='light' className={getSize(4)} />
-              </Button>
-
-              <Surface role='heading' limit={2} />
-              <div role='none' className='grow' />
-
-              {/* TODO(burdon): Too specific? status? contentinfo? */}
-              <Surface role='presence' limit={1} />
-
-              {complementarySidebarOpen !== null && showComplementarySidebar && (
-                <Button
-                  onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-                  variant='ghost'
-                >
-                  <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                  <CaretDoubleLeft
-                    mirrored={!!context.complementarySidebarOpen}
-                    weight='light'
-                    className={getSize(4)}
-                  />
+        <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[1]', baseSurface]} asChild>
+          <div aria-label={t('main header label')} role='none'>
+            <div role='none' className={mx('flex gap-1 p-1', coarseBlockSize)}>
+              <DensityProvider density='coarse'>
+                <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost'>
+                  <span className='sr-only'>{t('open navigation sidebar label')}</span>
+                  <MenuIcon weight='light' className={getSize(4)} />
                 </Button>
-              )}
-            </DensityProvider>
+
+                <Surface role='heading' limit={2} />
+                <div role='none' className='grow' />
+
+                {/* TODO(burdon): Too specific? status? contentinfo? */}
+                <Surface role='presence' limit={1} />
+
+                {complementarySidebarOpen !== null && showComplementarySidebar && (
+                  <Button
+                    onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+                    variant='ghost'
+                  >
+                    <span className='sr-only'>{t('open complementary sidebar label')}</span>
+                    <CaretDoubleLeft
+                      mirrored={!!context.complementarySidebarOpen}
+                      weight='light'
+                      className={getSize(4)}
+                    />
+                  </Button>
+                )}
+              </DensityProvider>
+            </div>
           </div>
         </Main.Content>
 
