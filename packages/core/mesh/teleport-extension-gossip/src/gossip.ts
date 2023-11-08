@@ -21,6 +21,7 @@ const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
 const YJS_CHANNEL_PREFIX = 'user-channel/yjs.awareness';
 const YJS_TIMEOUT_THRESHOLD = 20;
 const YJS_TIMEOUT_WINDOW = 1000 * 30;
+const MAX_CTX_TASKS = 50;
 
 /**
  * Gossip extensions manager.
@@ -88,11 +89,15 @@ export class Gossip {
         this._callListeners(message);
         if (message.channelId.startsWith(YJS_CHANNEL_PREFIX) && this._oldestYjsTimeoutInWindow()) {
           log('skipping propagating YJS gossip message due to timeouts');
-        } else {
-          scheduleTask(this._ctx, async () => {
-            await this._propagateAnnounce(message);
-          });
+          return;
         }
+        if (this._ctx.disposeCallbacksLength > MAX_CTX_TASKS) {
+          log('skipping propagating YJS gossip message due to exessive tasks');
+          return;
+        }
+        scheduleTask(this._ctx, async () => {
+          await this._propagateAnnounce(message);
+        });
       },
       onClose: async (err) => {
         if (err) {
