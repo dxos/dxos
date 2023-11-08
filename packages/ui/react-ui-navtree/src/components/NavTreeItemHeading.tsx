@@ -6,7 +6,7 @@ import { CaretDown, CaretRight, type IconProps } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
 import { Button, TreeItem } from '@dxos/react-ui';
-import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/react-ui-theme';
+import { getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
 
 import {
   navTreeHeading,
@@ -51,17 +51,20 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
         )}
       >
         {branch && (
-          <TreeItem.OpenTrigger
-            {...(disabled && { disabled, 'aria-disabled': true })}
-            classNames={['-translate-x-2', ghostButtonColors, disabled && staticDisabled]}
-            data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
-            onKeyDown={(event) => {
-              if (event.key === ' ' || event.key === 'Enter') {
-                event.stopPropagation();
-              }
-            }}
-          >
-            <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
+          <TreeItem.OpenTrigger asChild>
+            <Button
+              classNames='-translate-x-3 pli-1.5'
+              variant='ghost'
+              disabled={disabled}
+              data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
+              onKeyDown={(event) => {
+                if (event.key === ' ' || event.key === 'Enter') {
+                  event.stopPropagation();
+                }
+              }}
+            >
+              <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
+            </Button>
           </TreeItem.OpenTrigger>
         )}
         <TreeItem.Heading data-testid='navtree.treeItem.heading' title={id} asChild>
@@ -78,7 +81,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             onClick={onSelect}
             density='fine'
             variant='ghost'
-            classNames={['grow gap-1', branch && '-mis-6']}
+            classNames={['grow gap-1 hover:bg-transparent dark:hover:bg-transparent', branch && '-mis-6']}
             disabled={disabled}
             {...(current && { 'aria-current': 'page' })}
             ref={forwardedRef}

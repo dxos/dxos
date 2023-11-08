@@ -123,9 +123,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             open={!forceCollapse && open}
             onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
             classNames={[
-              'rounded block relative',
+              'rounded block relative transition-opacity',
               hoverableFocusedKeyboardControls,
-              'transition-opacity',
               active && active !== 'overlay' && 'opacity-0',
               focusRing,
               isOverCurrent && dropRing,
@@ -142,13 +141,15 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             <div
               role='none'
               className={mx(
+                'flex items-start rounded',
                 levelPadding(level),
                 hoverableControls,
                 hoverableFocusedWithinControls,
                 hoverableDescriptionIcons,
                 level < 1 && topLevelCollapsibleSpacing,
-                ((active && active !== 'overlay') || path === current) && 'bg-neutral-75 dark:bg-neutral-850',
-                'flex items-start rounded',
+                (active && active !== 'overlay') || path === current
+                  ? 'bg-neutral-75 dark:bg-neutral-850'
+                  : 'hover:bg-neutral-450/5 dark:hover:bg-25/5',
               )}
             >
               <NavTreeItemHeading

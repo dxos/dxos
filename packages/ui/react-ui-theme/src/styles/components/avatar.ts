@@ -47,7 +47,6 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
 export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
   mx(
     'absolute inset-0 border-2',
-    'border-[color:var(--surface-bg)]',
     variant === 'circle' ? 'rounded-full' : 'rounded',
     status === 'active'
       ? 'border-success-400 dark:border-success-400'
@@ -55,7 +54,9 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
       ? 'border-error-400 dark:border-error-500'
       : status === 'warning'
       ? 'border-warning-400 dark:border-warning-500'
-      : '',
+      : status === 'inactive'
+      ? 'border-neutral-400 dark:border-neutral-500'
+      : 'border-[color:var(--surface-bg)]',
     animation === 'pulse' ? 'animate-halo-pulse' : '',
     ...etc,
   );
