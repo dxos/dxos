@@ -35,12 +35,8 @@
         document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
       }
       const paletteMatch = window.matchMedia('(prefers-color-scheme: dark)');
-      if (window.top === window) {
-        setDarkTheme(paletteMatch.matches);
-        paletteMatch.addEventListener('change', ({ matches })=> setDarkTheme(matches));
-      } else {
-        setDarkTheme(true);
-      }
+      setDarkTheme(paletteMatch.matches);
+      paletteMatch.addEventListener('change', ({ matches })=> setDarkTheme(matches));
     </script>
   </head>
   <body>
