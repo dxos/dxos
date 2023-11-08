@@ -9,6 +9,7 @@ import { describe, test } from '@dxos/test';
 import { Contact, Container, Task, types } from './proto';
 import { immutable, Expando } from '../object';
 import { Schema } from '../proto';
+import { Filter } from '../query';
 import { TestBuilder, createDatabase } from '../testing';
 
 // TODO(burdon): Test with database.
@@ -51,6 +52,7 @@ describe('static schema', () => {
           '@meta': { keys: [] },
           subTasks: [],
           description: { '@id': task1.description.id },
+          todos: [],
           title: 'Task 1',
           assignee: { '@id': contact.id },
         },
@@ -124,6 +126,9 @@ describe('static schema', () => {
     expect(org.website).to.eq('dxos.org');
     expect(org.__schema).to.eq(orgSchema);
     expect(org.__schema?.[immutable]).to.eq(false);
+    expect(org.__typename).to.eq('example.Org');
+
+    expect(database.query(Filter.typename('example.Org')).objects).to.deep.eq([org]);
   });
 
   test('restart with static schema', async () => {
