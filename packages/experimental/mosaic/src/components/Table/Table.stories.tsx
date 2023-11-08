@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { useState } from 'react';
 
 import { range } from '@dxos/util';
 
-import '@dxosTheme';
-
-import { Item } from '../../layout';
-import { createItem, SeedDecorator, TestData } from '../../testing';
-import { Table, TableColumn } from './Table';
+import { Table, type TableColumn } from './Table';
+import { type Item } from '../../layout';
+import { createItem, SeedDecorator, type TestData } from '../../testing';
 
 const num = 8;
 
@@ -18,7 +18,7 @@ const columns: TableColumn<Item<TestData>>[] = [
   {
     Header: 'id',
     accessor: (record) => record.id.slice(0, 8),
-    Cell: ({ value }: any) => <div className='font-mono font-xs'>{value}</div>,
+    Cell: ({ value }: any) => <div className='font-mono text-xs'>{value}</div>,
     width: 80,
   },
   {

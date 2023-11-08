@@ -2,28 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
+import { type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
-  AuthenticationRequest,
+  type AuthenticationRequest,
   Invitation,
-  InvitationsService,
+  type InvitationsService,
   QueryInvitationsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InvitationProtocol } from './invitation-protocol';
-import { InvitationsHandler } from './invitations-handler';
+import { type InvitationProtocol } from './invitation-protocol';
+import { type InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
 export class InvitationsServiceImpl implements InvitationsService {
-  private readonly _createInvitations = new Map<string, CancellableInvitationObservable>();
-  private readonly _acceptInvitations = new Map<string, AuthenticatingInvitationObservable>();
+  private readonly _createInvitations = new Map<string, CancellableInvitation>();
+  private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();
   private readonly _invitationCreated = new Event<Invitation>();
   private readonly _invitationAccepted = new Event<Invitation>();
   private readonly _removedCreated = new Event<Invitation>();
@@ -42,7 +41,7 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   createInvitation(options: Invitation): Stream<Invitation> {
-    let invitation: CancellableInvitationObservable;
+    let invitation: CancellableInvitation;
 
     const existingInvitation = this._createInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -65,13 +64,16 @@ export class InvitationsServiceImpl implements InvitationsService {
         () => {
           close();
           this._createInvitations.delete(invitation.get().invitationId);
+          if (invitation.get().type !== Invitation.Type.MULTIUSE) {
+            this._removedCreated.emit(invitation.get());
+          }
         },
       );
     });
   }
 
   acceptInvitation(options: Invitation): Stream<Invitation> {
-    let invitation: AuthenticatingInvitationObservable;
+    let invitation: AuthenticatingInvitation;
 
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -94,6 +96,9 @@ export class InvitationsServiceImpl implements InvitationsService {
         () => {
           close();
           this._acceptInvitations.delete(invitation.get().invitationId);
+          if (invitation.get().type !== Invitation.Type.MULTIUSE) {
+            this._removedAccepted.emit(invitation.get());
+          }
         },
       );
     });
@@ -123,8 +128,6 @@ export class InvitationsServiceImpl implements InvitationsService {
       await accepted.cancel();
       this._acceptInvitations.delete(invitationId);
       this._removedAccepted.emit(accepted.get());
-    } else {
-      log.warn('invalid invitation', { invitationId });
     }
   }
 

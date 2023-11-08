@@ -3,46 +3,43 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import {
-  AuthenticatingInvitationObservable,
-  ClientServicesProvider,
-  Space,
-  STATUS_TIMEOUT,
-} from '@dxos/client-protocol';
+import { types as clientSchema, type ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import type { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
-import { ApiError } from '@dxos/errors';
+import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
-import { trace } from '@dxos/protocols';
-import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, MaybePromise } from '@dxos/util';
+import { ApiError, trace } from '@dxos/protocols';
+import {
+  GetDiagnosticsRequest,
+  type QueryStatusResponse,
+  SystemStatus,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { isNode, type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
-import type { Diagnostics, DiagnosticOptions, Monitor } from '../diagnostics';
-import type { EchoProxy } from '../echo';
+import { ClientRuntime } from './client-runtime';
+import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
-import type { PropertiesProps } from '../proto';
+import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
-
-// TODO(burdon): Define package-specific errors.
 
 /**
- * This options object configures the DXOS Client
+ * This options object configures the DXOS Client.
  */
+// TODO(burdon): Reconcile with ClientContextProps.
 export type ClientOptions = {
-  /** client configuration object */
+  /** Client configuration object. */
   config?: Config;
-  /** custom services provider */
+  /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
-  /** custom model factory */
+  /** Custom model factory. */
   modelFactory?: ModelFactory;
 };
 
@@ -51,7 +48,7 @@ export type ClientOptions = {
  */
 export class Client {
   /**
-   * The version of this client API
+   * The version of this client API.
    */
   public readonly version = DXOS_VERSION;
 
@@ -61,11 +58,15 @@ export class Client {
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
+  // TODO(wittjosiah): Remove.
+  private _defaultKey!: string;
 
   private _initialized = false;
-  private _statusStream?: Stream<SystemStatusResponse>;
+  private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
+
+  private readonly _graph = new Hypergraph();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -90,6 +91,9 @@ export class Client {
       const prefix = options.config?.get('runtime.client.log.prefix');
       log.config({ filter, prefix });
     }
+
+    this.addTypes(schemaBuiltin);
+    this.addTypes(clientSchema);
   }
 
   [inspect.custom]() {
@@ -99,14 +103,14 @@ export class Client {
   toJSON() {
     return {
       initialized: this.initialized,
-      echo: this._runtime?.echo,
+      spaces: this._runtime?.spaces,
       halo: this._runtime?.halo,
       mesh: this._runtime?.mesh,
     };
   }
 
   /**
-   * Current configuration object
+   * Current configuration object.
    */
   get config(): Config {
     invariant(this._config, 'Client not initialized.');
@@ -123,7 +127,7 @@ export class Client {
 
   // TODO(burdon): Rename isOpen.
   /**
-   * Returns true if the client has been initialized. Initialize by calling `.initialize()`
+   * Returns true if the client has been initialized. Initialize by calling `.initialize()`.
    */
   get initialized() {
     return this._initialized;
@@ -136,9 +140,9 @@ export class Client {
     return this._status;
   }
 
-  private get _echo(): EchoProxy {
+  get spaces(): SpaceList {
     invariant(this._runtime, 'Client not initialized.');
-    return this._runtime.echo;
+    return this._runtime.spaces;
   }
 
   /**
@@ -157,59 +161,51 @@ export class Client {
     return this._runtime.mesh;
   }
 
-  /**
-   * Debug monitor.
-   */
-  get monitor(): Monitor {
+  get shell(): Shell {
     invariant(this._runtime, 'Client not initialized.');
-    return this._runtime.monitor;
+    invariant(this._runtime.shell, 'Shell not available.');
+    return this._runtime.shell;
   }
 
   /**
-   * @deprecated
+   * @deprecated Temporary.
    */
-  get dbRouter(): DatabaseRouter {
-    return this._echo.dbRouter;
+  get experimental() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    return {
+      get types() {
+        return self._graph.types;
+      },
+    };
   }
 
-  addSchema(schema: EchoSchema): void {
-    return this._echo.addSchema(schema);
-  }
-
-  /**
-   * ECHO spaces.
-   */
-  get spaces(): MulticastObservable<Space[]> {
-    return this._echo.spaces;
-  }
-
-  /**
-   * Get an existing space by its key.
-   */
-  getSpace(spaceKey: PublicKey): Space | undefined {
-    return this._echo.getSpace(spaceKey);
+  // TODO(dmaretskyi): Expose `graph` directly?
+  addTypes(types: TypeCollection) {
+    this._graph.addTypes(types);
+    return this;
   }
 
   /**
-   * Creates a new space.
+   * @deprecated Replaced by addTypes.
    */
-  createSpace(meta?: PropertiesProps): Promise<Space> {
-    return this._echo.createSpace(meta);
-  }
-
-  /**
-   * Accept an invitation to a space.
-   */
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
-    return this._echo.acceptInvitation(invitation);
+  addSchema(types: TypeCollection) {
+    return this.addTypes(types);
   }
 
   /**
    * Get client diagnostics data.
    */
-  async diagnostics(opts: DiagnosticOptions = {}): Promise<Diagnostics> {
-    const { createDiagnostics } = await import('../diagnostics');
-    return createDiagnostics(this, opts);
+  async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    const data = await this._services.services.SystemService.getDiagnostics({
+      keys: options.humanize
+        ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
+        : options.truncate
+        ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+        : undefined,
+    });
+    return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }
 
   /**
@@ -224,42 +220,59 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame } = await import('../services');
-    const { Monitor } = await import('../diagnostics');
-    const { EchoProxy, createDefaultModelFactory } = await import('../echo');
-    const { HaloProxy } = await import('../halo');
-    const { MeshProxy } = await import('../mesh');
+    const { fromHost, fromIFrame, IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import(
+      '../services'
+    );
 
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    const monitor = new Monitor(this._services);
-    const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
-    const halo = new HaloProxy(this._services, this._instanceId);
+    await this._services!.open(new Context());
+
+    const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
+    const { HaloProxy } = await import('../halo');
+    const { MeshProxy } = await import('../mesh');
+
+    this._defaultKey = defaultKey;
+    const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     const mesh = new MeshProxy(this._services, this._instanceId);
-    this._runtime = new ClientRuntime({ monitor, echo, halo, mesh });
+    const halo = new HaloProxy(this._services, this._instanceId);
+    const spaces = new SpaceList(
+      this._services,
+      modelFactory,
+      this._graph,
+      () => halo.identity.get()?.identityKey,
+      this._instanceId,
+    );
 
-    await this._services.open();
-
-    // TODO(burdon): Remove?
-    // TODO(dmaretskyi): Refactor devtools init.
-    if (typeof window !== 'undefined') {
-      const { createDevtoolsRpcServer } = await import('../devtools');
-      await createDevtoolsRpcServer(this, this._services);
+    let shell: Shell | undefined;
+    if (this._services instanceof IFrameClientServicesHost || this._services instanceof IFrameClientServicesProxy) {
+      invariant(this._services._shellManager, 'ShellManager is not available.');
+      shell = new Shell({
+        shellManager: this._services._shellManager,
+        identity: halo.identity,
+        devices: halo.devices,
+        spaces,
+      });
     }
 
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
+    this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
+
+    // TODO(dmaretskyi): Refactor devtools init.
+    if (typeof window !== 'undefined') {
+      const { mountDevtoolsHooks } = await import('../devtools');
+      mountDevtoolsHooks({ client: this });
+    }
 
     const trigger = new Trigger<Error | undefined>();
-    this._statusStream = this._services.services.SystemService.queryStatus();
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {
         this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);
 
         this._statusUpdate.emit(status);
-
         this._statusTimeout = setTimeout(() => {
           this._statusUpdate.emit(null);
         }, STATUS_TIMEOUT);
@@ -292,10 +305,9 @@ export class Client {
     }
 
     await this._runtime!.close();
-
     this._statusTimeout && clearTimeout(this._statusTimeout);
-    this._statusStream!.close();
-    await this.services.close();
+    await this._statusStream!.close();
+    await this.services.close(new Context());
 
     this._initialized = false;
   }

@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FlightOffer, FlightQuery } from 'amadeus';
+import { type FlightOffer, type FlightQuery } from 'amadeus';
+import { expect } from 'chai';
 import { add, formatISO9075 } from 'date-fns';
 
 import { Config } from '@dxos/config';
 import { beforeAll, describe, test } from '@dxos/test';
 
-import { getKey, loadJson } from '../../util';
 import { Amadeus } from './amadeus';
+import { getKey, loadJson } from '../../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('amadeus', () => {
@@ -28,13 +29,15 @@ describe.skip('amadeus', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('cities', async () => {
     const cities = await amadeus.cities({ keyword: 'lon' });
-    console.log(cities);
+    // console.log(cities);
+    expect(cities).to.exist;
   });
 
   // eslint-disable-next-line mocha/no-skipped-tests
   test('airports', async () => {
     const airports = await amadeus.airports({ latitude: 51, longitude: 0 });
-    console.log(airports);
+    // console.log(airports);
+    expect(airports).to.exist;
   });
 
   // eslint-disable-next-line mocha/no-skipped-tests
@@ -93,6 +96,7 @@ describe.skip('amadeus', () => {
       return results;
     }, []);
 
-    console.log(JSON.stringify(filtered, undefined, 2));
+    // console.log(JSON.stringify(filtered, undefined, 2));
+    expect(filtered).to.exist;
   });
 });

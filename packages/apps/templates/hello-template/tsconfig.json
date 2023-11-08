@@ -8,11 +8,14 @@
     ],
     "outDir": "dist",
     "types": [
+      "@dxos/test",
       "node"
     ]
   },
   "include": [
-    "src"
+    "package.json",
+    "src",
+    "test"
   ],
   "references": [
     {

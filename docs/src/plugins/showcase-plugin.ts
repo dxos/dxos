@@ -3,14 +3,14 @@
 //
 
 import { ESLint } from 'eslint';
-import markdownItContainer from 'markdown-it-container';
 import type Token from 'markdown-it/lib/token';
+import markdownItContainer from 'markdown-it-container';
 import { readdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import prettier from 'prettier';
 import ts from 'typescript';
-import { Plugin } from 'vuepress';
+import { type Plugin } from 'vuepress';
 
 const require = createRequire(import.meta.url);
 // TODO(wittjosiah): Consider adding the following rules to the global config:
@@ -40,7 +40,7 @@ export const showcasePlugin = async (): Promise<Plugin> => {
       const rawSource = await readFile(filePath, 'utf-8');
       // Remove copyright and default export.
       const tsSource = rawSource.trim().split('\n').slice(4, -1).join('\n');
-      const transpiledSource = prettier.format(ts.transpile(tsSource, tsConfig), prettierConfig);
+      const transpiledSource = await prettier.format(ts.transpile(tsSource, tsConfig), prettierConfig);
       const [{ messages }] = await eslint.lintText(transpiledSource, {
         filePath: filePath.replace('.tsx', '.jsx'),
       });

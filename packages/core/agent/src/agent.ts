@@ -2,18 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import WebSocket from 'isomorphic-ws';
-import assert from 'node:assert';
+import type WebSocket from 'isomorphic-ws';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import { Config, Client, PublicKey } from '@dxos/client';
-import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { type Config, Client, PublicKey } from '@dxos/client';
+import { type ClientServices, type ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import {
+  createLibDataChannelTransportFactory,
+  createSimplePeerTransportFactory,
+  type TransportFactory,
+} from '@dxos/network-manager';
+import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { Plugin } from './plugins';
+import { type Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
 interface Service {
@@ -25,6 +32,7 @@ export type AgentOptions = {
   config: Config;
   profile: string;
   plugins?: Plugin[];
+  metrics?: boolean;
   protocol?: {
     socket: string;
     webSocket?: number;
@@ -42,25 +50,40 @@ export class Agent {
   private _services: Service[] = [];
 
   constructor(private readonly _options: AgentOptions) {
-    assert(this._options);
-    this._plugins = (this._options.plugins?.filter(Boolean) as Plugin[]) ?? [];
+    invariant(this._options);
+    this._plugins = this._options.plugins?.filter(Boolean) ?? [];
+    if (this._options.metrics) {
+      tracer.start();
+    }
   }
 
   async start() {
-    assert(!this._clientServices);
+    invariant(!this._clientServices);
     log('starting...');
 
     // Create client services.
-    this._clientServices = await fromHost(this._options.config, { lockKey: lockFilePath(this._options.profile) });
-    await this._clientServices.open();
+
+    // TODO(nf): move to config
+    let transportFactory: TransportFactory;
+
+    if (process.env.WEBRTCLIBRARY === 'LibDataChannel') {
+      log.info('using LibDataChannel');
+      transportFactory = createLibDataChannelTransportFactory();
+    } else {
+      log.info('using SimplePeer');
+      transportFactory = createSimplePeerTransportFactory();
+    }
+
+    this._clientServices = await fromHost(this._options.config, {
+      lockKey: lockFilePath(this._options.profile),
+      transportFactory,
+    });
+    await this._clientServices.open(new Context());
 
     // Create client.
     // TODO(burdon): Move away from needing client for epochs and proxy?
     this._client = new Client({ config: this._options.config, services: this._clientServices });
     await this._client.initialize();
-
-    // Global hook for debuggers.
-    ((globalThis as any).__DXOS__ ??= {}).host = (this._clientServices as any)._host;
 
     //
     // Unix socket (accessed via CLI).
@@ -72,9 +95,10 @@ export class Agent {
       rmSync(path, { force: true });
       const httpServer = http.createServer();
       httpServer.listen(path);
-      const service = createServer(this._clientServices, { server: httpServer });
-      await service.open();
-      this._services.push(service);
+      const socketServer = createServer(this._clientServices, { server: httpServer });
+      await socketServer.open();
+      this._services.push(socketServer);
+      log.info('listening', { path });
     }
 
     //
@@ -82,19 +106,21 @@ export class Agent {
     // TODO(burdon): Insecure.
     //
     if (this._options.protocol?.webSocket) {
-      const service = createServer(this._clientServices, { port: this._options.protocol.webSocket });
-      await service.open();
-      this._services.push(service);
+      const port = this._options.protocol.webSocket;
+      const socketServer = createServer(this._clientServices, { port });
+      await socketServer.open();
+      this._services.push(socketServer);
+      log.info('listening', { port });
     }
 
     // Open plugins.
     for (const plugin of this._plugins) {
-      await plugin.initialize(this._client!, this._clientServices!);
+      await plugin.initialize({ client: this._client!, clientServices: this._clientServices!, plugins: this._plugins });
       await plugin.open();
       log('open', { plugin });
     }
 
-    log('started...');
+    log('started');
   }
 
   async stop() {
@@ -110,11 +136,10 @@ export class Agent {
 
     // Close client and services.
     await this._client?.destroy();
-    await this._clientServices?.close();
+    await this._clientServices?.close(new Context());
     this._client = undefined;
     this._clientServices = undefined;
 
-    ((globalThis as any).__DXOS__ ??= {}).host = undefined;
     log('stopped');
   }
 }
@@ -124,10 +149,11 @@ const createServer = (clientServices: ClientServicesProvider, options: WebSocket
     ...options,
     onConnection: async () => {
       let start = 0;
-      const connection = PublicKey.random().toHex();
+      const connection = PublicKey.random().toHex().slice(0, 8);
       return {
         exposed: clientServices.descriptors,
         handlers: clientServices.services as ClientServices,
+        // Called when client connects.
         onOpen: async () => {
           start = Date.now();
           log('open', { connection });

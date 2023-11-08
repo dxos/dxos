@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { Item, Location } from '../layout';
+import { type Item, type Location } from '../layout';
 
 export type TestData = {
   title: string;
@@ -13,10 +13,10 @@ export type TestData = {
 };
 
 export const createItem = (location?: Location): Item<TestData> => ({
-  id: faker.datatype.uuid(),
+  id: faker.string.uuid(),
   data: {
     title: faker.lorem.words(3),
-    description: faker.lorem.sentences(faker.datatype.number(8)),
+    description: faker.lorem.sentences(faker.number.int(8)),
   },
   location,
 });

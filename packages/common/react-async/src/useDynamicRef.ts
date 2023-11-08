@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
 
 /**
  * Extension of useRef that contains computed values based on dependencies.

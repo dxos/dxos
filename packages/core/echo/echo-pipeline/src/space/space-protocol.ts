@@ -2,27 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { type Event } from '@dxos/async';
 import { discoveryKey, subtleCrypto } from '@dxos/crypto';
-import { FeedWrapper } from '@dxos/feed-store';
+import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {
   MMSTTopology,
-  NetworkManager,
-  SwarmConnection,
-  WireProtocol,
-  WireProtocolParams,
-  WireProtocolProvider,
+  type NetworkManager,
+  type SwarmConnection,
+  type WireProtocol,
+  type WireProtocolParams,
+  type WireProtocolProvider,
 } from '@dxos/network-manager';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Teleport } from '@dxos/teleport';
-import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
+import { type MuxerStats, Teleport } from '@dxos/teleport';
+import { type BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
-import { AuthExtension, AuthProvider, AuthVerifier } from './auth';
+import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
@@ -88,6 +87,7 @@ export class SpaceProtocol {
     this._onAuthFailure = onAuthFailure;
     this.blobSync = new BlobSync({ blobStore });
 
+    // TODO(burdon): Async race condition? Move to start?
     this._topic = subtleCrypto.digest('SHA-256', topic.asBuffer()).then(discoveryKey).then(PublicKey.from);
   }
 
@@ -101,6 +101,7 @@ export class SpaceProtocol {
     }
   }
 
+  // TODO(burdon): Rename open? Common open/close interfaces for all services?
   async start() {
     if (this._connection) {
       return;
@@ -119,12 +120,13 @@ export class SpaceProtocol {
     await this.blobSync.open();
 
     log('starting...');
+    const topic = await this._topic;
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
       peerId: this._swarmIdentity.peerKey,
-      topic: await this._topic,
+      topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${this._topic}`,
+      label: `space swarm ${topic.truncate()}`,
     });
 
     log('started');
@@ -206,7 +208,7 @@ export class SpaceProtocolSession implements WireProtocol {
     return this._authStatus;
   }
 
-  get stats(): Event<ConnectionInfo.StreamStats[]> {
+  get stats(): Event<MuxerStats> {
     return this._teleport.stats;
   }
 
@@ -225,7 +227,7 @@ export class SpaceProtocolSession implements WireProtocol {
     return this._teleport.stream;
   }
 
-  async initialize(): Promise<void> {
+  async open(): Promise<void> {
     await this._teleport.open();
     this._teleport.addExtension(
       'dxos.mesh.teleport.auth',
@@ -248,7 +250,12 @@ export class SpaceProtocolSession implements WireProtocol {
     this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());
   }
 
-  async destroy(): Promise<void> {
+  async close(): Promise<void> {
+    log('close');
     await this._teleport.close();
+  }
+
+  async abort(): Promise<void> {
+    await this._teleport.abort();
   }
 }

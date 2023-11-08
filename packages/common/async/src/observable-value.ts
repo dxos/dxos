@@ -4,7 +4,7 @@
 
 import { createSetDispatch } from '@dxos/util';
 
-import { UnsubscribeCallback } from './events';
+import { type UnsubscribeCallback } from './events';
 
 /**
  * Return type for processes that support cancellable subscriptions.
@@ -80,10 +80,7 @@ export class CancellableObservableProvider<
 > extends ObservableProvider<Events> {
   private _cancelled = false;
 
-  // prettier-ignore
-  constructor(
-    private readonly _handleCancel?: () => Promise<void>
-  ) {
+  constructor(private readonly _handleCancel?: () => Promise<void>) {
     super();
   }
 

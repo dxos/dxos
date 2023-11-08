@@ -34,12 +34,12 @@ export const useClientProvider = (dev: boolean) => {
 
     // TODO(burdon): Document.
     // TODO(burdon): Make modular (via registry).
-    client.addSchema(schema);
-    client.addSchema(chessSchema);
-    client.addSchema(sandboxSchema);
+    client.spaces.addSchema(schema);
+    client.spaces.addSchema(chessSchema);
+    client.spaces.addSchema(sandboxSchema);
 
     if (dev && client.halo.identity.get() && client.spaces.get().length === 0) {
-      const space = await client.createSpace();
+      const space = await client.spaces.create();
       space.properties.name = 'My Space';
 
       // TODO(burdon): Create context.

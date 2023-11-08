@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import React, { useMemo, useState } from 'react';
 
 import { range } from '@dxos/util';
 
-import '@dxosTheme';
-
-import { GridLayout, Item, Location } from '../../layout';
-import { createItem, SeedDecorator, TestData, TestTileContent } from '../../testing';
 import { Grid } from './Grid';
+import { GridLayout, type Item, type Location } from '../../layout';
+import { createItem, SeedDecorator, type TestData, TestTileContent } from '../../testing';
 
 // TODO(burdon): Layout for columns (as sorted list) vs positional grid.
 
@@ -35,8 +35,8 @@ const Test = () => {
   const [items, setItems] = useState<Item<TestData>[]>(() => {
     return range(num).map(() => {
       return createItem({
-        x: faker.datatype.number({ min: -layout.range.x, max: layout.range.x }),
-        y: faker.datatype.number({ min: -layout.range.y, max: layout.range.y }),
+        x: faker.number.int({ min: -layout.range.x, max: layout.range.x }),
+        y: faker.number.int({ min: -layout.range.y, max: layout.range.y }),
       });
     });
   });

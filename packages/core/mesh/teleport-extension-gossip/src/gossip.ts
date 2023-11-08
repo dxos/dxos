@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTask, Event } from '@dxos/async';
+import { scheduleTask, Event, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { RpcClosedError, TimeoutError } from '@dxos/protocols';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { GossipExtension } from './gossip-extension';
@@ -14,6 +15,8 @@ import { GossipExtension } from './gossip-extension';
 export type GossipParams = {
   localPeerId: PublicKey;
 };
+
+const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
 
 /**
  * Gossip extensions manager.
@@ -30,7 +33,12 @@ export class Gossip {
 
   private readonly _listeners = new Map<string, Set<(message: GossipMessage) => void>>();
 
-  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak. Never cleared.
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  /**
+   * Keys scheduled to be cleared from _receivedMessages on the next iteration.
+   */
+  private readonly _toClear = new ComplexSet<PublicKey>(PublicKey.hash);
 
   // remotePeerId -> PresenceExtension
   private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
@@ -38,6 +46,25 @@ export class Gossip {
   public readonly connectionClosed = new Event<PublicKey>();
 
   constructor(private readonly _params: GossipParams) {}
+
+  get localPeerId() {
+    return this._params.localPeerId;
+  }
+
+  async open() {
+    // Clear the map periodically.
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        this._performGc();
+      },
+      RECEIVED_MESSAGES_GC_INTERVAL,
+    );
+  }
+
+  async close() {
+    await this._ctx.dispose();
+  }
 
   getConnections() {
     return Array.from(this._connections.keys());
@@ -70,10 +97,6 @@ export class Gossip {
     return extension;
   }
 
-  async destroy() {
-    await this._ctx.dispose();
-  }
-
   postMessage(channel: string, payload: any) {
     for (const extension of this._connections.values()) {
       void extension
@@ -84,7 +107,20 @@ export class Gossip {
           timestamp: new Date(),
           payload,
         })
-        .catch((err) => log(err));
+
+        .catch(async (err) => {
+          if (err instanceof RpcClosedError) {
+            log('sendAnnounce failed because of RpcClosedError', { err });
+          } else if (
+            err instanceof TimeoutError ||
+            err.constructor.name === 'TimeoutError' ||
+            err.message.startsWith('Timeout')
+          ) {
+            log('sendAnnounce failed because of TimeoutError', { err });
+          } else {
+            log.catch(err);
+          }
+        });
     }
   }
 
@@ -118,5 +154,22 @@ export class Gossip {
         return extension.sendAnnounce(message).catch((err) => log(err));
       }),
     );
+  }
+
+  private _performGc() {
+    const start = performance.now();
+
+    for (const key of this._toClear.keys()) {
+      this._receivedMessages.delete(key);
+    }
+    this._toClear.clear();
+    for (const key of this._receivedMessages.keys()) {
+      this._toClear.add(key);
+    }
+
+    const elapsed = performance.now() - start;
+    if (elapsed > 100) {
+      log.warn('GC took too long', { elapsed });
+    }
   }
 }

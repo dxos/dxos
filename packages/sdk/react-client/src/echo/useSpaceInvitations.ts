@@ -4,11 +4,11 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 import { SpaceProxy } from '@dxos/client/echo';
 
-import { useInvitationStatus } from '../invitations';
 import { useSpace } from './useSpaces';
+import { useInvitationStatus } from '../invitations';
 
 export const useSpaceInvitations = (spaceKey?: PublicKey) => {
   const space = useSpace(spaceKey);

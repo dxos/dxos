@@ -4,26 +4,28 @@
 
 import { Event, Trigger } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
+import { DatabaseProxy, ItemManager, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
+import { type WriteOptions, type WriteReceipt } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { FeedMessageBlock } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type FeedMessageBlock, schema } from '@dxos/protocols';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { DatabaseHost } from '../dbhost';
+import { DatabaseHost } from '../db-host';
 
 const SPACE_KEY = PublicKey.random();
 
 export class DatabaseTestBuilder {
   public readonly peers = new ComplexMap<PublicKey, DatabaseTestPeer>(PublicKey.hash);
 
-  async createPeer(): Promise<DatabaseTestPeer> {
-    const peer = new DatabaseTestPeer(this);
+  async createPeer(spaceKey = SPACE_KEY): Promise<DatabaseTestPeer> {
+    const peer = new DatabaseTestPeer(this, spaceKey);
     this.peers.set(peer.key, peer);
     await peer.open();
     return peer;
@@ -53,6 +55,9 @@ export class DatabaseTestPeer {
 
   public feedMessages: FeedMessage[] = [];
 
+  public readonly snapshots = new Map<string, SpaceSnapshot>();
+  private currentEpoch?: Epoch;
+
   /**
    * Sequence number of the last mutation confirmed to be written to the feed store.
    */
@@ -69,33 +74,38 @@ export class DatabaseTestPeer {
 
   private readonly _writes = new Set<WriteRequest>();
 
-  constructor(public readonly rig: DatabaseTestBuilder) {}
+  constructor(public readonly rig: DatabaseTestBuilder, public readonly spaceKey: PublicKey) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
-    this.host = new DatabaseHost({
-      write: async (message, { afterWrite }: WriteOptions) => {
-        const seq =
-          this.feedMessages.push({
-            timeframe: this.timeframe,
-            payload: {
-              data: message,
-            },
-          }) - 1;
+    this.host = new DatabaseHost(
+      {
+        write: async (message, { afterWrite }: WriteOptions) => {
+          const seq =
+            this.feedMessages.push({
+              timeframe: this.timeframe,
+              payload: {
+                data: message,
+              },
+            }) - 1;
 
-        const request: WriteRequest = {
-          receipt: {
-            seq,
-            feedKey: this.key,
-          },
-          options: { afterWrite },
-          trigger: new Trigger(),
-        };
-        this._writes.add(request);
-        await request.trigger.wait();
-        return request.receipt;
+          const request: WriteRequest = {
+            receipt: {
+              seq,
+              feedKey: this.key,
+            },
+            options: { afterWrite },
+            trigger: new Trigger(),
+          };
+          this._writes.add(request);
+          await request.trigger.wait();
+          return request.receipt;
+        },
       },
-    });
+      async () => {
+        // No-op.
+      },
+    );
 
     await this.host.open(this.hostItems, this.modelFactory);
     if (this.snapshot) {
@@ -103,7 +113,11 @@ export class DatabaseTestPeer {
     }
 
     this.items = new ItemManager(this.modelFactory);
-    this.proxy = new DatabaseProxy(this.host.createDataServiceHost(), this.items, SPACE_KEY);
+    this.proxy = new DatabaseProxy({
+      service: this.host.createDataServiceHost({ deferEvents: false }),
+      itemManager: this.items,
+      spaceKey: this.spaceKey,
+    });
     await this.proxy.open(this.modelFactory);
   }
 
@@ -162,6 +176,27 @@ export class DatabaseTestPeer {
     return this.snapshot;
   }
 
+  createEpoch(mockSnapshot?: EchoSnapshot) {
+    const snapshot = this.makeSnapshot();
+    // Substitute snapshot with the mock one for test purposes (e.g. to test with empty snapshot).
+    mockSnapshot && (snapshot.database = mockSnapshot);
+    const snapshotCid = PublicKey.from(
+      schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encode(snapshot),
+    ).toHex();
+    this.snapshots.set(snapshotCid, snapshot);
+
+    const epoch: Epoch = {
+      previousId: PublicKey.random(),
+      timeframe: this.timeframe,
+      number: this.currentEpoch ? this.currentEpoch.number + 1 : 0,
+      snapshotCid,
+    };
+
+    this.currentEpoch = epoch;
+
+    this.host._itemDemuxer.restoreFromSnapshot(snapshot.database);
+  }
+
   /**
    * Gets all candidate messages according to the current timeframe.
    * Does not take into account the current snapshot, timeframe dependencies, or the confirmed, or replicated state.
@@ -216,5 +251,34 @@ export class DatabaseTestPeer {
         this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[candidate.feedKey, candidate.seq]]));
       }
     }
+  }
+
+  getModel(id: string): DocumentModel | TextModel | undefined {
+    const item = this.items.getItem(id);
+    if (!item) {
+      return;
+    }
+
+    invariant(item.modelMeta);
+    const ModelConstructor = this.modelFactory.getModel(item.modelMeta.type)?.constructor;
+    invariant(ModelConstructor);
+
+    const model = new ModelConstructor(
+      item.modelMeta,
+      item.id,
+      () => item.state,
+      async (mutation) => {
+        invariant(item.modelMeta);
+        this.proxy.mutate(createModelMutation(id, encodeModelMutation(item.modelMeta, mutation)));
+        return {
+          feedKey: PublicKey.from('00'),
+          seq: 0,
+          waitToBeProcessed: () => Promise.resolve(),
+        };
+      },
+    );
+    model.initialize();
+
+    return model;
   }
 }

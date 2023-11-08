@@ -8,14 +8,17 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 const client = new Client();
 
 // create a space
-const space = await client.createSpace();
+const space = await client.spaces.create();
 
 // get spaces
 const spaces = client.spaces.get();
 
+// get the default space
+const defaultSpace = client.spaces.default;
+
 // create an invitation to join the space, it will be used to locate the inviter
 // in the MESH and to create a secured peer connection
-const invitation = space.createInvitation();
+const invitation = space.share();
 
 // share this code with a friend, it will be used to establish a secure
 // connection TODO: ignore the exclamation mark
@@ -32,7 +35,7 @@ const authCode = invitation.get().authCode!;
 const receivedInvitation = InvitationEncoder.decode(code);
 
 // accept the invitation
-const { authenticate } = client.acceptInvitation(receivedInvitation);
+const { authenticate } = client.spaces.join(receivedInvitation);
 
 // verify it's secure by sending the second factor authCode from above TODO:
 // ignore exclamation mark

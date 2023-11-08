@@ -7,9 +7,9 @@ import React, { FC, useEffect, useRef } from 'react';
 import { Contact } from '@dxos/kai-types';
 import { Space, useQuery } from '@dxos/react-client/echo';
 
+import { ContactStack } from './ContactStack';
 import { ContactCard } from '../../cards';
 import { useFrameRouter, useFrameContext } from '../../hooks';
-import { ContactStack } from './ContactStack';
 
 const stringSort = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 const sort = ({ name: a1, email: a2 }: Contact, { name: b1, email: b2 }: Contact) => stringSort(a1 ?? a2, b1 ?? b2);

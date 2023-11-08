@@ -2,16 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import { dirname, relative } from 'path';
 import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
-import { normalizeFullyQualifiedName } from '../namespaces';
-import { SubstitutionsMap } from '../parser';
-import { GeneratorContext } from './context';
+import { invariant } from '@dxos/invariant';
+
+import { type GeneratorContext } from './context';
 import { attachDocComment } from './doc-comment';
 import { types, getTypeReference } from './types';
+import { normalizeFullyQualifiedName } from '../namespaces';
+import { type SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 
@@ -28,7 +29,7 @@ const getRpcTypes = (
 };
 
 const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) => {
-  assert(!method.requestStream, 'Streaming RPC requests are not supported.');
+  invariant(!method.requestStream, 'Streaming RPC requests are not supported.');
 
   const [requestType, responseType] = getRpcTypes(method, service, subs);
 

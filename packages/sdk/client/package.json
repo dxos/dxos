@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.54",
+  "version": "0.3.4",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,12 +19,6 @@
       "import": "./dist/lib/browser/devtools/index.mjs",
       "require": "./dist/lib/node/devtools/index.cjs",
       "node": "./dist/lib/node/devtools/index.cjs"
-    },
-    "./diagnostics": {
-      "browser": "./dist/lib/browser/diagnostics/index.mjs",
-      "import": "./dist/lib/browser/diagnostics/index.mjs",
-      "require": "./dist/lib/node/diagnostics/index.cjs",
-      "node": "./dist/lib/node/diagnostics/index.cjs"
     },
     "./echo": {
       "browser": "./dist/lib/browser/echo/index.mjs",
@@ -69,9 +63,6 @@
       "devtools": [
         "dist/types/src/devtools/index.d.ts"
       ],
-      "diagnostics": [
-        "dist/types/src/diagnostics/index.d.ts"
-      ],
       "echo": [
         "dist/types/src/echo/index.d.ts"
       ],
@@ -96,13 +87,11 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -111,7 +100,7 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
@@ -127,13 +116,10 @@
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
     "lodash.isequal": "^4.5.0",
-    "lodash.isequalwith": "^4.4.0",
-    "tiny-invariant": "^1.3.1"
+    "lodash.isequalwith": "^4.4.0"
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

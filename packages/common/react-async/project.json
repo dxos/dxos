@@ -31,7 +31,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/common/react-async/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

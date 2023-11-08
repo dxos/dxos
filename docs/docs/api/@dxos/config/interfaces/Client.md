@@ -3,8 +3,15 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
+### [devtoolsProxy]()
+Type: <code>string</code>
+
+Connect to and serve client services to a remote proxy.
+
+Options:
+  - proto3_optional = true
+
 ### [enableSnapshots]()
 Type: <code>boolean</code>
 
@@ -28,8 +35,6 @@ Options:
 ### [remoteSource]()
 Type: <code>string</code>
 
-Location of the remote client host.
-
 Options:
   - proto3_optional = true
 
@@ -46,3 +51,5 @@ Type: <code>[Storage](/api/@dxos/config/interfaces/Storage)</code>
 
 Options:
   - proto3_optional = true
+
+    

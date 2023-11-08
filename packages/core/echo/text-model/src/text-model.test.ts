@@ -4,6 +4,7 @@
 
 import { faker } from '@faker-js/faker';
 import expect from 'expect';
+import { Doc, applyUpdate } from 'yjs';
 
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
@@ -13,25 +14,43 @@ import { describe, test } from '@dxos/test';
 
 import { TextModel } from './text-model';
 
-describe.skip('TextModel', () => {
-  test('insert', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
-    const peer1 = rig.createPeer();
-    const peer2 = rig.createPeer();
+describe('TextModel', () => {
+  test('mutations merging', async () => {
+    const updates: Uint8Array[] = [];
+    const field = 'content';
 
-    peer1.model.insert('Hello World!', 0);
+    // Atomic updates.
+    {
+      const doc = new Doc();
+      doc.on('update', (update) => {
+        updates.push(update);
+      });
 
-    // await peer2.model.update.waitForCount(1);
-    expect(peer2.model.textContent).toBe('Hello World!');
+      const content = doc.getText(field);
+      doc.transact(() => {
+        content.insert(0, 'Hello ');
+      });
 
-    // TODO(burdon): Test delete.
-    const words = peer1.model.textContent.split(' ');
-    peer2.model.insert(' DXOS', words[0].length);
-    // await peer1.model.update.waitForCount(1);
-    expect(peer1.model.textContent).toBe('Hello DXOS World!');
+      doc.transact(() => {
+        content.insert(6, 'World!');
+      });
+
+      expect(updates.length).toBe(2);
+      expect(content.toString()).toBe('Hello World!');
+    }
+
+    // Merged updates.
+    {
+      const doc = new Doc();
+      const mergedMutation = TextModel.meta.mergeMutations!(updates.map((update) => ({ update })));
+      applyUpdate(doc, mergedMutation.update);
+      const content = doc.getText(field);
+      expect(content.toString()).toBe('Hello World!');
+    }
   });
 
-  test('insert a new text node', async () => {
+  // TODO(mykola): transfer to @dxos/echo-pipeline database unit test
+  test.skip('insert a new text node', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
@@ -50,7 +69,7 @@ describe.skip('TextModel', () => {
     expect(strigified2).toBe(`"<paragraph>${text1}</paragraph><paragraph>${text2}</paragraph>"`);
   });
 
-  test('snapshot', async () => {
+  test.skip('snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const model1 = modelFactory.createModel(
       TextModel.meta.type,
@@ -74,7 +93,7 @@ describe.skip('TextModel', () => {
     // expect(model2.model.textContent).toBe(text);
   });
 
-  test('conflict', async () => {
+  test.skip('conflict', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();

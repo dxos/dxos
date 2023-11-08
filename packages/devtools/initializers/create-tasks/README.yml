@@ -2,5 +2,5 @@ install: false
 usage: |
   Use with npm init like this:
   ```bash
-  npm init @dxos/bare@latest
+  npm init @dxos/tasks@latest
   ```

@@ -2,8 +2,13 @@ usage: |
   This is an encapsulated [`@dxos/plate`](https://www.npmjs.com/package/@dxos/plate) template, the default export is a `ConfigurationDeclaration` from `plate`.
 
   ```ts
-  import template from '@dxos/tasks-template';
+  import template from "@dxos/tasks-template";
 
-  const results = await template.execute({ /* ExecuteDirectoryOptions */ });
-  Promise.all(results.map(file => file.save()));
+  // get the template outputs without writing to disk:
+  const results = await template.apply({
+    /* ExecuteDirectoryOptions */
+    input: { ... }
+  });
+  // write to disk:
+  await results.apply()
   ```

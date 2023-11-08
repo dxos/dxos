@@ -7,8 +7,8 @@ import React from 'react';
 import { PublicKey } from '@dxos/react-client';
 import { Space } from '@dxos/react-client/echo';
 
-import { Intent } from '../../util';
 import { SpaceItem } from './SpaceItem';
+import { Intent } from '../../util';
 
 export type SpaceListAction = {
   spaceKey: PublicKey;

@@ -1,5 +1,5 @@
 ---
-order: 6
+order: 5
 ---
 
 # Mutations
@@ -60,19 +60,23 @@ If strong types are desired, an instance of a specific `TypedObject` descendant 
 
 ```tsx file=./snippets/create-objects-typed.ts#L5-
 import { Client } from '@dxos/client';
-import { Task } from './schema';
+
+import { Task, types } from './schema';
 
 const client = new Client();
 
-(async () => {
+void (async () => {
   await client.initialize();
-  if (!client.halo.identity.get()) await client.halo.createIdentity();
+  client.addSchema(types);
+  if (!client.halo.identity.get()) {
+    await client.halo.createIdentity();
+  }
 
   const space = client.spaces.get()[0];
 
   const object = new Task({ title: 'buy milk' });
 
-  await space.db.add(object);
+  space.db.add(object);
 })();
 ```
 

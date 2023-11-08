@@ -2,33 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { ComponentPropsWithoutRef, useState } from 'react';
+import React, { useState } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
-import { Input } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
+import { useTranslation } from '@dxos/react-ui';
 
-import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { Action, Actions, StepHeading, Input } from '../../../components';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {
   method: 'recover identity' | 'create identity';
 }
 
-export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) => {
-  const disabled = !active;
-  const { t } = useTranslation('os');
-  const [inputValue, setInputValue] = useState('');
-  const client = useClient();
-  const [validationMessage, setValidationMessage] = useState('');
+export type IdentityInputProps = IdentityCreatorProps;
+
+export type IdentityInputImplProps = IdentityCreatorProps & {
+  onDisplayNameConfirm?: (displayName: string) => void;
+  validationMessage?: string;
+};
+
+export const IdentityInput = (props: IdentityInputProps) => {
+  const { send, method } = props;
   const isRecover = method === 'recover identity';
-  const handleNext = () => {
-    void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: inputValue }).then(
+  const client = useClient();
+  const { t } = useTranslation('os');
+  const [validationMessage, setValidationMessage] = useState('');
+  const createIdentity = (displayName: string) => {
+    void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: displayName }).then(
       (identity) => {
-        send({ type: 'selectIdentity' as const, identity });
+        send?.({ type: 'selectIdentity' as const, identity });
       },
       (error) => {
         log.catch(error);
@@ -36,47 +39,48 @@ export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) =>
       },
     );
   };
+  return <IdentityInputImpl {...props} onDisplayNameConfirm={createIdentity} validationMessage={validationMessage} />;
+};
+
+// TODO(zhenyasav): impl shouldn't need send()
+export const IdentityInputImpl = (props: IdentityInputImplProps) => {
+  const { method, send, active, onDisplayNameConfirm, validationMessage } = props;
+  const disabled = !active;
+  const { t } = useTranslation('os');
+  const [inputValue, setInputValue] = useState('');
+  const isRecover = method === 'recover identity';
   return (
     <>
-      <Input
-        disabled={disabled}
-        label={
-          <PanelStepHeading>
-            {t(isRecover ? 'recover identity input label' : 'new identity input label')}
-          </PanelStepHeading>
-        }
-        onChange={({ target: { value } }) => setInputValue(value)}
-        slots={{
-          root: { className: 'm-0' },
-          input: {
-            'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
-          } as ComponentPropsWithoutRef<'input'>,
-        }}
-        {...(validationMessage.length && { validationValence: 'error', validationMessage })}
-        data-testid='identity-input'
-      />
-      <div role='none' className='grow' />
-      <PanelActions>
-        <PanelAction
-          aria-label={t('continue label')}
+      <div role='none' className='grow flex flex-col justify-center'>
+        <Input
+          {...{ validationMessage }}
+          label={
+            <StepHeading>{t(isRecover ? 'recover identity input label' : 'new identity input label')}</StepHeading>
+          }
           disabled={disabled}
-          classNames='order-2'
-          onClick={handleNext}
-          data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
-        >
-          <CaretRight weight='light' className={getSize(6)} />
-        </PanelAction>
-        <PanelAction
-          aria-label={t('back label')}
+          data-testid='identity-input'
+          placeholder={isRecover ? 'Type your recovery phrase' : 'Type a display name'}
+          onChange={({ target: { value } }) => setInputValue(value)}
+        />
+      </div>
+      <Actions>
+        <Action
+          variant='ghost'
           disabled={disabled}
-          onClick={() => send({ type: 'deselectAuthMethod' })}
-          classNames='flex items-center gap-2 pis-2 pie-4'
+          onClick={() => send?.({ type: 'deselectAuthMethod' })}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
-          <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction>
-      </PanelActions>
+          {t('back label')}
+        </Action>
+        <Action
+          variant='primary'
+          disabled={disabled}
+          onClick={() => onDisplayNameConfirm?.(inputValue)}
+          data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
+        >
+          {t('continue label')}
+        </Action>
+      </Actions>
     </>
   );
 };

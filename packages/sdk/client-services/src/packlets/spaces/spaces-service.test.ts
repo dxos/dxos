@@ -6,13 +6,14 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { Space, SpacesService } from '@dxos/protocols/proto/dxos/client/services';
+import { type Space, type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
-import { ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
 import { SpacesServiceImpl } from './spaces-service';
+import { type ServiceContext } from '../services';
+import { createServiceContext } from '../testing';
 
 chai.use(chaiAsPromised);
 
@@ -22,7 +23,7 @@ describe('SpacesService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
     spacesService = new SpacesServiceImpl(
       serviceContext.identityManager,
       serviceContext.spaceManager,

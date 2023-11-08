@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogProcessor } from './context';
+import { type LogProcessor } from './context';
 
 /**
  * Standard levels.
  */
 // NOTE: Keep aligned with LogLevel in @dxos/protocols.
+// TODO(burdon): Update numbers?
 export enum LogLevel {
   TRACE = 5,
   DEBUG = 10,
@@ -52,10 +53,13 @@ export type LogFilter = {
 export type LogOptions = {
   file?: string;
   filter?: string | string[] | LogLevel;
+  captureFilter?: string | string[] | LogLevel;
   depth?: number; // Context object depth.
   processor?: string | LogProcessorType;
   formatter?: {
     column: number;
+    timestamp: boolean;
+    timestampFirst: boolean;
   };
   prefix?: string;
 };
@@ -66,6 +70,7 @@ export type LogOptions = {
 export interface LogConfig {
   options: LogOptions;
   filters?: LogFilter[];
+  captureFilters?: LogFilter[];
   processors: LogProcessor[];
   prefix?: string;
 }

@@ -45,6 +45,9 @@ message Repo {
   optional string version = 3;
 }
 
+//
+// Unit of deployment.
+//
 message Module {
   message Build {
     optional string command = 1;
@@ -55,22 +58,23 @@ message Module {
     optional google.protobuf.Struct env = 10;
   }
 
-  optional string name = 1;   // TODO(burdon): Replace with id (or key?)
   optional string id = 8;     // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
-  optional string type = 2;   // TODO(burdon): Define namespace (e.g., 'dxos:type/frame' vs. 'dxos.type.frame')
+  optional string name = 1;   // TODO(burdon): Replace with id (or key?)
+  optional string type = 2;   // TODO(burdon): Define namespace (e.g., 'dxos.org/type/frame' vs. 'dxos.type.frame')
 
   // TODO(burdon): Developer info message.
 
+  // TODO(burdon): Start at 10.
   optional string display_name = 3;
   optional string description = 4;
   repeated string tags = 5;
-  optional bytes bundle = 6;
+  optional bytes bundle = 6; // TODO(burdon): ???
 
   // TODO(burdon): Remove.
   optional bool tunnel = 7;
 
+  // TODO(burdon): Start at 100.
   repeated Module deps = 10;  // TODO(burdon): E.g., types.
-
   optional Build build = 100;
   repeated Repo repos = 101;
 
@@ -90,15 +94,15 @@ message Runtime {
         NODE = 4;
         WEBFS = 5;
 
-        // Key storage only
+        // Key storage only.
         LEVELJS = 11;
         JSONDOWN = 12;
       }
 
-      optional bool persistent = 1;               // TODO(burdon): Replace with type.
-      optional StorageDriver key_storage = 3;     // TODO(burdon): Rename key_store.
-      optional StorageDriver storage_type = 2;    // TODO(burdon): Rename data_store.
-      optional string path = 4;                   // TODO(burdon): Rename data_path.
+      optional bool persistent = 1;
+      optional StorageDriver key_store = 2;
+      optional StorageDriver data_store = 3;
+      optional string data_root = 4;
     }
 
     message Log {
@@ -110,6 +114,7 @@ message Runtime {
     optional Storage storage = 2;
 
     // TODO(burdon): Structure snapshot/epoch related props.
+
     optional bool enable_snapshots = 3;
 
     /// Milliseconds
@@ -119,7 +124,11 @@ message Runtime {
     optional int32 invitation_expiration = 5;
 
     /// Location of the remote client host.
+    // TODO(burdon): Rename vault_endpoint (generalize http/ws; drop vault.html).
     optional string remote_source = 6;
+
+    /// Connect to and serve client services to a remote proxy.
+    optional string devtools_proxy = 7;
   }
 
   message App {
@@ -142,11 +151,14 @@ message Runtime {
   }
 
   message Agent {
-    message Functions {
-      int32 port = 1;
+    message Plugin {
+      string id = 1;
+      optional string name = 2;
+      optional bool enabled = 3;
+      optional google.protobuf.Any config = 10; 
     }
 
-    optional Functions functions = 1;
+    repeated Plugin plugins = 1;
   }
 
   // CLI configuration

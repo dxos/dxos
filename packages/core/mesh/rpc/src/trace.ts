@@ -5,22 +5,19 @@
 import { Event } from '@dxos/async';
 import { MessageTrace } from '@dxos/protocols/proto/dxos/rpc';
 
-import { RpcPort } from './rpc';
+import { type RpcPort } from './rpc';
 
 export class PortTracer {
   readonly message = new Event<MessageTrace>();
 
   private readonly _port: RpcPort;
 
-  // prettier-ignore
-  constructor(
-    private readonly _wrappedPort: RpcPort
-  ) {
+  constructor(private readonly _wrappedPort: RpcPort) {
     this._port = {
       send: (msg: Uint8Array) => {
         this.message.emit({
           direction: MessageTrace.Direction.OUTGOING,
-          data: msg
+          data: msg,
         });
 
         return this._wrappedPort.send(msg);
@@ -29,11 +26,11 @@ export class PortTracer {
         return this._wrappedPort.subscribe((msg) => {
           this.message.emit({
             direction: MessageTrace.Direction.INCOMING,
-            data: msg
+            data: msg,
           });
           cb(msg);
         });
-      }
+      },
     };
   }
 

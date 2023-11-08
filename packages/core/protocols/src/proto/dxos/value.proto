@@ -1,0 +1,23 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.value;
+
+message Value {
+  optional bool bool = 1;
+  optional string string = 2;
+  optional int32 int = 3;
+  optional float float = 4;
+}
+
+message Stats {
+  optional float min = 1;
+  optional float max = 2;
+  optional float mean = 3;
+  optional float median = 4;
+  optional float total = 5;
+  optional float count = 6;
+}

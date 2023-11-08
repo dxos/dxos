@@ -4,11 +4,11 @@
 
 import * as d3 from 'd3';
 
-import { D3Callable, D3Selection, Point } from '@dxos/gem-core';
+import { type D3Callable, type D3Selection, type Point } from '@dxos/gem-core';
 
 import { createBullets } from './bullets';
-import { Renderer, RendererOptions } from './renderer';
-import { GraphGuide, GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
+import { Renderer, type RendererOptions } from './renderer';
+import { type GraphGuide, type GraphLayout, type GraphLayoutLink, type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
 export type LabelOptions<N> = {
@@ -137,7 +137,8 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
         return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
-      // .attr('dx', (d) => ((d.r ?? 0) + 6) * (d.x > 0 ? 1 : -1))
+      .text((d) => options.labels.text(d))
+      .attr('dx', (d) => ((d.r ?? 0) + 6) * (d.x > 0 ? 1 : -1))
       .attr('x', (d) => d.x)
       .attr('y', (d) => d.y);
   }

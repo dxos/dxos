@@ -3,9 +3,9 @@
 //
 
 import { Box, Text, useApp, useInput } from 'ink';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { SpaceTable } from './SpaceTable';
 import { SystemTable } from './SystemTable';

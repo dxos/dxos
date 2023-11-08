@@ -6,9 +6,17 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { rmSync } from 'node:fs';
 
-import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } from '@dxos/agent';
+import {
+  Agent,
+  DashboardPlugin,
+  EchoProxyServer,
+  EpochMonitor,
+  FunctionsPlugin,
+  QueryPlugin,
+  parseAddress,
+} from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
-import { DX_RUNTIME } from '@dxos/client-protocol';
+import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
@@ -24,19 +32,26 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Run in foreground.',
       default: false,
     }),
+    system: Flags.boolean({
+      description: 'Run as system daemon.',
+      default: false,
+    }),
     ws: Flags.integer({
       description: 'Expose web socket port.',
       helpValue: 'port',
       aliases: ['web-socket'],
     }),
-    echo: Flags.integer({
-      description: 'Expose ECHO REST API.',
-      helpValue: 'port',
-    }),
-    monitor: Flags.boolean({
-      description: 'Run epoch monitoring.',
+    metrics: Flags.boolean({
+      description: 'Start metrics recording.',
     }),
   };
+
+  static override examples = [
+    {
+      description: 'Run with .',
+      command: 'dx agent start -f --ws=5001',
+    },
+  ];
 
   private readonly _ctx = new Context();
 
@@ -45,58 +60,57 @@ export default class Start extends BaseCommand<typeof Start> {
       // NOTE: This is invoked by the agent's forever daemon.
       await this._runInForeground();
     } else {
-      await this._runAsDaemon();
+      await this._runAsDaemon(this.flags.system);
     }
   }
 
   private async _runInForeground() {
-    const socket = `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`;
+    const socket = 'unix://' + getProfilePath(DX_RUNTIME, this.flags.profile, 'agent.sock');
     {
       // Clear out old socket file.
       const { path } = parseAddress(socket);
       rmSync(path, { force: true });
     }
 
+    // TODO(burdon): Option to start metrics recording (via config).
+
     const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
+      metrics: this.flags.metrics,
       protocol: {
         socket,
         webSocket: this.flags.ws,
       },
       plugins: [
         // Epoch monitoring.
-        // TODO(burdon): Config.
-        this.flags.monitor && new EpochMonitor(),
+        new EpochMonitor(),
+
+        // Query plugin.
+        new QueryPlugin(),
+
+        // Dashboard.
+        new DashboardPlugin({ configPath: this.flags.config }),
 
         // ECHO API.
-        // TODO(burdon): Config.
-        this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
+        new EchoProxyServer(),
 
         // Functions.
-        this.clientConfig.values.runtime?.agent?.functions &&
-          new FunctionsPlugin({
-            port: this.clientConfig.values.runtime?.agent?.functions?.port,
-          }),
+        new FunctionsPlugin(),
       ],
     });
 
     await agent.start();
     this.log('Agent started... (ctrl-c to exit)');
-    process.on('SIGINT', async () => {
-      void this._ctx.dispose();
-      await agent.stop();
-      process.exit(0);
-    });
 
     this._sendTelemetry();
 
-    if (this.flags['web-socket']) {
+    if (this.flags.ws) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
     }
   }
 
-  private async _runAsDaemon() {
+  private async _runAsDaemon(system: boolean) {
     return await this.execWithDaemon(async (daemon) => {
       if (await daemon.isRunning(this.flags.profile)) {
         this.log(chalk`{red Warning}: '${this.flags.profile}' is already running.`);
@@ -104,14 +118,19 @@ export default class Start extends BaseCommand<typeof Start> {
       }
 
       try {
-        const process = await daemon.start(this.flags.profile, { config: this.flags.config });
+        const process = await daemon.start(this.flags.profile, {
+          config: this.flags.config,
+          metrics: this.flags.metrics,
+          ws: this.flags.ws,
+          timeout: this.flags.timeout,
+        });
         if (process) {
           this.log('Agent started.');
         }
       } catch (err: any) {
         this.error(err);
       }
-    });
+    }, system);
   }
 
   private _sendTelemetry() {

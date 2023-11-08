@@ -23,6 +23,12 @@ message EchoEvent {
   optional dxos.keys.PublicKey feed_key = 2;
   optional int32 seq = 3;
 
+  enum DatabaseAction {
+    RESET = 0;
+  }
+
+  optional DatabaseAction action = 4;
+
   dxos.echo.object.EchoObjectBatch batch = 10;
 }
 
@@ -40,7 +46,12 @@ message MutationReceipt {
   int32 seq = 2;
 }
 
+message FlushRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
 service DataService {
   rpc Subscribe(SubscribeRequest) returns (stream EchoEvent);
   rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
+  rpc Flush(FlushRequest) returns (google.protobuf.Empty);
 }

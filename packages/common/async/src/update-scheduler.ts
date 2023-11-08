@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 
-import { scheduleTask } from './task-scheduling';
+import { scheduleMicroTask } from './task-scheduling';
 
 export type UpdateSchedulerOptions = {
   /**
@@ -43,7 +43,7 @@ export class UpdateScheduler {
       return;
     }
 
-    scheduleTask(this._ctx, async () => {
+    scheduleMicroTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
       await this._promise; // Can't be rejected.
 
@@ -74,7 +74,6 @@ export class UpdateScheduler {
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
       this._scheduled = false;
-
       this._promise = this._callback().then(
         () => {
           this._promise = null;
@@ -87,5 +86,11 @@ export class UpdateScheduler {
     });
 
     this._scheduled = true;
+  }
+
+  forceTrigger() {
+    scheduleMicroTask(this._ctx, async () => {
+      this._callback().catch((err) => this._ctx.raise(err));
+    });
   }
 }

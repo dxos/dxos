@@ -1,34 +1,27 @@
 {
   "name": "@dxos/tasks-template",
-  "version": "0.1.54",
-  "description": "An application template demonstrating a working Task List using the ECHO database",
+  "version": "0.3.4",
+  "description": "An application sample implementing a shared list with DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/config.t.js",
+  "main": "dist/src/template.t.js",
+  "types": "dist/src/template.t.d.ts",
   "scripts": {
-    "build": "tsc && plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "build-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "build-tsc": "tsc",
-    "clean": "rm -rf test/out",
-    "gen": "test/generate"
+    "build": "tsc"
   },
   "dependencies": {
     "@dxos/bare-template": "workspace:*",
-    "@dxos/plate": "workspace:*"
+    "@dxos/plate": "workspace:*",
+    "postcss": "^8.4.21",
+    "tailwindcss": "~3.3.2"
   },
   "devDependencies": {
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.4.0",
-    "typescript": "^5.0.4"
+    "@types/node": "^18.11.9",
+    "tmp-promise": "^3.0.3",
+    "ts-node": "10.9.1",
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

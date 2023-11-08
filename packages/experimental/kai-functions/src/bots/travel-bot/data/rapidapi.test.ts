@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { Config } from '@dxos/config';
 import { beforeAll, describe, test } from '@dxos/test';
 
@@ -37,6 +39,7 @@ describe.skip('rapid API', () => {
     });
 
     const data = await response.json();
-    console.log(Object.keys(data));
+    // console.log(Object.keys(data));
+    expect(data).to.exist;
   });
 });

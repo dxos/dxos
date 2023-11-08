@@ -9,13 +9,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
 import {
-  D3Callable,
-  D3Selection,
-  Fraction,
+  type D3Callable,
+  type D3Selection,
+  type Fraction,
   FullScreen,
   Grid,
   SVG,
-  SVGContext,
+  type SVGContext,
   SVGContextProvider,
   useSvgContext,
   useZoom,
@@ -106,7 +106,11 @@ class CircularLayout {
   private _map = new Map<string, number>();
   private _radius: Fraction = [1, 1];
 
-  constructor(private readonly _context: SVGContext, private readonly _duraction = 1000) {}
+  // prettier-ignore
+  constructor(
+    private readonly _context: SVGContext,
+    private readonly _duraction = 1000,
+  ) {}
 
   get layout() {
     return this.doLayout.bind(this);
@@ -301,8 +305,8 @@ class MeshLayout {
 
 const createObjects = (n = 5): Kube[] =>
   Array.from({ length: n }).map(() => ({
-    id: `kube-${faker.datatype.uuid()}`,
-    bots: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }).map(() => ({ id: faker.datatype.uuid() })),
+    id: `kube-${faker.string.uuid()}`,
+    bots: Array.from({ length: faker.number.int({ min: 1, max: 5 }) }).map(() => ({ id: faker.string.uuid() })),
   }));
 
 const Container = () => {
@@ -324,9 +328,9 @@ const Container = () => {
         bots: faker.datatype.boolean()
           ? bots
           : [
-              ...bots.map((bot) => (faker.datatype.number(10) > 7 ? bot : undefined)).filter(Boolean),
-              ...Array.from({ length: faker.datatype.number(4) }).map(() => ({
-                id: faker.datatype.uuid(),
+              ...bots.map((bot) => (faker.number.int(10) > 7 ? bot : undefined)).filter(Boolean),
+              ...Array.from({ length: faker.number.int(4) }).map(() => ({
+                id: faker.string.uuid(),
               })),
             ],
         ...rest,

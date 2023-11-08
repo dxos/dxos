@@ -1,9 +1,8 @@
-import { defineTemplate, text } from '@dxos/plate';
 import path from 'path';
-import config from './config.t';
+import template from './template.t';
 
-export default defineTemplate(
-  ({ outputDirectory }) => {
+export default template.define.text({
+  content: ({ outputDirectory }) => {
     const relative = (...s: string[]) => path.relative(process.cwd(), path.resolve(outputDirectory, ...s));
     const projectJson = {
       sourceRoot: relative('src'),
@@ -29,6 +28,5 @@ export default defineTemplate(
       }
     };
     return JSON.stringify(projectJson, null, 2);
-  },
-  { config }
-);
+  }
+});

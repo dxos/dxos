@@ -24,6 +24,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -42,10 +45,10 @@
       "path": "../../core/echo/text-model"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../client"

@@ -2,14 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import safeRace from 'race-as-promised';
 
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
-import { FeedWrapper } from './feed-wrapper';
-import { FeedBlock } from './types';
+import { type FeedWrapper } from './feed-wrapper';
+import { type FeedBlock } from './types';
 
 /**
  * Base class for an async iterable feed.
@@ -83,7 +84,8 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   async *_generator() {
     log('started');
     while (this._running) {
-      const block = await Promise.race([this._stopTrigger.wait(), this._nextBlock()]);
+      // https://github.com/nodejs/node/issues/17469
+      const block = await safeRace([this._stopTrigger.wait(), this._nextBlock()]);
 
       if (block === undefined) {
         break;
@@ -106,10 +108,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
 export class FeedIterator<T extends {}> extends AbstractFeedIterator<T> {
   private readonly _queue: FeedQueue<T>;
 
-  // prettier-ignore
-  constructor(
-    private readonly _feed: FeedWrapper<T>
-  ) {
+  constructor(private readonly _feed: FeedWrapper<T>) {
     super();
     this._queue = new FeedQueue<T>(this._feed);
   }

@@ -33,7 +33,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client-services/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

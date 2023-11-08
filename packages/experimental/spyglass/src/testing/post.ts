@@ -14,16 +14,16 @@ const keys = [
   'f7d45e653845b56f881fe8c7e1f5901228472c4e94ca05a3ae741df786f5bd43',
   '42dfc7a06a5b036a1157b46edde2f40d1f393d4ec86f5d4a71813a1dee197126',
   'f3cc97bc983c633e1c72b1c0c3f0503e30ad38e4db353080a0c1698680507f77',
-  'f607c12ac66fb8a8c03ec84a727cf98fb8031441d3b6c47a3ea0c3ec6dec7575'
+  'f607c12ac66fb8a8c03ec84a727cf98fb8031441d3b6c47a3ea0c3ec6dec7575',
 ];
 
 const spy = new Spy();
 
 let cmd: Command = Command.LOG;
-if (process.argv.some(arg => arg === '--clear')) {
+if (process.argv.some((arg) => arg === '--clear')) {
   cmd = Command.CLEAR;
 }
-if (process.argv.some(arg => arg === '--mark')) {
+if (process.argv.some((arg) => arg === '--mark')) {
   cmd = Command.MARK;
 }
 
@@ -43,8 +43,8 @@ switch (cmd) {
     const init = async () => {
       const key = PublicKey.from(faker.helpers.arrayElement(keys));
       await spy.log(key, {
-        num: faker.datatype.number(),
-        text: faker.lorem.paragraph()
+        num: faker.number.int(),
+        text: faker.lorem.paragraph(),
       });
 
       if (faker.datatype.boolean()) {
@@ -52,7 +52,7 @@ switch (cmd) {
         spy.bind(key, a);
 
         await spy.log(a, {
-          num: faker.datatype.number()
+          num: faker.number.int(),
         });
       }
     };

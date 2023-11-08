@@ -21,43 +21,28 @@
   ],
   "references": [
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../experimental/chess-app"
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-theme"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-intent"
+      "path": "../../types"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
     }
   ]
 }

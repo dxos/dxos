@@ -2,25 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
 
-import { Button, Main, useSidebar } from '@dxos/aurora';
 import { frameDefs, frameModules, FrameRegistryContextProvider } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
+import { Button, Main, useSidebars } from '@dxos/react-ui';
 
-import '@dxosTheme';
-
-import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
 import { Sidebar } from './Sidebar';
+import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
 
 const SidebarInvoker = () => {
-  const { openSidebar } = useSidebar();
-  return <Button onClick={openSidebar}>Open</Button>;
+  const { openNavigationSidebar } = useSidebars();
+  return <Button onClick={openNavigationSidebar}>Open</Button>;
 };
 
 const Test = () => {

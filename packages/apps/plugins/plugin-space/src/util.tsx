@@ -2,124 +2,387 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download, EyeSlash, PaperPlane, PencilSimpleLine, Planet, Upload } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
+import {
+  FolderPlus,
+  PencilSimpleLine,
+  Planet,
+  Placeholder,
+  Trash,
+  Users,
+  Intersect,
+  Download,
+  Upload,
+  X,
+  ClockCounterClockwise,
+  Plus,
+} from '@phosphor-icons/react';
+import { effect } from '@preact/signals-react';
 import React from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphNode } from '@braneframe/plugin-graph';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
-import { Plugin, findPlugin } from '@dxos/react-surface';
+import type { Graph, Node } from '@braneframe/plugin-graph';
+import { Folder } from '@braneframe/types';
+import { LayoutAction, type DispatchIntent, type MetadataResolver } from '@dxos/app-framework';
+import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
+import { type Query, clone } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
+import { EchoDatabase, type Space, SpaceState, TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
+import { SPACE_PLUGIN, SpaceAction } from './types';
+
+export const ROOT = 'root';
+export const SHARED = 'shared-spaces';
+export const HIDDEN = 'hidden-spaces';
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
     ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabase
     : false;
 
-export const getSpaceId = (spaceKey: PublicKeyLike) => {
-  if (spaceKey instanceof PublicKey) {
-    spaceKey = spaceKey.toHex();
-  }
-
-  return `${SPACE_PLUGIN_SHORT_ID}/${spaceKey}`;
-};
-
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
-  const disabled = space.state.get() !== SpaceState.READY;
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
-    : disabled
-    ? ['loading space title', { ns: SPACE_PLUGIN }]
-    : ['untitled space title', { ns: SPACE_PLUGIN }];
+    : space.state.get() === SpaceState.INITIALIZING
+    ? ['loading space label', { ns: SPACE_PLUGIN }]
+    : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
-export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string): GraphNode<Space> => {
-  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-  if (!clientPlugin) {
-    throw new Error('Client plugin not found');
-  }
+// TODO(wittjosiah): Remove space folders from graph when closed.
+export const objectToGraphNode = ({
+  object,
+  parent,
+  dispatch,
+  resolve,
+}: {
+  object: TypedObject;
+  parent: Node;
+  dispatch: DispatchIntent;
+  resolve: MetadataResolver;
+}): UnsubscribeCallback => {
+  const space = getSpaceForObject(object);
+  const metadata = object.__typename ? resolve(object.__typename) : object.type ? resolve(object.type) : {};
+  const isFolder = object instanceof Folder;
+  const isSpaceFolder = isFolder && space && object.name === space.key.toHex();
+  const isPersonalSpace = isSpaceFolder && parent.id === ROOT;
+  const isSharedSpacesFolder = isFolder && object.name === SHARED && parent.id === ROOT;
 
-  const client = clientPlugin.provides.client;
-  const identity = client.halo.identity.get();
-  const id = getSpaceId(space.key);
-  const actionIndices = getIndices(5);
-  const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
-  const node: GraphNode = {
-    id,
-    index,
-    label: getSpaceDisplayName(space),
-    description: space.properties.description,
-    icon: (props) => <Planet {...props} />,
-    data: space,
-    // TODO(burdon): Rename onChildMove and/or merge with onMoveNode?
-    onChildrenRearrange: (child: GraphNode<TypedObject>, nextIndex) => {
-      log.info('onChildrenRearrange', { child: JSON.stringify(child.data?.meta), nextIndex }); // TODO(burdon): Remove.
-      if (child.data) {
-        // TODO(burdon): Decouple from object's data structure.
-        child.data.meta = {
-          ...child.data?.meta,
-          index: nextIndex,
-        };
-      }
-    },
-    onMoveNode: (
-      source: GraphNode<TypedObject>,
-      target: GraphNode<TypedObject>,
-      child: GraphNode<TypedObject>,
-      nextIndex,
-    ) => {
-      log.info('onParentMove', { source: source.id, target: target.id, child: child.id, nextIndex });
-    },
-    attributes: {
-      role: 'branch',
-      hidden: identity && space.properties.members?.[identity.identityKey.toHex()]?.hidden === true,
-      disabled: space.state.get() !== SpaceState.READY,
-      error: space.state.get() === SpaceState.ERROR,
-    },
-    pluginActions: {
-      [SPACE_PLUGIN]: [
+  let previousObjects: TypedObject[] = [];
+  return effect(() => {
+    if (isSpaceFolder && space.state.get() === SpaceState.INACTIVE) {
+      return;
+    }
+
+    const [node] = parent.addNode(SPACE_PLUGIN, {
+      id: object.id,
+      label: isPersonalSpace
+        ? ['personal space label', { ns: SPACE_PLUGIN }]
+        : isSharedSpacesFolder
+        ? ['shared spaces label', { ns: SPACE_PLUGIN }]
+        : isSpaceFolder
+        ? getSpaceDisplayName(space)
+        : object.name || object.title || metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
+      description: isSpaceFolder ? space.properties.description : object.description,
+      icon:
+        isPersonalSpace || isSharedSpacesFolder
+          ? undefined
+          : isSpaceFolder
+          ? (props) => <Planet {...props} />
+          : metadata.icon ?? ((props) => <Placeholder {...props} />),
+      data: isSharedSpacesFolder ? null : object,
+      actions:
+        isFolder && !isSharedSpacesFolder
+          ? [
+              {
+                id: `${SPACE_PLUGIN}/create`,
+                label: ['create object group label', { ns: SPACE_PLUGIN }],
+                icon: (props) => <Plus {...props} />,
+                invoke: () => {
+                  // No-op.
+                },
+                properties: {
+                  disposition: 'toolbar',
+                  testId: 'spacePlugin.createObject',
+                },
+              },
+            ]
+          : [],
+      properties: {
+        // TODO(burdon): Factor out palette constants.
+        palette: isPersonalSpace ? 'teal' : isSharedSpacesFolder ? 'pink' : undefined,
+        testId: isPersonalSpace
+          ? 'spacePlugin.personalSpace'
+          : isSharedSpacesFolder
+          ? 'spacePlugin.sharedSpaces'
+          : isSpaceFolder
+          ? 'spacePlugin.space'
+          : isFolder
+          ? 'spacePlugin.folder'
+          : 'spacePlugin.object',
+        persistenceClass: isSpaceFolder ? undefined : 'folder',
+        ...(isFolder
+          ? {
+              acceptPersistenceClass: isSharedSpacesFolder ? undefined : new Set(['folder']),
+              role: 'branch',
+              onRearrangeChildren: (nextOrder: TypedObject[]) => {
+                object.objects = nextOrder;
+              },
+              onTransferStart: (child: Node<TypedObject>) => {
+                const childSpace = getSpaceForObject(child.data);
+                if (space && childSpace && !childSpace.key.equals(space.key)) {
+                  // Create clone of child and add to destination space.
+                  const newObject = clone(child.data, {
+                    retainId: true,
+                    // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
+                    additional: [
+                      child.data.content,
+                      ...(child.data.objects ?? []),
+                      ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
+                    ],
+                  });
+                  space.db.add(newObject);
+                  object.objects.push(newObject);
+                } else {
+                  // Add child to destination folder.
+                  object.objects.push(child.data);
+                }
+              },
+              onTransferEnd: (child: Node<TypedObject>, destination: Node) => {
+                // Remove child from origin folder.
+                const index = object.objects.indexOf(child.data);
+                if (index > -1) {
+                  object.objects.splice(index, 1);
+                }
+
+                const childSpace = getSpaceForObject(child.data);
+                const destinationSpace = getSpaceForObject(destination.data);
+                if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
+                  // Mark child as deleted in origin space.
+                  childSpace.db.remove(child.data);
+                }
+              },
+            }
+          : {}),
+      },
+    });
+
+    if (isSharedSpacesFolder) {
+      node.addAction(
+        {
+          id: 'create-space',
+          label: ['create space label', { ns: 'os' }],
+          icon: (props) => <Plus {...props} />,
+          properties: {
+            disposition: 'toolbar',
+            testId: 'spacePlugin.createSpace',
+          },
+          invoke: () =>
+            dispatch({
+              plugin: SPACE_PLUGIN,
+              action: SpaceAction.CREATE,
+            }),
+        },
+        {
+          id: 'join-space',
+          label: ['join space label', { ns: 'os' }],
+          icon: (props) => <Intersect {...props} />,
+          properties: {
+            testId: 'spacePlugin.joinSpace',
+          },
+          invoke: () =>
+            dispatch([
+              {
+                plugin: SPACE_PLUGIN,
+                action: SpaceAction.JOIN,
+              },
+              {
+                action: LayoutAction.ACTIVATE,
+              },
+            ]),
+        },
+      );
+    }
+
+    if (isSpaceFolder && !isPersonalSpace) {
+      node.addAction(
         {
           id: 'rename-space',
-          index: actionIndices[0],
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.RENAME },
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, id: object.id } }),
         },
         {
-          id: 'view-invitations',
-          index: actionIndices[1],
-          label: ['view invitations label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <PaperPlane {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.SHARE },
+          id: 'share-space',
+          label: ['share space', { ns: SPACE_PLUGIN }],
+          icon: (props) => <Users {...props} />,
+          invoke: () =>
+            dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
         },
         {
-          id: 'hide-space',
-          index: actionIndices[2],
-          label: ['hide space label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <EyeSlash {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.HIDE },
+          id: 'close-space',
+          label: ['close space label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <X {...props} />,
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
         },
+      );
+    }
+
+    if (isSpaceFolder) {
+      node.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+        id: 'folder/create',
+        label: ['create folder label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <FolderPlus {...props} />,
+        invoke: () =>
+          dispatch({
+            plugin: SPACE_PLUGIN,
+            action: SpaceAction.ADD_TO_FOLDER,
+            data: { folder: object, object: new Folder() },
+          }),
+      });
+
+      node.addAction(
         {
           id: 'backup-space',
-          index: actionIndices[3],
           label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Download {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.BACKUP },
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.BACKUP, data: { space } }),
         },
         {
           id: 'restore-space',
-          index: actionIndices[4],
           label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Upload {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.RESTORE },
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RESTORE, data: { space } }),
         },
-      ],
-    },
-  };
+      );
+    }
 
-  return node;
+    if (!isSpaceFolder && !isSharedSpacesFolder) {
+      node.addAction(
+        {
+          id: 'rename',
+          label: ['rename object label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <PencilSimpleLine {...props} />,
+          invoke: () =>
+            dispatch({
+              action: SpaceAction.RENAME_OBJECT,
+              data: { object },
+            }),
+        },
+        {
+          id: 'delete',
+          label: ['delete object label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <Trash {...props} />,
+          invoke: () =>
+            dispatch([
+              {
+                action: SpaceAction.REMOVE_FROM_FOLDER,
+                data: { folder: parent.data, object },
+              },
+              {
+                action: SpaceAction.REMOVE_OBJECT,
+                data: { object },
+              },
+            ]),
+        },
+      );
+    }
+
+    if (!isFolder) {
+      return;
+    }
+
+    const folder = object as Folder;
+    const childSubscriptions = new EventSubscriptions();
+    const removedObjects = previousObjects.filter((object) => !folder.objects.includes(object));
+    previousObjects = folder.objects;
+
+    removedObjects.forEach((object) => parent.removeNode(object.id));
+    folder.objects.forEach((object) => {
+      const unsubscribe = objectToGraphNode({ object, parent: node, dispatch, resolve });
+      if (unsubscribe) {
+        childSubscriptions.add(unsubscribe);
+      }
+    });
+
+    return () => childSubscriptions.clear();
+  });
+};
+
+export const hiddenSpacesToGraphNodes = ({
+  parent,
+  hidden,
+  spaces,
+  dispatch,
+}: {
+  parent: Node;
+  hidden?: boolean;
+  spaces: Space[];
+  dispatch: DispatchIntent;
+}) => {
+  if (!hidden) {
+    parent.removeNode(HIDDEN);
+    return;
+  }
+
+  const [hiddenSpacesNode] = parent.addNode(SPACE_PLUGIN, {
+    id: HIDDEN,
+    label: ['hidden spaces label', { ns: SPACE_PLUGIN }],
+    properties: {
+      palette: 'orange',
+    },
+  });
+
+  spaces
+    .filter((space) => space.state.get() === SpaceState.INACTIVE)
+    .forEach((space) => {
+      const [node] = hiddenSpacesNode.addNode(SPACE_PLUGIN, {
+        id: space.key.toHex(),
+        label: getSpaceDisplayName(space),
+        icon: (props) => <Planet {...props} />,
+        properties: {
+          disabled: true,
+        },
+      });
+
+      node.addAction({
+        id: 'open-space',
+        label: ['open space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <ClockCounterClockwise {...props} />,
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } }),
+        properties: {
+          disposition: 'toolbar',
+        },
+      });
+    });
+};
+
+export const getActiveSpace = (graph: Graph, active?: string) => {
+  if (!active) {
+    return;
+  }
+
+  const node = graph.findNode(active);
+  if (!node || !(node.data instanceof TypedObject)) {
+    return;
+  }
+
+  return getSpaceForObject(node.data);
+};
+
+export const indexSpaceFolder = ({ space, defaultSpace }: { space: Space; defaultSpace: Space }) => {
+  const {
+    objects: [sharedSpacesFolder],
+  } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
+  const query = space.db.query(Folder.filter({ name: space.key.toHex() }));
+  return new Promise<Folder>((resolve) => {
+    const push = ({ objects: [folder] }: Query<Folder>) => {
+      console.log({ folder });
+      if (folder) {
+        sharedSpacesFolder.objects.push(folder);
+        subscription?.();
+        resolve(folder);
+      }
+    };
+
+    const subscription = query.subscribe(push);
+    push(query);
+  });
 };

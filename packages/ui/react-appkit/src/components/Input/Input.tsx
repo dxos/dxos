@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ForwardedRef, forwardRef } from 'react';
+import React, { type ForwardedRef, forwardRef } from 'react';
 
-import { Input as NaturalInput, TextAreaProps } from '@dxos/aurora';
+import { Input as NaturalInput, type TextAreaProps } from '@dxos/react-ui';
 
-import { InputProps as AppkitInputProps } from './InputProps';
+import { type InputProps as AppkitInputProps } from './InputProps';
 
 export type InputProps = AppkitInputProps;
 
 /**
- * @deprecated use Input subcomponents from @dxos/aurora
+ * @deprecated use Input subcomponents from @dxos/react-ui
  */
 export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
   (

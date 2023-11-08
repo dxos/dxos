@@ -10,9 +10,9 @@ import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
-import { sentryTestkit } from '../testing';
-import * as Sentry from './node';
+import * as Sentry from './browser';
 import * as Tracing from './tracing';
+import { sentryTestkit } from '../testing';
 
 const { testkit, sentryTransport } = sentryTestkit();
 

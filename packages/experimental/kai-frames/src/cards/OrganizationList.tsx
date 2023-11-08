@@ -5,8 +5,8 @@
 import { Buildings, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { List, ListItem } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { List, ListItem } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Address, Organization } from '@dxos/kai-types';
 import { Input } from '@dxos/react-appkit';
 import { Space, useQuery } from '@dxos/react-client/echo';

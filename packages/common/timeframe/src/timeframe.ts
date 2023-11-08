@@ -4,15 +4,19 @@
 
 import { inspect } from 'node:util';
 
-import { equalsSymbol, Equatable } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
-import { ComplexMap } from '@dxos/util';
+import { equalsSymbol, type Equatable } from '@dxos/debug';
+import { type PublicKey } from '@dxos/keys';
+
+type Entry = {
+  key: PublicKey;
+  seq: number;
+};
 
 /**
  * A vector clock that implements ordering over a set of feed messages.
  */
 export class Timeframe implements Equatable {
-  private readonly _frames = new ComplexMap<PublicKey, number>(PublicKey.hash);
+  private readonly _frames = new Map<string, Entry>();
 
   constructor(frames: [PublicKey, number][] = []) {
     for (const [key, seq] of frames) {
@@ -38,18 +42,19 @@ export class Timeframe implements Equatable {
   }
 
   // TODO(burdon): Rename getFrame.
-  get(key: PublicKey) {
-    return this._frames.get(key);
+  get(key: PublicKey): number | undefined {
+    return this._frames.get(key.toHex())?.seq;
   }
 
   // TODO(burdon): Rename setFrame.
-  set(key: PublicKey, value: number) {
-    this._frames.set(key, value);
+  set(key: PublicKey, seq: number) {
+    const hex = key.toHex();
+    this._frames.set(hex, { key, seq });
   }
 
   // TODO(burdon): Change to getter.
   frames(): [PublicKey, number][] {
-    return Array.from(this._frames.entries()).filter((frame): frame is [PublicKey, number] => !!frame);
+    return Array.from(this._frames.values()).map(({ key, seq }) => [key, seq]);
   }
 
   // TODO(burdon): Change to getter.
@@ -67,11 +72,7 @@ export class Timeframe implements Equatable {
    * @param keys
    */
   withoutKeys(keys: PublicKey[]): Timeframe {
-    return new Timeframe(
-      this.frames().filter(([frameKey]) =>
-        keys.every((key) => Buffer.compare(key.asBuffer(), frameKey.asBuffer()) !== 0),
-      ),
-    );
+    return new Timeframe(this.frames().filter(([frameKey]) => keys.every((key) => !key.equals(frameKey))));
   }
 
   map(fn: (frame: [key: PublicKey, seq: number]) => [PublicKey, number]): Timeframe {
@@ -82,7 +83,7 @@ export class Timeframe implements Equatable {
    * Returns a total amount of messages represented by this timeframe.
    */
   totalMessages(): number {
-    return Array.from(this._frames.values()).reduce((result, seq) => result + seq + 1, 0);
+    return Array.from(this._frames.values()).reduce((result, { seq }) => result + seq + 1, 0);
   }
 
   /**
@@ -90,7 +91,7 @@ export class Timeframe implements Equatable {
    */
   newMessages(base: Timeframe) {
     return Array.from(this._frames.entries()).reduce(
-      (result, [key, seq]) => result + Math.max(seq - (base.get(key) ?? -1), 0),
+      (result, [hex, { seq }]) => result + Math.max(seq - (base._frames.get(hex)?.seq ?? -1), 0),
       0,
     );
   }
@@ -117,10 +118,10 @@ export class Timeframe implements Equatable {
   static merge(...timeframes: Timeframe[]): Timeframe {
     const result = new Timeframe();
     for (const timeframe of timeframes) {
-      for (const [key, seq] of timeframe.frames()) {
-        const current = result.get(key);
-        if (current === undefined || seq > current) {
-          result.set(key, seq);
+      for (const [hex, entry] of timeframe._frames) {
+        const currentEntry = result._frames.get(hex);
+        if (currentEntry === undefined || entry.seq > currentEntry.seq) {
+          result._frames.set(hex, entry);
         }
       }
     }
@@ -134,10 +135,10 @@ export class Timeframe implements Equatable {
    */
   static dependencies(tf1: Timeframe, tf2: Timeframe): Timeframe {
     const result = new Timeframe();
-    for (const [key, seq] of tf1.frames()) {
-      const otherSeq = tf2.get(key);
-      if (otherSeq === undefined || otherSeq < seq) {
-        result.set(key, seq);
+    for (const [hex, entry] of tf1._frames) {
+      const otherEntry = tf2._frames.get(hex);
+      if (otherEntry === undefined || otherEntry.seq < entry.seq) {
+        result._frames.set(hex, entry);
       }
     }
 

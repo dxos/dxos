@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 
-import { PublicKey } from '@dxos/keys';
-
-import { SwarmController, Topology } from './topology';
+import { type SwarmController, type Topology } from './topology';
 
 export class FullyConnectedTopology implements Topology {
   private _controller?: SwarmController;

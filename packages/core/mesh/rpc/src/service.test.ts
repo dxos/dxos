@@ -6,11 +6,15 @@ import { expect } from 'earljs';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { SerializedError, schema } from '@dxos/protocols';
-import { TestStreamService, TestRpcResponse, TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { SystemError, schema } from '@dxos/protocols';
+import {
+  type TestStreamService,
+  type TestRpcResponse,
+  type TestService,
+} from '@dxos/protocols/proto/example/testing/rpc';
 import { describe, test } from '@dxos/test';
 
-import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
+import { createProtoRpcPeer, type ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testing';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
@@ -90,7 +94,7 @@ describe('Protobuf service', () => {
       error = err;
     }
 
-    expect(error).toBeA(SerializedError);
+    expect(error).toBeA(SystemError);
     expect(error.message).toEqual('TestError');
     expect(error.stack?.includes('handlerFn')).toEqual(true);
     expect(error.stack?.includes('TestCall')).toEqual(true);

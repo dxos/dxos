@@ -11,7 +11,11 @@ export class MapEntry<K, V, U> {
   /**
    * @internal
    */
-  constructor(private readonly _map: Map<K, V>, private readonly _key: K) {}
+  // prettier-ignore
+  constructor(
+    private readonly _map: Map<K, V>,
+    private readonly _key: K,
+  ) {}
 
   get key(): K {
     return this._key;

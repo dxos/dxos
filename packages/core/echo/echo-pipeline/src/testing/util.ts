@@ -8,15 +8,17 @@ import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
-import { DatabaseHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
-import { DataPipeline } from '../space';
+import { DatabaseHost, type DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
+import { type DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
-  const backend = new DatabaseHost(feed);
+  const backend = new DatabaseHost(feed, async () => {
+    // No-op.
+  });
 
   feed.written.on(([data, meta]) =>
     backend.echoProcessor({
@@ -48,7 +50,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   await dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
   const itemManager = new ItemManager(modelFactory);
-  const backend = new DatabaseProxy(dataService, itemManager, spaceKey);
+  const backend = new DatabaseProxy({ service: dataService, itemManager, spaceKey });
   await backend.open(new ModelFactory().registerModel(DocumentModel));
   return {
     itemManager,

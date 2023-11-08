@@ -4,7 +4,7 @@
 
 import defaultsdeep from 'lodash.defaultsdeep';
 
-import { Bounds, Dimensions, Layout, Location, Point } from './layout';
+import { type Bounds, type Dimensions, type Layout, type Location, type Point } from './layout';
 
 export type GridLayoutOptions = {
   range: { x: number; y: number };

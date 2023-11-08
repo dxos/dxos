@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
 import { Document } from '@braneframe/types';
-import { Composer } from '@dxos/aurora-composer';
+import { Composer } from '@dxos/react-ui-editor';
 import { Contact, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
 import { Dialog } from '@dxos/react-appkit';
@@ -15,12 +15,12 @@ import { Config, useConfig } from '@dxos/react-client';
 import { TypedObject, Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
+import { ActionDialog, CustomStackAction } from './CustomActionMenu';
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
 import { FilePlugin, imageTypes } from '../File';
 import { getColumnType } from '../Table';
-import { ActionDialog, CustomStackAction } from './CustomActionMenu';
 
 // TODO(burdon): Generalize with Presenter.
 export const sectionActions = (config: Config, section?: DocumentStack.Section) => {

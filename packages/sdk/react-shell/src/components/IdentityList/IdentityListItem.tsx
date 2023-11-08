@@ -1,51 +1,42 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
-import { Avatar } from '@dxos/react-appkit';
+import React, { forwardRef } from 'react';
+
+import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
-import { Identity } from '@dxos/react-client/halo';
+import { type Identity } from '@dxos/react-client/halo';
+import { ListItem, Avatar, useJdenticonHref, useId } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-export const IdentityListItem = ({
-  identity,
-  presence,
-  onClick,
-}: {
+type IdentityListItemProps = {
   identity: Identity;
   presence?: SpaceMember['presence'];
   onClick?: () => void;
-}) => {
-  const { t } = useTranslation('os');
-  return (
-    <li
-      className={mx('flex gap-2 items-center', onClick && 'cursor-pointer')}
-      onClick={() => onClick?.()}
-      data-testid='identity-list-item'
-    >
-      <Avatar
-        {...{
-          variant: 'circle',
-          size: 9,
-          fallbackValue: identity.identityKey.toHex(),
-          label: <p className='text-sm truncate'>{identity.profile?.displayName ?? identity.identityKey.truncate()}</p>,
-          ...(presence === SpaceMember.PresenceState.OFFLINE && {
-            status: 'inactive',
-            description: (
-              <p
-                className='font-system-normal text-xs text-neutral-700 dark:text-neutral-300'
-                data-testid='identity-list-item.description'
-              >
-                {t('identity offline description')}
-              </p>
-            ),
-          }),
-          ...(presence === SpaceMember.PresenceState.ONLINE && { status: 'active' }),
-          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { classNames: 'shrink-0' } },
-        }}
-      />
-    </li>
-  );
 };
+
+export const IdentityListItem = forwardRef<HTMLLIElement, IdentityListItemProps>(
+  ({ identity, presence, onClick }: IdentityListItemProps, forwardedRef) => {
+    const fallbackValue = identity.identityKey.toHex();
+    const labelId = useId('identityListItem__label');
+    const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
+    const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
+    return (
+      <ListItem.Root
+        classNames={mx('flex gap-2 pis-3 pie-1 items-center', onClick && 'cursor-pointer')}
+        onClick={() => onClick?.()}
+        data-testid='identity-list-item'
+        labelId={labelId}
+        ref={forwardedRef}
+      >
+        <Avatar.Root status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'} labelId={labelId}>
+          <Avatar.Frame>
+            <Avatar.Fallback href={jdenticon} />
+          </Avatar.Frame>
+          <Avatar.Label classNames='text-sm truncate pli-2'>{displayName}</Avatar.Label>
+        </Avatar.Root>
+      </ListItem.Root>
+    );
+  },
+);

@@ -2,23 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
-export const PanelContainer: FC<{ toolbar?: ReactNode; children: ReactNode; className?: string }> = ({
-  toolbar,
-  children,
-  className,
-}) => {
+export const PanelContainer: FC<{
+  toolbar?: ReactNode;
+  footer?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}> = ({ toolbar, footer, children, className }) => {
   return (
-    <div className='flex flex-col flex-1 overflow-hidden divide-y'>
+    <div className='flex flex-col grow overflow-hidden'>
       {toolbar}
-      <div className={mx('flex flex-1 flex-col overflow-auto', className)}>{children}</div>
+      <div className={mx('flex flex-col grow overflow-auto', className)}>{children}</div>
+      {footer}
     </div>
   );
 };
-
-export const Toolbar: FC<{ children?: ReactNode }> = ({ children }) => (
-  <div className='flex space-x-2 p-2'>{children}</div>
-);

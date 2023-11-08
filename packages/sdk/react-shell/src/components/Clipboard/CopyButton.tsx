@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Copy, IconProps } from '@phosphor-icons/react';
+import { Check, Copy, type IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Button, ButtonProps, Tooltip, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, type ButtonProps, Tooltip, useTranslation } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { useClipboardContext } from './ClipboardProvider';
 
@@ -40,7 +40,7 @@ export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButto
   );
 };
 
-export const CopyButtonIconOnly = ({ value, classNames, iconProps, ...props }: CopyButtonProps) => {
+export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...props }: CopyButtonProps) => {
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboardContext();
   const isCopied = textValue === value;
@@ -48,22 +48,21 @@ export const CopyButtonIconOnly = ({ value, classNames, iconProps, ...props }: C
   const [open, setOpen] = useState(false);
   return (
     <Tooltip.Root delayDuration={1500} open={open} onOpenChange={setOpen}>
-      <Tooltip.Content side='bottom' sideOffset={12}>
-        <span>{label}</span>
-        <Tooltip.Arrow />
-      </Tooltip.Content>
-      <Tooltip.Trigger>
-        <Button
-          aria-label={label}
-          {...props}
-          classNames={['inline-flex flex-col justify-center', classNames]}
-          onClick={() => {
-            setOpen(true);
-            void setTextValue(value);
-          }}
-          data-testid='copy-invitation'
-        >
-          <Copy className={getSize(4)} weight='bold' {...iconProps} />
+      <Tooltip.Portal>
+        <Tooltip.Content side='bottom' sideOffset={12} classNames='z-30'>
+          <span>{label}</span>
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+      <Tooltip.Trigger
+        aria-label={label}
+        {...props}
+        onClick={() => setTextValue(value).then(() => setOpen(true))}
+        data-testid='copy-invitation'
+        asChild
+      >
+        <Button variant={variant} classNames={['inline-flex flex-col justify-center', classNames]}>
+          <Copy className={getSize(5)} weight='bold' {...iconProps} />
         </Button>
       </Tooltip.Trigger>
     </Tooltip.Root>

@@ -5,7 +5,7 @@
 import { Args, Flags } from '@oclif/core';
 
 import { sleep } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
 
 import { BaseCommand } from '../../base-command';
@@ -28,7 +28,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
       default: 0,
     }),
     jitter: Flags.integer({
-      description: 'Inverval variance (ms).',
+      description: 'Interval variance (ms).',
       default: 0,
     }),
     objects: Flags.integer({

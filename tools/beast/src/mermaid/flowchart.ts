@@ -4,7 +4,7 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Diagram } from './diagram';
+import { type Diagram } from './diagram';
 
 // TODO(burdon): Make types relevant to ERD, etc.
 
@@ -48,7 +48,12 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
   private readonly _subGraphs = new Set<SubgraphBuilder>();
 
-  constructor(readonly id: string, readonly label?: string, readonly style?: string) {}
+  // prettier-ignore
+  constructor(
+    readonly id: string,
+    readonly label?: string,
+    readonly style?: string,
+  ) {}
 
   addSubgraph({ id, label, style }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label, style);

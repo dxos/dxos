@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { XCircle } from '@phosphor-icons/react';
 import React from 'react';
 
-import { getSize } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/react-ui-theme';
 
-import '@dxosTheme';
-
-import { TileContentProps } from '../components';
-import { TestData } from '../testing';
+import { type TileContentProps } from '../components';
+import { type TestData } from '../testing';
 
 export const TestTileContent = ({ item, onDelete }: TileContentProps<TestData>) => {
   const handleDelete = (event: any) => {

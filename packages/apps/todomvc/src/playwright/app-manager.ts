@@ -8,7 +8,7 @@ import { sleep, Trigger } from '@dxos/async';
 import { setupPage } from '@dxos/test/playwright';
 import { ShellManager } from '@dxos/vault/testing';
 
-import { FILTER } from '../constants';
+import { type FILTER } from '../constants';
 
 export class AppManager {
   page!: Page;
@@ -25,7 +25,7 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      waitFor: async (page) => page.getByTestId('todo-placeholder').isVisible(),
+      waitFor: async (page) => page.getByTestId('new-todo').isVisible(),
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
@@ -34,10 +34,6 @@ export class AppManager {
   }
 
   // Getters
-
-  async isPlaceholderVisible() {
-    return await this.page.getByTestId('todo-placeholder').isVisible();
-  }
 
   async isNewTodoVisible() {
     return await this.page.getByTestId('new-todo').isVisible();

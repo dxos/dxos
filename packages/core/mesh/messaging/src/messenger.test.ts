@@ -5,16 +5,16 @@
 import { expect, mockFn } from 'earljs';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
-import { TaggedType } from '@dxos/codec-protobuf';
+import { type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { TYPES } from '@dxos/protocols';
-import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
+import { type TYPES } from '@dxos/protocols';
+import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Messenger } from './messenger';
 import { WebsocketSignalManager } from './signal-manager';
-import { Message } from './signal-methods';
+import { type Message } from './signal-methods';
 import { TestBuilder } from './testing';
 
 const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {
@@ -361,8 +361,7 @@ describe('Messenger', () => {
 
   describe('load', () => {
     test('many connections to KUBE', async () => {
-      let numReceived = 0;
-
+      // let numReceived = 0;
       range(100).map(async () => {
         const peerId = PublicKey.random();
         const newLocal = new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]);
@@ -377,7 +376,7 @@ describe('Messenger', () => {
         await messenger.listen({
           peerId,
           onMessage: async (msg) => {
-            console.log(++numReceived);
+            // console.log(++numReceived);
           },
         });
 

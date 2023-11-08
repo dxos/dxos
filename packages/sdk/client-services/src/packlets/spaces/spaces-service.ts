@@ -4,32 +4,32 @@
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { CredentialProcessor } from '@dxos/credentials';
+import { type CredentialProcessor } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
-import { ApiError } from '@dxos/errors';
+import { type DataServiceSubscriptions, type SpaceManager } from '@dxos/echo-pipeline';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeError } from '@dxos/protocols';
+import { ApiError, SpaceNotFoundError, encodeError } from '@dxos/protocols';
 import {
-  CreateEpochRequest,
-  PostMessageRequest,
-  QueryCredentialsRequest,
-  QuerySpacesResponse,
-  Space,
+  type CreateEpochRequest,
+  type PostMessageRequest,
+  type QueryCredentialsRequest,
+  type QuerySpacesResponse,
+  type Space,
   SpaceMember,
   SpaceState,
-  SpacesService,
-  SubscribeMessagesRequest,
-  UpdateSpaceRequest,
-  WriteCredentialsRequest,
+  type SpacesService,
+  type SubscribeMessagesRequest,
+  type UpdateSpaceRequest,
+  type WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { Provider, humanize } from '@dxos/util';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type Provider } from '@dxos/util';
 
-import { IdentityManager } from '../identity';
-import { DataSpace } from './data-space';
-import { DataSpaceManager } from './data-space-manager';
+import { type DataSpace } from './data-space';
+import { type DataSpaceManager } from './data-space-manager';
+import { type IdentityManager } from '../identity';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -78,7 +78,7 @@ export class SpacesServiceImpl implements SpacesService {
           log('update', { spaces });
           next({ spaces });
         },
-        { maxFrequency: 2 },
+        { maxFrequency: process.env.NODE_ENV === 'test' ? undefined : 2 },
       );
 
       scheduleTask(ctx, async () => {
@@ -92,12 +92,14 @@ export class SpacesServiceImpl implements SpacesService {
           subscriptions.clear();
 
           for (const space of dataSpaceManager.spaces.values()) {
-            subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.trigger()));
+            // TODO(dmaretskyi): This can skip updates and not report intermediate states. Potential race condition here.
+            subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.forceTrigger()));
+
             subscriptions.add(space.presence.updated.on(ctx, () => scheduler.trigger()));
             subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
             // Pipeline progress.
-            space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger());
+            subscriptions.add(space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             if (space.dataPipeline.pipelineState) {
               subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             }
@@ -138,8 +140,8 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  queryCredentials({ spaceKey }: QueryCredentialsRequest): Stream<Credential> {
-    return new Stream(({ ctx, next }) => {
+  queryCredentials({ spaceKey, noTail }: QueryCredentialsRequest): Stream<Credential> {
+    return new Stream(({ ctx, next, close }) => {
       const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
       const processor: CredentialProcessor = {
@@ -148,14 +150,31 @@ export class SpacesServiceImpl implements SpacesService {
         },
       };
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
-      scheduleTask(ctx, () => space.spaceState.addCredentialProcessor(processor));
+      scheduleTask(ctx, async () => {
+        await space.spaceState.addCredentialProcessor(processor);
+        if (noTail) {
+          close();
+        }
+      });
     });
   }
 
   async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest) {
     const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
     for (const credential of credentials ?? []) {
-      await space.controlPipeline.writer.write({ credential: { credential } });
+      if (credential.proof) {
+        await space.controlPipeline.writer.write({ credential: { credential } });
+      } else {
+        invariant(!credential.id, 'Id on unsigned credentials is not allowed');
+        invariant(this._identityManager.identity, 'Identity is not available');
+        const signer = this._identityManager.identity.getIdentityCredentialSigner();
+        invariant(credential.issuer.equals(signer.getIssuer()));
+        const signedCredential = await signer.createCredential({
+          subject: credential.subject.id,
+          assertion: credential.subject.assertion,
+        });
+        await space.controlPipeline.writer.write({ credential: { credential: signedCredential } });
+      }
     }
   }
 
@@ -185,19 +204,29 @@ export class SpacesServiceImpl implements SpacesService {
         targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
         totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
       },
-      members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
-        identity: {
-          identityKey: member.key,
-          profile: {
-            displayName: member.assertion.profile?.displayName ?? humanize(member.key),
+      members: Array.from(space.inner.spaceState.members.values()).map((member) => {
+        const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+        const isMe = this._identityManager.identity?.identityKey.equals(member.key);
+
+        if (isMe) {
+          peers.push(space.presence.getLocalState());
+        }
+
+        return {
+          identity: {
+            identityKey: member.key,
+            profile: {
+              displayName: member.profile?.displayName,
+            },
           },
-        },
-        presence:
-          this._identityManager.identity?.identityKey.equals(member.key) ||
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+          presence: member.removed
+            ? SpaceMember.PresenceState.REMOVED
+            : isMe || peers.length > 0
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
-      })),
+          peerStates: peers,
+        };
+      }),
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,

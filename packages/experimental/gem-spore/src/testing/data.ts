@@ -4,8 +4,8 @@
 
 import { faker } from '@faker-js/faker';
 
-import { GraphData, GraphLink } from '../graph';
-import { TestNode } from './types';
+import { type TestNode } from './types';
+import { type GraphData, type GraphLink } from '../graph';
 
 // https://www.npmjs.com/package/faker#setting-a-randomness-seed
 export const seed = (seed: number) => faker.seed(seed);
@@ -15,7 +15,7 @@ export const seed = (seed: number) => faker.seed(seed);
 //
 
 export const createNode = (type: string = undefined): TestNode => ({
-  id: faker.datatype.uuid(),
+  id: faker.string.uuid(),
   type,
   label: faker.lorem.words(3).replace(/ /g, '-'),
 });
@@ -37,7 +37,7 @@ export const createTree = ({ depth = 2, children = 3 } = {}): TestNode => {
   const createChildren = (root: TestNode, d = 0) => {
     if (d < depth) {
       const max = Math.round(Math.log(depth + 1 - d) * children);
-      const num = faker.datatype.number({ min: 1, max });
+      const num = faker.number.int({ min: 1, max });
       root.children = [...new Array(num)].map(() => {
         return createChildren(createNode(), d + 1);
       });

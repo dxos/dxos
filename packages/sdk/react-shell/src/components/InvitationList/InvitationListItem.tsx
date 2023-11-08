@@ -1,52 +1,150 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { ProhibitInset, X } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItem, useTranslation } from '@dxos/aurora';
-import { chromeSurface, getSize } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
+import {
+  type CancellableInvitationObservable,
+  Invitation,
+  type InvitationStatus,
+  useInvitationStatus,
+} from '@dxos/react-client/invitations';
+import {
+  Button,
+  ListItem,
+  useTranslation,
+  Avatar,
+  useThemeContext,
+  type AvatarRootProps,
+  Tooltip,
+} from '@dxos/react-ui';
+import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 
-import { invitationStatusValue } from '../../util';
+import { type SharedInvitationListProps } from './InvitationListProps';
+import { toEmoji } from '../../util';
+import { AuthCode } from '../AuthCode';
 import { CopyButtonIconOnly } from '../Clipboard';
-import { SharedInvitationListProps } from './InvitationListProps';
-import { InvitationStatusAvatar } from './InvitationStatusAvatar';
 
 export interface InvitationListItemProps extends SharedInvitationListProps {
   invitation: CancellableInvitationObservable;
-  onClickRemove: (invitation: CancellableInvitationObservable) => void;
+  onClickRemove?: (invitation: CancellableInvitationObservable) => void;
 }
 
-export const InvitationListItem = ({
+export interface InvitationListItemImplProps extends InvitationListItemProps {
+  invitationStatus: InvitationStatus;
+}
+
+export const InvitationListItem = (props: InvitationListItemProps) => {
+  const { invitation } = props;
+  const invitationStatus = useInvitationStatus(invitation);
+  return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
+};
+
+const avatarProps: Pick<AvatarRootProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
+
+const AvatarStackEffect = ({ animation, status }: Pick<AvatarRootProps, 'status' | 'animation'>) => {
+  const { tx } = useThemeContext();
+  return (
+    <>
+      <span
+        role='none'
+        className={mx('absolute inline-start-1 inline-end-auto opacity-20', getSize(avatarProps.size!))}
+      >
+        <span
+          role='none'
+          className={tx('avatar.ring', 'avatar__ring', { ...avatarProps, status, animation })}
+          style={{ animationDelay: '400ms' }}
+        />
+      </span>
+      <span
+        role='none'
+        className={mx('absolute inline-start-2 inline-end-auto opacity-50', getSize(avatarProps.size!))}
+      >
+        <span
+          role='none'
+          className={tx('avatar.ring', 'avatar__ring', { ...avatarProps, status, animation })}
+          style={{ animationDelay: '200ms' }}
+        />
+      </span>
+    </>
+  );
+};
+
+export const InvitationListItemImpl = ({
   invitation,
+  invitationStatus: propsInvitationStatus,
   send,
   onClickRemove,
   createInvitationUrl,
-}: InvitationListItemProps) => {
+}: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status, haltedAt, invitationCode, authCode } = useInvitationStatus(invitation);
-  const statusValue = invitationStatusValue.get(status) ?? 0;
+  const { cancel, status: invitationStatus, invitationCode, authCode, type } = propsInvitationStatus;
 
-  const isCancellable = statusValue < 5 && statusValue >= 0;
-  const showShare = statusValue < 3 && statusValue >= 0;
-  const showAuthCode = statusValue === 3;
+  const isCancellable = !(
+    [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
+  );
 
-  const handleClickRemove = useCallback(() => onClickRemove(invitation), [invitation, onClickRemove]);
+  const showShare =
+    type === Invitation.Type.MULTIUSE ||
+    [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0;
+
+  const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
+
+  const handleClickRemove = useCallback(() => onClickRemove?.(invitation), [invitation, onClickRemove]);
 
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
+  const invitationId = invitation?.get().invitationId;
+
+  const avatarAnimation = [
+    Invitation.State.INIT,
+    Invitation.State.CONNECTING,
+    Invitation.State.CONNECTED,
+    Invitation.State.READY_FOR_AUTHENTICATION,
+    Invitation.State.AUTHENTICATING,
+  ].includes(invitationStatus)
+    ? 'pulse'
+    : 'none';
+
+  const avatarError = [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].includes(
+    invitationStatus,
+  );
+
+  const avatarGreen = [
+    Invitation.State.CONNECTED,
+    Invitation.State.READY_FOR_AUTHENTICATION,
+    Invitation.State.AUTHENTICATING,
+    Invitation.State.SUCCESS,
+  ].includes(invitationStatus);
+
+  const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
 
   return (
-    <ListItem.Root id={invitationCode} classNames={['rounded p-2 flex gap-2 items-center', chromeSurface]}>
+    <ListItem.Root id={invitationCode} classNames='flex gap-2 pis-3 pie-1 items-center relative'>
       <ListItem.Heading classNames='sr-only'>
-        {t('invitation heading') /* todo(thure): Make this more accessible. */}
+        {t(type === Invitation.Type.MULTIUSE ? 'invite many list item label' : 'invite one list item label')}
       </ListItem.Heading>
-      <InvitationStatusAvatar {...{ status, haltedAt, size: 8, invitationId: invitation?.get().invitationId }} />
+      {type === Invitation.Type.MULTIUSE && <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} />}
+      <Tooltip.Root>
+        <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
+          <Tooltip.Trigger asChild>
+            <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full']}>
+              <Avatar.Fallback text={toEmoji(invitationId)} />
+            </Avatar.Frame>
+          </Tooltip.Trigger>
+        </Avatar.Root>
+        <Tooltip.Portal>
+          <Tooltip.Content side='left' classNames='z-[70]'>
+            {t(type === Invitation.Type.MULTIUSE ? 'invite many qr label' : 'invite one qr label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
       {showShare && invitationUrl ? (
         <>
           <Button
             variant='ghost'
-            classNames='grow justify-start'
+            classNames='grow justify-start font-system-medium'
             onClick={() => send({ type: 'selectInvitation', invitation })}
             data-testid='show-qrcode'
           >
@@ -55,19 +153,29 @@ export const InvitationListItem = ({
           <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
-        <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+        <AuthCode code={authCode} classNames='grow' />
+      ) : invitationStatus === Invitation.State.CONNECTING ? (
+        <span className='pli-2 grow text-neutral-500'>Connecting...</span>
+      ) : invitationStatus === Invitation.State.AUTHENTICATING ? (
+        <span className='pli-2 grow text-neutral-500'>Authenticating...</span>
+      ) : invitationStatus === Invitation.State.ERROR || invitationStatus === Invitation.State.TIMEOUT ? (
+        <span className='pli-2 grow text-neutral-500'>Failed</span>
+      ) : invitationStatus === Invitation.State.CANCELLED ? (
+        <span className='pli-2 grow text-neutral-500'>Cancelled</span>
+      ) : invitationStatus === Invitation.State.SUCCESS ? (
+        <span className='pli-2 grow truncate'>User joined</span>
       ) : (
-        <span role='none' className='grow' />
+        <span className='grow'> </span>
       )}
       {isCancellable ? (
         <Button variant='ghost' classNames='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
           <span className='sr-only'>{t('cancel invitation label')}</span>
-          <ProhibitInset className={getSize(4)} weight='bold' />
+          <X className={getSize(5)} weight='bold' />
         </Button>
       ) : (
         <Button variant='ghost' classNames='flex gap-1' onClick={handleClickRemove} data-testid='remove-invitation'>
           <span className='sr-only'>{t('remove invitation label')}</span>
-          <X className={getSize(4)} weight='bold' />
+          <X className={getSize(5)} weight='bold' />
         </Button>
       )}
     </ListItem.Root>

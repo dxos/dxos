@@ -6,17 +6,17 @@ next: ./tutorial
 
 # Quick Start Guide
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. 
+DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
 This guide shows how to use [ECHO](./platform/) for state consensus and [HALO](./platform/halo) for decentralized identity.
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
 
 ::: note In this guide
 
-- [Installation and usage](#installation).
-- Using with [React](#react).
-- Project [templates](#project-templates).
-- [Deploy](#deployment) to Netlify.
+*   [Installation and usage](#installation).
+*   Using with [React](#react).
+*   Project [templates](#project-templates).
+*   [Deploy](#deployment) to Netlify.
 
 :::
 
@@ -30,7 +30,7 @@ npm install --save @dxos/client
 
 Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 
-```ts file=./snippets/create-client.ts#L5-
+```ts file=./typescript/snippets/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
 // create a client
@@ -39,6 +39,7 @@ const client = new Client();
 const main = async () => {
   await client.initialize();
   // use client here
+
 };
 
 main();
@@ -60,15 +61,12 @@ npm install --save @dxos/react-client
 
 Create a `ClientProvider` to wrap your application. This allows nested components to use the hooks.
 
-```tsx file=./snippets/create-client-react.tsx#L5-
+```tsx file=./react/snippets/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ClientProvider,
-  useIdentity,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 const Component = () => {
   // Get the user to log in before a space can be obtained.
@@ -123,15 +121,15 @@ This will start the development server and print a URL to the console. Opening t
 
 ::: info Why this is cool:
 
-- State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
-- Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. The app running on `localhost` subscribes to data through a local shared memory connection with the [HALO](./platform/halo) [PWA](./glossary#pwa) on `halo.dxos.org` which is fast and works offline. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
-- Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-- User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
-- Everything works offline.
-- Real-time collaboration is possible when online.
-- There are **no servers** that store any data.
-- There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
-- **There is no need for an API tier.** The app has everything it needs on the client.
+*   State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
+*   Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. The app running on `localhost` subscribes to data through a local shared memory connection with the [HALO](./platform/halo) [PWA](./glossary#pwa) on `halo.dxos.org` which is fast and works offline. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
+*   Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
+*   User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
+*   Everything works offline.
+*   Real-time collaboration is possible when online.
+*   There are **no servers** that store any data.
+*   There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
+*   **There is no need for an API tier.** The app has everything it needs on the client.
 
 :::
 
@@ -143,24 +141,24 @@ The build command is `npm run build` which produces a static bundle in the outpu
 
 For example, with [Netlify](https://netlify.com):
 
-1. Go to "Add new site", and click "Import an existing project."
-2. Link to your application's repository.
-3. Set the build command and output directory.
-4. Publish!
+1.  Go to "Add new site", and click "Import an existing project."
+2.  Link to your application's repository.
+3.  Set the build command and output directory.
+4.  Publish!
 
 If you would like to host the application yourself, see our guide on [using KUBE for self-sovereign hosting](./kube/deploying.md).
 
 ## Next steps
 
-- Step-by-step [React tutorial](./tutorial.md)
-- ECHO with [React](./react/)
-- ECHO with [TypeScript](./typescript/)
-- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+*   Step-by-step [React tutorial](./tutorial.md)
+*   ECHO with [React](./react/)
+*   ECHO with [TypeScript](./typescript/)
+*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-- Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-- DXOS [repository on GitHub](https://github.com/dxos/dxos)
-- File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
+*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀

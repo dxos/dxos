@@ -4,19 +4,19 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, asyncTimeout } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
-import { DataSpace, InvitationsServiceImpl, ServiceContext } from '@dxos/client-services';
+import { type Space } from '@dxos/client-protocol';
+import { type DataSpace, InvitationsServiceImpl, type ServiceContext } from '@dxos/client-services';
 import {
-  PerformInvitationParams,
-  Result,
+  type PerformInvitationParams,
+  type Result,
   createIdentity,
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
+import { invariant } from '@dxos/invariant';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -280,8 +280,8 @@ describe('Invitations', () => {
         const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
-        assert(hostContext.dataSpaceManager);
-        assert(guestContext.dataSpaceManager);
+        invariant(hostContext.dataSpaceManager);
+        invariant(guestContext.dataSpaceManager);
 
         const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
           hostContext.getInvitationHandler(invitation),
@@ -376,11 +376,11 @@ describe('Invitations', () => {
       afterTest(() => Promise.all([host.destroy()]));
       afterTest(() => Promise.all([guest.destroy()]));
 
-      space = await host.createSpace();
+      space = await host.spaces.create();
     });
 
     testSuite(
-      () => ({ host: space, guest }),
+      () => ({ host: space, guest: guest.spaces }),
       () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });

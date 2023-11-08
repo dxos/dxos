@@ -2,20 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import platform from 'platform';
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
-import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-pipeline';
-import { FeedStore } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
+import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
+import { type FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
+import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { IdentityRecord, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { AdmittedFeed, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { trace as Trace } from '@dxos/tracing';
 import { deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
@@ -47,6 +50,7 @@ export type CreateIdentityOptions = {
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
+@Trace.resource()
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
@@ -65,16 +69,16 @@ export class IdentityManager {
     return this._identity;
   }
 
-  async open() {
+  @Trace.span({ showInBrowserTimeline: true })
+  async open(ctx: Context) {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
-    await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();
     log('identity record', { identityRecord });
     if (identityRecord) {
       this._identity = await this._constructIdentity(identityRecord);
-      await this._identity.open();
+      await this._identity.open(ctx);
       await this._identity.ready();
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
@@ -86,7 +90,7 @@ export class IdentityManager {
   }
 
   async close() {
-    await this._identity?.close();
+    await this._identity?.close(new Context());
   }
 
   async createIdentity({ displayName }: CreateIdentityOptions = {}) {
@@ -106,7 +110,7 @@ export class IdentityManager {
     };
 
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open();
+    await identity.open(new Context());
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
@@ -132,6 +136,16 @@ export class IdentityManager {
       // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
       credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
+      // Write device metadata to profile.
+      credentials.push(
+        await generator.createDeviceProfile({
+          platform: platform.name,
+          platformVersion: platform.version,
+          architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
+          os: platform.os?.family,
+          osVersion: platform.os?.version,
+        }),
+      );
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
           credential: { credential },
@@ -174,9 +188,9 @@ export class IdentityManager {
         controlTimeframe: params.controlTimeframe,
       },
     };
-    const identity = await this._constructIdentity(identityRecord);
 
-    await identity.open();
+    const identity = await this._constructIdentity(identityRecord);
+    await identity.open(new Context());
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
     await this._identity.ready();
@@ -188,6 +202,26 @@ export class IdentityManager {
     this.stateUpdate.emit();
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
     return identity;
+  }
+
+  /**
+   * Update the profile document of an existing identity.
+   */
+  async updateProfile(profile: ProfileDocument) {
+    invariant(this._identity, 'Identity not initialized.');
+    // TODO(wittjosiah): Use CredentialGenerator.
+    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
+      subject: this._identity.identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.IdentityProfile',
+        profile,
+      },
+    });
+
+    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    this.stateUpdate.emit();
+    return profile;
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {

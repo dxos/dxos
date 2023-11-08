@@ -7,10 +7,10 @@ import React from 'react';
 
 import { Document } from '@braneframe/types';
 import { DocumentStack, Presentation } from '@dxos/kai-types';
-import { Space, Text } from '@dxos/react-client/echo';
+import { type Space, TextObject } from '@dxos/react-client/echo';
 
-import { FrameRuntime } from '../../registry';
 import { slides } from './slides';
+import { type FrameRuntime } from '../../registry';
 
 export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 
@@ -24,7 +24,7 @@ export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
     slides.echo.forEach((content) => {
       presentation!.stack.sections.push(
         new DocumentStack.Section({
-          object: new Document({ content: new Text(content) }),
+          object: new Document({ content: new TextObject(content) }),
         }),
       );
     });

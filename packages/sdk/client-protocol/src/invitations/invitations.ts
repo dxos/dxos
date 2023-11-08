@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { MulticastObservable, Observable, Subscriber } from '@dxos/async';
+import { MulticastObservable, type Observable, type Subscriber } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
@@ -12,16 +11,16 @@ export const AUTHENTICATION_CODE_LENGTH = 6;
 export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 
 export interface Invitations {
-  created: MulticastObservable<CancellableInvitationObservable[]>;
-  accepted: MulticastObservable<AuthenticatingInvitationObservable[]>;
-  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+  created: MulticastObservable<CancellableInvitation[]>;
+  accepted: MulticastObservable<AuthenticatingInvitation[]>;
+  share(options?: Partial<Invitation>): CancellableInvitation;
+  join(invitation: Invitation): AuthenticatingInvitation;
 }
 
 /**
  * Base class for all invitation observables and providers.
  */
-export class CancellableInvitationObservable extends MulticastObservable<Invitation> {
+export class CancellableInvitation extends MulticastObservable<Invitation> {
   private readonly _onCancel: () => Promise<void>;
 
   constructor({
@@ -45,7 +44,7 @@ export class CancellableInvitationObservable extends MulticastObservable<Invitat
 /**
  * Cancelable observer that relays authentication requests.
  */
-export class AuthenticatingInvitationObservable extends CancellableInvitationObservable {
+export class AuthenticatingInvitation extends CancellableInvitation {
   private readonly _onAuthenticate: (authCode: string) => Promise<void>;
 
   constructor({
@@ -74,7 +73,7 @@ export class AuthenticatingInvitationObservable extends CancellableInvitationObs
  * @deprecated
  */
 // TODO(wittjosiah): Move to testing.
-export const wrapObservable = async (observable: CancellableInvitationObservable): Promise<Invitation> => {
+export const wrapObservable = async (observable: CancellableInvitation): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const subscription = observable.subscribe(
       (invitation: Invitation | undefined) => {

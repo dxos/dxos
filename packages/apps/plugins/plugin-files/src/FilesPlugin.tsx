@@ -3,26 +3,32 @@
 //
 
 import { FilePlus, FolderPlus } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
+import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
-import { GraphNode, GraphNodeAction, isGraphNode } from '@braneframe/plugin-graph';
-import { MarkdownProvides } from '@braneframe/plugin-markdown';
-import { TreeViewAction, TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { type Node } from '@braneframe/plugin-graph';
+import { type MarkdownProvides } from '@braneframe/plugin-markdown';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseLayoutPlugin,
+  parseGraphPlugin,
+  parseIntentPlugin,
+  LayoutAction,
+} from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { LocalFileMain, LocalFileMainPermissions } from './components';
+import { LocalFileMain } from './components';
 import translations from './translations';
 import {
   FILES_PLUGIN,
   FILES_PLUGIN_SHORT_ID,
-  LocalEntity,
-  LocalFile,
+  type LocalEntity,
+  type LocalFile,
   LocalFilesAction,
-  LocalFilesPluginProvides,
+  type LocalFilesPluginProvides,
 } from './types';
 import {
   findFile,
@@ -35,14 +41,15 @@ import {
   localEntityToGraphNode,
 } from './util';
 
+// TODO(burdon): Rename package plugin-file (singular).
+
 export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
-  let onFilesUpdate: ((node?: GraphNode<LocalEntity>) => void) | undefined;
+  let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
   const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
     current: undefined,
   });
   const subscriptions = new EventSubscriptions();
-  const fileSubs = new EventSubscriptions();
 
   const handleKeyDown = async (event: KeyboardEvent) => {
     const modifier = event.ctrlKey || event.metaKey;
@@ -58,7 +65,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       id: FILES_PLUGIN,
       shortId: FILES_PLUGIN_SHORT_ID,
     },
-    init: async () => {
+    initialize: async () => {
       return {
         markdown: {
           onChange: (text) => {
@@ -89,105 +96,108 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         );
       }
 
-      subscriptions.add(
-        state.$files!.subscribe(async (files) => {
-          await localforage.setItem(FILES_PLUGIN, files.map((file) => file.handle).filter(Boolean));
-          onFilesUpdate?.();
-        }),
-      );
-
-      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
-      if (treeViewPlugin) {
-        const handleUpdate = () => {
-          const current =
-            (treeViewPlugin.provides.treeView.active[0]?.startsWith(FILES_PLUGIN) &&
-              findFile(state.files, treeViewPlugin.provides.treeView.active)) ||
-            undefined;
-
-          if (state.current !== current) {
-            state.current = current;
-          }
-        };
-
-        subscriptions.add(state.$files!.subscribe(handleUpdate));
-        subscriptions.add(treeViewPlugin.provides.treeView.$active!.subscribe(handleUpdate));
+      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      if (layoutPlugin && graphPlugin) {
+        subscriptions.add(
+          effect(() => {
+            const active = layoutPlugin.provides.layout.active;
+            const path =
+              active &&
+              graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
+            const current =
+              (active?.startsWith(FILES_PLUGIN_SHORT_ID) && path && findFile(state.files, path)) || undefined;
+            if (state.current !== current) {
+              state.current = current;
+            }
+          }),
+        );
       }
     },
     unload: async () => {
       onFilesUpdate = undefined;
-      fileSubs.clear();
       subscriptions.clear();
       window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
       translations,
-      component: (data, role) => {
-        switch (role) {
-          case 'main':
-            if (isGraphNode(data) && isLocalFile(data.data) && data.attributes?.disabled) {
-              return LocalFileMainPermissions;
-            }
-            break;
-        }
+      surface: {
+        component: (data, role) => {
+          if (!isLocalFile(data.active)) {
+            return null;
+          }
 
-        return null;
-      },
-      components: {
-        Main: LocalFileMain,
+          switch (role) {
+            case 'main': {
+              return <LocalFileMain file={data.active} />;
+            }
+          }
+
+          return null;
+        },
       },
       graph: {
-        nodes: (parent, invalidate) => {
+        builder: ({ parent, plugins }) => {
           if (parent.id !== 'root') {
-            return [];
+            return;
           }
 
-          onFilesUpdate = invalidate;
-          const fileIndices = getIndices(state.files.length);
-          return state.files.map((entity, index) => localEntityToGraphNode(entity, fileIndices[index]));
-        },
-        actions: (parent) => {
-          if (parent.id !== 'root') {
-            return [];
-          }
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          const actionIndices = getIndices(2);
-          const actions: GraphNodeAction[] = [
-            {
-              id: 'open-file-handle',
-              index: actionIndices[0],
-              label: ['open file label', { ns: FILES_PLUGIN }],
-              icon: (props) => <FilePlus {...props} />,
-              intent: [
-                {
-                  plugin: FILES_PLUGIN,
-                  action: LocalFilesAction.OPEN_FILE,
-                },
-                { action: TreeViewAction.ACTIVATE },
-              ],
-            },
-          ];
+          const [groupNode] = parent.addNode(FILES_PLUGIN, {
+            id: 'all-files',
+            label: ['plugin name', { ns: FILES_PLUGIN }],
+            // TODO(burdon): Factor out palette constants.
+            properties: { palette: 'yellow', role: 'branch' },
+          });
+
+          groupNode.addAction({
+            id: 'open-file-handle',
+            label: ['open file label', { ns: FILES_PLUGIN }],
+            icon: (props) => <FilePlus {...props} />,
+            invoke: () => [
+              {
+                plugin: FILES_PLUGIN,
+                action: LocalFilesAction.OPEN_FILE,
+              },
+              { action: LayoutAction.ACTIVATE },
+            ],
+          });
 
           if ('showDirectoryPicker' in window) {
-            actions.push({
+            groupNode.addAction({
               id: 'open-directory',
-              index: actionIndices[1],
               label: ['open directory label', { ns: FILES_PLUGIN }],
               icon: (props) => <FolderPlus {...props} />,
-              intent: [
-                {
-                  plugin: FILES_PLUGIN,
-                  action: LocalFilesAction.OPEN_DIRECTORY,
-                },
-                { action: TreeViewAction.ACTIVATE },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: FILES_PLUGIN,
+                    action: LocalFilesAction.OPEN_DIRECTORY,
+                  },
+                  { action: LayoutAction.ACTIVATE },
+                ]),
             });
           }
 
-          return actions;
+          onFilesUpdate = () => {
+            const dispatch = intentPlugin?.provides.intent.dispatch;
+            if (dispatch) {
+              state.files.forEach((entity, index) => localEntityToGraphNode(entity, groupNode, dispatch));
+            }
+          };
+          onFilesUpdate();
+
+          const unsubscribe = state.$files!.subscribe(async (files) => {
+            await localforage.setItem(FILES_PLUGIN, files.map((file) => file.handle).filter(Boolean));
+            onFilesUpdate?.();
+          });
+
+          return () => unsubscribe();
         },
       },
       intent: {
-        resolver: async (intent, plugins) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case LocalFilesAction.OPEN_FILE: {
               if ('showOpenFilePicker' in window) {
@@ -238,7 +248,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               if ('children' in entity) {
                 const permission = await (entity.handle as any).requestPermission({ mode: 'readwrite' });
                 if (permission === 'granted') {
-                  entity.children = await getDirectoryChildren(entity.handle);
+                  entity.children = await getDirectoryChildren(entity.handle, entity.handle.name);
                   entity.permission = permission;
                   onFilesUpdate?.();
                 }

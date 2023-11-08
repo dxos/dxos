@@ -2,11 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client/echo';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 /**
  * Kanban data model.
@@ -17,7 +21,6 @@ import { isTypedObject } from '@dxos/client/echo';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-// TODO(burdon): Make id consistent with other plugins.
 export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 
 const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
@@ -26,7 +29,11 @@ export enum KanbanAction {
   CREATE = `${KANBAN_ACTION}/create`,
 }
 
-export type KanbanPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type KanbanPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides;
 
 // TODO(burdon): Undo?
 // TODO(burdon): Typescript types (replace proto with annotations?)
@@ -47,7 +54,7 @@ export interface KanbanModel {
 (globalThis as any)[KanbanType.name] = KanbanType;
 
 export const isKanban = (data: unknown): data is KanbanType => {
-  return isTypedObject(data) && KanbanType.type.name === data.__typename;
+  return isTypedObject(data) && KanbanType.schema.typename === data.__typename;
 };
 
 export type Location = {

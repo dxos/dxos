@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { Signer, subtleCrypto } from '@dxos/crypto';
+import { type Signer, subtleCrypto } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { TypedMessage } from '@dxos/protocols';
-import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type TypedMessage } from '@dxos/protocols';
+import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
@@ -69,9 +68,9 @@ export const createCredential = async ({
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);
-  credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
+  credential.proof!.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {
-    credential.proof.chain = chain;
+    credential.proof!.chain = chain;
   }
 
   credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload));

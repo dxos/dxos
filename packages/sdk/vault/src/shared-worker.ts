@@ -2,15 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { namespace } from './util';
 
-const LOG_FILTER = 'warn';
+// TODO(burdon): Make configurable (NOTE: levels lower than info affect performance).
+const LOG_FILTER = 'info';
 
 void initializeAppTelemetry({
   namespace,
@@ -26,9 +28,9 @@ const workerRuntime = new WorkerRuntime(async () => {
 });
 
 // Allow to access host from console.
-(globalThis as any).__DXOS__ = {
+mountDevtoolsHooks({
   host: workerRuntime.host,
-};
+});
 
 const start = Date.now();
 void workerRuntime.start().then(

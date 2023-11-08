@@ -5,14 +5,14 @@
 import React from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Main, useSidebar } from '@dxos/aurora';
 import { useTelemetry } from '@dxos/react-appkit';
 import { SpaceState, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { Main, useSidebars } from '@dxos/react-ui';
 
+import { SpacePanel } from './SpacePanel';
 import { Surface, Sidebar } from '../containers';
 import { createPath, defaultFrameId, useAppRouter, useAppState } from '../hooks';
-import { SpacePanel } from './SpacePanel';
 
 /**
  * Home page with current space.
@@ -26,7 +26,7 @@ const SpacePage = () => {
   const navigate = useNavigate(); // TODO(burdon): Factor out router (party of app state).
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-  const { sidebarOpen } = useSidebar();
+  const { navigationSidebarOpen } = useSidebars();
 
   if (!space && spaces.length > 0 && !spaceInvitationCode) {
     return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
@@ -47,10 +47,10 @@ const SpacePage = () => {
     //  Also, `<main>` should be the content not the container that contains the sidebar.
     <div className='flex flex-col h-full overflow-hidden'>
       <Sidebar
-        className={['!block-start-appbar md:is-sidebar', !sidebarOpen && 'md:-inline-start-sidebar']}
+        className={['!block-start-appbar md:is-sidebar', !navigationSidebarOpen && 'md:-inline-start-sidebar']}
         onNavigate={(path) => navigate(path)}
       />
-      <Main.Content classNames={['flex flex-col bs-full overflow-hidden', sidebarOpen && 'md:pis-sidebar']}>
+      <Main.Content classNames={['flex flex-col bs-full overflow-hidden', navigationSidebarOpen && 'md:pis-sidebar']}>
         <SpacePanel />
       </Main.Content>
     </div>

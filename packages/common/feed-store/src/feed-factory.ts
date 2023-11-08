@@ -2,15 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { RandomAccessStorageConstructor } from 'random-access-storage';
+import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Signer, subtleCrypto } from '@dxos/crypto';
+import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import type { Hypercore, HypercoreOptions } from '@dxos/hypercore';
+import type { HypercoreOptions } from '@dxos/hypercore';
 import { createCrypto, hypercore } from '@dxos/hypercore';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Directory } from '@dxos/random-access-storage';
+import { type Directory } from '@dxos/random-access-storage';
+
+import { FeedWrapper } from './feed-wrapper';
 
 export type FeedFactoryOptions = {
   root: Directory;
@@ -23,7 +25,7 @@ export type FeedOptions = HypercoreOptions & {
   /**
    * Optional hook called before data is written after being verified.
    * Called for writes done by this peer as well as for data replicated from other peers.
-   * NOTE: Remember to call the callback.
+   * NOTE: The callback must be invoked to complete the write operation.
    * @param peer Always null in hypercore@9.12.0.
    */
   onwrite?: (index: number, data: any, peer: null, cb: (err: Error | null) => void) => void;
@@ -33,31 +35,22 @@ export type FeedOptions = HypercoreOptions & {
  * Hypercore factory.
  */
 export class FeedFactory<T extends {}> {
-  private readonly _storage: (publicKey: PublicKey) => RandomAccessStorageConstructor;
-
   private readonly _root: Directory;
   private readonly _signer?: Signer;
   private readonly _hypercoreOptions?: HypercoreOptions;
 
-  // TODO(burdon): Must patch codec here createCodecEncoding.
-
   constructor({ root, signer, hypercore }: FeedFactoryOptions) {
+    log('FeedFactory', { options: hypercore });
     this._root = root ?? failUndefined();
     this._signer = signer;
     this._hypercoreOptions = hypercore;
-
-    this._storage = (publicKey: PublicKey) => (filename) => {
-      const dir = this._root.createDirectory(publicKey.toHex());
-      const { type, native } = dir.getOrCreateFile(filename);
-      log('created', {
-        path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`,
-      });
-
-      return native;
-    };
   }
 
-  async createFeed(publicKey: PublicKey, options?: FeedOptions): Promise<Hypercore<T>> {
+  get storageRoot() {
+    return this._root;
+  }
+
+  async createFeed(publicKey: PublicKey, options?: FeedOptions): Promise<FeedWrapper<T>> {
     if (options?.writable && !this._signer) {
       throw new Error('Signer required to create writable feeds.');
     }
@@ -68,8 +61,11 @@ export class FeedFactory<T extends {}> {
     // Required due to hypercore's 32-byte key limit.
     const key = await subtleCrypto.digest('SHA-256', Buffer.from(publicKey.toHex()));
 
-    const opts = Object.assign(
-      {},
+    const opts = defaultsDeep(
+      {
+        // sparse: false,
+        // stats: false,
+      },
       this._hypercoreOptions,
       {
         secretKey: this._signer && options?.writable ? Buffer.from('secret') : undefined,
@@ -80,6 +76,17 @@ export class FeedFactory<T extends {}> {
       options,
     );
 
-    return hypercore(this._storage(publicKey), Buffer.from(key), opts);
+    const storageDir = this._root.createDirectory(publicKey.toHex());
+    const makeStorage = (filename: string) => {
+      const { type, native } = storageDir.getOrCreateFile(filename);
+      log('created', {
+        path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`,
+      });
+
+      return native;
+    };
+
+    const core = hypercore(makeStorage, Buffer.from(key), opts);
+    return new FeedWrapper(core, publicKey, storageDir);
   }
 }

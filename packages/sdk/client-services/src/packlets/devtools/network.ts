@@ -5,15 +5,15 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { SignalManager } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { type SignalManager } from '@dxos/messaging';
+import { type NetworkManager } from '@dxos/network-manager';
 import {
-  GetNetworkPeersRequest,
-  GetNetworkPeersResponse,
-  SubscribeToNetworkTopicsResponse,
-  SubscribeToSignalStatusResponse,
-  SignalResponse,
-  SubscribeToSwarmInfoResponse,
+  type GetNetworkPeersRequest,
+  type GetNetworkPeersResponse,
+  type SubscribeToNetworkTopicsResponse,
+  type SubscribeToSignalStatusResponse,
+  type SignalResponse,
+  type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
@@ -45,7 +45,11 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
       });
     });
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
-      next({ swarmEvent: swarmEvent.swarmEvent, receivedAt: new Date() });
+      next({
+        swarmEvent: swarmEvent.swarmEvent,
+        topic: swarmEvent.topic.asUint8Array(),
+        receivedAt: new Date(),
+      });
     });
     return () => {
       return ctx.dispose();

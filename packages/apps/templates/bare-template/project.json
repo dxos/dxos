@@ -3,31 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "echo build ok",
-      "dependsOn": [
-        "^build",
-        "build-resources",
-        "build-tsc"
-      ]
-    },
-    "build-resources": {
-      "dependsOn": [
-        "build-tsc"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "build-resources"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "build-tsc": {
-      "dependsOn": [
-        "^build",
-        "^build-tsc"
-      ],
-      "executor": "@nx/js:tsc",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/apps/templates/bare-template/src/config.t.ts",
         "outputPath": "packages/apps/templates/bare-template/dist",
@@ -52,10 +28,35 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/templates/bare-template/{src,test}/**/*.{ts,js}?(x)"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "checkLeaks": false,
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/apps/templates/bare-template",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/apps/templates/bare-template",
+        "resultsPath": "test-results/packages/apps/templates/bare-template",
+        "testPatterns": [
+          "packages/apps/templates/bare-template/test/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/templates/bare-template/test/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ]
     }
   }

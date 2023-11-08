@@ -9,7 +9,7 @@ import { JSONTree } from 'react-json-tree';
 import { Trigger } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { createProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
@@ -43,11 +43,11 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
       },
       exposed: {},
       handlers: {},
-      port: await port.wait()
+      port: await port.wait(),
     });
     await client.open();
 
@@ -61,13 +61,13 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
           setError(error.message);
         }
         setClosed(true);
-      }
+      },
     );
 
     setClosed(false);
 
     return () => {
-      stream.close();
+      void stream.close();
       window.removeEventListener('message', messageHandler);
     };
   }, []);
@@ -79,7 +79,7 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
           data={{
             closed,
             error,
-            value
+            value,
           }}
         />
       </div>
@@ -91,7 +91,7 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
           //   https://stackoverflow.com/a/5268240/2804332
           src='http://127.0.0.1:5173/iframe-worker.html'
           style={{
-            flexGrow: 1
+            flexGrow: 1,
           }}
         />
       )}
@@ -109,7 +109,7 @@ if (typeof SharedWorker !== 'undefined') {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <App worker={worker} />
-      </StrictMode>
+      </StrictMode>,
     );
   })();
 } else {

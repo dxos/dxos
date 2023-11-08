@@ -3,15 +3,15 @@
 //
 
 import express from 'express';
-import http from 'http';
+import type http from 'http';
 import { join } from 'node:path';
 import { getPortPromise } from 'portfinder';
 
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { FunctionContext, FunctionHandler, FunctionsManifest, Response } from '../function';
+import { type FunctionContext, type FunctionHandler, type FunctionsManifest, type Response } from '../function';
 
 const DEFAULT_PORT = 7000;
 
@@ -24,7 +24,7 @@ export type DevServerOptions = {
  * Functions dev server provides a local HTTP server for testing functions.
  */
 export class DevServer {
-  private readonly _functionHandlers: Record<string, FunctionHandler> = {};
+  private readonly _handlers: Record<string, FunctionHandler<any>> = {};
 
   private _server?: http.Server;
   private _port?: number;
@@ -33,7 +33,7 @@ export class DevServer {
   // prettier-ignore
   constructor(
     private readonly _client: Client,
-    private readonly _options: DevServerOptions
+    private readonly _options: DevServerOptions,
   ) {}
 
   get port() {
@@ -45,20 +45,20 @@ export class DevServer {
   }
 
   get functions() {
-    return Object.keys(this._functionHandlers);
+    return Object.keys(this._handlers);
   }
 
   async initialize() {
-    for (const [name, _] of Object.entries(this._options.manifest.functions)) {
+    for (const { id } of this._options.manifest.functions) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const module = require(join(this._options.directory, name));
+        const module = require(join(this._options.directory, id));
         const handler = module.default;
         if (typeof handler !== 'function') {
-          throw new Error(`Handler must export default function: ${name}`);
+          throw new Error(`Handler must export default function: ${id}`);
         }
 
-        this._functionHandlers[name] = handler;
+        this._handlers[id] = handler;
       } catch (err) {
         log.error('parsing function (check functions.yml manifest)', err);
       }
@@ -91,7 +91,8 @@ export class DevServer {
 
       void (async () => {
         try {
-          await this._functionHandlers[functionName](req.body, context);
+          // TODO(burdon): Typed event handler.
+          await this._handlers[functionName]({ event: req.body, context });
         } catch (err: any) {
           res.statusCode = 500;
           res.end(err.message);
@@ -104,11 +105,16 @@ export class DevServer {
 
     // TODO(burdon): Check plugin is registered.
     //  TypeError: Cannot read properties of undefined (reading 'register')
-    const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
-      endpoint: this.endpoint!,
-      functions: this.functions.map((name) => ({ name })),
-    });
-    this._registrationId = registrationId;
+    try {
+      const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
+        endpoint: this.endpoint!,
+        functions: this.functions.map((name) => ({ name })),
+      });
+      this._registrationId = registrationId;
+    } catch (err: any) {
+      await this.stop();
+      throw new Error('FunctionRegistryService not available; check config (agent.plugins.functions).');
+    }
   }
 
   async stop() {

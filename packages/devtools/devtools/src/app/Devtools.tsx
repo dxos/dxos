@@ -2,12 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-import { HashRouter } from 'react-router-dom';
+import { deepSignal } from 'deepsignal/react';
+import React, { type FC, useEffect } from 'react';
+import { HashRouter, useLocation } from 'react-router-dom';
 
-import { DensityProvider } from '@dxos/aurora';
-import { appkitTranslations, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
-import { ClientServices, Client, ClientContext } from '@dxos/react-client';
+import {
+  BASE_TELEMETRY_PROPERTIES,
+  getTelemetryIdentifier,
+  setupTelemetryListeners,
+  withTelemetry,
+} from '@braneframe/plugin-telemetry/headless';
+import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
+import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/react-ui-theme';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
@@ -16,30 +23,62 @@ const Routes = () => {
   return useRoutes();
 };
 
+// TODO(wittjosiah): Migrate devtools to use surface plugins.
 const Telemetry = ({ namespace }: { namespace: string }) => {
-  useTelemetry({ namespace });
+  const location = useLocation();
+  const client = useClient();
+
+  useEffect(() => {
+    void withTelemetry((Telemetry) => {
+      Telemetry.event({
+        identityId: getTelemetryIdentifier(client),
+        name: `${namespace}.page.load`,
+        properties: {
+          ...BASE_TELEMETRY_PROPERTIES,
+          href: window.location.href,
+          loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+        },
+      });
+    });
+
+    return setupTelemetryListeners(namespace, client);
+  }, []);
+
+  useEffect(() => {
+    void withTelemetry((Telemetry) => {
+      Telemetry.page({
+        identityId: getTelemetryIdentifier(client),
+        properties: BASE_TELEMETRY_PROPERTIES,
+      });
+    });
+  }, [location]);
+
   return null;
 };
 
-// Entry point that does not have opinion on Client, so it can be reused in extension.
-export const Devtools = ({
-  context,
+/**
+ * Entrypoint for app and extension (no direct dependency on Client).
+ */
+export const Devtools: FC<{ client: Client; services: ClientServices; namespace?: string }> = ({
+  client,
+  services,
   namespace = telemetryNamespace,
-}: {
-  context?: { client: Client; services?: ClientServices };
-  namespace?: string;
 }) => {
-  // const fallback = <Fallback message='Loading...' />;
-  const fallback = null;
-  if (!context) {
-    return fallback;
-  }
+  const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  const devtoolsTx = bindTheme({
+    ...defaultTheme,
+    toolbar: {
+      root: (props, ...etc) => {
+        return toolbarRoot(props, 'p-2', ...etc);
+      },
+    },
+  });
 
   return (
-    <ThemeProvider appNs='devtools' resourceExtensions={[appkitTranslations]} fallback={fallback}>
+    <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
-          <ClientContext.Provider value={context}>
+          <ClientContext.Provider value={{ client, services }}>
             <DevtoolsContextProvider>
               <HashRouter>
                 <Telemetry namespace={namespace} />

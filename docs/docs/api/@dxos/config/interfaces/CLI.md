@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [app]()
 Type: <code>[AppServe](/api/@dxos/config/interfaces/AppServe)</code>
@@ -46,3 +45,5 @@ Type: <code>[Package](/api/@dxos/config/interfaces/Package)</code>
 
 Options:
   - proto3_optional = true
+
+    

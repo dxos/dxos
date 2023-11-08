@@ -2,18 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, scheduleTaskInterval } from '@dxos/async';
-import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { type WithTypeUrl } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { Gossip } from './gossip';
+import { type Gossip } from './gossip';
 
 export type PresenceParams = {
   /**
@@ -104,6 +103,14 @@ export class Presence {
       .map((message) => message.payload);
   }
 
+  getLocalState(): PeerState {
+    return {
+      identityKey: this._params.identityKey,
+      connections: this._params.gossip.getConnections(),
+      peerId: this._params.gossip.localPeerId,
+    };
+  }
+
   async destroy() {
     await this._ctx.dispose();
   }
@@ -112,6 +119,9 @@ export class Presence {
     invariant(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
     const oldPeerState = this._peerStates.get(message.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < message.timestamp.getTime()) {
+      // Assign peer id to payload.
+      (message.payload as PeerState).peerId = message.peerId;
+
       this._peerStates.set(message.peerId, message);
       this.updated.emit();
     }

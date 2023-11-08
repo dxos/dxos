@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
+import { type ModelMeta, Model, type StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
-import { Message } from '@dxos/protocols/proto/dxos/echo/model/messenger';
+import { type Message } from '@dxos/protocols/proto/dxos/echo/model/messenger';
 
 class MessengerModelStateMachine implements StateMachine<Message[], Message, {}> {
   private readonly _messages: Message[] = [];
@@ -32,7 +32,7 @@ class MessengerModelStateMachine implements StateMachine<Message[], Message, {}>
  */
 export class MessengerModel extends Model<Message[], Message> {
   static meta: ModelMeta = {
-    type: 'dxos:model/messenger',
+    type: 'dxos.org/model/messenger',
     stateMachine: () => new MessengerModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.messenger.Message'),
   };

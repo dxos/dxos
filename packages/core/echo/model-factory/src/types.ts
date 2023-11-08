@@ -2,13 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import type { Codec } from '@dxos/codec-protobuf';
 import type { WriteReceipt } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import type { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
 
-import { Model } from './model';
+import { type Model } from './model';
 
 // TODO(burdon): Replace with DXN (push to core protocol def).
 export type ModelType = string;
@@ -72,6 +71,9 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
 
   // Snapshot codecs are distinct from the mutation codecs.
   snapshotCodec?: Codec<TSnasphot>;
+
+  // Merge Mutations
+  mergeMutations?: (mutations: TMutation[]) => TMutation;
 
   // Manages state and state transitions vis mutations.
   stateMachine: () => StateMachine<TState, TMutation, TSnasphot>;

@@ -4,24 +4,22 @@
 
 import yaml from 'js-yaml';
 import fs from 'node:fs';
-import path from 'node:path';
 
-import { LogOptions } from '../../config';
+import { type LogOptions } from '../../config';
 
 /**
  * Node config loader.
  */
 export const loadOptions = (filepath?: string): LogOptions | undefined => {
   if (filepath) {
-    const fullpath = path.join(process.cwd(), filepath);
-    console.log(`Log file: ${fullpath}`);
+    // console.log(`Log file: ${fullpath}`);
     try {
-      const text = fs.readFileSync(fullpath, 'utf-8');
+      const text = fs.readFileSync(filepath, 'utf-8');
       if (text) {
         return yaml.load(text) as LogOptions;
       }
     } catch (err) {
-      console.warn(`Invalid log file: ${fullpath}`);
+      console.warn(`Invalid log file: ${filepath}`);
     }
   }
 };

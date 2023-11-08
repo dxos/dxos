@@ -3,17 +3,18 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { PROXY_CONNECTION_TIMEOUT, ShellRuntime } from '@dxos/client-protocol';
-import { Config } from '@dxos/config';
+import { PROXY_CONNECTION_TIMEOUT, type ShellRuntime } from '@dxos/client-protocol';
+import { type Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-manager';
-import { RpcPort } from '@dxos/rpc';
-import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
+import { createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
+import { type RpcPort } from '@dxos/rpc';
+import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
 
-import { ClientServicesHost } from '../services';
-import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
 import { ShellRuntimeImpl } from './shell-runtime';
+import { ClientServicesHost } from '../services';
+import { ClientRpcServer, type ClientRpcServerParams } from '../services/client-rpc-server';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 
@@ -70,7 +71,7 @@ export class IFrameHostRuntime {
     log('starting...');
     try {
       this._config = await getAsyncValue(this._configProvider);
-      this._transportFactory = createWebRTCTransportFactory({
+      this._transportFactory = createSimplePeerTransportFactory({
         iceServers: this._config.get('runtime.services.ice'),
       });
       const signals = this._config.get('runtime.services.signaling');
@@ -108,7 +109,7 @@ export class IFrameHostRuntime {
         ...middleware,
       });
 
-      await Promise.all([this._clientServices.open(), this._clientRpc.open(), this._shellRuntime?.open()]);
+      await Promise.all([this._clientServices.open(new Context()), this._clientRpc.open(), this._shellRuntime?.open()]);
       this._ready.wake(undefined);
       log('started');
     } catch (err: any) {

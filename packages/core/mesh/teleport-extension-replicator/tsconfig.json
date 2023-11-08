@@ -28,6 +28,9 @@
       "path": "../../../common/feed-store"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/keys"
     },
     {

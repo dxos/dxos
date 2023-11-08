@@ -9,9 +9,9 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@dxos/aurora": "latest",
-    "@dxos/aurora-theme": "latest",
-    "@dxos/aurora-types": "latest",
+    "@dxos/react-ui": "latest",
+    "@dxos/react-ui-theme": "latest",
+    "@dxos/react-ui-types": "latest",
     "@dxos/react-client": "latest",
     "@dxos/echo-schema": "latest",
     "@phosphor-icons/react": "^2.0.5",
@@ -25,7 +25,7 @@
     "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",
     "noise-protocol": "3.0.1",
-    "typescript": "^5.0.4",
+    "typescript": "^5.2.2",
     "vite": "^4.3.9"
   }
 }

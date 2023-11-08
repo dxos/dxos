@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import browser, { Runtime } from 'webextension-polyfill';
+import browser, { type Runtime } from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 

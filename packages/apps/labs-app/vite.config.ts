@@ -9,12 +9,12 @@ import { defineConfig, searchForWorkspaceRoot } from 'vite';
 // import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
   server: {
     host: true,
@@ -23,9 +23,9 @@ export default defineConfig({
     https:
       process.env.HTTPS === 'true'
         ? {
-            key: './key.pem',
-            cert: './cert.pem',
-          }
+          key: './key.pem',
+          cert: './cert.pem',
+        }
         : false,
     fs: {
       allow: [
@@ -37,6 +37,12 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, './index.html'),
+        'script-frame': resolve(__dirname, './script-frame/index.html'),
+      }
+    }
   },
   resolve: {
     alias: {
@@ -44,27 +50,54 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      // Required for the script plugin.
+      name: "sandbox-importmap-integration",
+      transformIndexHtml() {
+        return [{
+          tag: 'script',
+          injectTo: 'head-prepend', // Inject before vite's built-in scripts.
+          children: `
+            if(window.location.hash.includes('importMap')) {
+              const urlParams = new URLSearchParams(window.location.hash.slice(1));
+              if(urlParams.get('importMap')) {
+                const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
+                
+                const mapElement = document.createElement('script');
+                mapElement.type = 'importmap';
+                mapElement.textContent = JSON.stringify(importMap, null, 2);
+                document.head.appendChild(mapElement);
+              }
+            }
+          `
+        }];
+      }
+    },
+
     // mkcert(),
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
+      env: [
+        'DX_DEBUG', 'DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'
+      ],
     }),
     ThemePlugin({
       root: __dirname,
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-chess/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-debug/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-drawing/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-kanban/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-splitview/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-template/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-theme/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-thread/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
+
+        // TODO(burdon): Reconcile vs. direct deps.
+        resolve(__dirname, './node_modules/@braneframe/plugin-grid/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
+
+        // TODO(burdon): Hoisted as direct dependencies.
+        resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
-      extensions: [osThemeExtension],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
@@ -77,8 +110,8 @@ export default defineConfig({
       manifest: {
         name: 'DXOS Labs',
         short_name: 'Labs',
-        description: 'DXOS Labs Application',
-        theme_color: '#ffffff',
+        description: 'DXOS Labs',
+        theme_color: '#003E70',
         icons: [
           {
             src: 'icons/icon-32.png',
@@ -90,6 +123,16 @@ export default defineConfig({
             sizes: '256x256',
             type: 'image/png',
           },
+          {
+            src: 'android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
         ],
       },
     }),
@@ -97,7 +140,7 @@ export default defineConfig({
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({
       org: 'dxos',
-      project: 'labs-app',
+      project: 'labs-app', // TODO(burdon): Consistent naming (e.g., labs.dxos.org?)
       sourcemaps: {
         assets: './packages/apps/labs-app/out/labs/**',
       },

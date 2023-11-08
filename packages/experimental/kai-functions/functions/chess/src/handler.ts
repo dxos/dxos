@@ -12,14 +12,14 @@ module.exports = async (event: any, context: any) => {
     return context.status(400);
   }
 
-  const client = new Client({ config: new Config({}), services: fromSocket(clientUrl) });
+  const client = new Client({ config: new Config({}), services: await fromSocket(clientUrl) });
   await client.initialize();
 
   const { Chess } = await import('chess.js');
 
   // TODO(burdon): Normalized type def.
   const spaceKey = event?.body?.event?.trigger?.spaceKey;
-  const space = client.getSpace(PublicKey.from(spaceKey));
+  const space = client.spaces.get(PublicKey.from(spaceKey));
   await space.waitUntilReady(); // TODO(burdon): Review.
 
   const objectIds: string[] = event?.body?.event?.objects ?? [];

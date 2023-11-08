@@ -3,10 +3,11 @@
 //
 
 import * as pb from 'protobufjs';
-import invariant from 'tiny-invariant';
 
-import { MapingDescriptors, TypeMapperContext } from '../mapping';
+import { invariant } from '@dxos/invariant';
+
 import { codegen, ref } from './codegen';
+import { type MapingDescriptors, type TypeMapperContext } from '../mapping';
 
 export type Mapper = (obj: any, extraArgs: any[]) => any;
 

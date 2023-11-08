@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { GossipMessage, GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
+import { type GossipMessage, type GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
 export type GossipCallbacks = {
   /**
@@ -29,8 +28,6 @@ export type GossipCallbacks = {
 export class GossipExtension implements TeleportExtension {
   private readonly _opened = new Trigger();
   private _closed = false;
-
-  private _sendInterval?: NodeJS.Timeout;
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
@@ -63,8 +60,19 @@ export class GossipExtension implements TeleportExtension {
   async onClose(err?: Error): Promise<void> {
     log('close', { err });
     await this._rpc?.close();
-    this._sendInterval && clearInterval(this._sendInterval);
     await this._callbacks.onClose?.(err);
+    this._closed = true;
+  }
+
+  async onAbort(err?: Error): Promise<void> {
+    log('abort', { err });
+    try {
+      await this._rpc?.abort();
+    } catch (err) {
+      log.catch(err);
+    } finally {
+      await this._callbacks.onClose?.(err);
+    }
     this._closed = true;
   }
 

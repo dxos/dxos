@@ -5,14 +5,14 @@
 import { UserPlus } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Input } from '@dxos/react-appkit';
 import { Space } from '@dxos/react-client/echo';
 
+import { SpaceListAction } from './SpaceList';
 import { getIcon } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
-import { SpaceListAction } from './SpaceList';
 
 export type SpaceItemProps = {
   space: Space;

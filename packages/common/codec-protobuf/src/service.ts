@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import pb from 'protobufjs';
-import invariant from 'tiny-invariant';
+import type pb from 'protobufjs';
 
+import { invariant } from '@dxos/invariant';
 import { getAsyncValue } from '@dxos/util';
 
-import { Any, EncodingOptions } from './common';
+import { type Any, type EncodingOptions } from './common';
 import type { Schema } from './schema';
 import { Stream } from './stream';
 
@@ -28,7 +28,7 @@ export class ServiceDescriptor<S> {
   // prettier-ignore
   constructor(
     private readonly _service: pb.Service,
-    private readonly _schema: Schema<any>
+    private readonly _schema: Schema<any>,
   ) {}
 
   get serviceProto(): pb.Service {
@@ -52,13 +52,7 @@ export class ServiceDescriptor<S> {
  * Represents service instance.
  */
 export class Service {
-  // prettier-ignore
-  constructor(
-    backend: ServiceBackend,
-    service: pb.Service,
-    schema: Schema<any>,
-    encodingOptions?: EncodingOptions
-  ) {
+  constructor(backend: ServiceBackend, service: pb.Service, schema: Schema<any>, encodingOptions?: EncodingOptions) {
     for (const method of service.methodsArray) {
       method.resolve();
       invariant(method.resolvedRequestType);
@@ -75,7 +69,7 @@ export class Service {
           const encoded = requestCodec.encode(request, encodingOptions);
           const stream = backend.callStream(method.name, {
             value: encoded,
-            type_url: method.resolvedRequestType!.fullName
+            type_url: method.resolvedRequestType!.fullName,
           });
           return Stream.map(stream, (data) => responseCodec.decode(data.value!, encodingOptions));
         };
@@ -84,7 +78,7 @@ export class Service {
           const encoded = requestCodec.encode(request, encodingOptions);
           const response = await backend.call(method.name, {
             value: encoded,
-            type_url: method.resolvedRequestType!.fullName
+            type_url: method.resolvedRequestType!.fullName,
           });
           return responseCodec.decode(response.value, encodingOptions);
         };
@@ -92,7 +86,7 @@ export class Service {
 
       // Set function name so that is properly named in stack traces.
       Object.defineProperty((this as any)[methodName], 'name', {
-        value: methodName
+        value: methodName,
       });
     }
   }

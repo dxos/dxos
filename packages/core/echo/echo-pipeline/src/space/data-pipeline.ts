@@ -2,27 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
-import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
-import { CancelledError } from '@dxos/errors';
-import { FeedWriter } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { DataPipelineProcessed } from '@dxos/protocols';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type CredentialProcessor,
+  type FeedInfo,
+  type SpecificCredential,
+  checkCredentialType,
+} from '@dxos/credentials';
+import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
+import { type FeedWriter } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
+import { log, omit } from '@dxos/log';
+import { type ModelFactory } from '@dxos/model-factory';
+import { CancelledError, type DataPipelineProcessed } from '@dxos/protocols';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
+import { tracer } from '@dxos/util';
 
-import { DatabaseHost, SnapshotManager } from '../dbhost';
-import { MetadataStore } from '../metadata';
+import { DatabaseHost, type SnapshotManager } from '../db-host';
+import { type MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
 export interface PipelineFactory {
@@ -52,12 +57,12 @@ const MESSAGES_PER_SNAPSHOT = 10;
 /**
  * Minimum time between automatic snapshots.
  */
-const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
+const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5_000;
 
 /**
  * Minimum time in MS between recording latest timeframe in metadata.
  */
-const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
+const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 5_000;
 
 /**
  * Controls data pipeline in the space.
@@ -65,6 +70,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataPipeline implements CredentialProcessor {
   private _ctx = new Context();
   private _pipeline?: Pipeline = undefined;
@@ -75,11 +81,18 @@ export class DataPipeline implements CredentialProcessor {
 
   private _lastTimeframeSaveTime = 0;
   private _lastSnapshotSaveTime = 0;
+  private _lastProcessedEpoch = -1;
+  private _epochCtx?: Context;
 
-  constructor(private readonly _params: DataPipelineParams) {}
+  @trace.metricsCounter()
+  private _usage = new TimeUsageCounter();
+
+  @trace.metricsCounter()
+  private _mutations = new TimeSeriesCounter();
+
+  public databaseHost?: DatabaseHost;
 
   public itemManager!: ItemManager;
-  public databaseHost?: DatabaseHost;
 
   /**
    * Current epoch. Might be still processing.
@@ -91,10 +104,9 @@ export class DataPipeline implements CredentialProcessor {
    */
   public appliedEpoch?: SpecificCredential<Epoch> = undefined;
 
-  private _lastProcessedEpoch = -1;
-  private _epochCtx?: Context;
+  public readonly onNewEpoch = new Event<Credential>();
 
-  public onNewEpoch = new Event<Credential>();
+  constructor(private readonly _params: DataPipelineParams) {}
 
   get isOpen() {
     return this._isOpen;
@@ -133,8 +145,9 @@ export class DataPipeline implements CredentialProcessor {
 
     this._pipeline = new Pipeline();
     await this._params.onPipelineCreated(this._pipeline);
-    await this._pipeline.start();
+
     await this._pipeline.pause(); // Start paused until we have the first epoch.
+    await this._pipeline.start();
 
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
@@ -149,7 +162,7 @@ export class DataPipeline implements CredentialProcessor {
       },
     };
 
-    this.databaseHost = new DatabaseHost(feedWriter);
+    this.databaseHost = new DatabaseHost(feedWriter, () => this._flush());
     this.itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
@@ -204,8 +217,13 @@ export class DataPipeline implements CredentialProcessor {
       await waitForOneEpoch;
     }
 
+    let messageCounter = 0;
+
     invariant(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
+      const span = this._usage.beginRecording();
+      this._mutations.inc();
+
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
 
@@ -213,11 +231,12 @@ export class DataPipeline implements CredentialProcessor {
         if (data.payload.data) {
           const feedInfo = this._params.feedInfoProvider(feedKey);
           if (!feedInfo) {
-            log.error('Could not find feed.', { feedKey });
+            log.warn('Could not find feed', { feedKey });
             continue;
           }
 
-          await this.databaseHost!.echoProcessor({
+          const timer = tracer.mark('dxos.echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
+          this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
               feedKey,
@@ -227,17 +246,27 @@ export class DataPipeline implements CredentialProcessor {
             },
           });
 
+          timer.end();
+          // TODO(burdon): Reconcile different tracer approaches.
           log.trace('dxos.echo.data-pipeline.processed', {
-            feedKey: feedKey.toHex(),
+            feedKey: feedKey.toHex(), // TODO(burdon): Need to flatten?
             seq,
             spaceKey: this._params.spaceKey.toHex(),
           } satisfies DataPipelineProcessed);
 
-          // Timeframe clock is not updated yet
+          // Timeframe clock is not updated yet.
           await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
         }
       } catch (err: any) {
         log.catch(err);
+      }
+
+      span.end();
+
+      if (++messageCounter > 1_000) {
+        messageCounter = 0;
+        // Allow other tasks to process.
+        await sleep(1);
       }
     }
   }
@@ -264,9 +293,9 @@ export class DataPipeline implements CredentialProcessor {
       // Add properties to cache.
       const propertiesItem = this.itemManager.items.find(
         (item) =>
-          item.modelMeta?.type === 'dxos:model/document' &&
+          item.modelMeta?.type === 'dxos.org/model/document' &&
           // TODO(burdon): Document?
-          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
+          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === TYPE_PROPERTIES,
       );
       if (propertiesItem) {
         cache.properties = getStateMachineFromItem(propertiesItem)?.snapshot() as ObjectSnapshot;
@@ -280,6 +309,10 @@ export class DataPipeline implements CredentialProcessor {
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
+    if (!this._pipeline?.state.reachedTarget) {
+      return;
+    }
+
     // TODO(dmaretskyi): Replace this with a proper debounce/throttle.
 
     if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
@@ -316,7 +349,6 @@ export class DataPipeline implements CredentialProcessor {
         // Space closed before we got to process the epoch.
         return;
       }
-      log('process epoch', { epoch });
       await this._processEpoch(ctx, epoch.subject.assertion);
 
       this.appliedEpoch = epoch;
@@ -330,16 +362,13 @@ export class DataPipeline implements CredentialProcessor {
     invariant(this._pipeline);
     this._lastProcessedEpoch = epoch.number;
 
-    log('Processing epoch', { epoch });
+    log('processing', { epoch: omit(epoch, 'proof') });
     if (epoch.snapshotCid) {
       const snapshot = await this._params.snapshotManager.load(ctx, epoch.snapshotCid);
-
-      // TODO(dmaretskyi): Clearing old items + events.
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
     }
 
-    log('restarting pipeline for epoch');
-
+    log('restarting pipeline from epoch');
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);
     await this._pipeline.unpause();
@@ -374,5 +403,18 @@ export class DataPipeline implements CredentialProcessor {
 
   async ensureEpochInitialized() {
     await this.onNewEpoch.waitForCondition(() => !!this.currentEpoch);
+  }
+
+  private async _flush() {
+    try {
+      await this._saveCache();
+      if (this._pipeline) {
+        await this._saveTargetTimeframe(this._pipeline.state.timeframe);
+      }
+    } catch (err) {
+      log.catch(err);
+    }
+
+    await this._params.metadataStore.flush();
   }
 }

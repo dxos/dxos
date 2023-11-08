@@ -3,10 +3,10 @@
 //
 
 import Table from 'ink-table';
-import os from 'os';
-import React, { useEffect, FC, useState } from 'react';
+import React, { useEffect, type FC, useState } from 'react';
 
-type Status = {
+// Formatted stats.
+type Stats = {
   // arch: string;
   // version: string;
   // uptime: string;
@@ -18,14 +18,17 @@ type Status = {
 
   // total: string;
   // free: string;
-  loadavg: string;
+  loadavg?: string;
+
+  user?: string;
+  system?: string;
 };
 
 /**
  * System info.
  */
-export const SystemTable: FC<{ interval?: number }> = ({ interval = 1000 }) => {
-  const [data, setData] = useState<Status[]>([]);
+export const SystemTable: FC<{ interval?: number }> = ({ interval = 1_000 }) => {
+  const [data, setData] = useState<Stats[]>([]);
   useEffect(() => {
     const timer = setInterval(() => handleRefresh(), Math.max(100, interval));
     return () => clearInterval(timer);
@@ -33,8 +36,10 @@ export const SystemTable: FC<{ interval?: number }> = ({ interval = 1000 }) => {
 
   enum Unit {
     K = 1024,
-    S = 2000,
+    ms = 1_000,
+    μs = 1_000_000,
   }
+
   const size = (n: number, unit = Unit.K, len = 10) =>
     Math.round(n / unit)
       .toLocaleString()
@@ -44,6 +49,12 @@ export const SystemTable: FC<{ interval?: number }> = ({ interval = 1000 }) => {
     // TODO(burdon): https://www.npmjs.com/package/express-status-monitor
     // https://nodejs.org/api/process.html#process_process_memoryusage
     const { rss, heapTotal, heapUsed, external } = process.memoryUsage();
+
+    // TODO(burdon): How to measure CPU usage while running status?
+    // https://nodejs.org/api/process.html#processcpuusagepreviousvalue
+    // last.current = process.cpuUsage(last.current);
+    // const { user, system } = last.current;
+
     setData([
       {
         // arch: os.arch(),
@@ -57,10 +68,13 @@ export const SystemTable: FC<{ interval?: number }> = ({ interval = 1000 }) => {
 
         // total: os.totalmem().toLocaleString().padStart(14, ' '),
         // free: os.freemem().toLocaleString().padStart(14, ' '),
-        loadavg: os
-          .loadavg()
-          .map((n) => n.toFixed(2))
-          .join('; '),
+        // loadavg: os
+        //   .loadavg()
+        //   .map((n) => n.toFixed(2))
+        //   .join('; '),
+
+        // user: size(user),
+        // system: size(system),
       },
     ]);
   };

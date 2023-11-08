@@ -3,13 +3,13 @@
 //
 
 import { XMLBuilder } from 'fast-xml-parser';
-import { Stats } from 'mocha';
+import { type Stats } from 'mocha';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { BrowserType } from '../types';
-import { TestResult, TestStatus } from './reporter';
-import { RunTestsResults, Suites, TestError } from './run-tests';
+import { type TestResult, type TestStatus } from './reporter';
+import { type RunTestsResults, type Suites, type TestError } from './run-tests';
+import { type BrowserType } from '../types';
 
 export type OutputResultsOptions = {
   name: string;

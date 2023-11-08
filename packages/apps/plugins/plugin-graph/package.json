@@ -1,34 +1,44 @@
 {
   "name": "@braneframe/plugin-graph",
-  "version": "0.1.54",
+  "version": "0.3.4",
   "description": "DXOS Surface plugin for constructing knowledge graphs",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing.mjs",
+      "import": "./dist/lib/browser/testing.mjs",
+      "require": "./dist/lib/node/testing.cjs",
+      "node": "./dist/lib/node/testing.cjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "deepsignal": "^1.3.3",
-    "lodash.set": "^4.3.2"
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/debug": "workspace:*"
   },
   "devDependencies": {
-    "@braneframe/plugin-intent": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
-    "@tldraw/indices": "2.0.0-alpha.14",
-    "@types/lodash.set": "^4.3.7",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -36,11 +46,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-intent": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@dxos/app-framework": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-gossip",
-  "version": "0.1.54",
+  "version": "0.3.4",
   "description": "Gossip extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,17 +22,17 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "tiny-invariant": "^1.3.1"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public",

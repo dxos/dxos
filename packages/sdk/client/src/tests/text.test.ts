@@ -3,17 +3,18 @@
 //
 
 import * as fc from 'fast-check';
-import { ModelRunSetup } from 'fast-check';
+import { type ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
-import { Expando, Text } from '@dxos/echo-schema';
+import { Context } from '@dxos/context';
+import { Expando, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
-import { Doc } from '@dxos/text-model';
+import { type Doc } from '@dxos/text-model';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
-import { Client } from '../client';
+import { type Client } from '../client';
 import { joinCommonSpace, TestBuilder } from '../testing';
 
 // log.config({ filter: 'text.test:debug,error' });
@@ -35,7 +36,7 @@ const assertState = async (model: Model, real: Real) => {
   // Wait for replication.
   await waitForExpect(() => {
     for (const [peerId, peer] of real.peers.entries()) {
-      const space = peer.getSpace(real.spaceKey);
+      const space = peer.spaces.get(real.spaceKey);
       if (space) {
         if (!model.peers.has(peerId)) {
           throw new Error(`Expected peer to not be in space: ${peerId.truncate()}`);
@@ -68,14 +69,14 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
 
     // TODO(wittjosiah): Too many steps to creat client.
     const services = testBuilder.createClientServicesHost();
-    await services.open();
+    await services.open(new Context());
     const [client, server] = testBuilder.createClientServer(services);
     void server.open();
     await client.initialize();
     await client.halo.createIdentity();
     if (real.peers.size === 0) {
-      const space = await client.createSpace();
-      const content = new Text();
+      const space = await client.spaces.create();
+      const content = new TextObject();
       content.doc?.getText('utf8').insert(0, initialContent);
       await space.db.add(new Expando({ content }));
       real.spaceKey = space.key;
@@ -115,7 +116,7 @@ class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
     model.text = model.text.slice(0, this.index) + this.text + model.text.slice(this.index);
 
     const peer = real.peers.get(this.peerId);
-    const space = peer!.getSpace(real.spaceKey)!;
+    const space = peer!.spaces.get(real.spaceKey)!;
     const [document] = space.db.query((obj) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.insert(this.index, this.text);
@@ -141,7 +142,7 @@ class RemoveTextCommand implements fc.AsyncCommand<Model, Real> {
     model.text = model.text.slice(0, this.index) + model.text.slice(this.index + this.length);
 
     const peer = real.peers.get(this.peerId);
-    const space = peer!.getSpace(real.spaceKey)!;
+    const space = peer!.spaces.get(real.spaceKey)!;
     const [document] = space.db.query((obj) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.delete(this.index, this.length);

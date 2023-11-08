@@ -3,4 +3,5 @@
 //
 
 export * from './logging';
-export * from './stat-analysys';
+export * from './plot';
+export * from './stats';

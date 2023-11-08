@@ -2,27 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
+import { type Context } from '@dxos/context';
 import {
   DeviceStateMachine,
-  CredentialSigner,
+  type CredentialSigner,
   createCredentialSignerWithKey,
   createCredentialSignerWithChain,
   ProfileStateMachine,
 } from '@dxos/credentials';
-import { Signer } from '@dxos/crypto';
+import { type Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { Space } from '@dxos/echo-pipeline';
+import { type Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ComplexSet } from '@dxos/util';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import {
+  AdmittedFeed,
+  type DeviceProfileDocument,
+  type ProfileDocument,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { trace } from '@dxos/tracing';
+import { type ComplexMap, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
 
@@ -36,6 +41,7 @@ export type IdentityParams = {
 /**
  * Agent identity manager, which includes the agent's Halo space.
  */
+@trace.resource()
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;
@@ -55,6 +61,8 @@ export class Identity {
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
 
+    log.trace('dxos.halo.device', { deviceKey });
+
     this._deviceStateMachine = new DeviceStateMachine({
       identityKey: this.identityKey,
       deviceKey: this.deviceKey,
@@ -66,24 +74,26 @@ export class Identity {
     });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
-      trustedKeysProvider: () => this.authorizedDeviceKeys,
+      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, this.authorizedDeviceKeys.keys()),
       update: this.stateUpdate,
       authTimeout: AUTH_TIMEOUT,
     });
   }
 
   // TODO(burdon): Expose state object?
-  get authorizedDeviceKeys(): ComplexSet<PublicKey> {
+  get authorizedDeviceKeys(): ComplexMap<PublicKey, DeviceProfileDocument> {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
-  async open() {
+  @trace.span()
+  async open(ctx: Context) {
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
-    await this.space.open();
+    await this.space.open(ctx);
   }
 
-  async close() {
+  @trace.span()
+  async close(ctx: Context) {
     await this.authVerifier.close();
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);

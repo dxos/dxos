@@ -9,7 +9,7 @@ import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
@@ -42,7 +42,7 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom'],
+          vendor: ['react', 'react-dom'],
         },
       },
     },
@@ -53,7 +53,12 @@ export default defineConfig({
     }),
     ThemePlugin({
       root: __dirname,
-      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
+      content: [
+        resolve(__dirname, './*.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
+      ],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),

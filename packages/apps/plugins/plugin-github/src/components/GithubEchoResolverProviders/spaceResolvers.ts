@@ -5,7 +5,7 @@
 import get from 'lodash.get';
 import update from 'lodash.update';
 
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 // todo(thure): Why is the value that gets set in `ghBind` always undefined by the time this is called?
 const ghMatch = (space: Space, identityHex: string, id: string): boolean => {
@@ -18,7 +18,7 @@ export const matchSpace = (space: Space, identityHex: string, source?: string, i
     return false;
   }
   switch (source) {
-    case 'com.github':
+    case 'github.com':
       return ghMatch(space, identityHex, id);
     default:
       return false;
@@ -36,7 +36,7 @@ const ghBind = (space: Space, identityHex: string, id: string): string[] => {
 
 export const bindSpace = (space: Space, identityHex: string, source: string, id: string): string[] => {
   switch (source) {
-    case 'com.github':
+    case 'github.com':
       return ghBind(space, identityHex, id);
     default:
       return [];
@@ -59,7 +59,7 @@ const ghUnbind = (space: Space, identityHex: string, id: string): string[] => {
 
 export const unbindSpace = (space: Space, identityHex: string, source: string, id: string): string[] => {
   switch (source) {
-    case 'com.github':
+    case 'github.com':
       return ghUnbind(space, identityHex, id);
     default:
       return [];
@@ -78,7 +78,7 @@ const ghDisplayName = (id: string): string => {
 
 export const displayName = (source: string, id: string): string => {
   switch (source) {
-    case 'com.github':
+    case 'github.com':
       return ghDisplayName(id);
     default:
       return id;

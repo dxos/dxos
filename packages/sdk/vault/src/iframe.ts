@@ -4,22 +4,41 @@
 
 import { Trigger } from '@dxos/async';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
+import { type ClientServicesProvider, ClientServicesProxy, type ShellRuntime } from '@dxos/client/services';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
-import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
 
-const cssStyle = 'color:#C026D3;font-weight:bold';
+const cssLogStyle = 'color:#C026D3;font-weight:bold';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement, StrictMode } = await import('react');
   const { createRoot } = await import('react-dom/client');
   const { registerSignalFactory } = await import('@dxos/echo-signals/react');
-  const { ThemeProvider } = await import('@dxos/react-appkit');
+  const { ThemeProvider, Tooltip } = await import('@dxos/react-ui');
+  const { bindTheme, defaultTheme, dialogMotion, mx, surfaceElevation } = await import('@dxos/react-ui-theme');
   const { ClientContext } = await import('@dxos/react-client');
   const { osTranslations, Shell } = await import('@dxos/react-shell');
+
+  const shellTx = bindTheme({
+    ...defaultTheme,
+    dialog: {
+      ...defaultTheme.dialog,
+      content: ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
+        mx(
+          'flex flex-col',
+          !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
+          'is-[95vw] md:is-full max-is-[20rem] rounded-xl p-4',
+          dialogMotion,
+          surfaceElevation({ elevation }),
+          'bg-neutral-75/95 dark:bg-neutral-850/95 backdrop-blur',
+          ...etc,
+        ),
+    },
+  });
 
   registerSignalFactory();
   const root = createRoot(document.getElementById('root')!);
@@ -32,9 +51,17 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
       {},
       createElement(
         ThemeProvider,
-        { themeVariant: 'os', resourceExtensions: [osTranslations] },
-        // NOTE: Using context provider directly to avoid duplicate banners being logged.
-        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin })),
+        { tx: shellTx, resourceExtensions: [osTranslations] },
+        createElement(Tooltip.Provider, {
+          delayDuration: 100,
+          skipDelayDuration: 400,
+          children: createElement(
+            // NOTE: Using context provider directly to avoid duplicate banners being logged.
+            ClientContext.Provider,
+            { value: { client } },
+            createElement(Shell, { runtime, origin }),
+          ),
+        }),
       ),
     ),
   );
@@ -67,6 +94,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     }
   });
 
+  const info: string[] = [];
+
   if (safariCheck()) {
     log.info('Running DXOS shell from app client.');
     const origin = (window as any).__DXOS_APP_ORIGIN__;
@@ -76,7 +105,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled && port) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port }));
-      void shellClientProxy.open();
+      void shellClientProxy.open(new Context());
     }
 
     if (shellClientProxy) {
@@ -88,9 +117,10 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
     return;
   } else {
+    // TODO(burdon): Remove hardcoded path.
     const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-    const vaultUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=vault:${window.location.href}`;
-    console.log(`%cOpen devtools to inspect the application: ${vaultUrl}`, cssStyle);
+    const vaultUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=${window.location.href}`;
+    info.push(`%cOpen devtools: ${vaultUrl}`);
   }
 
   if (typeof SharedWorker === 'undefined') {
@@ -127,8 +157,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
-    console.log(`%cDXOS vault (shared worker) connection: ${window.location.origin}`, cssStyle);
-    console.log('%cInspect the worker using: chrome://inspect/#workers (URL must be copied manually).', cssStyle);
+    // info.push(`%cDXOS vault (shared worker) connection: ${window.location.origin}`);
+    info.push('%cTo inspect/reset the vault (shared worker) copy the URL: chrome://inspect/#workers');
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
     createWorker().port.onmessage = (event) => {
       const { command, payload } = event.data;
@@ -154,7 +184,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port: shellPort }));
-      void shellClientProxy.open();
+      void shellClientProxy.open(new Context());
     }
 
     const { IFrameProxyRuntime } = await import('@dxos/client-services');
@@ -168,6 +198,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     if (shellClientProxy && iframeRuntime.shell) {
       await startShell(config, iframeRuntime.shell, shellClientProxy, origin);
     }
+
+    info.forEach((message) => console.log(message, cssLogStyle));
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.close().catch((err: Error) => log.catch(err));
@@ -186,7 +218,6 @@ const forceClientReset = async () => {
   await services.reset();
 
   // TODO(wittjosiah): Make this look nicer.
-  const message = document.createElement('div');
-  message.textContent = 'Client storage has been reset. Return to the app and reload.';
-  document.body.appendChild(message);
+  const element = document.getElementById('vault-reset-success');
+  element?.classList?.remove('hidden');
 };

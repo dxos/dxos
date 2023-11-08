@@ -4,10 +4,10 @@
 
 import cx from 'classnames';
 import React, { useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, generatePath } from 'react-router-dom';
 
-import { IFrameClientServicesHost, IFrameClientServicesProxy, ShellLayout, useClient } from '@dxos/react-client';
-import { Space, useSpaces } from '@dxos/react-client/echo';
+import { useClient } from '@dxos/react-client';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
 import { TodoList } from '../proto';
@@ -17,22 +17,15 @@ export const SpaceList = ({ current }: { current?: Space }) => {
   const spaces = useSpaces();
   const navigate = useNavigate();
 
-  const handleOpen = () => {
-    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-      void client.services.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: current?.key });
-    }
-  };
-
-  const handleJoin = () => {
-    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-      void client.services.setLayout(ShellLayout.JOIN_SPACE);
-    }
+  const handleJoin = async () => {
+    const { space } = await client.shell.joinSpace();
+    space && navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
   };
 
   const handleCreateList = useCallback(async () => {
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     await space.db.add(new TodoList());
-    navigate(`/${space.key.toHex()}`);
+    navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
   }, [client, navigate]);
 
   return (
@@ -43,7 +36,10 @@ export const SpaceList = ({ current }: { current?: Space }) => {
         <button onClick={handleCreateList} data-testid='add-button'>
           +
         </button>
-        <button onClick={handleOpen} data-testid='share-button'>
+        <button
+          onClick={() => current && client.shell.shareSpace({ spaceKey: current.key })}
+          data-testid='share-button'
+        >
           ↸
         </button>
         <button id='' onClick={handleJoin} data-testid='join-button'>

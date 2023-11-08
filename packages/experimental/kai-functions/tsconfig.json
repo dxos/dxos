@@ -25,6 +25,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -50,9 +53,6 @@
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/errors"
     },
     {
       "path": "../chess-app"

@@ -5,6 +5,6 @@
 export * from './agent';
 export * from './daemon';
 export * from './errors';
-export * from './forever';
+export * from './launcher';
 export * from './plugins';
 export * from './util';

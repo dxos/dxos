@@ -10,6 +10,7 @@
     "burdon",
     "dxos",
     "DXOS",
+    "Expando",
     "Faas",
     "protobuf",
     "testutils"
@@ -46,7 +47,9 @@
       "<node_internals>/**",
       "internal/*",
       "**/stream.ts",
-      "**/events.ts"
+      "**/events.ts",
+      "**/wtfnode.js",
+      "**/context.ts"
     ]
 }
 }

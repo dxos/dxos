@@ -38,14 +38,14 @@ export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Parti
 /**
  * Remove keys with undefined values.
  */
-export const stripKeys = (obj: any): any => {
+export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T): T => {
   if (typeof obj === 'object') {
     Object.keys(obj).forEach((key) => {
       const value = obj[key];
       if (value === undefined) {
         delete obj[key];
       } else if (value !== null && typeof value === 'object') {
-        stripKeys(value); // TODO(burdon): Test recursion.
+        stripUndefinedValues(value); // TODO(burdon): Test recursion.
       }
     });
   }
@@ -56,6 +56,16 @@ export const stripKeys = (obj: any): any => {
 /**
  * Swap position of element within array.
  */
-export const arrayMove = <T>(array: Array<T>, from: number, to: number) => {
-  return array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
+export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
+  array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
+  return array;
+};
+
+export const safeParseInt = (value: string | undefined, defaultValue?: number) => {
+  try {
+    const n = parseInt(value ?? '');
+    return isNaN(n) ? defaultValue : n;
+  } catch (err) {
+    return defaultValue;
+  }
 };

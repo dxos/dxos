@@ -5,7 +5,7 @@
 import type { Plugin } from 'esbuild';
 
 import { definitions } from './definitions';
-import { ConfigPluginOpts } from './types';
+import { type ConfigPluginOpts } from './types';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
   return {

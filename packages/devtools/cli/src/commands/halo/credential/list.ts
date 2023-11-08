@@ -4,11 +4,10 @@
 
 import { Flags, ux } from '@oclif/core';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../../base-command';
-import { queryCredentials } from '../../../util';
-import { printCredentials, mapCredentials } from '../util';
+import { queryCredentials, printCredentials, mapCredentials } from '../../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

@@ -3,21 +3,21 @@
 //
 
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Button, ButtonGroup } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
-import { Group } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
-import { Space, SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { ClientDecorator } from '@dxos/react-client/testing';
+import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
+import { getSize, groupSurface } from '@dxos/react-ui-theme';
 
-import { IdentityListItem, SpaceListItem } from '../components';
+import { ClipboardProvider, IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 
 export default {
@@ -35,7 +35,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
   useMemo(() => {
     if (panel instanceof SpaceProxy) {
       (window as any)[`peer${id}CreateSpaceInvitation`] = (options?: Partial<Invitation>) => {
-        const invitation = panel.createInvitation(options);
+        const invitation = panel.share(options);
 
         invitation.subscribe((invitation) => {
           const invitationCode = InvitationEncoder.encode(invitation);
@@ -70,7 +70,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <ButtonGroup classNames='mbe-4'>
           {/* <Tooltip content='Create Space'> */}
           <Button
-            onClick={() => client.createSpace({ name: faker.animal.bird() })}
+            onClick={() => client.spaces.create({ name: faker.animal.bird() })}
             data-testid='invitations.create-space'
           >
             <PlusCircle className={getSize(6)} />
@@ -93,17 +93,18 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
       );
 
       return (
-        <Group label={{ children: header }}>
-          <ul>
-            {spaces.length > 0 ? (
-              spaces.map((space) => (
+        <div>
+          <h1>{header}</h1>
+          {spaces.length > 0 ? (
+            <List>
+              {spaces.map((space) => (
                 <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
-              ))
-            ) : (
-              <div className='text-center'>No spaces</div>
-            )}
-          </ul>
-        </Group>
+              ))}
+            </List>
+          ) : (
+            <div className='text-center'>No spaces</div>
+          )}
+        </div>
       );
     }
   }
@@ -117,7 +118,7 @@ const Invitations = ({ id }: { id: number }) => {
 
   useMemo(() => {
     (window as any)[`peer${id}CreateHaloInvitation`] = (options?: Partial<Invitation>) => {
-      const invitation = client.halo.createInvitation(options);
+      const invitation = client.halo.share(options);
 
       invitation.subscribe((invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
@@ -191,21 +192,34 @@ const Invitations = ({ id }: { id: number }) => {
   );
 
   return (
-    <div className='flex flex-col p-4 flex-1 min-w-0' data-testid={`peer-${id}`}>
-      <Group label={{ children: header }} className='mbe-2'>
+    <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
+      <div className={`${groupSurface} rounded p-2 mbe-2`}>
+        <h1>{header}</h1>
         {identity ? (
-          <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+          <List>
+            <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+          </List>
         ) : (
           <div className='text-center'>No identity</div>
         )}
-      </Group>
-      {identity || panel ? <Panel id={id} panel={panel} setPanel={setPanel} /> : null}
+      </div>
+      {identity || panel ? (
+        <div className={`${groupSurface} rounded p-2`}>
+          <Panel id={id} panel={panel} setPanel={setPanel} />
+        </div>
+      ) : null}
     </div>
   );
 };
 
 export const Default = {
-  render: (args: { id: number }) => <Invitations {...args} />,
+  render: (args: { id: number }) => (
+    <ClipboardProvider>
+      <Tooltip.Provider>
+        <Invitations {...args} />
+      </Tooltip.Provider>
+    </ClipboardProvider>
+  ),
   decorators: [ClientDecorator({ count: 3 })],
   parameters: {
     chromatic: { disableSnapshot: true },

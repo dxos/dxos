@@ -4,11 +4,11 @@
 
 import fetch from 'cross-fetch';
 
-import { ObservableValue, ObservableProvider } from '@dxos/async';
-import { Config } from '@dxos/config';
+import { type ObservableValue, ObservableProvider } from '@dxos/async';
+import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { ApiError } from '@dxos/errors';
-import { Module } from '@dxos/protocols/proto/dxos/config';
+import { ApiError } from '@dxos/protocols';
+import { type Module } from '@dxos/protocols/proto/dxos/config';
 
 export interface QueryEvents<T> {
   onUpdate(result: T[]): void;
@@ -23,10 +23,7 @@ export interface QueryObservable<T> extends ObservableValue<QueryEvents<T>> {
 export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T>> implements QueryObservable<T> {
   private _results: T[] = [];
 
-  // prettier-ignore
-  constructor(
-    private readonly _callback: () => Promise<void>
-  ) {
+  constructor(private readonly _callback: () => Promise<void>) {
     super();
   }
 

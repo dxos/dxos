@@ -5,12 +5,16 @@
 import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
+import { ContextDisposedError } from './context-disposed';
+
 export type ContextErrorHandler = (error: Error) => void;
 
 export type DisposeCallback = () => void | Promise<void>;
 
 export type CreateContextParams = {
   onError?: ContextErrorHandler;
+  attributes?: Record<string, any>;
+  parent?: Context;
 };
 
 /**
@@ -23,17 +27,32 @@ export class Context {
   private readonly _onError: ContextErrorHandler;
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;
-  private _disposePromise?: Promise<void>;
+  private _disposePromise?: Promise<void> = undefined;
+  private _parent: Context | null = null;
+
+  private _attributes: Record<string, any>;
+
+  public maxSafeDisposeCallbacks = MAX_SAFE_DISPOSE_CALLBACKS;
 
   constructor({
     onError = (error) => {
+      if (error instanceof ContextDisposedError) {
+        return;
+      }
+
       void this.dispose();
 
       // Will generate an unhandled rejection.
       throw error;
     },
+    attributes = {},
+    parent,
   }: CreateContextParams = {}) {
     this._onError = onError;
+    this._attributes = attributes;
+    if (parent !== undefined) {
+      this._parent = parent;
+    }
   }
 
   get disposed() {
@@ -62,10 +81,10 @@ export class Context {
     }
 
     this._disposeCallbacks.push(callback);
-    if (this._disposeCallbacks.length > MAX_SAFE_DISPOSE_CALLBACKS) {
+    if (this._disposeCallbacks.length > this.maxSafeDisposeCallbacks) {
       log.warn('Context has a large number of dispose callbacks. This might be a memory leak.', {
         count: this._disposeCallbacks.length,
-        safeThreshold: MAX_SAFE_DISPOSE_CALLBACKS,
+        safeThreshold: this.maxSafeDisposeCallbacks,
       });
     }
 
@@ -128,8 +147,9 @@ export class Context {
     }
   }
 
-  derive({ onError }: CreateContextParams = {}): Context {
+  derive({ onError, attributes }: CreateContextParams = {}): Context {
     const newCtx = new Context({
+      // TODO(dmaretskyi): Optimize to not require allocating a new closure for every context.
       onError: async (error) => {
         if (!onError) {
           this.raise(error);
@@ -141,9 +161,20 @@ export class Context {
           }
         }
       },
+      attributes,
     });
     const clearDispose = this.onDispose(() => newCtx.dispose());
     newCtx.onDispose(clearDispose);
     return newCtx;
+  }
+
+  getAttribute(key: string): any {
+    if (key in this._attributes) {
+      return this._attributes[key];
+    }
+    if (this._parent !== null) {
+      return this._parent.getAttribute(key);
+    }
+    return undefined;
   }
 }

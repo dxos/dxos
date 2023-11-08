@@ -7,7 +7,8 @@
   }
 </script>
 <style>
-  body {
+  body,
+  table.bg-body {
     background-color:#556;
     background-image: linear-gradient(30deg, #445 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
     linear-gradient(150deg, #445 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
@@ -18,7 +19,12 @@
     background-size:80px 140px;
     background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
   }
-  html, body {
-    height: 100%;
+  html {
+    height: 100vh;
+    width: auto;
   }
+  body {
+    min-height: 100%;
+  }
+  
 </style>

@@ -8,6 +8,7 @@
     ],
     "outDir": "dist",
     "types": [
+      "@dxos/test",
       "node"
     ]
   },
@@ -19,21 +20,6 @@
   "references": [
     {
       "path": "../../../common/plate"
-    },
-    {
-      "path": "../../../sdk/client"
-    },
-    {
-      "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../ui/aurora"
-    },
-    {
-      "path": "../../../ui/aurora-theme"
-    },
-    {
-      "path": "../../../ui/react-appkit"
     },
     {
       "path": "../bare-template"

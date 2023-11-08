@@ -6,8 +6,7 @@ import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { sleep, Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { InvitationEncoder } from '@dxos/client/invitations';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { acceptInvitation } from '../../util';
@@ -41,7 +40,7 @@ export default class Join extends BaseCommand<typeof Join> {
       const done = new Trigger();
       // TODO(burdon): Error code if joining same space (don't throw!)
       const invitation = await acceptInvitation({
-        observable: client.acceptInvitation(InvitationEncoder.decode(encoded!)),
+        observable: client.spaces.join(encoded!),
         callbacks: {
           onConnecting: async () => ux.action.stop(),
           onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
@@ -54,10 +53,10 @@ export default class Join extends BaseCommand<typeof Join> {
       await done.wait();
       // TODO(burdon): Race condition.
       await sleep(1000);
-      const space = client.getSpace(invitation.spaceKey!)!;
+      const space = client.spaces.get(invitation.spaceKey!)!;
 
       ux.log();
-      ux.log(chalk`{green Joined}: ${space.key.truncate()}`);
+      ux.log(chalk`{green Joined successfully.}`);
 
       return {
         key: space.key,

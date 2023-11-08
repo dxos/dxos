@@ -2,18 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { Event } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
+import { Event, Trigger } from '@dxos/async';
+import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { schema } from '@dxos/protocols';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { CommandTrace, SignalStatus } from '../signal-client';
-import { SignalManager } from './signal-manager';
+import { type SignalManager } from './signal-manager';
+import { type CommandTrace, type SignalStatus } from '../signal-client';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -56,10 +56,10 @@ export class MemorySignalManager implements SignalManager {
 
   private _ctx!: Context;
 
-  // prettier-ignore
-  constructor(
-    private readonly _context: MemorySignalManagerContext
-  ) {
+  // TODO(dmaretskyi): Replace with callback.
+  private readonly _freezeTrigger = new Trigger().wake();
+
+  constructor(private readonly _context: MemorySignalManagerContext) {
     this._ctx = new Context();
 
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
@@ -154,16 +154,39 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
+    log('send message', { author, recipient, ...dec(payload) });
+
     invariant(recipient);
     invariant(!this._ctx.disposed, 'Closed');
-    if (!this._context.connections.has(recipient)) {
+
+    await this._freezeTrigger.wait();
+
+    const remote = this._context.connections.get(recipient);
+    if (!remote) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
     }
 
-    if (!this._context.connections.get(recipient)?._ctx.disposed) {
-      this._context.connections.get(recipient)!.onMessage.emit({ author, recipient, payload });
+    if (remote._ctx.disposed) {
+      log.warn('recipient is disposed', { author, recipient });
+      return;
     }
+
+    remote._freezeTrigger
+      .wait()
+      .then(() => {
+        if (remote._ctx.disposed) {
+          log.warn('recipient is disposed', { author, recipient });
+          return;
+        }
+
+        log('receive message', { author, recipient, ...dec(payload) });
+
+        remote.onMessage.emit({ author, recipient, payload });
+      })
+      .catch((err) => {
+        log.error('error while waiting for freeze', { err });
+      });
   }
 
   async subscribeMessages(peerId: PublicKey) {
@@ -175,4 +198,25 @@ export class MemorySignalManager implements SignalManager {
     log('unsubscribing', { peerId });
     this._context.connections.delete(peerId);
   }
+
+  freeze() {
+    this._freezeTrigger.reset();
+  }
+
+  unfreeze() {
+    this._freezeTrigger.wake();
+  }
 }
+const dec = (payload: Any) => {
+  if (!payload.type_url.endsWith('ReliablePayload')) {
+    return {};
+  }
+
+  const relPayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload').decode(payload.value);
+
+  if (typeof relPayload?.payload?.data === 'object') {
+    return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId };
+  }
+
+  return {};
+};

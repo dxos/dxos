@@ -3,9 +3,9 @@
 //
 
 import { Args } from '@oclif/core';
-import assert from 'node:assert';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { schema } from '@dxos/protocols';
 
 import { BaseCommand } from '../../../base-command';
@@ -19,10 +19,10 @@ export default class Add extends BaseCommand<typeof Add> {
   async run(): Promise<any> {
     let { credential: credentialHex } = this.args;
     if (!credentialHex) {
-      credentialHex = await this.stdin;
+      credentialHex = await this.readStdin();
     }
 
-    assert(credentialHex, 'Invalid credential.');
+    invariant(credentialHex, 'Invalid credential.');
     return await this.execWithClient(async (client: Client) => {
       const identity = client.halo.identity;
       if (!identity) {

@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-    <title>Labs</title>
-    <meta name="description" content="DXOS Labs Application">
+    <title>DXOS Labs</title>
+    <meta name="description" content="DXOS Labs">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -15,8 +15,18 @@
       function setTheme(darkMode) {
         document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
       }
-      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+      setTheme(window.matchMedia('(prefers-color-scheme: light)').matches)
     </script>
+    <style>
+      html {
+        font-size: 18px;
+      }
+      @media (min-width: 768px) {
+        html {
+          font-size: 16px
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -2,23 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Messenger, SignalManager } from '@dxos/messaging';
+import { Messenger, type SignalManager } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { SignalConnection } from './signal';
-import { Swarm, SwarmMapper } from './swarm';
-import { Topology } from './topology';
-import { TransportFactory } from './transport';
-import { WireProtocolProvider } from './wire-protocol';
-
+import { type SignalConnection } from './signal';
+import { Swarm, SwarmMapper, ConnectionLimiter } from './swarm';
+import { type Topology } from './topology';
+import { type TransportFactory } from './transport';
+import { type WireProtocolProvider } from './wire-protocol';
 /**
  * Represents a single connection to a remote peer.
  */
@@ -66,13 +64,17 @@ export type NetworkManagerOptions = {
  */
 // TODO(dmaretskyi): Rename SwarmManager.
 export class NetworkManager {
-  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
+  /**
+   * @internal
+   */
+  readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
   private readonly _mappers = new ComplexMap<PublicKey, SwarmMapper>(PublicKey.hash);
 
   private readonly _transportFactory: TransportFactory;
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
+  private readonly _connectionLimiter: ConnectionLimiter;
 
   private _connectionState = ConnectionState.ONLINE;
   public readonly connectionStateChanged = new Event<ConnectionState>();
@@ -95,6 +97,7 @@ export class NetworkManager {
       leave: (opts) => this._signalManager.leave(opts),
     };
 
+    this._connectionLimiter = new ConnectionLimiter();
     // TODO(burdon): Inject listener (generic pattern).
     if (log) {
       this._connectionLog = new ConnectionLog();
@@ -160,7 +163,17 @@ export class NetworkManager {
     }
 
     log('joining', { topic: PublicKey.from(topic), peerId, topology: topology.toString() }); // TODO(burdon): Log peerId.
-    const swarm = new Swarm(topic, peerId, topology, protocol, this._messenger, this._transportFactory, label);
+    const swarm = new Swarm(
+      topic,
+      peerId,
+      topology,
+      protocol,
+      this._messenger,
+      this._transportFactory,
+      label,
+      this._connectionLimiter,
+    );
+
     swarm.errors.handle((error) => {
       log('swarm error', { error });
     });

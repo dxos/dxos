@@ -8,17 +8,27 @@
     ],
     "outDir": "dist",
     "types": [
+      "@dxos/test",
       "node"
     ]
   },
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
   "include": [
+    "package.json",
     "src",
     "src/.storybook/*",
-    "src/.vscode/*"
+    "src/.vscode/*",
+    "test"
   ],
   "references": [
     {
       "path": "../../../common/plate"
+    },
+    {
+      "path": "../../../common/process"
     }
   ]
 }

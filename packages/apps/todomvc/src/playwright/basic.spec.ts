@@ -6,8 +6,8 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { FILTER } from '../constants';
 import { AppManager } from './app-manager';
+import { FILTER } from '../constants';
 
 enum Groceries {
   Eggs = 'eggs',
@@ -26,7 +26,7 @@ test.describe('Basic test', () => {
 
     await host.init();
     // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
-    //   https://github.com/microsoft/playwright/issues/2973
+    //  https://github.com/microsoft/playwright/issues/2973
     guest = browserName === 'chromium' ? new AppManager(browser) : host;
     if (browserName === 'chromium') {
       await guest.init();
@@ -34,19 +34,6 @@ test.describe('Basic test', () => {
   });
 
   test.describe('Default space', () => {
-    test('create identity', async () => {
-      expect(await host.isPlaceholderVisible()).to.be.true;
-      expect(await host.isNewTodoVisible()).to.be.false;
-
-      await host.shell.createIdentity('host');
-
-      // Wait for app to load identity.
-      await waitForExpect(async () => {
-        expect(await host.isPlaceholderVisible()).to.be.false;
-        expect(await host.isNewTodoVisible()).to.be.true;
-      }, 1000);
-    });
-
     test('create a task', async () => {
       await host.createTodo(Groceries.Eggs);
 
@@ -59,7 +46,6 @@ test.describe('Basic test', () => {
         return;
       }
 
-      await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
       const authCode = await host.shell.getAuthCode();
 
@@ -72,7 +58,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      }, 1000);
+      });
     });
 
     test('toggle a task', async () => {
@@ -82,7 +68,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.true;
         expect(await guest.todoCount()).to.equal(0);
-      }, 10);
+      });
     });
 
     test('untoggle a task', async () => {
@@ -92,7 +78,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.false;
         expect(await guest.todoCount()).to.equal(1);
-      }, 10);
+      });
     });
 
     test('edit a task', async () => {
@@ -105,7 +91,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await guest.todoIsVisible(Groceries.Eggnog)).to.be.true;
         expect(await guest.todoCount()).to.equal(1);
-      }, 10);
+      });
     });
 
     test('cancel editing a task', async () => {
@@ -122,7 +108,7 @@ test.describe('Basic test', () => {
       // Wait for sync.
       await waitForExpect(async () => {
         expect(await guest.textIsVisible(Groceries.Eggnog)).to.be.false;
-      }, 10);
+      });
     });
 
     test('filter active tasks', async () => {
@@ -142,7 +128,7 @@ test.describe('Basic test', () => {
         expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
         expect(await host.todoIsVisible(Groceries.Flour)).to.be.true;
         expect(await host.todoCount()).to.equal(2);
-      }, 10);
+      });
     });
 
     test('filter completed tasks', async () => {

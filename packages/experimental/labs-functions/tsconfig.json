@@ -1,0 +1,70 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types"
+  },
+  "exclude": [
+    "functions"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../apps/types"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../core/echo/echo-generator"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../chess-app"
+    }
+  ]
+}

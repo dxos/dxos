@@ -6,6 +6,7 @@ export type ProcessInfo = {
   profile?: string;
   pid?: number;
   running?: boolean;
+  restarts?: number;
   started?: number;
   logFile?: string;
   locked?: boolean;
@@ -13,6 +14,9 @@ export type ProcessInfo = {
 
 export type StartOptions = {
   config?: string;
+  metrics?: boolean;
+  ws?: number;
+  timeout?: number;
 };
 
 export type StopOptions = {
@@ -37,3 +41,5 @@ export interface Daemon {
   isRunning: (profile: string) => Promise<boolean>;
   list: () => Promise<ProcessInfo[]>;
 }
+
+export const PROFILE_FOLDER = 'profile';

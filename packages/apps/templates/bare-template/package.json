@@ -1,31 +1,30 @@
 {
   "name": "@dxos/bare-template",
-  "version": "0.1.54",
+  "version": "0.3.4",
   "description": "An application template for local-first progressive web apps",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/config.t.js",
-  "types": "dist/src/config.t.d.ts",
+  "main": "dist/src/template.t.js",
+  "types": "dist/src/template.t.d.ts",
   "scripts": {
-    "build": "tsc && plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "build-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "clean": "rm -rf test/out",
-    "gen": "test/generate",
-    "tsc": "tsc"
+    "build": "tsc"
   },
   "dependencies": {
     "@dxos/plate": "workspace:*",
+    "@dxos/process": "workspace:*",
     "chalk": "^4.1.0",
     "lodash.merge": "^4.6.2",
+    "sanitize-filename": "1.6.3",
     "types-package-json": "^2.0.39"
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^18.11.9",
+    "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

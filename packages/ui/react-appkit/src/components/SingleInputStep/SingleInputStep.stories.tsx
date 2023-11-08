@@ -3,12 +3,13 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
+import { SingleInputStep, type SingleInputStepProps } from './SingleInputStep';
 import { Group } from '../Group';
-import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
 
 export default {
   component: SingleInputStep,

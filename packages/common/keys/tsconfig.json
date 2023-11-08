@@ -11,6 +11,9 @@
       "path": "../debug"
     },
     {
+      "path": "../invariant"
+    },
+    {
       "path": "../node-std"
     }
   ]

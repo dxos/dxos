@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "dxos/error.proto";
+import "dxos/client/logging.proto";
+
+package dxos.tracing;
+
+enum TraceLevel {
+  DISABLED = 0;
+  PRODUCTION = 10;
+  DEVELOPMENT = 20;
+  DEBUG = 30;
+}
+
+message Resource {
+  int32 id = 1;
+  string class_name = 2;
+  int32 instance_id = 3;
+
+  google.protobuf.Struct info = 4;
+  repeated ResourceLink links = 5;
+  repeated Metric metrics = 6;
+}
+
+message ResourceLink {
+  int32 from = 1;
+  int32 to = 2;
+  google.protobuf.Struct attributes = 4;
+}
+
+message Span {
+  int32 id = 1;
+  optional int32 parent_id = 2;
+  optional int32 resource_id = 3;
+  string method_name = 4;
+
+  // TODO(dmaretskyi): Figure out proper sub-millisecond timestamp type.
+  string start_ts = 5;
+  optional string end_ts = 6;
+
+  optional dxos.error.Error error = 11;
+}
+
+message StreamTraceEvent {
+  message ResourceAdded {
+    Resource resource = 1;
+  }
+
+  message ResourceRemoved {
+    int32 id = 1;
+  }
+
+  message SpanAdded {
+    Span span = 1;
+  }
+
+  message LogAdded {
+    dxos.client.services.LogEntry log = 1;
+  }
+
+  repeated ResourceAdded resource_added = 1;
+  repeated ResourceRemoved resource_removed = 2;
+  repeated SpanAdded span_added = 3;
+  repeated LogAdded log_added = 4;
+}
+
+message Metric {
+  message Counter {
+    double value = 1;
+    optional string units = 2;
+  }
+
+  message MultiCounter {
+    message Record {
+      string key = 1;
+      double value = 2;
+    }
+
+    repeated Record records = 1;
+    optional string units = 2;
+  }
+
+  message TimeSeries {
+    message Point {
+      double value = 1;
+    }
+
+    message Track {
+      string name = 1;
+      optional string units = 2;
+      repeated Point points = 10;
+      double total = 11;
+    }
+
+    repeated Track tracks = 1;
+  }
+
+  message Custom {
+    google.protobuf.Struct payload = 1;
+  }
+
+  string name = 1;
+
+  oneof Value {
+    Counter counter = 100;
+    TimeSeries time_series = 101;
+    MultiCounter multi_counter = 102;
+    Custom custom = 199;
+  }
+}
+
+
+service TracingService {
+  rpc StreamTrace(google.protobuf.Empty) returns (stream StreamTraceEvent);
+}

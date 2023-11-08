@@ -10,8 +10,7 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
-import { kaiThemeExtension } from '@dxos/kai-framework/theme-extensions';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
 import packageJson from './package.json';
@@ -52,7 +51,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
       ],
-      extensions: [osThemeExtension, kaiThemeExtension],
+      extensions: [osThemeExtension],
     }),
 
     chromeExtensionPlugin({

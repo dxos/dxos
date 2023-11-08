@@ -2,13 +2,50 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ux } from '@oclif/core';
+import { type Table } from '@oclif/core/lib/cli-ux';
+
 import { asyncTimeout } from '@dxos/async';
-import { Space } from '@dxos/client/echo';
+import { type Space, SpaceMember } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
+import { maybeTruncateKey } from './types';
 import { SpaceWaitTimeoutError } from '../errors';
 import { SPACE_WAIT_TIMEOUT } from '../timeouts';
-import { maybeTruncateKey } from './types';
+
+export const selectSpace = async (spaces: Space[]) => {
+  // eslint-disable-next-line no-eval
+  const inquirer = (await eval('import("inquirer")')).default;
+  const { key } = await inquirer.prompt([
+    {
+      name: 'key',
+      type: 'list',
+      message: 'Select a space:',
+      choices: spaces.map((space) => ({
+        name: `[${truncateKey(space.key)}] ${space.properties.name ?? ''}`,
+        value: space.key,
+      })),
+    },
+  ]);
+
+  return key;
+};
+
+export const waitForSpace = async (
+  space: Space,
+  timeout = SPACE_WAIT_TIMEOUT,
+  exceptionHandler?: (err: Error) => void,
+) => {
+  try {
+    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError(timeout));
+  } catch (err: any) {
+    if (exceptionHandler) {
+      exceptionHandler(err);
+    } else {
+      throw err;
+    }
+  }
+};
 
 export type MapSpacesOptions = {
   verbose?: boolean;
@@ -54,36 +91,100 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
   });
 };
 
-export const selectSpace = async (spaces: Space[]) => {
-  // eslint-disable-next-line no-eval
-  const inquirer = (await eval('import("inquirer")')).default;
-  const { key } = await inquirer.prompt([
+export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.table.Options = {}) => {
+  ux.table(
+    mapSpaces(spaces, { ...flags, truncateKeys: true }),
     {
-      name: 'key',
-      type: 'list',
-      message: 'Select a space:',
-      choices: spaces.map((space) => ({
-        name: `[${truncateKey(space.key)}] ${space.properties.name ?? ''}`,
-        value: space.key,
-      })),
-    },
-  ]);
+      key: {
+        header: 'key',
+      },
+      open: {
+        header: 'open',
+        minWidth: 6,
+      },
+      name: {
+        header: 'name',
+      },
+      members: {
+        header: 'members',
+      },
+      objects: {
+        header: 'objects',
+      },
+      epoch: {
+        header: 'epoch',
+      },
+      // appliedEpoch: {
+      //   header: 'Applied Epoch',
+      // },
 
-  return key;
+      startup: {
+        header: 'startup',
+        extended: true,
+      },
+      startDataMutations: {
+        header: 'stashed', // TODO(burdon): Stashed?
+        extended: true,
+      },
+      currentDataMutations: {
+        header: 'processed',
+        extended: true,
+      },
+      totalDataMutations: {
+        header: 'total',
+        extended: true,
+      },
+      progress: {
+        header: 'progress',
+        extended: true,
+        // TODO(burdon): Use `ink` to render progress bar (separate from list commands).
+        // get: (spaceInfo) => {
+        //   let progressValue = +spaceInfo.progress;
+        //   const subscription = spaces[0].pipeline.subscribe({
+        //     next: (value) => {
+        //       console.log('update', value);
+        //       progressValue += 1;
+        //     },
+        //   });
+        //   return progressValue;
+        // },
+      },
+    },
+    {
+      ...flags,
+    },
+  );
 };
 
-export const waitForSpace = async (
-  space: Space,
-  timeout = SPACE_WAIT_TIMEOUT,
-  exceptionHandler?: (err: Error) => void,
-) => {
-  try {
-    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError(timeout));
-  } catch (err: any) {
-    if (exceptionHandler) {
-      exceptionHandler(err);
-    } else {
-      throw err;
-    }
-  }
+//
+// Members
+//
+
+// TODO(burdon): Export proto type.
+export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
+  return members.map((member) => ({
+    key: maybeTruncateKey(member.identity.identityKey, truncateKeys),
+    name: member.identity.profile?.displayName,
+    presence: member.presence === SpaceMember.PresenceState.ONLINE ? 'Online' : 'Offline',
+  }));
+};
+
+export const printMembers = (members: SpaceMember[], flags = {}) => {
+  ux.table(
+    mapMembers(members, true),
+    {
+      key: {
+        header: 'identity key',
+      },
+      name: {
+        header: 'display name',
+      },
+      presence: {
+        header: 'presence',
+      },
+    },
+    {
+      ...flags,
+    },
+  );
 };

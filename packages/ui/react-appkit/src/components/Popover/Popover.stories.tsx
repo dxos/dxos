@@ -3,13 +3,14 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
-import { Button } from '@dxos/aurora';
-import { focusRing, hoverColors, openOutline } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { focusRing, hoverColors, openOutline } from '@dxos/react-ui-theme';
 
-import { Avatar } from '../Avatar';
 import { Popover } from './Popover';
+import { Avatar } from '../Avatar';
 
 export default {
   component: Popover,

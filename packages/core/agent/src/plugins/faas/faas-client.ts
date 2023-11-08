@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { FunctionListEntry } from './api';
+import { type FunctionListEntry } from './api';
 
 // TODO(burdon): Protobuf.
 export type Trigger = {
@@ -61,12 +60,8 @@ export type InvocationData = {
  * Wrapper for the OpenFaaS HTTP API.
  */
 export class FaasClient {
-  // prettier-ignore
-  constructor(
-    private readonly _config: Runtime.Services.Faasd,
-    private readonly _context: InvocationContext = {}
-  ) {
-    assert(this._config.gateway, 'Invalid gateway URL.');
+  constructor(private readonly _config: Runtime.Services.Faasd, private readonly _context: InvocationContext = {}) {
+    invariant(this._config.gateway, 'Invalid gateway URL.');
   }
 
   async dispatch(event: TriggerEvent) {

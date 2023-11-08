@@ -4,17 +4,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, schema } from '@dxos/protocols';
-import { BlobChunk, BlobSyncService, WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
-import { ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type BlobChunk, type BlobSyncService, type WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
+import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
-import { BlobStore } from './blob-store';
+import { type BlobStore } from './blob-store';
 
 export type BlobSyncExtensionParams = {
   blobStore: BlobStore;
@@ -23,7 +22,7 @@ export type BlobSyncExtensionParams = {
   onPush: (data: BlobChunk) => Promise<void>;
 };
 
-const MIN_WANT_LIST_UPDATE_INTERVAL = 500;
+const MIN_WANT_LIST_UPDATE_INTERVAL = process.env.NODE_ENV === 'test' ? 5 : 500;
 
 const MAX_CONCURRENT_UPLOADS = 20;
 

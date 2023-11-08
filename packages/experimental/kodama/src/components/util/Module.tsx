@@ -3,7 +3,7 @@
 //
 
 import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { useAppState, useModule } from '../../hooks';
 

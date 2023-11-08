@@ -49,6 +49,11 @@ declare module 'streamx' {
   export class Readable extends Stream implements IReadable {
     constructor(args?: any);
 
+    _open(cb: (err: Error | null) => void);
+    _read(cb: (err: Error | null) => void);
+
+    push(chunk: any);
+
     pipe(dest: Writable, cb?: Callback);
   }
 

@@ -2,20 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { type Keyring } from '@dxos/keyring';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type AdmissionRequest,
+  type AdmissionResponse,
+  type IntroductionRequest,
+} from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { DataSpaceManager, SigningContext } from '../spaces';
-import { InvitationProtocol } from './invitation-protocol';
+import { type InvitationProtocol } from './invitation-protocol';
+import { type DataSpaceManager, type SigningContext } from '../spaces';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(
@@ -75,7 +78,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   createIntroduction(): IntroductionRequest {
     return {
-      profile: this._signingContext.profile,
+      profile: this._signingContext.getProfile(),
     };
   }
 

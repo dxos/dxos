@@ -6,12 +6,21 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist/types"
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "@dxos/typings",
+      "node"
+    ]
   },
   "include": [
+    "scripts",
     "src"
   ],
   "references": [
+    {
+      "path": "../../apps/plugins/plugin-telemetry"
+    },
     {
       "path": "../../common/async"
     },
@@ -20,6 +29,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -32,6 +44,9 @@
     },
     {
       "path": "../../common/timeframe"
+    },
+    {
+      "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
@@ -49,13 +64,16 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/gem-core"
+    },
+    {
       "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/mosaic"
+      "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/mosaic"
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
@@ -67,16 +85,16 @@
       "path": "../../sdk/react-shell"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../../ui/react-ui-theme"
     }
   ]
 }

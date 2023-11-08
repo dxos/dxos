@@ -1,0 +1,106 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+import "dxos/config.proto";
+import "dxos/echo/metadata.proto";
+import "dxos/echo/timeframe.proto";
+import "dxos/error.proto";
+import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
+import "dxos/mesh/signal.proto";
+import "dxos/mesh/teleport/gossip.proto";
+import "dxos/value.proto";
+
+package dxos.client.services;
+
+//
+// Development Tooling
+//
+
+message Metrics {
+  message KeyPair {
+    optional string key = 1;
+    optional dxos.value.Value value = 2;
+    optional dxos.value.Stats stats = 3;
+  }
+
+  google.protobuf.Timestamp timestamp = 1;
+  repeated KeyPair values = 10;
+}
+
+message ControlMetricsRequest {
+  optional bool reset = 1;
+  optional bool record = 2;
+}
+
+message ControlMetricsResponse {
+  optional bool recording = 1;
+}
+
+// TODO(burdon): Rename Trace?
+message QueryMetricsRequest {
+  optional int32 interval = 1;
+}
+
+message QueryMetricsResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  Metrics metrics = 2;
+}
+
+// NOTE: Keep aligned with LogLevel in @dxos/log.
+enum LogLevel {
+  TRACE = 5;
+  DEBUG = 10;
+  INFO = 11;
+  WARN = 12;
+  ERROR = 13;
+}
+
+message QueryLogsRequest {
+  enum MatchingOptions {
+    /// Filters match all log levels above. Default behaviour for the logger.
+    INCLUSIVE = 1;
+
+    /// Explicitly specify all desired log levels.
+    EXPLICIT = 2;
+  }
+
+  message Filter {
+    LogLevel level = 1;
+    optional string pattern = 2;
+  }
+
+  repeated Filter filters = 1;
+  optional MatchingOptions options = 10;
+}
+
+message LogEntry {
+  message Meta {
+    string file = 1;
+    int32 line = 2;
+    optional google.protobuf.Struct scope = 3;
+    optional int32 resource_id = 4;
+  }
+
+  LogLevel level = 1;
+  string message = 2;
+  optional google.protobuf.Struct context = 3;
+  optional Meta meta = 4;
+  optional dxos.error.Error error = 5;
+  google.protobuf.Timestamp timestamp = 6;
+}
+
+service LoggingService {
+  // TODO(burdon): Deprecated: move to system service/diagnostics.
+  rpc ControlMetrics(ControlMetricsRequest) returns (ControlMetricsResponse);
+  rpc QueryMetrics(QueryMetricsRequest) returns (stream QueryMetricsResponse);
+  rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
+}

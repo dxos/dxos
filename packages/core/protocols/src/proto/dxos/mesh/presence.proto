@@ -16,4 +16,7 @@ message PeerState {
 
   // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
   dxos.keys.PublicKey identity_key = 2;
+
+  /// Omitted when sent over the network.
+  optional dxos.keys.PublicKey peer_id = 3;
 }

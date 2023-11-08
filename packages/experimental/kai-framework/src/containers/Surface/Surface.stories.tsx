@@ -2,20 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { Circle, List, MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 'react';
+import React, { type FC, type ReactNode, Suspense, useContext, useEffect, useState } from 'react';
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
-import { Button, Main, ThemeProvider, useSidebar } from '@dxos/aurora';
-import { getSize, mx, appTx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { osTranslations } from '@dxos/react-shell';
-
-import '@dxosTheme';
+import { Button, Main, ThemeProvider, useSidebars } from '@dxos/react-ui';
+import { getSize, mx, defaultTx } from '@dxos/react-ui-theme';
 
 // type Action = {
 //   type: 'select';
@@ -113,7 +113,7 @@ const SurfaceOutlet = () => {
 const SIDEBAR_SURFACE_NAME = 'KaiFrameworkSidebarSurface';
 
 const SidebarSurface = () => {
-  const { toggleSidebar } = useSidebar(SIDEBAR_SURFACE_NAME);
+  const { toggleNavigationSidebar } = useSidebars(SIDEBAR_SURFACE_NAME);
   const { controller } = useContext(SurfaceControllerContext);
 
   return (
@@ -128,7 +128,7 @@ const SidebarSurface = () => {
           </Button>
         </div>
         <div>
-          <Button variant='ghost' onClick={toggleSidebar}>
+          <Button variant='ghost' onClick={toggleNavigationSidebar}>
             <CaretLeft className={getSize(5)} />
           </Button>
         </div>
@@ -271,13 +271,13 @@ const Component3 = () => (
 const PANEL_SIDEBAR_CONTENT_NAME = 'PanelSidebarContent';
 
 const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
-  const { sidebarOpen, openSidebar } = useSidebar(PANEL_SIDEBAR_CONTENT_NAME);
+  const { navigationSidebarOpen, openNavigationSidebar } = useSidebars(PANEL_SIDEBAR_CONTENT_NAME);
   return (
     <div className='flex grow overflow-hidden'>
-      {!sidebarOpen && (
+      {!navigationSidebarOpen && (
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
-            <Button variant='ghost' onClick={openSidebar}>
+            <Button variant='ghost' onClick={openNavigationSidebar}>
               <CaretRight className={getSize(5)} />
             </Button>
           </div>
@@ -303,9 +303,9 @@ const Layout = () => {
   return (
     <Main.Root>
       <Main.Overlay />
-      <Main.Sidebar>
+      <Main.NavigationSidebar>
         <Surface id='sidebar' element={<SidebarSurface />} />
-      </Main.Sidebar>
+      </Main.NavigationSidebar>
       <Main.Content>
         <PanelSidebarContent>
           <Surface id='main' element={<MainSurface />} />
@@ -329,7 +329,12 @@ const TestApp = () => {
   };
 
   const Root = () => (
-    <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]} tx={appTx}>
+    <ThemeProvider
+      appNs='kai'
+      rootDensity='fine'
+      resourceExtensions={[osTranslations, appkitTranslations]}
+      tx={defaultTx}
+    >
       <SurfaceControllerContextProvider components={components}>
         <Layout />
       </SurfaceControllerContextProvider>

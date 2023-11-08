@@ -4,22 +4,22 @@
 
 import { synchronized, trackLeaks } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { FeedStore } from '@dxos/feed-store';
+import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
+import { type ModelFactory } from '@dxos/model-factory';
+import { type NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Teleport } from '@dxos/teleport';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
+import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type Teleport } from '@dxos/teleport';
+import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { SnapshotManager, SnapshotStore } from '../dbhost';
-import { MetadataStore } from '../metadata';
 import { Space } from './space';
-import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
+import { SnapshotManager, type SnapshotStore } from '../db-host';
+import { type MetadataStore } from '../metadata';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
@@ -122,6 +122,7 @@ export class SpaceManager {
       memberKey,
     });
     this._spaces.set(space.key, space);
+
     log.trace('dxos.echo.space-manager.construct-space', trace.end({ id: this._instanceId }));
     return space;
   }

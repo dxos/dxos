@@ -1,0 +1,23 @@
+[
+  [
+    "@dxos/swc-log-plugin",
+    {
+      "symbols": [
+        {
+          "function": "log",
+          "package": "@dxos/log",
+          "param_index": 2,
+          "include_args": false,
+          "include_call_site": true
+        },
+        {
+          "function": "invariant",
+          "package": "@dxos/invariant",
+          "param_index": 2,
+          "include_args": true,
+          "include_call_site": false
+        }
+      ]
+    }
+  ]
+]

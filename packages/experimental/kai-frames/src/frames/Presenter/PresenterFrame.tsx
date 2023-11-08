@@ -5,13 +5,13 @@
 import { Eye, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
-import { Presentation } from '@dxos/kai-types';
+import { Button } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
+import { type Presentation } from '@dxos/kai-types';
 
-import { useFrameContext } from '../../hooks';
 import { DeckContainer } from './DeckContainer';
 import { DeckEditor } from './DeckEditor';
+import { useFrameContext } from '../../hooks';
 
 // TODO(burdon): Load/save Deck to IPFS.
 // TODO(burdon): IPFS images.

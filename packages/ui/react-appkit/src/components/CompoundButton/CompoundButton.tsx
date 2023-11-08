@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
+import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { useId, useThemeContext, ButtonProps, useElevationContext } from '@dxos/aurora';
-import { descriptionText, descriptionTextPrimary, mx } from '@dxos/aurora-theme';
+import { useId, useThemeContext, type ButtonProps, useElevationContext } from '@dxos/react-ui';
+import { descriptionText, descriptionTextPrimary, mx } from '@dxos/react-ui-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -36,8 +36,8 @@ export const CompoundButton = ({
   const descriptionId = useId('compoundButton-description');
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
-  const isOs = tx('themeName', 'aurora', {}) === 'dxos';
-  const styleProps = { ...buttonProps, variant, elevation };
+  const isOs = tx('themeName', 'default', {}) === 'dxos';
+  const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
   const buttonClassName = tx(
     'button.root',
     'button button--compound',
@@ -58,7 +58,11 @@ export const CompoundButton = ({
           {before}
         </div>
       )}
-      <div role='none' {...slots.middle} className={mx('grow flex flex-col gap-1 text-left', slots.middle?.className)}>
+      <div
+        role='none'
+        {...slots.middle}
+        className={mx('grow whitespace-normal flex flex-col gap-1 text-left', slots.middle?.className)}
+      >
         <p {...slots.label} id={labelId} className={mx(slots.label?.className)}>
           {children}
         </p>

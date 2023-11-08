@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
-import { DevicesService, Device } from '@dxos/protocols/proto/dxos/client/services';
+import { Context } from '@dxos/context';
+import { type DevicesService, type Device } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
-import { ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
 import { DevicesServiceImpl } from './devices-service';
+import { type ServiceContext } from '../services';
+import { createServiceContext } from '../testing';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;
@@ -18,7 +19,7 @@ describe('DevicesService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
     devicesService = new DevicesServiceImpl(serviceContext.identityManager);
   });
 

@@ -2,9 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { ErrorStream } from '@dxos/debug';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Event } from '@dxos/async';
+import { type ErrorStream } from '@dxos/debug';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+
+export enum TransportKind {
+  SIMPLE_PEER = 'SIMPLE_PEER',
+  LIBDATACHANNEL = 'LIBDATACHANNEL',
+  SIMPLE_PEER_PROXY = 'SIMPLE_PEER_PROXY',
+  MEMORY = 'MEMORY',
+  TCP = 'TCP',
+}
 
 /**
  * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.

@@ -5,11 +5,11 @@
 import { VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
 import React, { FC, useRef, useState } from 'react';
 import Peer from 'simple-peer';
-import invariant from 'tiny-invariant';
 
-import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useConfig } from '@dxos/react-client';
 import { Space, useMembers } from '@dxos/react-client/echo';

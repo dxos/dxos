@@ -2,25 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
-import { FeedInfo } from '@dxos/credentials';
-import { FeedOptions, FeedWrapper } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { type Context } from '@dxos/context';
+import { type FeedInfo } from '@dxos/credentials';
+import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { type ModelFactory } from '@dxos/model-factory';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
-import { AsyncCallback, Callback } from '@dxos/util';
+import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Timeframe } from '@dxos/timeframe';
+import { trace } from '@dxos/tracing';
+import { type AsyncCallback, Callback } from '@dxos/util';
 
-import { SnapshotManager } from '../dbhost';
-import { MetadataStore } from '../metadata';
-import { PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { DataPipeline } from './data-pipeline';
-import { SpaceProtocol } from './space-protocol';
+import { type SpaceProtocol } from './space-protocol';
+import { type SnapshotManager } from '../db-host';
+import { type MetadataStore } from '../metadata';
+import { type PipelineAccessor } from '../pipeline';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;
@@ -49,6 +50,7 @@ export type CreatePipelineParams = {
  */
 // TODO(dmaretskyi): Extract database stuff.
 @trackLeaks('open', 'close')
+@trace.resource()
 export class Space {
   private readonly _addFeedLock = new Lock();
 
@@ -88,7 +90,7 @@ export class Space {
 
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
-        await this._addFeedLock.executeSynchronized(async () => {
+        queueMicrotask(async () => {
           if (this._dataPipeline.pipeline) {
             if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
               return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse }));
@@ -98,7 +100,9 @@ export class Space {
       }
 
       if (!info.key.equals(params.genesisFeed.key)) {
-        this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
+        queueMicrotask(async () => {
+          this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
+        });
       }
     });
 
@@ -138,6 +142,7 @@ export class Space {
   }
 
   @logInfo
+  @trace.info()
   get key() {
     return this._key;
   }
@@ -205,7 +210,8 @@ export class Space {
   //   return this._dataPipeline?.getFeeds();
   // }
   @synchronized
-  async open() {
+  @trace.span()
+  async open(ctx: Context) {
     log('opening...');
     if (this._isOpen) {
       return;

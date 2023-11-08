@@ -35,6 +35,9 @@
       "path": "../../common/feed-store"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -53,6 +56,9 @@
       "path": "../../common/timeframe"
     },
     {
+      "path": "../../common/tracing"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -63,6 +69,9 @@
     },
     {
       "path": "../../core/echo/echo-pipeline"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/model-factory"
@@ -98,6 +107,9 @@
       "path": "../../core/mesh/teleport-extension-object-sync"
     },
     {
+      "path": "../../core/mesh/websocket-rpc"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -105,9 +117,6 @@
     },
     {
       "path": "../config"
-    },
-    {
-      "path": "../errors"
     }
   ]
 }

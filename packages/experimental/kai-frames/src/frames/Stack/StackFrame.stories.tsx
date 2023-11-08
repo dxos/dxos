@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
 import { DocumentStack } from '@dxos/kai-types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
-import { TestFrameContainer } from '../../testing';
 import { StackFrame } from './StackFrame';
 import { StackFrameRuntime } from './defs';
-
-import '@dxosTheme';
+import { TestFrameContainer } from '../../testing';
 
 export default {
   component: StackFrame,

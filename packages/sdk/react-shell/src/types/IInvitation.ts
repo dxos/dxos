@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { InvitationStatus } from '@dxos/react-client/invitations';
+import { type InvitationStatus } from '@dxos/react-client/invitations';
 
 export type IInvitation = Pick<
   InvitationStatus,

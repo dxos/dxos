@@ -1,62 +1,73 @@
-import { defineTemplate, renderSlots, text, Imports } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input, defaultOutputFile, slots, ...rest }) => {
-    const { react, pwa, dxosUi, name } = input;
-    const imports = new Imports();
-    const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
-    const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.lazy(
-      ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
-      '@dxos/react-client',
-    );
-    const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-appkit');
-    const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
-    const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
-      ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
-      '@dxos/react-appkit',
-    );
+export default template.define
+  .slots({
+    content: '<p>Your code goes here</p>',
+    extraImports: '',
+  })
+  .script({
+    content: ({ input, slots, imports }) => {
+      const { react, pwa, dxosUi, name, proto } = input;
+      const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.use(
+        ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
+        '@dxos/react-client',
+      );
+      const ThemeProvider = imports.use('ThemeProvider', '@dxos/react-appkit');
+      const useRegisterSW = imports.use('useRegisterSW', 'virtual:pwa-register/react');
+      // TODO(wittjosiah): Remove appkit.
+      const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.use(
+        ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
+        '@dxos/react-appkit',
+      );
 
-    const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
+      const types = imports.use('types', './proto');
 
-    const coreContent = text`
-    <ErrorBoundary fallback={({ error }) => <${ResetDialog()} error={error} config={config} />}>
-      <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
-        ${render?.content?.()}
-        ${dxosUi && pwa && swToast()}
-      </${ClientProvider()}>
-    </ErrorBoundary>`;
+      const swToast = () => plate`<${ServiceWorkerToastContainer} {...serviceWorker} />`;
 
-    const themeProvider = (content: string) => text`
-    <${ThemeProvider()} appNs='${name}' resourceExtensions={[${appkitTranslations()}]} fallback={<${GenericFallback()} />}>
-      ${content}
-    </${ThemeProvider()}>
-    `;
+      const coreContent = plate`
+      <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
+        <${ClientProvider}
+          config={config}${dxosUi ? plate`
+          fallback={${GenericFallback}}` : ''}
+          onInitialized={async (client) => {
+            ${proto && plate`client.addSchema(${types});`}
+            const searchParams = new URLSearchParams(location.search);
+            if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+              await client.halo.createIdentity();
+            }
+          }}
+        >
+          ${slots.content}
+          ${dxosUi && pwa && swToast}
+        </${ClientProvider}>
+      </ErrorBoundary>`;
 
-    return !react
-      ? null
-      : text`
-      import React from 'react';
-      ${() => imports.render(defaultOutputFile)}
-      import { ErrorBoundary } from './ErrorBoundary';
-      
-      ${render?.extraImports?.()}
-      
-      // Dynamics allows configuration to be supplied by the hosting KUBE.
-      const config = async () => new ${Config()}(await ${Dynamics()}(), ${Local()}(), ${Defaults()}());
+      // TODO(wittjosiah): Generic fallback is missing translations.
+      const themeProvider = (content: string) => plate`
+      <${ThemeProvider} appNs='${name}' resourceExtensions={[${appkitTranslations}]} fallback={<${GenericFallback} />}>
+        ${content}
+      </${ThemeProvider}>
+      `;
 
-      export const App = () => {
-        ${pwa && `const serviceWorker = ${useRegisterSW()}();`}
-        return (
-          ${dxosUi ? themeProvider(coreContent) : coreContent}
-        )
-      }`;
-  },
-  {
-    config,
-    slots: {
-      content: '<div>Your code goes here</div>',
-      extraImports: '',
+      return (
+        react &&
+        plate`
+        import React from 'react';
+        ${imports}
+        import { ErrorBoundary } from './ErrorBoundary';
+        
+        ${slots.extraImports}
+        
+        // Dynamics allows configuration to be supplied by the hosting KUBE.
+        const config = async () => new ${Config}(await ${Dynamics}(), ${Local}(), ${Defaults}());
+
+        export const App = () => {
+          ${pwa && plate`const serviceWorker = ${useRegisterSW}();`}
+          return (
+            ${dxosUi ? themeProvider(coreContent) : coreContent}
+          )
+        }`
+      );
     },
-  },
-);
+  });

@@ -5,3 +5,4 @@
 export * from './connection';
 export * from './swarm';
 export * from './swarm-mapper';
+export * from './connection-limiter';

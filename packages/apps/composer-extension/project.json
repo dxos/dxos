@@ -15,6 +15,40 @@
     },
     "bundle": {
       "executor": "nx:run-script",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_IPDATA_API_KEY"
+        },
+        {
+          "env": "DX_SENTRY_DESTINATION"
+        },
+        {
+          "env": "DX_TELEMETRY_API_KEY"
+        },
+        {
+          "env": "DX_VAULT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "REMOTE_SOURCE"
+        },
+        {
+          "env": "SENTRY_RELEASE_AUTH_TOKEN"
+        },
+        {
+          "env": "VITE_COMPOSER_URL"
+        },
+        "^production",
+        "production"
+      ],
       "options": {
         "script": "bundle"
       },
@@ -28,7 +62,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/composer-extension/**/*.{ts,js}?(x)"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

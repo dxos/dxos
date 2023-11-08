@@ -5,10 +5,18 @@
 import { asyncTimeout, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TestExtension, TestExtensionWithStreams, type TestStreamStats } from '@dxos/teleport';
+import { TestExtension, TestExtensionWithStreams } from '@dxos/teleport';
+import type { TestStreamStats, TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { createTeleportProtocolFactory } from '../wire-protocol';
+
+export type TestTeleportExtension = {
+  name: string;
+  extension: TeleportExtension;
+};
+
+export type TestTeleportExtensionFactory = () => TestTeleportExtension[];
 
 export class TestWireProtocol {
   public readonly connections = new ComplexMap<PublicKey, TestExtension>(PublicKey.hash);
@@ -17,7 +25,14 @@ export class TestWireProtocol {
   public readonly connected = new Event<PublicKey>();
   public readonly disconnected = new Event<PublicKey>();
 
-  constructor(public readonly peerId: PublicKey) {}
+  public readonly otherConnections = new ComplexMap<{ remotePeerId: PublicKey; extension: string }, TeleportExtension>(
+    ({ remotePeerId, extension }) => remotePeerId.toHex() + extension,
+  );
+
+  constructor(
+    public readonly peerId: PublicKey,
+    private readonly _extensionFactory: TestTeleportExtensionFactory = () => [],
+  ) {}
 
   readonly factory = createTeleportProtocolFactory(async (teleport) => {
     log('create', { remotePeerId: teleport.remotePeerId });
@@ -38,6 +53,11 @@ export class TestWireProtocol {
     });
     this.streamConnections.set(teleport.remotePeerId, streamExtension);
     teleport.addExtension('test-stream', streamExtension);
+
+    for (const { name, extension } of this._extensionFactory()) {
+      this.otherConnections.set({ remotePeerId: teleport.remotePeerId, extension: name }, extension);
+      teleport.addExtension(name, extension);
+    }
   });
 
   async waitForConnection(peerId: PublicKey) {

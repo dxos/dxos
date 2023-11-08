@@ -8,26 +8,88 @@ import "dxos/schema.proto";
 
 package braneframe;
 
-// TODO(burdon): Move into object.
-message Meta {
-  message ForeignKey {
-    string source = 1;
-    string id = 2;
-  }
+//option echo_namespace = 'braneframe.com/schema';
 
-  repeated ForeignKey keys = 1;
+/**
+ *
+ */
+message Folder {
+  option (object) = true;
+
+  optional string name = 1;
+  repeated dxos.schema.TypedObject objects = 2;
 }
 
+/**
+ * Generic data view.
+ */
+message View {
+  option (object) = true;
+
+  string title = 1;
+  string type = 2;
+}
+
+/**
+ * Table view.
+ */
+message Table {
+  option (object) = true;
+
+  message Prop {
+    string id = 1;
+    string prop = 2;
+    string label = 3;
+    string refProp = 4;
+    int32 size = 10;
+  }
+
+  string title = 1;
+  dxos.schema.Schema schema = 2;
+  repeated Prop props = 3;
+
+  // TODO(burdon): Filter.
+  // TODO(burdon): Visible columns.
+  // TODO(burdon): Column widths.
+}
+
+/**
+ *
+ */
+message File {
+  option (object) = true;
+
+  string type = 1;
+  string timestamp = 2;
+  string title = 3;
+  string filename = 4;
+
+  string cid = 10;
+}
+
+/**
+ *
+ */
 message Document {
   option (object) = true;
 
   string title = 1;
   dxos.schema.Text content = 2;
-
-  // TODO(wittjosiah): Make system-level prop.
-  Meta meta = 1000;
 }
 
+/**
+ *
+ */
+message Script {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text source = 2;
+}
+
+/**
+ *
+ */
 message Stack {
   option (object) = true;
 
@@ -42,6 +104,9 @@ message Stack {
   repeated Section sections = 2;
 }
 
+/**
+ *
+ */
 message Kanban {
   option (object) = true;
 
@@ -50,23 +115,50 @@ message Kanban {
     option (object) = true;
 
     string title = 1;
-    repeated Item items = 2;
+    string index = 2;
+    repeated Item items = 3;
   }
 
+  // TODO(burdon): Reconcile with Grid.Item.
   message Item {
-    // TODO(burdon): Should this be an object?
     option (object) = true;
 
-    dxos.schema.Text title = 1;
-    // TODO(burdon): Optional content
-    dxos.schema.TypedObject object = 2;
+    dxos.schema.TypedObject object = 1;
+    dxos.schema.Text title = 2;
+
+    // TODO(burdon): Properties.
+    string index = 11;
   }
 
   string title = 1;
   repeated Column columns = 2;
 }
 
-message Drawing {
+/**
+ *
+ */
+message Grid {
+  option (object) = true;
+
+  // TODO(burdon): Reconcile with Kanban.Item.
+  message Item {
+    option (object) = true;
+
+    dxos.schema.TypedObject object = 1;
+
+    string position = 10; // TODO(burdon): Replace layout object?
+    string color = 11;
+  }
+
+  string title = 1;
+  repeated Item items = 2;
+  dxos.schema.TypedObject layout = 3;
+}
+
+/**
+ *
+ */
+message Sketch {
   option (object) = true;
 
   string title = 1;
@@ -74,14 +166,24 @@ message Drawing {
   dxos.schema.Text data = 2;
 }
 
+/**
+ *
+ */
 // TODO(burdon): Channel > Thread > Block > Message.
 message Thread {
   option (object) = true;
+
+  message Context {
+    string space = 1;
+    string schema = 2;
+    string object = 3;
+  }
 
   message Message {
     string timestamp = 1;
     string text = 2;
     string data = 3; // JSON.
+    dxos.schema.Expando ref = 4; // TODO(burdon): Change to TypedObject.
   }
 
   // TODO(burdon): Meta (e.g., source).
@@ -92,12 +194,29 @@ message Thread {
     // TODO(burdon): Import key.
     // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
-    repeated Message messages = 2;
-
-    // TODO(wittjosiah): Make system-level prop.
-    Meta meta = 1000;
+    Context context = 2;
+    repeated Message messages = 3;
   }
 
   string title = 1;
   repeated Block blocks = 2;
+}
+
+message Message {
+  option (object) = true;
+
+  message Recipient {
+    option (object) = true; // TODO(burdon): REMOVE.
+    string email = 1;
+    string name = 2;
+  }
+
+  // TODO(burdon): Type.
+  // TODO(burdon): Timestamp (across all objects).
+  string date = 2;
+  Recipient from = 3;
+  repeated Recipient to = 4;
+  string subject = 5;
+  string body = 6;
+  string ref = 7; // TODO(burdon): Implement as link.
 }

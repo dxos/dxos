@@ -46,6 +46,8 @@ service DevtoolsHost {
   rpc EnableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
   rpc DisableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
 
+  // TODO(burdon): Rename SubscribeToX as QueryX.
+
   //
   // HALO
   //
@@ -183,7 +185,6 @@ message SubscribeToSpacesResponse {
     dxos.keys.PublicKey genesis_feed = 4;
     dxos.keys.PublicKey control_feed = 5;
     dxos.keys.PublicKey data_feed = 6;
-
   }
 
   repeated SpaceInfo spaces = 1;
@@ -319,6 +320,7 @@ message SignalResponse {
     dxos.mesh.signal.Message message = 2;
   }
   google.protobuf.Timestamp received_at = 3;
+  optional bytes topic = 4;
 }
 
 //

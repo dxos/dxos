@@ -2,21 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { setUser, getCurrentHub } from '@sentry/browser';
-import { Transaction, Span } from '@sentry/types';
-import invariant from 'tiny-invariant';
+// NOTE: Browser only API. There is no node polyfill.
 
-import { runInContext, scheduleTask, Trigger } from '@dxos/async';
+import { getCurrentHub } from '@sentry/browser';
+import { type Transaction, type Span } from '@sentry/types';
+
+import { runInContext, scheduleMicroTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
-import { humanize } from '@dxos/util';
+import { invariant } from '@dxos/invariant';
+import { getContextFromEntry, log, LogLevel, type LogProcessor } from '@dxos/log';
+
+const REPORT_SPANS = false;
 
 let TX!: Transaction;
 const SPAN_MAP = new Map<string, Span>();
 const SENTRY_INITIALIZED = new Trigger();
 const ctx = new Context({ onError: (err) => log.warn('Unhandled error in Sentry context', err) });
+ctx.maxSafeDisposeCallbacks = 10_000;
+
+let tracingConfigured = false;
 
 export const configureTracing = () => {
+  tracingConfigured = true;
   runInContext(ctx, () => {
     // Configure root transaction.
     TX = getCurrentHub().startTransaction({
@@ -51,20 +58,22 @@ export const finish = () => {
 };
 
 export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
-  if (entry.level !== LogLevel.TRACE) {
+  if (!tracingConfigured) {
     return;
   }
-  scheduleTask(ctx, async () => {
+
+  const { message, level, error } = entry;
+  const context = getContextFromEntry(entry);
+
+  if (level !== LogLevel.TRACE) {
+    return;
+  }
+
+  // NOTE: Make sure `entry` is not captured in this closure to avoid a memory leak.
+  scheduleMicroTask(ctx, async () => {
     await SENTRY_INITIALIZED.wait();
-    const context = getContextFromEntry(entry);
 
-    if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
-      setUser({
-        id: humanize(context.identityKey),
-      });
-    }
-
-    if (context?.span) {
+    if (REPORT_SPANS && context?.span) {
       switch (context.span.command) {
         case 'begin': {
           const id = context.span.id;
@@ -81,13 +90,13 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
 
           let logContext: string;
           try {
-            logContext = JSON.stringify({ ...context, ...entry });
+            logContext = JSON.stringify({ ...context, message, level, error });
           } catch (err) {
             logContext = JSON.stringify(context);
           }
 
           const span = parentSpan.startChild({
-            op: entry.message,
+            op: message,
             data: {
               ...context.span.data,
               '@dxos/log': logContext,

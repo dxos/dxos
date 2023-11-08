@@ -2,19 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
-import { Any, Stream } from '@dxos/codec-protobuf';
+import { type Any, type Stream } from '@dxos/codec-protobuf';
 import { Context, cancelWithContext } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { Message as SignalMessage, SignalState, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Message as SignalMessage, SignalState, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { Message, SignalMethods } from '../signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
+import { type Message, type SignalMethods } from '../signal-methods';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5000;
@@ -214,7 +213,7 @@ export class SignalClient implements SignalMethods {
     this._performance.leaveCounter++;
     log('leaving', { topic, peerId });
 
-    this._swarmStreams.get({ topic, peerId })?.close();
+    void this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
     this._joinedTopics.delete({ topic, peerId });
   }
@@ -235,7 +234,7 @@ export class SignalClient implements SignalMethods {
   async unsubscribeMessages(peerId: PublicKey) {
     log('unsubscribing from messages', { peerId });
     this._subscribedMessages.delete({ peerId });
-    this._messageStreams.get(peerId)?.close();
+    void this._messageStreams.get(peerId)?.close();
     this._messageStreams.delete(peerId);
   }
 
@@ -264,10 +263,10 @@ export class SignalClient implements SignalMethods {
 
     // Create new context for each connection.
     this._connectionCtx = this._ctx!.derive();
-    this._connectionCtx.onDispose(() => {
+    this._connectionCtx.onDispose(async () => {
       log('connection context disposed');
-      Array.from(this._swarmStreams.values()).forEach((stream) => stream.close());
-      Array.from(this._messageStreams.values()).forEach((stream) => stream.close());
+      await Promise.all(Array.from(this._swarmStreams.values()).map((stream) => stream.close()));
+      await Promise.all(Array.from(this._messageStreams.values()).map((stream) => stream.close()));
       this._swarmStreams.clear();
       this._messageStreams.clear();
     });
@@ -366,7 +365,7 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      this._swarmStreams.get({ topic, peerId })?.close();
+      void this._swarmStreams.get({ topic, peerId })?.close();
       this._swarmStreams.delete({ topic, peerId });
     }
 
@@ -406,7 +405,7 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      this._messageStreams.get(peerId)?.close();
+      void this._messageStreams.get(peerId)?.close();
       this._messageStreams.delete(peerId);
     }
 

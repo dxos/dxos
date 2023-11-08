@@ -4,31 +4,30 @@
 
 import { Chess } from 'chess.js';
 import React, { useEffect, useState } from 'react';
-import invariant from 'tiny-invariant';
 
-import { Main } from '@dxos/aurora';
-import { baseSurface, mx } from '@dxos/aurora-theme';
-import { Chessboard, ChessModel, ChessMove, Game } from '@dxos/chess-app';
-import { SpaceProxy } from '@dxos/client/echo';
+import { Chessboard, type ChessModel, type ChessMove, type Game } from '@dxos/chess-app';
+import { invariant } from '@dxos/invariant';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; object: Game } }) => {
+export const ChessMain = ({ game }: { game: Game }) => {
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
-    if (!model || object.pgn !== model?.chess.pgn()) {
+    if (!model || game.pgn !== model?.chess.pgn()) {
       const chess = new Chess();
-      if (object.pgn) {
-        chess.loadPgn(object.pgn);
+      if (game.pgn) {
+        chess.loadPgn(game.pgn);
       }
 
       setModel({ chess });
     }
-  }, [object.pgn]);
+  }, [game.pgn]);
 
   const handleUpdate = (move: ChessMove) => {
     invariant(model);
     if (model.chess.move(move)) {
       // TODO(burdon): Add move (requires array of scalars).
-      object!.pgn = model.chess.pgn();
+      game!.pgn = model.chess.pgn();
       setModel({ ...model });
     }
   };
@@ -38,7 +37,7 @@ export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; obj
   }
 
   return (
-    <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex grow justify-center items-center md:m-8'>
         <div className='flex md:min-w-[600px] md:min-h-[600px]'>
           <Chessboard model={model} onUpdate={handleUpdate} />

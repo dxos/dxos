@@ -3,12 +3,12 @@
 //
 
 import DigitalOcean from 'do-wrapper';
-import assert from 'node:assert';
 
 import { waitForCondition } from '@dxos/async';
 import type { Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 
-import { KUBE_TAG, KubeDeployOptions, MachineryProvider } from './provider';
+import { KUBE_TAG, type KubeDeployOptions, type MachineryProvider } from './provider';
 
 const DEFAULT_REGION = 'nyc3';
 const DEFAULT_MEMORY = 4;
@@ -18,13 +18,13 @@ export class DigitalOceanProvider implements MachineryProvider {
 
   constructor(config: Config) {
     const doAccessToken = config.get('runtime.services.machine.doAccessToken');
-    assert(doAccessToken, 'Invalid DigitalOcean Access Token.');
+    invariant(doAccessToken, 'Invalid DigitalOcean Access Token.');
 
     this._session = new DigitalOcean(doAccessToken, 100);
   }
 
   async getDropletIdFromName(name: string) {
-    assert(name);
+    invariant(name);
 
     const result = await this._session.droplets.getAll();
     const [targetDroplet] = result.droplets.filter((droplet: any) => droplet.name === name) || [];
@@ -109,7 +109,7 @@ export class DigitalOceanProvider implements MachineryProvider {
 
     const sshKeys = await this.getSshKeys();
 
-    assert(sshKeys.length, 'No SSH keys found.');
+    invariant(sshKeys.length, 'No SSH keys found.');
 
     const createParameters = {
       name,

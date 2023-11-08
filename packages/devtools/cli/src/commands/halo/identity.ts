@@ -4,7 +4,7 @@
 
 import chalk from 'chalk';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
@@ -22,7 +22,7 @@ export default class Identity extends BaseCommand<typeof Identity> {
       } else {
         const { identityKey, profile } = identity;
         this.log('Identity key:', identityKey.toHex());
-        this.log('Profile name:', profile?.displayName);
+        this.log('Display name:', profile?.displayName);
         return {
           identityKey: identityKey.toHex(),
           profile,

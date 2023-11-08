@@ -5,8 +5,8 @@
 import { AppWindow, Circle, Code, Robot } from '@phosphor-icons/react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useMetagraph } from '@dxos/react-metagraph';
@@ -15,9 +15,9 @@ import { compareObject, compareString } from '@dxos/util';
 // TODO(burdon): Type selector.
 
 const iconTypes: { [index: string]: { Icon: FC<any>; color: string } } = {
-  'dxos:type/bot': { Icon: Robot, color: 'text-green-400' },
-  'dxos:type/frame': { Icon: AppWindow, color: 'text-orange-400' },
-  'dxos:type/schema': { Icon: Code, color: 'text-blue-400' },
+  'dxos.org/type/bot': { Icon: Robot, color: 'text-green-400' },
+  'dxos.org/type/frame': { Icon: AppWindow, color: 'text-orange-400' },
+  'dxos.org/type/schema': { Icon: Code, color: 'text-blue-400' },
 };
 
 // TODO(burdon): Re-use in console.

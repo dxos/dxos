@@ -2,11 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import {
+  type EncodingOptions,
+  type ServiceDescriptor,
+  type ServiceHandler,
+  type ServiceProvider,
+} from '@dxos/codec-protobuf';
+import { invariant } from '@dxos/invariant';
 
-import { EncodingOptions, ServiceDescriptor, ServiceHandler, ServiceProvider } from '@dxos/codec-protobuf';
-
-import { RpcPeer, RpcPeerOptions } from './rpc';
+import { RpcPeer, type RpcPeerOptions } from './rpc';
 
 /**
  * Map of service definitions.
@@ -29,11 +33,7 @@ export const createServiceBundle = <Service>(services: ServiceBundle<Service>): 
  * Type-safe RPC peer.
  */
 export class ProtoRpcPeer<Service> {
-  // prettier-ignore
-  constructor(
-    public readonly rpc: Service,
-    private readonly _peer: RpcPeer
-  ) {}
+  constructor(public readonly rpc: Service, private readonly _peer: RpcPeer) {}
 
   async open() {
     await this._peer.open();
@@ -41,6 +41,10 @@ export class ProtoRpcPeer<Service> {
 
   async close() {
     await this._peer.close();
+  }
+
+  async abort() {
+    await this._peer.abort();
   }
 }
 

@@ -2,19 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { type FC } from 'react';
 
-import { Main } from '@dxos/aurora';
-import { baseSurface, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/client';
-import { SpaceProxy, TypedObject } from '@dxos/client/echo';
+import { PublicKey } from '@dxos/react-client';
+import { getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const TemplateMain = ({ data: { space, object } }: { data: { space: SpaceProxy; object: TypedObject } }) => {
+export const TemplateMain: FC<{ object: TypedObject }> = ({ object }) => {
+  const space = getSpaceForObject(object);
+
   return (
     // TODO(burdon): Boilerplate.
-    <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <pre className='m-4 p-2 ring'>
-        <span>{space.key.truncate()}</span>/<span>{PublicKey.from(object.id).truncate()}</span>
+        <span>{space?.key.truncate()}</span>/<span>{PublicKey.from(object.id).truncate()}</span>
       </pre>
     </Main.Content>
   );

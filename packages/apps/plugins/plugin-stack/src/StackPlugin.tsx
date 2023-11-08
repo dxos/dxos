@@ -2,27 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { StackSimple, type IconProps } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Stack as StackType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client/echo';
-import { Plugin, PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Stack as StackType } from '@braneframe/types';
+import {
+  resolvePlugin,
+  type Plugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+} from '@dxos/app-framework';
 
-import { StackMain, StackSectionOverlay } from './components';
-import { stackState } from './stores';
+import { StackMain } from './components';
 import translations from './translations';
-import { STACK_PLUGIN, StackAction, StackPluginProvides, StackProvides } from './types';
-import { isStack, stackToGraphNode } from './util';
+import {
+  STACK_PLUGIN,
+  StackAction,
+  isStack,
+  type StackPluginProvides,
+  type StackProvides,
+  type StackState,
+} from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[StackType.name] = StackType;
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const adapter = new GraphNodeAdapter(StackType.filter(), stackToGraphNode);
+  const stackState: StackState = deepSignal({ creators: [] });
 
   return {
     meta: {
@@ -37,78 +47,64 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
-        if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
-          stackState.choosers.push(...((plugin as Plugin<StackProvides>).provides.stack.choosers ?? []));
-        }
       }
     },
-    unload: async () => {
-      adapter.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [StackType.schema.typename]: {
+            placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
+            icon: (props: IconProps) => <StackSimple {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent, emit) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
+            return;
           }
 
-          const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          return [
-            {
-              id: `${STACK_PLUGIN}/create`,
-              index: 'a1',
-              testId: 'stackPlugin.createStack',
-              label: ['create stack label', { ns: STACK_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              intent: [
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+            id: `${STACK_PLUGIN}/create`,
+            label: ['create stack label', { ns: STACK_PLUGIN }],
+            icon: (props) => <StackSimple {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
                 {
                   plugin: STACK_PLUGIN,
                   action: StackAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
-                  action: TreeViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
-              ],
+              ]),
+            properties: {
+              testId: 'stackPlugin.createObject',
             },
-          ];
+          });
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            if ('object' in data && isStack(data.object)) {
-              return StackMain;
-            } else {
-              return null;
-            }
-          case 'dragoverlay':
-            if ('object' in data) {
-              return StackSectionOverlay;
-            } else {
-              return null;
-            }
-          default:
+      surface: {
+        component: (data, role) => {
+          if (!isStack(data.active)) {
             return null;
-        }
-      },
-      components: {
-        StackMain,
+          }
+
+          switch (role) {
+            case 'main':
+              return <StackMain stack={data.active} />;
+
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {
@@ -119,7 +115,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
         },
       },
-      // TODO(burdon): Review with @thure (same variable used by other plugins to define the stack).
       stack: stackState,
     },
   };

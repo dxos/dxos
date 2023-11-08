@@ -5,10 +5,11 @@
 import { expect } from 'chai';
 
 import { asyncChain } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { ServiceContext } from '../services';
+import { type ServiceContext } from '../services';
 import { createPeers, createServiceContext, performInvitation } from '../testing';
 
 const closeAfterTest = async (peer: ServiceContext) => {
@@ -19,7 +20,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 describe('services/device', () => {
   test('creates identity', async () => {
     const peer = createServiceContext();
-    await peer.open();
+    await peer.open(new Context());
     afterTest(() => peer.close());
 
     const identity = await peer.createIdentity();

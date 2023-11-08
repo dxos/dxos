@@ -7,7 +7,7 @@ import expect from 'expect';
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test } from '@dxos/test';
 
 import { createCredential } from './credential-factory';
@@ -55,7 +55,7 @@ describe('verifier', () => {
       });
 
       // Tamper with the signature.
-      credential.proof.value[0]++;
+      credential.proof!.value[0]++;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -108,7 +108,7 @@ describe('verifier', () => {
       });
 
       // Remove the nonce.
-      credential.proof.nonce = undefined;
+      credential.proof!.nonce = undefined;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -134,7 +134,7 @@ describe('verifier', () => {
       });
 
       // Tamper with the credential.
-      credential.proof.nonce = PublicKey.random().asUint8Array();
+      credential.proof!.nonce = PublicKey.random().asUint8Array();
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -214,7 +214,7 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof.chain = undefined;
+      credential.proof!.chain = undefined;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -256,8 +256,8 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof.chain!.credential.proof.value = randomBytes(
-        credential.proof.chain!.credential.proof.value.length,
+      credential.proof!.chain!.credential.proof!.value = randomBytes(
+        credential.proof!.chain!.credential.proof!.value.length,
       );
 
       expect(await verifyCredential(credential)).toMatchObject({
@@ -298,7 +298,7 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof.chain!.credential = await createCredential({
+      credential.proof!.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
@@ -349,7 +349,7 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof.chain!.credential = await createCredential({
+      credential.proof!.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device,
@@ -464,7 +464,7 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof.chain!.credential.proof.chain!.credential = await createCredential({
+      credential.proof!.chain!.credential.proof!.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device1,

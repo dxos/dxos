@@ -8,11 +8,12 @@ import { rmSync } from 'node:fs';
 
 import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
-import { Identity } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest, describe, test } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
@@ -21,16 +22,16 @@ import { createMockCredential, createServiceHost } from '../testing';
 chai.use(chaiAsPromised);
 
 describe('ClientServicesHost', () => {
-  const persistentStoragePath = '/tmp/dxos/client-services/service-host/storage';
+  const dataRoot = '/tmp/dxos/client-services/service-host/storage';
 
   afterEach(async () => {
     // Clean up.
-    isNode() && rmSync(persistentStoragePath, { recursive: true, force: true });
+    isNode() && rmSync(dataRoot, { recursive: true, force: true });
   });
 
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
@@ -49,14 +50,14 @@ describe('ClientServicesHost', () => {
 
   test('write and query credentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
-      signer: host._serviceContext.keyring,
-      issuer: host._serviceContext.identityManager.identity!.deviceKey,
+      signer: host.context.keyring,
+      issuer: host.context.identityManager.identity!.deviceKey,
     });
 
     // Test if Identity exposes haloSpace key.
@@ -86,14 +87,14 @@ describe('ClientServicesHost', () => {
 
   test('sign presentation', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
-      signer: host._serviceContext.keyring,
-      issuer: host._serviceContext.identityManager.identity!.deviceKey,
+      signer: host.context.keyring,
+      issuer: host.context.identityManager.identity!.deviceKey,
     });
 
     const nonce = new Uint8Array([0, 0, 0, 0]);
@@ -113,15 +114,15 @@ describe('ClientServicesHost', () => {
 
   test('storage reset', async () => {
     const config = new Config({
-      runtime: { client: { storage: { persistent: true, path: persistentStoragePath } } },
+      runtime: { client: { storage: { persistent: true, dataRoot } } },
     });
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
-      await host.open();
+      await host.open(new Context());
 
       await host.services.IdentityService?.createIdentity({});
 
-      expect(host._serviceContext.storage.size).to.exist;
+      expect(host.context.storage.size).to.exist;
 
       await asyncTimeout(host.reset(), 1000);
       await host.close();
@@ -129,7 +130,7 @@ describe('ClientServicesHost', () => {
 
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
-      await host.open();
+      await host.open(new Context());
       const trigger = new Trigger<Identity>();
 
       const stream = host.services.IdentityService?.queryIdentity();
@@ -141,7 +142,7 @@ describe('ClientServicesHost', () => {
         }
       });
       await expect(asyncTimeout(trigger.wait(), 200)).to.be.rejectedWith();
-      stream?.close();
+      await stream?.close();
       await host.close();
     }
   }).onlyEnvironments('nodejs', 'chromium', 'firefox');

@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { Invitation } from '@dxos/react-client/invitations';
+import { type Invitation } from '@dxos/react-client/invitations';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPage } from '@dxos/test/playwright';
 
@@ -149,8 +149,9 @@ export class InvitationsManager extends ShellManager {
     if (type === 'device') {
       await peer.getByTestId('join-identity').click();
     }
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).waitFor({ timeout: 500 });
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).type(invitation);
-    await this.page.keyboard.press('Enter');
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`).click();
   }
 
   private async _onConsoleMessage(message: ConsoleMessage) {

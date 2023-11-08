@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Document } from '@braneframe/types';
-import { Composer } from '@dxos/aurora-composer';
+import { Composer } from '@dxos/react-ui-editor';
 import { Input } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client/halo';
 

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContextScope, Scope } from '@radix-ui/react-context';
+import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 // TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
@@ -21,8 +21,6 @@ type ListProps = ComponentPropsWithRef<typeof Primitive.ol> & {
   variant?: ListVariant;
   itemSizes?: ListItemSizes;
 };
-
-// LIST
 
 const [createListContext, createListScope] = createContextScope(LIST_NAME, []);
 

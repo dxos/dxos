@@ -5,7 +5,7 @@
 import base from 'base-x';
 
 import { schema } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // Encode with URL-safe alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
@@ -30,6 +30,7 @@ export class InvitationEncoder {
         swarmKey: invitation.swarmKey,
         state: invitation.state,
         timeout: invitation.timeout,
+        ...(invitation.spaceKey ? { spaceKey: invitation.spaceKey } : {}),
       }),
     );
   }

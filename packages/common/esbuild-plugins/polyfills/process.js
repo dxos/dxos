@@ -1,167 +1,45 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+// !!! Duplicated in @dxos/node-std
+// TODO(dmaretskyi): Unify.
+
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
+
+globalThis.global = globalThis;
+
 /* eslint-disable */
 
-var _window = this || self || window;
-_window.global = _window;
-
-function defaultSetTimout () {
-  throw new Error('setTimeout has not been defined');
-}
-
-function defaultClearTimeout () {
-  throw new Error('clearTimeout has not been defined');
-}
-
-var cachedSetTimeout = defaultSetTimout;
-var cachedClearTimeout = defaultClearTimeout;
-if (typeof global.setTimeout === 'function') {
-  cachedSetTimeout = setTimeout;
-}
-if (typeof global.clearTimeout === 'function') {
-  cachedClearTimeout = clearTimeout;
-}
-
-function runTimeout (fun) {
-  if (cachedSetTimeout === setTimeout) {
-    //normal enviroments in sane situations
-    return setTimeout(fun, 0);
-  }
-  // if setTimeout wasn't available but was latter defined
-  if (
-    (cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) &&
-    setTimeout
-  ) {
-    cachedSetTimeout = setTimeout;
-    return setTimeout(fun, 0);
-  }
-  try {
-    // when when somebody has screwed with setTimeout but no I.E. maddness
-    return cachedSetTimeout(fun, 0);
-  } catch (e) {
-    try {
-      // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-      return cachedSetTimeout.call(null, fun, 0);
-    } catch (e) {
-      // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-      return cachedSetTimeout.call(this, fun, 0);
-    }
-  }
-}
-
-function runClearTimeout (marker) {
-  if (cachedClearTimeout === clearTimeout) {
-    //normal enviroments in sane situations
-    return clearTimeout(marker);
-  }
-  // if clearTimeout wasn't available but was latter defined
-  if (
-    (cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) &&
-    clearTimeout
-  ) {
-    cachedClearTimeout = clearTimeout;
-    return clearTimeout(marker);
-  }
-  try {
-    // when when somebody has screwed with setTimeout but no I.E. maddness
-    return cachedClearTimeout(marker);
-  } catch (e) {
-    try {
-      // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-      return cachedClearTimeout.call(null, marker);
-    } catch (e) {
-      // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-      // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-      return cachedClearTimeout.call(this, marker);
-    }
-  }
-}
-
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick () {
-  if (!draining || !currentQueue) {
-    return;
-  }
-  draining = false;
-  if (currentQueue.length) {
-    queue = currentQueue.concat(queue);
+function nextTick (fun, ...args) {
+  if(args.length > 0) {
+    queueMicrotask(() => fun(...args));
   } else {
-    queueIndex = -1;
-  }
-  if (queue.length) {
-    drainQueue();
+    queueMicrotask(fun);
   }
 }
 
-function drainQueue () {
-  if (draining) {
-    return;
-  }
-  var timeout = runTimeout(cleanUpNextTick);
-  draining = true;
 
-  var len = queue.length;
-  while (len) {
-    currentQueue = queue;
-    queue = [];
-    while (++queueIndex < len) {
-      if (currentQueue) {
-        currentQueue[queueIndex].run();
-      }
-    }
-    queueIndex = -1;
-    len = queue.length;
-  }
-  currentQueue = null;
-  draining = false;
-  runClearTimeout(timeout);
-}
-
-function nextTick (fun) {
-  var args = new Array(arguments.length - 1);
-  if (arguments.length > 1) {
-    for (var i = 1; i < arguments.length; i++) {
-      args[i - 1] = arguments[i];
-    }
-  }
-  queue.push(new Item(fun, args));
-  if (queue.length === 1 && !draining) {
-    runTimeout(drainQueue);
-  }
-}
-
-// v8 likes predictible objects
-function Item (fun, array) {
-  this.fun = fun;
-  this.array = array;
-}
-
-Item.prototype.run = function () {
-  this.fun.apply(null, this.array);
-};
-var title = 'browser';
-var platform = 'browser';
-var browser = true;
-var env = {};
-var argv = [];
-var version = ''; // empty string to avoid regexp issues
-var versions = {};
-var release = {};
-var config = {};
+const title = 'browser';
+const platform = 'browser';
+const browser = true;
+const env = {};
+const argv = [];
+const version = ''; // empty string to avoid regexp issues
+const versions = {};
+const release = {};
+const config = {};
 
 function noop () {}
 
-var on = noop;
-var addListener = noop;
-var once = noop;
-var off = noop;
-var removeListener = noop;
-var removeAllListeners = noop;
-var emit = noop;
+const on = noop;
+const addListener = noop;
+const once = noop;
+const off = noop;
+const removeListener = noop;
+const removeAllListeners = noop;
+const emit = noop;
 
 function binding (name) {
   throw new Error('process.binding is not supported');
@@ -180,7 +58,7 @@ function umask () {
 }
 
 // from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
-var performance = global.performance || {};
+var performance = globalThis.performance || {};
 var performanceNow =
   performance.now ||
   performance.mozNow ||
@@ -216,9 +94,7 @@ function uptime () {
   return dif / 1000;
 }
 
-_window.setImmediate = nextTick;
-
-export var process = {
+export var process = (globalThis.process ??= {
   nextTick: nextTick,
   title: title,
   browser: browser,
@@ -242,7 +118,7 @@ export var process = {
   release: release,
   config: config,
   uptime: uptime,
-};
+});
 
 // replace process.env.VAR with define
 

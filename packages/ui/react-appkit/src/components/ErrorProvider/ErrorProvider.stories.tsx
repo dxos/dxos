@@ -3,9 +3,10 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button } from '@dxos/react-ui';
 
 import { ErrorProvider } from './ErrorProvider';
 

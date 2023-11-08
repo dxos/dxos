@@ -79,7 +79,7 @@ export const dumpLeaks = () => {
 
   console.log(`Leaked resources ${openResources.size}:`);
   for (const resource of openResources) {
-    console.log(` - ${resource.name} at`);
+    console.log(`- ${resource.name} at`);
     console.log(resource.openStack.getStack());
     console.log();
   }

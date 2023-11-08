@@ -6,7 +6,7 @@ import fs from 'fs';
 import minimatch, { Minimatch } from 'minimatch';
 import path from 'path';
 
-import { PackageJson, Project, WorkspaceJson } from '../types';
+import { type PackageJson, type Project, type WorkspaceJson } from '../types';
 import { array } from '../util';
 
 type WorkspaceProcessorOptions = {
@@ -26,7 +26,7 @@ export class WorkspaceProcessor {
   // prettier-ignore
   constructor(
     private readonly _baseDir: string,
-    private readonly _options: WorkspaceProcessorOptions = {}
+    private readonly _options: WorkspaceProcessorOptions = {},
   ) {}
 
   get baseDir() {

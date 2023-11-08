@@ -19,37 +19,13 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../common/sentry"
-    },
-    {
-      "path": "../../common/telemetry"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../experimental/metagraph"
-    },
-    {
-      "path": "../../experimental/react-metagraph"
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/config"
@@ -64,13 +40,25 @@
       "path": "../../sdk/vault"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../plugins/plugin-client"
+    },
+    {
+      "path": "../plugins/plugin-error"
+    },
+    {
+      "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-telemetry"
+    },
+    {
+      "path": "../plugins/plugin-theme"
     }
   ]
 }

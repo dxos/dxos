@@ -3,27 +3,20 @@
 //
 
 import { Clipboard } from '@phosphor-icons/react';
-import React, { Component, PropsWithChildren, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { Component, type PropsWithChildren, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { Button, Message } from '@dxos/aurora';
-import { log } from '@dxos/log';
-import { Tooltip } from '@dxos/react-appkit';
+import { Button, Message } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
-  let insideRouter = false;
-  try {
-    insideRouter = !!useLocation().pathname;
-  } catch (e) {
-    log.info('ErrorBoundary is outside of Router.');
-  }
-  const navigate = insideRouter ? useNavigate() : undefined;
+  return <div>{error.message}</div>;
 
+  const navigate = useNavigate();
   const message = String(error);
   const stack = error.stack;
 
-  const onCopyError = useCallback(() => {
+  const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify({ message, stack }));
   }, [message, stack]);
 
@@ -33,13 +26,12 @@ const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) 
         <Message.Title>{message}</Message.Title>
         <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
       </Message.Root>
-      <div role='none' className='flex'>
-        <Tooltip content='Copy' zIndex='z-[21]'>
-          <Button onClick={onCopyError}>
-            <Clipboard weight='duotone' size='1em' />
-          </Button>
-        </Tooltip>
-        <div role='none' className='flex-grow' />
+      <div role='none' className='flex gap-2'>
+        <div className='grow' />
+        <Button onClick={handleCopyError} classNames='gap-2'>
+          <span>Copy Error</span>
+          <Clipboard weight='duotone' />
+        </Button>
         <Button
           variant='primary'
           onClick={async () => {

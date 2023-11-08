@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { warnAfterTimeout } from '@dxos/debug';
+
 /**
  * A locking mechanism to ensure that a given section of the code is executed by only one single "thread" at a time.
  *
@@ -76,6 +78,11 @@ interface LockableClass {
   [classLockSymbol]?: Lock;
 }
 
+const FORCE_DISABLE_WARNING = false;
+
+// Enabled only in tests by default.
+const enableWarning = !FORCE_DISABLE_WARNING && (globalThis as any).mochaExecutor;
+
 /**
  * Same as `synchronized` in Java.
  * Uses a lock global to the current class instance.
@@ -87,14 +94,18 @@ export const synchronized = (
   descriptor: TypedPropertyDescriptor<(...args: any) => any>,
 ) => {
   const method = descriptor.value!;
-  descriptor.value = async function (this: any & LockableClass, ...args: any) {
+  descriptor.value = async function synchronizedMethod(this: any & LockableClass, ...args: any) {
     const lock: Lock = (this[classLockSymbol] ??= new Lock());
 
     const tag = `${target.constructor.name}.${propertyName}`;
 
-    // TODO(dmaretskyi): Disabled due to performance concerns.
-    // const release = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
-    const release = await lock.acquire(tag);
+    // Disable warning in prod to avoid performance penalty.
+    let release;
+    if (!enableWarning) {
+      release = await lock.acquire(tag);
+    } else {
+      release = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
+    }
 
     try {
       return await method.apply(this, args);

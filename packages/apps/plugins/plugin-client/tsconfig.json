@@ -21,7 +21,16 @@
   ],
   "references": [
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/config"
@@ -30,7 +39,7 @@
       "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../types"
     }
   ]
 }

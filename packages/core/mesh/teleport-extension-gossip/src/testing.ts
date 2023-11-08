@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { asyncTimeout } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { TestConnection, TestPeer as TestPeerBase } from '@dxos/teleport/testing';
+import { type TestConnection, TestPeer as TestPeerBase } from '@dxos/teleport/testing';
 
 import { Gossip } from './gossip';
 import { Presence } from './presence';
@@ -26,6 +25,7 @@ export class TestAgent extends TestPeerBase {
     this.gossip = new Gossip({
       localPeerId: peerId,
     });
+    void this.gossip.open();
     this.presence = new Presence({
       announceInterval,
       offlineTimeout,
@@ -53,7 +53,7 @@ export class TestAgent extends TestPeerBase {
 
   override async destroy() {
     await super.destroy();
-    await this.gossip.destroy();
+    await this.gossip.close();
     await this.presence.destroy();
   }
 }

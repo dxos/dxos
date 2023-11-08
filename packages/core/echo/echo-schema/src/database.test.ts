@@ -5,15 +5,24 @@
 import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
 import { inspect } from 'node:util';
 
+import { Trigger } from '@dxos/async';
+import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
-import { data } from './defs';
-import { createDatabase } from './testing';
-import { TypedObject } from './typed-object';
+import { data, Expando, TypedObject } from './object';
+import { Schema } from './proto';
+import { TestBuilder, createDatabase } from './testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
 describe('Database', () => {
+  test('flush with test builder', async () => {
+    const testBuilder = new TestBuilder();
+    const peer = await testBuilder.createPeer();
+    peer.db.add(new Expando({ str: 'test' }));
+    await testBuilder.flushAll();
+  });
+
   test('inspect', async () => {
     const { db } = await createDatabase();
 
@@ -43,7 +52,7 @@ describe('Database', () => {
     expect(objects).toHaveLength(n);
   });
 
-  test('remove objects', async () => {
+  test('removing objects', async () => {
     const { db } = await createDatabase();
 
     const n = 10;
@@ -65,6 +74,26 @@ describe('Database', () => {
       const { objects } = db.query();
       expect(objects).toHaveLength(n - 1);
     }
+  });
+
+  // TODO(burdon): 100 times (not batched).
+  test.skip('flush callback', async () => {
+    const { db } = await createDatabase();
+
+    const update = new Trigger<BatchUpdate>();
+    db.pendingBatch.on((event) => {
+      update.wake(event);
+    });
+
+    const n = 100;
+    for (const _ of Array.from({ length: n })) {
+      db.add(new TypedObject());
+    }
+    await db.flush();
+
+    const { size, duration } = await update.wait();
+    expect(size).toEqual(1);
+    expect(duration).toBeGreaterThan(0);
   });
 
   test.skip('move object between spaces', async () => {
@@ -124,7 +153,8 @@ describe('Database', () => {
     expect(obj[data]).toEqual({
       '@id': obj.id,
       '@type': undefined,
-      '@model': 'dxos:model/document',
+      '@model': 'dxos.org/model/document',
+      '@meta': { keys: [] },
       title: 'Test title',
       description: 'Test description',
     });
@@ -215,12 +245,68 @@ describe('Database', () => {
     expect(task.toJSON()).toEqual({
       '@id': task.id,
       '@type': undefined,
-      '@model': 'dxos:model/document',
+      '@model': 'dxos.org/model/document',
+      '@meta': { keys: [] },
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
         '@id': task.assignee.id,
       },
     });
+  });
+
+  test('meta', async () => {
+    const { db } = await createDatabase();
+
+    const obj = new TypedObject();
+    expect(Array.from(obj.__meta.keys)).toEqual([]);
+    obj.__meta.keys = [{ id: 'test-key', source: 'test' }];
+    expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
+
+    db.add(obj);
+    await db.flush();
+
+    expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
+    expect(obj[data]).toEqual({
+      '@id': obj.id,
+      '@type': undefined,
+      '@model': 'dxos.org/model/document',
+      '@meta': {
+        keys: [{ id: 'test-key', source: 'test' }],
+      },
+    });
+  });
+
+  test('query by id', async () => {
+    const { db } = await createDatabase();
+
+    const title = 'Test title';
+    const obj = new TypedObject({ title });
+    db.add(obj);
+    await db.flush();
+
+    const { objects } = db.query({ id: obj.id });
+    expect(objects).toHaveLength(1);
+    expect(objects[0].title).toEqual(title);
+  });
+
+  test('schema gets automatically added to the database', async () => {
+    const testBuilder = new TestBuilder();
+    const peer = await testBuilder.createPeer();
+
+    const schema = new Schema({
+      typename: 'example.Task',
+      props: [
+        {
+          id: 'title',
+          type: Schema.PropType.STRING,
+        },
+      ],
+    });
+
+    const obj = new Expando({ title: 'Test title' }, { schema });
+    expect(obj.__schema).toEqual(schema);
+    peer.db.add(obj);
+    expect(obj.__schema).toEqual(schema);
   });
 });

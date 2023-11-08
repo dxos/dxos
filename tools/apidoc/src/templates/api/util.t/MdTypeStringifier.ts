@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { JSONOutput as Schema, ReflectionKind } from 'typedoc';
+import { type JSONOutput as Schema, ReflectionKind } from 'typedoc';
 
 import { packageOfReflectionId, reflectionById } from './utils.js';
 

@@ -4,15 +4,31 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { LogLevel, LogProcessor, LogEntry as NaturalLogEntry, getContextFromEntry, log } from '@dxos/log';
-import { LogEntry, LoggingService, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { jsonify } from '@dxos/util';
+import {
+  type LogLevel,
+  type LogProcessor,
+  type LogEntry as NaturalLogEntry,
+  getContextFromEntry,
+  log,
+} from '@dxos/log';
+import {
+  type LogEntry,
+  type LoggingService,
+  type Metrics,
+  QueryLogsRequest,
+  type ControlMetricsRequest,
+  type ControlMetricsResponse,
+  type QueryMetricsRequest,
+  type QueryMetricsResponse,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { jsonify, numericalValues, tracer } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.
  */
 export class LoggingServiceImpl implements LoggingService {
   private readonly _logs = new Event<NaturalLogEntry>();
+  private readonly _started = new Date();
 
   async open() {
     log.runtimeConfig.processors.push(this._logProcessor);
@@ -21,6 +37,54 @@ export class LoggingServiceImpl implements LoggingService {
   async close() {
     const index = log.runtimeConfig.processors.findIndex((processor) => processor === this._logProcessor);
     log.runtimeConfig.processors.splice(index, 1);
+  }
+
+  async controlMetrics({ reset, record }: ControlMetricsRequest): Promise<ControlMetricsResponse> {
+    if (reset) {
+      tracer.clear();
+    }
+
+    if (record === true) {
+      tracer.start();
+    } else if (record === false) {
+      tracer.stop();
+    }
+
+    return { recording: tracer.recording };
+  }
+
+  /**
+   * @deprecated (Move to diagnostics).
+   */
+  queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<QueryMetricsResponse> {
+    // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
+    const getNumericalValues = (key: string) => {
+      const events = tracer.get(key) ?? [];
+      return { key, stats: numericalValues(events, 'duration') };
+    };
+
+    return new Stream(({ next }) => {
+      const update = () => {
+        const metrics: Metrics = {
+          timestamp: new Date(),
+          values: [
+            getNumericalValues('dxos.echo.pipeline.control'),
+            getNumericalValues('dxos.echo.pipeline.data'),
+          ].filter(Boolean) as Metrics.KeyPair[],
+        };
+
+        next({
+          timestamp: new Date(),
+          metrics,
+        });
+      };
+
+      update();
+      const i = setInterval(update, Math.max(interval, 1_000));
+      return () => {
+        clearInterval(i);
+      };
+    });
   }
 
   queryLogs(request: QueryLogsRequest): Stream<LogEntry> {

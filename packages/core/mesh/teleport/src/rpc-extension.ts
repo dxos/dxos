@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
+import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
 
-import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
-
-import { ExtensionContext, TeleportExtension } from './teleport';
+import { type ExtensionContext, type TeleportExtension } from './teleport';
 
 export abstract class RpcExtension<Client, Server> implements TeleportExtension {
   // TODO(dmaretskyi): Type optionally.
@@ -60,6 +59,11 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
   async onClose(err?: Error | undefined): Promise<void> {
     this._isClosed = true;
     await this._rpc?.close();
+  }
+
+  async onAbort(err?: Error | undefined): Promise<void> {
+    this._isClosed = true;
+    await this._rpc?.abort();
   }
 
   close() {

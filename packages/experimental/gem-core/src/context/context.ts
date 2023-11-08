@@ -3,25 +3,26 @@
 //
 
 import type { ZoomTransform } from 'd3';
-import { RefObject, createRef } from 'react';
+import { type RefObject, createRef } from 'react';
 
-import { EventEmitter, Point, Size } from '../util';
 import { Scale } from './scale';
+import { EventEmitter, type Point, type Size } from '../util';
 
 /**
  * Contains a reference to the root SVG element and objects and configuraiton required by child nodes.
  */
 export class SVGContext {
-  readonly resized = new EventEmitter<SVGContext>();
-
   private readonly _ref = createRef<SVGSVGElement>();
+
   private _size?: Size;
   private _center?: Point;
+
+  readonly resized = new EventEmitter<SVGContext>();
 
   // prettier-ignore
   constructor(
     private readonly _scale: Scale = new Scale(),
-    private readonly _centered: boolean = true
+    private readonly _centered: boolean = true,
   ) {}
 
   get ref(): RefObject<SVGSVGElement> {

@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Move to tailwind.
 import { css } from '@emotion/css';
 import React from 'react';
 
-import { useGrid, useSvgContext, useZoom, createSvgContext } from '../hooks';
-import { defaultGridStyles } from '../styles';
 import { FullScreen } from './FullScreen';
 import { SVGContextProvider } from './SVGContextProvider';
+import { useGrid, useSvgContext, useZoom, createSvgContext } from '../hooks';
+import { defaultGridStyles } from '../styles';
 
 // Pros
 // - Natural layout and control of DOM (incl. SVG element).

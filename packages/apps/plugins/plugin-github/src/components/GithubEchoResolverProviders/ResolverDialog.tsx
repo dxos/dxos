@@ -4,24 +4,19 @@
 
 import React from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { Button, useTranslation } from '@dxos/aurora';
-import { ShellLayout } from '@dxos/react-client';
-import { Plugin } from '@dxos/react-surface';
+import { Button, useTranslation } from '@dxos/react-ui';
 
-import { GITHUB_PLUGIN } from '../../props';
 import { ResolverTree } from './ResolverTree';
+import { GITHUB_PLUGIN } from '../../props';
 
-export const ResolverDialog = ({ clientPlugin }: { clientPlugin?: Plugin<ClientPluginProvides> }) => {
+export const ResolverDialog = ({
+  handleJoinSpace,
+  handleCreateSpace,
+}: {
+  handleJoinSpace?: () => void;
+  handleCreateSpace?: () => void;
+}) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
-
-  const handleJoinSpace = () => {
-    void clientPlugin?.provides.setLayout(ShellLayout.JOIN_SPACE);
-  };
-
-  const handleCreateSpace = () => {
-    void clientPlugin?.provides.client.createSpace();
-  };
 
   return (
     <>

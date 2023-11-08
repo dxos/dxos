@@ -5,8 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { LayoutRequest, ShellDisplay, ShellLayout, ShellRuntime, useClient } from '@dxos/react-client';
-import { useSpace, useSpaces } from '@dxos/react-client/echo';
+import { type LayoutRequest, ShellDisplay, ShellLayout, type ShellRuntime } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 
 import { IdentityDialog } from '../IdentityDialog';
 import { JoinDialog } from '../JoinDialog';
@@ -19,8 +19,6 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
     spaceKey: runtime.spaceKey,
   });
 
-  const client = useClient();
-  const spaces = useSpaces({ all: true });
   const space = useSpace(spaceKey);
 
   useEffect(() => {
@@ -28,12 +26,12 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   }, [runtime]);
 
   useEffect(() => {
-    if (layout === ShellLayout.SPACE_INVITATIONS && !space) {
+    if (layout === ShellLayout.SPACE && !space) {
       log.warn('No space found for shell space invitations.');
 
       const timeout = setTimeout(async () => {
         await runtime.setAppContext({ display: ShellDisplay.NONE });
-        runtime.setLayout(ShellLayout.DEFAULT);
+        runtime.setLayout({ layout: ShellLayout.DEFAULT });
       });
 
       return () => clearTimeout(timeout);
@@ -48,34 +46,33 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           initialInvitationCode={invitationCode}
           onDone={() => {
             void runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
-            // TODO(wittjosiah): Support this first-class inside client?
-            if (spaces.length === 0) {
-              void client.createSpace();
-            }
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       );
 
-    case ShellLayout.DEVICE_INVITATIONS:
+    // TODO(wittjosiah): Jump straight to specific step if SHARE or EDIT are specified.
+    case ShellLayout.IDENTITY:
+    case ShellLayout.SHARE_IDENTITY:
+    case ShellLayout.EDIT_PROFILE:
       return (
         <IdentityDialog
           createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       );
 
-    case ShellLayout.SPACE_INVITATIONS:
+    case ShellLayout.SPACE:
       return space ? (
         <SpaceDialog
           space={space}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       ) : null;
@@ -86,11 +83,11 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           initialInvitationCode={invitationCode}
           onDone={async (result) => {
             await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: result?.spaceKey ?? undefined });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
           onExit={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       );

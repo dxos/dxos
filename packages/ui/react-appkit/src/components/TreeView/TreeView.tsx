@@ -3,9 +3,9 @@
 //
 
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
-import React, { FC, ReactNode, useState } from 'react';
+import React, { type FC, type ReactNode, useState } from 'react';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);
@@ -122,7 +122,7 @@ export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selec
         >
           <div className='flex items-center' style={{ marginLeft: depth * 16 }}>
             <div style={{ width: 20 }} onClick={() => handleToggle(item)}>
-              {sub && (open ? <CaretDown className={getSize(3)} /> : <CaretRight className={getSize(3)} />)}
+              {sub && (open ? <CaretDown className={getSize(5)} /> : <CaretRight className={getSize(5)} />)}
             </div>
             {Icon && (
               <div className='pr-1'>

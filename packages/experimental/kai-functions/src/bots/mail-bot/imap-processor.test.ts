@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import { expect } from 'chai';
 
+import { invariant } from '@dxos/invariant';
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../util';
 import { ImapProcessor } from './imap-processor';
+import { getConfig, getKey } from '../util';
 
 // TODO(burdon): Set-up in-memory test for CI.
 
@@ -16,7 +17,7 @@ describe.skip('IMAP processor', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('basic', async () => {
     const config = getConfig(process.env.TEST_CONFIG);
-    assert(config);
+    invariant(config);
 
     const processor = new ImapProcessor('dxos.module.bot.mail', {
       user: process.env.COM_PROTONMAIL_USERNAME!,
@@ -42,6 +43,7 @@ describe.skip('IMAP processor', () => {
       }))
       .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
 
-    console.log('messages', JSON.stringify(mapped, undefined, 2));
+    // console.log('messages', JSON.stringify(mapped, undefined, 2));
+    expect(mapped).to.have.length.greaterThan(0);
   });
 });

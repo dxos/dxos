@@ -3,10 +3,13 @@
 //
 
 import { Octokit } from 'octokit';
-import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import React, { type Context, createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 
+import { usePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { useKeyStore } from '@dxos/react-client/halo';
+
+import { type GithubPluginProvides } from '../../GithubPlugin';
+import { GITHUB_PLUGIN } from '../../props';
 
 export type OctokitContextValue = {
   pat: string;
@@ -16,25 +19,32 @@ export type OctokitContextValue = {
 };
 
 export const OctokitContext: Context<OctokitContextValue> = createContext<OctokitContextValue>({
-  pat: '',
+  pat: '', // TODO(burdon): Access settings directly?
   setPat: async () => {},
   patError: null,
   octokit: null,
 });
 
-const GhPatKey = 'com.github.pat';
-
 export const useOctokitContext = () => useContext(OctokitContext);
 
 export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
-  const [keyMap, setKey] = useKeyStore([GhPatKey]);
-  const pat = keyMap.get(GhPatKey) ?? '';
-
   const [octokit, setOctokit] = useState<Octokit | null>(null);
   const [patError, setPatError] = useState<OctokitContextValue['patError']>(null);
+  const githubPlugin = usePlugin<GithubPluginProvides>(GITHUB_PLUGIN);
+  if (!githubPlugin) {
+    return null;
+  }
+
+  const settings = githubPlugin.provides.settings;
+  const pat = settings.pat;
+  useEffect(() => {
+    if (pat && !octokit) {
+      void setPat(pat);
+    }
+  }, [pat, octokit]);
 
   const setPat = async (nextPat: string) => {
-    setKey(GhPatKey, nextPat);
+    settings.pat = nextPat;
     if (nextPat) {
       const nextOctokit = new Octokit({ auth: nextPat });
       return nextOctokit.rest.users.getAuthenticated().then(
@@ -52,12 +62,6 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
       setOctokit(null);
     }
   };
-
-  useEffect(() => {
-    if (pat && !octokit) {
-      void setPat(pat);
-    }
-  }, [pat, octokit]);
 
   return <OctokitContext.Provider value={{ pat, setPat, patError, octokit }}>{children}</OctokitContext.Provider>;
 };

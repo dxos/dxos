@@ -8,13 +8,15 @@ import { Writable } from 'streamx';
 import { Event, latch, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import type { ReadStreamOptions } from '@dxos/hypercore';
-import { invariant, log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
-import { FeedWrapper } from './feed-wrapper';
-import { FeedBlock } from './types';
+import { type FeedWrapper } from './feed-wrapper';
+import { type FeedBlock } from './types';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.
+  batch: 1024, // Read in batches.
 };
 
 export type FeedQueueOptions = {};
@@ -29,7 +31,7 @@ export class FeedQueue<T extends {}> {
     autoReset: true,
   });
 
-  private _feedConsumer?: Writable;
+  private _feedConsumer?: Writable = undefined;
   private _next?: () => void;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
@@ -37,7 +39,7 @@ export class FeedQueue<T extends {}> {
   // prettier-ignore
   constructor(
     private readonly _feed: FeedWrapper<T>,
-    private readonly _options: FeedQueueOptions = {}
+    private readonly _options: FeedQueueOptions = {},
   ) {}
 
   [inspect.custom]() {
@@ -114,29 +116,38 @@ export class FeedQueue<T extends {}> {
     });
 
     const onClose = () => {
-      if (this._feedConsumer) {
-        log('queue closed', { feedKey: this._feed.key });
-        this._feedConsumer = undefined;
-        this._next = undefined;
-        this._currentBlock = undefined;
-        this._index = -1;
+      this.feed.core.off('close', onClose);
+      this._feedConsumer?.off('close', onClose);
+      this._feedConsumer?.off('error', onError);
+
+      this._destroyConsumer();
+    };
+
+    const onError = (err?: Error) => {
+      if (!err) {
+        return;
       }
+
+      if (err.message === 'Writable stream closed prematurely' || err.message === 'Feed is closed') {
+        return;
+      }
+
+      log.catch(err, { feedKey: this._feed.key });
     };
 
     // Called if feed is closed externally.
-    this._feed.core.once('close', () => {
-      log('feed closed', { feedKey: this._feed.key });
-      onClose();
-    });
+    this._feed.core.once('close', onClose);
+    this._feedConsumer.on('error', onError);
 
     // Called when queue is closed. Throws exception if waiting for `pop`.
-    this._feedConsumer.once('close', () => {
-      onClose();
-    });
+    this._feedConsumer.once('close', onClose);
 
     // Pipe readable stream into writable consumer.
-    feedStream.pipe(this._feedConsumer, () => {
-      onClose();
+    feedStream.pipe(this._feedConsumer, (err) => {
+      if (err) {
+        onError(err);
+      }
+      this._destroyConsumer();
     });
 
     log('opened');
@@ -185,5 +196,15 @@ export class FeedQueue<T extends {}> {
     }
 
     return block;
+  }
+
+  private _destroyConsumer() {
+    if (this._feedConsumer) {
+      log('queue closed', { feedKey: this._feed.key });
+      this._feedConsumer = undefined;
+      this._next = undefined;
+      this._currentBlock = undefined;
+      this._index = -1;
+    }
   }
 }

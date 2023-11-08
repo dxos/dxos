@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   SnapshotStore,
-  DataPipeline,
+  type DataPipeline,
   MetadataStore,
   SpaceManager,
   valueEncoding,
@@ -19,11 +19,11 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { ClientServicesHost, createDefaultModelFactory, ServiceContext } from '../services';
-import { DataSpaceManager, SigningContext } from '../spaces';
+import { DataSpaceManager, type SigningContext } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -60,7 +60,7 @@ export const createPeers = async (numPeers: number) => {
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
       const peer = createServiceContext({ signalContext });
-      await peer.open();
+      await peer.open(new Context());
       return peer;
     }),
   );
@@ -94,7 +94,7 @@ export class TestBuilder {
 }
 
 export type TestPeerOpts = {
-  storageType?: StorageType;
+  dataStore?: StorageType;
 };
 
 export type TestPeerProps = {
@@ -115,7 +115,7 @@ export class TestPeer {
 
   constructor(
     private readonly signalContext: MemorySignalManagerContext,
-    private readonly opts: TestPeerOpts = { storageType: StorageType.RAM },
+    private readonly opts: TestPeerOpts = { dataStore: StorageType.RAM },
   ) {}
 
   get props() {
@@ -123,7 +123,7 @@ export class TestPeer {
   }
 
   get storage() {
-    return (this._props.storage ??= createStorage({ type: this.opts.storageType }));
+    return (this._props.storage ??= createStorage({ type: this.opts.dataStore }));
   }
 
   get keyring() {
@@ -211,5 +211,6 @@ export const createSigningContext = async (keyring: Keyring): Promise<SigningCon
       deviceKey,
     ),
     recordCredential: async () => {}, // No-op.
+    getProfile: () => undefined,
   };
 };

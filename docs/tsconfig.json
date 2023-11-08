@@ -54,16 +54,19 @@
       "path": "../packages/sdk/react-client"
     },
     {
+      "path": "../packages/sdk/react-shell"
+    },
+    {
       "path": "../packages/sdk/vault"
     },
     {
-      "path": "../packages/ui/aurora"
-    },
-    {
-      "path": "../packages/ui/aurora-theme"
-    },
-    {
       "path": "../packages/ui/react-appkit"
+    },
+    {
+      "path": "../packages/ui/react-ui"
+    },
+    {
+      "path": "../packages/ui/react-ui-theme"
     },
     {
       "path": "../tools/apidoc"

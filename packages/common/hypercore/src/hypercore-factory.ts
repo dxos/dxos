@@ -4,9 +4,9 @@
 
 import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
-import invariant from 'tiny-invariant';
 
-import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
+import { invariant } from '@dxos/invariant';
+import { createStorage, type Directory, StorageType } from '@dxos/random-access-storage';
 
 import { py } from './util';
 
@@ -14,10 +14,9 @@ import { py } from './util';
  * Creates feeds with default properties.
  */
 export class HypercoreFactory<T> {
-  // prettier-ignore
   constructor(
     private readonly _root: Directory = createStorage({ type: StorageType.RAM }).createDirectory(),
-    private readonly _options?: HypercoreOptions
+    private readonly _options?: HypercoreOptions,
   ) {
     invariant(this._root);
   }
@@ -28,7 +27,7 @@ export class HypercoreFactory<T> {
    * do not behave uniformly across platforms.
    */
   createFeed(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
-    const directory = this._root.createDirectory(publicKey.toString());
+    const directory = this._root.createDirectory(publicKey.toString('hex'));
     const storage = (filename: string) => directory.getOrCreateFile(filename).native;
     return hypercore(storage, publicKey, Object.assign({}, this._options, options));
   }

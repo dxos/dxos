@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DecoratorFunction } from '@storybook/csf';
-import { ReactRenderer } from '@storybook/react';
+import { type DecoratorFunction } from '@storybook/csf';
+import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 
@@ -19,22 +19,25 @@ export type ClientDecoratorOptions = {
   clients?: Client[];
   count?: number;
   registerSignalFactory?: boolean;
+  className?: string;
 };
 
 /**
  * Storybook decorator to setup client for n peers.
  * The story is rendered n times, once for each peer.
  *
- * @param {number} count Number of peers to join.
  * @returns {DecoratorFunction}
  */
+// TODO(burdon): Reconcile with ClientSpaceDecorator.
 export const ClientDecorator = (options: ClientDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> => {
-  const { clients, count = 1, registerSignalFactory: register = true } = options;
-  register && registerSignalFactory();
+  const { clients, count = 1, className = 'flex place-content-evenly' } = options;
+  if (options.registerSignalFactory ?? true) {
+    registerSignalFactory();
+  }
 
   if (clients) {
     return (Story, context) => (
-      <div className='flex place-content-evenly'>
+      <div className={className}>
         {clients.map((client, index) => (
           <ClientContext.Provider key={index} value={{ client }}>
             {Story({ args: { id: index, count: clients.length, ...context.args } })}
@@ -45,9 +48,9 @@ export const ClientDecorator = (options: ClientDecoratorOptions = {}): Decorator
   }
 
   return (Story, context) => (
-    <div className='flex place-content-evenly'>
+    <div className={className}>
       {[...Array(count)].map((_, index) => (
-        <ClientProvider key={index} services={services} fallback={() => <p>Loading</p>}>
+        <ClientProvider key={index} services={services}>
           {Story({ args: { id: index, count, ...context.args } })}
         </ClientProvider>
       ))}

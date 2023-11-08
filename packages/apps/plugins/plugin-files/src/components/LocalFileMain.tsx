@@ -2,36 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
-import { isGraphNode } from '@braneframe/plugin-graph';
-import { Surface } from '@dxos/react-surface';
+import { Surface } from '@dxos/app-framework';
 
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
+import { type LocalFile } from '../types';
 
-export const LocalFileMain: FC<{ data: unknown }> = ({ data }) => {
-  const [parentNode, childNode] =
-    data && typeof data === 'object' && 'active' in data && Array.isArray(data.active) && isGraphNode(data.active[0])
-      ? [data.active[0], data.active[1]]
-      : [];
-  const node = childNode ?? parentNode;
+export const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
   const transformedData = useMemo(
     () =>
-      node?.attributes?.disabled
+      file.permission !== 'granted'
         ? {
-            composer: { id: node.id, content: () => <LocalFileMainPermissions data={node} /> },
-            properties: { title: node.data.title, readOnly: true },
+            composer: { id: file.id, content: () => <LocalFileMainPermissions entity={file} /> },
+            properties: { title: file.title, readOnly: true },
           }
-        : node?.data?.text
+        : file.text
         ? {
-            composer: { id: node.id, content: node.data.text },
-            properties: { title: node.data.title, readOnly: true },
+            composer: { id: file.id, content: file.text },
+            properties: { title: file.title, readOnly: true },
           }
-        : node?.data
-        ? node.data
-        : null,
-    [node?.id, Boolean(node?.data?.text)],
+        : { file },
+    [file.id, Boolean(file.text)],
   );
+
+  // TODO(wittjosiah): Render file list.
+  if ('children' in file) {
+    return null;
+  }
 
   return <Surface role='main' data={transformedData} />;
 };

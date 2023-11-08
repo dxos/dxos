@@ -3,7 +3,7 @@
 //
 
 import fetch from 'node-fetch';
-import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -19,6 +19,8 @@ interface TestBrokerOptions {
   port?: number;
   timeout?: number;
   env?: Record<string, string>;
+  killExisting?: boolean;
+  onError?: (err: any) => void;
 
   /**
    * Allows arbitrary commands. WARNING: It stalls on Linux machine if `true`.
@@ -33,10 +35,12 @@ export class SignalServerRunner {
   private readonly _cwd?: string;
   private readonly _env: Record<string, string>;
   private readonly _shell: boolean;
+  private readonly _killExisting: boolean;
+  private readonly onError?: (err: any) => void;
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
-  private readonly _port: number;
+  private _port: number | undefined;
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
@@ -44,10 +48,12 @@ export class SignalServerRunner {
     binCommand,
     signalArguments,
     cwd,
-    port = 8080,
-    timeout = 5_000,
+    port,
+    timeout = 60_000,
     env = {},
     shell = false,
+    killExisting = false,
+    onError,
   }: TestBrokerOptions) {
     this._binCommand = binCommand;
     this._signalArguments = signalArguments;
@@ -56,20 +62,46 @@ export class SignalServerRunner {
     this._timeout = timeout;
     this._env = env;
     this._shell = shell;
+    this._killExisting = killExisting;
+    this.onError = onError;
 
     this._serverProcess = this.startProcess();
   }
 
   public startProcess(): ChildProcessWithoutNullStreams {
+    if (this._cwd && !fs.existsSync(this._cwd)) {
+      throw new Error(`CWD not exists: ${this._cwd}`);
+    }
+    if (!this._port) {
+      // find a port that does not have another process listening on it.
+      while (true) {
+        this._port = randomInt(10000, 50000);
+        const pid = checkPort(this._port);
+
+        if (pid.length === 0) {
+          break;
+        }
+      }
+    } else {
+      const pid = checkPort(this._port);
+      if (pid.length > 0) {
+        if (this._killExisting) {
+          log.warn(`Port ${this._port} is already in use by process ${pid}, killing it`);
+          // TODO(nf): verify the process is actually a signal server
+          process.kill(-Number(pid), 'SIGINT');
+        } else {
+          throw new Error(`Port ${this._port} is already in use by process ${pid}`);
+        }
+      }
+    }
+
     log('starting', {
       binCommand: this._binCommand,
       signalArguments: this._signalArguments,
       cwd: this._cwd,
       port: this._port,
     });
-    if (this._cwd && !fs.existsSync(this._cwd)) {
-      throw new Error(`CWD not exists: ${this._cwd}`);
-    }
+
     const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
       cwd: this._cwd,
       shell: this._shell,
@@ -77,7 +109,8 @@ export class SignalServerRunner {
         ...process.env,
         ...this._env,
       },
-      // force creation of process group to ensure all child processes are killed https://nodejs.org/api/child_process.html#optionsdetached
+      // Force creation of process group to ensure all child processes are killed.
+      // https://nodejs.org/api/child_process.html#optionsdetached
       detached: true,
     });
 
@@ -86,15 +119,24 @@ export class SignalServerRunner {
     });
 
     server.stderr.on('data', (data) => {
-      log(`TestServer stderr: ${data}`);
+      log.info(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {
       log.error(`TestServer ERROR: ${err}`);
+      this.onError?.(err);
     });
 
     server.on('close', (code) => {
-      log.info(`TestServer exited with code ${code}`);
+      if ((code! -= 0)) {
+        if (this.onError) {
+          this.onError?.(new Error(`TestServer exited with code ${code}`));
+        } else {
+          throw new Error(`TestServer exited with code ${code}`);
+        }
+      } else {
+        log.info(`TestServer exited with code ${code}`);
+      }
     });
 
     this._serverProcess = server;
@@ -120,7 +162,7 @@ export class SignalServerRunner {
       this._serverProcess = this.startProcess();
       this._startRetries++;
       if (this._startRetries > this._retriesLimit) {
-        throw new Error('Test Signal server was not started');
+        throw new Error(`Test Signal server was not started in ${this._retriesLimit} retries`);
       }
 
       return await this.waitUntilStarted();
@@ -166,6 +208,7 @@ const OS = process.platform;
 export const runTestSignalServer = async ({
   port,
   mode = 'server',
+  killExisting = false,
 }: {
   port?: number;
 
@@ -174,6 +217,7 @@ export const runTestSignalServer = async ({
    * @see https://github.com/dxos/kube
    */
   mode?: 'client' | 'server' | 'p2pserver' | 'keypair' | 'pubsubserver';
+  killExisting?: boolean;
 } = {}): Promise<SignalServerRunner> => {
   if (ARCH === '32') {
     throw new Error('32 bit architecture not supported');
@@ -182,14 +226,32 @@ export const runTestSignalServer = async ({
   if (!['darwin', 'linux'].includes(OS)) {
     throw new Error(`Unsupported platform: ${OS}`);
   }
-  const binPath = `./signal-test-${OS}-${ARCH}`;
 
+  const binPath = `./signal-test-${OS}-${ARCH}`;
   const server = new SignalServerRunner({
     binCommand: binPath,
     signalArguments: [mode],
     cwd: path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'),
-    port: port ?? randomInt(10000, 50000),
+    port,
+    killExisting,
   });
   await server.waitUntilStarted();
   return server;
+};
+
+export const checkPort = (port: number) => {
+  let pid = '';
+  try {
+    pid = execSync(`lsof -t -i:${port}`).toString().trim();
+  } catch (err) {
+    if (typeof err === 'object' && err !== null) {
+      // lsof responds with status 1 if pattern does match, along with other errors :(, so this is the best we can do
+      if ((err as Record<string, unknown>).status !== 1) {
+        throw err;
+      }
+    } else {
+      throw err;
+    }
+  }
+  return pid;
 };

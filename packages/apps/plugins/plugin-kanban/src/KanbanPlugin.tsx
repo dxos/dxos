@@ -2,88 +2,77 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { type IconProps, Kanban } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Kanban as KanbanType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Kanban as KanbanType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
 import { KanbanMain } from './components';
 import translations from './translations';
-import { isKanban, KANBAN_PLUGIN, KanbanAction, KanbanPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { KANBAN_PLUGIN, KanbanAction, type KanbanPluginProvides, isKanban } from './types';
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[KanbanType.name] = KanbanType;
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
-  const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
-
   return {
     meta: {
       id: KANBAN_PLUGIN,
     },
-    unload: async () => {
-      adapter.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [KanbanType.schema.typename]: {
+            placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
+            icon: (props: IconProps) => <Kanban {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent, emit) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
+            return;
           }
 
-          const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          return [
-            {
-              id: `${KANBAN_PLUGIN}/create`,
-              index: 'a1',
-              testId: 'kanbanPlugin.createKanban',
-              label: ['create kanban label', { ns: KANBAN_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              intent: [
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+            id: `${KANBAN_PLUGIN}/create`,
+            label: ['create kanban label', { ns: KANBAN_PLUGIN }],
+            icon: (props) => <Kanban {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
                 {
                   plugin: KANBAN_PLUGIN,
                   action: KanbanAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
-                  action: TreeViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
-              ],
+              ]),
+            properties: {
+              testId: 'kanbanPlugin.createObject',
             },
-          ];
+          });
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            if ('object' in data && isKanban(data.object)) {
-              return KanbanMain;
-            } else {
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isKanban(data.active) ? <KanbanMain kanban={data.active} /> : null;
+            default:
               return null;
-            }
-          default:
-            return null;
-        }
-      },
-      components: {
-        KanbanMain,
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

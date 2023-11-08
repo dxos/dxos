@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Range } from 'hypercore';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
-import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
 import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
-import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createBinder } from '@dxos/util';
+import { type Directory } from '@dxos/random-access-storage';
+import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
 
-import { FeedWriter, WriteReceipt } from './feed-writer';
+import { type FeedWriter, type WriteReceipt } from './feed-writer';
 
 /**
  * Async feed wrapper.
@@ -31,6 +31,7 @@ export class FeedWrapper<T extends {}> {
   constructor(
     private _hypercore: Hypercore<T>,
     private _key: PublicKey, // TODO(burdon): Required since currently patching the key inside factory.
+    private _storageDirectory: Directory,
   ) {
     invariant(this._hypercore);
     invariant(this._key);
@@ -75,11 +76,17 @@ export class FeedWrapper<T extends {}> {
         });
       },
     });
-    this._hypercore.createReadStream(opts).pipe(transform, (err) => {
+    const readStream =
+      opts?.batch !== undefined && opts?.batch > 1
+        ? new BatchedReadStream(this._hypercore, opts)
+        : this._hypercore.createReadStream(opts);
+
+    readStream.pipe(transform, (err: any) => {
       // Ignore errors.
       // We might get "Writable stream closed prematurely" error.
       // Its okay since the pipeline is closed and does not expect more messages.
     });
+
     return transform;
   }
 
@@ -98,6 +105,10 @@ export class FeedWrapper<T extends {}> {
           }
 
           const receipt = await this.appendWithReceipt(data);
+
+          // TODO(dmaretskyi): Removing this will make user-intiated writes faster but might result in a data-loss.
+          await this.flushToDisk();
+
           await afterWrite?.(receipt);
 
           return receipt;
@@ -123,6 +134,14 @@ export class FeedWrapper<T extends {}> {
     return receipt;
   }
 
+  /**
+   * Flush pending changes to disk.
+   * Calling this is not required unless you want to explicitly wait for data to be written.
+   */
+  async flushToDisk() {
+    await this._storageDirectory.flush();
+  }
+
   get opened() {
     return this._hypercore.opened;
   }
@@ -131,8 +150,16 @@ export class FeedWrapper<T extends {}> {
     return this._hypercore.closed;
   }
 
+  get readable() {
+    return this._hypercore.readable;
+  }
+
   get length() {
     return this._hypercore.length;
+  }
+
+  get byteLength() {
+    return this._hypercore.byteLength;
   }
 
   on = this._binder.fn(this._hypercore.on);
@@ -149,6 +176,7 @@ export class FeedWrapper<T extends {}> {
       });
     }
     this._closed = true;
+    await this.flushToDisk();
     await this._close();
   };
 
@@ -159,9 +187,106 @@ export class FeedWrapper<T extends {}> {
   /**
    * Will not resolve if `end` parameter is not specified and the feed is not closed.
    */
-  download = this._binder.async(this._hypercore.download) as (range?: Partial<Range>) => Promise<number>;
+  download = this._binder.fn(this._hypercore.download);
   undownload = this._binder.fn(this._hypercore.undownload);
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
   clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number) => Promise<void>;
+
+  /**
+   * Clear and check for integrity.
+   */
+  async safeClear(from: number, to: number) {
+    invariant(from >= 0 && from < to && to <= this.length, 'Invalid range');
+
+    const CHECK_MESSAGES = 20;
+    const checkBegin = to;
+    const checkEnd = Math.min(checkBegin + CHECK_MESSAGES, this.length);
+
+    const messagesBefore = await Promise.all(
+      rangeFromTo(checkBegin, checkEnd).map((idx) =>
+        this.get(idx, {
+          valueEncoding: { decode: (x: Uint8Array) => x },
+        }),
+      ),
+    );
+
+    await this.clear(from, to);
+
+    const messagesAfter = await Promise.all(
+      rangeFromTo(checkBegin, checkEnd).map((idx) =>
+        this.get(idx, {
+          valueEncoding: { decode: (x: Uint8Array) => x },
+        }),
+      ),
+    );
+
+    for (let i = 0; i < messagesBefore.length; i++) {
+      const before = arrayToBuffer(messagesBefore[i]);
+      const after = arrayToBuffer(messagesAfter[i]);
+      if (!before.equals(after)) {
+        throw new Error('Feed corruption on clear. There has likely been a data loss.');
+      }
+    }
+  }
+}
+
+class BatchedReadStream extends Readable {
+  private readonly _feed: Hypercore<any>;
+  private readonly _batch: number;
+  private _cursor: number;
+  private _reading = false;
+
+  constructor(feed: Hypercore<any>, opts: ReadStreamOptions = {}) {
+    super({ objectMode: true });
+    invariant(opts.live === true, 'Only live mode supported');
+    invariant(opts.batch !== undefined && opts.batch > 1);
+    this._feed = feed;
+    this._batch = opts.batch;
+    this._cursor = opts.start ?? 0;
+  }
+
+  override _open(cb: (err: Error | null) => void): void {
+    this._feed.ready(cb);
+  }
+
+  override _read(cb: (err: Error | null) => void): void {
+    if (this._reading) {
+      return;
+    }
+
+    if (this._feed.bitfield!.total(this._cursor, this._cursor + this._batch) === this._batch) {
+      this._batchedRead(cb);
+    } else {
+      this._nonBatchedRead(cb);
+    }
+  }
+
+  private _nonBatchedRead(cb: (err: Error | null) => void) {
+    this._feed.get(this._cursor, { wait: true }, (err, data) => {
+      if (err) {
+        cb(err);
+      } else {
+        this._cursor++;
+        this._reading = false;
+        this.push(data);
+        cb(null);
+      }
+    });
+  }
+
+  private _batchedRead(cb: (err: Error | null) => void) {
+    this._feed.getBatch(this._cursor, this._cursor + this._batch, { wait: true }, (err, data) => {
+      if (err) {
+        cb(err);
+      } else {
+        this._cursor += data.length;
+        this._reading = false;
+        for (const item of data) {
+          this.push(item);
+        }
+        cb(null);
+      }
+    });
+  }
 }

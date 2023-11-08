@@ -11,7 +11,9 @@ message Command {
   oneof payload {
     OpenChannel open_channel = 1;
     Data data = 2;
+    // deprecated.
     Destroy destroy = 3;
+    Close close = 4;
   }
 }
 
@@ -46,6 +48,10 @@ message Data {
 
 /// Terminate the connection. The other peer can expect the connection to be closed.
 message Destroy {
+  /// Error that caused the termination.
+  optional string error = 1;
+}
+message Close {
   /// Error that caused the termination.
   optional string error = 1;
 }

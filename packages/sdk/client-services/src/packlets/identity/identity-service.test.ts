@@ -6,13 +6,14 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { Identity, IdentityService } from '@dxos/protocols/proto/dxos/client/services';
+import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
-import { ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
 import { IdentityServiceImpl } from './identity-service';
+import { type ServiceContext } from '../services';
+import { createServiceContext } from '../testing';
 
 chai.use(chaiAsPromised);
 
@@ -22,8 +23,12 @@ describe('IdentityService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
-    identityService = new IdentityServiceImpl(serviceContext);
+    await serviceContext.open(new Context());
+    identityService = new IdentityServiceImpl(
+      (options) => serviceContext.createIdentity(options),
+      serviceContext.identityManager,
+      serviceContext.keyring,
+    );
   });
 
   afterEach(async () => {
@@ -53,6 +58,16 @@ describe('IdentityService', () => {
   });
 
   describe.skip('recoverIdentity', () => {});
+
+  describe('updateProfile', () => {
+    test('updates profile', async () => {
+      const identity = await identityService.createIdentity({});
+      expect(identity.profile?.displayName).to.be.undefined;
+
+      const updatedIdentity = await identityService.updateProfile({ displayName: 'Example' });
+      expect(updatedIdentity.profile?.displayName).to.equal('Example');
+    });
+  });
 
   describe('queryIdentity', () => {
     test('returns undefined if no identity is available', async () => {

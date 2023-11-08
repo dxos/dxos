@@ -2,26 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { randomBytes } from 'node:crypto';
-import { Duplex } from 'node:stream';
+import { type Duplex } from 'node:stream';
 
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
-import { ExtensionContext, TeleportExtension } from '../teleport';
+import { type ExtensionContext, type TeleportExtension } from '../teleport';
 
 interface TestExtensionWithStreamsCallbacks {
   onOpen?: () => Promise<void>;
   onClose?: () => Promise<void>;
+  onAbort?: () => Promise<void>;
 }
 
 export class TestExtensionWithStreams implements TeleportExtension {
   public readonly open = new Trigger();
   public readonly closed = new Trigger();
+  public readonly aborted = new Trigger();
   private readonly _streams = new Map<string, TestStream>();
 
   public extensionContext: ExtensionContext | undefined;
@@ -34,7 +36,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
   }
 
   private async _openStream(streamTag: string, interval = 5, chunkSize = 2048) {
-    assert(!this._streams.has(streamTag), `Stream already exists: ${streamTag}`);
+    invariant(!this._streams.has(streamTag), `Stream already exists: ${streamTag}`);
 
     const networkStream = await this.extensionContext!.createStream(streamTag, {
       contentType: 'application/x-test-stream',
@@ -84,14 +86,29 @@ export class TestExtensionWithStreams implements TeleportExtension {
     networkStream.on('close', () => {
       networkStream.removeAllListeners();
     });
+
+    streamEntry.reportingTimer = setInterval(() => {
+      const { bytesSent, bytesReceived, sendErrors, receiveErrors } = streamEntry;
+      // log.info('stream stats', { streamTag, bytesSent, bytesReceived, sendErrors, receiveErrors });
+      log.trace('dxos.test.stream-stats', {
+        streamTag,
+        bytesSent,
+        bytesReceived,
+        sendErrors,
+        receiveErrors,
+        from: this.extensionContext?.localPeerId,
+        to: this.extensionContext?.remotePeerId,
+      });
+    }, 100);
   }
 
   private _closeStream(streamTag: string): Stats {
-    assert(this._streams.has(streamTag), `Stream does not exist: ${streamTag}`);
+    invariant(this._streams.has(streamTag), `Stream does not exist: ${streamTag}`);
 
     const stream = this._streams.get(streamTag)!;
 
     clearTimeout(stream.timer);
+    clearTimeout(stream.reportingTimer);
 
     const { bytesSent, bytesReceived, sendErrors, receiveErrors, startTimestamp } = stream;
 
@@ -170,6 +187,13 @@ export class TestExtensionWithStreams implements TeleportExtension {
     await this._rpc?.close();
   }
 
+  async onAbort(err?: Error) {
+    log('onAbort', { err });
+    await this.callbacks.onAbort?.();
+    this.aborted.wake();
+    await this._rpc?.abort();
+  }
+
   async addNewStream(streamLoadInterval: number, streamLoadChunkSize: number, streamTag?: string): Promise<string> {
     await this.open.wait({ timeout: 1500 });
     if (!streamTag) {
@@ -180,7 +204,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
       streamLoadInterval,
       streamLoadChunkSize,
     });
-    assert(data === streamTag);
+    invariant(data === streamTag);
 
     await this._openStream(streamTag, streamLoadInterval, streamLoadChunkSize);
     return streamTag;
@@ -193,7 +217,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
         data: streamTag,
       });
 
-    assert(data === streamTag);
+    invariant(data === streamTag);
 
     const local = this._closeStream(streamTag);
 
@@ -244,4 +268,5 @@ type TestStream = {
   receiveErrors: number;
   timer?: NodeJS.Timer;
   startTimestamp?: number;
+  reportingTimer?: NodeJS.Timer;
 };

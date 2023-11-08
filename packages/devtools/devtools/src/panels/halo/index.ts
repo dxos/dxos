@@ -5,5 +5,6 @@
 import React from 'react';
 
 export const CredentialsPanel = React.lazy(() => import('./CredentialsPanel'));
+export const DeviceListPanel = React.lazy(() => import('./DeviceListPanel'));
 export const IdentityPanel = React.lazy(() => import('./IdentityPanel'));
 export const KeyringPanel = React.lazy(() => import('./KeyringPanel'));

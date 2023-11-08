@@ -5,12 +5,11 @@
 import { CaretRight, Plus, QrCode, Textbox } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
-import { CompoundButton } from '@dxos/react-appkit';
+import { useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
-import { PanelStepHeading } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { CompoundButton, StepHeading } from '../../../components';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 export type AdditionMethodChooserProps = JoinStepProps;
 
@@ -28,7 +27,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
 
   return (
     <>
-      <PanelStepHeading>{t('addition method chooser title')}</PanelStepHeading>
+      <StepHeading>{t('addition method chooser title')}</StepHeading>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
           {...sharedButtonProps}

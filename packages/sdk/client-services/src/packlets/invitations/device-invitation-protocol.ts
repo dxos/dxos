@@ -2,14 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { Keyring } from '@dxos/keyring';
+import { invariant } from '@dxos/invariant';
+import { type Keyring } from '@dxos/keyring';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import {
+  type AdmissionRequest,
+  type AdmissionResponse,
+  type IntroductionRequest,
+} from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { Identity, JoinIdentityParams } from '../identity';
-import { InvitationProtocol } from './invitation-protocol';
+import { type InvitationProtocol } from './invitation-protocol';
+import { type Identity, type JoinIdentityParams } from '../identity';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(

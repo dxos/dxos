@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Subscription } from '@dxos/echo-schema';
+import { type Subscription } from '@dxos/echo-schema';
 import { DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
-import { Bot } from '../bot';
-import { getKey } from '../util';
 import { ChatModel } from './chat-model';
 import { ContactStackResolver } from './generators';
+import { Bot } from '../bot';
+import { getKey } from '../util';
 
 export class KaiBot extends Bot {
   private _chatModel?: ChatModel;
@@ -17,8 +17,8 @@ export class KaiBot extends Bot {
 
   override async onInit() {
     this._chatModel = new ChatModel({
-      orgId: process.env.COM_OPENAI_ORG_ID ?? getKey(this.config, 'com.openai.org_id')!,
-      apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(this.config, 'com.openai.api_key')!,
+      orgId: process.env.COM_OPENAI_ORG_ID ?? getKey(this.config, 'openai.com/org_id')!,
+      apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(this.config, 'openai.com/api_key')!,
     });
   }
 

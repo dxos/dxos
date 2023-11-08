@@ -3,11 +3,11 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { Button, List, ListItem } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
+import { Button, List, ListItem } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Reconcile with Item.
 export type Object = { id: string };

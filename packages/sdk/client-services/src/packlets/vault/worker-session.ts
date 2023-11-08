@@ -2,21 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { asyncTimeout, Trigger } from '@dxos/async';
 import {
   iframeServiceBundle,
-  IframeServiceBundle,
+  type IframeServiceBundle,
   PROXY_CONNECTION_TIMEOUT,
   workerServiceBundle,
 } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { Callback, MaybePromise } from '@dxos/util';
+import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { Callback, type MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost, ClientRpcServer, ClientRpcServerParams } from '../services';
+import { type ClientServicesHost, ClientRpcServer, type ClientRpcServerParams } from '../services';
 
 export type WorkerSessionParams = {
   serviceHost: ClientServicesHost;
@@ -74,6 +73,7 @@ export class WorkerSession {
       port: appPort,
       ...middleware,
     });
+
     this._shellClientRpc = new ClientRpcServer({
       serviceRegistry: this._serviceHost.serviceRegistry,
       port: shellPort,
@@ -103,7 +103,7 @@ export class WorkerSession {
         },
       },
       port: systemPort,
-      timeout: 1000, // With low timeout heartbeat may fail if the tab's thread is saturated.
+      timeout: 1_000, // With low timeout heartbeat may fail if the tab's thread is saturated.
     });
 
     this.bridgeService = this._iframeRpc.rpc.BridgeService;
@@ -113,10 +113,14 @@ export class WorkerSession {
     log.info('opening...');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
+    // Wait until the worker's RPC service has started.
     await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
+
+    // TODO(burdon): Comment required.
     if (this.lockKey) {
       void this._afterLockReleases(this.lockKey, () => this.close());
     }
+
     log.info('opened');
   }
 

@@ -3,10 +3,10 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
-import { PublicKey } from '@dxos/keys';
+import { type Space } from '@dxos/client-protocol';
+import { type PublicKey } from '@dxos/keys';
 
-import { Client } from '../client';
+import { type Client } from '../client';
 
 type Options = {
   timeout?: number;
@@ -18,14 +18,15 @@ export const waitForSpace = async (
   spaceKey: PublicKey,
   { timeout = 500, ready }: Options = {},
 ): Promise<Space> => {
-  let space = client.getSpace(spaceKey);
+  let space = client.spaces.get(spaceKey);
 
   if (!space) {
     const spaceTrigger = new Trigger<Space>();
     const sub = client.spaces.subscribe(() => {
-      if (client.spaces.get()[0]) {
+      const space = client.spaces.get(spaceKey);
+      if (space) {
         sub.unsubscribe();
-        spaceTrigger.wake(client.spaces.get()[0]);
+        spaceTrigger.wake(space);
       }
     });
     space = await spaceTrigger.wait({ timeout });

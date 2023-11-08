@@ -3,15 +3,15 @@
 //
 
 import { Recycle, X } from '@phosphor-icons/react';
-import React, { FC } from 'react';
-import invariant from 'tiny-invariant';
+import React, { type FC } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
-import { TypedObject } from '@dxos/echo-schema';
-import { FrameRuntime } from '@dxos/kai-frames';
+import { type TypedObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { type FrameRuntime } from '@dxos/kai-frames';
 import { EditableObjectList } from '@dxos/mosaic';
 import { ShowDeletedOption, useQuery } from '@dxos/react-client/echo';
+import { Button } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { useAppRouter } from '../../hooks';
 

@@ -5,7 +5,7 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
@@ -30,7 +30,7 @@ export default class Share extends BaseCommand<typeof Share> {
         return {};
       }
 
-      const observable = client.halo.createInvitation({
+      const observable = client.halo.share({
         authMethod: this.flags.noCode ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
       });
       const invitationSuccess = hostInvitation({
@@ -47,6 +47,7 @@ export default class Share extends BaseCommand<typeof Share> {
       ux.action.start('Waiting for peer to connect');
       await invitationSuccess;
       ux.action.stop();
+      ux.log(chalk`{green Joined successfully.}`);
     });
   }
 }

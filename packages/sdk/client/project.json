@@ -18,13 +18,11 @@
       "options": {
         "entryPoints": [
           "packages/sdk/client/src/devtools/index.ts",
-          "packages/sdk/client/src/diagnostics/index.ts",
           "packages/sdk/client/src/echo/index.ts",
           "packages/sdk/client/src/halo/index.ts",
           "packages/sdk/client/src/index.ts",
           "packages/sdk/client/src/invitations/index.ts",
           "packages/sdk/client/src/mesh/index.ts",
-          "packages/sdk/client/src/proto/index.ts",
           "packages/sdk/client/src/services/index.ts",
           "packages/sdk/client/src/testing/index.ts"
         ],
@@ -40,19 +38,11 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
-      ]
-    },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "packages/sdk/client/src/proto/gen"
       ]
     },
     "test": {

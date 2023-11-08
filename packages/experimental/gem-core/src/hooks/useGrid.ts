@@ -3,10 +3,10 @@
 //
 
 import * as d3 from 'd3';
-import { RefObject, useEffect, useMemo, useRef } from 'react';
+import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { SVGContext } from '../context';
 import { useSvgContext } from './useSvgContext';
+import { type SVGContext } from '../context';
 
 const createLine = d3.line();
 

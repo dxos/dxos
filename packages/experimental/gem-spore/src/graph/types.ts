@@ -7,9 +7,8 @@
 // Generic graph data type.
 //
 
-import invariant from 'tiny-invariant';
-
-import { Point } from '@dxos/gem-core';
+import { type Point } from '@dxos/gem-core';
+import { invariant } from '@dxos/invariant';
 
 export type IdAccessor<N = any> = (node: N) => string;
 

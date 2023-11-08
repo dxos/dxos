@@ -2,35 +2,38 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
-import { CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
-import { DataServiceSubscriptions, MetadataStore, Space, SpaceManager } from '@dxos/echo-pipeline';
-import { FeedStore } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
+import { type CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
+import { type DataServiceSubscriptions, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import { type FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
+import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
-import { Timeframe } from '@dxos/timeframe';
-import { ComplexMap, deferFunction } from '@dxos/util';
+import { type Timeframe } from '@dxos/timeframe';
+import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
+import { createAuthProvider } from '../identity';
+
+const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
+const PRESENCE_OFFLINE_TIMEOUT = 20_000;
 
 export interface SigningContext {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
   recordCredential: (credential: Credential) => Promise<void>;
-  profile?: ProfileDocument;
+  // TODO(dmaretskyi): Should be a getter.
+  getProfile: () => ProfileDocument | undefined;
 }
 
 export type AcceptSpaceOptions = {
@@ -79,23 +82,26 @@ export class DataSpaceManager {
   async open() {
     log('open');
     log.trace('dxos.echo.data-space-manager.open', trace.begin({ id: this._instanceId }));
-    await this._metadataStore.load();
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
-    for (const spaceMetadata of this._metadataStore.spaces) {
+    await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        const space = await this._constructSpace(spaceMetadata);
-        if (spaceMetadata.state !== SpaceState.INACTIVE) {
-          space.initializeDataPipelineAsync();
-        }
+        await this._constructSpace(spaceMetadata);
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
-    }
+    });
 
     this._isOpen = true;
     this.updated.emit();
+
+    for (const space of this._spaces.values()) {
+      if (space.state !== SpaceState.INACTIVE) {
+        space.initializeDataPipelineAsync();
+      }
+    }
+
     log.trace('dxos.echo.data-space-manager.open', trace.end({ id: this._instanceId }));
   }
 
@@ -185,8 +191,8 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: 500,
-      offlineTimeout: 5_000, // TODO(burdon): Config.
+      announceInterval: PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: PRESENCE_OFFLINE_TIMEOUT, // TODO(burdon): Config.
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -194,7 +200,11 @@ export class DataSpaceManager {
     const controlFeed =
       metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true }));
     const dataFeed =
-      metadata.dataFeedKey && (await this._feedStore.openFeed(metadata.dataFeedKey, { writable: true, sparse: true }));
+      metadata.dataFeedKey &&
+      (await this._feedStore.openFeed(metadata.dataFeedKey, {
+        writable: true,
+        sparse: true,
+      }));
 
     const space: Space = await this._spaceManager.constructSpace({
       metadata,

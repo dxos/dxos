@@ -8,8 +8,8 @@ import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
-import { DropdownMenu } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { DropdownMenu } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { Serializer } from '@dxos/echo-schema';
 import { useFileDownload } from '@dxos/kai-frames';
 import { useClient } from '@dxos/react-client';
@@ -46,7 +46,7 @@ export const Actions = () => {
   const handleImportSpace = async (file: File) => {
     const data = new Uint8Array(await file.arrayBuffer());
     const json = new TextDecoder('utf-8').decode(data);
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     await serializer.import(space.db, JSON.parse(json));
     navigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };

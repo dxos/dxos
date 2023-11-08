@@ -7,9 +7,9 @@ import update from 'immutability-helper';
 
 import { useStateRef } from '@dxos/gem-core';
 
-import { GraphData } from '../graph';
 import { createNode, createLink } from './data';
-import { TestNode } from './types';
+import { type TestNode } from './types';
+import { type GraphData } from '../graph';
 
 export type ObjectMutator<T> = [
   T, // Current value.

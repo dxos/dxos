@@ -34,23 +34,12 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/echo/echo-typegen/src/**/*.{ts,js}"
-        ]
+          "packages/core/echo/echo-typegen/src/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
-      ]
-    },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
-      },
-      "outputs": [
-        "packages/core/echo/echo-typegen/test/proto/gen"
       ]
     },
     "test": {

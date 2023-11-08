@@ -2,20 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight, SignOut } from '@phosphor-icons/react';
-import React, { cloneElement, ComponentPropsWithoutRef, useEffect, useState } from 'react';
+import React, { useState, useEffect, cloneElement } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
-import { Input } from '@dxos/react-appkit';
+import { useTranslation } from '@dxos/react-ui';
 
-import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
-import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
+import { Actions, StepHeading, Action, Input } from '../../../components';
+import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';
   unredeemedCode?: string;
+  succeededKeys?: Set<string>;
 }
 
 const invitationCodeFromUrl = (text: string) => {
@@ -29,16 +27,9 @@ const invitationCodeFromUrl = (text: string) => {
   }
 };
 
-export const InvitationInput = ({
-  Kind,
-  active,
-  send,
-  unredeemedCode,
-  onExit,
-  exitActionParent,
-  onDone,
-  doneActionParent,
-}: InvitationInputProps) => {
+export const InvitationInput = (props: InvitationInputProps) => {
+  const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent, succeededKeys } =
+    props;
   const disabled = !active;
   const { t } = useTranslation('os');
 
@@ -52,55 +43,44 @@ export const InvitationInput = ({
     send({
       type: `set${Kind}InvitationCode`,
       code: invitationCodeFromUrl(inputValue),
+      ...(Kind === 'Space' && { succeededKeys }),
     });
 
   const exitAction = (
-    <PanelAction
-      aria-label={t('cancel label')}
+    <Action
+      variant='ghost'
       disabled={disabled}
       {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
       data-testid='join-exit'
     >
-      <SignOut mirrored weight='light' className={getSize(6)} />
-    </PanelAction>
+      {t('cancel label')}
+    </Action>
   );
 
   return (
     <>
-      <Input
-        disabled={disabled}
-        label={<PanelStepHeading>{t('invitation input label')}</PanelStepHeading>}
-        value={inputValue}
-        onChange={({ target: { value } }) => setInputValue(value)}
-        slots={{
-          root: { className: 'm-0' },
-          input: {
-            'data-autofocus': `inputting${Kind}InvitationCode`,
-            'data-testid': `${Kind.toLowerCase()}-invitation-input`,
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
-          } as ComponentPropsWithoutRef<'input'>,
-        }}
-      />
-      <div role='none' className='grow' />
-      <PanelActions>
-        <PanelAction
-          aria-label={t('continue label')}
+      <div role='none' className='grow flex flex-col justify-center'>
+        <Input
+          label={<StepHeading>{t('invitation input label')}</StepHeading>}
+          placeholder='Type an invitation code'
           disabled={disabled}
-          classNames='order-2'
-          onClick={handleNext}
-          data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
-        >
-          <CaretRight weight='light' className={getSize(6)} />
-        </PanelAction>
+          value={inputValue}
+          onChange={({ target: { value } }) => setInputValue(value)}
+          data-autofocus={`inputting${Kind}InvitationCode`}
+          data-testid={`${Kind.toLowerCase()}-invitation-input`}
+          onKeyUp={({ key }) => key === 'Enter' && handleNext()}
+        />
+      </div>
+      <Actions>
         {Kind === 'Halo' ? (
-          <PanelAction
-            aria-label={t('back label')}
+          <Action
+            variant='ghost'
             disabled={disabled}
             onClick={() => send({ type: 'deselectAuthMethod' })}
             data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
           >
-            <CaretLeft weight='light' className={getSize(6)} />
-          </PanelAction>
+            {t('back label')}
+          </Action>
         ) : exitActionParent ? (
           cloneElement(exitActionParent, {}, exitAction)
         ) : doneActionParent ? (
@@ -108,7 +88,15 @@ export const InvitationInput = ({
         ) : (
           exitAction
         )}
-      </PanelActions>
+        <Action
+          variant='primary'
+          disabled={disabled}
+          onClick={handleNext}
+          data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
+        >
+          {t('continue label')}
+        </Action>
+      </Actions>
     </>
   );
 };

@@ -9,13 +9,13 @@ import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
+import { type FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
 import { TestItemBuilder } from './testing';
-import { FeedBlock } from './types';
+import { type FeedBlock } from './types';
 
 // Random selector.
 const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
-  faker.datatype.number({ min: 0, max: blocks.length - 1 });
+  faker.number.int({ min: 0, max: blocks.length - 1 });
 
 // TODO(burdon): Create randomized setTimeout to test race conditions.
 
@@ -125,7 +125,7 @@ describe('FeedSetIterator', () => {
         });
         log('wrote', receipts);
       }
-    }, faker.datatype.number({ min: 0, max: 100 }));
+    }, faker.number.int({ min: 0, max: 100 }));
 
     // Open and start iterator.
     await iterator.open();
@@ -143,7 +143,7 @@ describe('FeedSetIterator', () => {
           await iterator.stop();
         }
       }
-    }, faker.datatype.number({ min: 0, max: 100 }));
+    }, faker.number.int({ min: 0, max: 100 }));
 
     // Wait until all written and read.
     const count = await readAll();

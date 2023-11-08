@@ -3,13 +3,13 @@
 //
 
 import chalk from 'chalk';
-import assert from 'node:assert';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { BaseCommand } from '../../base-command';
-import { SupervisorRpcPeer, queryCredentials } from '../../util';
+import { type SupervisorRpcPeer, queryCredentials } from '../../util';
 
 export default class Auth extends BaseCommand<typeof Auth> {
   static override enableJsonFlag = true;
@@ -63,7 +63,7 @@ export default class Auth extends BaseCommand<typeof Auth> {
         this.log(chalk`{red Profile not initialized.}`);
       } else {
         const { credential, token } = await this.presentAuthCredentials(client);
-        assert(!!credential || !!token, 'No credentials or token received.');
+        invariant(!!credential || !!token, 'No credentials or token received.');
 
         if (token) {
           this.log(chalk`{green Authenticated with session token ${token}}`);

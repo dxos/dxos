@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Trigger, Event } from '@dxos/async';
 import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
+  type CancellableInvitationObservable,
   Invitation,
 } from '@dxos/client/invitations';
+import { invariant } from '@dxos/invariant';
 
 export const hostInvitation = async ({
   observable,
@@ -75,7 +74,7 @@ export const acceptInvitation = async ({
           if (invitation.authMethod === Invitation.AuthMethod.SHARED_SECRET) {
             const callbackResult = await callbacks?.onReadyForAuth?.(invitation);
             const code = invitation.authCode ?? callbackResult;
-            assert(code, 'No code provided');
+            invariant(code, 'No code provided');
             await observable.authenticate(code);
           }
           break;

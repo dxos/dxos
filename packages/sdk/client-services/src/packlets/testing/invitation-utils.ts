@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Trigger } from '@dxos/async';
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
+import { type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ServiceContext } from '../services';
@@ -26,11 +25,11 @@ export const sanitizeInvitation = (invitation: Invitation): Invitation => {
 };
 
 export type InvitationHost = {
-  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
+  share(options?: Partial<Invitation>): CancellableInvitation;
 };
 
 export type InvitationGuest = {
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+  join(invitation: Invitation | string): AuthenticatingInvitation;
 };
 
 export type PerformInvitationCallbacks<T> = {
@@ -49,8 +48,8 @@ export type PerformInvitationParams = {
   guest: ServiceContext | InvitationGuest;
   options?: Partial<Invitation>;
   hooks?: {
-    host?: PerformInvitationCallbacks<CancellableInvitationObservable>;
-    guest?: PerformInvitationCallbacks<AuthenticatingInvitationObservable>;
+    host?: PerformInvitationCallbacks<CancellableInvitation>;
+    guest?: PerformInvitationCallbacks<AuthenticatingInvitation>;
   };
 };
 
@@ -197,7 +196,7 @@ export const performInvitation = ({
 const createInvitation = (
   host: ServiceContext | InvitationHost,
   options?: Partial<Invitation>,
-): CancellableInvitationObservable => {
+): CancellableInvitation => {
   options ??= {
     authMethod: Invitation.AuthMethod.NONE,
     ...(options ?? {}),
@@ -208,13 +207,13 @@ const createInvitation = (
     return host.invitations.createInvitation(hostHandler, options);
   }
 
-  return host.createInvitation(options);
+  return host.share(options);
 };
 
 const acceptInvitation = (
   guest: ServiceContext | InvitationGuest,
   invitation: Invitation,
-): AuthenticatingInvitationObservable => {
+): AuthenticatingInvitation => {
   invitation = sanitizeInvitation(invitation);
 
   if (guest instanceof ServiceContext) {
@@ -222,5 +221,5 @@ const acceptInvitation = (
     return guest.invitations.acceptInvitation(guestHandler, invitation);
   }
 
-  return guest.acceptInvitation(invitation);
+  return guest.join(invitation);
 };

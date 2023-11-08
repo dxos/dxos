@@ -4,12 +4,12 @@
 
 import { expect } from 'earljs';
 
-import { Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
+import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
@@ -67,7 +67,7 @@ describe('SignalRPCClient', () => {
 
     expect((await received).author).toEqual(peerId2.asUint8Array());
     expect((await received).payload).toBeAnObjectWith(payload);
-    stream1.close();
+    void stream1.close();
   })
     .timeout(2_000)
     .retries(2);
@@ -99,8 +99,8 @@ describe('SignalRPCClient', () => {
     const stream2 = await client2.join({ topic, peerId: peerId2 });
 
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
-    stream1.close();
-    stream2.close();
+    void stream1.close();
+    void stream2.close();
   })
     .timeout(2_000)
     .retries(2);

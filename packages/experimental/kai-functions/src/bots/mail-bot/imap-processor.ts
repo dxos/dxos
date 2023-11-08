@@ -4,11 +4,11 @@
 
 import sub from 'date-fns/sub';
 import { convert } from 'html-to-text';
-import { Config as ImapConfig } from 'imap';
-import imaps, { Message as ImapMessage, ImapSimple } from 'imap-simple';
-import { simpleParser, EmailAddress } from 'mailparser';
-import assert from 'node:assert';
+import { type Config as ImapConfig } from 'imap';
+import imaps, { type Message as ImapMessage, type ImapSimple } from 'imap-simple';
+import { simpleParser, type EmailAddress } from 'mailparser';
 
+import { invariant } from '@dxos/invariant';
 import { Message } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
@@ -24,9 +24,13 @@ const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/]
 export class ImapProcessor {
   private _connection?: ImapSimple;
 
-  constructor(private readonly _id: string, private readonly _config: ImapConfig) {
-    assert(this._id);
-    assert(this._config);
+  // prettier-ignore
+  constructor(
+    private readonly _id: string,
+    private readonly _config: ImapConfig,
+  ) {
+    invariant(this._id);
+    invariant(this._config);
   }
 
   // https://www.npmjs.com/package/imap-simple

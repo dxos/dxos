@@ -2,9 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ux } from '@oclif/core';
+
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Client } from '@dxos/client';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+
+import { maybeTruncateKey } from './types';
 
 const timeout = 500;
 
@@ -35,4 +39,36 @@ export const queryCredentials = async (
 
   await trigger.wait();
   return result;
+};
+
+export const mapCredentials = (credentials: Credential[], truncateKeys = false) => {
+  return credentials.map((credential) => ({
+    id: maybeTruncateKey(credential.id!, truncateKeys),
+    issuer: maybeTruncateKey(credential.issuer!, truncateKeys),
+    subject: maybeTruncateKey(credential.subject!.id!, truncateKeys),
+    type: credential.subject.assertion['@type'],
+  }));
+};
+
+export const printCredentials = (credentials: Credential[], flags = {}) => {
+  ux.table(
+    mapCredentials(credentials, true),
+    {
+      id: {
+        header: 'id',
+      },
+      issuer: {
+        header: 'issuer',
+      },
+      subject: {
+        header: 'subject',
+      },
+      type: {
+        header: 'type',
+      },
+    },
+    {
+      ...flags,
+    },
+  );
 };

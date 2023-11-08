@@ -11,9 +11,9 @@ import { log } from '@dxos/log';
 import { afterTest, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { TestBuilder } from '../testing';
-import { FullyConnectedTopology, StarTopology } from '../topology';
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
+import { type TestBuilder } from '../testing';
+import { FullyConnectedTopology, StarTopology } from '../topology';
 
 // TODO(burdon): Use PublicKey throughout (remove conversion to strings, from buffers, etc.)
 
@@ -139,7 +139,6 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await openAndCloseAfterTest([peer1, peer2]);
 
     const topic = PublicKey.random();
-
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
     await exchangeMessages(swarm1, swarm2);
 
@@ -167,7 +166,6 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await waitForExpect(() => {
       expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
-
       expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
     }, 2_000);
 

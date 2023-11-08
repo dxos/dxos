@@ -6,13 +6,13 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
-import assert from 'node:assert';
 import { join } from 'path';
 import { promisify } from 'util';
 
 import type { Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 
-import { Logger, PackageModule } from './common';
+import { type Logger, type PackageModule } from './common';
 import { uploadToIPFS } from './ipfs-upload';
 
 const DEFAULT_OUTDIR = 'out';
@@ -41,7 +41,7 @@ interface PublishArgs {
 }
 
 export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { log, config, module }: PublishParams) => {
-  assert(module.name, 'Module name is required to publish.');
+  invariant(module.name, 'Module name is required to publish.');
   log(`Publishing module ${chalk.bold(module.name)} ...`);
   const moduleOut = `out/${encodeName(module.name)}`;
   const outdir = path ?? module.build?.outdir ?? (fs.existsSync(moduleOut) ? moduleOut : DEFAULT_OUTDIR);

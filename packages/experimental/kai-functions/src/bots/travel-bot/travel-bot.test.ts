@@ -10,12 +10,12 @@ import { debounce, Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { fromHost } from '@dxos/client/services';
 import { Config } from '@dxos/config';
-import { TravelProfile, Trip } from '@dxos/kai-types';
+import { type TravelProfile, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { loadJson } from '../util';
 import { TravelBot } from './travel-bot';
+import { loadJson } from '../util';
 
 // TODO(burdon): Configure logging.
 
@@ -27,7 +27,7 @@ describe.skip('TravelBot', () => {
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
     await client.halo.createIdentity();
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
 
     const bot = new TravelBot('dxos.module.bot.travel');
     await bot.init(client.config, space);

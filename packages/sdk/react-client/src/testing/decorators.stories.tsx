@@ -3,15 +3,16 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 
-import { useClient } from '../client';
-import { useSpace } from '../echo';
 import { ClientDecorator } from './ClientDecorator';
 import { setupPeersInSpace } from './ClientSpaceDecorator';
 import { ToggleNetworkDecorator } from './ToggleNetworkDecorator';
+import { useClient } from '../client';
+import { useSpace } from '../echo';
 
 export default {
   title: 'testing/decorators',

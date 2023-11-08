@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ForwardedRef, forwardRef, KeyboardEventHandler } from 'react';
+import React, { type ForwardedRef, forwardRef, type KeyboardEventHandler } from 'react';
 
 export const Header = forwardRef(
   ({ onKeyDown }: { onKeyDown?: KeyboardEventHandler<HTMLInputElement> }, inputRef: ForwardedRef<HTMLInputElement>) => (
@@ -13,7 +13,7 @@ export const Header = forwardRef(
         className='new-todo'
         placeholder='What needs to be done?'
         onKeyDown={onKeyDown}
-        data-testid={onKeyDown ? 'new-todo' : 'todo-placeholder'}
+        data-testid='new-todo'
       />
     </header>
   ),

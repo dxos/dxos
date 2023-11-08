@@ -6,18 +6,18 @@ import { deepSignal } from 'deepsignal/react';
 import type { Resource } from 'i18next';
 import React from 'react';
 
-import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
-import { appTx } from '@dxos/aurora-theme';
-import { PluginDefinition } from '@dxos/react-surface';
+import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import compositeEnUs from './translations/en-US';
-import { translationsPlugins } from './util';
 
 export type ThemePluginOptions = {
   appName?: string;
+  tx?: ThemeFunction<any>;
 };
 
-export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
+export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
   let modeQuery: MediaQueryList | undefined;
   const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
@@ -35,7 +35,7 @@ export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' 
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setTheme({ matches: modeQuery.matches });
       modeQuery.addEventListener('change', setTheme);
-      for (const plugin of translationsPlugins(plugins)) {
+      for (const plugin of filterPlugins(plugins, parseTranslationsPlugin)) {
         resources.push(...plugin.provides.translations);
       }
     },
@@ -43,14 +43,16 @@ export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' 
       return modeQuery?.removeEventListener('change', setTheme);
     },
     provides: {
-      context: ({ children }) => (
-        <ThemeProvider {...{ tx: appTx, themeMode: state.themeMode, resourceExtensions: resources }}>
-          <Toast.Provider>
-            <Tooltip.Provider>{children}</Tooltip.Provider>
-            <Toast.Viewport />
-          </Toast.Provider>
-        </ThemeProvider>
-      ),
+      context: ({ children }) => {
+        return (
+          <ThemeProvider {...{ tx: propsTx ?? defaultTx, themeMode: state.themeMode, resourceExtensions: resources }}>
+            <Toast.Provider>
+              <Tooltip.Provider>{children}</Tooltip.Provider>
+              <Toast.Viewport />
+            </Toast.Provider>
+          </ThemeProvider>
+        );
+      },
     },
   };
 };

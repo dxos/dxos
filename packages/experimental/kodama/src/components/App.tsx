@@ -9,13 +9,13 @@ import React, { useMemo } from 'react';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { ModuleProvider, useAppState } from '../hooks';
 import { Config } from './Config';
 import { createEchoMenu } from './echo';
 import { createHaloMenu } from './halo';
 import { createKubeMenu } from './kube';
 import { createMeshMenu } from './mesh';
-import { MenuItem, Module, Panel } from './util';
+import { type MenuItem, Module, Panel } from './util';
+import { ModuleProvider, useAppState } from '../hooks';
 
 /**
  * Top-level app with menu.

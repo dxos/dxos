@@ -2,22 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { Event, sleep, synchronized, Trigger } from '@dxos/async';
+import { Event, sleepWithContext, synchronized, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
+import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedMessageBlock } from '@dxos/protocols';
+import { type FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, startAfter, TimeframeClock } from './timeframe-clock';
+import { createMappedFeedWriter } from '../common';
 
 export type WaitUntilReachedTargetParams = {
   /**
@@ -61,11 +60,15 @@ export class PipelineState {
    */
   _reachedTargetPromise: Promise<void> | undefined;
 
-  // prettier-ignore
+  /**
+   * @internal
+   */
+  _reachedTarget: boolean = false;
+
   constructor(
     private _feeds: ComplexMap<PublicKey, FeedWrapper<FeedMessage>>,
-    private _timeframeClock: TimeframeClock
-  ) { }
+    private _timeframeClock: TimeframeClock,
+  ) {}
 
   /**
    * Latest theoretical timeframe based on the last mutation in each feed.
@@ -97,6 +100,10 @@ export class PipelineState {
 
   get targetTimeframe() {
     return this._targetTimeframe ? this._targetTimeframe : new Timeframe();
+  }
+
+  get reachedTarget() {
+    return this._reachedTarget;
   }
 
   get feeds() {
@@ -144,8 +151,9 @@ export class PipelineState {
         rejectOnDispose(this._ctx),
         this._reachedTargetPromise.then(() => {
           done = true;
+          this._reachedTarget = true;
         }),
-        sleep(timeout).then(() => {
+        sleepWithContext(this._ctx, timeout).then(() => {
           if (done) {
             return;
           }
@@ -203,30 +211,28 @@ export interface PipelineAccessor {
  */
 export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(new Timeframe());
-
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
-
-  // Inbound feed stream.
-  private _feedSetIterator?: FeedSetIterator<FeedMessage>;
 
   // External state accessor.
   private readonly _state: PipelineState = new PipelineState(this._feeds, this._timeframeClock);
 
   // Waits for the message consumer to process the message and yield control back to the pipeline.
   private readonly _processingTrigger = new Trigger().wake();
-
   private readonly _pauseTrigger = new Trigger().wake();
 
-  private _isStopping = false;
+  // Pending downloads.
+  private readonly _downloads = new ComplexMap<FeedWrapper<FeedMessage>, any>((value) => PublicKey.hash(value.key));
 
-  private _isStarted = false;
-
-  private _isOpen = false;
-
-  private _isPaused = false;
+  // Inbound feed stream.
+  private _feedSetIterator?: FeedSetIterator<FeedMessage>;
 
   // Outbound feed writer.
   private _writer: FeedWriter<FeedMessage.Payload> | undefined;
+
+  private _isStopping = false;
+  private _isStarted = false;
+  private _isBeingConsumed = false;
+  private _isPaused = false;
 
   get state() {
     return this._state;
@@ -237,6 +243,10 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
+  hasFeed(feedKey: PublicKey) {
+    return this._feeds.has(feedKey);
+  }
+
   getFeeds(): FeedWrapper<FeedMessage>[] {
     return this._feedSetIterator!.feeds;
   }
@@ -245,14 +255,14 @@ export class Pipeline implements PipelineAccessor {
   // which might be opening feeds during the mutation processing, which w
   async addFeed(feed: FeedWrapper<FeedMessage>) {
     this._feeds.set(feed.key, feed);
+
     if (this._feedSetIterator) {
       await this._feedSetIterator.addFeed(feed);
     }
-    this._setFeedDownloadState(feed);
-  }
 
-  hasFeed(feedKey: PublicKey) {
-    return this._feeds.has(feedKey);
+    if (this._isStarted && !this._isPaused) {
+      this._setFeedDownloadState(feed);
+    }
   }
 
   setWriteFeed(feed: FeedWrapper<FeedMessage>) {
@@ -270,28 +280,41 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async start() {
-    log('starting...', {});
+    invariant(!this._isStarted, 'Pipeline is already started.');
+    log('starting...');
     await this._initIterator();
     await this._feedSetIterator!.open();
-    log('started');
     this._isStarted = true;
+    log('started');
+
+    if (!this._isPaused) {
+      for (const feed of this._feeds.values()) {
+        this._setFeedDownloadState(feed);
+      }
+    }
   }
 
   @synchronized
   async stop() {
-    log('stopping...', {});
+    log('stopping...');
     this._isStopping = true;
+    for (const [feed, handle] of this._downloads.entries()) {
+      feed.undownload(handle);
+    }
+    this._downloads.clear();
     await this._feedSetIterator?.close();
     await this._processingTrigger.wait(); // Wait for the in-flight message to be processed.
     await this._state._ctx.dispose();
     this._state._ctx = new Context();
     this._state._reachedTargetPromise = undefined;
-    log('stopped');
+    this._state._reachedTarget = false;
     this._isStarted = false;
+    log('stopped');
   }
 
   /**
-   * @param timeframe Timeframe of already processed messages. The pipeline will start processing messages AFTER this timeframe.
+   * @param timeframe Timeframe of already processed messages.
+   *  The pipeline will start processing messages AFTER this timeframe.
    */
   @synchronized
   async setCursor(timeframe: Timeframe) {
@@ -301,10 +324,6 @@ export class Pipeline implements PipelineAccessor {
     this._timeframeClock.setTimeframe(timeframe);
 
     // Cancel downloads of mutations before the cursor.
-    for (const feed of this._feeds.values()) {
-      this._setFeedDownloadState(feed);
-    }
-
     if (this._feedSetIterator) {
       await this._feedSetIterator.close();
       await this._initIterator();
@@ -317,7 +336,6 @@ export class Pipeline implements PipelineAccessor {
    */
   @synchronized
   async pause() {
-    invariant(this._isStarted, 'Pipeline is not open.');
     if (this._isPaused) {
       return;
     }
@@ -329,11 +347,14 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async unpause() {
-    invariant(this._isStarted, 'Pipeline is not open.');
     invariant(this._isPaused, 'Pipeline is not paused.');
 
     this._pauseTrigger.wake();
     this._isPaused = false;
+
+    for (const feed of this._feeds.values()) {
+      this._setFeedDownloadState(feed);
+    }
   }
 
   /**
@@ -341,8 +362,8 @@ export class Pipeline implements PipelineAccessor {
    * Updates the timeframe clock after the message has bee processed.
    */
   async *consume(): AsyncIterable<FeedMessageBlock> {
-    invariant(!this._isOpen, 'Pipeline is already being consumed.');
-    this._isOpen = true;
+    invariant(!this._isBeingConsumed, 'Pipeline is already being consumed.');
+    this._isBeingConsumed = true;
 
     invariant(this._feedSetIterator, 'Iterator not initialized.');
     let lastFeedSetIterator = this._feedSetIterator;
@@ -358,33 +379,40 @@ export class Pipeline implements PipelineAccessor {
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
       }
 
+      // Will be canceled when the iterator gets closed.
       const { done, value } = await iterable.next();
-      if (done) {
-        continue;
+      if (!done) {
+        const block = value ?? failUndefined();
+        this._processingTrigger.reset();
+        this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
+        yield block;
+        this._processingTrigger.wake();
+        this._timeframeClock.updateTimeframe();
       }
-
-      const block = value ?? failUndefined();
-      this._processingTrigger.reset();
-      this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
-      yield block;
-      this._processingTrigger.wake();
-
-      this._timeframeClock.updateTimeframe();
     }
 
     // TODO(burdon): Test re-entrant?
-    this._isOpen = false;
+    this._isBeingConsumed = false;
   }
 
   private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>) {
+    let handle = this._downloads.get(feed); // TODO(burdon): Always undefined?
+    if (handle) {
+      feed.undownload(handle);
+    }
+
     const timeframe = this._state._startTimeframe;
-    const seq = timeframe.get(feed.key) ?? 0;
-
-    feed.undownload({ callback: () => log('Undownloaded') });
-
-    feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
-      log('failed to download feed', { err });
+    const seq = timeframe.get(feed.key) ?? -1;
+    log('download', { feed: feed.key.truncate(), seq, length: feed.length });
+    handle = feed.download({ start: seq + 1, linear: true }, (err: any, data: any) => {
+      if (err) {
+        // log.warn(err); // TODO(burdon): Feed is closed/Download was cancelled.
+      } else {
+        log.info('downloaded', { data }); // TODO(burdon): Never called.
+      }
     });
+
+    this._downloads.set(feed, handle);
   }
 
   private async _initIterator() {
@@ -392,6 +420,7 @@ export class Pipeline implements PipelineAccessor {
       start: startAfter(this._timeframeClock.timeframe),
       stallTimeout: 1000,
     });
+
     this._feedSetIterator.stalled.on((iterator) => {
       log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
       this._state.stalled.emit();

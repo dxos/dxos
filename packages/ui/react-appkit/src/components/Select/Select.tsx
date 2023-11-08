@@ -4,10 +4,10 @@
 
 import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export type SelectItemProps = SelectPrimitive.SelectItemProps;
 
@@ -52,9 +52,7 @@ export const Select = (props: SelectProps) => {
       </SelectPrimitive.Trigger>
       <SelectPrimitive.Content className='z-[50]'>
         <SelectPrimitive.ScrollUpButton className='flex items-center justify-center text-gray-700 dark:text-gray-300'>
-          <div className=''>
-            <CaretUp />
-          </div>
+          <CaretUp />
         </SelectPrimitive.ScrollUpButton>
         <SelectPrimitive.Viewport className='bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg'>
           {children}

@@ -3,21 +3,30 @@
 //
 
 import get from 'lodash.get';
-import invariant from 'tiny-invariant';
 
-import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
+import { invariant } from '@dxos/invariant';
+import { type ModelMeta, Model, type StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
-import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import {
+  ObjectMutation,
+  type ObjectMutationSet,
+  type ObjectSnapshot,
+} from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { DocumentModelState, MutationUtil, ValueUtil } from './mutation';
+import { type DocumentModelState, MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
+import { Reference } from './reference';
 import { validateKey } from './util';
+
+const DEFAULT_META_SNAPSHOT = ValueUtil.createMessage({
+  keys: OrderedArray.fromValues([]),
+});
 
 /**
  * Processes object mutations.
  */
 class DocumentModelStateMachine implements StateMachine<DocumentModelState, ObjectMutationSet, ObjectSnapshot> {
-  private _object: DocumentModelState = { data: {} };
+  private _object: DocumentModelState = { data: {}, meta: {} };
 
   getState(): DocumentModelState {
     return this._object;
@@ -25,10 +34,15 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 
   reset(snapshot: ObjectSnapshot): void {
     invariant(snapshot.root);
-    const object: DocumentModelState = { data: {} };
+    const object: DocumentModelState = { data: {}, meta: {} };
     ValueUtil.applyValue(object, 'data', snapshot.root);
+    ValueUtil.applyValue(object, 'meta', snapshot.meta ?? DEFAULT_META_SNAPSHOT);
     this._object = object;
-    this._object.type = snapshot.type;
+    if (snapshot.type) {
+      this._object.type = Reference.fromLegacyTypename(snapshot.type);
+    } else if (snapshot.typeRef) {
+      this._object.type = Reference.fromValue(snapshot.typeRef);
+    }
   }
 
   process(mutation: ObjectMutationSet): void {
@@ -37,8 +51,9 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 
   snapshot(): ObjectSnapshot {
     return {
+      typeRef: this._object.type?.encode(),
       root: ValueUtil.createMessage(this._object.data),
-      type: this._object.type,
+      meta: ValueUtil.createMessage(this._object.meta),
     };
   }
 }
@@ -49,10 +64,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 export class MutationBuilder {
   _mutations: ObjectMutation[] = [];
 
-  // prettier-ignore
-  constructor(
-    private readonly _model?: DocumentModel
-  ) { }
+  constructor(private readonly _model?: DocumentModel, private readonly _meta?: boolean) {}
 
   set(key: string, value: any) {
     this._mutations.push(MutationUtil.createFieldMutation(key, value));
@@ -61,7 +73,7 @@ export class MutationBuilder {
 
   private _yjsTransact(key: string, tx: (arr: OrderedArray) => void): this {
     invariant(this._model);
-    const arrayInstance = this._model.get(key);
+    const arrayInstance = this._meta ? this._model.getMeta(key) : this._model.get(key);
     invariant(arrayInstance instanceof OrderedArray);
     const mutation = arrayInstance.transact(() => {
       tx(arrayInstance);
@@ -102,14 +114,23 @@ export class MutationBuilder {
 
   async commit() {
     invariant(this._model);
-    return this._model._makeMutation({ mutations: this._mutations });
+    if (this._meta) {
+      return this._model._makeMutation({ metaMutations: this._mutations });
+    } else {
+      return this._model._makeMutation({ mutations: this._mutations });
+    }
   }
 
   /**
    * Returns a mutation object without applying it.
+   * @param meta Apply to the `meta` key-space.
    */
-  build(): ObjectMutationSet {
-    return { mutations: this._mutations };
+  build(meta = this._meta): ObjectMutationSet {
+    if (meta) {
+      return { metaMutations: this._mutations };
+    } else {
+      return { mutations: this._mutations };
+    }
   }
 }
 
@@ -125,10 +146,9 @@ export interface ObjectProperties {
 /**
  * Object mutation model.
  */
-// TODO(burdon): Make generic (separate model?) With read/write validation.
 export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
-    type: 'dxos:model/document',
+    type: 'dxos.org/model/document',
     stateMachine: () => new DocumentModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
     snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot'),
@@ -145,13 +165,22 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     return this._getState().data;
   }
 
-  builder() {
-    return new MutationBuilder(this);
+  metaObject() {
+    return this._getState().meta;
+  }
+
+  builder(meta?: boolean) {
+    return new MutationBuilder(this, meta);
   }
 
   get(key: string, defaultValue?: unknown) {
     validateKey(key);
     return get(this._getState().data, key, defaultValue);
+  }
+
+  getMeta(key: string, defaultValue?: unknown) {
+    validateKey(key);
+    return get(this._getState().meta, key, defaultValue);
   }
 
   async set(key: string, value: unknown) {

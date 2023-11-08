@@ -5,11 +5,12 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { SwarmInfo, ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type SwarmInfo, type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState, Swarm } from './swarm';
-import { WireProtocol } from './wire-protocol';
+import { ConnectionState, type Swarm } from './swarm';
+import { type WireProtocol } from './wire-protocol';
 
 export enum EventType {
   CONNECTION_STATE_CHANGED = 'CONNECTION_STATE_CHANGED',
@@ -49,7 +50,8 @@ export class ConnectionLog {
 
     swarm.connectionAdded.on((connection) => {
       const connectionInfo: ConnectionInfo = {
-        state: ConnectionState.INITIAL,
+        state: ConnectionState.CREATED,
+        closeReason: connection.closeReason,
         remotePeerId: connection.remoteId,
         sessionId: connection.sessionId,
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
@@ -61,6 +63,7 @@ export class ConnectionLog {
 
       connection.stateChanged.on((state) => {
         connectionInfo.state = state;
+        connectionInfo.closeReason = connection.closeReason;
         connectionInfo.events!.push({
           type: EventType.CONNECTION_STATE_CHANGED,
           newState: state,
@@ -68,8 +71,10 @@ export class ConnectionLog {
         this.update.emit();
       });
 
-      (connection.protocol as WireProtocol & { stats: Event<ConnectionInfo.StreamStats[]> })?.stats?.on((stats) => {
-        connectionInfo.streams = stats;
+      (connection.protocol as WireProtocol & { stats: Event<MuxerStats> })?.stats?.on((stats) => {
+        connectionInfo.readBufferSize = stats.readBufferSize;
+        connectionInfo.writeBufferSize = stats.writeBufferSize;
+        connectionInfo.streams = stats.channels;
         this.update.emit();
       });
 

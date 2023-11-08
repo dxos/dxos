@@ -21,13 +21,25 @@
   ],
   "references": [
     {
-      "path": "../../../sdk/config"
+      "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../ui/react-appkit"
+      "path": "../../../sdk/client-services"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

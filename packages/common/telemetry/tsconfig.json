@@ -19,10 +19,22 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../async"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
       "path": "../log"
     },
     {
       "path": "../sentry"
+    },
+    {
+      "path": "../util"
     }
   ]
 }

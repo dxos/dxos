@@ -3,9 +3,10 @@
 //
 
 import protobufjs from 'protobufjs';
-import invariant from 'tiny-invariant';
 
-import { Substitutions } from './common';
+import { invariant } from '@dxos/invariant';
+
+import { type Substitutions } from './common';
 
 export type TypeMapperContext = {
   /**

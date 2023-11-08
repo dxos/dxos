@@ -4,21 +4,24 @@
 
 import { CaretLeft, Info, Function, Graph, PuzzlePiece, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useEffect, useState, Suspense } from 'react';
-import invariant from 'tiny-invariant';
 
-import { Button, DensityProvider, Main, ClassNameValue, useSidebar } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { invariant } from '@dxos/invariant';
 import { searchMeta } from '@dxos/kai-frames';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
-import { TypedObject, useSpaces } from '@dxos/react-client/echo';
+import { type TypedObject, useSpaces } from '@dxos/react-client/echo';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
+import { Button, DensityProvider, Main, type ClassNameValue, useSidebars } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { SpaceListAction } from '../../components';
+import { FrameList } from './FrameList';
+import { type ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
+import { Separator, SpaceListPanel } from './SpaceListPanel';
+import { type SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
 import {
   Section,
-  SearchResults,
+  type SearchResults,
   createPath,
   getIcon,
   useAppRouter,
@@ -26,12 +29,9 @@ import {
   useCreateInvitation,
   useTheme,
 } from '../../hooks';
-import { Intent, IntentAction } from '../../util';
+import { type Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
-import { FrameList } from './FrameList';
-import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
-import { Separator, SpaceListPanel } from './SpaceListPanel';
 
 const SIDEBAR_NAME = 'KaiFrameworkSidebar';
 
@@ -73,7 +73,7 @@ export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
   // App state
   //
 
-  const { toggleSidebar, sidebarOpen } = useSidebar(SIDEBAR_NAME);
+  const { toggleNavigationSidebar, navigationSidebarOpen } = useSidebars(SIDEBAR_NAME);
   const { swarm: connectionState } = useNetworkStatus();
   const [showSpacePanel, setShowSpacePanel] = useState(false);
 
@@ -154,7 +154,7 @@ export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
   const Icon = getIcon(space.properties.icon);
 
   return (
-    <Main.Sidebar classNames={className}>
+    <Main.NavigationSidebar classNames={className}>
       <DensityProvider density='fine'>
         <div role='none' className={mx('flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg')}>
           {/* Header */}
@@ -176,8 +176,8 @@ export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
                 >
                   <Info className={getSize(5)} />
                 </Button>
-                <Button variant='ghost' classNames='p-0 pr-2' onClick={toggleSidebar}>
-                  {sidebarOpen && <CaretLeft className={getSize(6)} />}
+                <Button variant='ghost' classNames='p-0 pr-2' onClick={toggleNavigationSidebar}>
+                  {navigationSidebarOpen && <CaretLeft className={getSize(6)} />}
                 </Button>
               </div>
             </div>
@@ -309,7 +309,7 @@ export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
           </div>
         </div>
       </DensityProvider>
-    </Main.Sidebar>
+    </Main.NavigationSidebar>
   );
 };
 

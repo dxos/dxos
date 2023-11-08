@@ -22,6 +22,12 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -31,28 +37,28 @@
       "path": "../../sdk/react-shell"
     },
     {
-      "path": "../../sdk/react-surface"
-    },
-    {
       "path": "../../sdk/vault"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-composer"
+      "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../../ui/react-ui-navtree"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-dnd"
+      "path": "../plugins/plugin-debug"
     },
     {
       "path": "../plugins/plugin-error"
@@ -67,31 +73,43 @@
       "path": "../plugins/plugin-graph"
     },
     {
-      "path": "../plugins/plugin-intent"
+      "path": "../plugins/plugin-ipfs"
+    },
+    {
+      "path": "../plugins/plugin-layout"
     },
     {
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-metadata"
+    },
+    {
+      "path": "../plugins/plugin-navtree"
+    },
+    {
+      "path": "../plugins/plugin-presenter"
+    },
+    {
       "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-sketch"
     },
     {
       "path": "../plugins/plugin-space"
     },
     {
-      "path": "../plugins/plugin-splitview"
+      "path": "../plugins/plugin-stack"
     },
     {
-      "path": "../plugins/plugin-stack"
+      "path": "../plugins/plugin-telemetry"
     },
     {
       "path": "../plugins/plugin-theme"
     },
     {
-      "path": "../plugins/plugin-treeview"
-    },
-    {
-      "path": "../plugins/plugin-url-sync"
+      "path": "../types"
     }
   ]
 }

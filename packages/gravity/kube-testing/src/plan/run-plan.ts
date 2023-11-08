@@ -2,34 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChildProcess, fork } from 'node:child_process';
+import yaml from 'js-yaml';
+import { fork } from 'node:child_process';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import seedrandom from 'seedrandom';
-
-import { Event, Trigger, sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
-import { LogLevel, createFileProcessor, invariant, log } from '@dxos/log';
-
-import { AgentEnv } from './agent-env';
-import { AgentParams, PlanResults, Platform, TestPlan } from './spec-base';
-import { mkdir, readFile } from 'node:fs/promises';
-import { v4 } from 'uuid';
+import { readFile, mkdir } from 'node:fs/promises';
 import { createServer } from 'node:http';
-import { AddressInfo } from 'node:net';
+import { type AddressInfo } from 'node:net';
+import { join } from 'node:path';
+import type { BrowserType } from 'playwright';
+import seedrandom from 'seedrandom';
+import { v4 } from 'uuid';
+
+import { Trigger, sleep, latch } from '@dxos/async';
 import {
   NodeGlobalsPolyfillPlugin,
   FixMemdownPlugin,
   FixGracefulFsPlugin,
   NodeModulesPlugin,
 } from '@dxos/esbuild-plugins';
-import type { BrowserType } from 'playwright';
+import { PublicKey } from '@dxos/keys';
+import { LogLevel, createFileProcessor, invariant, log } from '@dxos/log';
+
+import { AgentEnv } from './env';
+import { type AgentParams, type PlanResults, type Platform, type TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;
+const SUMMARY_FILENAME = 'test.json';
 
-type PlanOptions = {
+export type PlanOptions = {
   staggerAgents?: number;
   repeatAnalysis?: string;
   randomSeed?: string;
@@ -54,18 +56,30 @@ export type RunPlanParams<S, C> = {
   spec: S;
   options: PlanOptions;
 };
-
-
 // fixup env in browser
 if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
   process.env = (globalThis as any).dxgravity_env;
 }
 
+// TODO(nf): merge with defaults
+export const readYAMLSpecFile = async <S, C>(
+  path: string,
+  plan: TestPlan<S, C>,
+  options: PlanOptions,
+): Promise<() => RunPlanParams<any, any>> => {
+  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
+  return () => ({
+    plan,
+    spec: yamlSpec,
+    options,
+  });
+};
+
 // TODO(mykola): Introduce Executor class.
-export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
+export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
-    // Analysis mode
+    // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
     await plan.finish(
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
@@ -73,36 +87,27 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
     );
     return;
   }
-
-  if (!process.env.GRAVITY_AGENT_PARAMS) {
-    // Planner mode
-    await runPlanner({ plan, spec, options });
-  } else {
-    // Agent mode
-    const params: AgentParams<S, C> = JSON.parse(process.env.GRAVITY_AGENT_PARAMS);
-    await runAgent(plan, params);
-  }
+  // Planner mode.
+  await runPlanner(name, { plan, spec, options });
 };
 
-const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
-  const testId = genTestId();
-  const outDir = `${process.cwd()}/out/results/${testId}`;
+const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
+  const testId = createTestPathname();
+  const outDirBase = process.env.GRAVITY_OUT_BASE || process.cwd();
+  const outDir = `${outDirBase}/out/results/${testId}`;
   fs.mkdirSync(outDir, { recursive: true });
-
   log.info('starting plan', {
     outDir,
   });
 
-  const agentsArray = await plan.init({
-    spec,
-    outDir,
-    testId,
-  });
+  const agentsArray = await plan.init({ spec, outDir, testId });
   const agents = Object.fromEntries(agentsArray.map((config) => [PublicKey.random().toHex(), config]));
 
-  if (Object.values(agents).some((agent) => agent.runtime?.platform !== 'nodejs' && agent.runtime?.platform !== undefined)) {
+  if (
+    Object.values(agents).some((agent) => agent.runtime?.platform !== 'nodejs' && agent.runtime?.platform !== undefined)
+  ) {
     const begin = Date.now();
-    await buildBrowserBundle(join(outDir, 'browser.js'))
+    await buildBrowserBundle(join(outDir, 'browser.js'));
     log.info('browser bundle built', {
       time: Date.now() - begin,
     });
@@ -118,6 +123,22 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   const promises: Promise<void>[] = [];
 
   {
+    // stop the test when the plan fails (e.g. signal server dies)
+    // TODO(nf): add timeout for plan completion
+    const [allAgentsComplete, agentComplete] = latch({ count: agentsArray.length });
+
+    promises.push(
+      Promise.race([
+        new Promise<void>((resolve, reject) => {
+          plan.onError = (err) => {
+            log.info('got plan error, stopping agents', { err });
+            reject(err);
+          };
+        }),
+        allAgentsComplete().then(() => {}),
+      ]),
+    );
+
     //
     // Start agents
     //
@@ -143,36 +164,57 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
       fs.mkdirSync(agentParams.outDir, { recursive: true });
 
-      const promise = agentParams.runtime.platform === 'nodejs' ? runNode(agentParams, options) : runBrowser(agentParams, options);
+      const promise =
+        agentParams.runtime.platform === 'nodejs' ? runNode(agentParams, options) : runBrowser(agentParams, options);
       promises.push(
-        promise
-          .then((exitCode) => {
+        new Promise<void>((resolve, reject) => {
+          childProcess.on('error', (err) => {
+            log.info('child process error', { err });
+            reject(err);
+          });
+          childProcess.on('exit', async (exitCode, signal) => {
+            if (exitCode == null) {
+              log.warn('agent exited with signal', { signal });
+              reject(new Error(`agent exited with signal ${signal}`));
+            }
+
+            if (exitCode !== 0) {
+              log.warn('agent exited with non-zero exit code', { exitCode });
+              reject(new Error(`agent exited with non-zero exit code ${exitCode}`));
+            }
+
             planResults.agents[agentId] = {
-              exitCode,
+              result: exitCode ?? -1,
               outDir: agentParams.outDir,
               logFile: join(agentParams.outDir, AGENT_LOG_FILE),
             };
-          }),
+
+            agentComplete();
+            resolve();
+            log.info('agent process exited successfully', { agentId });
+          });
+          // TODO(nf): add timeout for agent completion
+        }),
       );
     }
 
-    await Promise.all(promises);
+    await Promise.all(promises).catch((err) => {
+      log.warn('test plan or agent failed, killing remaining test agents', err);
+      for (const child of children) {
+        log.warn('killing child', { pid: child.pid });
+        child.kill();
+      }
+      throw new Error('plan failed');
+    });
 
     log.info('test complete', {
-      summary: join(outDir, 'test.json'),
+      summary: join(outDir, SUMMARY_FILENAME),
     });
   }
 
   let stats: any;
   try {
-    stats = await await plan.finish(
-      {
-        spec,
-        outDir,
-        testId,
-      },
-      planResults,
-    );
+    stats = await plan.finish({ spec, outDir, testId }, planResults);
   } catch (err) {
     log.warn('error finishing plan', err);
   }
@@ -188,10 +230,19 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     results: planResults,
     agents,
   };
-  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
 
+  writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
   log.info('plan complete');
   process.exit(0);
+};
+
+/**
+ * entry point for process running in agent mode
+ */
+
+export const runAgentForPlan = async <S, C>(planName: string, agentParamsJSON: string, plan: TestPlan<S, C>) => {
+  const params: AgentParams<S, C> = JSON.parse(agentParamsJSON);
+  await runAgent(plan, params);
 };
 
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
@@ -205,7 +256,6 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
 
     const env = new AgentEnv<S, C>(params);
     await env.open();
-
     await plan.run(env);
   } catch (err) {
     console.error(err);
@@ -216,8 +266,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
   }
 };
 
-const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().truncate()}`;
-
+const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');
 
 const runNode = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
   const execArgv = process.execArgv;
@@ -235,30 +284,28 @@ const runNode = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Pr
   const childProcess = fork(process.argv[1], {
     execArgv: options.debug
       ? [
-        '--inspect=:' + (DEBUG_PORT_START + agentParams.agentIdx), //
-        ...execArgv,
-      ]
+          '--inspect=:' + (DEBUG_PORT_START + agentParams.agentIdx), //
+          ...execArgv,
+        ]
       : execArgv,
     env: {
       ...process.env,
       GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
     },
   });
-  return Event.wrap<number>(childProcess, 'exit').waitForCount(1)
-}
+  return Event.wrap<number>(childProcess, 'exit').waitForCount(1);
+};
 
 const runBrowser = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
   invariant(agentParams.runtime.platform);
   const { page } = await getNewBrowserContext(agentParams.runtime.platform, { headless: false });
-
-
   const doneTrigger = new Trigger<number>();
 
   const apis: EposedApis = {
     dxgravity_done: (code) => {
       doneTrigger.wake(code);
     },
-  }
+  };
   for (const [name, fn] of Object.entries(apis)) {
     await page.exposeFunction(name, fn);
   }
@@ -279,26 +326,26 @@ const runBrowser = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOpt
   <h1>TESTING TESTING.</h1>
   <script>
     window.dxgravity_env = ${JSON.stringify({
-        ...process.env,
-        GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
-      })}
+      ...process.env,
+      GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+    })}
   </script>
   <script src="index.js"></script>
 </body>
 </html>
-`
+`,
     },
     '/index.js': {
       contentType: 'text/javascript',
-      data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8')
-    }
+      data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8'),
+    },
   });
 
   const port = (server.address() as AddressInfo).port;
   await page.goto(`http://localhost:${port}`);
 
   return doneTrigger.wait();
-}
+};
 
 const getBrowser = (browserType: Platform): BrowserType => {
   const { chromium, firefox, webkit } = require('playwright');
@@ -340,7 +387,7 @@ type BrowserOptions = {
 type WebResource = {
   contentType: string;
   data: string;
-}
+};
 
 const servePage = async (resources: Record<string, WebResource>, port = 5176) => {
   const server = createServer((req, res) => {
@@ -380,8 +427,8 @@ const servePage = async (resources: Record<string, WebResource>, port = 5176) =>
 };
 
 type EposedApis = {
-  dxgravity_done: (code: number) => void
-}
+  dxgravity_done: (code: number) => void;
+};
 
 const buildBrowserBundle = async (outfile: string) => {
   const { build } = require('esbuild');
@@ -392,7 +439,7 @@ const buildBrowserBundle = async (outfile: string) => {
     platform: 'browser',
     format: 'iife',
     sourcemap: 'inline',
-    outfile: outfile,
+    outfile,
     plugins: [FixGracefulFsPlugin(), FixMemdownPlugin(), NodeGlobalsPolyfillPlugin(), NodeModulesPlugin()],
   });
-}
+};

@@ -2,13 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { JSONTree } from 'react-json-tree';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+// eslint-disable-next-line no-restricted-imports
+import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { mx } from '@dxos/aurora-theme';
+import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
+import { mx } from '@dxos/react-ui-theme';
 import { arrayToBuffer } from '@dxos/util';
+
+export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
+  return (
+    <SyntaxHighlighter language='json' style={style} className='w-full'>
+      {JSON.stringify(data, replacer(truncate), 2)}
+    </SyntaxHighlighter>
+  );
+};
 
 // TODO(burdon): Light/dark mode.
 // https://github.com/gaearon/base16-js/tree/master/src
@@ -33,31 +45,21 @@ const theme = {
   base0F: '#b3588e',
 };
 
-// const getItemString = (type: string) => <span className='text-sm'>[{type}]</span>;
-
-export const JsonView: FC<{
+export const JsonTreeView: FC<{
   data?: Object;
   className?: string;
   level?: number;
   showRoot?: boolean;
   showMeta?: boolean;
 }> = ({ data, className, level = 3, showRoot = false, showMeta = false }) => {
-  // TODO(mykola): Add proto schema. Decode bytes.
-  // TODO(mykola): Write our own recursive replacing, to avoid double serialization.
-  const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer));
+  const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer()));
 
   return (
     <div className={mx('m-2', className)}>
       <JSONTree
-        hideRoot={!showRoot}
-        theme={{
-          extend: theme,
-          valueLabel: {
-            textDecoration: 'underline',
-          },
-        }}
-        getItemString={showMeta ? undefined : () => null}
         data={replaced}
+        hideRoot={!showRoot}
+        getItemString={showMeta ? undefined : () => null}
         shouldExpandNodeInitially={(_, __, _level) => _level < level}
         labelRenderer={([key]) => key}
         // TODO(burdon): Fix.
@@ -66,32 +68,59 @@ export const JsonView: FC<{
           return replacer('', value);
         }}
         */
+
+        theme={{
+          extend: theme,
+          valueLabel: {
+            textDecoration: 'underline',
+          },
+        }}
       />
     </div>
   );
 };
 
 // TODO(burdon): Factor out.
-const replacer = (key: any, value: any) => {
-  if (typeof value === 'object') {
-    if (value instanceof Uint8Array) {
-      return arrayToBuffer(value).toString('hex');
+// TODO(mykola): Add proto schema. Decode bytes.
+// TODO(mykola): Write our own recursive replacing, to avoid double serialization.
+const replacer =
+  (truncate = false) =>
+  (key: any, value: any) => {
+    // TODO(dmaretskyi): Overly aggressive and breaks lots of other strings.
+    // if (typeof value === 'string') {
+    //   if (truncate) {
+    //     const k = PublicKey.safeFrom(value);
+    //     if (k) {
+    //       return k.truncate();
+    //     }
+    //   }
+    // }
+
+    if (typeof value === 'object') {
+      if (truncate) {
+        if (value instanceof PublicKey) {
+          return value.truncate();
+        }
+      }
+
+      if (value instanceof Uint8Array) {
+        return arrayToBuffer(value).toString('hex');
+      }
+
+      if (value?.type === 'Buffer') {
+        return Buffer.from(value.data).toString('hex');
+      }
+
+      if (value?.['@type'] === 'google.protobuf.Any') {
+        try {
+          const codec = schema.getCodecForType(value.type_url);
+          return {
+            '@type': value.type_url,
+            ...codec.decode(value.value),
+          };
+        } catch {}
+      }
     }
 
-    if (value?.type === 'Buffer') {
-      return Buffer.from(value.data).toString('hex');
-    }
-
-    if (value?.['@type'] === 'google.protobuf.Any') {
-      try {
-        const codec = schema.getCodecForType(value.type_url);
-        return {
-          '@type': value.type_url,
-          ...codec.decode(value.value),
-        };
-      } catch {}
-    }
-  }
-
-  return value;
-};
+    return value;
+  };

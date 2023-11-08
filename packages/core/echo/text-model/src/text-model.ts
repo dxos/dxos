@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
+import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 
-import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
-import { ItemID, schema } from '@dxos/protocols';
-import { TextMutation, TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { invariant } from '@dxos/invariant';
+import { Model, type ModelMeta, type MutationWriter, type StateMachine } from '@dxos/model-factory';
+import { type ItemID, schema } from '@dxos/protocols';
+import { type TextMutation, type TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 type TextModelState = {
   doc: Doc;
@@ -58,20 +58,35 @@ class TextModelStateMachine implements StateMachine<TextModelState, TextMutation
 
 export class TextModel extends Model<TextModelState, TextMutation> {
   static meta: ModelMeta = {
-    type: 'dxos:model/text',
+    type: 'dxos.org/model/text',
     stateMachine: () => new TextModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.text.TextMutation'),
     snapshotCodec: schema.getCodecForType('dxos.echo.model.text.TextSnapshot'),
+    mergeMutations: (mutations: TextMutation[]) => {
+      const first = mutations[0];
+      invariant(
+        mutations.every(
+          (mutation) =>
+            mutation.kind === first.kind && mutation.field === first.field && mutation.clientId === first.clientId,
+        ),
+      );
+
+      return {
+        kind: first.kind,
+        field: first.field,
+        clientId: first.clientId,
+        update: mergeUpdates(mutations.map((mutation) => mutation.update!)),
+      };
+    },
   };
 
   private _unsubscribe: (() => void) | undefined;
 
-  // prettier-ignore
   constructor(
     meta: ModelMeta,
     itemId: ItemID, // TODO(burdon): Rename objectId, ObjectID.
     getState: () => TextModelState,
-    writeStream?: MutationWriter<TextMutation>
+    writeStream?: MutationWriter<TextMutation>,
   ) {
     super(meta, itemId, getState, writeStream);
     this.initialize();

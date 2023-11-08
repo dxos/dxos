@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import { trackResource } from './track-leaks';
 
@@ -19,11 +19,7 @@ export class DeferredTask {
   private _scheduled = false;
   private _promise: Promise<void> | null = null; // Can't be rejected.
 
-  // prettier-ignore
-  constructor(
-    private readonly _ctx: Context,
-    private readonly _callback: () => Promise<void>
-  ) {}
+  constructor(private readonly _ctx: Context, private readonly _callback: () => Promise<void>) {}
 
   schedule() {
     if (this._scheduled) {
@@ -59,6 +55,15 @@ export const runInContextAsync = async (ctx: Context, fn: () => MaybePromise<voi
   } catch (err: any) {
     ctx.raise(err);
   }
+};
+
+export const scheduleMicroTask = (ctx: Context, fn: () => MaybePromise<void>) => {
+  queueMicrotask(async () => {
+    if (ctx.disposed) {
+      return;
+    }
+    await runInContextAsync(ctx, fn);
+  });
 };
 
 export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {

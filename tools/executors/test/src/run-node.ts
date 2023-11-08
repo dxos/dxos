@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext } from '@nx/devkit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -20,7 +20,7 @@ const LOG_TRANSFORM_CONFIG = {
     },
     {
       function: 'invariant',
-      package: '@dxos/log',
+      package: '@dxos/invariant',
       param_index: 2,
       include_args: true,
       include_call_site: false,
@@ -56,21 +56,44 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
   console.log(`$ ${mocha} ${args.join(' ')}`);
-  const exitCode = await execTool(mocha, args, {
-    env: {
-      ...process.env,
-      ...options.envVariables,
-      FORCE_COLOR: '2',
-      MOCHA_TAGS: options.tags.join(','),
-      MOCHA_ENV: 'nodejs',
-      EXECUTOR_RESULT: JSON.stringify(options.executorResult),
-      DX_TRACK_LEAKS: options.trackLeakedResources ? '1' : undefined,
+  const exitCode = await execTool(
+    mocha,
+    args,
 
-      // Patch in ts-node will read this.
-      // https://github.com/TypeStrong/ts-node/issues/1937
-      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), LOG_TRANSFORM_CONFIG]]),
+    // TODO(dmaretskyi): Add a switch to run with deopt logs.
+    // 'node',
+    // [
+    //   ...[
+    //     'prof',
+    //     'log-deopt',
+    //     'log-ic',
+    //     'log-maps',
+    //     'log-maps-details',
+    //     'log-internal-timer-events',
+    //     'log-code',
+    //     'log-source-code',
+    //     'detailed-line-info',
+    //   ].flatMap((flag) => `--${flag}`),
+    //   require.resolve('mocha/bin/mocha'),
+    //   ...args,
+    // ],
+    {
+      env: {
+        ...process.env,
+        ...options.envVariables,
+        FORCE_COLOR: '2',
+        MOCHA_TAGS: options.tags.join(','),
+        MOCHA_ENV: 'nodejs',
+        EXECUTOR_RESULT: JSON.stringify(options.executorResult),
+        DX_TRACK_LEAKS: options.trackLeakedResources ? '1' : undefined,
+        NODE_ENV: 'test',
+
+        // Patch in ts-node will read this.
+        // https://github.com/TypeStrong/ts-node/issues/1937
+        SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), LOG_TRANSFORM_CONFIG]]),
+      },
     },
-  });
+  );
 
   return exitCode;
 };

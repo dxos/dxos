@@ -2,212 +2,117 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import get from 'lodash.get';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, type FC } from 'react';
 
-import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
-import { useIntent } from '@braneframe/plugin-intent';
-import { Main, Input, List, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { blockSeparator, chromeSurface, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { arrayMove } from '@dxos/util';
+import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
+import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
+import { type TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
+import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
+import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
 
-import { stackState } from '../stores';
-import {
-  GenericStackObject,
-  STACK_PLUGIN,
-  StackModel,
-  StackProperties,
-  StackSectionModel,
-  StackSections,
-} from '../types';
-import { StackSection } from './StackSection';
+import { FileUpload } from './FileUpload';
+import { defaultFileTypes } from '../hooks';
+import { STACK_PLUGIN, type StackPluginProvides, isStack } from '../types';
 
-const getSectionModels = (sections: StackSections): StackSectionModel[] =>
-  Array.from(sections)
-    .filter((section) => section?.object?.id)
-    .map(({ object }) => getSectionModel(object));
-
-const getSectionModel = (object: GenericStackObject, isPreview?: boolean): StackSectionModel => ({
-  id: object.id,
-  object,
-  isPreview: !!isPreview,
-});
-
-const StackSectionsImpl = ({
-  sections,
-  id: stackId,
-  onAdd,
-}: {
-  sections: StackSections;
-  id: string;
-  onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
-}) => {
-  const { t } = useTranslation(STACK_PLUGIN);
-  const dnd = useDnd();
-  const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
-  const sectionIds = useMemo(() => new Set(Array.from(sectionModels).map(({ object: { id } }) => id)), [sectionModels]);
-
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
-  const [overIsMember, setOverIsMember] = useState(false);
-
-  const { setNodeRef } = useDroppable({ id: stackId, data: { stack: { id: stackId } } });
-
-  useEffect(() => setSectionModels(getSectionModels(sections)), [sections, stackId]);
-
-  useDragStart(
-    ({ active: { data } }: DragStartEvent) => {
-      const nextActiveId = get(data.current, 'section.object.id', null);
-      if (nextActiveId) {
-        setActiveId(nextActiveId);
-        setActiveAddableObject(null);
-      } else {
-        const chooserData = get(data.current, 'treeitem.data', null);
-        const validChooser = chooserData && stackState.choosers?.find((chooser) => chooser?.filter(chooserData));
-        setActiveAddableObject(validChooser && !sectionIds.has(get(chooserData, 'id')) ? chooserData : null);
-      }
-    },
-    [sectionIds],
-  );
-
-  useDragOver(
-    ({ over }: DragOverEvent) => {
-      if (!over) {
-        setOverIsMember(false);
-      } else {
-        const overSectionId = get(over, 'data.current.section.object.id', null);
-        const overStackId = get(over, 'data.current.stack.id', null);
-        const overIndex =
-          overStackId && !overSectionId
-            ? sections.length
-            : sections.findIndex((section) => section?.object?.id === overSectionId);
-        setOverIsMember(overIndex >= 0);
-        if (activeAddableObject) {
-          setSectionModels((sectionModels) => {
-            if (overIndex >= 0) {
-              const persistedObjects = getSectionModels(sections);
-              return [
-                ...persistedObjects.slice(0, overIndex),
-                { id: activeAddableObject.id, object: activeAddableObject, isPreview: true },
-                ...persistedObjects.slice(overIndex, persistedObjects.length),
-              ];
-            } else if (overSectionId !== activeAddableObject.id && sectionModels.length !== sections.length) {
-              return getSectionModels(sections);
-            } else {
-              return sectionModels;
-            }
-          });
-        }
-      }
-    },
-    [sections, activeAddableObject],
-  );
-
-  const handleRemove = useCallback(
-    (start: number) => {
-      sections.splice(start, 1);
-      setSectionModels(getSectionModels(sections));
-    },
-    [sections],
-  );
-
-  useDragEnd(
-    ({ active, over }: DragEndEvent) => {
-      const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
-      if (activeModelIndex >= 0) {
-        dnd.overlayDropAnimation = 'into';
-        setSectionModels(onAdd(activeModelIndex, activeAddableObject!));
-      } else if (overIsMember) {
-        const overSectionId = get(over, 'data.current.section.object.id');
-        const activeSectionId = get(active, 'data.current.section.object.id', null);
-        const nextIndex = sections.findIndex((section) => section.object.id === over?.id);
-        if (activeSectionId) {
-          dnd.overlayDropAnimation = 'around';
-          if (activeSectionId !== overSectionId) {
-            const activeIndex = sections.findIndex((section) => section.object.id === active.id);
-            arrayMove(sections, activeIndex, nextIndex);
-            setSectionModels(getSectionModels(sections));
-          }
-        }
-      } else {
-        setSectionModels(getSectionModels(sections));
-      }
-      setActiveId(null);
-      setActiveAddableObject(null);
-      setOverIsMember(false);
-    },
-    [sections, overIsMember, activeAddableObject, sectionModels],
-  );
-
-  return (
-    <List variant='ordered' itemSizes='many' classNames='pli-2'>
-      <SortableContext items={sectionModels} strategy={verticalListSortingStrategy}>
-        {sectionModels.map((sectionModel, start) => {
-          return (
-            <StackSection
-              key={sectionModel.id}
-              onRemove={() => handleRemove(start)}
-              section={sectionModel}
-              rearranging={overIsMember && activeId === sectionModel.id}
-            />
-          );
-        })}
-      </SortableContext>
-      <div role='none' className='plb-1' ref={setNodeRef}>
-        {sectionModels.length < 1 && (
-          <p className='text-center mlb-1 plb-4 border border-dashed border-neutral-500/50 rounded'>
-            {t('empty stack message')}
-          </p>
-        )}
-      </div>
-    </List>
-  );
+const StackContent = ({ data }: { data: StackSectionItem }) => {
+  // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+  const object = (data as any).node?.data ?? data;
+  return <Surface role='section' data={{ object }} />;
 };
 
-const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
+export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
-  const { sendIntent } = useIntent();
+  const { dispatch } = useIntent();
+  const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
+
+  const id = `stack-${stack.id}`;
+  const items = stack.sections
+    .map(({ object }) => object as TypedObject<StackSectionItem>)
+    // TODO(wittjosiah): Should the database handle this differently?
+    // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
+    .filter((object) => Boolean(object));
+  const space = getSpaceForObject(stack);
+  const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
+
+  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+    if (!isTypedObject(active.item) && !isTypedObject((active.item as any).node?.data)) {
+      return 'reject';
+    }
+
+    // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
+    //  Perhaps stack plugin should just provide a fallback section renderer.
+    if (isStack(active.item) || isStack((active.item as any).node?.data)) {
+      return 'reject';
+    }
+
+    const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
+    if (!exists) {
+      return 'copy';
+    } else {
+      return 'reject';
+    }
+  };
+
+  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
+    if (
+      (active.path === Path.create(id, active.item.id) || active.path === id) &&
+      (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
+    ) {
+      stack.sections.splice(active.position!, 1);
+    }
+
+    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+    const object = ((active.item as any).node?.data ?? active.item) as TypedObject;
+    if (over.path === Path.create(id, over.item.id)) {
+      stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
+    } else if (over.path === id) {
+      stack.sections.push(new StackType.Section({ object }));
+    }
+  };
+
+  const handleRemove = (path: string) => {
+    const index = stack.sections.findIndex(({ object }) => object.id === Path.last(path));
+    if (index >= 0) {
+      stack.sections.splice(index, 1);
+    }
+  };
+
   const handleAdd = useCallback(
-    (start: number, nextSectionObject: GenericStackObject) => {
-      const nextSectionModel = getSectionModel(nextSectionObject);
-      stack.sections.splice(start, 0, nextSectionModel);
-      return getSectionModels(stack.sections);
+    (sectionObject: StackType['sections'][0]['object']) => {
+      stack.sections.push(new StackType.Section({ object: sectionObject }));
+      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
+      folder?.objects.push(sectionObject);
     },
-    [stack.sections],
+    [stack, stack.sections],
   );
 
   return (
-    <Main.Content classNames='min-bs-[100vh]' bounce>
-      <div role='none' className='mli-auto max-is-[60rem]'>
-        {/* TODO(burdon): Factor out header. */}
-        <Input.Root>
-          <Input.Label srOnly>{t('stack title label')}</Input.Label>
-          <Input.TextInput
-            variant='subdued'
-            classNames='flex-1 min-is-0 is-auto pis-4 pointer-fine:pis-12 lg:pis-4 pointer-fine:lg:pis-4 plb-3.5 pointer-fine:plb-2.5'
-            placeholder={t('stack title placeholder')}
-            value={stack.title ?? ''}
-            onChange={({ target: { value } }) => (stack.title = value)}
-          />
-        </Input.Root>
-        <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />
+    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
+      <Stack
+        id={id}
+        Component={StackContent}
+        items={items}
+        onOver={handleOver}
+        onDrop={handleDrop}
+        onRemoveSection={handleRemove}
+      />
 
-        <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
-
-        <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
-          <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
-            <DropdownMenu.Root modal={false}>
-              <DropdownMenu.Trigger asChild>
-                <Button variant='ghost'>
-                  <Plus className={getSize(5)} />
-                </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Arrow />
-                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
+      <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
+        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
+          <DropdownMenu.Root modal={false}>
+            <DropdownMenu.Trigger asChild>
+              <Button variant='ghost'>
+                <Plus className={getSize(5)} />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Arrow />
+              <DropdownMenu.Viewport>
+                {stackPlugin?.provides?.stack.creators?.map(({ id, testId, intent, icon, label }) => {
                   const Icon = icon ?? Placeholder;
                   return (
                     <DropdownMenu.Item
@@ -215,8 +120,8 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
                       id={id}
                       data-testid={testId}
                       onClick={async () => {
-                        const { object: nextSection } = await sendIntent(intent);
-                        handleAdd(stack.sections.length, nextSection);
+                        const { object: nextSection } = await dispatch(intent);
+                        handleAdd(nextSection);
                       }}
                     >
                       <Icon className={getSize(4)} />
@@ -224,16 +129,18 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
                     </DropdownMenu.Item>
                   );
                 })}
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-          </ButtonGroup>
-        </div>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+          <FileUpload
+            classNames='p-2'
+            fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
+            onUpload={(file: FileType) => {
+              handleAdd(file);
+            }}
+          />
+        </ButtonGroup>
       </div>
     </Main.Content>
   );
-};
-
-export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
-  const stack = data.object as StackModel & StackProperties;
-  return <StackMainImpl stack={stack} />;
 };

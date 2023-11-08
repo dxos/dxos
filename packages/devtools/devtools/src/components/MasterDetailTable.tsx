@@ -2,41 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 
-import defaultsdeep from 'lodash.defaultsdeep';
 import React, { useState } from 'react';
 
-import { TableColumn, Table, TableSlots } from '@dxos/mosaic';
+import { Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { mx } from '@dxos/react-ui-theme';
 
 import { JsonView } from './JsonView';
 
 export type MasterTableProps<T extends {}> = {
-  columns: TableColumn<T>[];
+  columns: TableColumnDef<T>[];
   data: T[];
-  slots?: TableSlots;
-  compact?: boolean;
+  pinToBottom?: boolean;
+  widths?: string[];
 };
 
-export const MasterDetailTable = <T extends {}>({ columns, data, slots, compact = true }: MasterTableProps<T>) => {
-  const [selected, setSelected] = useState<T>();
-  const tableSlots = defaultsdeep({}, slots, {
-    selected: { className: 'bg-slate-200' },
-    cell: { className: 'cursor-pointer' },
-  });
+export const MasterDetailTable = <T extends {}>({
+  columns,
+  data,
+  pinToBottom,
+  widths = ['w-1/2', 'w-1/2'],
+}: MasterTableProps<T>) => {
+  const [selected, setSelected] = useState<T[]>();
 
   return (
-    <div className='flex flex-1 overflow-hidden divide-x'>
-      <div className='flex w-1/2 overflow-hidden'>
+    <div className='flex grow overflow-hidden divide-x'>
+      <div className={mx('flex overflow-hidden', widths[0])}>
         <Table<T>
-          compact={compact}
           columns={columns}
           data={data}
-          slots={tableSlots}
           selected={selected}
-          onSelect={setSelected}
+          onSelectedChange={setSelected}
+          pinToBottom={pinToBottom}
         />
       </div>
 
-      <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>
+      <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected?.[0]} />}</div>
     </div>
   );
 };

@@ -167,6 +167,7 @@ class Toolbox {
           'extra-files': [
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
+            'packages/sdk/client-services/src/version.ts',
             ...this.projects
               .sort((projectA, projectB) => projectA.path.localeCompare(projectB.path))
               .map((project) => ({
@@ -206,6 +207,7 @@ class Toolbox {
       if (projectJson?.targets) {
         if (projectJson.targets.lint) {
           projectJson.targets.lint.options.format = 'unix';
+          projectJson.targets.lint.options.quiet = true;
         }
 
         const updated = sortJson(projectJson, {

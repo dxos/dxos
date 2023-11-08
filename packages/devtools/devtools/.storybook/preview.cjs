@@ -3,7 +3,8 @@
 //
 
 import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/react-appkit';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -21,9 +22,9 @@ export const globalTypes = {
     description: 'Global theme for components',
     defaultValue: 'light',
     toolbar: {
-      // The icon for the toolbar item
+      // The icon for the toolbar item.
       icon: 'circlehollow',
-      // Array of options
+      // Array of options.
       items: [
         { value: 'light', icon: 'circlehollow', title: 'light' },
         { value: 'dark', icon: 'circle', title: 'dark' },
@@ -39,7 +40,11 @@ const withTheme = (StoryFn, context) => {
   useEffect(() => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
   }, [theme]);
-  return createElement(ThemeProvider, { children: createElement(StoryFn) });
+
+  return createElement(ThemeProvider, {
+    children: createElement(StoryFn),
+    tx: defaultTx
+  });
 };
 
 export const decorators = [withTheme];

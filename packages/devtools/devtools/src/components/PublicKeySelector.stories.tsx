@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
-import '@dxosTheme';
 import { PublicKey } from '@dxos/keys';
+import { Toolbar } from '@dxos/react-ui';
 
 import { PublicKeySelector } from './PublicKeySelector';
 
@@ -15,5 +17,9 @@ export default {
 };
 
 export const Normal = (props: any) => {
-  return <PublicKeySelector keys={[PublicKey.random(), PublicKey.random()]} {...props} />;
+  return (
+    <Toolbar.Root>
+      <PublicKeySelector keys={[PublicKey.random(), PublicKey.random()]} {...props} />
+    </Toolbar.Root>
+  );
 };

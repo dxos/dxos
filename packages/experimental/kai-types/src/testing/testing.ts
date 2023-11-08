@@ -9,19 +9,19 @@ import { schema } from 'prosemirror-schema-basic';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
 import { Document } from '@braneframe/types';
-import { EchoDatabase, Text } from '@dxos/echo-schema';
+import { type EchoDatabase, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { stripKeys } from '@dxos/util';
+import { stripUndefinedValues } from '@dxos/util';
 
-import { Contact, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
+import { Contact, Event, Message, Organization, Note, Project, Task } from '../proto';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 
 export type MinMax = { min: number; max: number } | number;
 
-export const range = (range: MinMax) => Array.from({ length: faker.datatype.number(range as any) });
+export const range = (range: MinMax) => Array.from({ length: faker.number.int(range as any) });
 
 export type GeneratorOptions = {
   organizations: MinMax;
@@ -96,7 +96,7 @@ export class Generator {
     const contacts = await Promise.all(
       range(this._options.contacts).map(async () => {
         const contact = await this.createContact();
-        if (faker.datatype.number(10) > 7) {
+        if (faker.number.int(10) > 7) {
           const organization = faker.helpers.arrayElement(organizations);
           organization.people.push(contact);
           contact.employer = organization;
@@ -110,7 +110,7 @@ export class Generator {
     await Promise.all(
       range(this._options.events).map(async () => {
         const event = await this.createEvent();
-        event.members.push(...faker.helpers.arrayElements(contacts, faker.datatype.number(2)));
+        event.members.push(...faker.helpers.arrayElements(contacts, faker.number.int(2)));
         return event;
       }),
     );
@@ -122,7 +122,7 @@ export class Generator {
     await Promise.all(
       range(this._options.messages).map(async () => {
         const contact = faker.helpers.arrayElement(contacts);
-        return this.createMessage(faker.datatype.number(10) > 6 ? contact : undefined);
+        return this.createMessage(faker.number.int(10) > 6 ? contact : undefined);
       }),
     );
 
@@ -170,7 +170,7 @@ export class Generator {
 
   createNote = async () => {
     const document = await this._db.add(createNote());
-    document.content = new Text(faker.lorem.sentence(), TextKind.RICH);
+    document.content = new TextObject(faker.lorem.sentence(), TextKind.RICH);
     return document;
   };
 
@@ -179,7 +179,7 @@ export class Generator {
   };
 }
 
-// TODO(burdon): Replace with `new Text(str)` (and remove pm deps).
+// TODO(burdon): Replace with `new TextObject(str)` (and remove pm deps).
 export const createTextObjectContent = (content: Text, sentences = 5, text?: string) => {
   const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
     schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))]),
@@ -228,17 +228,17 @@ export const createContact = () => {
   return new Contact({
     name: faker.person.fullName(),
     email: faker.datatype.boolean() ? faker.internet.email() : undefined,
-    username: faker.datatype.number(10) > 2 ? '@' + faker.internet.userName() : undefined,
+    username: faker.number.int(10) > 2 ? '@' + faker.internet.userName() : undefined,
     phone: faker.datatype.boolean() ? faker.phone.number() : undefined,
     address: faker.datatype.boolean()
       ? {
-          city: faker.address.city(),
-          state: faker.address.stateAbbr(),
-          zip: faker.address.zipCode(),
-          coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) },
+          city: faker.location.city(),
+          state: faker.location.state({ abbreviated: true }),
+          zip: faker.location.zipCode(),
+          coordinates: { lat: Number(faker.location.latitude()), lng: Number(faker.location.longitude()) },
         }
       : undefined,
-    tag: faker.datatype.number(10) > 7 ? faker.helpers.arrayElement(tags) : undefined,
+    tag: faker.number.int(10) > 7 ? faker.helpers.arrayElement(tags) : undefined,
   });
 };
 
@@ -256,7 +256,7 @@ export const createEvent = () => {
 export const createDocument = () => {
   const document = new Document();
   document.title = faker.lorem.sentence(3);
-  document.content = new Text('', TextKind.RICH);
+  document.content = new TextObject('', TextKind.RICH);
   return document;
 };
 
@@ -268,7 +268,7 @@ export const createNote = () => {
 // TODO(burdon): Use constructors above.
 export const createMessage = (from?: Contact, resolver?: string, recent = 14) => {
   return new Message({
-    source: stripKeys({
+    source: stripUndefinedValues({
       // TODO(burdon): Strip keys in TypedObject constructor.
       resolver,
       guid: PublicKey.random().toHex(),
@@ -279,7 +279,7 @@ export const createMessage = (from?: Contact, resolver?: string, recent = 14) =>
     // to: [
     //   new Message.Recipient({
     //     email: faker.internet.email(),
-    //     name: faker.datatype.number(10) > 6 ? faker.person.fullName() : undefined
+    //     name: faker.number.int(10) > 6 ? faker.person.fullName() : undefined
     //   })
     // ],
     from: new Message.Recipient({

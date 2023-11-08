@@ -2,16 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './array';
+// TODO(burdon): Check for breaking changes re Text => TextObject.
+// TODO(burdon): Break apart files to remove unneeded exports (e.g., EchoBaseObject).
+// TODO(burdon): Remove circ deps (remove need for reexports).
+// TODO(burdon): linkDeferred
+// TODO(burdon): Split defs (by folder).
+// TODO(burdon): Organize test suites.
+// TODO(burdon): Rename EchoArray.
+// TODO(burdon): Don't export symbols outside of package?
+
+import { linkDeferred } from './type-collection';
+
 export * from './database';
-export * from './defs';
+export * from './hypergraph';
 export * from './object';
+export * from './proto';
 export * from './query';
-export * from './router';
-export * from './schema';
 export * from './serializer';
-export * from './subscription';
-export * from './text-object';
-export * from './typed-object';
+export { TypeCollection } from './type-collection';
 export * from './util';
-export * from './clone';
+
+linkDeferred();

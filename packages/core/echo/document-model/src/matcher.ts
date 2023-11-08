@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { Predicate, type Query } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { ValueUtil } from './mutation';
-import { TextIndex } from './text-index';
+import { type TextIndex } from './text-index';
 
 export type Getter = (item: any, path: string) => any;
 
@@ -19,10 +19,7 @@ interface MatcherOptions {
  * NOTE: The approach here is to match items against the DNF predicate tree.
  */
 export class Matcher {
-  // prettier-ignore
-  constructor(
-    private readonly _options: MatcherOptions
-  ) {}
+  constructor(private readonly _options: MatcherOptions) {}
 
   getFilter(query: Query) {
     return (item: any) => this._matchItem(item, query.root!);

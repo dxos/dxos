@@ -14,7 +14,11 @@ export class AppManager {
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
 
-  constructor(private readonly _browser: Browser, inIframe?: boolean) {
+  // prettier-ignore
+  constructor(
+    private readonly _browser: Browser,
+    inIframe?: boolean,
+  ) {
     this._inIframe = inIframe;
   }
 
@@ -24,7 +28,7 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('dxos-shell').isVisible(),
+      waitFor: (page) => page.getByTestId('treeView.haloButton').isVisible(),
     });
     this.page = page;
     this.shell = new ShellManager(this.page, this._inIframe);
@@ -32,27 +36,39 @@ export class AppManager {
   }
 
   isAuthenticated() {
-    return this.page.getByTestId('splitViewPlugin.firstRunMessage').isVisible();
+    return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
   }
 
-  createSpace() {
-    return this.page.getByTestId('spacePlugin.createSpace').click();
+  async createSpace() {
+    await this.page.getByTestId('spacePlugin.createSpace').click();
+    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
 
-  joinSpace() {
+  async joinSpace() {
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  createDocument() {
-    return this.page.getByTestId('spacePlugin.createDocument').last().click();
+  // TODO(wittjosiah): This is not always a space.
+  expandSpace() {
+    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
 
-  getSpaceItemsCount() {
-    return this.page.getByTestId('spacePlugin.spaceTreeItemHeading').count();
+  async createDocument() {
+    await this.page.getByTestId('spacePlugin.createObject').last().click();
+    return this.page.getByTestId('markdownPlugin.createDocument').last().click();
   }
 
-  getDocumentItemsCount() {
-    return this.page.getByTestId('spacePlugin.documentTreeItemHeading').count();
+  async getSpaceItemsCount() {
+    const [openCount, closedCount] = await Promise.all([
+      this.page.getByTestId('spacePlugin.personalSpace').count(),
+      this.page.getByTestId('spacePlugin.space').count(),
+    ]);
+    return openCount + closedCount;
+  }
+
+  getObjectsCount() {
+    return this.page.getByTestId('spacePlugin.object').count();
   }
 
   getMarkdownTextbox() {
@@ -74,8 +90,8 @@ export class AppManager {
     return this.page.getByTestId('composer.documentTitle');
   }
 
-  getDocumentLinks() {
-    return this.page.getByTestId('spacePlugin.documentTreeItemHeading');
+  getObjectLinks() {
+    return this.page.getByTestId('spacePlugin.object');
   }
 
   getCollaboratorCursors() {

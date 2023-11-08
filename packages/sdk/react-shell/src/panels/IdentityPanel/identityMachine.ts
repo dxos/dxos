@@ -3,21 +3,23 @@
 //
 
 import { useMachine } from '@xstate/react';
-import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
+import { assign, createMachine, type InterpreterFrom, type StateFrom, type Subscribable } from 'xstate';
 
 import { log } from '@dxos/log';
-import { Identity } from '@dxos/react-client/halo';
-import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { type Client } from '@dxos/react-client';
+import { type Identity } from '@dxos/react-client/halo';
+import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { StepEvent } from '../../steps';
+import { type StepEvent } from '../../steps';
 
 type IdentityMachineContext = {
   invitation?: CancellableInvitationObservable;
   identity: Identity | null;
+  identitySubscribable: Subscribable<SetIdentityEvent> | null;
 };
 
 type IdentityChooseActionEvent = {
-  type: 'chooseDevices' | /* 'chooseProfile' | 'chooseSignOut' | */ 'unchooseAction';
+  type: 'chooseDevices' | 'chooseProfile' | /* 'chooseSignOut' | */ 'unchooseAction';
 };
 
 type IdentitySelectDeviceInvitationEvent = {
@@ -25,7 +27,21 @@ type IdentitySelectDeviceInvitationEvent = {
   invitation: CancellableInvitationObservable;
 };
 
-type IdentityEvent = IdentitySelectDeviceInvitationEvent | IdentityChooseActionEvent | StepEvent;
+export type SetIdentityEvent = {
+  type: 'setIdentity';
+  identity: Identity | null;
+};
+
+export type UpdateProfileEvent = {
+  type: 'updateProfile';
+};
+
+type IdentityEvent =
+  | SetIdentityEvent
+  | UpdateProfileEvent
+  | IdentitySelectDeviceInvitationEvent
+  | IdentityChooseActionEvent
+  | StepEvent;
 
 const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
   {
@@ -33,12 +49,26 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
     predictableActionArguments: true,
     context: {
       identity: null,
+      identitySubscribable: null,
     },
     initial: 'choosingAction',
+    invoke: {
+      src: (context) => context.identitySubscribable!,
+    },
     states: {
       choosingAction: {},
       managingDeviceInvitation: {},
-      // managingProfile: {},
+      managingProfile: {
+        initial: 'idle',
+        states: {
+          idle: {},
+          pending: {},
+        },
+        on: {
+          setIdentity: { target: 'choosingAction', actions: ['setIdentity', 'log'] },
+          updateProfile: { target: '.pending', actions: 'log' },
+        },
+      },
       // signingOut: {},
     },
     on: {
@@ -46,12 +76,15 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       chooseDevices: { target: '.managingDeviceInvitation', actions: ['unsetInvitation', 'log'] },
       deselectInvitation: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
       selectInvitation: { target: '.managingDeviceInvitation', actions: ['setInvitation', 'log'] },
-      // chooseProfile: { target: '.managingProfile', actions: 'log' },
+      chooseProfile: { target: '.managingProfile', actions: 'log' },
       // chooseSignOut: { target: '.signingOut', actions: 'log' },
     },
   },
   {
     actions: {
+      setIdentity: assign<IdentityMachineContext, IdentityEvent>({
+        identity: (context, event) => (event as SetIdentityEvent)?.identity ?? null,
+      }),
       setInvitation: assign<IdentityMachineContext, IdentityEvent>({
         invitation: (context, event) => (event as IdentitySelectDeviceInvitationEvent)?.invitation ?? null,
       }),
@@ -73,8 +106,18 @@ type IdentityMachine = typeof identityMachine;
 type IdentityState = StateFrom<IdentityMachine>;
 type IdentitySend = InterpreterFrom<IdentityMachine>['send'];
 
-const useIdentityMachine = (options?: Parameters<typeof useMachine<IdentityMachine>>[1]) => {
-  return useMachine(identityMachine, { ...options, context: { ...options?.context } });
+const useIdentityMachine = (client: Client, options?: Parameters<typeof useMachine<IdentityMachine>>[1]) => {
+  return useMachine(identityMachine, {
+    ...options,
+    context: {
+      ...options?.context,
+      identity: client.halo.identity.get(),
+      identitySubscribable: client.halo.identity.map((identity) => ({
+        type: 'setIdentity',
+        identity,
+      })) satisfies Subscribable<SetIdentityEvent>,
+    },
+  });
 };
 
 export type {

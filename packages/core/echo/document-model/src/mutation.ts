@@ -6,14 +6,14 @@
 
 import get from 'lodash.get';
 import set from 'lodash.set';
-import invariant from 'tiny-invariant';
 
+import { invariant } from '@dxos/invariant';
 import {
-  KeyValue,
+  type KeyValue,
   ObjectMutation,
-  ObjectMutationSet,
-  KeyValueObject,
-  Value,
+  type ObjectMutationSet,
+  type KeyValueObject,
+  type Value,
 } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { OrderedArray } from './ordered-array';
@@ -22,7 +22,8 @@ import { removeKey } from './util';
 
 export type DocumentModelState = {
   data: Record<string, any>;
-  type?: string;
+  meta: Record<string, any>;
+  type?: Reference;
 };
 
 /**
@@ -241,10 +242,14 @@ export class MutationUtil {
   static applyMutationSet(object: DocumentModelState, message: ObjectMutationSet): DocumentModelState {
     invariant(message);
     if (message.type) {
-      object.type = message.type;
+      object.type = Reference.fromLegacyTypename(message.type);
     }
-    const { mutations } = message;
+    if (message.typeRef) {
+      object.type = Reference.fromValue(message.typeRef);
+    }
+    const { mutations, metaMutations } = message;
     mutations?.forEach((mutation) => MutationUtil.applyMutation(object.data, mutation));
+    metaMutations?.forEach((mutation) => MutationUtil.applyMutation(object.meta, mutation));
     return object;
   }
 

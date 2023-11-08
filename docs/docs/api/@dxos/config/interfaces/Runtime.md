@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [agent]()
 Type: <code>[Agent](/api/@dxos/config/interfaces/Agent)</code>
@@ -32,6 +31,8 @@ Options:
 ### [keys]()
 Type: <code>[Keys](/api/@dxos/config/interfaces/Keys)[]</code>
 
+
+
 ### [kube]()
 Type: <code>[Kube](/api/@dxos/config/interfaces/Kube)</code>
 
@@ -55,3 +56,5 @@ Type: <code>[System](/api/@dxos/config/interfaces/System)</code>
 
 Options:
   - proto3_optional = true
+
+    

@@ -3,16 +3,16 @@
 //
 
 import startCase from 'lodash.startcase';
-import assert from 'node:assert';
-import { ChatCompletionRequestMessage } from 'openai';
+import { type ChatCompletionRequestMessage } from 'openai';
 
 import { Document } from '@braneframe/types';
-import { Space, Text, TextKind } from '@dxos/client/echo';
-import { Contact, DocumentStack } from '@dxos/kai-types';
+import { type Space, TextObject, TextKind } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
+import { type Contact, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
-import { Resolver } from '../../resolver';
-import { ChatModel } from '../chat-model';
+import { type Resolver } from '../../resolver';
+import { type ChatModel } from '../chat-model';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const parseJson = (content: string) => {
@@ -24,9 +24,13 @@ const parseJson = (content: string) => {
 };
 
 export class ContactStackResolver implements Resolver<DocumentStack> {
-  constructor(private readonly _id: string, private readonly _chatModel: ChatModel) {
-    assert(this._id);
-    assert(this._chatModel);
+  // prettier-ignore
+  constructor(
+    private readonly _id: string,
+    private readonly _chatModel: ChatModel,
+  ) {
+    invariant(this._id);
+    invariant(this._chatModel);
   }
 
   async update(space: Space, stack: DocumentStack) {
@@ -76,7 +80,7 @@ export class ContactStackResolver implements Resolver<DocumentStack> {
       // const data = parseJson(content);
 
       // TODO(burdon): Add formatting?
-      const text = new Text([title, '', content].join('\n'), TextKind.RICH);
+      const text = new TextObject([title, '', content].join('\n'), TextKind.RICH);
       const document = await space.db.add(new Document({ title, content: text }));
 
       // TODO(burdon): Add metadata.

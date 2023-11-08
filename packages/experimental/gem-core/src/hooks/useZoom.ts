@@ -5,10 +5,10 @@
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 import defaultsDeep from 'lodash.defaultsdeep';
-import { RefObject, useEffect, useMemo, useRef } from 'react';
+import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { SVGContext } from '../context';
 import { useSvgContext } from './useSvgContext';
+import { type SVGContext } from '../context';
 
 export type ZoomExtent = [min: number, max: number];
 
@@ -85,7 +85,7 @@ export class ZoomHandler {
 
   reset(duration = 500) {
     // TODO(burdon): Scale to midpoint in extent.
-    const scale = this._options.extent?.[0] ?? 1;
+    const scale = 1; // this._options.extent?.[0] ?? 1;
     const transform = d3.zoomIdentity.scale(scale);
     d3.select(this._context.svg)
       .transition()

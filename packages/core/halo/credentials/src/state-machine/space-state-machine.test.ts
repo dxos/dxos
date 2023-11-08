@@ -5,11 +5,11 @@
 import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
-import { AdmittedFeed, Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test } from '@dxos/test';
 
-import { createCredential, verifyCredential } from '../credentials';
 import { SpaceStateMachine } from './space-state-machine';
+import { createCredential, verifyCredential } from '../credentials';
 
 describe('SpaceStateMachine', () => {
   test('basic space creation', async () => {
@@ -32,7 +32,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -49,7 +49,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -82,7 +82,7 @@ describe('SpaceStateMachine', () => {
           signingKey: device,
           chain,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -132,7 +132,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -150,7 +150,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -182,7 +182,7 @@ describe('SpaceStateMachine', () => {
           signingKey: device,
           chain,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -229,7 +229,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -247,7 +247,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -264,7 +264,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -281,7 +281,7 @@ describe('SpaceStateMachine', () => {
           issuer: identity,
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -307,7 +307,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 

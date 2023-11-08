@@ -3,8 +3,9 @@
 //
 
 import '@dxosTheme';
+
+import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
 import { Config, Defaults } from '@dxos/config';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 
 import { startIFrameRuntime } from './iframe';
 import { namespace } from './util';

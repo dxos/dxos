@@ -4,7 +4,7 @@
 
 import { pipeline } from 'stream';
 
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { FeedFactory, type FeedOptions, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -39,8 +39,8 @@ export class TestAgent {
     return feed;
   }
 
-  createReadFeed(key: PublicKey) {
-    return this.feedStore.openFeed(key);
+  createReadFeed(key: PublicKey, opts?: FeedOptions) {
+    return this.feedStore.openFeed(key, opts);
   }
 }
 

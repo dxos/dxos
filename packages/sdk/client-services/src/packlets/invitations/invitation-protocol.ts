@@ -2,9 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type AdmissionRequest,
+  type AdmissionResponse,
+  type IntroductionRequest,
+} from '@dxos/protocols/proto/dxos/halo/invitations';
 
 export interface InvitationProtocol {
   // Debugging

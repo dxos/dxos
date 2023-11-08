@@ -5,14 +5,14 @@
 import { PlayCircle } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { compile, Editor, Frame, FrameContainer } from '@dxos/kai-sandbox';
 import { Toolbar } from '@dxos/mosaic';
-import { useQuery, Text } from '@dxos/react-client/echo';
+import { useQuery, TextObject } from '@dxos/react-client/echo';
+import { Button } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
-import { useFrameContext } from '../../hooks';
 import { sampleCode } from './sample';
+import { useFrameContext } from '../../hooks';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
@@ -29,7 +29,7 @@ export const SandboxFrame = () => {
       setTimeout(async () => {
         const frame = new Frame({
           name: 'Frame.tsx',
-          content: new Text(),
+          content: new TextObject(),
         });
 
         await space?.db.add(frame);

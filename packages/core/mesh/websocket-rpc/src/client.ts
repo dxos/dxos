@@ -6,7 +6,7 @@ import WebSocket from 'isomorphic-ws';
 
 import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
-import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
+import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
 
 export type WebsocketRpcClientParams<C, S> = {
   url: string;
@@ -21,11 +21,7 @@ export class WebsocketRpcClient<C, S> {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: WebsocketRpcClientParams<C, S>
-  ) {
-
+  constructor(private readonly _params: WebsocketRpcClientParams<C, S>) {
     this._rpc = createProtoRpcPeer({
       requested: this._params.requested,
       exposed: this._params.exposed,
@@ -42,8 +38,8 @@ export class WebsocketRpcClient<C, S> {
               cb(msg.data as any);
             }
           };
-        }
-      }
+        },
+      },
     });
   }
 

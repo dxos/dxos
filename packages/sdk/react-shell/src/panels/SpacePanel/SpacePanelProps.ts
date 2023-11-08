@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement } from 'react';
-import { SingleOrArray, Event } from 'xstate';
+import { type cloneElement } from 'react';
+import { type SingleOrArray, type Event } from 'xstate';
 
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
-export type ErsatzSpace = Pick<Space, 'key'> &
-  Partial<Pick<Space, 'createInvitation'>> & { properties: { name?: string } };
+import { type SpaceManagerProps } from './steps';
+import { type InvitationManagerProps } from '../../steps';
+
+export type ErsatzSpace = Pick<Space, 'key'> & Partial<Pick<Space, 'share'>> & { properties: { name?: string } };
 
 export type SpacePanelImplProps = {
   titleId: string;
@@ -20,6 +22,9 @@ export type SpacePanelImplProps = {
   authCode?: string;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
+  DoneAction?: React.FC;
+  SpaceManager?: React.FC<SpaceManagerProps>;
+  InvitationManager?: React.FC<InvitationManagerProps>;
 };
 
 export type SpacePanelProps = Pick<SpacePanelImplProps, 'space'> &
@@ -29,7 +34,7 @@ export type SpacePanelHeadingProps = Pick<SpacePanelImplProps, 'titleId' | 'spac
 
 export type SpacePanelStepProps = Pick<
   SpacePanelImplProps,
-  'space' | 'createInvitationUrl' | 'send' | 'onDone' | 'doneActionParent'
+  'space' | 'createInvitationUrl' | 'send' | 'onDone' | 'doneActionParent' | 'DoneAction'
 > & {
   active?: boolean;
 };

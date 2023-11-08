@@ -5,7 +5,7 @@
 import { ux, Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -37,7 +37,7 @@ export default class Share extends BaseCommand<typeof Share> {
       // TODO(burdon): Timeout error not propagated.
       const type = this.flags.multiple ? Invitation.Type.MULTIUSE : undefined;
       const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
-      const observable = space!.createInvitation({ type, authMethod, timeout: this.flags.timeout });
+      const observable = space!.share({ type, authMethod, timeout: this.flags.timeout });
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {
@@ -57,6 +57,7 @@ export default class Share extends BaseCommand<typeof Share> {
       ux.action.start('Waiting for peer to connect');
       await invitationSuccess;
       ux.action.stop();
+      ux.log(chalk`{green Joined successfully.}`);
     });
   }
 }

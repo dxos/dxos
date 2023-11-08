@@ -2,15 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, MulticastObservable } from '@dxos/async';
-import { ClientServicesProvider } from '@dxos/client-protocol';
+import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Public API for MESH services.
@@ -62,9 +61,7 @@ export class MeshProxy {
       this._networkStatusUpdated.emit(networkStatus);
     });
 
-    this._ctx.onDispose(() => {
-      networkStatusStream.close();
-    });
+    this._ctx.onDispose(() => networkStatusStream.close());
     log.trace('dxos.sdk.mesh-proxy.open', trace.end({ id: this._instanceId }));
   }
 

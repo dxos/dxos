@@ -7,7 +7,8 @@ import rev from 'git-rev-sync';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
+import { type ConfigProto } from '@dxos/config';
 
 import { BaseCommand } from '../../base-command';
 
@@ -26,6 +27,10 @@ export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
 
   static override examples = [
     {
+      description: 'Inspect diagnostics.',
+      command: "dx debug diagnostics --json --truncate | jq -r '.metrics'",
+    },
+    {
       description: 'Upload diagnostics to GitHub.',
       command: 'dx debug diagnostics --json --truncate | gh gist create --filename diagnostics.json',
     },
@@ -38,17 +43,21 @@ export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
         this.flags.timeout,
       );
 
-      return defaultsDeep({}, data, {
-        config: {
-          runtime: {
-            app: {
-              build: {
-                timestamp: rev.date().toISOString(),
-                hash: rev.long(),
-                branch: rev.branch(),
-              },
+      const config: ConfigProto = {
+        runtime: {
+          app: {
+            build: {
+              timestamp: rev.date().toISOString(),
+              commitHash: rev.long(),
+              branch: rev.branch(),
             },
           },
+        },
+      };
+
+      return defaultsDeep({}, data, {
+        diagnostics: {
+          config,
         },
       });
     });

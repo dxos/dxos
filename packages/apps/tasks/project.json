@@ -1,0 +1,55 @@
+{
+  "sourceRoot": "packages/apps/tasks/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/apps/tasks/src/main.ts",
+        "outputPath": "packages/apps/tasks/dist",
+        "transformers": ["@dxos/log-hook/transformer"],
+        "tsConfig": "packages/apps/tasks/tsconfig.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "bundle": {
+      "executor": "@nx/vite:build",
+      "options": {
+        "outputPath": "packages/apps/tasks/out/tasks"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": ["packages/apps/tasks/**/*.{ts,js}?(x)"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": ["packages/apps/tasks/src/proto/gen"]
+    },
+    "preview": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "tasks:bundle",
+        "staticFilePath": "packages/apps/tasks/out/tasks"
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "tasks:bundle"
+      }
+    },
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
+    }
+  },
+  "implicitDependencies": ["serve-with-vault"]
+}

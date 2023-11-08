@@ -6,8 +6,10 @@ import chalk from 'chalk';
 import pickBy from 'lodash.pickby';
 import { inspect } from 'node:util';
 
-import { LogConfig, LogLevel, shortLevelName } from '../config';
-import { getContextFromEntry, LogProcessor, shouldLog } from '../context';
+import { getPrototypeSpecificInstanceId } from '@dxos/util';
+
+import { type LogConfig, LogLevel, shortLevelName } from '../config';
+import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.TRACE]: 'gray',
@@ -34,35 +36,54 @@ const getRelativeFilename = (filename: string) => {
   return filename;
 };
 
-// TODO(burdon): Optional timestamp.
 // TODO(burdon): Optional package name.
 // TODO(burdon): Show exceptions on one line.
 export type FormatParts = {
   path?: string;
   line?: number;
+  timestamp?: string;
   level: LogLevel;
   message: string;
   context?: any;
   error?: Error;
+  scope?: any;
 };
 
 export type Formatter = (config: LogConfig, parts: FormatParts) => (string | undefined)[];
 
-export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, message, context, error }) => {
+export const DEFAULT_FORMATTER: Formatter = (
+  config,
+  { path, line, timestamp, level, message, context, error, scope },
+) => {
   const column = config.options?.formatter?.column;
 
   const filepath = path !== undefined && line !== undefined ? chalk.grey(`${path}:${line}`) : undefined;
 
-  return [
-    // NOTE: File path must come fist for console hyperlinks.
-    // Must not truncate for terminal output.
-    filepath,
-    column && filepath ? ''.padStart(column - filepath.length) : undefined,
-    chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
-    message,
-    context,
-    error,
-  ];
+  let instance;
+  if (scope) {
+    const prototype = Object.getPrototypeOf(scope);
+    const id = getPrototypeSpecificInstanceId(scope);
+    instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
+  }
+
+  const formattedTimestamp = config.options?.formatter?.timestamp ? new Date().toISOString() : undefined;
+  const formattedLevel = chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]);
+  const padding = column && filepath ? ''.padStart(column - filepath.length) : undefined;
+
+  return config.options?.formatter?.timestampFirst
+    ? [formattedTimestamp, filepath, padding, formattedLevel, instance, message, context, error]
+    : [
+        // NOTE: File path must come fist for console hyperlinks.
+        // Must not truncate for terminal output.
+        filepath,
+        padding,
+        formattedTimestamp,
+        formattedLevel,
+        instance,
+        message,
+        context,
+        error,
+      ];
 };
 
 export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => [
@@ -80,11 +101,20 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
-  const parts: FormatParts = { level, message, error };
+  const parts: FormatParts = {
+    level,
+    message,
+    error,
+    path: undefined,
+    line: undefined,
+    scope: undefined,
+    context: undefined,
+  };
 
   if (meta) {
     parts.path = getRelativeFilename(meta.F);
     parts.line = meta.L;
+    parts.scope = meta.S;
   }
 
   const context = getContextFromEntry(entry);

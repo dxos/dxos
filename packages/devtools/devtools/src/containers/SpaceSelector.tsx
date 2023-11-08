@@ -2,16 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Planet } from '@phosphor-icons/react';
 import * as localForage from 'localforage';
 import React from 'react';
 
-import { Select } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
+import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
 
 export const SpaceSelector = () => {
@@ -25,7 +24,6 @@ export const SpaceSelector = () => {
       ...state,
       space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
       spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
-      feedKey: undefined,
     }));
 
     if (spaceKey) {
@@ -40,24 +38,18 @@ export const SpaceSelector = () => {
     }
   }, []);
 
-  // TODO(burdon): Font size is too small.
+  const getLabel = (key: PublicKey) => {
+    const space = spaces.find((space) => space.key.equals(key));
+    return space?.properties.name ?? humanize(key);
+  };
+
   return (
-    <Select
+    <PublicKeySelector
       placeholder='Select space'
-      value={space?.key.toHex()}
-      onValueChange={(id) => handleSelect(PublicKey.fromHex(id))}
-    >
-      {spaces.map((space) => (
-        <Select.Item key={space.key.toHex()} value={space.key.toHex()}>
-          <div className='flex items-center gap-2'>
-            <div className='pr-1'>
-              <Planet />
-            </div>
-            <span className='font-mono text-neutral-250'>{space.key.truncate()}</span>
-            <span className='whitespace-nowrap'>{space.properties.name ?? humanize(space.key)}</span>
-          </div>
-        </Select.Item>
-      ))}
-    </Select>
+      getLabel={getLabel}
+      keys={spaces.map((space) => space.key)}
+      value={space?.key}
+      onChange={handleSelect}
+    />
   );
 };

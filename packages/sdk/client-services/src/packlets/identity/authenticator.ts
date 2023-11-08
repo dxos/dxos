@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, Trigger } from '@dxos/async';
+import { type Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { verifyCredential, CredentialSigner } from '@dxos/credentials';
-import { AuthProvider, AuthVerifier } from '@dxos/echo-pipeline';
-import { PublicKey } from '@dxos/keys';
+import { verifyCredential, type CredentialSigner } from '@dxos/credentials';
+import { type AuthProvider, type AuthVerifier } from '@dxos/echo-pipeline';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { ComplexSet } from '@dxos/util';
+import { type ComplexSet } from '@dxos/util';
 
 const Credential = schema.getCodecForType('dxos.halo.credentials.Credential');
 
@@ -44,10 +44,7 @@ export type TrustedKeySetAuthVerifierParams = {
 export class TrustedKeySetAuthVerifier {
   private _ctx = new Context();
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: TrustedKeySetAuthVerifierParams
-  ) {}
+  constructor(private readonly _params: TrustedKeySetAuthVerifierParams) {}
 
   async close() {
     await this._ctx.dispose();
@@ -64,7 +61,7 @@ export class TrustedKeySetAuthVerifier {
         return false;
       }
 
-      if (!credential.proof.nonce || !Buffer.from(nonce).equals(credential.proof.nonce)) {
+      if (!credential.proof!.nonce || !Buffer.from(nonce).equals(credential.proof!.nonce)) {
         log('Invalid nonce', { nonce, credential });
         return false;
       }

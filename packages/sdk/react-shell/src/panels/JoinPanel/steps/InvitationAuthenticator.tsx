@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { ChangeEvent, useState } from 'react';
+import React, { type ChangeEvent, useState } from 'react';
 
-import { Input, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Input, useTranslation } from '@dxos/react-ui';
 
-import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { Actions, Action, Emoji, StepHeading } from '../../../components';
+import { toEmoji } from '../../../util';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
 
@@ -17,6 +16,7 @@ export interface InvitationAuthenticatorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
   failed?: boolean;
   pending?: boolean;
+  invitationId?: string;
   onInvitationCancel?: () => Promise<void> | undefined;
   onInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
 }
@@ -26,6 +26,7 @@ export const InvitationAuthenticator = ({
   Kind,
   active,
   pending,
+  invitationId,
   onInvitationAuthenticate,
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
@@ -43,55 +44,56 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <Input.Root
-        {...(failed && {
-          validationValence: 'error',
-        })}
-      >
-        <Input.Label asChild>
-          <PanelStepHeading>{t('auth code input label')}</PanelStepHeading>
-        </Input.Label>
-        <Input.PinInput
-          {...{
-            disabled,
-            length: pinLength,
-            onChange,
-            inputMode: 'numeric',
-            autoComplete: 'off',
-            pattern: '\\d*',
-            'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
-            'data-prevent-ios-autofocus': true,
-            'data-testid': `${invitationType}-auth-code-input`,
-            'data-1p-ignore': true,
-          }}
-        />
-        {failed && (
-          <Input.DescriptionAndValidation classNames='text-center'>
-            <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        )}
-      </Input.Root>
-      <div role='none' className='grow' />
-      <PanelActions>
-        <PanelAction
-          aria-label={t('next label')}
-          disabled={disabled}
-          classNames='order-2'
-          onClick={() => onInvitationAuthenticate?.(authCode)}
-          data-autofocus-pinlength={invitationType}
-          data-testid={`${invitationType}-invitation-authenticator-next`}
+      <div role='none' className='grow flex flex-col justify-center'>
+        {invitationId && <Emoji text={toEmoji(invitationId)} />}
+        <Input.Root
+          {...(failed && {
+            validationValence: 'error',
+          })}
         >
-          <CaretRight weight='light' className={getSize(6)} />
-        </PanelAction>
-        <PanelAction
-          aria-label={t('cancel label')}
+          <Input.Label asChild>
+            <StepHeading>{t('auth code input label')}</StepHeading>
+          </Input.Label>
+          <Input.PinInput
+            {...{
+              disabled,
+              length: pinLength,
+              onChange,
+              inputMode: 'numeric',
+              autoComplete: 'off',
+              pattern: '\\d*',
+              'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
+              'data-prevent-ios-autofocus': true,
+              'data-testid': `${invitationType}-auth-code-input`,
+              'data-1p-ignore': true,
+            }}
+          />
+          {failed && (
+            <Input.DescriptionAndValidation classNames='text-center'>
+              <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
+            </Input.DescriptionAndValidation>
+          )}
+        </Input.Root>
+      </div>
+      <Actions>
+        <Action
+          variant='ghost'
           disabled={disabled}
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
-          <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction>
-      </PanelActions>
+          {t('cancel label')}
+        </Action>
+        <Action
+          variant='primary'
+          disabled={disabled}
+          onClick={() => onInvitationAuthenticate?.(authCode)}
+          data-autofocus-pinlength={invitationType}
+          data-testid={`${invitationType}-invitation-authenticator-next`}
+        >
+          {t('next label')}
+        </Action>
+      </Actions>
     </>
   );
 };

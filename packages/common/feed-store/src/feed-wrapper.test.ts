@@ -13,15 +13,14 @@ import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { FeedWrapper } from './feed-wrapper';
-import { defaultValueEncoding, TestBuilder, TestItem, TestItemBuilder } from './testing';
+import { defaultValueEncoding, TestBuilder, TestItemBuilder } from './testing';
 
 describe('FeedWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();
 
   test('creates a readable feed', async () => {
     const key = PublicKey.random();
-    const feed = new FeedWrapper(await factory.createFeed(key), key);
+    const feed = await factory.createFeed(key);
     await feed.open();
     expect(feed.properties.readable).to.be.true;
     expect(feed.properties.writable).to.be.false;
@@ -30,7 +29,7 @@ describe('FeedWrapper', () => {
 
   test('creates a writable feed', async () => {
     const key = PublicKey.random();
-    const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
+    const feed = await factory.createFeed(key, { writable: true });
     await feed.open();
     expect(feed.properties.readable).to.be.true;
     expect(feed.properties.writable).to.be.true;
@@ -39,7 +38,7 @@ describe('FeedWrapper', () => {
 
   test('creates, opens, and closes a feed multiple times', async () => {
     const key = PublicKey.random();
-    const feed = new FeedWrapper(await factory.createFeed(key), key);
+    const feed = await factory.createFeed(key);
 
     await feed.open();
     expect(feed.properties.opened).to.be.true;
@@ -57,7 +56,7 @@ describe('FeedWrapper', () => {
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper(await feedFactory.createFeed(key, { writable: true }), key);
+    const feed = await feedFactory.createFeed(key, { writable: true });
 
     for (const _ of Array.from(Array(numBlocks)).keys()) {
       await feed.append(faker.lorem.sentence());
@@ -71,7 +70,7 @@ describe('FeedWrapper', () => {
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper(await feedFactory.createFeed(key, { writable: true }), key);
+    const feed = await feedFactory.createFeed(key, { writable: true });
 
     let emittedAppend = 0;
     feed.on('append', () => {
@@ -89,13 +88,10 @@ describe('FeedWrapper', () => {
     const builder = new TestItemBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper<TestItem>(
-      await feedFactory.createFeed(key, {
-        writable: true,
-        valueEncoding: defaultValueEncoding,
-      }),
-      key,
-    );
+    const feed = await feedFactory.createFeed(key, {
+      writable: true,
+      valueEncoding: defaultValueEncoding,
+    });
 
     for (const i of Array.from(Array(numBlocks)).keys()) {
       await feed.append({
@@ -115,17 +111,14 @@ describe('FeedWrapper', () => {
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(
-      await factory.createFeed(key, {
-        writable: true,
-        valueEncoding: defaultValueEncoding,
-      }),
-      key,
-    );
+    const feed = await factory.createFeed(key, {
+      writable: true,
+      valueEncoding: defaultValueEncoding,
+    });
 
     // TODO(burdon): Use generator.
     for (const i of Array.from(Array(numBlocks)).keys()) {
-      await sleep(faker.datatype.number({ min: 0, max: 20 }));
+      await sleep(faker.number.int({ min: 0, max: 20 }));
       await feed.append({
         id: String(i + 1),
         value: faker.lorem.sentence(),
@@ -150,8 +143,8 @@ describe('FeedWrapper', () => {
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = new FeedWrapper(await feedFactory.createFeed(key1, { writable: true }), key1);
-    const feed2 = new FeedWrapper(await feedFactory.createFeed(key1), key1);
+    const feed1 = await feedFactory.createFeed(key1, { writable: true });
+    const feed2 = await feedFactory.createFeed(key1);
 
     await feed1.open();
     await feed2.open();
@@ -204,8 +197,8 @@ describe('FeedWrapper', () => {
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = new FeedWrapper(await feedFactory.createFeed(key1, { writable: true }), key1);
-    const feed2 = new FeedWrapper(await feedFactory.createFeed(key1, { sparse: true }), key1);
+    const feed1 = await feedFactory.createFeed(key1, { writable: true });
+    const feed2 = await feedFactory.createFeed(key1, { sparse: true });
 
     await feed1.open();
     await feed2.open();
@@ -241,8 +234,10 @@ describe('FeedWrapper', () => {
     // Reader.
     {
       const start = 5;
-      feed2.download({ start, linear: true }).catch((err) => {
-        log.catch(err);
+      feed2.download({ start, linear: true }, (err: Error) => {
+        if (err) {
+          throw err;
+        }
       });
       await waitForExpect(async () => {
         expect(feed2.has(start)).to.be.true;

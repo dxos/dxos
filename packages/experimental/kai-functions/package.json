@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-functions",
-  "version": "0.1.54",
+  "version": "0.3.0",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -23,8 +23,8 @@
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/kai-types": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

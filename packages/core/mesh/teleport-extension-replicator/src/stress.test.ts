@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { Teleport } from '@dxos/teleport';
+import { type Teleport } from '@dxos/teleport';
 import { afterTest, describe, test } from '@dxos/test';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
@@ -27,7 +27,11 @@ class TestAgent {
 
   readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
-  constructor(readonly keyring: Keyring, readonly peer: Teleport) {
+  // prettier-ignore
+  constructor(
+    readonly keyring: Keyring,
+    readonly peer: Teleport,
+  ) {
     peer.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 
@@ -82,7 +86,11 @@ const assertState = async (model: Model, real: Real) => {
 };
 
 class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly agent: AgentName, readonly feedKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    readonly agent: AgentName,
+    readonly feedKey: PublicKey,
+  ) {}
 
   toString = () => `OpenFeedCommand(${this.agent}, ${this.feedKey.truncate()})`;
 
@@ -105,7 +113,12 @@ class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
 }
 
 class WriteToFeedCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly agent: AgentName, readonly feedKey: PublicKey, readonly count: number) {}
+  // prettier-ignore
+  constructor(
+    readonly agent: AgentName,
+    readonly feedKey: PublicKey,
+    readonly count: number,
+  ) {}
 
   toString = () => `WriteToFeedCommand(${this.agent}, ${this.feedKey.truncate()}, ${this.count})`;
 
@@ -209,8 +222,8 @@ describe('stress-tests', () => {
 
       await fc.assert(
         fc.asyncProperty(fc.commands(allCommands, { maxCommands: 100 }), async (cmds) => {
-          console.log('\n=====');
-          console.log([...cmds].map((c) => c.toString()).join('\n'));
+          // console.log('\n=====');
+          // console.log([...cmds].map((c) => c.toString()).join('\n'));
 
           const system = await factory(keyring)();
           try {

@@ -21,6 +21,7 @@
       <w>dxos</w>
       <w>dxos's</w>
       <w>dxrpc</w>
+      <w>echofs</w>
       <w>endcap</w>
       <w>faas</w>
       <w>faasd</w>
@@ -66,6 +67,7 @@
       <w>onwant</w>
       <w>openfaas</w>
       <w>orgs</w>
+      <w>outdir</w>
       <w>packlets</w>
       <w>permissionless</w>
       <w>prefs</w>
@@ -82,6 +84,7 @@
       <w>statable</w>
       <w>streamx</w>
       <w>stringified</w>
+      <w>subtiles</w>
       <w>svg's</w>
       <w>testutils</w>
       <w>textbox</w>
@@ -89,6 +92,7 @@
       <w>treeitem</w>
       <w>truncatable</w>
       <w>typegen</w>
+      <w>unbundle</w>
       <w>uncompiled</w>
       <w>undownload</w>
       <w>unhave</w>

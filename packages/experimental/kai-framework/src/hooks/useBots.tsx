@@ -4,9 +4,9 @@
 
 import { useMemo } from 'react';
 
-import { Module } from '@dxos/protocols/proto/dxos/config';
+import { type Module } from '@dxos/protocols/proto/dxos/config';
 import { useConfig } from '@dxos/react-client';
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { useKeyStore } from '@dxos/react-client/halo';
 
 import { BotClient } from '../bots';
@@ -14,25 +14,25 @@ import { BotClient } from '../bots';
 export const botModules: Module[] = [
   {
     id: 'dxos.module.bot.store',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'Store',
     description: 'Secure storage.',
   },
   {
     id: 'dxos.module.bot.mail',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'EMail',
     description: 'Email sync.',
   },
   {
     id: 'dxos.module.bot.chess',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'Chess',
     description: 'Basic chess engine.',
   },
   {
     id: 'dxos.module.bot.kai',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'Kai',
     description: 'Research and task assistant.',
   },
@@ -45,8 +45,8 @@ export const botKeys: { [key: string]: string } = {
   'com.protonmail.username': 'COM_PROTONMAIL_USERNAME',
   'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD',
   'com.protonmail.tls': 'COM_PROTONMAIL_TLS',
-  'com.openai.org_id': 'COM_OPENAI_ORG_ID',
-  'com.openai.api_key': 'COM_OPENAI_API_KEY',
+  'openai.com/org_id': 'COM_OPENAI_ORG_ID',
+  'openai.com/api_key': 'COM_OPENAI_API_KEY',
 };
 
 export const getBotEnvs = (keyMap: Map<string, string>) => {

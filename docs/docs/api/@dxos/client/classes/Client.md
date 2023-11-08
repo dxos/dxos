@@ -1,12 +1,12 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/src/client/client.ts:52](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L52)</sub>
+<sub>Declared in [packages/sdk/client/src/client/client.ts:49](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L49)</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
 
-
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L74)
+### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L75)
+
 
 
 
@@ -17,58 +17,62 @@ Arguments:
 `options`: <code>[ClientOptions](/api/@dxos/client/types/ClientOptions)</code>
 
 
+
 ## Properties
-### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L56)
-Type: <code>"0.1.54"</code>
+### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L53)
+Type: <code>"0.3.4"</code>
 
-The version of this client API
+The version of this client API.
 
-### [config](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L111)
+### [config](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L115)
 Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
-Current configuration object
+Current configuration object.
 
-### [dbRouter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L171)
-Type: <code>DatabaseRouter</code>
+### [experimental](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L170)
+Type: <code>object</code>
 
-### [halo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L147)
+
+
+### [halo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L151)
 Type: <code>HaloProxy</code>
 
 HALO credentials.
 
-### [initialized](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L128)
+### [initialized](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L132)
 Type: <code>boolean</code>
 
-Returns true if the client has been initialized. Initialize by calling  `.initialize()`
+Returns true if the client has been initialized. Initialize by calling  `.initialize()` .
 
-### [mesh](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L155)
+### [mesh](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L159)
 Type: <code>MeshProxy</code>
 
 MESH networking.
 
-### [monitor](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L163)
-Type: <code>Monitor</code>
-
-Debug monitor.
-
-### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L119)
+### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L123)
 Type: <code>ClientServicesProvider</code>
 
 Current client services provider.
 
-### [spaces](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L182)
-Type: <code>MulticastObservable&lt;Space[]&gt;</code>
+### [shell](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L164)
+Type: <code>Shell</code>
 
-ECHO spaces.
 
-### [status](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L135)
+
+### [spaces](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L143)
+Type: <code>SpaceList</code>
+
+
+
+### [status](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L139)
 Type: <code>MulticastObservable&lt;"null" | SystemStatus&gt;</code>
 
 Client services system status.
 
 
 ## Methods
-### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L95)
+### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L99)
+
 
 
 
@@ -76,121 +80,107 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [acceptInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L203)
 
 
 
-Accept an invitation to a space.
-
-
-Returns: <code>AuthenticatingInvitationObservable</code>
-
-Arguments: 
-
-`invitation`: <code>Invitation</code>
-
-### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L175)
+### [addSchema(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L189)
 
 
 
-Returns: <code>void</code>
+
+Returns: <code>[Client](/api/@dxos/client/classes/Client)</code>
 
 Arguments: 
 
-`schema`: <code>EchoSchema</code>
-
-### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L196)
+`types`: <code>TypeCollection</code>
 
 
+### [addTypes(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L181)
 
-Creates a new space.
 
 
-Returns: <code>Promise&lt;Space&gt;</code>
+
+Returns: <code>[Client](/api/@dxos/client/classes/Client)</code>
 
 Arguments: 
 
-`meta`: <code>PropertiesProps</code>
+`types`: <code>TypeCollection</code>
 
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L289)
 
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L299)
 
 
 Cleanup, release resources.
 Open/close is re-entrant.
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [diagnostics(opts)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L210)
 
+
+
+### [diagnostics(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L196)
 
 
 Get client diagnostics data.
 
-
-Returns: <code>Promise&lt;Partial&lt;ClientStats&gt;&gt;</code>
-
-Arguments: 
-
-`opts`: <code>DiagnosticOptions</code>
-
-### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L189)
-
-
-
-Get an existing space by its key.
-
-
-Returns: <code>undefined | Space</code>
+Returns: <code>Promise&lt;any&gt;</code>
 
 Arguments: 
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+`options`: <code>JsonKeyOptions</code>
 
-### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L220)
 
+### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L213)
 
 
 Initializes internal resources in an idempotent way.
 Required before using the Client instance.
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L317)
 
+
+
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L326)
 
 
 Resets and destroys client storage.
 Warning: Inconsistent state after reset, do not continue to use this client instance.
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L308)
 
+
+
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L317)
 
 
 Reinitialized the client session with the remote service host.
 This is useful when connecting to a host running behind a resource lock
 (e.g., HALO when SharedWorker is unavailable).
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L99)
+
+
+
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L103)
+
 
 
 
 Returns: <code>object</code>
 
 Arguments: none
+
+
+
+

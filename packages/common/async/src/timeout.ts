@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type Context, ContextDisposedError } from '@dxos/context';
+
 import { createPromiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
@@ -41,15 +43,39 @@ export const asyncTimeout = async <T>(
       reject(throwable);
     }, timeout);
 
-    // In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
-    // https://nodejs.org/api/timers.html#timeoutunref
-    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
-      timeoutId.unref();
-    }
+    unrefTimeout(timeoutId);
   });
 
   const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
   return await Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
+  });
+};
+
+/**
+ * In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
+ * https://nodejs.org/api/timers.html#timeoutunref
+ */
+export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
+  if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+    timeoutId.unref();
+  }
+};
+
+export const sleepWithContext = (ctx: Context, ms: number) => {
+  const error = new ContextDisposedError();
+  return new Promise<void>((resolve, reject) => {
+    if (ctx.disposed) {
+      reject(error);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      clearDispose();
+      resolve();
+    }, ms);
+    const clearDispose = ctx.onDispose(() => {
+      clearTimeout(timeout);
+      reject(error);
+    });
   });
 };

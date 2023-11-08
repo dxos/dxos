@@ -34,6 +34,9 @@
       "path": "../../../common/hypercore"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/keys"
     },
     {
@@ -49,13 +52,13 @@
       "path": "../../../common/timeframe"
     },
     {
+      "path": "../../../common/tracing"
+    },
+    {
       "path": "../../../common/typings"
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../../sdk/errors"
     },
     {
       "path": "../../halo/credentials"

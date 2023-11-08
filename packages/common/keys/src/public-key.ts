@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { inspect, InspectOptionsStylized } from 'node:util';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
-import invariant from 'tiny-invariant';
 
-import { truncateKey, devtoolsFormatter, DevtoolsFormatter, equalsSymbol, Equatable } from '@dxos/debug';
+import { truncateKey, devtoolsFormatter, type DevtoolsFormatter, equalsSymbol, type Equatable } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
@@ -38,6 +38,7 @@ export class PublicKey implements Equatable {
     } else if (source instanceof ArrayBuffer) {
       return new PublicKey(new Uint8Array(source));
     } else if (typeof source === 'string') {
+      // TODO(burdon): Check length.
       return PublicKey.fromHex(source);
     } else if ((<any>source).asUint8Array) {
       return new PublicKey((<any>source).asUint8Array());
@@ -57,8 +58,13 @@ export class PublicKey implements Equatable {
     }
 
     try {
-      return PublicKey.from(source);
-    } catch (error: any) {
+      const key = PublicKey.from(source);
+      // TODO(wittjosiah): Space keys don't pass this check.
+      // if (key.length !== PUBLIC_KEY_LENGTH && key.length !== SECRET_KEY_LENGTH) {
+      //   return undefined;
+      // }
+      return key;
+    } catch (err: any) {
       return undefined;
     }
   }
@@ -81,7 +87,7 @@ export class PublicKey implements Equatable {
    */
   static random(): PublicKey {
     // TODO(burdon): Enable seed for debugging.
-    return PublicKey.from(randomBytes(32));
+    return PublicKey.from(randomBytes(PUBLIC_KEY_LENGTH));
   }
 
   static *randomSequence(): Generator<PublicKey> {
@@ -164,6 +170,10 @@ export class PublicKey implements Equatable {
 
   toJSON() {
     return this.toHex();
+  }
+
+  get length() {
+    return this._value.length;
   }
 
   toHex(): string {

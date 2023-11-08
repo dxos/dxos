@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
@@ -16,19 +17,22 @@
   ],
   "references": [
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/echo-typegen"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../react-client"

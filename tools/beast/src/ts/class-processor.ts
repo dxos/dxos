@@ -4,13 +4,13 @@
 
 import assert from 'node:assert';
 import {
-  ClassDeclaration,
+  type ClassDeclaration,
   InterfaceDeclaration,
-  ParameterDeclaration,
+  type ParameterDeclaration,
   Project,
-  PropertyDeclaration,
-  SourceFile,
-  Type,
+  type PropertyDeclaration,
+  type SourceFile,
+  type Type,
 } from 'ts-morph';
 
 import { log } from '@dxos/log';
@@ -51,10 +51,7 @@ export class ClassProcessor {
   private readonly _project = new Project();
   private readonly _classes = new Map<string, ClassDefinition>();
 
-  // prettier-ignore
-  constructor(
-    private readonly sources: string[]
-  ) {
+  constructor(private readonly sources: string[]) {
     // https://ts-morph.com/setup
     this._project.addSourceFilesAtPaths(sources);
     log('files', { sources, count: this._project.getSourceFiles().length });

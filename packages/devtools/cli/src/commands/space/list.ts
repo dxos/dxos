@@ -5,13 +5,12 @@
 import { Flags, ux } from '@oclif/core';
 
 import { Event } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { Space } from '@dxos/client-protocol';
+import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 
 import { BaseCommand } from '../../base-command';
-import { mapSpaces } from '../../util';
-import { printSpaces } from './util';
+import { mapSpaces, printSpaces } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
@@ -26,7 +25,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await this.getSpaces(client);
+      const spaces = await this.getSpaces(client, false);
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {

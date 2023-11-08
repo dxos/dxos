@@ -1,19 +1,15 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.1.54",
+  "version": "0.3.4",
   "description": "An application template for local-first progressive web apps",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/config.t.js",
+  "main": "dist/src/template.t.js",
+  "types": "dist/src/template.t.d.ts",
   "scripts": {
-    "build": "tsc && plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "build-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "build-tsc": "tsc",
-    "clean": "rm -rf test/out",
-    "gen": "test/generate",
-    "plate": "plate"
+    "build": "tsc"
   },
   "dependencies": {
     "@dxos/bare-template": "workspace:*",
@@ -22,7 +18,10 @@
     "tailwindcss": "~3.3.2"
   },
   "devDependencies": {
-    "typescript": "^5.0.4"
+    "@types/node": "^18.11.9",
+    "tmp-promise": "^3.0.3",
+    "ts-node": "10.9.1",
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

@@ -4,7 +4,7 @@
 
 import directive from '@linkedmd/markdown-it-directive';
 import memoize from 'lodash.memoize';
-import MdIt from 'markdown-it';
+import type MdIt from 'markdown-it';
 import type Renderer from 'markdown-it/lib/renderer';
 import remarkParse from 'remark-parse';
 import remarkPrettier from 'remark-prettier';
@@ -83,7 +83,7 @@ export namespace Remark {
           headers: !!node?.attributes.headers,
         });
         const insertedAst = await unified().use(remarkParse).use(remarkPrettier).parse(content);
-        node.children = [directiveLabelNode, ...insertedAst.children];
+        node.children = [directiveLabelNode, ...(insertedAst as any).children];
       });
       await Promise.all(promises);
       return tree;

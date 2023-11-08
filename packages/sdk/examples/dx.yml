@@ -1,5 +1,14 @@
 version: 1
 
+# TODO: Remove. Temporary workaround for chromatic upload not working.
+package:
+  modules:
+    - name: demo
+      type: dxos:type/app
+      displayName: DXOS Demo
+      build:
+        command: pnpm -w nx bundle examples
+
 runtime:
   services:
     signaling:

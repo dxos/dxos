@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import {
   asyncTimeout,
@@ -14,14 +13,20 @@ import {
   ObservableProvider,
   Trigger,
 } from '@dxos/async';
-import { AUTH_TIMEOUT, ClientServicesProvider, Halo } from '@dxos/client-protocol';
+import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
-import { ApiError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
-import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { ApiError, trace } from '@dxos/protocols';
+import {
+  type Contact,
+  type Device,
+  DeviceKind,
+  type Identity,
+  Invitation,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { InvitationsProxy } from '../invitations';
 
@@ -119,6 +124,11 @@ export class HaloProxy implements Halo {
     devicesStream.subscribe((data) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
+        const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        log.trace('dxos.halo.device', {
+          deviceKey: current?.deviceKey,
+          profile: current?.profile,
+        });
       }
     });
 
@@ -172,6 +182,13 @@ export class HaloProxy implements Halo {
   async recoverIdentity(recoveryKey: Uint8Array): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.recoverIdentity({ recoveryKey });
+    this._identityChanged.emit(identity);
+    return identity;
+  }
+
+  async updateProfile(profile: ProfileDocument): Promise<Identity> {
+    invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile);
     this._identityChanged.emit(identity);
     return identity;
   }
@@ -230,26 +247,26 @@ export class HaloProxy implements Halo {
   /**
    * Initiates device invitation.
    */
-  createInvitation(options?: Partial<Invitation>) {
+  share(options?: Partial<Invitation>) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('create invitation', options);
-    const invitation = this._invitationProxy!.createInvitation(options);
+    const invitation = this._invitationProxy!.share(options);
     return invitation;
   }
 
   /**
    * Initiates accepting invitation.
    */
-  acceptInvitation(invitation: Invitation) {
+  join(invitation: Invitation | string) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy!.acceptInvitation(invitation);
+    return this._invitationProxy!.join(invitation);
   }
 
   /**

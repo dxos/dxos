@@ -3,15 +3,15 @@
 //
 
 import { Box } from 'ink';
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { InvitationEncoder, Invitation } from '@dxos/react-client/invitations';
 
 import { SpaceInfo } from '../echo';
-import { ActionStatus, StatusState, TextInput, Panel } from '../util';
+import { ActionStatus, type StatusState, TextInput, Panel } from '../util';
 
 export const Join: FC<{
   onJoin?: (spaceKey: PublicKey) => void;
@@ -27,7 +27,7 @@ export const Join: FC<{
 
   const handleDecode = async () => {
     const invitation = InvitationEncoder.decode(invitationCode!);
-    const observable = await client.acceptInvitation(invitation);
+    const observable = await client.spaces.join(invitation);
     observable.subscribe(
       (invitation: Invitation) => {
         if (invitation.state === Invitation.State.SUCCESS) {
@@ -44,7 +44,7 @@ export const Join: FC<{
     try {
       setStatus({ processing: 'Authenticating...' });
       // await invitation!.authenticate(Buffer.from(secret));
-      // const space = await invitation!.getSpace();
+      // const space = await invitation!.spaces.get();
       // setInvitation(undefined);
       // setStatus({ success: 'OK' });
       // setSpaceKey(space.key);

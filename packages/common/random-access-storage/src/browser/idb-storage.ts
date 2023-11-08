@@ -4,8 +4,8 @@
 
 import idb from 'random-access-idb';
 
-import { StorageType } from '../common';
 import { BrowserStorage } from './browser-storage';
+import { StorageType } from '../common';
 
 /**
  * Storage interface implementation for index DB.

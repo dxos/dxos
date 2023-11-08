@@ -2,8 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { safariCheck } from '@dxos/util';
+
 import { LogLevel } from '../config';
-import { getContextFromEntry, LogProcessor, shouldLog } from '../context';
+import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
 
 const getRelativeFilename = (filename: string) => {
   // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
@@ -74,7 +76,8 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     [LogLevel.DEBUG]: console.log,
   };
 
-  if (CONFIG.printFileLinks) {
+  // Safari prints source code location as this file, not the caller.
+  if (CONFIG.printFileLinks || safariCheck()) {
     if (LOG_BROWSER_CSS?.length) {
       args = [`%c${link}\n%c${args.join(' ')}`, ...LOG_BROWSER_CSS];
     } else {

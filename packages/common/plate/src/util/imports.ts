@@ -19,28 +19,16 @@ type ImportOptions = {
 
 type PathLike = string | string[];
 
-export class Imports {
-  private imports: { [k: string]: Import } = {};
-  use(name: string, from: PathLike, options?: ImportOptions): string;
-  use(name: string[], from: PathLike, options?: ImportOptions): string[];
-  use(name: string | string[], from: PathLike, options?: ImportOptions): string | string[] {
-    const { aliasOf, isDefault } = { ...options };
-    const { imports } = this;
-    const flatFrom = Array.isArray(from) ? path.join(...from) : from;
-    const names = Array.isArray(name) ? name : [name];
-    names.forEach((name) => {
-      imports[name] = {
-        name,
-        dealias: aliasOf,
-        from: flatFrom,
-        isDefault: !!isDefault,
-      };
-    });
-    return Array.isArray(name) ? names : names[0];
-  }
+type LazyPathLike = () => PathLike;
 
-  render(relativeTo?: PathLike) {
-    const { imports } = this;
+type Lazy<T> = () => T;
+// type DoubleLazy<T> = () => Lazy<T>;
+
+export type Imports = ReturnType<typeof imports>;
+
+export const imports = (defaultRelativeTo?: LazyPathLike) => {
+  const imports: { [k: string]: Import } = {};
+  const render = (relativeTo: PathLike = defaultRelativeTo?.() ?? '') => {
     relativeTo = Array.isArray(relativeTo) ? path.join(...relativeTo) : relativeTo;
     const relative = (p: string, relativeTo: string) => {
       const dir = path.dirname(relativeTo);
@@ -85,13 +73,39 @@ export class Imports {
     return Array.from(groups.entries())
       .map(([key, val]) => format.fromGroup(key, Array.from(val.values())))
       .join(os.EOL);
+  };
+
+  function use(name: string, from: PathLike, options?: ImportOptions): string;
+  function use(name: string[], from: PathLike, options?: ImportOptions): string[];
+  // eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+  function use(name: string | string[], from: PathLike, options?: ImportOptions): string | string[] {
+    const { aliasOf, isDefault } = { ...options };
+    const flatFrom = Array.isArray(from) ? path.join(...from) : from;
+    const names = Array.isArray(name) ? name : [name];
+    names.forEach((name) => {
+      imports[name] = {
+        name,
+        dealias: aliasOf,
+        from: flatFrom,
+        isDefault: !!isDefault,
+      };
+    });
+    return Array.isArray(name) ? names : names[0];
   }
 
-  lazy(name: string, from: PathLike, o?: ImportOptions): () => string;
-  lazy(names: string[], from: PathLike, o?: ImportOptions): Record<string, () => string>;
-  lazy(name: string | string[], from: PathLike, o?: ImportOptions) {
+  function lazy(name: string, from: PathLike, o?: ImportOptions): Lazy<string>;
+  function lazy(names: string[], from: PathLike, o?: ImportOptions): Record<string, Lazy<string>>;
+  // eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+  function lazy(
+    name: string | string[],
+    from: PathLike,
+    o?: ImportOptions,
+  ): Record<string, Lazy<string>> | Lazy<string> {
     return Array.isArray(name)
-      ? Object.fromEntries(name.map((n) => [n, () => this.use(n, from, o)]))
-      : () => this.use(name, from, o);
+      ? Object.fromEntries(name.map((n) => [n, () => use(n, from, o)]))
+      : () => use(name, from, o);
   }
-}
+  const result = () => render; // intentional non-invocation, to allow for lazy evaluation in plate`` templates
+  result.use = lazy;
+  return result;
+};

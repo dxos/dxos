@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Buildings, DotsThree, Envelope, User } from '@phosphor-icons/react';
 import React from 'react';
@@ -10,9 +12,8 @@ import React from 'react';
 // storybook config (files and modules)
 // dxosTheme import
 
-import { Button, DensityProvider } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
-import '@dxosTheme';
+import { Button, DensityProvider } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { Card } from './Card';
 import { CardActions } from './CardActions';

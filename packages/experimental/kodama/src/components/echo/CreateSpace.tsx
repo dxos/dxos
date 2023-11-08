@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 
 import { TextInput, Panel } from '../util';
@@ -19,7 +19,7 @@ export const CreateSpace: FC<{
   const handleSubmit = async (text: string) => {
     const name = text.trim();
     if (name.length) {
-      const space = await client.createSpace();
+      const space = await client.spaces.create();
       space.properties.name = name;
       setName('');
       onCreate?.(space.key);

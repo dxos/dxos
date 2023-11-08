@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
 import { FirefoxStorage } from './firefox-storage';
 import { IDbStorage } from './idb-storage';
 import { WebFS } from './web-fs';
+import { MemoryStorage, type Storage, type StorageConstructor, StorageType } from '../common';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {

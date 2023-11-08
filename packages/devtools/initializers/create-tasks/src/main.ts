@@ -1,20 +1,38 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import minimist from 'minimist';
 
+import { type InputOf } from '@dxos/plate';
 import template from '@dxos/tasks-template';
 
 void (async () => {
-  const args = minimist(process.argv.slice(2), {
-    boolean: ['interactive', 'verbose', 'monorepo'],
-  });
-  const { monorepo, interactive, verbose } = { interactive: false, verbose: false, monorepo: false, ...args };
-  const result = await template.execute({
+  const args = minimist(process.argv.slice(2));
+
+  const { monorepo, verbose, interactive, name } = {
+    verbose: false,
+    monorepo: false,
+    interactive: undefined,
+    name: args._[0],
+    ...args,
+  };
+
+  const defaults: Partial<InputOf<typeof template>> = {
+    monorepo,
+    react: true,
+    dxosUi: true,
+    tailwind: true,
+    storybook: false,
+    pwa: false,
+    proto: true,
+    ...(name ? { name, createFolder: true } : {}),
+  };
+
+  const result = await template.apply({
     verbose,
-    input: interactive
-      ? { monorepo }
-      : { pwa: true, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false },
+    interactive: interactive !== false,
+    input: interactive ? { monorepo } : defaults,
   });
-  await result.save();
+  await result.apply();
 })();

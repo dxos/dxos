@@ -1,0 +1,18 @@
+functions:
+  - id: 'assistant'
+    description: 'AI Chat'
+
+  - id: 'chess'
+    description: 'Chess'
+
+  - id: 'hello'
+    description: 'Test'
+
+triggers:
+  - function: 'assistant'
+    subscription:
+      type: 'braneframe.Thread.Block'
+
+  - function: 'chess'
+    subscription:
+      type: 'dxos.experimental.chess.Game'

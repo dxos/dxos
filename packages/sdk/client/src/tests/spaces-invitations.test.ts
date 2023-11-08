@@ -10,7 +10,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
-import { SpaceProxy } from '../echo/space-proxy';
+import { type SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
@@ -29,12 +29,12 @@ describe('Spaces/invitations', () => {
     afterTest(() => Promise.all([client1.destroy()]));
     afterTest(() => Promise.all([client2.destroy()]));
 
-    const space1 = await client1.createSpace();
-    log('createSpace', { key: space1.key });
+    const space1 = await client1.spaces.create();
+    log('spaces.create', { key: space1.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: space1 as SpaceProxy,
-        guest: client2,
+        guest: client2.spaces,
       }),
     );
     expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);

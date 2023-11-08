@@ -3,21 +3,23 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
 
 import { scheduleTaskInterval, Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { schema, TimeoutError } from '@dxos/protocols';
+import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Balancer } from './balancer';
-import { Framer } from './framer';
-import { RpcPort } from './rpc-port';
+import { type RpcPort } from './rpc-port';
 
 const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
+
+const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
+const DESTROY_COMMAND_SEND_TIMEOUT = 5_000;
 
 export type CleanupCb = void | (() => void);
 
@@ -32,9 +34,60 @@ export type CreateChannelOpts = {
   contentType?: string;
 };
 
-const STATS_INTERVAL = 1000;
+export type MuxerStats = {
+  timestamp: number;
+  channels: ConnectionInfo.StreamStats[];
+  bytesSent: number;
+  bytesReceived: number;
+  bytesSentRate?: number;
+  bytesReceivedRate?: number;
+  readBufferSize?: number;
+  writeBufferSize?: number;
+};
 
-const SYSTEM_CHANNEL_ID = -1;
+const STATS_INTERVAL = 1_000;
+const MAX_SAFE_FRAME_SIZE = 1_000_000;
+const SYSTEM_CHANNEL_ID = 0;
+const GRACEFUL_CLOSE_TIMEOUT = 3_000;
+
+type Channel = {
+  /**
+   * Our local channel ID.
+   * Incoming Data commands will have this ID.
+   */
+  id: number;
+  tag: string;
+
+  /**
+   * Remote id is set when we receive an OpenChannel command.
+   * The originating Data commands should carry this id.
+   */
+  remoteId: null | number;
+
+  contentType?: string;
+
+  /**
+   * Send buffer.
+   */
+  buffer: Uint8Array[];
+
+  /**
+   * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
+   */
+  push: null | ((data: Uint8Array) => void);
+
+  destroy: null | ((err?: Error) => void);
+
+  stats: {
+    bytesSent: number;
+    bytesReceived: number;
+  };
+};
+
+type CreateChannelInternalParams = {
+  tag: string;
+  contentType?: string;
+};
 
 /**
  * Channel based multiplexer.
@@ -47,30 +100,30 @@ const SYSTEM_CHANNEL_ID = -1;
  * A higher level API (could be build on top of this muxer) for channel discovery is required.
  */
 export class Muxer {
-  private readonly _framer = new Framer();
-  private readonly _balancer = new Balancer(this._framer.port, SYSTEM_CHANNEL_ID);
-  public readonly stream = this._framer.stream;
-
+  private readonly _balancer = new Balancer(SYSTEM_CHANNEL_ID);
   private readonly _channelsByLocalId = new Map<number, Channel>();
   private readonly _channelsByTag = new Map<string, Channel>();
-
-  private _nextId = 0;
-  private _destroyed = false;
-  private _destroying = false;
-
-  public close = new Event<Error | undefined>();
-
-  public statsUpdated = new Event<ConnectionInfo.StreamStats[]>();
-
   private readonly _ctx = new Context();
+
+  private _nextId = 1;
+
+  private _closing = false;
+  private _destroying = false;
+  private _disposed = false;
+
+  private _lastStats?: MuxerStats = undefined;
+  private readonly _lastChannelStats = new Map<number, Channel['stats']>();
+
+  public afterClosed = new Event<Error | undefined>();
+  public statsUpdated = new Event<MuxerStats>();
+
+  public readonly stream = this._balancer.stream;
 
   constructor() {
     // Add a channel for control messages.
-    this._framer.port.subscribe(async (msg) => {
+    this._balancer.incomingData.on(async (msg) => {
       await this._handleCommand(Command.decode(msg));
     });
-
-    scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
   }
 
   /**
@@ -152,8 +205,8 @@ export class Muxer {
     };
 
     const port: RpcPort = {
-      send: async (data: Uint8Array) => {
-        await this._sendData(channel, data);
+      send: async (data: Uint8Array, timeout?: number) => {
+        await this._sendData(channel, data, timeout);
         // TODO(dmaretskyi): Debugging.
         // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
@@ -187,46 +240,96 @@ export class Muxer {
     return port;
   }
 
-  /**
-   * Force-close with optional error.
-   */
-  destroy(err?: Error) {
+  // initiate graceful close
+
+  async close(err?: Error) {
     if (this._destroying) {
+      log('already destroying, ignoring graceful close request');
       return;
     }
-    this._destroying = true;
+    if (this._closing) {
+      log('already closing, ignoring graceful close request');
+      return;
+    }
 
-    this._sendCommand(
+    this._closing = true;
+
+    await this._sendCommand(
       {
-        destroy: {
+        close: {
           error: err?.message,
         },
       },
       SYSTEM_CHANNEL_ID,
-    )
-      .then(() => {
-        this._dispose();
-      })
-      .catch((err: any) => {
-        this._dispose(err);
-      });
-    void this._ctx.dispose();
+      DESTROY_COMMAND_SEND_TIMEOUT,
+    ).catch(async (err: any) => {
+      log('error sending close command', { err });
+
+      await this.dispose(err);
+    });
+
+    await Promise.race([
+      new Promise((_resolve, reject) => {
+        setTimeout(() => {
+          reject(new TimeoutError('gracefully closing muxer'));
+        }, GRACEFUL_CLOSE_TIMEOUT);
+      }),
+      (async () => {
+        await this.dispose(err);
+      })(),
+    ]);
   }
 
-  private _dispose(err?: Error) {
-    if (this._destroyed) {
+  // force close without confirmation
+
+  async destroy(err?: Error) {
+    if (this._destroying) {
+      log('already destroying, ignoring destroy request');
+      return;
+    }
+    this._destroying = true;
+    void this._ctx.dispose();
+    if (this._closing) {
+      log('destroy cancelling graceful close');
+      this._closing = false;
+    } else {
+      // as a courtesy to the peer, send destroy command but ignore errors sending
+
+      await this._sendCommand(
+        {
+          close: {
+            error: err?.message,
+          },
+        },
+        SYSTEM_CHANNEL_ID,
+      ).catch(async (err: any) => {
+        log('error sending courtesy close command', { err });
+      });
+    }
+
+    this.dispose(err).catch((err) => {
+      log('error disposing after destroy', { err });
+    });
+  }
+
+  // complete the termination, graceful or otherwise
+
+  async dispose(err?: Error) {
+    if (this._disposed) {
+      log('already destroyed, ignoring dispose request');
       return;
     }
 
-    this._destroyed = true;
-    this._balancer.destroy();
-    this._framer.destroy();
+    void this._ctx.dispose();
+
+    await this._balancer.destroy();
 
     for (const channel of this._channelsByTag.values()) {
       channel.destroy?.(err);
     }
+    this._disposed = true;
 
-    this.close.emit(err);
+    this.afterClosed.emit(err);
 
     // Make it easy for GC.
     this._channelsByLocalId.clear();
@@ -234,10 +337,19 @@ export class Muxer {
   }
 
   private async _handleCommand(cmd: Command) {
-    log('Received command', { cmd });
-
-    if (this._destroyed || this._destroying) {
+    if (this._disposed) {
       log.warn('Received command after destroy', { cmd });
+      return;
+    }
+
+    if (cmd.close) {
+      if (!this._closing) {
+        log('received peer close, initiating my own graceful close');
+        await this.close();
+      } else {
+        log('received close from peer, already closing');
+      }
+
       return;
     }
 
@@ -268,22 +380,23 @@ export class Muxer {
         return;
       }
       stream.push(cmd.data.data);
-    } else if (cmd.destroy) {
-      this._dispose();
     }
   }
 
-  private async _sendCommand(cmd: Command, channelId = -1) {
+  private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT) {
     try {
       const trigger = new Trigger<void>();
-      this._balancer.pushChunk(Command.encode(cmd), trigger, channelId);
-      await trigger.wait();
+      this._balancer.pushData(Command.encode(cmd), trigger, channelId);
+      await trigger.wait({ timeout });
     } catch (err: any) {
-      this.destroy(err);
+      await this.destroy(err);
     }
   }
 
   private _getOrCreateStream(params: CreateChannelInternalParams): Channel {
+    if (this._channelsByTag.size === 0) {
+      scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
+    }
     let channel = this._channelsByTag.get(params.tag);
     if (!channel) {
       channel = {
@@ -303,10 +416,15 @@ export class Muxer {
       this._channelsByLocalId.set(channel.id, channel);
       this._balancer.addChannel(channel.id);
     }
+
     return channel;
   }
 
-  private async _sendData(channel: Channel, data: Uint8Array): Promise<void> {
+  private async _sendData(channel: Channel, data: Uint8Array, timeout?: number): Promise<void> {
+    if (data.length > MAX_SAFE_FRAME_SIZE) {
+      log.warn('frame size exceeds maximum safe value', { size: data.length, threshold: MAX_SAFE_FRAME_SIZE });
+    }
+
     channel.stats.bytesSent += data.length;
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
@@ -321,6 +439,7 @@ export class Muxer {
         },
       },
       channel.id,
+      timeout,
     );
   }
 
@@ -328,61 +447,54 @@ export class Muxer {
     if (channel.destroy) {
       channel.destroy(err);
     }
+
     this._channelsByLocalId.delete(channel.id);
     this._channelsByTag.delete(channel.tag);
   }
 
   private async _emitStats() {
-    if (this._destroyed || this._destroying) {
+    if (this._disposed || this._destroying) {
+      this._lastStats = undefined;
+      this._lastChannelStats.clear();
       return;
     }
 
-    this.statsUpdated.emit(
-      Array.from(this._channelsByTag.values()).map((channel) => ({
-        id: channel.id,
-        tag: channel.tag,
-        bytesSent: channel.stats.bytesSent,
-        bytesReceived: channel.stats.bytesReceived,
-      })),
-    );
+    const bytesSent = this._balancer.bytesSent;
+    const bytesReceived = this._balancer.bytesReceived;
+
+    const now = Date.now();
+    const interval = this._lastStats ? (now - this._lastStats.timestamp) / 1_000 : 0;
+    const calculateThroughput = (current: Channel['stats'], last: Channel['stats'] | undefined) =>
+      last
+        ? {
+            bytesSentRate: interval ? (current.bytesSent - last.bytesSent) / interval : undefined,
+            bytesReceivedRate: interval ? (current.bytesReceived - last.bytesReceived) / interval : undefined,
+          }
+        : {};
+
+    this._lastStats = {
+      timestamp: now,
+      channels: Array.from(this._channelsByTag.values()).map((channel) => {
+        const stats: ConnectionInfo.StreamStats = {
+          id: channel.id,
+          tag: channel.tag,
+          contentType: channel.contentType,
+          writeBufferSize: channel.buffer.length,
+          bytesSent: channel.stats.bytesSent,
+          bytesReceived: channel.stats.bytesReceived,
+          ...calculateThroughput(channel.stats, this._lastChannelStats.get(channel.id)),
+        };
+
+        this._lastChannelStats.set(channel.id, stats);
+        return stats;
+      }),
+      bytesSent,
+      bytesReceived,
+      ...calculateThroughput({ bytesSent, bytesReceived }, this._lastStats),
+      readBufferSize: this._balancer.stream.readableLength,
+      writeBufferSize: this._balancer.stream.writableLength,
+    };
+
+    this.statsUpdated.emit(this._lastStats);
   }
 }
-
-type Channel = {
-  /**
-   * Our local channel ID.
-   * Incoming Data commands will have this ID.
-   */
-  id: number;
-  tag: string;
-
-  /**
-   * Remote id is set when we receive an OpenChannel command.
-   * The originating Data commands should carry this id.
-   */
-  remoteId: null | number;
-
-  contentType?: string;
-
-  /**
-   * Send buffer.
-   */
-  buffer: Uint8Array[];
-
-  /**
-   * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
-   */
-  push: null | ((data: Uint8Array) => void);
-
-  destroy: null | ((err?: Error) => void);
-
-  stats: {
-    bytesSent: number;
-    bytesReceived: number;
-  };
-};
-
-type CreateChannelInternalParams = {
-  tag: string;
-  contentType?: string;
-};

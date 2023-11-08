@@ -2,88 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Asterisk, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder } from '@braneframe/types';
+import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
+import { Expando } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
 import translations from './translations';
-import { isObject, TEMPLATE_PLUGIN, TemplateAction, TemplatePluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { TEMPLATE_PLUGIN, TemplateAction, type TemplatePluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
 
-export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
-  const adapter = new GraphNodeAdapter((object: TypedObject) => isObject(object), objectToGraphNode);
+const typename = 'template'; // Type.schema.typename
 
+export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
   return {
     meta: {
       id: TEMPLATE_PLUGIN,
     },
-    unload: async () => {
-      adapter.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [typename]: {
+            placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
+            icon: (props: IconProps) => <Asterisk {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent, emit) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
+            return;
           }
 
-          const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          return [
-            {
-              id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
-              index: 'a1',
-              testId: 'templatePlugin.createKanban', // TODO(burdon): Namespace?
-              label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
-              icon: (props) => <Plus {...props} />,
-              // TODO(burdon): Factor out helper.
-              intent: [
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+            id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
+            label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
+            icon: (props) => <Asterisk {...props} />,
+            // TODO(burdon): Factor out helper.
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
                 {
                   plugin: TEMPLATE_PLUGIN,
                   action: TemplateAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
-                  action: TreeViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
-              ],
+              ]),
+            properties: {
+              testId: 'templatePlugin.createObject',
             },
-          ];
+          });
         },
       },
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            if ('object' in datum && isObject(datum.object)) {
-              return TemplateMain;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isObject(data.active) ? <TemplateMain object={data.active} /> : null;
             }
           }
-        }
 
-        return null;
+          return null;
+        },
       },
       intent: {
         resolver: (intent) => {

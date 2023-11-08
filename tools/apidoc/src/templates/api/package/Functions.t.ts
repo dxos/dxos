@@ -1,28 +1,25 @@
+import path from 'path';
 import { ReflectionKind, JSONOutput as S } from 'typedoc';
-import { TemplateFunction, text, File } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import { packagesInProject, Stringifier, reflectionsOfKind } from '../util.t/index.js';
-import { Input } from '../config.t.js';
+import template from '../template.t.js';
 
-const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
-  if (typeof outputDirectory == 'undefined') throw new Error('invalid output directory');
-  const packages = packagesInProject(input);
-  const stringifier = new Stringifier(input);
+export default template.define.group(({ input }) => {
+  const packages = packagesInProject(input! as any);
+  const stringifier = new Stringifier(input! as any);
   return packages
     .filter((p) => p?.name)
     .map((pkage) => {
       const funcs = reflectionsOfKind(pkage, ReflectionKind.Function) as S.DeclarationReflection[];
-      const dir = [outputDirectory, pkage.name];
-      return new File({
-        path: [...dir, `functions.md`],
-        content: text`
+      return template.define.text({
+        path: path.join( pkage.name, 'functions.md'),
+        content: plate`
         ---
         title: Functions
         ---
         # Functions
         ${funcs.map((func) => stringifier.method(func))}
-        `
+        `,
       });
     });
-};
-
-export default template;
+});

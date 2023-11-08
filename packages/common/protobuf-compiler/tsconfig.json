@@ -16,6 +16,9 @@
       "path": "../codec-protobuf"
     },
     {
+      "path": "../invariant"
+    },
+    {
       "path": "../log"
     },
     {

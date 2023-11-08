@@ -5,4 +5,3 @@
 export * from './DeviceList';
 export * from './IdentityListItem';
 export * from './SpaceMemberList';
-export * from './SpaceMemberListContainer';

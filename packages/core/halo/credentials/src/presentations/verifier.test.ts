@@ -7,12 +7,12 @@ import { expect } from 'chai';
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test } from '@dxos/test';
 
-import { createCredential } from '../credentials';
 import { signPresentation } from './presentation';
 import { verifyPresentation, verifyPresentationSignature } from './verifier';
+import { createCredential } from '../credentials';
 
 describe('presentation verifier', () => {
   describe('chain', () => {
@@ -101,7 +101,7 @@ describe('presentation verifier', () => {
         signerKey: device,
         chain: {
           ...chain,
-          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } },
+          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } as any },
         },
 
         nonce: randomBytes(32),

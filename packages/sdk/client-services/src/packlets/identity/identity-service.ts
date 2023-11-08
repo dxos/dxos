@@ -2,29 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Stream } from '@dxos/codec-protobuf';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
+import { type Keyring } from '@dxos/keyring';
 import {
-  Identity,
-  IdentityService,
-  QueryIdentityResponse,
-  RecoverIdentityRequest,
-  SignPresentationRequest,
+  type Identity,
+  type IdentityService,
+  type QueryIdentityResponse,
+  type RecoverIdentityRequest,
+  type SignPresentationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { ServiceContext } from '../services';
+import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 
 export class IdentityServiceImpl implements IdentityService {
-  // TODO(wittjosiah): Remove dependency on service context.
-  constructor(private readonly _serviceContext: ServiceContext) {}
+  constructor(
+    private readonly _createIdentity: (params?: CreateIdentityOptions) => Promise<Identity>,
+    private readonly _identityManager: IdentityManager,
+    private readonly _keyring: Keyring,
+    private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
+  ) {}
 
   async createIdentity(request: ProfileDocument): Promise<Identity> {
-    await this._serviceContext.createIdentity(request);
-
+    await this._createIdentity(request);
     return this._getIdentity()!;
   }
 
@@ -37,30 +40,37 @@ export class IdentityServiceImpl implements IdentityService {
       const emitNext = () => next({ identity: this._getIdentity() });
 
       emitNext();
-      return this._serviceContext.identityManager.stateUpdate.on(emitNext);
+      return this._identityManager.stateUpdate.on(emitNext);
     });
   }
 
   private _getIdentity(): Identity | undefined {
-    if (!this._serviceContext.identityManager.identity) {
+    if (!this._identityManager.identity) {
       return undefined;
     }
 
     return {
-      identityKey: this._serviceContext.identityManager.identity.identityKey,
-      spaceKey: this._serviceContext.identityManager.identity.space.key,
-      profile: this._serviceContext.identityManager.identity.profileDocument,
+      identityKey: this._identityManager.identity.identityKey,
+      spaceKey: this._identityManager.identity.space.key,
+      profile: this._identityManager.identity.profileDocument,
     };
   }
 
+  async updateProfile(profile: ProfileDocument): Promise<Identity> {
+    invariant(this._identityManager.identity, 'Identity not initialized.');
+    await this._identityManager.updateProfile(profile);
+    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
+    return this._getIdentity()!;
+  }
+
   async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
-    invariant(this._serviceContext.identityManager.identity, 'Identity not initialized.');
+    invariant(this._identityManager.identity, 'Identity not initialized.');
 
     return await signPresentation({
       presentation,
-      signer: this._serviceContext.keyring,
-      signerKey: this._serviceContext.identityManager.identity.deviceKey,
-      chain: this._serviceContext.identityManager.identity.deviceCredentialChain,
+      signer: this._keyring,
+      signerKey: this._identityManager.identity.deviceKey,
+      chain: this._identityManager.identity.deviceCredentialChain,
       nonce,
     });
   }

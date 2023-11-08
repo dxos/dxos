@@ -2,5 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './SpaceSelector';
 export * from './RootContainer';
+export * from './SpaceSelector';
+export * from './VaultSelector';

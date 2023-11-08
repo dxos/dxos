@@ -8,17 +8,17 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
 
+import { defaultGraphStyles, defaultStyles } from './styles';
 import {
   GraphForceProjector,
-  GraphLayoutNode,
-  GraphLayoutLink,
+  type GraphLayoutNode,
+  type GraphLayoutLink,
   GraphRenderer,
   createMarkers,
   createSimulationDrag,
   linkerRenderer,
 } from '../graph';
-import { convertTreeToGraph, createTree, styles, TestGraphModel, TestNode } from '../testing';
-import { defaultGraphStyles, defaultMarkerStyles } from './styles';
+import { convertTreeToGraph, createTree, styles, TestGraphModel, type TestNode } from '../testing';
 
 export default {
   title: 'gem-spore/hooks',
@@ -104,7 +104,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   // });
   // useButton('Reset', () => {
   //   model.clear();
-  //   model.createNodes(undefined, faker.datatype.number({ min: 6, max: 36 }));
+  //   model.createNodes(undefined, faker.number.int({ min: 6, max: 36 }));
   // });
   // useButton('Create', () => {
   //   model.createNodes(undefined, 1);
@@ -184,7 +184,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
 
   return (
     <svg ref={context.ref}>
-      <defs ref={markersRef} className={defaultMarkerStyles} />
+      <defs ref={markersRef} className={defaultStyles.markers} />
       <g ref={grid.ref} className={defaultGridStyles} />
       <g ref={zoom.ref} className={clsx(defaultGraphStyles, styles.linker)}>
         <g ref={graphRef} />

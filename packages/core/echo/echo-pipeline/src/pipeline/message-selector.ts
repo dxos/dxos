@@ -2,13 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { FeedBlock, FeedBlockSelector } from '@dxos/feed-store';
+import { type FeedBlock, type FeedBlockSelector } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { TimeframeClock } from './timeframe-clock';
+import { type TimeframeClock } from './timeframe-clock';
 
 /**
  * The MessageSelector makes sure that we read in a trusted order.

@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
-import React, { ComponentProps, FC, ReactNode } from 'react';
-
-import { mx } from '@dxos/aurora-theme';
-import { range, MinMax } from '@dxos/kai-types';
-
 import '@dxosTheme';
+
+import { faker } from '@faker-js/faker';
+import React, { type ComponentProps, type FC, type ReactNode } from 'react';
+
+import { range, type MinMax } from '@dxos/kai-types';
+import { mx } from '@dxos/react-ui-theme';
+// @ts-ignore
 
 const Frame: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className='flex absolute top-0 bottom-0 left-0 right-0 p-8'>{children}</div>;
@@ -23,7 +24,7 @@ type Item = { id: string; label: string; expanded: boolean; selected: boolean };
 // TODO(burdon): Use testing lib without db.
 const createItem = (n: MinMax): Item[] =>
   range(n).map(() => ({
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     label: faker.lorem.word(8),
     expanded: faker.datatype.boolean(),
     selected: faker.datatype.boolean(),

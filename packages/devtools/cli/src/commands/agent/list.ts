@@ -5,7 +5,7 @@
 import { Flags, ux } from '@oclif/core';
 
 import { BaseCommand } from '../../base-command';
-import { printAgents } from './util';
+import { printAgents } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
@@ -15,6 +15,10 @@ export default class List extends BaseCommand<typeof List> {
     ...ux.table.flags(),
     live: Flags.boolean({
       description: 'Live update.',
+      default: false,
+    }),
+    system: Flags.boolean({
+      description: 'Run as system daemon.',
       default: false,
     }),
   };
@@ -31,12 +35,12 @@ export default class List extends BaseCommand<typeof List> {
           setInterval(async () => {
             const result = await daemon.list();
             console.clear();
-            printAgents(result);
+            printAgents(result, this.flags);
           }, 1000);
         } else {
-          printAgents(result);
+          printAgents(result, this.flags);
         }
       }
-    });
+    }, this.flags.system);
   }
 }

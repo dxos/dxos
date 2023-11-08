@@ -2,13 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
-import assert from 'node:assert';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import { asyncTimeout } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { File, Storage, StorageType } from '../common';
+import { type File, type Storage, StorageType } from '../common';
+
+chai.use(chaiAsPromised);
 
 export const randomText = () => Math.random().toString(36).substring(2);
 
@@ -17,7 +19,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     await file.write(offset, data);
     const bufferRead = await file.read(offset, data.length);
     const result = data.equals(bufferRead);
-    expect(result).toBeTruthy();
+    expect(result).to.be.true;
   };
 
   describe(testGroupName, () => {
@@ -61,7 +63,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         }
 
         const entries = await directory.list();
-        expect(entries).toHaveLength(count);
+        expect(entries.length).to.equal(count);
       }
 
       {
@@ -73,7 +75,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         }
 
         const entries = await directory.list();
-        expect(entries).toHaveLength(count - amountToDelete);
+        expect(entries.length).to.equal(count - amountToDelete);
       }
 
       // Cleanup.
@@ -90,7 +92,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       const file = directory.getOrCreateFile(fileName);
       const { size } = await file.stat();
       const data = await file.read(0, size);
-      expect(Buffer.from('').equals(data)).toBeTruthy();
+      expect(Buffer.from('').equals(data)).to.be.true;
     });
 
     test('reopen and check if data is the same', async () => {
@@ -108,7 +110,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       {
         const file = directory.getOrCreateFile(fileName);
         const data2 = await file.read(0, data1.length);
-        expect(data1.equals(data2)).toBeTruthy();
+        expect(data1.equals(data2)).to.be.true;
         await file.close();
       }
     });
@@ -132,7 +134,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       {
         const file = directory.getOrCreateFile(fileName);
         const { size } = await file.stat();
-        expect(size).toBe(0);
+        expect(size).to.equal(0);
         await file.close();
       }
     });
@@ -156,8 +158,8 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file2.write(0, buffer2);
 
       // 4. Check that they have correct content.
-      expect(await file1.read(0, buffer1.length)).toStrictEqual(buffer1);
-      expect(await file2.read(0, buffer2.length)).toStrictEqual(buffer2);
+      expect(await file1.read(0, buffer1.length)).to.deep.equal(buffer1);
+      expect(await file2.read(0, buffer2.length)).to.deep.equal(buffer2);
     });
 
     test('write in directory/sub-directory/file', async () => {
@@ -170,7 +172,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file.write(0, buffer);
 
       const readBuffer = await file.read(0, buffer.length);
-      expect(readBuffer).toStrictEqual(buffer);
+      expect(readBuffer).to.deep.equal(buffer);
       await file.close();
     });
 
@@ -183,7 +185,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await writeAndCheck(file, buffer);
 
       await directory.delete();
-      await assert.rejects(async () => await file.read(0, buffer.length), Error, 'Closed');
+      await expect(file.read(0, buffer.length)).to.be.rejected;
     });
 
     test('del method', async () => {
@@ -196,24 +198,20 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file.write(0, buffer1);
       const buffer2 = Buffer.from(randomText());
       await file.write(buffer1.length, buffer2);
-      expect((await file.stat()).size).toBe(buffer1.length + buffer2.length);
+      expect((await file.stat()).size).to.equal(buffer1.length + buffer2.length);
 
       // Weird behavior. Works only if offset + size === file size. If greater - throws error, if less - does nothing.
       await file.del(buffer1.length, buffer2.length);
-      expect((await file.stat()).size).toBe(buffer1.length);
-      expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
-      await assert.rejects(
-        async () => await file.read(buffer1.length, buffer2.length),
-        Error,
-        'Could not satisfy length',
-      );
+      expect((await file.stat()).size).to.equal(buffer1.length);
+      expect(await file.read(0, buffer1.length)).to.deep.equal(buffer1);
+      await expect(file.read(buffer1.length, buffer2.length)).to.be.rejectedWith('Could not satisfy length');
     }).onlyEnvironments('nodejs'); // File.del() throws 'Not deletable' error for IDb.
 
     test('stat of new file', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
-      expect((await file.stat()).size).toBe(0);
+      expect((await file.stat()).size).to.equal(0);
     });
 
     test('call del with edge arguments', async () => {
@@ -229,21 +227,21 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         const file = directory.getOrCreateFile(randomText());
         await file.write(0, buffer);
         await file.del(0, buffer.length + 1);
-        expect((await file.stat()).size).toBe(0);
+        expect((await file.stat()).size).to.equal(0);
       }
 
       {
         const file = directory.getOrCreateFile(randomText());
         await file.write(0, buffer);
         await file.del(1, buffer.length);
-        expect((await file.stat()).size).toBe(1);
+        expect((await file.stat()).size).to.equal(1);
       }
 
       {
         const file = directory.getOrCreateFile(randomText());
         await file.write(0, buffer);
         await file.del(0, -1);
-        expect((await file.stat()).size).toBe(buffer.length);
+        expect((await file.stat()).size).to.equal(buffer.length);
       }
     });
 
@@ -269,7 +267,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         const storage = createStorage();
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(filename);
-        expect(await file.read(0, buffer.length)).toStrictEqual(buffer);
+        expect(await file.read(0, buffer.length)).to.deep.equal(buffer);
         await file.close();
       }
 
@@ -282,9 +280,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         const storage = createStorage();
         const directory = storage.createDirectory();
         const file = directory.getOrCreateFile(filename);
-        await expect(async () => {
-          await file.read(0, buffer.length);
-        }).rejects.toThrow();
+        await expect(file.read(0, buffer.length)).to.be.rejected;
       }
     });
 
@@ -300,7 +296,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
 
       {
         const entries = await directory.list();
-        expect(entries).toHaveLength(0);
+        expect(entries.length).to.equal(0);
       }
 
       const files = [...Array(10)].map(() => directory.getOrCreateFile(randomText()));
@@ -311,14 +307,14 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
 
       {
         const entries = await directory.list();
-        expect(entries).toHaveLength(files.length);
+        expect(entries.length).to.equal(files.length);
       }
 
       {
         const storage = createStorage();
         const directory = storage.createDirectory(dirname);
         const entries = await directory.list();
-        expect(entries).toHaveLength(files.length);
+        expect(entries.length).to.equal(files.length);
       }
     });
   });

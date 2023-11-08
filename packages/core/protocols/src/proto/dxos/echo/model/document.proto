@@ -42,29 +42,36 @@ message Value {
  * Ordered collection of values.
  */
 message Array {
-  repeated Value values               = 1;
+  repeated Value values = 1;
 }
 
 /**
  * Key x Value tuple.
  */
 message KeyValue {
-  string key                          = 1;
-  Value value                         = 2;
+  string key = 1;
+  Value value = 2;
 }
 
 /**
  * Object data definition.
  */
 message KeyValueObject {
-  repeated KeyValue properties        = 1;
+  repeated KeyValue properties = 1;
 }
 
 /**
  * Reference to an Item.
  */
 message Reference {
-  string itemId                           = 1;
+  // TODO(dmaretskyi): Rename `id`.
+  string itemId = 1;
+
+  /// "space", or "protobuf"
+  optional string protocol = 2;
+
+  /// space key, FQN of the schema
+  optional string host = 3;
 }
 
 /**
@@ -107,7 +114,10 @@ message Query {
  */
 message ObjectSnapshot {
   optional string type                = 1;
+  optional Reference type_ref = 4;
+
   Value root                          = 2;
+  optional Value meta                          = 3;
 }
 
 /**
@@ -139,6 +149,12 @@ message YJS {
  * Set of mutations.
  */
 message ObjectMutationSet {
+  // depereacted
   optional string type = 1;
+  optional Reference type_ref = 4;
+
   repeated ObjectMutation mutations   = 2;
+
+  // Mutations for the `meta` keyspace.
+  repeated ObjectMutation meta_mutations   = 3;
 }

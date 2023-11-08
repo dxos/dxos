@@ -1,14 +1,14 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  async ({ input }) => {
+export default template.define.text({
+  content: async ({ input }) => {
     const { dxosUi, react, tailwind } = input;
-    return text`
+    return plate`
     ${
       !dxosUi &&
       tailwind &&
-      text`
+      plate`
     @tailwind base;
     @tailwind components;
     @tailwind utilities;
@@ -20,7 +20,7 @@ export default defineTemplate(
       opacity: 0.05;
     }
 
-    ${!react && text`
+    ${!react && plate`
     .dark img.no-dark {
       display: none;
     }
@@ -33,9 +33,9 @@ export default defineTemplate(
       display: block;
     }
     `}
-    ${(dxosUi || tailwind) && text`
+    ${(dxosUi || tailwind) && plate`
 
-    ${!dxosUi && text`
+    ${!dxosUi && plate`
     body {
       @apply dark:bg-zinc-900 dark:text-zinc-300 bg-zinc-200 text-zinc-800;
     }
@@ -74,7 +74,7 @@ export default defineTemplate(
     }
     
     `}
-    ${!(dxosUi || tailwind) && text`
+    ${!(dxosUi || tailwind) && plate`
     * {
       box-sizing: border-box;
       font-family: sans-serif;
@@ -169,6 +169,4 @@ export default defineTemplate(
     }
     `}
     `;
-  },
-  { config }
-);
+  }});

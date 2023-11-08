@@ -9,11 +9,11 @@ import { createModelMutation, DatabaseProxy, encodeModelMutation, genesisMutatio
 import { TestBuilder as FeedTestBuilder } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { test } from '@dxos/test';
 
 import { createMappedFeedWriter } from '../common';
-import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
+import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
 
 const createDatabase = async () => {
@@ -35,7 +35,9 @@ const createDatabaseWithFeeds = async () => {
   const feed = await feedStore.openFeed(await feedTestBuilder.keyring.createKey(), { writable: true });
 
   const writer = createMappedFeedWriter((data: DataMessage) => ({ data }), feed.createFeedWriter());
-  const host = new DatabaseHost(writer);
+  const host = new DatabaseHost(writer, async () => {
+    /* No-op. */
+  });
   await host.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
 
   const dataServiceSubscriptions = new DataServiceSubscriptions();
@@ -44,7 +46,7 @@ const createDatabaseWithFeeds = async () => {
   const spaceKey = PublicKey.random();
   await dataServiceSubscriptions.registerSpace(spaceKey, host.createDataServiceHost());
 
-  const proxy = new DatabaseProxy(dataService, new ItemManager(modelFactory), spaceKey);
+  const proxy = new DatabaseProxy({ service: dataService, itemManager: new ItemManager(modelFactory), spaceKey });
   await proxy.open(new ModelFactory().registerModel(DocumentModel));
 
   return { proxy, host };
@@ -56,11 +58,12 @@ describe('database', () => {
       const database = await createDatabase();
 
       const result = database.backend.mutate(genesisMutation(PublicKey.random().toHex(), DocumentModel.meta.type));
-      expect(result.objectsUpdated.length).toEqual(1);
-      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
+      expect(result.updateEvent.itemsUpdated.length).toEqual(1);
+      expect(database.itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
+      database.backend.commitBatch();
 
       await result.batch.waitToBeProcessed();
-      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
+      expect(database.itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
     });
 
     test('mutate document', async () => {
@@ -72,6 +75,7 @@ describe('database', () => {
         createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
       );
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
+      database.backend.commitBatch();
 
       await result.batch.waitToBeProcessed();
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);

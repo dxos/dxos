@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
+import { type Duplex } from 'node:stream';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { Teleport } from '@dxos/teleport';
 
 export type WireProtocolParams = {
@@ -23,8 +23,9 @@ export type WireProtocolProvider = (params: WireProtocolParams) => WireProtocol;
 export interface WireProtocol {
   stream: Duplex;
 
-  initialize(): Promise<void>;
-  destroy(): Promise<void>;
+  open(): Promise<void>;
+  close(): Promise<void>;
+  abort(): Promise<void>;
 }
 
 /**
@@ -39,12 +40,15 @@ export const createTeleportProtocolFactory = (
     const teleport = new Teleport(params);
     return {
       stream: teleport.stream,
-      initialize: async () => {
+      open: async () => {
         await teleport.open();
         await onConnection(teleport);
       },
-      destroy: async () => {
+      close: async () => {
         await teleport.close();
+      },
+      abort: async () => {
+        await teleport.abort();
       },
     };
   };

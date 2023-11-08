@@ -6,17 +6,17 @@ import { DownloadSimple } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { Button, useMediaQuery } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, useMediaQuery } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { EditableObjectList } from '@dxos/mosaic';
 import { useConfig } from '@dxos/react-client';
 import { Space, useQuery } from '@dxos/react-client/echo';
 
-import { useFileDownload, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';
 import { FileFrameRuntime, defaultFileTypes } from './defs';
+import { useFileDownload, useIpfsClient } from '../../hooks';
 
 // TODO(burdon): Plugin signature.
 export type FileListProps = {

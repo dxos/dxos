@@ -20,7 +20,13 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/invariant"
     },
     {
       "path": "../../../common/keys"
@@ -48,6 +54,9 @@
     },
     {
       "path": "../echo-pipeline"
+    },
+    {
+      "path": "../echo-typegen"
     },
     {
       "path": "../model-factory"

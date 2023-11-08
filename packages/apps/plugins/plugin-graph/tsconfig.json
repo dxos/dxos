@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types",
     "types": [
       "node"
@@ -16,30 +17,20 @@
   ],
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
+    "src/**/*.tsx"
   ],
   "references": [
-    {
-      "path": "../../../common/async"
-    },
     {
       "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/app-graph"
     },
     {
-      "path": "../../../ui/aurora"
-    },
-    {
-      "path": "../../../ui/aurora-theme"
-    },
-    {
-      "path": "../plugin-intent"
+      "path": "../../../sdk/react-client"
     }
   ]
 }

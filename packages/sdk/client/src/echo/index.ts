@@ -2,42 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-export type { Echo, Space } from '@dxos/client-protocol';
-// TODO(burdon): Export form `@dxos/echo-db`.
+export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 export { type ItemID, DocumentModel } from '@dxos/document-model';
+// TODO(burdon): Remove/Rename Item.
+export { Item } from '@dxos/echo-db';
 export {
-  TYPE_SCHEMA,
-  Item,
-  Schema,
-  ShowDeletedOption,
-  type QueryOptions,
-  type SchemaDef,
-  type SchemaField,
-  type SchemaRef,
-} from '@dxos/echo-db';
-export {
+  base,
   createSubscription,
   isTypedObject,
-  base,
   subscribe,
   EchoDatabase,
-  EchoObject,
-  EchoSchema,
   Expando,
   Query,
-  Text,
+  Schema,
+  Text, // TODO(burdon): Deprecated.
+  TextObject,
+  TypeCollection,
   TypedObject,
-  type Filter,
+  Filter,
+  type EchoObject, // TODO(burdon): Remove?
+  type FilterSource,
+  type ObjectMeta,
   type Selection,
+  type Subscription,
   type SubscriptionHandle,
-  type TypeFilter,
 } from '@dxos/echo-schema';
+
+export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { TextModel } from '@dxos/text-model';
 
-export { Properties, type PropertiesProps } from '../proto';
-
-export { EchoProxy } from './echo-proxy';
+export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy';
-export { createDefaultModelFactory } from './util';
+export { createDefaultModelFactory, getSpaceForObject } from './util';

@@ -3,14 +3,15 @@
 //
 
 import '@dxosTheme';
+
 import { registerSW } from 'virtual:pwa-register';
 
+import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
 import { Config, Defaults } from '@dxos/config';
 import { log } from '@dxos/log';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { startIFrameRuntime } from '@dxos/vault';
 
-import { namespace } from './util';
+import { namespace } from './namespace';
 
 // https://vite-plugin-pwa.netlify.app/frameworks/
 // https://github.com/vite-pwa/vite-plugin-pwa/blob/main/types/index.d.ts

@@ -71,10 +71,10 @@ describe('Teleport', () => {
     {
       // latch to ensure all 4 destroy calls are made.
       const [done, inc, errorHandler] = latch({ count: 4 });
-      peer1.destroy().then(inc, errorHandler);
-      peer1.destroy().then(inc, errorHandler);
-      peer2.destroy().then(inc, errorHandler);
-      peer2.destroy().then(inc, errorHandler);
+      void peer1.destroy().then(inc, errorHandler);
+      void peer1.destroy().then(inc, errorHandler);
+      void peer2.destroy().then(inc, errorHandler);
+      void peer2.destroy().then(inc, errorHandler);
       await done();
     }
 

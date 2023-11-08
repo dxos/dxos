@@ -4,7 +4,7 @@
 
 import * as Y from 'yjs';
 
-import { YJS } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { type YJS } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { Reference } from './reference';
 
@@ -62,11 +62,7 @@ export class OrderedArray {
     return new OrderedArray(doc, array);
   }
 
-  // prettier-ignore
-  constructor(
-    public readonly doc: Y.Doc,
-    public readonly array: Y.Array<any>
-  ) {}
+  constructor(public readonly doc: Y.Doc, public readonly array: Y.Array<any>) {}
 
   insert(index: number, content: unknown[]) {
     this.array.insert(index, encodeValue(content));

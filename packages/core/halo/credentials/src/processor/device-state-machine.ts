@@ -3,13 +3,14 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { ComplexSet } from '@dxos/util';
+import { type Chain, type Credential, type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { ComplexMap } from '@dxos/util';
 
+import { type CredentialProcessor } from './credential-processor';
 import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
-import { CredentialProcessor } from './credential-processor';
 
 export type DeviceStateMachineParams = {
   identityKey: PublicKey;
@@ -22,15 +23,13 @@ export type DeviceStateMachineParams = {
  */
 export class DeviceStateMachine implements CredentialProcessor {
   // TODO(burdon): Return values via getter.
-  public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(PublicKey.hash);
+  public readonly authorizedDeviceKeys = new ComplexMap<PublicKey, DeviceProfileDocument>(PublicKey.hash);
+
   public readonly deviceChainReady = new Trigger();
 
   public deviceCredentialChain?: Chain;
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: DeviceStateMachineParams
-  ) {}
+  constructor(private readonly _params: DeviceStateMachineParams) {}
 
   async processCredential(credential: Credential) {
     log('processing credential...', {
@@ -46,15 +45,32 @@ export class DeviceStateMachine implements CredentialProcessor {
     }
 
     const assertion = getCredentialAssertion(credential);
+
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.AuthorizedDevice': {
+        invariant(!this.authorizedDeviceKeys.has(assertion.deviceKey), 'Device already added.');
         // TODO(dmaretskyi): Extra validation for the credential?
-        this.authorizedDeviceKeys.add(assertion.deviceKey);
+        this.authorizedDeviceKeys.set(assertion.deviceKey, {});
         log('added device', {
           localDeviceKey: this._params.deviceKey,
           deviceKey: assertion.deviceKey,
           size: this.authorizedDeviceKeys.size,
         });
+        this._params.onUpdate?.();
+        break;
+      }
+
+      case 'dxos.halo.credentials.DeviceProfile': {
+        invariant(this.authorizedDeviceKeys.has(credential.subject.id), 'Device not found.');
+
+        if (assertion && credential.subject.id.equals(this._params.deviceKey)) {
+          log.trace('dxos.halo.device', {
+            deviceKey: credential.subject.id,
+            profile: assertion.profile,
+          });
+        }
+
+        this.authorizedDeviceKeys.set(credential.subject.id, assertion.profile);
         this._params.onUpdate?.();
         break;
       }

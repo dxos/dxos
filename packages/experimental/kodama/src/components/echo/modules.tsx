@@ -3,18 +3,18 @@
 //
 
 import { Box, useFocusManager } from 'ink';
-import React, { FC, ReactNode, useMemo } from 'react';
+import React, { type FC, type ReactNode, useMemo } from 'react';
 
-import { Space, useSpace } from '@dxos/react-client/echo';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 
-import { useAppState } from '../../hooks';
-import { Join, Share } from '../invitations';
-import { MenuItem, Module, Panel } from '../util';
 import { CreateSpace } from './CreateSpace';
 import { SpaceFeeds } from './SpaceFeeds';
 import { SpaceInfo } from './SpaceInfo';
 import { SpaceMembers } from './SpaceMembers';
 import { SpaceView } from './SpaceView';
+import { useAppState } from '../../hooks';
+import { Join, Share } from '../invitations';
+import { type MenuItem, Module, Panel } from '../util';
 
 const SpacePanel: FC<{
   children: ReactNode;
@@ -67,7 +67,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                     <SpacePanel space={space}>
                       <Share
                         onCreate={() => {
-                          return space.createInvitation();
+                          return space.share();
                         }}
                       />
                     </SpacePanel>

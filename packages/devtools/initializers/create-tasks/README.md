@@ -1,13 +1,13 @@
 # @dxos/create-tasks
 
-Creates a sample todo list app with DXOS
+Creates a DXOS tasks application
 
 ## Usage
 
 Use with npm init like this:
 
 ```bash
-npm init @dxos/bare
+npm init @dxos/tasks@latest
 ```
 
 ## DXOS Resources

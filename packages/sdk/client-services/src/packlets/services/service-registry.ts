@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ServiceBundle } from '@dxos/rpc';
+import { type ServiceBundle } from '@dxos/rpc';
 
 /**
  * Registry of operational services.

@@ -3,15 +3,15 @@
 //
 
 import { faker } from '@faker-js/faker';
-import { DecoratorFunction } from '@storybook/csf';
-import { ReactRenderer } from '@storybook/react';
-import React, { PropsWithChildren, ReactNode, useState } from 'react';
+import { type DecoratorFunction } from '@storybook/csf';
+import { type ReactRenderer } from '@storybook/react';
+import React, { type PropsWithChildren, type ReactNode, useState } from 'react';
 
-import { Client, PublicKey } from '@dxos/client';
-import { EchoSchema, SpaceProxy, Space } from '@dxos/client/echo';
+import { Client, type PublicKey } from '@dxos/client';
+import { type SpaceProxy, type Space, type TypeCollection } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals';
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
 
@@ -19,15 +19,18 @@ const testBuilder = new TestBuilder();
 const services = () => testBuilder.createLocal();
 
 // TODO(wittjosiah): Generates warning `No peers to notarize with` during invitation, but retry succeeds.
-const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {
+const ChildClient = ({
+  rootSpace,
+  schema,
+  children,
+}: PropsWithChildren<{ rootSpace: Space; schema?: TypeCollection }>) => {
   return (
     <ClientProvider
-      fallback={() => <p>Loading</p>}
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.person.firstName() });
-        schema && client.addSchema(schema);
-        await performInvitation({ host: rootSpace as SpaceProxy, guest: client });
+        schema && client.spaces.addSchema(schema);
+        performInvitation({ host: rootSpace as SpaceProxy, guest: client.spaces });
       }}
     >
       {children}
@@ -37,8 +40,8 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
 
 export type PeersInSpaceProps = {
   count?: number;
-  registerSignalFactory?: boolean;
-  schema?: EchoSchema;
+  schema?: TypeCollection; // TODO(burdon): Rename types.
+  registerSignalFactory?: boolean; // TODO(burdon): Document.
   onCreateSpace?: (space: Space) => MaybePromise<void>;
   children: (id: number, spaceKey: PublicKey) => ReactNode;
 };
@@ -54,12 +57,11 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
   return (
     <div className='flex' style={{ display: 'flex' }}>
       <ClientProvider
-        fallback={() => <p>Loading</p>}
         services={services}
         onInitialized={async (client) => {
-          await client.halo.createIdentity({ displayName: faker.person.firstName() });
-          schema && client.addSchema(schema);
-          const space = await client.createSpace({ name: faker.animal.bird() });
+          await client.halo.createIdentity();
+          schema && client.spaces.addSchema(schema);
+          const space = await client.spaces.create({ name: faker.animal.bird() });
           await onCreateSpace?.(space);
           setSpace(space);
         }}
@@ -98,11 +100,13 @@ export const setupPeersInSpace = async (options: Omit<PeersInSpaceProps, 'childr
   register && registerSignalFactory();
   const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
   await Promise.all(clients.map((client) => client.initialize()));
-  await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.person.firstName() })));
-  schema && clients.map((client) => client.addSchema(schema));
-  const space = await clients[0].createSpace({ name: faker.animal.bird() });
+  await Promise.all(clients.map((client) => client.halo.createIdentity()));
+  schema && clients.map((client) => client.spaces.addSchema(schema));
+  const space = await clients[0].spaces.create({ name: faker.animal.bird() });
   await onCreateSpace?.(space);
-  await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client })));
+  await Promise.all(
+    clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
+  );
 
   return { spaceKey: space.key, clients };
 };

@@ -29,7 +29,10 @@ enum ShellDisplay {
 }
 
 message AppContextRequest {
-  ShellDisplay display = 1;
+  /// The display mode that shell should use
+  optional ShellDisplay display = 1;
+
+  /// The key of the joined space
   optional dxos.keys.PublicKey space_key = 2;
 }
 
@@ -41,9 +44,11 @@ service AppService {
 enum ShellLayout {
   DEFAULT = 0;
   INITIALIZE_IDENTITY = 1;
-  DEVICE_INVITATIONS = 2;
-  SPACE_INVITATIONS = 3;
-  JOIN_SPACE = 4;
+  IDENTITY = 2;
+  SHARE_IDENTITY = 3;
+  EDIT_PROFILE = 4;
+  SPACE = 5;
+  JOIN_SPACE = 6;
 }
 
 message LayoutRequest {

@@ -5,11 +5,11 @@
 import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from '@phosphor-icons/react';
 import { Chess, Color } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
-import invariant from 'tiny-invariant';
 
-import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
+import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';

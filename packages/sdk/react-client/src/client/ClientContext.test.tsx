@@ -4,7 +4,7 @@
 
 import { renderHook, screen, render, act } from '@testing-library/react';
 import expect from 'expect';
-import React, { Component, PropsWithChildren } from 'react';
+import React, { Component, type PropsWithChildren } from 'react';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
@@ -12,8 +12,8 @@ import { SystemStatus, fromHost } from '@dxos/client/services';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { useIdentity } from '../halo';
 import { ClientProvider, useClient } from './ClientContext';
+import { useIdentity } from '../halo';
 
 log.config({ filter: 'ClientContext:debug,warn' });
 

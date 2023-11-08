@@ -178,7 +178,7 @@ export class LogPrinter {
   // prettier-ignore
   constructor(
     private readonly _logger: (...args: any[]) => void,
-    private readonly _filePrefix: string
+    private readonly _filePrefix: string,
   ) {}
 
   logReport(report: LogReport, options: LogOptions = { skipPassing: true, skipText: true }) {

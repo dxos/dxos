@@ -28,6 +28,9 @@
       "path": "../../../common/feed-store"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/keys"
     },
     {
@@ -46,9 +49,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/errors"
-    },
-    {
       "path": "../../protocols"
     },
     {
@@ -56,6 +56,9 @@
     },
     {
       "path": "../model-factory"
+    },
+    {
+      "path": "../text-model"
     }
   ]
 }

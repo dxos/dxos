@@ -31,14 +31,44 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client-protocol/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/sdk/client-protocol/src/proto/gen"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/sdk/client-protocol",
+        "outputPath": "tmp/mocha/packages/sdk/client-protocol",
+        "resultsPath": "test-results/packages/sdk/client-protocol",
+        "testPatterns": [
+          "packages/sdk/client-protocol/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/client-protocol/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ]
 }

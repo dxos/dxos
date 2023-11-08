@@ -3,15 +3,15 @@
 //
 
 import path from 'node:path';
-import invariant from 'tiny-invariant';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
-import { Directory } from '@dxos/random-access-storage';
+import { type BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
+import { type Directory } from '@dxos/random-access-storage';
 import { BitField, arrayToBuffer } from '@dxos/util';
 
 export type GetOptions = {
@@ -24,10 +24,7 @@ export const DEFAULT_CHUNK_SIZE = 4096;
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 
 export class BlobStore {
-  // prettier-ignore
-  constructor(
-    private readonly _directory: Directory
-  ) { }
+  constructor(private readonly _directory: Directory) {}
 
   @synchronized
   async getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {
@@ -62,7 +59,7 @@ export class BlobStore {
     const endChunk = Math.ceil((offset + length) / metadata.chunkSize);
 
     invariant(metadata.bitfield, 'Bitfield not present');
-    invariant(metadata.bitfield.length >= endChunk, 'Invalid bitfield length');
+    invariant(metadata.bitfield.length * 8 >= endChunk, 'Invalid bitfield length');
 
     const present = BitField.count(metadata.bitfield, beginChunk, endChunk) === endChunk - beginChunk;
 

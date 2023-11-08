@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import * as pb from 'protobufjs';
 import * as ts from 'typescript';
+
+import { invariant } from '@dxos/invariant';
 
 const f = ts.factory;
 
@@ -88,7 +89,7 @@ export const splitSchemaIntoNamespaces = (root: pb.Namespace): Map<string, pb.Re
     } else if (obj instanceof pb.Namespace) {
       const nested = splitSchemaIntoNamespaces(obj);
       for (const [namespace, values] of nested) {
-        assert(!res.has(namespace));
+        invariant(!res.has(namespace));
         res.set(namespace, values);
       }
     }

@@ -2,16 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, synchronized } from '@dxos/async';
-import { ProtoCodec } from '@dxos/codec-protobuf';
-import { subtleCrypto, Signer } from '@dxos/crypto';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
+import { subtleCrypto, type Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
+import { createStorage, type Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
 const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
@@ -119,6 +118,7 @@ export class Keyring implements Signer {
     const file = this._storage.getOrCreateFile(publicKey.toHex());
     await file.write(0, arrayToBuffer(KeyRecord.encode(record)));
     await file.close();
+    await file.flush?.();
     this.keysUpdate.emit();
   }
 
@@ -135,6 +135,11 @@ export class Keyring implements Signer {
       keys.push({ publicKey: PublicKey.fromHex(fileName).asUint8Array() });
     }
     return keys;
+  }
+
+  async importKeyPair(keyPair: CryptoKeyPair): Promise<PublicKey> {
+    await this._setKey(keyPair);
+    return keyPairToPublicKey(keyPair);
   }
 }
 

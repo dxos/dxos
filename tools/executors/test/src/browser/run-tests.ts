@@ -2,20 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 import fs from 'fs';
 import http from 'http';
 import get from 'lodash.get';
 import set from 'lodash.set';
-import { Stats } from 'mocha';
-import { AddressInfo } from 'net';
+import { type Stats } from 'mocha';
+import { type AddressInfo } from 'net';
 import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { BrowserType } from '../types';
+import { type TestResult } from './reporter';
+import { type BrowserType } from '../types';
 import { Lock, trigger } from '../util';
-import { TestResult } from './reporter';
 
 export type RunTestsOptions = {
   debug: boolean;

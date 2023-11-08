@@ -2,19 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { Event, MulticastObservable, Observable, PushStream } from '@dxos/async';
+import { Event, MulticastObservable, type Observable, PushStream } from '@dxos/async';
 import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
-  Invitations,
+  AuthenticatingInvitation,
+  CancellableInvitation,
+  InvitationEncoder,
+  type Invitations,
 } from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Invitation, InvitationsService, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  Invitation,
+  type InvitationsService,
+  QueryInvitationsResponse,
+} from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Create an observable from an RPC stream.
@@ -41,8 +45,8 @@ const createObservable = <T>(rpcStream: Stream<T>): Observable<T> => {
 
 export class InvitationsProxy implements Invitations {
   private _ctx!: Context;
-  private _createdUpdate = new Event<CancellableInvitationObservable[]>();
-  private _acceptedUpdate = new Event<AuthenticatingInvitationObservable[]>();
+  private _createdUpdate = new Event<CancellableInvitation[]>();
+  private _acceptedUpdate = new Event<AuthenticatingInvitation[]>();
   private _created = MulticastObservable.from(this._createdUpdate, []);
   private _accepted = MulticastObservable.from(this._acceptedUpdate, []);
   // Invitations originating from this proxy.
@@ -50,17 +54,16 @@ export class InvitationsProxy implements Invitations {
 
   private _opened = false;
 
-  // prettier-ignore
   constructor(
     private readonly _invitationsService: InvitationsService,
-    private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>
+    private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>,
   ) {}
 
-  get created(): MulticastObservable<CancellableInvitationObservable[]> {
+  get created(): MulticastObservable<CancellableInvitation[]> {
     return this._created;
   }
 
-  get accepted(): MulticastObservable<AuthenticatingInvitationObservable[]> {
+  get accepted(): MulticastObservable<AuthenticatingInvitation[]> {
     return this._accepted;
   }
 
@@ -84,9 +87,7 @@ export class InvitationsProxy implements Invitations {
           ?.filter((invitation) => this._matchesInvitationContext(invitation))
           .filter((invitation) => !this._invitations.has(invitation.invitationId))
           .forEach((invitation) => {
-            type === QueryInvitationsResponse.Type.CREATED
-              ? this.createInvitation(invitation)
-              : this.acceptInvitation(invitation);
+            type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
           });
       } else if (action === QueryInvitationsResponse.Action.REMOVED) {
         log('remote invitations removed', { type, invitations });
@@ -99,7 +100,7 @@ export class InvitationsProxy implements Invitations {
             cacheUpdate.emit([
               ...cache.get().slice(0, index),
               ...cache.get().slice(index + 1),
-            ] as AuthenticatingInvitationObservable[]);
+            ] as AuthenticatingInvitation[]);
         });
       }
     });
@@ -132,7 +133,7 @@ export class InvitationsProxy implements Invitations {
     };
   }
 
-  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable {
+  share(options?: Partial<Invitation>): CancellableInvitation {
     const invitation: Invitation = { ...this.getInvitationOptions(), ...options };
     this._invitations.add(invitation.invitationId);
 
@@ -141,7 +142,7 @@ export class InvitationsProxy implements Invitations {
       return existing;
     }
 
-    const observable = new CancellableInvitationObservable({
+    const observable = new CancellableInvitation({
       initialInvitation: invitation,
       subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
       onCancel: async () => {
@@ -155,16 +156,20 @@ export class InvitationsProxy implements Invitations {
     return observable;
   }
 
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+  join(invitation: Invitation | string): AuthenticatingInvitation {
+    if (typeof invitation === 'string') {
+      invitation = InvitationEncoder.decode(invitation);
+    }
     invariant(invitation && invitation.swarmKey);
     this._invitations.add(invitation.invitationId);
 
-    const existing = this._accepted.get().find((accepted) => accepted.get().invitationId === invitation.invitationId);
+    const id = invitation.invitationId;
+    const existing = this._accepted.get().find((accepted) => accepted.get().invitationId === id);
     if (existing) {
       return existing;
     }
 
-    const observable = new AuthenticatingInvitationObservable({
+    const observable = new AuthenticatingInvitation({
       initialInvitation: invitation,
       subscriber: createObservable(this._invitationsService.acceptInvitation({ ...invitation })),
       onCancel: async () => {

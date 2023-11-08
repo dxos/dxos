@@ -4,49 +4,49 @@
 
 import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import {
-  ClearSnapshotsRequest,
-  DevtoolsHost, // TODO(burdon): Rename DevtoolsService
-  EnableDebugLoggingRequest,
-  EnableDebugLoggingResponse,
-  Event,
-  GetConfigResponse,
-  GetNetworkPeersRequest,
-  GetNetworkPeersResponse,
-  GetSpaceSnapshotRequest,
-  GetSpaceSnapshotResponse,
-  ResetStorageRequest,
-  SaveSpaceSnapshotRequest,
-  SaveSpaceSnapshotResponse,
-  SubscribeToCredentialMessagesRequest,
-  SubscribeToCredentialMessagesResponse,
-  SubscribeToFeedBlocksRequest,
-  SubscribeToFeedBlocksResponse,
-  SubscribeToFeedsRequest,
-  SubscribeToFeedsResponse,
-  SubscribeToItemsRequest,
-  SubscribeToItemsResponse,
-  SubscribeToKeyringKeysRequest,
-  SubscribeToKeyringKeysResponse,
-  SubscribeToNetworkTopicsResponse,
-  SubscribeToSpacesRequest,
-  SubscribeToSpacesResponse,
-  SubscribeToSignalStatusResponse,
-  SignalResponse,
-  SubscribeToSwarmInfoResponse,
-  StorageInfo,
-  GetSnapshotsResponse,
-  SubscribeToMetadataResponse,
-  GetBlobsResponse,
+  type ClearSnapshotsRequest,
+  type DevtoolsHost, // TODO(burdon): Rename DevtoolsService
+  type EnableDebugLoggingRequest,
+  type EnableDebugLoggingResponse,
+  type Event,
+  type GetConfigResponse,
+  type GetNetworkPeersRequest,
+  type GetNetworkPeersResponse,
+  type GetSpaceSnapshotRequest,
+  type GetSpaceSnapshotResponse,
+  type ResetStorageRequest,
+  type SaveSpaceSnapshotRequest,
+  type SaveSpaceSnapshotResponse,
+  type SubscribeToCredentialMessagesRequest,
+  type SubscribeToCredentialMessagesResponse,
+  type SubscribeToFeedBlocksRequest,
+  type SubscribeToFeedBlocksResponse,
+  type SubscribeToFeedsRequest,
+  type SubscribeToFeedsResponse,
+  type SubscribeToItemsRequest,
+  type SubscribeToItemsResponse,
+  type SubscribeToKeyringKeysRequest,
+  type SubscribeToKeyringKeysResponse,
+  type SubscribeToNetworkTopicsResponse,
+  type SubscribeToSpacesRequest,
+  type SubscribeToSpacesResponse,
+  type SubscribeToSignalStatusResponse,
+  type SignalResponse,
+  type SubscribeToSwarmInfoResponse,
+  type StorageInfo,
+  type GetSnapshotsResponse,
+  type SubscribeToMetadataResponse,
+  type GetBlobsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';
 import { subscribeToMetadata } from './metadata';
 import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
+import { type ServiceContext } from '../services';
 
 export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();

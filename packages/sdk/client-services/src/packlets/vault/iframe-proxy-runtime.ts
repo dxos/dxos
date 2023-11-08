@@ -3,14 +3,19 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { iframeServiceBundle, ShellRuntime, workerServiceBundle, WorkerServiceBundle } from '@dxos/client-protocol';
-import { Config } from '@dxos/config';
-import { RemoteServiceConnectionError } from '@dxos/errors';
+import {
+  iframeServiceBundle,
+  type ShellRuntime,
+  workerServiceBundle,
+  type WorkerServiceBundle,
+} from '@dxos/client-protocol';
+import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
-import { WebRTCTransportService } from '@dxos/network-manager';
-import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
+import { SimplePeerTransportService } from '@dxos/network-manager';
+import { RemoteServiceConnectionError } from '@dxos/protocols';
+import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
 
 import { ShellRuntimeImpl } from './shell-runtime';
 
@@ -52,7 +57,7 @@ export class IFrameProxyRuntime {
   async open(origin: string) {
     this._config = await getAsyncValue(this._configProvider);
 
-    this._transportService = new WebRTCTransportService({
+    this._transportService = new SimplePeerTransportService({
       iceServers: this._config.get('runtime.services.ice'),
     });
 

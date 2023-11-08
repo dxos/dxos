@@ -4,27 +4,33 @@
 
 import {
   ChartLine,
+  ComputerTower,
   CreditCard,
   Database,
+  Devices,
+  FireSimple,
   Gear,
   Graph,
   HardDrive,
   HardDrives,
+  type Icon,
   IdentificationBadge,
   Key,
-  PaperPlane,
   Planet,
+  Polygon,
   Queue,
   Receipt,
+  Robot,
   Users,
   UsersThree,
+  WifiHigh,
+  MagnifyingGlass,
 } from '@phosphor-icons/react';
-import { FC } from 'react';
 
 export type SectionItem = {
   id: string;
   title: string;
-  Icon?: FC;
+  Icon: Icon;
   items?: SectionItem[];
 };
 
@@ -33,11 +39,6 @@ export type SectionItem = {
  */
 export const useSections = (): SectionItem[] => {
   return [
-    {
-      id: '/diagnostics',
-      title: 'Diagnostics',
-      Icon: ChartLine,
-    },
     {
       id: '/client',
       title: 'Client',
@@ -58,6 +59,16 @@ export const useSections = (): SectionItem[] => {
           title: 'Logs',
           Icon: Receipt,
         },
+        {
+          id: '/client/diagnostics',
+          title: 'Diagnostics',
+          Icon: ChartLine,
+        },
+        {
+          id: '/client/tracing',
+          title: 'Tracing',
+          Icon: FireSimple,
+        },
       ],
     },
     {
@@ -69,6 +80,11 @@ export const useSections = (): SectionItem[] => {
           id: '/halo/identity',
           title: 'Identity',
           Icon: IdentificationBadge,
+        },
+        {
+          id: '/halo/devices',
+          title: 'Devices',
+          Icon: Devices,
         },
         {
           id: '/halo/keyring',
@@ -103,8 +119,8 @@ export const useSections = (): SectionItem[] => {
           Icon: Queue,
         },
         {
-          id: '/echo/items',
-          title: 'Items',
+          id: '/echo/objects',
+          title: 'Objects',
           Icon: Database,
         },
         {
@@ -129,49 +145,39 @@ export const useSections = (): SectionItem[] => {
       title: 'MESH',
       Icon: Graph,
       items: [
-        // {
-        //   id: '/mesh/network',
-        //   title: 'Network Graph',
-        //   Icon: SwarmIcon
-        // },
+        {
+          id: '/mesh/signal',
+          title: 'Signal',
+          Icon: WifiHigh,
+        },
         {
           id: '/mesh/swarm',
           title: 'Swarm',
           Icon: UsersThree,
         },
         {
-          id: '/mesh/signal',
-          title: 'Signal',
-          Icon: PaperPlane,
+          id: '/mesh/network',
+          title: 'Network',
+          Icon: Polygon,
         },
       ],
     },
-    // {
-    //   id: '/dmg',
-    //   title: 'DMG',
-    //   items: [
-    //     {
-    //       id: '/dmg/registry',
-    //       title: 'Registry',
-    //       icon: <RegistryIcon />
-    //     }
-    //   ]
-    // },
-    // {
-    //   id: '/debug',
-    //   title: 'Debug',
-    //   items: [
-    //     {
-    //       id: '/debug/logging',
-    //       title: 'Logging',
-    //       icon: <LoggingIcon />
-    //     },
-    //     {
-    //       id: '/debug/rpc',
-    //       title: 'RPC Trace',
-    //       icon: <MessagesIcon />
-    //     }
-    //   ]
-    // }
+    {
+      id: 'agent',
+      title: 'AGENT',
+      Icon: Robot,
+      items: [
+        {
+          id: '/agent/dashboard',
+          title: 'Dashboard',
+          Icon: ComputerTower,
+        },
+        {
+          id: '/agent/search',
+          title: 'Search',
+          Icon: MagnifyingGlass,
+        },
+      ],
+    },
   ];
 };

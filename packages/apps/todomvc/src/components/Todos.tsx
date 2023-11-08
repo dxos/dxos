@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import React, { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import { Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery, SpaceState } from '@dxos/react-client/echo';
 
-import { FILTER } from '../constants';
-import { Todo, TodoList } from '../proto';
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
+import { FILTER } from '../constants';
+import { Todo, TodoList } from '../proto';
 
 export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -23,7 +23,7 @@ export const Todos = () => {
   const [list] = useQuery(space, TodoList.filter());
 
   useEffect(() => {
-    if (space && !list) {
+    if (space && space.state.get() === SpaceState.READY && !list) {
       void space.db.add(new TodoList());
     }
   }, [space, list]);

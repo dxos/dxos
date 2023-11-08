@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
-import { TestFrameContainer } from '../../testing';
 import { Sidecar, Section, SidecarStack } from './Sidecar';
 import { StackFrameRuntime } from './defs';
-
-import '@dxosTheme';
+import { TestFrameContainer } from '../../testing';
 
 const actions = ['summarize', 'translate', 'list people', 'convert to records', 'shorten', 'extend'];
 
 const sections: Section[] = Array.from({ length: 16 }).map(() => ({
-  text: faker.lorem.sentences(2 + faker.datatype.number(4)),
-  actions: faker.helpers.arrayElements(actions, faker.datatype.number(3)),
+  text: faker.lorem.sentences(2 + faker.number.int(4)),
+  actions: faker.helpers.arrayElements(actions, faker.number.int(3)),
 }));
 
 export default {

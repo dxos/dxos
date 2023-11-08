@@ -6,10 +6,10 @@ import { faker } from '@faker-js/faker';
 import type { AbstractValueEncoding } from 'hypercore';
 
 import { sleep } from '@dxos/async';
-import { Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/codec-protobuf';
 import { createCodecEncoding } from '@dxos/hypercore';
 
-import { FeedWriter } from '../feed-writer';
+import { type FeedWriter } from '../feed-writer';
 
 export type TestItem = {
   id: string;
@@ -27,7 +27,7 @@ export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncod
 export type TestBlockGenerator<T> = (i: number) => T;
 
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
-  id: faker.datatype.uuid(),
+  id: faker.string.uuid(),
   index: i,
   value: faker.lorem.sentence(),
 });
@@ -38,10 +38,7 @@ export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
 export class TestGenerator<T extends {}> {
   _count = 0;
 
-  // prettier-ignore
-  constructor(
-    private readonly _generate: TestBlockGenerator<T>
-  ) {}
+  constructor(private readonly _generate: TestBlockGenerator<T>) {}
 
   async writeBlocks(
     writer: FeedWriter<T>,
@@ -61,7 +58,7 @@ export class TestGenerator<T extends {}> {
         const data = this._generate(this._count++);
         const receipt = await writer.write(data);
         if (delay) {
-          await sleep(faker.datatype.number(delay));
+          await sleep(faker.number.int(delay));
         }
 
         return receipt;

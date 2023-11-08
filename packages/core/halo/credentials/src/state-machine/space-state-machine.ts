@@ -6,14 +6,14 @@ import { runInContextAsync } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TypedMessage } from '@dxos/protocols';
-import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback, ComplexSet } from '@dxos/util';
+import { type TypedMessage } from '@dxos/protocols';
+import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
+import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
+import { MemberStateMachine, type MemberInfo } from './member-state-machine';
 import { getCredentialAssertion, verifyCredential } from '../credentials';
-import { CredentialProcessor } from '../processor/credential-processor';
-import { FeedInfo, FeedStateMachine } from './feed-state-machine';
-import { MemberStateMachine, MemberInfo } from './member-state-machine';
+import { type CredentialProcessor } from '../processor/credential-processor';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
@@ -28,6 +28,19 @@ export interface SpaceState {
   getCredentialsOfType(type: TypedMessage['@type']): Credential[];
 }
 
+export type ProcessOptions = {
+  sourceFeed: PublicKey;
+  skipVerification?: boolean;
+};
+
+export type CredentialEntry = {
+  credential: Credential;
+  sourceFeed: PublicKey;
+  revoked: boolean;
+};
+
+const REVOKABLE_CREDENTIALS = ['dxos.halo.credentials.SpaceMember'];
+
 /**
  * Validates and processes credentials for a single space.
  * Keeps a list of members and feeds.
@@ -36,7 +49,8 @@ export interface SpaceState {
 export class SpaceStateMachine implements SpaceState {
   private readonly _members = new MemberStateMachine(this._spaceKey);
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
-  private readonly _credentials: Credential[] = [];
+  private readonly _credentials: CredentialEntry[] = [];
+  private readonly _credentialsById = new ComplexMap<PublicKey, CredentialEntry>(PublicKey.hash);
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _genesisCredential: Credential | undefined;
@@ -46,10 +60,7 @@ export class SpaceStateMachine implements SpaceState {
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
 
-  // prettier-ignore
-  constructor(
-    private readonly _spaceKey: PublicKey
-  ) { }
+  constructor(private readonly _spaceKey: PublicKey) {}
 
   get creator(): MemberInfo | undefined {
     return this._members.creator;
@@ -64,6 +75,10 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   get credentials(): Credential[] {
+    return this._credentials.map((entry) => entry.credential);
+  }
+
+  get credentialEntries(): CredentialEntry[] {
     return this._credentials;
   }
 
@@ -79,7 +94,7 @@ export class SpaceStateMachine implements SpaceState {
     const consumer = new CredentialConsumer(
       processor,
       async () => {
-        for (const credential of this._credentials) {
+        for (const credential of this.credentials) {
           await consumer._process(credential);
         }
 
@@ -103,14 +118,14 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   getCredentialsOfType(type: TypedMessage['@type']): Credential[] {
-    return this._credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
+    return this.credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
   }
 
   /**
    * @param credential Message to process.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  async process(credential: Credential, fromFeed: PublicKey): Promise<boolean> {
+  async process(credential: Credential, { sourceFeed, skipVerification }: ProcessOptions): Promise<boolean> {
     if (credential.id) {
       if (this._processedCredentials.has(credential.id)) {
         return true;
@@ -118,14 +133,35 @@ export class SpaceStateMachine implements SpaceState {
       this._processedCredentials.add(credential.id);
     }
 
-    const result = await verifyCredential(credential);
-    if (result.kind !== 'pass') {
-      log.warn(`Invalid credential: ${result.errors.join(', ')}`);
-      return false;
+    if (!skipVerification) {
+      const result = await verifyCredential(credential);
+      if (result.kind !== 'pass') {
+        log.warn(`Invalid credential: ${result.errors.join(', ')}`);
+        return false;
+      }
     }
 
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
+      case 'dxos.halo.credentials.Revocation': {
+        if (!this._canRevokeCredentials(credential.issuer)) {
+          log.warn(`Space member is not authorized to invite new members: ${credential.issuer}`);
+          return false;
+        }
+        const toBeRevoked = this._credentialsById.get(credential.subject.id);
+        if (!toBeRevoked) {
+          log.warn(`Credential to revoke not found: ${credential.subject.id}`);
+          return false;
+        }
+        if (!this._credentialCanBeRevoked(toBeRevoked)) {
+          log.warn(`Credential cannot be revoked: ${credential.subject.id}`);
+        }
+
+        toBeRevoked.revoked = true;
+        await this._members.onRevoked(toBeRevoked.credential, credential);
+
+        break;
+      }
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
@@ -162,6 +198,16 @@ export class SpaceStateMachine implements SpaceState {
         break;
       }
 
+      case 'dxos.halo.credentials.MemberProfile': {
+        if (!this._genesisCredential) {
+          log.warn('Space must have a genesis credential before adding members.');
+          return false;
+        }
+
+        await this._members.process(credential);
+        break;
+      }
+
       case 'dxos.halo.credentials.AdmittedFeed': {
         if (!this._genesisCredential) {
           log.warn('Space must have a genesis credential before admitting feeds.');
@@ -173,13 +219,18 @@ export class SpaceStateMachine implements SpaceState {
         }
 
         // TODO(dmaretskyi): Check that the feed owner is a member of the space.
-        await this._feeds.process(credential, fromFeed);
+        await this._feeds.process(credential, sourceFeed);
         break;
       }
     }
 
-    // TODO(burdon): Await or void?
-    void this._credentials.push(credential);
+    const newEntry: CredentialEntry = { credential, sourceFeed, revoked: false };
+    this._credentials.push(newEntry);
+
+    // TODO(dmaretskyi): Invariant on every credential having an id?
+    if (credential.id) {
+      this._credentialsById.set(credential.id, newEntry);
+    }
 
     for (const processor of this._credentialProcessors) {
       if (processor._isReadyForLiveCredentials) {
@@ -198,6 +249,15 @@ export class SpaceStateMachine implements SpaceState {
   private _canAdmitFeeds(key: PublicKey): boolean {
     const role = this._members.getRole(key);
     return role === SpaceMember.Role.MEMBER || role === SpaceMember.Role.ADMIN;
+  }
+
+  private _canRevokeCredentials(key: PublicKey): boolean {
+    return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;
+  }
+
+  private _credentialCanBeRevoked(entry: CredentialEntry) {
+    // TODO(dmaretskyi): Prohibit from removing space's creator member credential.
+    return REVOKABLE_CREDENTIALS.includes(entry.credential.subject.assertion['@type']);
   }
 }
 

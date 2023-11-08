@@ -2,24 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { asyncTimeout, Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
-import { ExtensionContext, TeleportExtension } from '../teleport';
+import { type ExtensionContext, type TeleportExtension } from '../teleport';
 
 interface TestExtensionCallbacks {
   onOpen?: () => Promise<void>;
   onClose?: () => Promise<void>;
+  onAbort?: () => Promise<void>;
 }
 
 export class TestExtension implements TeleportExtension {
   public readonly open = new Trigger();
   public readonly closed = new Trigger();
+  public readonly aborted = new Trigger();
   public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
 
@@ -68,6 +69,13 @@ export class TestExtension implements TeleportExtension {
     await this.callbacks.onClose?.();
     this.closed.wake();
     await this._rpc?.close();
+  }
+
+  async onAbort(err?: Error) {
+    log('onAbort', { err });
+    await this.callbacks.onAbort?.();
+    this.aborted.wake();
+    await this._rpc?.abort();
   }
 
   async test(message = 'test') {

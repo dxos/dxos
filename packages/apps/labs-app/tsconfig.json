@@ -15,11 +15,24 @@
     "vite.config.ts"
   ],
   "include": [
+    "script-frame",
     "src"
   ],
   "references": [
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/devtools"
+    },
+    {
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/config"
@@ -31,22 +44,19 @@
       "path": "../../sdk/react-shell"
     },
     {
-      "path": "../../sdk/react-surface"
-    },
-    {
       "path": "../../sdk/vault"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-composer"
+      "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../plugins/plugin-chess"
@@ -58,13 +68,10 @@
       "path": "../plugins/plugin-debug"
     },
     {
-      "path": "../plugins/plugin-dnd"
-    },
-    {
-      "path": "../plugins/plugin-drawing"
-    },
-    {
       "path": "../plugins/plugin-error"
+    },
+    {
+      "path": "../plugins/plugin-explorer"
     },
     {
       "path": "../plugins/plugin-files"
@@ -76,25 +83,55 @@
       "path": "../plugins/plugin-graph"
     },
     {
-      "path": "../plugins/plugin-intent"
+      "path": "../plugins/plugin-grid"
+    },
+    {
+      "path": "../plugins/plugin-ipfs"
     },
     {
       "path": "../plugins/plugin-kanban"
     },
     {
+      "path": "../plugins/plugin-layout"
+    },
+    {
+      "path": "../plugins/plugin-map"
+    },
+    {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-metadata"
+    },
+    {
+      "path": "../plugins/plugin-navtree"
+    },
+    {
+      "path": "../plugins/plugin-presenter"
     },
     {
       "path": "../plugins/plugin-pwa"
     },
     {
+      "path": "../plugins/plugin-script"
+    },
+    {
+      "path": "../plugins/plugin-search"
+    },
+    {
+      "path": "../plugins/plugin-sketch"
+    },
+    {
       "path": "../plugins/plugin-space"
     },
     {
-      "path": "../plugins/plugin-splitview"
+      "path": "../plugins/plugin-stack"
     },
     {
-      "path": "../plugins/plugin-stack"
+      "path": "../plugins/plugin-table"
+    },
+    {
+      "path": "../plugins/plugin-telemetry"
     },
     {
       "path": "../plugins/plugin-template"
@@ -106,10 +143,7 @@
       "path": "../plugins/plugin-thread"
     },
     {
-      "path": "../plugins/plugin-treeview"
-    },
-    {
-      "path": "../plugins/plugin-url-sync"
+      "path": "../types"
     }
   ]
 }

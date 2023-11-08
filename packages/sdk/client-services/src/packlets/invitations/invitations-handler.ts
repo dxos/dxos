@@ -2,22 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
 import {
-  AuthenticatingInvitationObservable,
+  AuthenticatingInvitation,
   AUTHENTICATION_CODE_LENGTH,
-  CancellableInvitationObservable,
+  CancellableInvitation,
   INVITATION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
-import { trace } from '@dxos/protocols';
+import {
+  createTeleportProtocolFactory,
+  type NetworkManager,
+  StarTopology,
+  type SwarmConnection,
+} from '@dxos/network-manager';
+import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 
@@ -27,7 +30,7 @@ import {
   isAuthenticationRequired,
   MAX_OTP_ATTEMPTS,
 } from './invitation-extension';
-import { InvitationProtocol } from './invitation-protocol';
+import { type InvitationProtocol } from './invitation-protocol';
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -62,7 +65,7 @@ export class InvitationsHandler {
    */
   constructor(private readonly _networkManager: NetworkManager) {}
 
-  createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitationObservable {
+  createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitation {
     const {
       invitationId = PublicKey.random().toHex(),
       type = Invitation.Type.INTERACTIVE,
@@ -187,6 +190,7 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
+        label: 'invitation host',
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -194,7 +198,7 @@ export class InvitationsHandler {
     });
 
     // TODO(burdon): Stop anything pending.
-    const observable = new CancellableInvitationObservable({
+    const observable = new CancellableInvitation({
       initialInvitation: invitation,
       subscriber: stream.observable,
       onCancel: async () => {
@@ -206,7 +210,7 @@ export class InvitationsHandler {
     return observable;
   }
 
-  acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitationObservable {
+  acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitation {
     const { timeout = INVITATION_TIMEOUT } = invitation;
     invariant(protocol);
 
@@ -275,9 +279,6 @@ export class InvitationsHandler {
               );
               log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
-              if (introductionResponse.spaceKey) {
-                invitation.spaceKey = introductionResponse.spaceKey;
-              }
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {
@@ -363,13 +364,14 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
+        label: 'invitation guest',
       });
       ctx.onDispose(() => swarmConnection.close());
 
       setState({ state: Invitation.State.CONNECTING });
     });
 
-    const observable = new AuthenticatingInvitationObservable({
+    const observable = new AuthenticatingInvitation({
       initialInvitation: invitation,
       subscriber: stream.observable,
       onCancel: async () => {

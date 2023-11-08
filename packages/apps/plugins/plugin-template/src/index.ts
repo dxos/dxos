@@ -3,5 +3,3 @@
 //
 
 export * from './TemplatePlugin';
-export * from './types';
-export * from './util';

@@ -1,6 +1,6 @@
 import { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/aurora';
-import { appTx } from '@dxos/aurora-theme';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -38,7 +38,7 @@ const withTheme = (StoryFn, context) => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
   }, [theme]);
 
-  return createElement(ThemeProvider, { tx: appTx, children: StoryFn() });
+  return createElement(ThemeProvider, { tx: defaultTx, children: StoryFn() });
 };
 
 export const decorators = [withTheme];

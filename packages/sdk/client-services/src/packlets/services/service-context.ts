@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Trigger } from '@dxos/async';
-import { CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { Context } from '@dxos/context';
+import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   valueEncoding,
@@ -15,32 +14,38 @@ import {
   SnapshotStore,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
-import { STORAGE_VERSION, trace } from '@dxos/protocols';
+import { type SignalManager } from '@dxos/messaging';
+import { type ModelFactory } from '@dxos/model-factory';
+import { type NetworkManager } from '@dxos/network-manager';
+import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Storage } from '@dxos/random-access-storage';
+import { type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
+import { trace as Trace } from '@dxos/tracing';
+import { safeInstanceof } from '@dxos/util';
 
-import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
+import { type CreateIdentityOptions, IdentityManager, type JoinIdentityParams } from '../identity';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
-  InvitationProtocol,
+  type InvitationProtocol,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager, SigningContext } from '../spaces';
+import { DataSpaceManager, type SigningContext } from '../spaces';
 
 /**
  * Shared backend for all client services.
  */
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
+// TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
+@safeInstanceof('dxos.client-services.ServiceContext')
+@Trace.resource()
 export class ServiceContext {
   public readonly initialized = new Trigger();
   public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
@@ -68,12 +73,11 @@ export class ServiceContext {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  // prettier-ignore
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
-    public readonly modelFactory: ModelFactory
+    public readonly modelFactory: ModelFactory,
   ) {
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
@@ -86,9 +90,10 @@ export class ServiceContext {
         root: storage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
-          valueEncoding
-        }
-      })
+          valueEncoding,
+          stats: true,
+        },
+      }),
     });
 
     this.spaceManager = new SpaceManager({
@@ -100,12 +105,7 @@ export class ServiceContext {
       snapshotStore: this.snapshotStore,
     });
 
-    this.identityManager = new IdentityManager(
-      this.metadataStore,
-      this.keyring,
-      this.feedStore,
-      this.spaceManager
-    );
+    this.identityManager = new IdentityManager(this.metadataStore, this.keyring, this.feedStore, this.spaceManager);
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
@@ -117,26 +117,28 @@ export class ServiceContext {
         new DeviceInvitationProtocol(
           this.keyring,
           () => this.identityManager.identity ?? failUndefined(),
-          this._acceptIdentity.bind(this)
-        )
+          this._acceptIdentity.bind(this),
+        ),
     );
   }
 
-  async open() {
-    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
-
+  @Trace.span()
+  async open(ctx: Context) {
     await this._checkStorageVersion();
 
     log('opening...');
+    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
     await this.signalManager.open();
     await this.networkManager.open();
+
+    await this.metadataStore.load();
     await this.spaceManager.open();
-    await this.identityManager.open();
+    await this.identityManager.open(ctx);
     if (this.identityManager.identity) {
-      await this._initialize();
+      await this._initialize(ctx);
     }
-    log('opened');
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
+    log('opened');
   }
 
   async close() {
@@ -151,13 +153,13 @@ export class ServiceContext {
     await this.networkManager.close();
     await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
+    await this.metadataStore.close();
     log('closed');
   }
 
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
-
-    await this._initialize();
+    await this._initialize(new Context());
     return identity;
   }
 
@@ -167,30 +169,40 @@ export class ServiceContext {
     return factory(invitation);
   }
 
+  async broadcastProfileUpdate(profile: ProfileDocument | undefined) {
+    if (!profile || !this.dataSpaceManager) {
+      return;
+    }
+
+    for (const space of this.dataSpaceManager.spaces.values()) {
+      await space.updateOwnProfile(profile);
+    }
+  }
+
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
-
-    await this._initialize();
+    await this._initialize(new Context());
     return identity;
   }
 
   private async _checkStorageVersion() {
     await this.metadataStore.load();
     if (this.metadataStore.version !== STORAGE_VERSION) {
-      throw new Error(`Invalid storage version: current=${this.metadataStore.version}, expected=${STORAGE_VERSION}`);
+      throw new InvalidStorageVersionError(STORAGE_VERSION, this.metadataStore.version);
       // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
     }
   }
 
   // Called when identity is created.
-  private async _initialize() {
+  @Trace.span()
+  private async _initialize(ctx: Context) {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,
-      profile: identity.profileDocument,
+      getProfile: () => identity.profileDocument,
       recordCredential: async (credential) => {
         await identity.controlPipeline.writer.write({ credential: { credential } });
       },
@@ -242,6 +254,7 @@ export class ServiceContext {
         }
       },
     };
+
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 }

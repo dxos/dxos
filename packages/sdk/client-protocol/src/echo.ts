@@ -3,12 +3,16 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { DatabaseRouter } from '@dxos/echo-schema';
+import type { TypeCollection } from '@dxos/echo-schema';
 import type { PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import type { AuthenticatingInvitationObservable } from './invitations';
+import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';
+
+// Space properties key for default metadata.
+// TODO(wittjosiah): Remove. Default space should be indicated by data in HALO space.
+export const defaultKey = '__DEFAULT__';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -16,15 +20,46 @@ import type { Space } from './space';
 // TODO(wittjosiah): Rename?
 //   https://ts.dev/style/#naming-style
 //   ClientApi? ClientProtocol?
-export interface Echo {
-  get spaces(): MulticastObservable<Space[]>;
+export interface Echo extends MulticastObservable<Space[]> {
+  /**
+   * Resolves when the default space is available.
+   */
+  // TODO(wittjosiah): Remove. Ensure default space is always available.
+  get isReady(): MulticastObservable<boolean>;
 
-  createSpace(): Promise<Space>;
-  // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
-  getSpace(spaceKey: PublicKey): Space | undefined;
+  /**
+   * Returns the list of spaces.
+   */
+  get(): Space[];
 
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+  /**
+   * Returns the space with the given key.
+   */
+  get(spaceKey: PublicKey): Space | undefined;
 
-  // TODO(burdon): Rename.
-  dbRouter: DatabaseRouter;
+  /**
+   * Returns the default space.
+   */
+  get default(): Space;
+
+  /**
+   * Creates a new space.
+   */
+  create(): Promise<Space>;
+
+  /**
+   * Creates a space from the given snapshot.
+   */
+  // clone(snapshot: SpaceSnapshot): Promise<Space>;
+
+  /**
+   * Joins an existing space using the given invitation.
+   */
+  join(invitation: Invitation | string): AuthenticatingInvitation;
+
+  /**
+   * Adds a schema to ECHO.
+   */
+  // TODO(dmaretskyi): Rename `addTypes`.
+  addSchema(schema: TypeCollection): void;
 }

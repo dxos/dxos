@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
+import { type AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
 
@@ -31,10 +30,7 @@ export class FeedStateMachine {
 
   readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
 
-  // prettier-ignore
-  constructor(
-    private readonly _spaceKey: PublicKey
-  ) {}
+  constructor(private readonly _spaceKey: PublicKey) {}
 
   get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
     return this._feeds;

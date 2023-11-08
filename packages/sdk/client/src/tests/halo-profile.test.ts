@@ -25,6 +25,20 @@ describe('Halo', () => {
     expect(client.halo.identity.get()!.profile?.displayName).to.equal('test-user');
   });
 
+  test('updates profile', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    afterTest(() => client.destroy());
+    await client.initialize();
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+    expect(client.halo.identity.get()!.profile?.displayName).to.equal('test-user');
+
+    await client.halo.updateProfile({ displayName: 'test-user-updated' });
+    expect(client.halo.identity.get()!.profile?.displayName).to.equal('test-user-updated');
+  });
+
   test('device invitations', async () => {
     const testBuilder = new TestBuilder();
 

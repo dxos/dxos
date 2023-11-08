@@ -2,17 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { DeferredTask } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
-import type { Space } from '@dxos/client/echo';
+import { type Client, type PublicKey } from '@dxos/client';
+import type { Query, Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { createSubscription } from '@dxos/echo-schema';
+import { Filter, createSubscription } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { FunctionTrigger } from '../function';
+import { type FunctionTrigger } from '../function';
 
 // TODO(burdon): Rename.
 export type InvokeOptions = {
@@ -25,6 +24,8 @@ export class TriggerManager {
     { name: string; spaceKey: PublicKey },
     { ctx: Context; trigger: FunctionTrigger }
   >(({ name, spaceKey }) => `${spaceKey.toHex()}:${name}`);
+
+  private readonly _queries = new Set<Query>();
 
   constructor(
     private readonly _client: Client,
@@ -61,6 +62,7 @@ export class TriggerManager {
         return;
       }
 
+      // TODO(burdon): Trigger binding.
       // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
       const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
@@ -89,19 +91,18 @@ export class TriggerManager {
         task.schedule();
         count++;
       });
-
-      ctx.onDispose(() => subscription.unsubscribe());
-
       // TODO(burdon): DSL for query (replace props).
-      const query = space.db.query({ '@type': trigger.subscription.type, ...trigger.subscription.props });
+      const query = space.db.query(Filter.typename(trigger.subscription.type, trigger.subscription.props));
+      this._queries.add(query);
       const unsubscribe = query.subscribe(({ objects }) => {
         subscription.update(objects);
+      }, true);
+
+      ctx.onDispose(() => {
+        subscription.unsubscribe();
+        unsubscribe();
+        this._queries.delete(query);
       });
-
-      // TODO(burdon): Option to trigger on first subscription.
-      // TODO(burdon): After restart not triggered.
-
-      ctx.onDispose(() => unsubscribe());
     }
   }
 
@@ -116,8 +117,8 @@ export class TriggerManager {
 
   private async invokeFunction(options: InvokeOptions, functionName: string, data: any) {
     const { endpoint, runtime } = options;
-    assert(endpoint, 'Missing endpoint');
-    assert(runtime, 'Missing runtime');
+    invariant(endpoint, 'Missing endpoint');
+    invariant(runtime, 'Missing runtime');
 
     try {
       log('invoke', { function: functionName });

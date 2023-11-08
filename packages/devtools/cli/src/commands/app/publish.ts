@@ -3,11 +3,12 @@
 //
 
 import { Flags } from '@oclif/core';
-import assert from 'node:assert';
 import os from 'os';
 
+import { invariant } from '@dxos/invariant';
+
 import { BaseCommand } from '../../base-command';
-import { PublisherRpcPeer, build, loadConfig, publish } from '../../util';
+import { type PublisherRpcPeer, build, loadConfig, publish } from '../../util';
 
 export default class Publish extends BaseCommand<typeof Publish> {
   static override description = 'Publish apps.';
@@ -33,7 +34,7 @@ export default class Publish extends BaseCommand<typeof Publish> {
     const { accessToken, configPath, skipExisting, verbose, version } = this.flags;
 
     const moduleConfig = await loadConfig(configPath);
-    assert(moduleConfig.values.package, 'Missing package definition in dx.yml');
+    invariant(moduleConfig.values.package, 'Missing package definition in dx.yml');
     for (const module of moduleConfig.values.package!.modules ?? []) {
       await build({ verbose }, { log: (...args) => this.log(...args), module });
       const cid = await publish(

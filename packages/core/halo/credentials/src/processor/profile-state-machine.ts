@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+import { type CredentialProcessor } from './credential-processor';
 import { getCredentialAssertion } from '../credentials';
-import { CredentialProcessor } from './credential-processor';
 
 export type ProfileStateMachineParams = {
   identityKey: PublicKey;
@@ -21,10 +21,7 @@ export class ProfileStateMachine implements CredentialProcessor {
   // TODO(burdon): Return values via getter.
   public profile?: ProfileDocument;
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: ProfileStateMachineParams
-  ) {}
+  constructor(private readonly _params: ProfileStateMachineParams) {}
 
   async processCredential(credential: Credential) {
     const assertion = getCredentialAssertion(credential);

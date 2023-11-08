@@ -57,10 +57,10 @@ function pa () {
 
   ROOT=$(git rev-parse --show-toplevel)
   if [ "$ROOT" = "$PWD" ]; then
-    nx run-many --target=$TARGET $@
+    nx run-many --target=$TARGET "$@"
   else;
     pushd $ROOT
-    nx run-many --target=$TARGET $@
+    nx run-many --target=$TARGET "$@"
     popd
   fi;
 }

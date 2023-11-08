@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
-import { appServiceBundle, AppServiceBundle, ShellRuntime, shellServiceBundle } from '@dxos/client-protocol';
-import { PublicKey } from '@dxos/keys';
-import { AppContextRequest, LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { appServiceBundle, type AppServiceBundle, type ShellRuntime, shellServiceBundle } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
+import { type AppContextRequest, type LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 
 /**
  * Endpoint that handles shell services.
@@ -34,11 +33,11 @@ export class ShellRuntimeImpl implements ShellRuntime {
     return this._spaceKey;
   }
 
-  setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
+  setLayout({ layout, invitationCode, spaceKey }: LayoutRequest) {
     this._layout = layout;
-    this._invitationCode = options.invitationCode;
-    this._spaceKey = options.spaceKey;
-    this.layoutUpdate.emit({ layout, ...options });
+    this._invitationCode = invitationCode;
+    this._spaceKey = spaceKey;
+    this.layoutUpdate.emit({ layout, invitationCode, spaceKey });
   }
 
   async setAppContext(context: AppContextRequest) {

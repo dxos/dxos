@@ -3,13 +3,13 @@
 //
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Link, Input, Trans, useTranslation, useId } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { GITHUB_PLUGIN } from '../../props';
 import { useOctokitContext } from './OctokitProvider';
+import { GITHUB_PLUGIN } from '../../props';
 
 const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
@@ -42,13 +42,13 @@ export const PatInput = () => {
 
   return (
     <Input.Root>
-      <div role='none' className='mlb-4 max-is-md text-start'>
+      <div role='none' className='max-is-md text-start'>
         <Input.Label>{t('github pat label')}</Input.Label>
         <Input.TextInput
           autoFocus
           spellCheck={false}
           classNames='font-mono mlb-1'
-          value={patValue}
+          value={patValue ?? ''}
           onChange={({ target: { value } }) => setPatValue(value)}
         />
         <Input.DescriptionAndValidation classNames='mbs-0.5'>

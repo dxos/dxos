@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClientServices, ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 /**
  * Access to remote client via a socket.
  */
-export const fromSocket = (url: string): ClientServicesProvider => {
+export const fromSocket = async (url: string): Promise<ClientServicesProvider> => {
   let dxRpcClient!: WebsocketRpcClient<ClientServices, {}>;
 
   return {

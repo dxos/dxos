@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { schema } from '@dxos/protocols';
-import { createServiceBundle, ServiceTypesOf } from '@dxos/rpc';
+import { createServiceBundle, type ServiceTypesOf } from '@dxos/rpc';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { WebsocketRpcClient } from './client';

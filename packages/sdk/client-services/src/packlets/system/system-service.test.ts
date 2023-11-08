@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { SystemStatus, SystemStatusResponse, SystemService } from '@dxos/protocols/proto/dxos/client/services';
+import { type SystemService, SystemStatus, type QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { beforeEach, describe, test } from '@dxos/test';
 
 import { SystemServiceImpl } from './system-service';
@@ -35,6 +35,7 @@ describe('SystemService', () => {
       config,
       statusUpdate,
       getCurrentStatus: () => currentStatus,
+      getDiagnostics: async () => ({}),
       onUpdateStatus: (status) => {
         updateStatus.wake(status);
       },
@@ -55,8 +56,8 @@ describe('SystemService', () => {
   });
 
   test('queryStatus returns initial status', async () => {
-    const status = new Trigger<SystemStatusResponse>();
-    systemService.queryStatus().subscribe((response) => {
+    const status = new Trigger<QueryStatusResponse>();
+    systemService.queryStatus({}).subscribe((response) => {
       status.wake(response);
     });
     expect(await status.wait()).to.deep.equal({ status: SystemStatus.ACTIVE });
@@ -64,7 +65,7 @@ describe('SystemService', () => {
 
   test('queryStatus streams status changes', async () => {
     const statuses: SystemStatus[] = [];
-    systemService.queryStatus().subscribe(({ status }) => {
+    systemService.queryStatus({}).subscribe(({ status }) => {
       statuses.push(status);
     });
     changeStatus(SystemStatus.INACTIVE);

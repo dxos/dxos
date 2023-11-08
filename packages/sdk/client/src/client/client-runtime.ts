@@ -2,35 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Monitor } from '../diagnostics';
-import type { EchoProxy } from '../echo';
+import type { SpaceList } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
+import type { Shell } from '../services';
 
 export class ClientRuntime {
-  public readonly monitor: Monitor;
-  public readonly echo;
-  public readonly halo;
-  public readonly mesh;
+  readonly spaces: SpaceList;
+  readonly halo: HaloProxy;
+  readonly mesh: MeshProxy;
+  readonly shell?: Shell;
 
-  constructor({ monitor, echo, halo, mesh }: { monitor: Monitor; echo: EchoProxy; halo: HaloProxy; mesh: MeshProxy }) {
-    this.monitor = monitor;
-    this.echo = echo;
+  constructor({ spaces, halo, mesh, shell }: { spaces: SpaceList; halo: HaloProxy; mesh: MeshProxy; shell?: Shell }) {
+    this.spaces = spaces;
     this.halo = halo;
     this.mesh = mesh;
+    this.shell = shell;
   }
 
   async open() {
-    await this.monitor.open();
     await this.mesh._open();
-    await this.echo.open();
+    await this.spaces._open();
     await this.halo._open();
   }
 
   async close() {
     await this.halo._close();
-    await this.echo.close();
+    await this.spaces._close();
     await this.mesh._close();
-    await this.monitor.close();
   }
 }

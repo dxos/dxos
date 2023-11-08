@@ -2,18 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { scheduleTask, synchronized } from '@dxos/async';
+import { Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { CancelledError, SystemError } from '@dxos/protocols';
+import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
-import { TransportFactory } from '../transport';
-import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
+import { type ConnectionLimiter } from './connection-limiter';
+import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
+import { type TransportFactory } from '../transport';
+import { type WireProtocolProvider } from '../wire-protocol';
+
+export class ConnectionDisplacedError extends SystemError {
+  constructor() {
+    super('Connection displaced by remote initiator.');
+  }
+}
 
 interface PeerCallbacks {
   /**
@@ -81,6 +88,9 @@ export class Peer {
 
   public initiating = false;
 
+  public readonly connectionDisplaced = new Event<Connection>();
+
+  // TODO(burdon): Convert to map?
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
@@ -88,6 +98,7 @@ export class Peer {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _transportFactory: TransportFactory,
+    private readonly _connectionLimiter: ConnectionLimiter,
     private readonly _callbacks: PeerCallbacks,
   ) {}
 
@@ -97,20 +108,29 @@ export class Peer {
   async onOffer(message: OfferMessage): Promise<Answer> {
     const remoteId = message.author;
 
+    if (
+      this.connection &&
+      ![ConnectionState.CREATED, ConnectionState.INITIAL, ConnectionState.CONNECTING].includes(this.connection.state)
+    ) {
+      log.info(`received offer when connection already in ${this.connection.state} state`);
+      return { accept: false };
+    }
     // Check if we are already trying to connect to that peer.
     if (this.connection || this.initiating) {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
         // TODO(burdon): Too verbose.
-        log("closing local connection and accepting remote peer's offer", {
-          id: this.id,
+        // TODO(nf): gets stuck when remote connection is aborted (i.e. closed tab)
+        log('close local connection', {
+          localPeerId: this.id,
           topic: this.topic,
-          peerId: this.localPeerId,
+          remotePeerId: this.localPeerId,
+          sessionId: this.connection?.sessionId,
         });
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          await this.closeConnection();
+          await this.closeConnection(new ConnectionDisplacedError());
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -123,12 +143,19 @@ export class Peer {
         // Connection might have been already established.
         invariant(message.sessionId);
         const connection = this._createConnection(false, message.sessionId);
+
         try {
-          connection.openConnection();
+          await this._connectionLimiter.connecting(message.sessionId);
+          connection.initiate();
+
+          await connection.openConnection();
         } catch (err: any) {
-          log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+          if (!(err instanceof CancelledError)) {
+            log.info('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+          }
+
           // Calls `onStateChange` with CLOSED state.
-          await this.closeConnection();
+          await this.closeConnection(err);
         }
 
         return { accept: true };
@@ -145,11 +172,16 @@ export class Peer {
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
     log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
+
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;
 
+    let answer: Answer;
     try {
-      const answer = await this._signalMessaging.offer({
+      await this._connectionLimiter.connecting(sessionId);
+      connection.initiate();
+
+      answer = await this._signalMessaging.offer({
         author: this.localPeerId,
         recipient: this.id,
         sessionId,
@@ -161,17 +193,47 @@ export class Peer {
         log('ignoring response');
         return;
       }
+    } catch (err: any) {
+      log('initiation error: send offer', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
+      await connection.abort(err);
+      throw err;
+    } finally {
+      this.initiating = false;
+    }
 
+    try {
       if (!answer.accept) {
         this._callbacks.onRejected();
         return;
       }
-      connection.openConnection();
+    } catch (err: any) {
+      log('initiation error: accept answer', {
+        err,
+        topic: this.topic,
+        peerId: this.localPeerId,
+        remoteId: this.id,
+      });
+      await connection.abort(err);
+      throw err;
+    } finally {
+      this.initiating = false;
+    }
+
+    try {
+      log('opening connection as initiator');
+      await connection.openConnection();
       this._callbacks.onAccepted();
     } catch (err: any) {
-      log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
+      log('initiation error: open connection', {
+        err,
+        topic: this.topic,
+        peerId: this.localPeerId,
+        remoteId: this.id,
+      });
+      // TODO(nf): unsure when this will be called and the connection won't abort itself. but if it does fall through we should probably abort and not close.
+      log.warn('closing connection due to unhandled error on openConnection', { err });
       // Calls `onStateChange` with CLOSED state.
-      await this.closeConnection();
+      await this.closeConnection(err);
       throw err;
     } finally {
       this.initiating = false;
@@ -202,54 +264,87 @@ export class Peer {
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
       this._transportFactory,
+      {
+        onConnected: () => {
+          this.availableToConnect = true;
+          this._lastConnectionTime = Date.now();
+          this._callbacks.onConnected();
+
+          this._connectionLimiter.doneConnecting(sessionId);
+          log.trace('dxos.mesh.connection.connected', {
+            topic: this.topic,
+            localPeerId: this.localPeerId,
+            remotePeerId: this.id,
+            sessionId,
+            initiator,
+          });
+        },
+        onClosed: (err) => {
+          log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
+
+          // Make sure none of the connections are stuck in the limiter.
+          this._connectionLimiter.doneConnecting(sessionId);
+
+          invariant(this.connection === connection, 'Connection mismatch (race condition).');
+
+          log.trace('dxos.mesh.connection.closed', {
+            topic: this.topic,
+            localPeerId: this.localPeerId,
+            remotePeerId: this.id,
+            sessionId,
+            initiator,
+          });
+
+          if (err instanceof ConnectionDisplacedError) {
+            this.connectionDisplaced.emit(this.connection);
+          } else {
+            if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
+              // If we're closing the connection, and it has been connected for a while, reset the backoff.
+              this._availableAfter = 0;
+            } else {
+              this.availableToConnect = false;
+              this._availableAfter = increaseInterval(this._availableAfter);
+            }
+            this._callbacks.onDisconnected();
+
+            scheduleTask(
+              this._connectionCtx!,
+              () => {
+                this.availableToConnect = true;
+                this._callbacks.onPeerAvailable();
+              },
+              this._availableAfter,
+            );
+          }
+
+          this.connection = undefined;
+        },
+      },
     );
     this._callbacks.onInitiated(connection);
 
     void this._connectionCtx?.dispose();
     this._connectionCtx = this._ctx.derive();
 
-    connection.stateChanged.on((state) => {
-      switch (state) {
-        case ConnectionState.CONNECTED: {
-          this.availableToConnect = true;
-          this._lastConnectionTime = Date.now();
-          this._callbacks.onConnected();
-          break;
-        }
-
-        case ConnectionState.CLOSED: {
-          log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
-          invariant(this.connection === connection, 'Connection mismatch (race condition).');
-
-          if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
-            // If we're closing the connection, and it has been connected for a while, reset the backoff.
-            this._availableAfter = 0;
-          } else {
-            this.availableToConnect = false;
-            this._availableAfter = increaseInterval(this._availableAfter);
-          }
-
-          this.connection = undefined;
-          this._callbacks.onDisconnected();
-
-          scheduleTask(
-            this._connectionCtx!,
-            () => {
-              this.availableToConnect = true;
-              this._callbacks.onPeerAvailable();
-            },
-            this._availableAfter,
-          );
-
-          break;
-        }
-      }
-    });
     connection.errors.handle((err) => {
-      log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator, err });
+      log.info('connection error, closing', {
+        topic: this.topic,
+        peerId: this.localPeerId,
+        remoteId: this.id,
+        initiator,
+        err,
+      });
+      log.trace('dxos.mesh.connection.error', {
+        topic: this.topic,
+        localPeerId: this.localPeerId,
+        remotePeerId: this.id,
+        sessionId,
+        initiator,
+        err,
+      });
 
       // Calls `onStateChange` with CLOSED state.
-      void this.closeConnection();
+      void this.closeConnection(err);
     });
 
     this.connection = connection;
@@ -257,16 +352,18 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection() {
+  async closeConnection(err?: Error) {
     if (!this.connection) {
       return;
     }
+
     const connection = this.connection;
+
     log('closing...', { peerId: this.id, sessionId: connection.sessionId });
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
-    await connection.close();
+    await connection.close(err);
 
     log('closed', { peerId: this.id, sessionId: connection.sessionId });
   }
@@ -276,16 +373,17 @@ export class Peer {
       log('dropping signal message for non-existent connection', { message });
       return;
     }
+
     await this.connection.signal(message);
   }
 
   @synchronized
-  async destroy() {
+  async destroy(reason?: Error) {
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.id, topic: this.topic });
 
     // Won't throw.
-    await this?.connection?.close();
+    await this?.connection?.close(reason);
   }
 }
 

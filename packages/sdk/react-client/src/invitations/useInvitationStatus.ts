@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
+import { useReducer, type Reducer, useMemo, useCallback, useEffect } from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
+  type CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
 } from '@dxos/client/invitations';
@@ -20,7 +20,7 @@ export type InvitationResult = {
 };
 
 interface InvitationReducerState {
-  status: Invitation.State;
+  status: Invitation.State; // TODO(burdon): Rename state.
   haltedAt?: Invitation.State;
   result: InvitationResult;
   error?: number;
@@ -60,7 +60,8 @@ export type InvitationStatus = {
   id?: string;
   invitationCode?: string;
   authCode?: string;
-  authMethod?: Invitation['authMethod'];
+  authMethod?: Invitation.AuthMethod;
+  type?: Invitation.Type;
   status: Invitation.State;
   haltedAt?: Invitation.State;
   result: InvitationResult;
@@ -77,6 +78,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       log('useInvitationStatus', { action });
       return {
         ...prev,
+        // TODO(burdon): State.
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
@@ -102,7 +104,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     },
   );
 
-  // Handle unmount
+  // Handle unmount.
 
   useEffect(() => {
     const update = (invitation: Invitation) => {
@@ -148,7 +150,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     return () => subscription?.unsubscribe();
   }, [state.observable, state.status]);
 
-  // Return memoized callbacks & values
+  // Return memoized callbacks & values.
 
   const connect = useCallback((observable: CancellableInvitationObservable) => {
     dispatch({ status: Invitation.State.CONNECTING, observable });
@@ -178,6 +180,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
       authCode: invitation?.authCode,
       authMethod: invitation?.authMethod,
+      type: invitation?.type,
     };
 
     return result;

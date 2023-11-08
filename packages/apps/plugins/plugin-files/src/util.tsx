@@ -3,21 +3,32 @@
 //
 
 import { File as FileIcon, FloppyDisk, Folder, Plugs, X } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { GraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
+import { type DispatchIntent } from '@dxos/app-framework';
 
-import { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID, LocalDirectory, LocalEntity, LocalFile, LocalFilesAction } from './types';
+import {
+  FILES_PLUGIN,
+  FILES_PLUGIN_SHORT_ID,
+  type LocalDirectory,
+  type LocalEntity,
+  type LocalFile,
+  LocalFilesAction,
+} from './types';
 
 export const isLocalFile = (data: unknown): data is LocalFile =>
-  data && typeof data === 'object' ? 'title' in data : false;
+  data && typeof data === 'object' ? 'title' in data && 'handle' in data : false;
 
-export const handleToLocalDirectory = async (handle: any /* FileSystemDirectoryHandle */): Promise<LocalDirectory> => {
+export const handleToLocalDirectory = async (
+  handle: any /* FileSystemDirectoryHandle */,
+  path = '',
+): Promise<LocalDirectory> => {
   const permission = await handle.queryPermission({ mode: 'readwrite' });
-  const children = permission === 'granted' ? await getDirectoryChildren(handle) : [];
+  const childrenPath = path.length > 0 ? `${path}:${handle.name}` : handle.name;
+  const children = permission === 'granted' ? await getDirectoryChildren(handle, childrenPath) : [];
   return {
-    id: `${FILES_PLUGIN_SHORT_ID}/${handle.name.replaceAll(/\./g, '-')}`,
+    id: `${FILES_PLUGIN_SHORT_ID}:${path}${handle.name.replaceAll(/\./g, '-')}`,
     title: handle.name,
     handle,
     permission,
@@ -25,16 +36,12 @@ export const handleToLocalDirectory = async (handle: any /* FileSystemDirectoryH
   };
 };
 
-export const handleToLocalFile = async (
-  handle: any /* FileSystemFileHandle */,
-  // TODO(wittjosiah): Unify id generation.
-  hasParent = false,
-): Promise<LocalFile> => {
+export const handleToLocalFile = async (handle: any /* FileSystemFileHandle */, path = ''): Promise<LocalFile> => {
   const permission = await handle.queryPermission({ mode: 'readwrite' });
   const text = permission === 'granted' ? await handle.getFile().then((file: any) => file.text()) : undefined;
-  const id = handle.name.replaceAll(/\./g, '-');
+  path = path.length > 0 ? `${path}:` : path;
   return {
-    id: hasParent ? id : `${FILES_PLUGIN_SHORT_ID}/${id}`,
+    id: `${FILES_PLUGIN_SHORT_ID}:${path}${handle.name.replaceAll(/\./g, '-')}`,
     title: handle.name,
     handle,
     permission,
@@ -42,7 +49,7 @@ export const handleToLocalFile = async (
   };
 };
 
-export const legacyFileToLocalFile = async (file: File) => {
+export const legacyFileToLocalFile = async (file: File): Promise<LocalFile> => {
   const text = await new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.addEventListener('loadend', (event) => {
@@ -53,20 +60,25 @@ export const legacyFileToLocalFile = async (file: File) => {
   });
 
   return {
-    id: `${FILES_PLUGIN_SHORT_ID}/${file.name.replaceAll(/\.| /g, '-')}`,
+    id: `${FILES_PLUGIN_SHORT_ID}:${file.name.replaceAll(/\.| /g, '-')}`,
     title: file.name,
+    handle: false,
+    permission: 'granted',
     text,
   };
 };
 
-export const getDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle */): Promise<LocalEntity[]> => {
+export const getDirectoryChildren = async (
+  handle: any /* FileSystemDirectoryHandle */,
+  path: string,
+): Promise<LocalEntity[]> => {
   const children = [];
   for await (const entry of handle.values()) {
     if (entry.kind === 'file' && entry.name.endsWith('.md')) {
-      children.push(await handleToLocalFile(entry, true));
+      children.push(await handleToLocalFile(entry, path));
     } else if (entry.kind === 'directory') {
       // TODO(wittjosiah): Handle subdirectories.
-      // children.push(await handleToLocalDirectory(entry));
+      // children.push(await handleToLocalDirectory(entry, path));
     }
   }
   return children;
@@ -107,130 +119,112 @@ const handleLegacySave = (file: LocalFile) => {
   document.body.removeChild(a);
 };
 
-export const localEntityToGraphNode = (entity: LocalEntity, index: string, parent?: GraphNode<LocalDirectory>) => {
+export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispatch: DispatchIntent) => {
   if ('children' in entity) {
-    return localDirectoryToGraphNode(entity, index, parent);
+    return localDirectoryToGraphNode(entity, parent, dispatch);
   } else {
-    return localFileToGraphNode(entity, index, parent);
+    return localFileToGraphNode(entity, parent, dispatch);
   }
 };
 
-const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, parent?: GraphNode<LocalDirectory>) => {
-  const node: GraphNode<LocalDirectory> = {
+const localDirectoryToGraphNode = (
+  directory: LocalDirectory,
+  parent: Node<LocalDirectory>,
+  dispatch: DispatchIntent,
+) => {
+  const [node] = parent.addNode(FILES_PLUGIN, {
     id: directory.id,
-    index,
     label: directory.title,
     icon: (props) => <Folder {...props} />,
     data: directory,
-    parent,
-    attributes: {
-      disabled: directory.permission !== 'granted',
-    },
-  };
+    properties: { role: 'branch' },
+  });
 
-  const closeAction: GraphNodeAction = {
-    id: 'close-directory',
-    index: 'a1',
-    label: ['close directory label', { ns: FILES_PLUGIN }],
-    icon: (props) => <X {...props} />,
-    intent: {
-      plugin: FILES_PLUGIN,
-      action: LocalFilesAction.CLOSE,
-      data: { id: directory.id },
-    },
-  };
-
-  const grantedActions = [closeAction];
-
-  const defaultActions: GraphNodeAction[] = [
-    {
+  if (directory.permission !== 'granted') {
+    node.addAction({
       id: 're-open',
-      index: 'a0',
       label: ['re-open directory label', { ns: FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
-      disposition: 'toolbar',
-      intent: {
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.RECONNECT,
-        data: { id: directory.id },
+      invoke: () =>
+        dispatch({
+          plugin: FILES_PLUGIN,
+          action: LocalFilesAction.RECONNECT,
+          data: { id: directory.id },
+        }),
+      properties: {
+        disposition: 'default',
       },
-    },
-    closeAction,
-  ];
+    });
+  }
 
-  node.pluginActions = { [FILES_PLUGIN]: directory.permission === 'granted' ? grantedActions : defaultActions };
-  const childIndices = getIndices(directory.children.length);
-  node.pluginChildren = {
-    [FILES_PLUGIN]: directory.children.map((entity, index) => {
-      if ('children' in entity) {
-        return localDirectoryToGraphNode(entity, childIndices[index], node);
-      } else {
-        return localFileToGraphNode(entity, childIndices[index], node);
-      }
-    }),
-  };
+  node.addAction({
+    id: 'close-directory',
+    label: ['close directory label', { ns: FILES_PLUGIN }],
+    icon: (props) => <X {...props} />,
+    invoke: () =>
+      dispatch({
+        plugin: FILES_PLUGIN,
+        action: LocalFilesAction.CLOSE,
+        data: { id: directory.id },
+      }),
+  });
+
+  directory.children.forEach((entity, index) => localEntityToGraphNode(entity, node, dispatch));
 
   return node;
 };
 
-const localFileToGraphNode = (file: LocalFile, index: string, parent?: GraphNode<LocalDirectory>) => {
-  const node: GraphNode<LocalFile> = {
+const localFileToGraphNode = (file: LocalFile, parent: Node<LocalDirectory>, dispatch: DispatchIntent) => {
+  const [node] = parent.addNode(FILES_PLUGIN, {
     id: file.id,
-    index,
     label: file.title,
     icon: (props) => <FileIcon {...props} />,
     data: file,
-    parent,
-    attributes: {
-      disabled: file.permission !== 'granted',
+    properties: {
       modified: file.modified,
     },
-  };
+  });
 
-  const closeAction: GraphNodeAction = {
-    id: 'close-directory',
-    index: 'a1',
-    label: ['close file label', { ns: FILES_PLUGIN }],
-    icon: (props) => <X {...props} />,
-    intent: {
-      plugin: FILES_PLUGIN,
-      action: LocalFilesAction.CLOSE,
-      data: { id: file.id },
-    },
-  };
-
-  const grantedActions: GraphNodeAction[] = [
-    {
+  if (file.permission === 'granted') {
+    node.addAction({
       id: 'save',
-      index: 'a2',
       label: [file.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
       icon: (props) => <FloppyDisk {...props} />,
-      intent: {
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.SAVE,
-        data: { id: file.id },
-      },
-    },
-    closeAction,
-  ];
-
-  const defaultActions: GraphNodeAction[] = [
-    {
+      invoke: () =>
+        dispatch({
+          plugin: FILES_PLUGIN,
+          action: LocalFilesAction.SAVE,
+          data: { id: file.id },
+        }),
+    });
+  } else {
+    node.addAction({
       id: 're-open',
-      index: 'a0',
       label: ['re-open file label', { ns: FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
-      disposition: 'toolbar',
-      intent: {
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.RECONNECT,
-        data: { id: file.id },
+      invoke: () =>
+        dispatch({
+          plugin: FILES_PLUGIN,
+          action: LocalFilesAction.RECONNECT,
+          data: { id: file.id },
+        }),
+      properties: {
+        disposition: 'default',
       },
-    },
-    closeAction,
-  ];
+    });
+  }
 
-  node.pluginActions = { [FILES_PLUGIN]: file.permission === 'granted' ? grantedActions : defaultActions };
+  node.addAction({
+    id: 'close-file',
+    label: ['close file label', { ns: FILES_PLUGIN }],
+    icon: (props) => <X {...props} />,
+    invoke: () =>
+      dispatch({
+        plugin: FILES_PLUGIN,
+        action: LocalFilesAction.CLOSE,
+        data: { id: file.id },
+      }),
+  });
 
   return node;
 };

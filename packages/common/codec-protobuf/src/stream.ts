@@ -2,11 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 type Callbacks<T> = {
   ctx: Context;
@@ -81,6 +80,41 @@ export class Stream<T> {
     });
   }
 
+  static async consumeData<T>(stream: Stream<T>): Promise<T[]> {
+    const entries = await Stream.consume(stream);
+    const res: T[] = [];
+    for (const entry of entries) {
+      if ('data' in entry) {
+        res.push(entry.data);
+      } else if ('closed' in entry && entry.closed === true) {
+        if (entry.error) {
+          throw entry.error;
+        } else {
+          break;
+        }
+      }
+    }
+    return res;
+  }
+
+  static async first<T>(stream: Stream<T>): Promise<T | undefined> {
+    return new Promise((resolve, reject) => {
+      stream.subscribe(
+        (data) => {
+          resolve(data);
+          void stream.close();
+        },
+        (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(undefined);
+          }
+        },
+      );
+    });
+  }
+
   /**
    * Maps all data coming through the stream.
    */
@@ -124,13 +158,13 @@ export class Stream<T> {
   }
 
   private readonly _ctx: Context;
-  private _messageHandler?: (msg: T) => void;
-  private _closeHandler?: (error?: Error) => void;
-  private _readyHandler?: () => void;
+  private _messageHandler?: (msg: T) => void = undefined;
+  private _closeHandler?: (error?: Error) => void = undefined;
+  private _readyHandler?: () => void = undefined;
 
   private _isClosed = false;
-  private _closeError: Error | undefined;
-  private _producerCleanup: ((err?: Error) => void) | undefined;
+  private _closeError: Error | undefined = undefined;
+  private _producerCleanup: ((err?: Error) => void) | undefined = undefined;
   private _readyPromise: Promise<void>;
   private _resolveReadyPromise!: () => void;
   private _isReady = false;
@@ -158,9 +192,7 @@ export class Stream<T> {
         void this._ctx.dispose();
       },
     });
-    this._ctx.onDispose(() => {
-      this.close();
-    });
+    this._ctx.onDispose(() => this.close());
 
     try {
       const producerCleanup = producer({
@@ -266,7 +298,6 @@ export class Stream<T> {
   onReady(onReady: () => void): void {
     invariant(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
-
     if (this._isReady) {
       onReady();
     }
@@ -275,8 +306,7 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
-  // TODO(burdon): Make async.
-  close() {
+  async close() {
     if (this._isClosed) {
       return;
     }
@@ -284,7 +314,7 @@ export class Stream<T> {
     this._isClosed = true;
     this._producerCleanup?.();
     this._closeHandler?.(undefined);
-    void this._ctx.dispose();
+    await this._ctx.dispose();
 
     // Clear function pointers.
     this._messageHandler = undefined;

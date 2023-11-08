@@ -24,6 +24,9 @@
       "path": "../debug"
     },
     {
+      "path": "../invariant"
+    },
+    {
       "path": "../keys"
     },
     {
@@ -34,6 +37,9 @@
     },
     {
       "path": "../random-access-storage"
+    },
+    {
+      "path": "../tracing"
     },
     {
       "path": "../typings"

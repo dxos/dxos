@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClientServices } from '@dxos/client-protocol';
-import { Any, ServiceHandler, Stream } from '@dxos/codec-protobuf';
+import { type ClientServices } from '@dxos/client-protocol';
+import { type Any, type ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { parseMethodName, RpcPeer, RpcPeerOptions } from '@dxos/rpc';
-import { MaybePromise } from '@dxos/util';
+import { parseMethodName, RpcPeer, type RpcPeerOptions, type ServiceBundle } from '@dxos/rpc';
+import { MapCounter, trace } from '@dxos/tracing';
+import { type MaybePromise } from '@dxos/util';
 
-import { ServiceRegistry } from './service-registry';
+import { type ServiceRegistry } from './service-registry';
 
 export type ClientRpcServerParams = {
   serviceRegistry: ServiceRegistry<ClientServices>;
@@ -24,12 +25,21 @@ export type ClientRpcServerParams = {
   ) => MaybePromise<Stream<Any>>;
 } & Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>;
 
+@trace.resource()
 export class ClientRpcServer {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _rpcPeer: RpcPeer;
   private readonly _handlerCache = new Map<string, ServiceHandler<any>>();
   private readonly _handleCall: ClientRpcServerParams['handleCall'];
   private readonly _handleStream: ClientRpcServerParams['handleStream'];
+
+  @trace.metricsCounter()
+  private readonly _callMetrics = new MapCounter();
+
+  @trace.info()
+  private get _services() {
+    return Object.keys(this._serviceRegistry.services);
+  }
 
   constructor(params: ClientRpcServerParams) {
     const { serviceRegistry, handleCall, handleStream, ...rpcOptions } = params;
@@ -43,6 +53,8 @@ export class ClientRpcServer {
         const [serviceName, methodName] = parseMethodName(method);
         const handler = (method: string, params: Any) => this._getServiceHandler(serviceName).call(method, params);
 
+        this._callMetrics.inc(`${serviceName}.${methodName} request`);
+
         if (this._handleCall) {
           return this._handleCall(methodName, params, handler);
         } else {
@@ -54,8 +66,13 @@ export class ClientRpcServer {
         const handler = (method: string, params: Any) =>
           this._getServiceHandler(serviceName).callStream(method, params);
 
+        this._callMetrics.inc(`${serviceName}.${methodName} request stream`);
+
         if (this._handleStream) {
-          return Stream.unwrapPromise(this._handleStream(methodName, params, handler));
+          return Stream.map(Stream.unwrapPromise(this._handleStream(methodName, params, handler)), (data) => {
+            this._callMetrics.inc(`${serviceName}.${methodName} response stream`);
+            return data;
+          });
         } else {
           return handler(methodName, params);
         }
@@ -74,16 +91,16 @@ export class ClientRpcServer {
   private _getServiceHandler(serviceName: string) {
     if (!this._handlerCache.has(serviceName)) {
       const [key, descriptor] =
-        Object.entries(this._serviceRegistry.descriptors).find(
+        Object.entries(this._serviceRegistry.descriptors as ServiceBundle<Record<string, any>>).find(
           ([key, descriptor]) => descriptor.name === serviceName,
         ) ?? raise(new Error(`Service not available: ${serviceName}`));
 
-      const service = this._serviceRegistry.services[key as keyof ClientServices];
+      const service = this._serviceRegistry.services[key as keyof ClientServices] as any;
       if (!service) {
         throw new Error(`Service not available: ${serviceName}`);
       }
 
-      this._handlerCache.set(serviceName, descriptor.createServer(service as any));
+      this._handlerCache.set(serviceName, descriptor.createServer(service));
     }
 
     return this._handlerCache.get(serviceName)!;

@@ -7,7 +7,7 @@ import { schema } from '@dxos/protocols';
 import type { TestItemMutation, TestItemSnapshot } from '@dxos/protocols/proto/example/testing/data';
 
 import { Model } from '../model';
-import { ModelMeta, StateMachine } from '../types';
+import { type ModelMeta, type StateMachine } from '../types';
 
 class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
   private readonly _state = new Map();
@@ -38,7 +38,7 @@ class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutat
 
 export class TestModel extends Model<Map<any, any>, TestItemMutation> {
   static meta: ModelMeta = {
-    type: 'dxos:model/test',
+    type: 'dxos.org/model/test',
     stateMachine: () => new TestModelStateMachine(),
     mutationCodec: schema.getCodecForType('example.testing.data.TestItemMutation'),
     snapshotCodec: schema.getCodecForType('example.testing.data.TestItemSnapshot'),

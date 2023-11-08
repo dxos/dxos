@@ -19,10 +19,7 @@
         "entryPoints": [
           "packages/apps/plugins/plugin-graph/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-graph/dist/lib",
-        "platforms": [
-          "browser"
-        ]
+        "outputPath": "packages/apps/plugins/plugin-graph/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -34,34 +31,26 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/plugins/plugin-graph/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
       ]
     },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-graph",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-graph",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-graph",
-        "testPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*"
-        ]
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-graph/.storybook"
+      }
     }
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

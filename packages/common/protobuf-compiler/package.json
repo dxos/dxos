@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler",
-  "version": "0.1.54",
+  "version": "0.3.4",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -19,6 +19,7 @@
     "test": "mocha -r @swc-node/register '**/*.test.ts'"
   },
   "dependencies": {
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "argparse": "^2.0.1",
@@ -38,10 +39,10 @@
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "peerDependencies": {
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

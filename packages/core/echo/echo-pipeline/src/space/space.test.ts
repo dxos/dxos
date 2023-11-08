@@ -3,10 +3,11 @@
 //
 
 import expect from 'expect';
-import assert from 'node:assert';
 import { promisify } from 'node:util';
 
+import { Context } from '@dxos/context';
 import { createCredential, CredentialGenerator } from '@dxos/credentials';
+import { invariant } from '@dxos/invariant';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';
@@ -21,7 +22,7 @@ describe('space/space', () => {
     const agent = await builder.createPeer();
     const space = await agent.createSpace();
 
-    await space.open();
+    await space.open(new Context());
     expect(space.isOpen).toBeTruthy();
     afterTest(() => space.close());
 
@@ -31,7 +32,7 @@ describe('space/space', () => {
     await space.initializeDataPipeline();
     await space.dataPipeline.ensureEpochInitialized();
 
-    assert(space.dataPipeline.databaseHost);
+    invariant(space.dataPipeline.databaseHost);
     await testLocalDatabase(space.dataPipeline);
 
     await builder.close();
@@ -49,7 +50,7 @@ describe('space/space', () => {
       const agent = await builder.createPeer();
       const space = await agent.createSpace(agent.identityKey);
 
-      await space.open();
+      await space.open(new Context());
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
 
@@ -70,7 +71,7 @@ describe('space/space', () => {
       const agent = await builder.createPeer();
       const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, undefined, true);
 
-      await space.open();
+      await space.open(new Context());
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
 
@@ -128,7 +129,7 @@ describe('space/space', () => {
     const agent = await builder.createPeer();
     const space1 = await agent.createSpace();
 
-    await space1.open();
+    await space1.open(new Context());
     expect(space1.isOpen).toBeTruthy();
     afterTest(() => space1.close());
 
@@ -138,7 +139,7 @@ describe('space/space', () => {
     await space1.initializeDataPipeline();
     await space1.dataPipeline.ensureEpochInitialized();
 
-    assert(space1.dataPipeline.databaseHost);
+    invariant(space1.dataPipeline.databaseHost);
     await testLocalDatabase(space1.dataPipeline);
 
     const objectCount = space1.dataPipeline.itemManager.entities.size;
@@ -149,7 +150,7 @@ describe('space/space', () => {
     // Re-open.
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
 
-    await space2.open();
+    await space2.open(new Context());
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
     await space2.initializeDataPipeline();
     await space2.dataPipeline.ensureEpochInitialized();
@@ -157,7 +158,7 @@ describe('space/space', () => {
     space2.dataPipeline.setTargetTimeframe(space2.dataPipeline.pipelineState!.endTimeframe);
     await space2.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe();
 
-    assert(space2.dataPipeline.databaseHost);
+    invariant(space2.dataPipeline.databaseHost);
     expect(space2.dataPipeline.itemManager.entities.size).toEqual(objectCount);
 
     await testLocalDatabase(space2.dataPipeline);
@@ -171,7 +172,7 @@ describe('space/space', () => {
 
     let objectCount: number;
     {
-      await space.open();
+      await space.open(new Context());
       afterTest(() => space.close());
       expect(space.isOpen).toBeTruthy();
 
@@ -181,7 +182,7 @@ describe('space/space', () => {
       await space.initializeDataPipeline();
       await space.dataPipeline.ensureEpochInitialized();
 
-      assert(space.dataPipeline.databaseHost);
+      invariant(space.dataPipeline.databaseHost);
       await testLocalDatabase(space.dataPipeline);
 
       objectCount = space.dataPipeline.itemManager.entities.size;
@@ -192,7 +193,7 @@ describe('space/space', () => {
 
     // Re-open.
     {
-      await space.open();
+      await space.open(new Context());
       expect(space.isOpen).toBeTruthy();
 
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
@@ -202,7 +203,7 @@ describe('space/space', () => {
       space.dataPipeline.setTargetTimeframe(space.dataPipeline.pipelineState!.endTimeframe);
       await space.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe();
 
-      assert(space.dataPipeline.databaseHost);
+      invariant(space.dataPipeline.databaseHost);
       expect(space.dataPipeline.itemManager.entities.size).toEqual(objectCount);
 
       await testLocalDatabase(space.dataPipeline);
@@ -215,7 +216,7 @@ describe('space/space', () => {
     const agent = await builder.createPeer();
     const space1 = await agent.createSpace();
 
-    await space1.open();
+    await space1.open(new Context());
     expect(space1.isOpen).toBeTruthy();
     afterTest(() => space1.close());
 
@@ -225,7 +226,7 @@ describe('space/space', () => {
     await space1.initializeDataPipeline();
     await space1.dataPipeline.ensureEpochInitialized();
 
-    assert(space1.dataPipeline.databaseHost);
+    invariant(space1.dataPipeline.databaseHost);
     await testLocalDatabase(space1.dataPipeline);
 
     const objectCount = space1.dataPipeline.itemManager.entities.size;
@@ -255,7 +256,7 @@ describe('space/space', () => {
     // Re-open.
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
 
-    await space2.open();
+    await space2.open(new Context());
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
     await space2.initializeDataPipeline();
     await space2.dataPipeline.ensureEpochInitialized();
@@ -263,7 +264,7 @@ describe('space/space', () => {
     space2.dataPipeline.setTargetTimeframe(space2.dataPipeline.pipelineState!.endTimeframe);
     await space2.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe();
 
-    assert(space2.dataPipeline.databaseHost);
+    invariant(space2.dataPipeline.databaseHost);
     expect(space2.dataPipeline.itemManager.entities.size).toEqual(objectCount);
 
     await testLocalDatabase(space2.dataPipeline);

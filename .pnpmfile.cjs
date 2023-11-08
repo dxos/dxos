@@ -49,6 +49,22 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case '@nx/eslint-plugin':
+    case '@nrwl/eslint-plugin-nx': {
+      packageJson.peerDependencies['@typescript-eslint/parser'] = '^6.5.0';
+      break;
+    }
+
+    case 'eslint-config-semistandard': {
+      packageJson.peerDependencies['eslint-plugin-n'] = '^16.1.0';
+      break;
+    }
+
+    case 'eslint-plugin-unused-imports': {
+      packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^6.5.0';
+      break;
+    }
+
     case '@nx/vite': {
       // We don't use vitest.
       delete packageJson.peerDependencies['vitest']
@@ -58,12 +74,6 @@ function readPackage(packageJson, context) {
     case '@storybook/html': {
       // Unused.
       delete packageJson.peerDependencies['@babel/core'];
-      break;
-    }
-
-    case '@typescript-eslint/eslint-plugin':
-    case '@typescript-eslint/parser': {
-      packageJson.dependencies['eslint'] = '^8.0.0'
       break;
     }
 
@@ -82,7 +92,7 @@ function readPackage(packageJson, context) {
     }
 
     case 'esbuild-plugin-raw': {
-      packageJson.peerDependencies['esbuild'] = '^0.16.0'
+      packageJson.peerDependencies['esbuild'] = '^0.19.0'
       break;
     }
 

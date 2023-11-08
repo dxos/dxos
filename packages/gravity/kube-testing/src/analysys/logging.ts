@@ -13,8 +13,8 @@ export enum TestingEvent {
   AGENT_ERROR = 'AGENT_ERROR',
 
   // Swarm events.
-  JOIN_SWARM = '',
-  LEAVE_SWARM = '',
+  JOIN_SWARM = 'JOIN_SWARM',
+  LEAVE_SWARM = 'LEAVE_SWARM',
 }
 
 export type TraceEvent =
@@ -59,7 +59,7 @@ export type AddFileOptions = {
   preprocessor?: (entry: any) => SerializedLogEntry;
 };
 
-export class LogReader implements AsyncIterable<SerializedLogEntry> {
+export class LogReader implements Iterable<SerializedLogEntry> {
   private _logs: any[] = [];
 
   addFile(path: string, { preprocessor }: AddFileOptions = {}) {
@@ -79,7 +79,7 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
     ];
   }
 
-  async *[Symbol.asyncIterator](): AsyncGenerator<SerializedLogEntry> {
+  *[Symbol.iterator](): Generator<SerializedLogEntry> {
     let idx = 0;
     while (idx < this._logs.length) {
       yield this._logs[idx++];
@@ -90,6 +90,10 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
     const reader = new LogReader();
     reader._logs = [...this._logs];
     return reader;
+  }
+
+  forEach<T>(callbackFn: (value: T, index: number, array: T[]) => void): void {
+    this._logs.forEach(callbackFn);
   }
 }
 

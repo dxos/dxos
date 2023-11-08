@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-replicator",
-  "version": "0.1.54",
+  "version": "0.3.4",
   "description": "Replicator extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,21 +23,21 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "tiny-invariant": "^1.3.1"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "add": "^2.0.6",
     "fast-check": "~3.3.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

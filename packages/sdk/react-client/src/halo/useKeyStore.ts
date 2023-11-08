@@ -2,36 +2,51 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect, useMemo, useReducer } from 'react';
+import { useMemo, useReducer } from 'react';
+
+// TODO(burdon): Move to settings plugin.
+export class KeyStore {
+  private _keyMap = new Map<string, string>();
+
+  constructor(private readonly _defaultKeys: string[] = []) {}
+
+  get map() {
+    return this._keyMap;
+  }
+
+  // TODO(burdon): Create subkeys.
+  initialize() {
+    this._defaultKeys.forEach((key) => {
+      const value = localStorage.getItem(key);
+      this.setKey(key, value ?? '');
+    });
+
+    return this;
+  }
+
+  getKey(key: string) {
+    localStorage.getItem(key);
+  }
+
+  setKey(key: string, value: string) {
+    localStorage.setItem(key, '');
+    this._keyMap.set(key, value);
+  }
+}
 
 /**
  * Settings store.
  * @deprecated Replace with HALO key store when available.
  */
-// TODO(burdon): Move to react-client.
-// NOTE: Will be replaced by HALO.
 export const useKeyStore = (
   defaultKeys: string[] = [],
 ): [Map<string, string>, (key: string, value: string) => void] => {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
-  const keyMap = useMemo(() => new Map<string, string>(), []);
-  useEffect(() => {
-    defaultKeys.forEach((key) => {
-      const value = localStorage.getItem(key);
-      keyMap.set(key, value ?? '');
-      if (value === undefined) {
-        localStorage.setItem(key, '');
-      }
-    });
-
-    forceUpdate();
-  }, []);
-
+  const store = useMemo(() => new KeyStore(defaultKeys).initialize(), [defaultKeys]);
   const setKey = (key: string, value: string) => {
-    localStorage.setItem(key, value);
-    keyMap.set(key, value);
+    store.setKey(key, value);
     forceUpdate();
   };
 
-  return [keyMap, setKey];
+  return [store.map, setKey];
 };

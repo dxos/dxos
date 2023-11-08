@@ -3,9 +3,9 @@
 //
 
 import Table from 'ink-table';
-import React, { useEffect, FC, useState } from 'react';
+import React, { useEffect, type FC, useState } from 'react';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { mapSpaces } from '../util';
 

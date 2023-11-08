@@ -3,11 +3,11 @@
 //
 
 import fs from 'fs';
-import { CID, create, globSource } from 'ipfs-http-client';
-import assert from 'node:assert';
+import { type CID, create, globSource } from 'ipfs-http-client';
 import { join } from 'path';
 
-import { Config } from '@dxos/client';
+import { type Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 interface UploadOptions {
@@ -20,7 +20,7 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
   const { timeout, pin = true, progress } = options || {};
 
   const ipfsServer = config?.get('runtime.services.ipfs.server');
-  assert(ipfsServer, 'Invalid IPFS Server.');
+  invariant(ipfsServer, 'Invalid IPFS Server.');
 
   const ipfsClient = create({
     url: ipfsServer,

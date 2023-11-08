@@ -3,28 +3,32 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   MemorySignalManager,
   MemorySignalManagerContext,
-  SignalManager,
+  type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
+import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
-  TransportFactory,
-  WebRTCTransport,
-  WebRTCTransportProxyFactory,
-  WebRTCTransportService,
+  type TransportFactory,
+  SimplePeerTransportProxyFactory,
+  SimplePeerTransportService,
+  createSimplePeerTransportFactory,
+  createLibDataChannelTransportFactory,
+  TransportKind,
 } from '../transport';
-import { TestWireProtocol } from './test-wire-protocol';
+import { TcpTransportFactory } from '../transport/tcp-transport';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;
@@ -35,6 +39,7 @@ export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
 export type TestBuilderOptions = {
   signalHosts?: Runtime.Services.Signal[];
   bridge?: boolean;
+  transport?: TransportKind;
 };
 
 /**
@@ -54,7 +59,7 @@ export class TestBuilder {
   }
 
   createPeer(peerId: PublicKey = PublicKey.random()) {
-    return new TestPeer(this, peerId);
+    return new TestPeer(this, peerId, this.options.transport);
   }
 }
 
@@ -77,49 +82,79 @@ export class TestPeer {
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
 
-  constructor(private readonly testBuilder: TestBuilder, public readonly peerId: PublicKey) {
+  constructor(
+    private readonly testBuilder: TestBuilder,
+    public readonly peerId: PublicKey,
+    public readonly transport?: TransportKind,
+  ) {
     this._signalManager = this.testBuilder.createSignalManager();
-    this._networkManager = this.createNetworkManager();
+    if (!transport) {
+      if (this.testBuilder.options.signalHosts) {
+        transport = TransportKind.SIMPLE_PEER;
+      } else {
+        transport = TransportKind.MEMORY;
+      }
+    }
+    this._networkManager = this.createNetworkManager(transport);
   }
 
   // TODO(burdon): Move to TestBuilder.
-  createNetworkManager() {
-    let transportFactory: TransportFactory = MemoryTransportFactory;
-
+  createNetworkManager(transport: TransportKind) {
+    let transportFactory: TransportFactory;
     if (this.testBuilder.options.signalHosts) {
-      if (this.testBuilder.options.bridge) {
-        // Simulates bridge to shared worker.
-        const [proxyPort, servicePort] = createLinkedPorts();
+      log.info(`using ${transport} transport with signal server.`);
+      switch (transport) {
+        case TransportKind.MEMORY:
+          throw new Error('Memory transport not supported with signal server.');
+        case TransportKind.TCP:
+          transportFactory = TcpTransportFactory;
+          break;
+        case TransportKind.SIMPLE_PEER:
+          transportFactory = createSimplePeerTransportFactory();
+          break;
+        case TransportKind.LIBDATACHANNEL:
+          transportFactory = createLibDataChannelTransportFactory();
+          break;
+        case TransportKind.SIMPLE_PEER_PROXY:
+          {
+            // Simulates bridge to shared worker.
+            const [proxyPort, servicePort] = createLinkedPorts();
 
-        this._proxy = createProtoRpcPeer({
-          port: proxyPort,
-          requested: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-          },
-          noHandshake: true,
-          encodingOptions: {
-            preserveAny: true,
-          },
-        });
+            this._proxy = createProtoRpcPeer({
+              port: proxyPort,
+              requested: {
+                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              },
+              noHandshake: true,
+              encodingOptions: {
+                preserveAny: true,
+              },
+            });
 
-        this._service = createProtoRpcPeer({
-          port: servicePort,
-          exposed: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-          },
-          handlers: { BridgeService: new WebRTCTransportService() },
-          noHandshake: true,
-          encodingOptions: {
-            preserveAny: true,
-          },
-        });
+            this._service = createProtoRpcPeer({
+              port: servicePort,
+              exposed: {
+                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              },
+              handlers: { BridgeService: new SimplePeerTransportService() },
+              noHandshake: true,
+              encodingOptions: {
+                preserveAny: true,
+              },
+            });
 
-        transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
-      } else {
-        transportFactory = {
-          createTransport: (params) => new WebRTCTransport(params),
-        };
+            transportFactory = new SimplePeerTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
+          }
+          break;
+        default:
+          throw new Error(`Unsupported transport: ${transport}`);
       }
+    } else {
+      if (transport !== TransportKind.MEMORY && transport !== TransportKind.TCP) {
+        log.warn(`specified transport ${transport} but no signalling configured, using memory transport instead`);
+      }
+      log.info(`using ${transport} transport without signal server.`);
+      transportFactory = MemoryTransportFactory;
     }
 
     return new NetworkManager({
@@ -152,13 +187,13 @@ export class TestPeer {
     return swarm;
   }
 
-  createSwarm(topic: PublicKey): TestSwarmConnection {
+  createSwarm(topic: PublicKey, extensionFactory: TestTeleportExtensionFactory = () => []): TestSwarmConnection {
     // TODO(burdon): Multiple.
     // if (this._swarms.get(topic)) {
     //   throw new Error(`Swarm already exists for topic: ${topic.truncate()}`);
     // }
 
-    const swarm = new TestSwarmConnection(this, topic);
+    const swarm = new TestSwarmConnection(this, topic, extensionFactory);
     this._swarms.set(topic, swarm);
     return swarm;
   }
@@ -176,10 +211,14 @@ export class TestPeer {
 export class TestSwarmConnection {
   protocol: TestWireProtocol;
 
-  constructor(readonly peer: TestPeer, readonly topic: PublicKey) {
+  constructor(
+    readonly peer: TestPeer,
+    readonly topic: PublicKey,
+    readonly extensionFactory: TestTeleportExtensionFactory,
+  ) {
     // TODO(burdon): Configure plugins.
     // TODO(burdon): Prevent reuse?
-    this.protocol = new TestWireProtocol(this.peer.peerId);
+    this.protocol = new TestWireProtocol(this.peer.peerId, this.extensionFactory);
   }
 
   // TODO(burdon): Need to create new plugin instance per swarm?

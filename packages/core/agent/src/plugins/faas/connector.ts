@@ -2,17 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { DeferredTask } from '@dxos/async';
-import { Space, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { createSubscription } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { AbstractPlugin } from '../plugin';
-import { FaasClient, InvocationContext, Trigger } from './faas-client';
+import { FaasClient, type InvocationContext, type Trigger } from './faas-client';
+import { Plugin } from '../plugin';
 
 type MountedTrigger = {
   trigger: Trigger;
@@ -22,8 +21,10 @@ type MountedTrigger = {
 /**
  * Connects to the OpenFaaS service and mounts triggers.
  * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
+ * @deprecated
  */
-export class FaasConnector extends AbstractPlugin {
+export class FaasConnector extends Plugin {
+  public readonly id = 'dxos.org/agent/plugin/faas-connector';
   private readonly _ctx = new Context();
 
   // TODO(burdon): Factor out triggers.
@@ -35,11 +36,7 @@ export class FaasConnector extends AbstractPlugin {
 
   private readonly _faasClient: FaasClient;
 
-  // prettier-ignore
-  constructor(
-    faasConfig: Runtime.Services.Faasd,
-    context: InvocationContext,
-  ) {
+  constructor(faasConfig: Runtime.Services.Faasd, context: InvocationContext) {
     super();
     this._faasClient = new FaasClient(faasConfig, context);
   }
@@ -47,18 +44,20 @@ export class FaasConnector extends AbstractPlugin {
   async open() {
     await this._watchTriggers();
     this._remountTask.schedule();
+    this.statusUpdate.emit();
   }
 
   async close() {
     await this._ctx.dispose();
     await this._unmountTriggers();
+    this.statusUpdate.emit();
   }
 
   private async _watchTriggers() {
     const observedSpaces = new Map<Space, Context>();
 
     const update = () => {
-      const spaces = this._client!.spaces.get();
+      const spaces = this._pluginCtx!.client.spaces.get();
       for (const space of spaces) {
         if (observedSpaces.has(space)) {
           continue;
@@ -91,7 +90,7 @@ export class FaasConnector extends AbstractPlugin {
       }
     };
 
-    const sub = this._client!.spaces.subscribe(() => {
+    const sub = this._pluginCtx!.client.spaces.subscribe(() => {
       update();
     });
     this._ctx.onDispose(() => sub.unsubscribe());
@@ -100,7 +99,7 @@ export class FaasConnector extends AbstractPlugin {
   private async _getTriggers(): Promise<Trigger[]> {
     const triggers: Trigger[] = [];
 
-    for (const space of this._client!.spaces.get()) {
+    for (const space of this._pluginCtx!.client.spaces.get()) {
       if (space.state.get() !== SpaceState.READY) {
         continue;
       }
@@ -136,8 +135,8 @@ export class FaasConnector extends AbstractPlugin {
 
   private async _mountTrigger(trigger: Trigger) {
     const ctx = this._ctx.derive();
-    assert(trigger.spaceKey);
-    assert(trigger.subscription);
+    invariant(trigger.spaceKey);
+    invariant(trigger.subscription);
 
     this._mountedTriggers.push({
       trigger,
@@ -146,7 +145,7 @@ export class FaasConnector extends AbstractPlugin {
       },
     });
 
-    const space = this._client!.spaces.get().find((space) => space.key.equals(trigger.spaceKey!));
+    const space = this._pluginCtx!.client.spaces.get().find((space) => space.key.equals(trigger.spaceKey!));
     if (!space) {
       log.warn('space not found', { space: trigger.spaceKey });
       return;

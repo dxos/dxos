@@ -14,7 +14,7 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/hypercore"
+      "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"

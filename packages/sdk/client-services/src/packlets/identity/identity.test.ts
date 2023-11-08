@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { Context } from '@dxos/context';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   MetadataStore,
@@ -17,17 +18,17 @@ import {
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { createDefaultModelFactory } from '../services';
 import { Identity } from './identity';
+import { createDefaultModelFactory } from '../services';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
@@ -106,8 +107,8 @@ describe('identity/identity', () => {
       space,
     });
 
-    await identity.open();
-    afterTest(() => identity.close());
+    await identity.open(new Context());
+    afterTest(() => identity.close(new Context()));
 
     //
     // Identity genesis
@@ -219,8 +220,8 @@ describe('identity/identity', () => {
         space,
       }));
 
-      await identity.open();
-      afterTest(() => identity.close());
+      await identity.open(new Context());
+      afterTest(() => identity.close(new Context()));
 
       //
       // Identity genesis
@@ -310,8 +311,8 @@ describe('identity/identity', () => {
         space,
       }));
 
-      await identity.open();
-      afterTest(() => identity.close());
+      await identity.open(new Context());
+      afterTest(() => identity.close(new Context()));
     }
 
     //
@@ -335,7 +336,7 @@ describe('identity/identity', () => {
       await identity2.ready();
     }
 
-    expect(Array.from(identity1.authorizedDeviceKeys.values())).toEqual([identity1.deviceKey, identity2.deviceKey]);
-    expect(Array.from(identity2.authorizedDeviceKeys.values())).toEqual([identity1.deviceKey, identity2.deviceKey]);
+    expect(Array.from(identity1.authorizedDeviceKeys.keys())).toEqual([identity1.deviceKey, identity2.deviceKey]);
+    expect(Array.from(identity2.authorizedDeviceKeys.keys())).toEqual([identity1.deviceKey, identity2.deviceKey]);
   });
 });

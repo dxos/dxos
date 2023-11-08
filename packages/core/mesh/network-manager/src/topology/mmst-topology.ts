@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import distance from 'xor-distance';
 
-import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SwarmController, Topology } from './topology';
+import { type SwarmController, type Topology } from './topology';
 
 export interface MMSTTopologyOptions {
   /**

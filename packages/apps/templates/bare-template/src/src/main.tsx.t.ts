@@ -2,28 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
-  const { react, dxosUi } = input;
-  return !react
-    ? null
-    : text`
+export default template.define.text({
+  content: ({ input: { react, dxosUi } }) =>
+    react &&
+    plate`
     import React from 'react';
     import { createRoot } from 'react-dom/client';
 
     ${
       dxosUi &&
-      text`
-    // This includes css styles from @dxos/aurora-theme.
+      plate`
+    // This includes css styles from @dxos/react-ui-theme.
     // This must precede all other style imports in the app.
     import '@dxosTheme';`
     }
 
     ${
       !dxosUi &&
-      text`
+      plate`
     // Include any css files directly.
     import './index.css';`
     }
@@ -31,5 +30,5 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     import { App } from './App';
 
     createRoot(document.getElementById('root')!).render(<App />);
-    `;
+    `,
 });

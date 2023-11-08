@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
-import { ScrollContainer } from '../ScrollContainer';
 import { Icon } from './util';
+import { ScrollContainer } from '../ScrollContainer';
 
 // TODO(burdon): Vertical scroll.
 

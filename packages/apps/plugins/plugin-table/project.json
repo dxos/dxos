@@ -1,0 +1,59 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-table/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/apps/plugins/plugin-table/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-table/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-table/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-table/src/index.ts"
+        ],
+        "outputPath": "packages/apps/plugins/plugin-table/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-table/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-table/.storybook"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

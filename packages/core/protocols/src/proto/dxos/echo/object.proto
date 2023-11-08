@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
+import "dxos/keys.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/echo/timeframe.proto";
 
@@ -23,12 +24,12 @@ message EchoObject {
 
   message Snapshot {
     // TODO(dmaretskyi): Change to enum?
-    optional bool deleted = 1; 
+    optional bool deleted = 1;
 
     optional string parent_id = 2;
 
     /// Set the model to the provided snapshot.
-    optional google.protobuf.Any model = 10 [preserve_any = true]; 
+    optional google.protobuf.Any model = 10 [preserve_any = true];
   }
 
   message Mutation {
@@ -42,7 +43,7 @@ message EchoObject {
 
     /// Set parent id
     optional string parent_id = 10;
-    
+
     optional Action action = 11;
 
     // Encoded model mutation, format is defined by model's codec.
@@ -54,11 +55,11 @@ message EchoObject {
   /// Metadata for the genesis mutation.
   optional MutationMeta meta = 2;
 
-  /// Present in mutations creating new items and snapshots. 
+  /// Present in mutations creating new items and snapshots.
   optional Genesis genesis = 10;
 
   optional Snapshot snapshot = 13;
-  
+
   /// May be present in snapshots. In that case the mutations must be applied on top of the snapshot.
   repeated Mutation mutations = 14;
 }
@@ -71,7 +72,7 @@ message MutationMeta {
   optional timeframe.TimeframeVector timeframe = 4;
 
   /// If this mutation was created by this client, this field will be set to the tag in the mutation.
-  optional string client_tag = 5;
+  repeated string client_tag = 5;
 }
 
 message EchoObjectBatch {

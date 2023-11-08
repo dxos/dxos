@@ -11,7 +11,11 @@ export class ShellManager extends NaturalShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
 
-  constructor(override readonly page: Page, readonly inIFrame = true) {
+  // prettier-ignore
+  constructor(
+    override readonly page: Page,
+    readonly inIFrame = true,
+  ) {
     super();
     this.page.on('console', (message) => this._onConsoleMessage(message));
   }
@@ -77,7 +81,7 @@ export class ShellManager extends NaturalShellManager {
 
   async authenticate(authCode: string) {
     // Wait for focus to shift before typing.
-    await sleep(1000);
+    await sleep(1500);
     await this.authenticateInvitation('space', authCode, this.shell);
     await this.doneInvitation('space', this.shell);
   }

@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import { isAbsolute, resolve, relative } from 'path';
+
+import { invariant } from '@dxos/invariant';
 
 /**
  * Represents a reference to a module, either as an relative path with the cwd or as a global module specifier.
@@ -17,8 +18,12 @@ export class ModuleSpecifier {
     return new ModuleSpecifier(pathWithDot, context);
   }
 
-  constructor(public readonly name: string, public readonly contextPath: string) {
-    assert(isAbsolute(contextPath));
+  // prettier-ignore
+  constructor(
+    public readonly name: string,
+    public readonly contextPath: string,
+  ) {
+    invariant(isAbsolute(contextPath));
   }
 
   isAbsolute() {

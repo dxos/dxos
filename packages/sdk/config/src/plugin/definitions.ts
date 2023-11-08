@@ -11,8 +11,8 @@ import pkgUp from 'pkg-up';
 
 import { log } from '@dxos/log';
 
+import { type ConfigPluginOpts } from './types';
 import { mapFromKeyValues } from '../config';
-import { ConfigPluginOpts } from './types';
 
 const CWD = process.cwd();
 

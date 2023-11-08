@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { List, useTranslation } from '@dxos/aurora';
-import { descriptionText, mx } from '@dxos/aurora-theme';
-import { Device } from '@dxos/react-client/halo';
+import { type Device } from '@dxos/react-client/halo';
+import { List, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { IdentityListItem } from './IdentityListItem';
 
@@ -20,7 +20,14 @@ export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
   return devices.length > 0 ? (
     <List classNames='flex flex-col gap-2'>
       {devices.map((device) => {
-        const identity = { identityKey: device.deviceKey, profile: { displayName: device.profile?.displayName } };
+        const identity = {
+          identityKey: device.deviceKey,
+          profile: {
+            displayName: `${device.profile?.platform} (${device.profile?.platformVersion}) on ${device.profile?.os} (${
+              device.profile?.osVersion
+            }) ${device.profile?.architecture ?? 'Unknown'}-bit`,
+          },
+        };
         return (
           <IdentityListItem
             key={device.deviceKey.toHex()}

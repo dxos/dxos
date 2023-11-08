@@ -3,10 +3,10 @@
 //
 
 import { log } from '@dxos/log';
-import { RpcPort } from '@dxos/rpc';
+import { type RpcPort } from '@dxos/rpc';
 
-import { MessageData } from './message';
-import { createIFramePort, createWorkerPort, IFramePortOptions, WorkerPortOptions } from './ports';
+import { type MessageData } from './message';
+import { createIFramePort, createWorkerPort, type IFramePortOptions, type WorkerPortOptions } from './ports';
 
 /**
  * Facilitates the multiplexing of multiple RpcPorts over a single MessagePort.
@@ -16,10 +16,7 @@ export class PortMuxer {
 
   private readonly _rpcPorts = new Map<string, RpcPort>();
 
-  // prettier-ignore
-  constructor(
-    private readonly _messagePort?: MessagePort
-  ) {
+  constructor(private readonly _messagePort?: MessagePort) {
     if (this._messagePort) {
       this._messagePort.onmessage = (event) => this.onWorkerMessage(event);
     }

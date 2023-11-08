@@ -5,6 +5,8 @@ ENV NODE_VERSION 18.12.1
 ENV NPM_CONFIG_PREFIX=/home/circleci/.npm-global
 ENV PATH=$PATH:/home/circleci/.npm-global/bin
 
+RUN mkdir -p ${NPM_CONFIG_PREFIX}/{bin,lib}
+
 RUN curl -L -o node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" && \
   sudo tar -xJf node.tar.xz -C /usr/local --strip-components=1 && \
   rm node.tar.xz && \
@@ -12,8 +14,8 @@ RUN curl -L -o node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NOD
 
 # NOTE: Keep playwright version in sync with the one in package.json
 RUN sudo apt-get update \
-  && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 \
+  && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 lsof \
   && npx playwright@1.27.1 install-deps \ 
-  && npm install -g pnpm@7.17.0
+  && npm install -g pnpm@8.9.2
 
 # TODO(wittjosiah): Add CI job to publish this automatically.

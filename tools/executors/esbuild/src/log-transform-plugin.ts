@@ -3,7 +3,7 @@
 //
 
 import { transform } from '@swc/core';
-import { Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 import { readFile } from 'fs/promises';
 import { basename } from 'path';
 
@@ -48,7 +48,7 @@ export class LogTransformer {
                   },
                   {
                     function: 'invariant',
-                    package: '@dxos/log',
+                    package: '@dxos/invariant',
                     param_index: 2,
                     include_args: true,
                     include_call_site: false,

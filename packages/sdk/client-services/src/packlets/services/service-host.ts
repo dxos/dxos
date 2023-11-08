@@ -2,39 +2,59 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
-import { Config } from '@dxos/config';
+import { clientServiceBundle, type ClientServices, defaultKey, Properties } from '@dxos/client-protocol';
+import { type Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
+import { type TypedObject, base } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';
+import { type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { createSimplePeerTransportFactory, NetworkManager, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { Storage } from '@dxos/random-access-storage';
+import { type EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { type Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
+import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { createDiagnostics } from './diagnostics';
+import { ServiceContext } from './service-context';
+import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
-import { IdentityServiceImpl } from '../identity';
+import { type CreateIdentityOptions, IdentityServiceImpl } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
-import { Lock, ResourceLock } from '../locks';
+import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { ServiceContext } from './service-context';
-import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
+};
+
+// TODO(wittjosiah): Factor out.
+const createGenesisMutationFromTypedObject = (obj: TypedObject): EchoObject => {
+  const snapshot = obj[base]._createSnapshot();
+
+  return {
+    objectId: obj[base]._id,
+    genesis: {
+      modelType: obj[base]._modelConstructor.meta.type,
+    },
+    snapshot: {
+      model: snapshot,
+    },
+  };
 };
 
 export type ClientServicesHostParams = {
@@ -65,11 +85,13 @@ export type InitializeOptions = {
 /**
  * Remote service implementation.
  */
+@Trace.resource()
 export class ClientServicesHost {
   private readonly _resourceLock?: ResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
+  private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
@@ -78,18 +100,21 @@ export class ClientServicesHost {
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
   private _callbacks?: ClientServicesHostCallbacks;
+  private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
-  _serviceContext!: ServiceContext;
+  private _serviceContext!: ServiceContext;
+
+  @Trace.info()
   private _opening = false;
+
+  @Trace.info()
   private _open = false;
 
   constructor({
     config,
     modelFactory = createDefaultModelFactory(),
-    // TODO(burdon): Create ApolloLink abstraction (see Client).
     transportFactory,
     signalManager,
-    connectionLog,
     storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
@@ -108,20 +133,21 @@ export class ClientServicesHost {
         lockKey,
         onAcquire: () => {
           if (!this._opening) {
-            void this.open();
+            void this.open(new Context());
           }
         },
         onRelease: () => this.close(),
       });
     }
 
+    // TODO(wittjosiah): If config is not defined here, system service will always have undefined config.
     this._systemService = new SystemServiceImpl({
       config: this._config,
-
       statusUpdate: this._statusUpdate,
-
       getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
-
+      getDiagnostics: () => {
+        return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
+      },
       onUpdateStatus: async (status: SystemStatus) => {
         if (!this.isOpen && status === SystemStatus.ACTIVE) {
           await this._resourceLock?.acquire();
@@ -129,7 +155,6 @@ export class ClientServicesHost {
           await this._resourceLock?.release();
         }
       },
-
       onReset: async () => {
         await this.reset();
       },
@@ -137,14 +162,22 @@ export class ClientServicesHost {
 
     this._loggingService = new LoggingServiceImpl();
 
-    // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
+      TracingService: this._tracingService,
     });
   }
 
   get isOpen() {
     return this._open;
+  }
+
+  get config() {
+    return this._config;
+  }
+
+  get context() {
+    return this._serviceContext;
   }
 
   get serviceRegistry() {
@@ -166,10 +199,10 @@ export class ClientServicesHost {
    */
   initialize({ config, ...options }: InitializeOptions) {
     invariant(!this._open, 'service host is open');
+    log('initializing...');
 
     if (config) {
       invariant(!this._config, 'config already set');
-
       this._config = config;
       if (!this._storage) {
         this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
@@ -178,7 +211,7 @@ export class ClientServicesHost {
 
     const {
       connectionLog = true,
-      transportFactory = createWebRTCTransportFactory({
+      transportFactory = createSimplePeerTransportFactory({
         iceServers: this._config?.get('runtime.services.ice'),
       }),
       signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
@@ -191,16 +224,19 @@ export class ClientServicesHost {
       transportFactory,
       signalManager,
     });
+
+    log('initialized');
   }
 
   @synchronized
-  async open() {
+  @Trace.span()
+  async open(ctx: Context) {
     if (this._open) {
       return;
     }
 
     const traceId = PublicKey.random().toHex();
-    log.trace('dxos.sdk.client-services-host.open', trace.begin({ id: traceId }));
+    log.trace('dxos.client-services.host.open', trace.begin({ id: traceId }));
 
     invariant(this._config, 'config not set');
     invariant(this._storage, 'storage not set');
@@ -213,8 +249,6 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    // TODO(wittjosiah): Make re-entrant.
-    // TODO(burdon): Break into components.
     this._serviceContext = new ServiceContext(
       this._storage,
       this._networkManager,
@@ -222,11 +256,15 @@ export class ClientServicesHost {
       this._modelFactory,
     );
 
-    // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
 
-      IdentityService: new IdentityServiceImpl(this._serviceContext),
+      IdentityService: new IdentityServiceImpl(
+        (params) => this._createIdentity(params),
+        this._serviceContext.identityManager,
+        this._serviceContext.keyring,
+        (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+      ),
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
         this._serviceContext.getInvitationHandler(invitation),
@@ -249,6 +287,7 @@ export class ClientServicesHost {
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
       LoggingService: this._loggingService,
+      TracingService: this._tracingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
@@ -258,16 +297,29 @@ export class ClientServicesHost {
       }),
     });
 
-    await this._serviceContext.open();
+    await this._serviceContext.open(ctx);
+
+    const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
+    if (devtoolsProxy) {
+      this._devtoolsProxy = new WebsocketRpcClient({
+        url: devtoolsProxy,
+        requested: {},
+        exposed: clientServiceBundle,
+        handlers: this.services as ClientServices,
+      });
+      void this._devtoolsProxy.open();
+    }
+
     this._opening = false;
     this._open = true;
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
-    log.trace('dxos.sdk.client-services-host.open', trace.end({ id: traceId }));
+    log.trace('dxos.client-services.host.open', trace.end({ id: traceId }));
   }
 
   @synchronized
+  @Trace.span()
   async close() {
     if (!this._open) {
       return;
@@ -275,6 +327,7 @@ export class ClientServicesHost {
 
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
+    await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
@@ -293,5 +346,24 @@ export class ClientServicesHost {
     log('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
+  }
+
+  private async _createIdentity(params?: CreateIdentityOptions) {
+    const identity = await this._serviceContext.createIdentity(params);
+
+    // Setup default space.
+    await this._serviceContext.initialized.wait();
+    const space = await this._serviceContext.dataSpaceManager!.createSpace();
+    const obj: TypedObject = new Properties();
+    obj[defaultKey] = identity.identityKey.toHex();
+    await this._serviceRegistry.services.DataService!.write({
+      spaceKey: space.key,
+      batch: {
+        objects: [createGenesisMutationFromTypedObject(obj)],
+      },
+    });
+    await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
+
+    return identity;
   }
 }

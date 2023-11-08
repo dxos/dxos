@@ -26,7 +26,7 @@ export const os = {
   'recover identity label': 'Use a seed phrase',
   'recover identity description': 'Enter your seed phrase to log in manually.',
   'invite device label': 'Add a device',
-  'join identity label': 'Use an authed device',
+  'join identity label': 'Use another device',
   'join identity description': 'Add this device to an identity you’re already logged into on another device.',
   'deselect identity label': 'Back to identities',
   'addition method selector title': 'An identity is required to continue',

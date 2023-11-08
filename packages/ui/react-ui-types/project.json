@@ -1,0 +1,45 @@
+{
+  "sourceRoot": "packages/ui/react-ui-types/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/ui/react-ui-types/src/index.ts",
+        "outputPath": "packages/ui/react-ui-types/dist/types",
+        "tsConfig": "packages/ui/react-ui-types/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-types/src/index.ts"
+        ],
+        "outputPath": "packages/ui/react-ui-types/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/ui/react-ui-types/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

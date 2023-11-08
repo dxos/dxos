@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-import fs from 'node:fs';
-import { FileHandle } from 'node:fs/promises';
+import type fs from 'node:fs';
+import { type FileHandle } from 'node:fs/promises';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 
 enum FileState {
   INIT = 'INIT',
@@ -16,6 +16,7 @@ enum FileState {
   DONE = 'DONE',
 }
 
+// TODO(burdon): Comment.
 export class Printer {
   private state = FileState.INIT;
   private stream?: fs.ReadStream;
@@ -29,7 +30,7 @@ export class Printer {
   }
 
   async start() {
-    assert(this.state === FileState.INIT);
+    invariant(this.state === FileState.INIT);
     await this._readToEnd();
   }
 
@@ -44,7 +45,7 @@ export class Printer {
     if (this.state !== FileState.READING) {
       return;
     }
-    console.log(data.toString());
+
     this.offset += data.length;
   }
 

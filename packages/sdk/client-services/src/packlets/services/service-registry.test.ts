@@ -5,17 +5,18 @@
 import { expect } from 'chai';
 
 import { Event } from '@dxos/async';
-import { ClientServices } from '@dxos/client-protocol';
+import { type ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 import { describe, test } from '@dxos/test';
 
+import { ServiceRegistry } from './service-registry';
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
-import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
 
@@ -31,12 +32,13 @@ describe('service registry', () => {
   test('builds a service registry', async () => {
     const remoteSource = 'https://remote.source';
     const serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       SystemService: new SystemServiceImpl({
         config: new Config({ runtime: { client: { remoteSource } } }),
         getCurrentStatus: () => SystemStatus.ACTIVE,
+        getDiagnostics: async () => ({}),
         onReset: () => {},
         onUpdateStatus: () => {},
         statusUpdate: new Event(),

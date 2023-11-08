@@ -5,7 +5,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Main } from '@dxos/aurora';
+import { Main } from '@dxos/react-ui';
 
 import { Sidebar } from '../components';
 import { useModules } from '../hooks';
@@ -28,9 +28,9 @@ export const ModuleContainer = () => {
   return (
     <Main.Root>
       <Main.Overlay />
-      <Main.Sidebar>
+      <Main.NavigationSidebar>
         <Sidebar modules={modules} active={active.id} onActiveChange={handleActiveChange} />
-      </Main.Sidebar>
+      </Main.NavigationSidebar>
       <Main.Content classNames='flex overflow-hidden'>
         <Component />
       </Main.Content>

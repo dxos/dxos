@@ -2,10 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { MarkdownComposerProps } from '@dxos/aurora-composer';
+import type { Document } from '@braneframe/types';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import type { ObjectMeta } from '@dxos/react-client/echo';
+import type { EditorMode, MarkdownComposerProps } from '@dxos/react-ui-editor';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
@@ -17,14 +23,16 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = {
   title: string;
-  // TODO(burdon): Factor out (type system).
-  meta?: { keys?: { source?: string; id?: string }[] };
+
+  // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
+  __meta: ObjectMeta;
   readOnly?: boolean;
 };
 
 export type MarkdownProvides = {
   markdown: {
-    onChange: MarkdownComposerProps['onChange'];
+    filter?: (document: Document) => boolean;
+    onChange?: MarkdownComposerProps['onChange'];
   };
 };
 
@@ -42,4 +50,13 @@ type StackProvides = {
   };
 };
 
-export type MarkdownPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & StackProvides;
+export type MarkdownSettingsProps = { editorMode?: EditorMode };
+
+export type MarkdownPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides &
+  StackProvides & {
+    settings: MarkdownSettingsProps;
+  };

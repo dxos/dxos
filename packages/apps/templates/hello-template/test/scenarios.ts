@@ -1,0 +1,98 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type InputOf } from '@dxos/plate';
+
+import type template from '../src/template.t';
+
+export const scenarios: InputOf<typeof template>[] = [
+  {
+    name: 'min',
+    monorepo: true,
+    pwa: false,
+    dxosUi: false,
+    react: false,
+    storybook: false,
+    tailwind: false,
+    createFolder: false,
+    proto: true,
+  },
+  {
+    name: 'pwa',
+    monorepo: true,
+    pwa: true,
+    dxosUi: false,
+    react: false,
+    storybook: false,
+    tailwind: false,
+    createFolder: false,
+    proto: true,
+  },
+  {
+    name: 'dxosui',
+    monorepo: true,
+    pwa: false,
+    dxosUi: true,
+    react: true,
+    storybook: false,
+    tailwind: true,
+    createFolder: false,
+    proto: true,
+  },
+  {
+    name: 'react',
+    monorepo: true,
+    pwa: false,
+    dxosUi: false,
+    react: true,
+    storybook: false,
+    tailwind: false,
+    createFolder: false,
+    proto: true,
+  },
+  {
+    name: 'storybook',
+    monorepo: true,
+    pwa: false,
+    dxosUi: false,
+    react: true,
+    storybook: true,
+    tailwind: false,
+    createFolder: false,
+    proto: true,
+  },
+  {
+    name: 'tailwind',
+    monorepo: true,
+    pwa: false,
+    dxosUi: false,
+    react: false,
+    storybook: false,
+    tailwind: true,
+    createFolder: false,
+    proto: true,
+  },
+  {
+    name: 'react-tailwind',
+    monorepo: true,
+    pwa: false,
+    dxosUi: false,
+    react: true,
+    storybook: false,
+    tailwind: true,
+    createFolder: false,
+    proto: true,
+  },
+  {
+    name: 'max',
+    monorepo: true,
+    pwa: true,
+    dxosUi: true,
+    react: true,
+    storybook: true,
+    tailwind: true,
+    createFolder: false,
+    proto: true,
+  },
+];

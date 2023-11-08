@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
-import { FeedIndex } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { type FeedIndex } from '@dxos/feed-store';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -26,10 +26,7 @@ export class TimeframeClock {
 
   private _pendingTimeframe: Timeframe;
 
-  // prettier-ignore
-  constructor(
-    private _timeframe = new Timeframe()
-  ) {
+  constructor(private _timeframe = new Timeframe()) {
     this._pendingTimeframe = _timeframe;
   }
 
