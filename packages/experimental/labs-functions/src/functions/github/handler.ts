@@ -23,8 +23,6 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
       const project = context.client.spaces.query({ id: objectId }).objects[0];
 
       if (project && project.repo && project.repo.includes('github.com') && project.__meta.keys.length === 0) {
-        project.__meta.keys.push({ source: 'github' });
-
         const [owner, repo] = new URL(project.repo).pathname.split('/').slice(1, 3);
         const response = await octokit.repos.listContributors({ owner, repo });
         const contributors: GithubContributors = response.data;
@@ -57,6 +55,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
                 {
                   name: user.name,
                   email: user.email,
+                  org: user.company,
                 },
                 { schema: personSchema },
               ),
@@ -64,6 +63,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
           }),
         );
         await space.db.flush();
+        project.__meta.keys.push({ source: 'github' });
       }
     }
   });
