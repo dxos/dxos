@@ -5,14 +5,11 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { Expando, type TypedObject, type Schema } from '@dxos/client/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { Expando, type TypedObject, type Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { baseSurface, chromeSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { getSchema, schemaPropMapper, TableColumnBuilder } from '../schema';
 
@@ -32,7 +29,7 @@ export const TableSection: FC<{ table: TableType }> = ({ table }) => {
 
 export const TableSlide: FC<{ table: TableType }> = ({ table }) => {
   return (
-    <div className={'flex m-8 overflow-hidden'}>
+    <div className={'flex p-24 overflow-hidden'}>
       <TableComponent table={table} />
     </div>
   );
@@ -50,10 +47,7 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
 
 export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
   const [, forceUpdate] = useState({});
-
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
+  const space = getSpaceForObject(table);
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
@@ -144,12 +138,19 @@ export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col grow __m-4 overflow-hidden'>
+      <div className='flex flex-col grow overflow-hidden'>
         <Table<TypedObject>
           keyAccessor={(row) => row.id ?? '__new'}
           columns={columns}
           data={rows}
           border
+          slots={{
+            header: { className: [chromeSurface, 'px-2 font-light select-none'] },
+            footer: { className: [chromeSurface, 'px-2 font-light'] },
+            group: { className: 'px-2 font-light text-xs text-left' },
+            focus: { className: 'ring ring-primary-600 ring-inset' },
+            selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
+          }}
           onColumnResize={handleColumnResize}
         />
         {debug && (

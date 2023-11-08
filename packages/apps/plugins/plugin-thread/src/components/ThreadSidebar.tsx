@@ -5,22 +5,26 @@
 import { CaretDoubleRight } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
-import { findPlugin, parseLayoutPlugin, resolvePlugin, usePlugins } from '@dxos/app-framework';
+import { parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { type Space } from '@dxos/client/echo';
 import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { ThreadContainer } from './ThreadContainer';
 import { THREAD_PLUGIN } from '../types';
 
-export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThread }) => {
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+export const ThreadSidebar: FC<{ space?: Space; thread?: ThreadType }> = ({ space, thread: initialThread }) => {
   const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const { t } = useTranslation('os');
-  const space = spacePlugin?.provides.space.active;
+
+  // TODO(burdon): Get current context.
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  // console.log('layout:', layoutPlugin?.provides.layout.active);
+
   const [thread, setThread] = useState(initialThread);
+  // const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  // const space = thread && spacePlugin?.provides.space;
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.
@@ -30,10 +34,6 @@ export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThre
       }
     }
   }, [space, thread]);
-
-  // TODO(burdon): Get current context.
-  const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-  // console.log('layout:', layoutPlugin?.provides.layout.active);
 
   if (!space || !thread) {
     return null;
@@ -61,7 +61,12 @@ export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThre
         </Tooltip.Portal>
       </Tooltip.Root>
 
-      <ThreadContainer space={space} thread={thread} activeObjectId={layoutPlugin?.provides.layout.active} />
+      <ThreadContainer
+        space={space}
+        thread={thread}
+        activeObjectId={layoutPlugin?.provides.layout.active}
+        fullWidth={true}
+      />
     </div>
   );
 };

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, type ReactNode } from 'react';
 
 import { type MosaicOperation, type MosaicDraggedItem, useMosaic } from '@dxos/react-ui-mosaic';
 
@@ -13,6 +13,7 @@ export type NavTreeContextType = {
   popoverAnchorId?: string;
   onSelect?: (params: { path: string; node: TreeNode; level: number; position: number }) => void;
   isOver: (path: string) => boolean;
+  renderPresence?: (node: TreeNode) => ReactNode;
 };
 
 const Context = createContext<NavTreeContextType>({ isOver: () => false });

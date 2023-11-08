@@ -4,13 +4,15 @@
 
 import { expect } from 'chai';
 
-import { sleep } from '@dxos/async';
-import { beforeAll, beforeEach, describe, test } from '@dxos/test';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { ShowDeletedOption } from './filter';
+import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
 import { Expando, TypedObject, TextObject } from '../object';
 import { TestBuilder, createDatabase } from '../testing';
+import { Contact, types } from '../tests/proto';
 
 describe('Queries', () => {
   let db: EchoDatabase;
@@ -110,17 +112,17 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: ShowDeletedOption.HIDE_DELETED });
+      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
       expect(objects).to.have.length(7);
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: ShowDeletedOption.SHOW_DELETED });
+      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
       expect(objects).to.have.length(10);
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: ShowDeletedOption.SHOW_DELETED_ONLY });
+      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY });
       expect(objects).to.have.length(3);
     }
   });
@@ -198,5 +200,34 @@ test('query with model filters', async () => {
   expect(peer.db.query().objects).to.have.length(1);
   expect(peer.db.query().objects[0]).to.eq(obj);
 
-  expect(peer.db.query(undefined, { models: null }).objects).to.have.length(2);
+  expect(peer.db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
+});
+
+test('query by typename receives updates', async () => {
+  const testBuilder = new TestBuilder();
+  testBuilder.graph.addTypes(types);
+  const peer = await testBuilder.createPeer();
+  const contact = peer.db.add(new Contact());
+  const name = 'Rich Ivanov';
+
+  const query = peer.db.query(Filter.typename('example.test.Contact'));
+  expect(query.objects).to.have.length(1);
+  expect(query.objects[0]).to.eq(contact);
+
+  const nameUpdate = new Trigger();
+  const anotherContactAdded = new Trigger();
+  const unsub = query.subscribe(({ objects }) => {
+    if (objects.some((obj) => obj.name === name)) {
+      nameUpdate.wake();
+    }
+    if (objects.length === 2) {
+      anotherContactAdded.wake();
+    }
+  });
+  afterTest(() => unsub());
+
+  contact.name = name;
+  peer.db.add(new Contact());
+  await asyncTimeout(nameUpdate.wait(), 1000);
+  await asyncTimeout(anotherContactAdded.wait(), 1000);
 });

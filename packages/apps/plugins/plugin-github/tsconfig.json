@@ -45,22 +45,13 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

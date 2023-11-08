@@ -17,7 +17,7 @@ import { ClientDecorator } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
 import { getSize, groupSurface } from '@dxos/react-ui-theme';
 
-import { IdentityListItem, SpaceListItem } from '../components';
+import { ClipboardProvider, IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 
 export default {
@@ -214,9 +214,11 @@ const Invitations = ({ id }: { id: number }) => {
 
 export const Default = {
   render: (args: { id: number }) => (
-    <Tooltip.Provider>
-      <Invitations {...args} />
-    </Tooltip.Provider>
+    <ClipboardProvider>
+      <Tooltip.Provider>
+        <Invitations {...args} />
+      </Tooltip.Provider>
+    </ClipboardProvider>
   ),
   decorators: [ClientDecorator({ count: 3 })],
   parameters: {

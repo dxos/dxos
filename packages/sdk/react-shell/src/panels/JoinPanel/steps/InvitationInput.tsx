@@ -7,14 +7,13 @@ import React, { useState, useEffect, cloneElement } from 'react';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Actions, StepHeading } from '../../../components';
-import { Action } from '../../../components/Panel/Action';
-import { Input } from '../../../components/Panel/Input';
+import { Actions, StepHeading, Action, Input } from '../../../components';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';
   unredeemedCode?: string;
+  succeededKeys?: Set<string>;
 }
 
 const invitationCodeFromUrl = (text: string) => {
@@ -29,7 +28,8 @@ const invitationCodeFromUrl = (text: string) => {
 };
 
 export const InvitationInput = (props: InvitationInputProps) => {
-  const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent } = props;
+  const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent, succeededKeys } =
+    props;
   const disabled = !active;
   const { t } = useTranslation('os');
 
@@ -43,6 +43,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
     send({
       type: `set${Kind}InvitationCode`,
       code: invitationCodeFromUrl(inputValue),
+      ...(Kind === 'Space' && { succeededKeys }),
     });
 
   const exitAction = (

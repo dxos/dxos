@@ -1,11 +1,10 @@
-# Kai Remote Functions
+# Labs Remote Functions
 
 ## TODO(burdon):
 - stack.yml files
 - Function namespace (OpenFaaS).
 - Deploy from URL (yml file in GH, package in GHCR).
 - Local docker/package registry for offline/perf.
-
 
 ## Getting Started
 

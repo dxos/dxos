@@ -1,0 +1,90 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../core/echo/echo-generator"
+    },
+    {
+      "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../core/mesh/rpc"
+    },
+    {
+      "path": "../../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../../core/protocols"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/client-protocol"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-explorer"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-layout"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-theme"
+    }
+  ]
+}

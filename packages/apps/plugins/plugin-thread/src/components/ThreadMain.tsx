@@ -4,25 +4,22 @@
 
 import React, { type FC } from 'react';
 
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { type Thread as ThreadType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
+import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { ThreadContainer } from './ThreadContainer';
 
 export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides.space.active;
+  const space = getSpaceForObject(thread);
   if (!space) {
     return null;
   }
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <ThreadContainer space={space} thread={thread} />
+      <ThreadContainer space={space} thread={thread} fullWidth={false} />
     </Main.Content>
   );
 };

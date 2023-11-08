@@ -129,6 +129,8 @@ export const generate = (root: pb.NamespaceBase, options: CodegenOptions): strin
   `;
 };
 
+const isObject = (type: pb.ReflectionObject) => type.options?.['(object)'] === true;
+
 function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
   if (ns instanceof pb.Type) {
     // NOTE: Hack to allow schema.proto to compile.
@@ -136,7 +138,7 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
       return;
     }
 
-    if (ns.options?.['(object)'] !== true) {
+    if (!isObject(ns)) {
       yield createPlainInterface(ns);
     } else {
       yield createObjectClass(ns);
@@ -244,6 +246,7 @@ export enum PropType {
   DATE = 4,
   REF = 5,
   RECORD = 6,
+  ENUM = 7,
 }
 
 export type SchemaProps = {
@@ -258,25 +261,53 @@ export interface Prop {
   refModelType?: string;
   repeated?: boolean;
   digits?: number;
+  props?: Prop[];
+  variants?: {
+    tag: number;
+    name: string;
+  }[];
 }
 
-export const createProtoSchema = (type: pb.Type): SchemaProps => {
+// Using max depth of 2 to not crash on recursive types (schema).
+const getProps = (type: pb.Type, depth = 2): Prop[] => {
   type.fieldsArray.forEach((field) => field.resolve());
-  return {
-    typename: type.fullName.slice(1),
-    props: type.fieldsArray.map((field) => ({
+  return type.fieldsArray.map((field) => {
+    const type = getPropType(field);
+    return {
       id: field.name,
-      type: getPropType(field),
+      type,
       repeated: field.repeated,
       refName: field.resolvedType?.fullName.slice(1),
       refModelType: getRefModel(field),
-    })),
+      // Inline nested props for records only.
+      props:
+        type === PropType.RECORD && field.resolvedType instanceof pb.Type && !isObject(field.resolvedType) && depth > 0
+          ? getProps(field.resolvedType, depth - 1)
+          : undefined,
+      variants:
+        field.resolvedType instanceof pb.Enum
+          ? Object.entries(field.resolvedType.values).map(([name, tag]) => ({ name, tag }))
+          : undefined,
+    };
+  });
+};
+
+export const createProtoSchema = (type: pb.Type): SchemaProps => {
+  return {
+    typename: type.fullName.slice(1),
+    props: getProps(type),
   };
 };
 
 const getPropType = (field: pb.Field): PropType => {
   if (field.resolvedType) {
-    return PropType.REF;
+    if (field.resolvedType instanceof pb.Enum) {
+      return PropType.ENUM;
+    } else if (isObject(field.resolvedType) || isTextObject(field.type)) {
+      return PropType.REF;
+    } else {
+      return PropType.RECORD;
+    }
   }
 
   switch (field.type) {

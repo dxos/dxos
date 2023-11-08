@@ -5,6 +5,7 @@
 import * as varint from 'varint';
 
 import { type Trigger, Event } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { Framer } from './framer';
@@ -42,6 +43,7 @@ export class Balancer {
   private readonly _sendBuffers: Map<number, ChunkEnvelope[]> = new Map();
   private readonly _receiveBuffers = new Map<number, ChannelBuffer>();
 
+  private _sending = false;
   public incomingData = new Event<Uint8Array>();
   public readonly stream = this._framer.stream;
 
@@ -69,39 +71,14 @@ export class Balancer {
   }
 
   pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
-    const noCalls = this._sendBuffers.size === 0;
-
-    if (!this._channels.includes(channelId)) {
-      throw new Error(`Unknown channel ${channelId}`);
-    }
-
-    if (!this._sendBuffers.has(channelId)) {
-      this._sendBuffers.set(channelId, []);
-    }
-
-    const sendBuffer = this._sendBuffers.get(channelId)!;
-
-    const chunks = [];
-    for (let idx = 0; idx < data.length; idx += MAX_CHUNK_SIZE) {
-      chunks.push(data.subarray(idx, idx + MAX_CHUNK_SIZE));
-    }
-
-    chunks.forEach((chunk, index) => {
-      const msg = encodeChunk({
-        chunk,
-        channelId,
-        dataLength: index === 0 ? data.length : undefined,
-      });
-      sendBuffer.push({ msg, trigger: index === chunks.length - 1 ? trigger : undefined });
-    });
-
-    // Start processing calls if this is the first call.
-    if (noCalls) {
-      this._sendChunk().catch((err) => log.catch(err));
-    }
+    this._enqueueChunk(data, trigger, channelId);
+    this._sendChunks().catch((err) => log.catch(err));
   }
 
   destroy() {
+    if (this._sendBuffers.size !== 0) {
+      log.warn('destroying balancer with pending calls');
+    }
     this._sendBuffers.clear();
     this._framer.destroy();
   }
@@ -140,9 +117,37 @@ export class Balancer {
     return this._channels[index];
   }
 
-  private _getNextChunk(): ChunkEnvelope {
+  private _enqueueChunk(data: Uint8Array, trigger: Trigger, channelId: number) {
+    if (!this._channels.includes(channelId)) {
+      throw new Error(`Unknown channel ${channelId}`);
+    }
+
+    if (!this._sendBuffers.has(channelId)) {
+      this._sendBuffers.set(channelId, []);
+    }
+
+    const sendBuffer = this._sendBuffers.get(channelId)!;
+
+    const chunks = [];
+    for (let idx = 0; idx < data.length; idx += MAX_CHUNK_SIZE) {
+      chunks.push(data.subarray(idx, idx + MAX_CHUNK_SIZE));
+    }
+
+    chunks.forEach((chunk, index) => {
+      const msg = encodeChunk({
+        chunk,
+        channelId,
+        dataLength: index === 0 ? data.length : undefined,
+      });
+      sendBuffer.push({ msg, trigger: index === chunks.length - 1 ? trigger : undefined });
+    });
+  }
+
+  // get the next chunk or null if there are no chunks remaining
+
+  private _getNextChunk(): ChunkEnvelope | null {
     let chunk;
-    while (!chunk) {
+    while (this._sendBuffers.size > 0) {
       const channelId = this._getNextCallerId();
       const sendBuffer = this._sendBuffers.get(channelId);
       if (!sendBuffer) {
@@ -150,32 +155,42 @@ export class Balancer {
       }
 
       chunk = sendBuffer.shift();
+      if (!chunk) {
+        continue;
+      }
       if (sendBuffer.length === 0) {
         this._sendBuffers.delete(channelId);
       }
+      return chunk;
     }
-    return chunk;
+    return null;
   }
 
-  private async _sendChunk() {
-    if (this._sendBuffers.size === 0) {
+  private async _sendChunks() {
+    if (this._sending) {
       return;
     }
-
-    if (!this._framer.writable) {
-      await this._framer.drain.waitForCount(1);
+    this._sending = true;
+    let chunk: ChunkEnvelope | null;
+    chunk = this._getNextChunk();
+    while (chunk) {
+      // TODO(nf): determine whether this is needed since we await the chunk send
+      if (!this._framer.writable) {
+        log('PAUSE for drain');
+        await this._framer.drain.waitForCount(1);
+        log('RESUME for drain');
+      }
+      try {
+        await this._framer.port.send(chunk.msg);
+        chunk.trigger?.wake();
+      } catch (err: any) {
+        log('Error sending chunk', { err });
+        chunk.trigger?.throw(err);
+      }
+      chunk = this._getNextChunk();
     }
-
-    const chunk = this._getNextChunk();
-
-    try {
-      await this._framer.port.send(chunk.msg);
-      chunk.trigger?.wake();
-    } catch (err: any) {
-      chunk.trigger?.throw(err);
-    }
-
-    await this._sendChunk();
+    invariant(this._sendBuffers.size === 0, 'sendBuffers not empty');
+    this._sending = false;
   }
 }
 

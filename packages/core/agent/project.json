@@ -29,7 +29,20 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/agent/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
       "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
@@ -50,19 +63,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/agent/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
       ]
     }
   },
