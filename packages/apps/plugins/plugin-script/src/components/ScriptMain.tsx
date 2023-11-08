@@ -115,7 +115,7 @@ export const ScriptSection = ({ id, view: controlledView, source, containerUrl, 
         )}
         {view !== 'editor' && result && (
           <div className='flex flex-1 shrink-0 overflow-hidden'>
-            <FrameContainer key={id} result={result} containerUrl={containerUrl} />
+            <FrameContainer key={result.timestamp} result={result} containerUrl={containerUrl} />
           </div>
         )}
       </div>
