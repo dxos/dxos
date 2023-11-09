@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L53)
-Type: <code>"0.3.4"</code>
+Type: <code>"0.3.6"</code>
 
 The version of this client API.
 
@@ -29,7 +29,7 @@ Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 Current configuration object.
 
-### [experimental](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L170)
+### [experimental](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L173)
 Type: <code>object</code>
 
 
@@ -83,7 +83,7 @@ Arguments: none
 
 
 
-### [addSchema(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L189)
+### [addSchema(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L192)
 
 
 
@@ -95,7 +95,7 @@ Arguments:
 `types`: <code>TypeCollection</code>
 
 
-### [addTypes(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L181)
+### [addTypes(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L184)
 
 
 
@@ -107,7 +107,7 @@ Arguments:
 `types`: <code>TypeCollection</code>
 
 
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L299)
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L302)
 
 
 Cleanup, release resources.
@@ -120,7 +120,7 @@ Arguments: none
 
 
 
-### [diagnostics(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L196)
+### [diagnostics(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L199)
 
 
 Get client diagnostics data.
@@ -132,7 +132,7 @@ Arguments:
 `options`: <code>JsonKeyOptions</code>
 
 
-### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L213)
+### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L216)
 
 
 Initializes internal resources in an idempotent way.
@@ -145,7 +145,7 @@ Arguments: none
 
 
 
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L326)
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L329)
 
 
 Resets and destroys client storage.
@@ -158,7 +158,7 @@ Arguments: none
 
 
 
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L317)
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L320)
 
 
 Reinitialized the client session with the remote service host.
