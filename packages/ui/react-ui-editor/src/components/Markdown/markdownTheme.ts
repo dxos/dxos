@@ -94,6 +94,7 @@ export const markdownTheme = {
   },
   '& .cm-line': {
     paddingInline: 0,
+    minBlockSize: '1.6em',
   },
   '& .cm-line *': {
     lineHeight: 1.6,
