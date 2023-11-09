@@ -98,7 +98,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       },
       context: (props) => <OctokitProvider {...props} />,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (data.component) {
             case `${GITHUB_PLUGIN}/embedded`:
               return <EmbeddedMain />;

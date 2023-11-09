@@ -65,7 +65,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isTable(data.active) ? <TableMain table={data.active} /> : null;
