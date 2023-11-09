@@ -13,6 +13,8 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { type CompilerResult } from '../../compiler';
 import { Message } from 'esbuild';
 import { Warning } from '@phosphor-icons/react';
+import { Message } from '@dxos/react-ui';
+import { type } from 'os';
 
 export type FrameContainerProps = {
   containerUrl: string;
@@ -56,30 +58,9 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
   }, [iframeRef]);
 
   useEffect(() => {
-    if(iframeRef.current) {
+    if (iframeRef.current) {
       const handler: OnErrorEventHandler = (msg, url, line, col, err) => {
-        console.log({ msg })
-        const message: Message = {
-          id: '',
-          text: typeof msg === 'string' ? msg : (msg as any).message,
-          location: null,
-          notes: [],
-          pluginName: 'runtime',
-          detail: err,
-        }
-
-        message.location = {
-          namespace: '',
-          file: url ?? '',
-          line: line ?? 0,
-          column: col ?? 0,
-          length: 0,
-          lineText: '',
-          suggestion: '',
-        };
-  
-        console.log('push',message);
-        setRuntimeErrors(runtimeErrors => [...runtimeErrors, message]);
+        setRuntimeErrors(runtimeErrors => [...runtimeErrors, decodeRuntimeError(msg, url, line, col, err)]);
       }
 
       iframeRef.current.contentWindow?.addEventListener('error', handler);
@@ -97,8 +78,6 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
       imports: createImportMap(result),
     }),
   )}`;
-
-
 
   if (result.errors.length > 0 || runtimeErrors.length > 0) {
     return (
@@ -187,9 +166,14 @@ const DiagnosticMessage = ({ message, kind }: { message: Message, kind: 'error' 
             </span>
           )}
         </div>
-        <div className=''>
+        <div>
           {message.text}
         </div>
+        {message.detail instanceof Error && (
+          <div>
+            {message.detail.message}
+          </div>
+        )}
         {message.notes.length > 0 && (
           <div className=''>
             {message.notes.map((note, index) => (
@@ -200,4 +184,29 @@ const DiagnosticMessage = ({ message, kind }: { message: Message, kind: 'error' 
       </div>
     </div>
   )
+}
+
+const decodeRuntimeError = (...[msg, url, line, col, err]: Parameters<OnErrorEventHandlerNonNull>): Message => {
+  const message: Message = {
+    id: '',
+    text: typeof msg === 'string' ? msg : (msg as any).message,
+    location: null,
+    notes: [],
+    pluginName: 'runtime',
+    detail: err,
+  }
+
+  if(typeof url === 'string' && !!url) {
+    message.location = {
+      namespace: '',
+      file: url ?? '',
+      line: line ?? 0,
+      column: col ?? 0,
+      length: 0,
+      lineText: '',
+      suggestion: '',
+    };
+  }
+
+  return message
 }
