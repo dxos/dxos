@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6](https://github.com/dxos/dxos/compare/v0.3.5...v0.3.6) (2023-11-09)
+
+
+### Bug Fixes
+
+* **react-ui-editor:** Fix broken layouts ([#4657](https://github.com/dxos/dxos/issues/4657)) ([c41e968](https://github.com/dxos/dxos/commit/c41e968798062edd18e4f78e434a51c0b94734c9))
+
 ## [0.3.5](https://github.com/dxos/dxos/compare/v0.3.4...v0.3.5) (2023-11-08)
 
 
