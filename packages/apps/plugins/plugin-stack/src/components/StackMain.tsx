@@ -7,7 +7,7 @@ import React, { useCallback, type FC } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
 import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
-import { TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import { type TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
@@ -69,9 +69,9 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
     const object = ((active.item as any).node?.data ?? active.item) as TypedObject;
     if (over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, new TypedObject({ object }));
+      stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
     } else if (over.path === id) {
-      stack.sections.push(new TypedObject({ object }));
+      stack.sections.push(new StackType.Section({ object }));
     }
   };
 

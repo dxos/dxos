@@ -90,9 +90,12 @@ export const ClientPlugin = ({
         }
       }
 
-      await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-      const firstRun = !client.spaces.default.properties[appKey];
-      client.spaces.default.properties[appKey] = true;
+      let firstRun = false;
+      if (client.halo.identity.get()) {
+        await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+        firstRun = !client.spaces.default.properties[appKey];
+        client.spaces.default.properties[appKey] = true;
+      }
 
       return {
         client,

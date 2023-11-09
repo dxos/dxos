@@ -564,11 +564,6 @@
         },
         {
           "type": "json",
-          "path": "packages/gravity/gravity-agent/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/gravity/gravity-dashboard/package.json",
           "jsonpath": "$.version"
         },

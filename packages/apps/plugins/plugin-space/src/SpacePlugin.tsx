@@ -187,7 +187,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  state.viewers = [
+                  const newViewers = [
                     ...state.viewers.filter(
                       (viewer) =>
                         !viewer.identityKey.equals(identityKey) ||
@@ -204,6 +204,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                       lastSeen: Date.now(),
                     })),
                   ];
+                  newViewers.sort((a, b) => b.lastSeen - a.lastSeen);
+                  state.viewers = newViewers;
                 }
               }),
             );

@@ -11,7 +11,7 @@ import {
   type MarkdownComposerProps,
   type MarkdownComposerRef,
 } from '@dxos/react-ui-editor';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
@@ -46,7 +46,13 @@ export const EditorMain = ({
         slots={{
           root: {
             role: 'none',
-            className: mx(focusRing, 'shrink-0 grow flex flex-col'),
+            className: mx(
+              focusRing,
+              inputSurface,
+              surfaceElevation({ elevation: 'group' }),
+              layout !== 'embedded' && 'rounded',
+              'pli-10 m-0.5 shrink-0 grow flex flex-col',
+            ),
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
@@ -58,7 +64,6 @@ export const EditorMain = ({
                 inlineSize: '100%',
               },
               '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-              '& .cm-line': { paddingInline: '1rem' },
             },
             placeholder: t('editor placeholder'),
           },
