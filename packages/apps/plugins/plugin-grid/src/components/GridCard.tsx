@@ -7,7 +7,7 @@ import React, { forwardRef } from 'react';
 import { type TextObject, type TypedObject } from '@dxos/client/echo';
 import { useConfig } from '@dxos/react-client';
 import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
+import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -93,7 +93,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
           </Card.Header>
           {!url && (
             <Card.Body>
-              <MarkdownComposer
+              <MarkdownEditor
                 model={content}
                 slots={{
                   root: {
