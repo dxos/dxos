@@ -7,16 +7,12 @@ import React, { type FC, useEffect } from 'react';
 import { Document as DocumentType, Grid as GridType } from '@braneframe/types';
 import { Expando, getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import {
-  Grid,
-  type MosaicDropEvent,
-  type MosaicOperation,
-  type MosaicTileAction,
-  type Position,
-} from '@dxos/react-ui-mosaic';
+import type { MosaicDropEvent, MosaicOperation, MosaicTileAction } from '@dxos/react-ui-mosaic';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
+import { Grid } from './Grid';
 import { colors, getObject, GridCard } from './GridCard';
+import type { Position } from './layout';
 
 export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const space = getSpaceForObject(grid);
