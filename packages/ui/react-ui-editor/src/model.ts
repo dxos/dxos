@@ -12,7 +12,7 @@ import type { YText, YXmlFragment } from '@dxos/text-model';
 
 import { SpaceAwarenessProvider } from './yjs';
 
-export type ComposerSlots = {
+export type EditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
     className?: string;
@@ -27,7 +27,7 @@ type Awareness = awarenessProtocol.Awareness;
 type Provider = { awareness: Awareness };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
-export type ComposerModel = {
+export type EditorModel = {
   id: string;
   content: string | YText | YXmlFragment;
   provider?: Provider;
@@ -44,8 +44,8 @@ export type UseTextModelOptions = {
 };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
-// TODO(burdon): Decouple space (make Composer less dependent on entire stack)?
-export const useTextModel = ({ identity, space, text }: UseTextModelOptions): ComposerModel | undefined => {
+// TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
+export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
   const provider = useMemo(() => {
     if (!space || !text?.doc) {
       return undefined;

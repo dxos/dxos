@@ -15,9 +15,9 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
-  type ComposerModel,
-  type MarkdownComposerProps,
-  type MarkdownComposerRef,
+  type EditorModel,
+  type MarkdownEditorProps,
+  type MarkdownEditorRef,
   useTextModel,
 } from '@dxos/react-ui-editor';
 
@@ -56,22 +56,22 @@ export const isDocument = (data: unknown): data is Document =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN);
-  const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<MarkdownEditorProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
-  const pluginMutableRef: MutableRefObject<MarkdownComposerRef> = {
+  const pluginMutableRef: MutableRefObject<MarkdownEditorRef> = {
     current: { editor: null },
   };
-  const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
+  const pluginRefCallback: RefCallback<MarkdownEditorRef> = (nextRef: MarkdownEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc. Should these components be inline or external?
   const EditorMainStandalone: FC<{
-    composer: ComposerModel;
+    composer: EditorModel;
     properties: MarkdownProperties;
   }> = ({ composer, properties }) => {
-    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
+    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -99,7 +99,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       text: document?.content,
     });
 
-    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
+    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
