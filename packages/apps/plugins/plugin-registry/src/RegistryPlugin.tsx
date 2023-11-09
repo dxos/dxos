@@ -18,7 +18,7 @@ export const RegistryPlugin = (): PluginDefinition<RegistryPluginProvides> => {
     provides: {
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ role }) => {
           switch (role) {
             case 'settings':
               return <Settings />;
