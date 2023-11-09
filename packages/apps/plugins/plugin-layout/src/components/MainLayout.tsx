@@ -142,10 +142,10 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
             <Dialog.Overlay>
               {/* TODO(burdon): Move (thure)[ProfileSettings dialog in particular] dialog to settings-plugin. */}
               {dialogContent.component === 'dxos.org/plugin/layout/ProfileSettings' ? (
-                <Dialog.Content>
+                <Dialog.Content classNames='max-is-[32rem]'>
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                   {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
-                  <div className='flex flex-col my-2 gap-4'>
+                  <div className='mlb-4 space-b-4'>
                     <Surface role='settings' data={dialogContent} />
                   </div>
                   <Dialog.Close asChild>
