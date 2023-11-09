@@ -176,6 +176,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Load the client config.
    */
   override async init(): Promise<void> {
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!');
     await super.init();
     await this._initTelemetry();
 
@@ -266,6 +267,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   private async _loadConfig() {
     const { config: configFile } = this.flags;
+    console.log(':::::::::::::', configFile);
     const configExists = await exists(configFile);
     if (!configExists) {
       const defaultConfigPath = join(
@@ -288,6 +290,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await mkdir(dirname(configFile), { recursive: true });
       await writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
     }
+
+    console.log(':::::::::::::', configFile);
 
     this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
   }
