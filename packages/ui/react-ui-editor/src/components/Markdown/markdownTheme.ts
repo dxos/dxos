@@ -99,17 +99,17 @@ export const markdownTheme = {
   '& .cm-line *': {
     lineHeight: 1.6,
   },
-  '& .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.150', '#00ffff') + 'aa',
+  '&.cm-focused .cm-selectionBackground, & .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
   },
-  '.dark & .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.500', '#00ffff') + 'aa',
+  '.dark & .cm-selectionBackground, .dark &.cm-focused .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.800', '#00ffff'),
   },
   '& .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.100', '#00ffff') + '44',
+    background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
   },
   '.dark & .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.400', '#00ffff') + '44',
+    background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
   },
   '& .cm-content': {
     caretColor: 'black',
@@ -144,6 +144,12 @@ export const markdownTheme = {
   '& .cm-ySelection, & .cm-selectionMatch': {
     paddingBlockStart: '.15em',
     paddingBlockEnd: '.15em',
+  },
+  '& .cm-ySelection, & .cm-yLineSelection': {
+    mixBlendMode: 'multiply',
+  },
+  '.dark & .cm-ySelection, .dark & .cm-yLineSelection': {
+    mixBlendMode: 'screen',
   },
   '& .cm-ySelectionCaret': {
     display: 'inline-block',
