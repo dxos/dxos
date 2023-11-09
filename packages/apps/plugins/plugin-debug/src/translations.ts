@@ -16,6 +16,7 @@ export default [
         'debug label': 'Debug',
         'show debug panel': 'Show Debug panel',
         'show devtools panel': 'Show DevTools panel',
+        'plugin settings heading': 'DevTools & Debug',
       },
     },
   },

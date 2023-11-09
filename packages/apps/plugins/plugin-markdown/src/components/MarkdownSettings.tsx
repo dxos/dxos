@@ -32,9 +32,11 @@ export const MarkdownSettings = () => {
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
-    <div>
+    <div role='none' className='space-b-2'>
       <Input.Root>
-        <Input.Label>{t('editor mode label')}</Input.Label>
+        <Input.Label classNames='text-base font-system-medium' asChild>
+          <h3>{t('editor mode label')}</h3>
+        </Input.Label>
         <Select.Root value={settings.editorMode} onValueChange={handleValueChange}>
           <Select.TriggerButton classNames='mbs-0.5' placeholder={t('select editor mode placeholder')} />
           <Select.Portal>
