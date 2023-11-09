@@ -15,7 +15,8 @@ import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceEl
 
 import { FileUpload } from './FileUpload';
 import { defaultFileTypes } from '../hooks';
-import { STACK_PLUGIN, type StackPluginProvides, isStack } from '../types';
+import { STACK_PLUGIN } from '../meta';
+import { type StackPluginProvides, isStack } from '../types';
 
 const StackContent = ({ data }: { data: StackSectionItem }) => {
   // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.

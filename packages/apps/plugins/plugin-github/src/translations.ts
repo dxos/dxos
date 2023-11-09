@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GITHUB_PLUGIN } from './props';
+import { GITHUB_PLUGIN } from './meta';
 
 export default [
   {

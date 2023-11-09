@@ -9,11 +9,8 @@ APPS=(
   ./packages/devtools/devtools
   ./packages/apps/halo-app
   ./packages/apps/composer-app
-  ./packages/apps/labs-app
   ./packages/apps/tasks
   ./packages/apps/todomvc
-  ./packages/experimental/kai
-  ./packages/experimental/kube-console
 )
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)

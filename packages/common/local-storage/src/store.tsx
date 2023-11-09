@@ -60,6 +60,20 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
+  static json: PropType<object> = {
+    get: (key) => {
+      const value = localStorage.getItem(key);
+      return value ? JSON.parse(value) : undefined;
+    },
+    set: (key, value) => {
+      if (value === undefined) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+    },
+  };
+
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
   public readonly values: DeepSignal<T>;

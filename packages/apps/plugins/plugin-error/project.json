@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-error/src/index.ts"
+          "packages/apps/plugins/plugin-error/src/index.ts",
+          "packages/apps/plugins/plugin-error/src/meta.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-error/dist/lib",
         "platforms": [

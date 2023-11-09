@@ -24,7 +24,8 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
-import { DEBUG_PLUGIN, DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
+import meta, { DEBUG_PLUGIN } from './meta';
+import { DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
 import translations from './translations';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
@@ -35,9 +36,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   let intentPlugin: Plugin<IntentPluginProvides>;
 
   return {
-    meta: {
-      id: DEBUG_PLUGIN,
-    },
+    meta,
     ready: async () => {
       settings
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)

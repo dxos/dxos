@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TABLE_PLUGIN } from './types';
+import { TABLE_PLUGIN } from './meta';
 
 export default [
   {

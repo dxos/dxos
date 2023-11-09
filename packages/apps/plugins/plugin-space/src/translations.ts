@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SPACE_PLUGIN } from './types';
+import { SPACE_PLUGIN } from './meta';
 
 export default [
   {

@@ -11,7 +11,8 @@ import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
-import { PRESENTER_PLUGIN, PresenterContext } from '../types';
+import { PRESENTER_PLUGIN } from '../meta';
+import { PresenterContext } from '../types';
 
 export const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);

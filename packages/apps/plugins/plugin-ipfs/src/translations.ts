@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IPFS_PLUGIN } from './types';
+import { IPFS_PLUGIN } from './meta';
 
 export default [
   {

@@ -7,7 +7,7 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { LAYOUT_PLUGIN } from '../types';
+import { LAYOUT_PLUGIN } from '../meta';
 
 export const ContentFallback = () => {
   const { t } = useTranslation(LAYOUT_PLUGIN);

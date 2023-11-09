@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-chess/src/index.ts"
+          "packages/apps/plugins/plugin-chess/src/index.ts",
+          "packages/apps/plugins/plugin-chess/src/meta.tsx"
         ],
         "outputPath": "packages/apps/plugins/plugin-chess/dist/lib",
         "platforms": [

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SKETCH_PLUGIN } from './types';
+import { SKETCH_PLUGIN } from './meta';
 
 export default [
   {

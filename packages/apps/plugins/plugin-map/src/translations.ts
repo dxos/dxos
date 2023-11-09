@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MAP_PLUGIN } from './types';
+import { MAP_PLUGIN } from './meta';
 
 export default [
   {

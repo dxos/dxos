@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CHESS_PLUGIN } from './types';
+import { CHESS_PLUGIN } from './meta';
 
 export default [
   {

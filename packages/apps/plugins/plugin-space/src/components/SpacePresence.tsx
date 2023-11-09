@@ -21,7 +21,8 @@ import {
 } from '@dxos/react-ui';
 import { getColorForValue, getSize, mx } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
+import { SPACE_PLUGIN } from '../meta';
+import { SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
 
 export const SpacePresence = ({ object }: { object: TypedObject }) => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);

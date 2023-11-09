@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-pwa/src/index.ts"
+          "packages/apps/plugins/plugin-pwa/src/index.ts",
+          "packages/apps/plugins/plugin-pwa/src/meta.ts"
         ],
         "ignorePackages": [
           "virtual:pwa-register"
