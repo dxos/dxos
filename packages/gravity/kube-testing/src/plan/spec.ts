@@ -17,11 +17,12 @@ export type AgentParams<S, C> = {
   agentId: string;
   outDir: string;
   config: C;
+  planRunDir: string;
   runtime: AgentRuntimeParams;
 
   testId: string;
   spec: S;
-  agents: Record<string, C>;
+  agents: Record<string, AgentRunOptions<C>>;
 };
 
 export type AgentRuntimeParams = {
@@ -47,7 +48,7 @@ export type AgentResult = {
 // plan vs environment
 export interface TestPlan<S, C> {
   onError?: (err: Error) => void;
-  init(params: TestParams<S>): Promise<C[]>; // 1
+  init(params: TestParams<S>): Promise<AgentRunOptions<C>[]>; // 1
   run(env: AgentEnv<S, C>): Promise<void>; // N
   finish(params: TestParams<S>, results: PlanResults): Promise<any>;
   defaultSpec(): S;

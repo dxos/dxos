@@ -21,11 +21,12 @@ import {
   FixGracefulFsPlugin,
   NodeModulesPlugin,
 } from '@dxos/esbuild-plugins';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { LogLevel, createFileProcessor, invariant, log } from '@dxos/log';
+import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
 import { AgentEnv } from './env';
-import { type AgentParams, type PlanResults, type Platform, type TestPlan } from './spec';
+import { type AgentResult, type AgentParams, type PlanResults, type Platform, type TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;
@@ -49,6 +50,18 @@ type TestSummary = {
     outDir: string;
   };
   agents: Record<string, any>;
+};
+
+type ProcessHandle = {
+  /**
+   * Promise that resolves when the agent finishes.
+   */
+  result: Promise<AgentResult>;
+
+  /**
+   * Kill the agent process/browser.
+   */
+  kill: () => void;
 };
 
 export type RunPlanParams<S, C> = {
@@ -117,9 +130,8 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     count: agentsArray.length,
   });
 
-  const planResults: PlanResults = {
-    agents: {},
-  };
+  const killCallbacks: (() => void)[] = [];
+  const planResults: PlanResults = { agents: {} };
   const promises: Promise<void>[] = [];
 
   {
@@ -164,45 +176,26 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
 
       fs.mkdirSync(agentParams.outDir, { recursive: true });
 
-      const promise =
-        agentParams.runtime.platform === 'nodejs' ? runNode(agentParams, options) : runBrowser(agentParams, options);
+      const { result, kill } =
+        agentParams.runtime.platform === 'nodejs'
+          ? await runNode(agentParams, options)
+          : await runBrowser(agentParams, options);
+      killCallbacks.push(kill);
       promises.push(
-        new Promise<void>((resolve, reject) => {
-          childProcess.on('error', (err) => {
-            log.info('child process error', { err });
-            reject(err);
-          });
-          childProcess.on('exit', async (exitCode, signal) => {
-            if (exitCode == null) {
-              log.warn('agent exited with signal', { signal });
-              reject(new Error(`agent exited with signal ${signal}`));
-            }
+        result.then((result) => {
+          planResults.agents[agentId] = result;
 
-            if (exitCode !== 0) {
-              log.warn('agent exited with non-zero exit code', { exitCode });
-              reject(new Error(`agent exited with non-zero exit code ${exitCode}`));
-            }
-
-            planResults.agents[agentId] = {
-              result: exitCode ?? -1,
-              outDir: agentParams.outDir,
-              logFile: join(agentParams.outDir, AGENT_LOG_FILE),
-            };
-
-            agentComplete();
-            resolve();
-            log.info('agent process exited successfully', { agentId });
-          });
-          // TODO(nf): add timeout for agent completion
+          agentComplete();
+          log.info('agent process exited successfully', { agentId });
         }),
       );
     }
 
     await Promise.all(promises).catch((err) => {
       log.warn('test plan or agent failed, killing remaining test agents', err);
-      for (const child of children) {
-        log.warn('killing child', { pid: child.pid });
-        child.kill();
+      for (const kill of killCallbacks) {
+        log.warn('killing agent');
+        kill();
       }
       throw new Error('plan failed');
     });
@@ -268,7 +261,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
 
 const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');
 
-const runNode = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
+const runNode = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<ProcessHandle> => {
   const execArgv = process.execArgv;
 
   if (options.profile) {
@@ -293,10 +286,41 @@ const runNode = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Pr
       GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
     },
   });
-  return Event.wrap<number>(childProcess, 'exit').waitForCount(1);
+
+  return {
+    result: new Promise<AgentResult>((resolve, reject) => {
+      childProcess.on('error', (err) => {
+        log.info('child process error', { err });
+        reject(err);
+      });
+      childProcess.on('exit', async (exitCode, signal) => {
+        if (exitCode == null) {
+          log.warn('agent exited with signal', { signal });
+          reject(new Error(`agent exited with signal ${signal}`));
+        }
+
+        if (exitCode !== 0) {
+          log.warn('agent exited with non-zero exit code', { exitCode });
+          reject(new Error(`agent exited with non-zero exit code ${exitCode}`));
+        }
+
+        resolve({
+          result: exitCode ?? -1,
+          outDir: agentParams.outDir,
+          logFile: join(agentParams.outDir, AGENT_LOG_FILE),
+        });
+
+        log.info('agent process exited successfully', { agentId: agentParams.agentId });
+      });
+      // TODO(nf): add timeout for agent completion
+    }),
+    kill: () => {
+      childProcess.kill();
+    },
+  };
 };
 
-const runBrowser = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
+const runBrowser = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<ProcessHandle> => {
   invariant(agentParams.runtime.platform);
   const { page } = await getNewBrowserContext(agentParams.runtime.platform, { headless: false });
   const doneTrigger = new Trigger<number>();
@@ -344,10 +368,19 @@ const runBrowser = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOpt
   const port = (server.address() as AddressInfo).port;
   await page.goto(`http://localhost:${port}`);
 
-  return doneTrigger.wait();
+  return {
+    // TODO(mykola): Result should be a promise that resolves when the agent finishes.
+    result: (async () => ({
+      result: 0,
+      outDir: agentParams.outDir,
+      logFile: join(agentParams.outDir, AGENT_LOG_FILE),
+    }))(),
+    kill: () => page.close(),
+  };
 };
 
 const getBrowser = (browserType: Platform): BrowserType => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { chromium, firefox, webkit } = require('playwright');
   switch (browserType) {
     case 'chromium':
@@ -431,6 +464,7 @@ type EposedApis = {
 };
 
 const buildBrowserBundle = async (outfile: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { build } = require('esbuild');
   await build({
     entryPoints: [process.argv[1]],
