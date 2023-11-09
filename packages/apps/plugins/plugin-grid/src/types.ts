@@ -12,7 +12,7 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/react-client/echo';
 
-export const GRID_PLUGIN = 'dxos.org/plugin/grid';
+import { GRID_PLUGIN } from './meta';
 
 const GRID_ACTION = `${GRID_PLUGIN}/action`;
 
