@@ -38,17 +38,11 @@ import {
   PopoverRenameSpace,
   SpaceMain,
   SpacePresence,
+  SpaceSettings,
 } from './components';
-import SpaceSettings from './components/SpaceSettings';
+import meta, { SPACE_PLUGIN } from './meta';
 import translations from './translations';
-import {
-  SPACE_PLUGIN,
-  SPACE_PLUGIN_SHORT_ID,
-  SpaceAction,
-  type SpacePluginProvides,
-  type SpaceSettingsProps,
-  type PluginState,
-} from './types';
+import { SpaceAction, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
 import {
   ROOT,
   SHARED,
@@ -101,10 +95,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
-    meta: {
-      id: SPACE_PLUGIN,
-      shortId: SPACE_PLUGIN_SHORT_ID,
-    },
+    meta,
     ready: async (plugins) => {
       settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);

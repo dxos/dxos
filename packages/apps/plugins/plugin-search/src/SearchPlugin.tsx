@@ -10,14 +10,13 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
+import meta, { SEARCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SEARCH_PLUGIN, SearchAction, type SearchPluginProvides } from './types';
+import { SearchAction, type SearchPluginProvides } from './types';
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
   return {
-    meta: {
-      id: SEARCH_PLUGIN,
-    },
+    meta,
     provides: {
       translations,
       graph: {

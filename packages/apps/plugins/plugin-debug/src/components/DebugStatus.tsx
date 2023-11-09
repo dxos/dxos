@@ -195,5 +195,3 @@ export const DebugStatus = () => {
     </div>
   );
 };
-
-export default DebugStatus;

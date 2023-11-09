@@ -8,7 +8,7 @@ import { useIntent } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
 
-import { NAVTREE_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../meta';
 import { getTreeItemLabel } from '../util';
 
 export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {

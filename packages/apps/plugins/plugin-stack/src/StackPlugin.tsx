@@ -17,15 +17,9 @@ import {
 } from '@dxos/app-framework';
 
 import { StackMain } from './components';
+import meta, { STACK_PLUGIN } from './meta';
 import translations from './translations';
-import {
-  STACK_PLUGIN,
-  StackAction,
-  isStack,
-  type StackPluginProvides,
-  type StackProvides,
-  type StackState,
-} from './types';
+import { StackAction, isStack, type StackPluginProvides, type StackProvides, type StackState } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -35,9 +29,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const stackState: StackState = deepSignal({ creators: [] });
 
   return {
-    meta: {
-      id: STACK_PLUGIN,
-    },
+    meta,
     ready: async (plugins) => {
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {

@@ -4,21 +4,52 @@
 
 import { type Context, type Provider, createContext, useContext } from 'react';
 
-import { type Plugin, type PluginDefinition } from './plugin';
+import { type Plugin } from './plugin';
 import { findPlugin, resolvePlugin } from '../helpers';
 
 export type PluginContext = {
+  /**
+   * All plugins are ready.
+   */
   ready: boolean;
-  initializing: PluginDefinition[];
-  loading: PluginDefinition[];
+
+  /**
+   * Ids of plugins which are enabled on this device.
+   */
+  enabled: string[];
+
+  /**
+   * Initialized and ready plugins.
+   */
   plugins: Plugin[];
+
+  /**
+   * All available plugins.
+   */
+  available: Plugin['meta'][];
+
+  /**
+   * Mark plugin as enabled.
+   *
+   * Requires reload to take effect.
+   */
+  enablePlugin: (id: string) => void;
+
+  /**
+   * Mark plugin as disabled.
+   *
+   * Requires reload to take effect.
+   */
+  disablePlugin: (id: string) => void;
 };
 
 const PluginContext: Context<PluginContext> = createContext<PluginContext>({
   ready: false,
-  initializing: [],
-  loading: [],
+  enabled: [],
   plugins: [],
+  available: [],
+  enablePlugin: () => {},
+  disablePlugin: () => {},
 });
 
 /**

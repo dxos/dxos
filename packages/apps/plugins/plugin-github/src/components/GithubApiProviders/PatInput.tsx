@@ -9,7 +9,7 @@ import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './OctokitProvider';
-import { GITHUB_PLUGIN } from '../../props';
+import { GITHUB_PLUGIN } from '../../meta';
 
 const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(GITHUB_PLUGIN);

@@ -10,7 +10,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN } from '../types';
+import { SPACE_PLUGIN } from '../meta';
 
 export const SpaceMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);

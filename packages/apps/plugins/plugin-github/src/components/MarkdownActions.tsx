@@ -14,7 +14,8 @@ import { getSize } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';
-import { GITHUB_PLUGIN, type GhIssueIdentifier } from '../props';
+import { GITHUB_PLUGIN } from '../meta';
+import type { GhIssueIdentifier } from '../props';
 
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
 export const MarkdownActions = ({

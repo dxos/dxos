@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SCRIPT_PLUGIN } from './types';
+import { SCRIPT_PLUGIN } from './meta';
 
 export default [
   {

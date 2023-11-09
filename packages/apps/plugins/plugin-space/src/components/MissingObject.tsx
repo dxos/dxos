@@ -8,7 +8,8 @@ import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN, SpaceAction } from '../types';
+import { SPACE_PLUGIN } from '../meta';
+import { SpaceAction } from '../types';
 
 export const MissingObject = ({ id }: { id: string }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
