@@ -103,7 +103,7 @@ export const markdownTheme = {
     background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
   },
   '.dark & .cm-selectionBackground, .dark &.cm-focused .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.800', '#00ffff'),
+    background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
   },
   '& .cm-selectionMatch': {
     background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
