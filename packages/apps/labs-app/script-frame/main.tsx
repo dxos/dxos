@@ -12,7 +12,6 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 // TODO(burdon): The script main frame currently must be part of the vite applications.
 //  Import file as resource from package?
 
-
 (window as any).__DXOS_SANDBOX_MODULES__ = {
   modules: {
     // prettier-ignore
@@ -25,14 +24,12 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
   },
   resolve: (name: string) => {
     const { modules } = (window as any).__DXOS_SANDBOX_MODULES__;
-    if(!modules[name]) {
+    if (!modules[name]) {
       throw new Error(`Module not found: ${name}`);
     }
     return modules[name];
-  }
-}
-
-
+  },
+};
 
 // eslint-disable-next-line no-new-func
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);

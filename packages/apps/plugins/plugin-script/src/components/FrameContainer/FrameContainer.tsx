@@ -2,27 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Warning } from '@phosphor-icons/react';
+import { type Message } from 'esbuild';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
 import { useClient } from '@dxos/react-client';
+import { type Message } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { type CompilerResult } from '../../compiler';
-import { Message } from 'esbuild';
-import { Warning } from '@phosphor-icons/react';
-import { Message } from '@dxos/react-ui';
-import { type } from 'os';
 
 export type FrameContainerProps = {
   containerUrl: string;
   result: CompilerResult;
   debug?: boolean;
 };
-
-
 
 /**
  * IFrame container for the compiled script.
@@ -33,7 +30,7 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
   const [runtimeErrors, setRuntimeErrors] = useState<Message[]>([]);
 
   useEffect(() => {
-    console.log('clear')
+    console.log('clear');
     setRuntimeErrors([]);
   }, [result]);
 
@@ -60,16 +57,16 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
   useEffect(() => {
     if (iframeRef.current) {
       const handler: OnErrorEventHandler = (msg, url, line, col, err) => {
-        setRuntimeErrors(runtimeErrors => [...runtimeErrors, decodeRuntimeError(msg, url, line, col, err)]);
-      }
+        setRuntimeErrors((runtimeErrors) => [...runtimeErrors, decodeRuntimeError(msg, url, line, col, err)]);
+      };
 
       iframeRef.current.contentWindow?.addEventListener('error', handler);
 
       return () => {
         iframeRef.current?.contentWindow?.removeEventListener('error', handler);
-      }
+      };
     }
-  }, [iframeRef])
+  }, [iframeRef]);
 
   // Encodes compiled code via URL.
   const sourceHash = Buffer.from(result.sourceHash).toString('hex');
@@ -92,12 +89,17 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
           <DiagnosticMessage key={index} message={warning} kind={'warning'} />
         ))}
       </div>
-    )
+    );
   }
 
   return (
     <>
-      <iframe ref={iframeRef} sandbox='allow-scripts allow-same-origin' src={src} style={{ width: '100%', height: '100%' }} />
+      <iframe
+        ref={iframeRef}
+        sandbox='allow-scripts allow-same-origin'
+        src={src}
+        style={{ width: '100%', height: '100%' }}
+      />
 
       {debug && (
         <div className='relative'>
@@ -153,27 +155,21 @@ const createImportMap = (result: CompilerResult) => {
   };
 };
 
-const DiagnosticMessage = ({ message, kind }: { message: Message, kind: 'error' | 'warning' }) => {
+const DiagnosticMessage = ({ message, kind }: { message: Message; kind: 'error' | 'warning' }) => {
   return (
     <div className='flex flex-row gap-2'>
       <Warning />
       <div className='whitespace-pre text-xs'>
         <div className='font-bold'>
-          <span className='uppercase'>{kind} {' '}</span>
+          <span className='uppercase'>{kind} </span>
           {message.location && (
-            <span >
+            <span>
               {message.location.file}:{message.location.line}:{message.location.column}
             </span>
           )}
         </div>
-        <div>
-          {message.text}
-        </div>
-        {message.detail instanceof Error && (
-          <div>
-            {message.detail.message}
-          </div>
-        )}
+        <div>{message.text}</div>
+        {message.detail instanceof Error && <div>{message.detail.message}</div>}
         {message.notes.length > 0 && (
           <div className=''>
             {message.notes.map((note, index) => (
@@ -183,8 +179,8 @@ const DiagnosticMessage = ({ message, kind }: { message: Message, kind: 'error' 
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const decodeRuntimeError = (...[msg, url, line, col, err]: Parameters<OnErrorEventHandlerNonNull>): Message => {
   const message: Message = {
@@ -194,9 +190,9 @@ const decodeRuntimeError = (...[msg, url, line, col, err]: Parameters<OnErrorEve
     notes: [],
     pluginName: 'runtime',
     detail: err,
-  }
+  };
 
-  if(typeof url === 'string' && !!url) {
+  if (typeof url === 'string' && !!url) {
     message.location = {
       namespace: '',
       file: url ?? '',
@@ -208,5 +204,5 @@ const decodeRuntimeError = (...[msg, url, line, col, err]: Parameters<OnErrorEve
     };
   }
 
-  return message
-}
+  return message;
+};

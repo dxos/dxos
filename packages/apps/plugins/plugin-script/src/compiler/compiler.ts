@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Message, type BuildOptions, formatMessages } from 'esbuild';
+import { type Message, type BuildOptions } from 'esbuild';
 import { build, initialize, type BuildResult } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
@@ -19,8 +19,8 @@ export type CompilerResult = {
   sourceHash: Buffer;
   imports: Import[];
   bundle: string;
-  errors: Message[]
-  warnings: Message[]
+  errors: Message[];
+  warnings: Message[];
 };
 
 export type CompilerOptions = {
@@ -38,7 +38,7 @@ export const initializeCompiler = async (options: { wasmURL: string }) => {
  * ESBuild compiler.
  */
 export class Compiler {
-  constructor(private readonly _options: CompilerOptions) { }
+  constructor(private readonly _options: CompilerOptions) {}
 
   // TODO(burdon): Error handling.
   async compile(source: string): Promise<CompilerResult> {
@@ -86,7 +86,7 @@ export class Compiler {
         warnings: result.warnings,
       };
     } catch (e: any) {
-      console.log(JSON.stringify(e))
+      console.log(JSON.stringify(e));
       return {
         timestamp: Date.now(),
         sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
@@ -94,7 +94,7 @@ export class Compiler {
         bundle: '',
         errors: e.errors ?? [],
         warnings: e.warnings ?? [],
-      }
+      };
     }
   }
 
