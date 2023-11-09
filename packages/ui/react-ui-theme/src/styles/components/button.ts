@@ -25,7 +25,7 @@ export const defaultAppButtonColors =
 export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutral-750/50 dark:text-neutral-50';
 export const ghostButtonColors =
   ghostHover +
-  'hover:text-inherit dark:hover:text-inherit aria-pressed:text-primary-800 aria-checked:text-primary-800 dark:aria-pressed:text-primary-100 dark:aria-checked:text-primary-100';
+  ' hover:text-inherit dark:hover:text-inherit aria-pressed:text-primary-800 aria-checked:text-primary-800 dark:aria-pressed:text-primary-100 dark:aria-checked:text-primary-100';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
