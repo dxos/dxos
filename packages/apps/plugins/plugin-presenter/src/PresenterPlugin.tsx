@@ -70,7 +70,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         );
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isStack(data.active) && state.presenting ? <PresenterMain stack={data.active} /> : null;

@@ -65,7 +65,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isExplorer(data.active) ? <ExplorerMain view={data.active} /> : null;

@@ -84,7 +84,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           if (!isStack(data.active)) {
             return null;
           }

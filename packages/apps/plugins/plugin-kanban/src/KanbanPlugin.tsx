@@ -64,7 +64,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isKanban(data.active) ? <KanbanMain kanban={data.active} /> : null;

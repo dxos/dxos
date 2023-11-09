@@ -113,7 +113,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     provides: {
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           if (!isLocalFile(data.active)) {
             return null;
           }
