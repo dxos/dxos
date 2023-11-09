@@ -13,11 +13,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { DebugPanel } from './DebugPanel';
 import { Json, Tree } from './Tree';
 
-export const DEFAULT_COUNT = 100;
-export const DEFAULT_PERIOD = 500;
-export const DEFAULT_JITTER = 50;
-
-const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
+export const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('diagnostics');
   const [data, setData] = useState<any>({});
@@ -80,5 +76,3 @@ const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
     </DebugPanel>
   );
 };
-
-export default DebugGlobal;

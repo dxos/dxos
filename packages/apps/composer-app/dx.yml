@@ -5,7 +5,7 @@ package:
     - name: composer
       type: dxos:type/app
       displayName: Composer
-      description: Self-sovereign text documents.
+      description: Composer is an open-source, extensible environment for bringing together knowledge from all systems.
       tags:
         - showcase
       build:

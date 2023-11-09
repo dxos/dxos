@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DEBUG_PLUGIN } from './props';
+import { DEBUG_PLUGIN } from './meta';
 
 export default [
   {

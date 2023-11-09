@@ -11,8 +11,9 @@ import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition }
 import { Expando } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
+import meta, { TEMPLATE_PLUGIN } from './meta';
 import translations from './translations';
-import { TEMPLATE_PLUGIN, TemplateAction, type TemplatePluginProvides, isObject } from './types';
+import { TemplateAction, type TemplatePluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -22,9 +23,7 @@ const typename = 'template'; // Type.schema.typename
 
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
   return {
-    meta: {
-      id: TEMPLATE_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {

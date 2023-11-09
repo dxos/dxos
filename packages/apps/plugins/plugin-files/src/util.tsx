@@ -8,14 +8,8 @@ import React from 'react';
 import { type Node } from '@braneframe/plugin-graph';
 import { type DispatchIntent } from '@dxos/app-framework';
 
-import {
-  FILES_PLUGIN,
-  FILES_PLUGIN_SHORT_ID,
-  type LocalDirectory,
-  type LocalEntity,
-  type LocalFile,
-  LocalFilesAction,
-} from './types';
+import { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID } from './meta';
+import { type LocalDirectory, type LocalEntity, type LocalFile, LocalFilesAction } from './types';
 
 export const isLocalFile = (data: unknown): data is LocalFile =>
   data && typeof data === 'object' ? 'title' in data && 'handle' in data : false;

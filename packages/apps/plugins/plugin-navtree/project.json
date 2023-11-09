@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-navtree/src/index.ts"
+          "packages/apps/plugins/plugin-navtree/src/index.ts",
+          "packages/apps/plugins/plugin-navtree/src/meta.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-navtree/dist/lib",
         "platforms": [
