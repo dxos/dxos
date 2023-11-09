@@ -42,8 +42,10 @@ export const PatInput = () => {
 
   return (
     <Input.Root>
-      <div role='none' className='max-is-md text-start'>
-        <Input.Label>{t('github pat label')}</Input.Label>
+      <div role='none' className='text-start'>
+        <Input.Label classNames='text-base font-system-medium' asChild>
+          <h3>{t('github pat label')}</h3>
+        </Input.Label>
         <Input.TextInput
           autoFocus
           spellCheck={false}

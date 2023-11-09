@@ -15,7 +15,7 @@ import {
   type DialogRootProps,
   type DialogTitleProps,
 } from '@dxos/react-ui';
-import { focusRing, hoverColors, getSize, mx } from '@dxos/react-ui-theme';
+import { focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 
@@ -90,7 +90,7 @@ export const Dialog = ({
                 className={mx(
                   'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
                   focusRing,
-                  hoverColors,
+                  ghostHover,
                   slots.close?.className,
                 )}
               >

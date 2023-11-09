@@ -13,6 +13,7 @@ import {
   staticDisabled,
   focusRing,
   contentElevation,
+  ghostHover,
 } from '../fragments';
 
 // TODO(burdon): Ghost styles should have no border (be really flat).
@@ -23,7 +24,8 @@ export const defaultAppButtonColors =
   'bg-white aria-pressed:bg-primary-100 aria-checked:bg-primary-100 text-neutral-800 aria-pressed:text-primary-800 aria-checked:text-primary-800 dark:bg-neutral-800 dark:aria-pressed:bg-primary-700 dark:aria-checked:bg-primary-700 dark:text-neutral-50 dark:aria-pressed:text-primary-50 dark:aria-checked:text-primary-50';
 export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutral-750/50 dark:text-neutral-50';
 export const ghostButtonColors =
-  'hover:bg-neutral-450/10 dark:hover:bg-25/10 hover:text-inherit dark:hover:text-inherit aria-pressed:text-primary-800 aria-checked:text-primary-800 dark:aria-pressed:text-primary-100 dark:aria-checked:text-primary-100';
+  ghostHover +
+  'hover:text-inherit dark:hover:text-inherit aria-pressed:text-primary-800 aria-checked:text-primary-800 dark:aria-pressed:text-primary-100 dark:aria-checked:text-primary-100';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
