@@ -4,6 +4,8 @@
 
 import { type AgentEnv } from './env';
 
+export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
+
 export type TestParams<S> = {
   testId: string;
   outDir: string;
@@ -15,12 +17,21 @@ export type AgentParams<S, C> = {
   agentId: string;
   outDir: string;
   config: C;
+  runtime: AgentRuntimeParams;
 
-  // environment: {
   testId: string;
   spec: S;
   agents: Record<string, C>;
-  // }
+};
+
+export type AgentRuntimeParams = {
+  // defaults to node.
+  platform?: Platform;
+};
+
+export type AgentRunOptions<C> = {
+  config: C;
+  runtime?: AgentRuntimeParams;
 };
 
 export type PlanResults = {
