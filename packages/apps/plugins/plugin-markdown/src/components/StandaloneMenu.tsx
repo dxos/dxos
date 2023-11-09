@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, type RefObject } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { Button, DropdownMenu } from '@dxos/react-ui';
-import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-editor';
+import { type EditorModel, type MarkdownEditorRef } from '@dxos/react-ui-editor';
 import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
@@ -17,10 +17,10 @@ export const StandaloneMenu = ({
   properties,
   editorRef,
 }: PropsWithChildren<{
-  model: ComposerModel;
+  model: EditorModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
-  editorRef?: RefObject<MarkdownComposerRef>;
+  editorRef?: RefObject<MarkdownEditorRef>;
 }>) => {
   return (
     <DropdownMenu.Root modal={false}>
