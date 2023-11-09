@@ -494,6 +494,9 @@ importers:
 
   packages/apps/composer-app:
     dependencies:
+      '@braneframe/plugin-chess':
+        specifier: workspace:*
+        version: link:../plugins/plugin-chess
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugins/plugin-client
@@ -503,6 +506,9 @@ importers:
       '@braneframe/plugin-error':
         specifier: workspace:*
         version: link:../plugins/plugin-error
+      '@braneframe/plugin-explorer':
+        specifier: workspace:*
+        version: link:../plugins/plugin-explorer
       '@braneframe/plugin-files':
         specifier: workspace:*
         version: link:../plugins/plugin-files
@@ -512,12 +518,21 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugins/plugin-graph
+      '@braneframe/plugin-grid':
+        specifier: workspace:*
+        version: link:../plugins/plugin-grid
       '@braneframe/plugin-ipfs':
         specifier: workspace:*
         version: link:../plugins/plugin-ipfs
+      '@braneframe/plugin-kanban':
+        specifier: workspace:*
+        version: link:../plugins/plugin-kanban
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugins/plugin-layout
+      '@braneframe/plugin-map':
+        specifier: workspace:*
+        version: link:../plugins/plugin-map
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
@@ -533,6 +548,15 @@ importers:
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
+      '@braneframe/plugin-registry':
+        specifier: workspace:*
+        version: link:../plugins/plugin-registry
+      '@braneframe/plugin-script':
+        specifier: workspace:*
+        version: link:../plugins/plugin-script
+      '@braneframe/plugin-search':
+        specifier: workspace:*
+        version: link:../plugins/plugin-search
       '@braneframe/plugin-sketch':
         specifier: workspace:*
         version: link:../plugins/plugin-sketch
@@ -542,12 +566,21 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
+      '@braneframe/plugin-table':
+        specifier: workspace:*
+        version: link:../plugins/plugin-table
       '@braneframe/plugin-telemetry':
         specifier: workspace:*
         version: link:../plugins/plugin-telemetry
+      '@braneframe/plugin-template':
+        specifier: workspace:*
+        version: link:../plugins/plugin-template
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugins/plugin-theme
+      '@braneframe/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugins/plugin-thread
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
@@ -569,6 +602,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc-tunnel
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -715,169 +751,6 @@ importers:
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
-      vite-plugin-pwa:
-        specifier: ^0.14.1
-        version: 0.14.1(vite@4.3.9)(workbox-window@6.5.4)
-      workbox-window:
-        specifier: ^6.5.4
-        version: 6.5.4
-
-  packages/apps/labs-app:
-    dependencies:
-      '@braneframe/plugin-chess':
-        specifier: workspace:*
-        version: link:../plugins/plugin-chess
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugins/plugin-client
-      '@braneframe/plugin-debug':
-        specifier: workspace:*
-        version: link:../plugins/plugin-debug
-      '@braneframe/plugin-error':
-        specifier: workspace:*
-        version: link:../plugins/plugin-error
-      '@braneframe/plugin-explorer':
-        specifier: workspace:*
-        version: link:../plugins/plugin-explorer
-      '@braneframe/plugin-files':
-        specifier: workspace:*
-        version: link:../plugins/plugin-files
-      '@braneframe/plugin-github':
-        specifier: workspace:*
-        version: link:../plugins/plugin-github
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugins/plugin-graph
-      '@braneframe/plugin-grid':
-        specifier: workspace:*
-        version: link:../plugins/plugin-grid
-      '@braneframe/plugin-ipfs':
-        specifier: workspace:*
-        version: link:../plugins/plugin-ipfs
-      '@braneframe/plugin-kanban':
-        specifier: workspace:*
-        version: link:../plugins/plugin-kanban
-      '@braneframe/plugin-layout':
-        specifier: workspace:*
-        version: link:../plugins/plugin-layout
-      '@braneframe/plugin-map':
-        specifier: workspace:*
-        version: link:../plugins/plugin-map
-      '@braneframe/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugins/plugin-markdown
-      '@braneframe/plugin-metadata':
-        specifier: workspace:*
-        version: link:../plugins/plugin-metadata
-      '@braneframe/plugin-navtree':
-        specifier: workspace:*
-        version: link:../plugins/plugin-navtree
-      '@braneframe/plugin-presenter':
-        specifier: workspace:*
-        version: link:../plugins/plugin-presenter
-      '@braneframe/plugin-pwa':
-        specifier: workspace:*
-        version: link:../plugins/plugin-pwa
-      '@braneframe/plugin-script':
-        specifier: workspace:*
-        version: link:../plugins/plugin-script
-      '@braneframe/plugin-search':
-        specifier: workspace:*
-        version: link:../plugins/plugin-search
-      '@braneframe/plugin-sketch':
-        specifier: workspace:*
-        version: link:../plugins/plugin-sketch
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugins/plugin-space
-      '@braneframe/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugins/plugin-stack
-      '@braneframe/plugin-table':
-        specifier: workspace:*
-        version: link:../plugins/plugin-table
-      '@braneframe/plugin-telemetry':
-        specifier: workspace:*
-        version: link:../plugins/plugin-telemetry
-      '@braneframe/plugin-template':
-        specifier: workspace:*
-        version: link:../plugins/plugin-template
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugins/plugin-theme
-      '@braneframe/plugin-thread':
-        specifier: workspace:*
-        version: link:../plugins/plugin-thread
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../types
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-editor
-      '@dxos/react-ui-table':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-table
-      '@dxos/rpc-tunnel':
-        specifier: workspace:*
-        version: link:../../core/mesh/rpc-tunnel
-      isomorphic-fetch:
-        specifier: ^3.0.0
-        version: 3.0.0
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/devtools':
-        specifier: workspace:*
-        version: link:../../devtools/devtools
-      '@dxos/react-shell':
-        specifier: workspace:*
-        version: link:../../sdk/react-shell
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/vault':
-        specifier: workspace:*
-        version: link:../../sdk/vault
-      '@sentry/vite-plugin':
-        specifier: ^0.7.2
-        version: 0.7.2
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      '@vitejs/plugin-react':
-        specifier: ^3.0.1
-        version: 3.1.0(vite@4.3.9)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-      vite-plugin-mkcert:
-        specifier: ^1.16.0
-        version: 1.16.0(vite@4.3.9)
       vite-plugin-pwa:
         specifier: ^0.14.1
         version: 0.14.1(vite@4.3.9)(workbox-window@6.5.4)
@@ -1951,32 +1824,7 @@ importers:
         version: 4.3.9(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
-    dependencies:
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../../sdk/client
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-layout':
-        specifier: workspace:*
-        version: link:../plugin-layout
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1991,7 +1839,7 @@ importers:
         version: link:../../../ui/react-ui-theme
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -6726,9 +6574,15 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@preact/signals-react':
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
@@ -15276,6 +15130,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       '@octokit/types': 8.0.0
+    dev: false
 
   /@octokit/auth-unauthenticated@3.0.4:
     resolution: {integrity: sha512-AT74XGBylcLr4lmUp1s6mjSUgphGdlse21Qjtv5DzpX1YOl5FXKwvNcZWESdhyBbpDT8VkVyLFqa/7a7eqpPNw==}
@@ -15312,6 +15167,7 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
+    dev: false
 
   /@octokit/endpoint@6.0.12:
     resolution: {integrity: sha512-lF3puPwkQWGfkMClXb4k/eUT/nZKQfxinRWJrdZaJO85Dqwo/G0yOC434Jr2ojwafWJMYqFGFa5ms4jJUgujdA==}
@@ -15328,6 +15184,7 @@ packages:
       '@octokit/types': 8.0.0
       is-plain-object: 5.0.0
       universal-user-agent: 6.0.0
+    dev: false
 
   /@octokit/graphql@4.8.0:
     resolution: {integrity: sha512-0gv+qLSBLKF0z8TKaSKTsS39scVKF9dbMxJpj3U0vC7wjNWFuIpL/z76Qe2fiuCbDRcJSavkXsVtMS6/dtQQsg==}
@@ -15348,6 +15205,7 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
+    dev: false
 
   /@octokit/oauth-app@4.2.0:
     resolution: {integrity: sha512-gyGclT77RQMkVUEW3YBeAKY+LBSc5u3eC9Wn/Uwt3WhuKuu9mrV18EnNpDqmeNll+mdV02yyBROU29Tlili6gg==}
@@ -15390,9 +15248,11 @@ packages:
 
   /@octokit/openapi-types@14.0.0:
     resolution: {integrity: sha512-HNWisMYlR8VCnNurDU6os2ikx0s0VyEjDYHNS/h4cgb8DeOxQ0n72HyinUtdDVxJhFy3FWLGl0DJhfEWk3P5Iw==}
+    dev: false
 
   /@octokit/openapi-types@16.0.0:
     resolution: {integrity: sha512-JbFWOqTJVLHZSUUoF4FzAZKYtqdxWu9Z5m2QQnOyEa04fOFljvyh7D3GYKbfuaSWisqehImiVIMG4eyJeP5VEA==}
+    dev: false
 
   /@octokit/plugin-paginate-rest@2.21.3(@octokit/core@3.6.0):
     resolution: {integrity: sha512-aCZTEf0y2h3OLbrgKkrfFdjRL6eSOo8komneVQJnYecAxIej7Bafor2xhuDJOIFau4pk0i/P28/XgtbyPF0ZHw==}
@@ -15411,6 +15271,7 @@ packages:
     dependencies:
       '@octokit/core': 4.1.0
       '@octokit/types': 8.0.0
+    dev: false
 
   /@octokit/plugin-paginate-rest@6.0.0(@octokit/core@4.1.0):
     resolution: {integrity: sha512-Sq5VU1PfT6/JyuXPyt04KZNVsFOSBaYOAq2QRZUwzVlI10KFvcbUo8lR258AAQL1Et60b0WuVik+zOWKLuDZxw==}
@@ -15436,6 +15297,7 @@ packages:
       '@octokit/core': '>=3'
     dependencies:
       '@octokit/core': 4.1.0
+    dev: false
 
   /@octokit/plugin-rest-endpoint-methods@5.16.2(@octokit/core@3.6.0):
     resolution: {integrity: sha512-8QFz29Fg5jDuTPXVtey05BLm7OB+M8fnvE64RNegzX7U+5NUXcOcnpTIK0YfSHBg8gYd0oxIq3IZTe9SfPZiRw==}
@@ -15456,6 +15318,7 @@ packages:
       '@octokit/core': 4.1.0
       '@octokit/types': 8.0.0
       deprecation: 2.3.1
+    dev: false
 
   /@octokit/plugin-rest-endpoint-methods@7.0.1(@octokit/core@4.1.0):
     resolution: {integrity: sha512-pnCaLwZBudK5xCdrR823xHGNgqOzRnJ/mpC/76YPpNP7DybdsJtP7mdOwh+wYZxK5jqeQuhu59ogMI4NRlBUvA==}
@@ -15505,6 +15368,7 @@ packages:
       '@octokit/types': 9.0.0
       deprecation: 2.3.1
       once: 1.4.0
+    dev: false
 
   /@octokit/request@5.6.3:
     resolution: {integrity: sha512-bFJl0I1KVc9jYTe9tdGGpAMPy32dLBXXo1dS/YwSCTL/2nd9XeHsY616RE3HPXDVk+a+dBuzyz5YdlXwcDTr2A==}
@@ -15531,6 +15395,7 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
+    dev: false
 
   /@octokit/rest@18.12.0:
     resolution: {integrity: sha512-gDPiOHlyGavxr72y0guQEhLsemgVjwRePayJ+FcKc2SJqKUbxbkvf5kAZEWA/MKvsfYlQAMVzNJE3ezQcxMJ2Q==}
@@ -15553,6 +15418,7 @@ packages:
       '@octokit/plugin-rest-endpoint-methods': 6.7.0(@octokit/core@4.1.0)
     transitivePeerDependencies:
       - encoding
+    dev: false
 
   /@octokit/types@6.41.0:
     resolution: {integrity: sha512-eJ2jbzjdijiL3B4PrSQaSjuF2sPEQPVCPzBvTHJD9Nz+9dw2SGH4K4xeQJ77YfTq5bRQ+bD8wT11JbeDPmxmGg==}
@@ -15564,11 +15430,13 @@ packages:
     resolution: {integrity: sha512-65/TPpOJP1i3K4lBJMnWqPUJ6zuOtzhtagDvydAWbEXpbFYA0oMKKyLb95NFZZP0lSh/4b6K+DQlzvYQJQQePg==}
     dependencies:
       '@octokit/openapi-types': 14.0.0
+    dev: false
 
   /@octokit/types@9.0.0:
     resolution: {integrity: sha512-LUewfj94xCMH2rbD5YJ+6AQ4AVjFYTgpp6rboWM5T7N3IsIF65SBEOVcYMGAEzO/kKNiNaW4LoWtoThOhH06gw==}
     dependencies:
       '@octokit/openapi-types': 16.0.0
+    dev: false
 
   /@octokit/webhooks-methods@3.0.2:
     resolution: {integrity: sha512-Vlnv5WBscf07tyAvfDbp7pTkMZUwk7z7VwEF32x6HqI+55QRwBTcT+D7DDjZXtad/1dU9E32x0HmtDlF9VIRaQ==}
@@ -22677,7 +22545,7 @@ packages:
   /axios@0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.15.2(debug@4.3.4)
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
     dev: false
@@ -22685,7 +22553,7 @@ packages:
   /axios@0.26.1:
     resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
     dependencies:
-      follow-redirects: 1.15.2(debug@4.3.4)
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
     dev: false
@@ -22693,7 +22561,7 @@ packages:
   /axios@0.27.2:
     resolution: {integrity: sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==}
     dependencies:
-      follow-redirects: 1.15.2(debug@4.3.4)
+      follow-redirects: 1.15.2
       form-data: 4.0.0
     transitivePeerDependencies:
       - debug
@@ -22702,17 +22570,17 @@ packages:
   /axios@1.1.3:
     resolution: {integrity: sha512-00tXVRwKx/FZr/IDVFt4C+f9FYairX517WoGCL6dpOntqLkZofjhu43F/Xl44UOpqa+9sLFDrG/XAnFsUYgkDA==}
     dependencies:
-      follow-redirects: 1.15.2(debug@4.3.4)
+      follow-redirects: 1.15.2
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
     dev: true
 
-  /axios@1.3.4(debug@4.3.4):
+  /axios@1.3.4:
     resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
-      follow-redirects: 1.15.2(debug@4.3.4)
+      follow-redirects: 1.15.2
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -28049,7 +27917,7 @@ packages:
       tslib: 2.4.1
     dev: true
 
-  /follow-redirects@1.15.2(debug@4.3.4):
+  /follow-redirects@1.15.2:
     resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
     engines: {node: '>=4.0'}
     peerDependencies:
@@ -28057,8 +27925,6 @@ packages:
     peerDependenciesMeta:
       debug:
         optional: true
-    dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
 
   /fontkit@2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
@@ -29339,7 +29205,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2(debug@4.3.4)
+      follow-redirects: 1.15.2
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -35119,7 +34985,7 @@ packages:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.0-rc.46
       '@zkochan/js-yaml': 0.0.6
-      axios: 1.3.4(debug@4.3.4)
+      axios: 1.3.4
       chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
@@ -35183,7 +35049,7 @@ packages:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.0-rc.46
       '@zkochan/js-yaml': 0.0.6
-      axios: 1.3.4(debug@4.3.4)
+      axios: 1.3.4
       chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
@@ -41751,22 +41617,6 @@ packages:
       vite: 4.3.9(@types/node@18.11.9)
     transitivePeerDependencies:
       - rollup
-      - supports-color
-    dev: true
-
-  /vite-plugin-mkcert@1.16.0(vite@4.3.9):
-    resolution: {integrity: sha512-5r+g8SB9wZzLNUFekGwZo3e0P6QlS6rbxK5p9z/itxNAimsYohgjK/YfVPVxM9EuglP9hjridq0lUejo9v1nVg==}
-    engines: {node: '>=v16.7.0'}
-    peerDependencies:
-      vite: '>=3'
-    dependencies:
-      '@octokit/rest': 19.0.5
-      axios: 1.3.4(debug@4.3.4)
-      debug: 4.3.4(supports-color@8.1.1)
-      picocolors: 1.0.0
-      vite: 4.3.9(@types/node@18.11.9)
-    transitivePeerDependencies:
-      - encoding
       - supports-color
     dev: true
 

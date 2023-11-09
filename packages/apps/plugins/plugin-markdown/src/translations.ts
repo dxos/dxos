@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MARKDOWN_PLUGIN } from './types';
+import { MARKDOWN_PLUGIN } from './meta';
 
 export default [
   {

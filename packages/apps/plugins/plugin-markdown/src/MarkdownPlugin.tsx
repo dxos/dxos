@@ -30,9 +30,9 @@ import {
   // SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
+import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  MARKDOWN_PLUGIN,
   MarkdownAction,
   type MarkdownPluginProvides,
   type MarkdownProperties,
@@ -139,9 +139,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   };
 
   return {
-    meta: {
-      id: MARKDOWN_PLUGIN,
-    },
+    meta,
     ready: async (plugins) => {
       settings.prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string);
 

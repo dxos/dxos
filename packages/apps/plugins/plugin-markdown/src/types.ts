@@ -13,7 +13,7 @@ import type {
 import type { ObjectMeta } from '@dxos/react-client/echo';
 import type { EditorMode, MarkdownComposerProps } from '@dxos/react-ui-editor';
 
-export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
+import { MARKDOWN_PLUGIN } from './meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 

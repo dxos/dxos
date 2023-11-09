@@ -8,7 +8,7 @@ import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { Dialog, Button, useTranslation, Input } from '@dxos/react-ui';
 
 import { useGhIdFromUrl } from '../hooks';
-import { GITHUB_PLUGIN } from '../props';
+import { GITHUB_PLUGIN } from '../meta';
 
 export const UrlDialog = ({ properties }: { properties: MarkdownProperties }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);

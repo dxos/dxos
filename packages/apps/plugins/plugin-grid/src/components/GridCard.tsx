@@ -11,7 +11,7 @@ import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
-import { GRID_PLUGIN } from '../types';
+import { GRID_PLUGIN } from '../meta';
 
 export const colors: Record<string, string> = {
   gray: '!bg-neutral-50',

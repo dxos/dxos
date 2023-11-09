@@ -10,8 +10,9 @@ import { Folder, Grid as GridType } from '@braneframe/types';
 import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 
 import { GridMain } from './components';
+import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
-import { GRID_PLUGIN, GridAction, type GridPluginProvides, isGrid } from './types';
+import { GridAction, type GridPluginProvides, isGrid } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -19,9 +20,7 @@ import { GRID_PLUGIN, GridAction, type GridPluginProvides, isGrid } from './type
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
-    meta: {
-      id: GRID_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
