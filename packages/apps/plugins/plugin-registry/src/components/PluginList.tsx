@@ -45,10 +45,12 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                   <label htmlFor={inputId} id={labelId} className='truncate'>
                     {name ?? id}
                   </label>
-                  <div id={descriptionId} className='space-b-1'>
-                    <p className={descriptionText}>{description}</p>
-                    {reloadRequired && <p className='text-sm font-system-medium'>{t('reload required message')}</p>}
-                  </div>
+                  {(description || reloadRequired) && (
+                    <div id={descriptionId} className='space-b-1 pbe-1'>
+                      <p className={descriptionText}>{description}</p>
+                      {reloadRequired && <p className='text-sm font-system-medium'>{t('reload required message')}</p>}
+                    </div>
+                  )}
                 </div>
                 <Input.Switch classNames='self-center' checked={!!isEnabled} />
               </ListItem.Root>
