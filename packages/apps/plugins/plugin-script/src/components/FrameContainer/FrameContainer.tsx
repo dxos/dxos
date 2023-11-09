@@ -8,7 +8,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
 import { useClient } from '@dxos/react-client';
-import { type Message } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
