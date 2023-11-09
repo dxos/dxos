@@ -10,7 +10,7 @@ import React, { type FC } from 'react';
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
-import { getSize, mx, inputSurface } from '@dxos/react-ui-theme';
+import { getSize, mx, inputSurface, focusRing } from '@dxos/react-ui-theme';
 
 import { KANBAN_PLUGIN } from '../meta';
 
@@ -52,7 +52,7 @@ export const KanbanCardComponent: FC<{
         <div className='flex flex-col grow'>
           <MarkdownEditor
             // TODO(burdon): Placeholder ignored.
-            slots={{ root: { className: 'p-1' }, editor: { placeholder: t('item title placeholder') } }}
+            slots={{ root: { className: mx(focusRing, 'p-1') }, editor: { placeholder: t('item title placeholder') } }}
             model={model}
           />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
