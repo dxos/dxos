@@ -32,6 +32,10 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
       <MarkdownComposer
         model={model}
         slots={{
+          root: {
+            role: 'none',
+            className: 'pli-4',
+          },
           editor: {
             // TODO(wittjosiah): Copied from plugin-markdown.
             //   Without this the cursors are cut off at the edges.
