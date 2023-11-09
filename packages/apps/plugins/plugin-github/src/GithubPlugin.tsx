@@ -29,7 +29,8 @@ import {
   PatInput,
   UrlDialog,
 } from './components';
-import { type ExportViewState, GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID, type GhIdentifier } from './props';
+import { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
+import type { ExportViewState, GhIdentifier } from './props';
 import translations from './translations';
 
 export type GithubSettingsProps = {

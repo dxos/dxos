@@ -7,7 +7,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { type TypedObject } from '@dxos/react-client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../types';
+import { SPACE_PLUGIN } from '../meta';
 
 export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
   const { t } = useTranslation(SPACE_PLUGIN);

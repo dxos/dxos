@@ -12,7 +12,7 @@ import { baseSurface, coarseBlockSize, fixedInsetFlexLayout, getSize, mx } from 
 import { ContentFallback } from './ContentFallback';
 import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
-import { LAYOUT_PLUGIN } from '../types';
+import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
   fullscreen?: boolean;

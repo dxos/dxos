@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EXPLORER_PLUGIN } from './types';
+import { EXPLORER_PLUGIN } from './meta';
 
 export default [
   {
