@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(thure): Restore.
+
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { ComboBox, type ComboBoxItem } from './ComboBox';
+import { Combobox } from './Combobox';
 
 type TestItem = { id: string; text: string };
 
@@ -19,10 +21,10 @@ const data: TestItem[] = faker.helpers
     text,
   }));
 
-const ComboBoxStory: FC<{ data: TestItem[] }> = ({ data = [] }) => {
+const ComboboxStory: FC<{ data: TestItem[] }> = ({ data = [] }) => {
   const [filter, setFilter] = useState<string>();
-  const [items, setItems] = useState<ComboBoxItem[]>([]);
-  const [selected, setSelected] = useState<ComboBoxItem>();
+  const [items, setItems] = useState<ComboboxItem[]>([]);
+  const [selected, setSelected] = useState<ComboboxItem>();
   useEffect(() => {
     setItems(() =>
       filter?.length
@@ -35,16 +37,16 @@ const ComboBoxStory: FC<{ data: TestItem[] }> = ({ data = [] }) => {
 
   return (
     <div className='flex flex-col w-full bg-neutral-100 dark:bg-neutral-800'>
-      <ComboBox.Root items={items} onChange={setSelected} onInputChange={setFilter}>
-        <ComboBox.Input placeholder={'Select...'} />
-        <ComboBox.Content>
+      <Combobox.Root items={items} onChange={setSelected} onInputChange={setFilter}>
+        <Combobox.Input placeholder={'Select...'} />
+        <Combobox.Content>
           {items?.map((item) => (
-            <ComboBox.Item key={item.id} item={item}>
+            <Combobox.Item key={item.id} item={item}>
               {item.label}
-            </ComboBox.Item>
+            </Combobox.Item>
           ))}
-        </ComboBox.Content>
-      </ComboBox.Root>
+        </Combobox.Content>
+      </Combobox.Root>
 
       <div className='mt-16 p-2 font-mono text-xs truncate'>
         <div>{selected?.label}</div>
@@ -54,7 +56,7 @@ const ComboBoxStory: FC<{ data: TestItem[] }> = ({ data = [] }) => {
 };
 
 export default {
-  component: ComboBoxStory,
+  component: ComboboxStory,
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
