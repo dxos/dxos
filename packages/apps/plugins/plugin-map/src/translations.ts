@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [MAP_PLUGIN]: {
-        'plugin name': 'Map',
+        'plugin name': 'Maps',
         'object title placeholder': 'New map',
         'create object label': 'Create map',
         'delete object label': 'Delete',
