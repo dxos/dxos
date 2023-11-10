@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [THREAD_PLUGIN]: {
-        'plugin name': 'Thread',
+        'plugin name': 'Threads',
         'thread title placeholder': 'New thread',
         'thread title label': 'Title',
         'column title label': 'Column title',

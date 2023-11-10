@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [IPFS_PLUGIN]: {
-        'plugin name': 'File',
+        'plugin name': 'Files',
         'object title placeholder': 'New file',
         'delete object label': 'Delete',
       },
