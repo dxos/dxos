@@ -64,7 +64,7 @@ class CompositeRuntime implements SignalRuntime {
       }
     };
 
-    callBatchRecursively(0);
+    return callBatchRecursively(0);
   }
 
   createSignal(): GenericSignal {
