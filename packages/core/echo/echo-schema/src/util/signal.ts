@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { log } from '@dxos/log';
-
 export interface GenericSignal {
   notifyRead(): void;
   notifyWrite(): void;
