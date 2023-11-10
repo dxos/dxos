@@ -10,7 +10,7 @@ export const os = {
   'copy invitation code success label': 'Copied',
   'open share panel label': 'View QR code',
   'joining space heading': 'Joining space',
-  'join space heading': 'Enter space invitation',
+  'join space heading': 'Join a space',
   'halo heading': 'Initialize device identity',
   'exit label': 'Exit',
   'identity selector title': 'Join as',
