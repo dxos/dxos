@@ -56,11 +56,11 @@ class CompositeRuntime implements SignalRuntime {
   batch(cb: () => void): void {
     runtimeUsed = true;
 
-    const callBatchRecursively = (index: number) => {
+    const callBatchRecursively = (index: number): void => {
       if (index >= runtimeList.length) {
         return cb();
       } else {
-        runtimeList[index].batch(() => callBatchRecursively(index + 1));
+        return runtimeList[index].batch(() => callBatchRecursively(index + 1));
       }
     };
 
