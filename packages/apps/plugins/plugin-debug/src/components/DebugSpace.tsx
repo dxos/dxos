@@ -6,12 +6,14 @@ import {
   ArrowClockwise,
   DotsThreeVertical,
   DownloadSimple,
+  FileText,
   Flag,
   FlagPennant,
   HandPalm,
   Play,
   Plus,
   PlusMinus,
+  Table,
   Timer,
   UserCirclePlus,
 } from '@phosphor-icons/react';
@@ -93,9 +95,8 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
     }
   };
 
-  // TODO(burdon): Call generator.
   const handleCreate = (schema: Schema, count: number) => {
-    // generator.createObjects();
+    generator.createObjects({ [schema.typename]: count });
   };
 
   const handleCreateInvitation = () => {
@@ -127,22 +128,24 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
                 <DotsThreeVertical />
               </Button>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                <DropdownMenu.Item onClick={() => onAddObjects?.([generator.createDocument()])}>
-                  <Plus className={getSize(5)} />
-                  <p>Create document</p>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => onAddObjects?.(generator.createTables())}>
-                  <Plus className={getSize(5)} />
-                  <p>Create tables</p>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => generator.createObjects()}>
-                  <Plus className={getSize(5)} />
-                  <p>Create objects</p>
-                </DropdownMenu.Item>
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content>
+                <DropdownMenu.Viewport>
+                  <DropdownMenu.Item onClick={() => onAddObjects?.([generator.createDocument()])}>
+                    <FileText className={getSize(5)} />
+                    <p>Create document</p>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => onAddObjects?.(generator.createTables())}>
+                    <Table className={getSize(5)} />
+                    <p>Create tables</p>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => generator.createObjects()}>
+                    <Plus className={getSize(5)} />
+                    <p>Create objects</p>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
           </DropdownMenu.Root>
 
           <div className='relative' title='mutation count'>

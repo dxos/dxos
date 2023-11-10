@@ -6,22 +6,22 @@ import { faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
 import { type Space, TextObject } from '@dxos/client/echo';
-import { createSpaceObjectGenerator, type SpaceObjectGenerator, type TestSchemaType } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
 import { range } from '@dxos/util';
 
 const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
   {
-    type: 'organization', // TODO(burdon): Reference schema type.
+    type: TestSchemaType.organization,
     title: 'Organizations',
   },
   {
-    type: 'project',
+    type: TestSchemaType.project,
     title: 'Projects',
   },
   {
-    type: 'person',
-    title: 'People',
+    type: TestSchemaType.contact,
+    title: 'Contacts',
     props: [
       {
         id: 'org',
@@ -30,6 +30,12 @@ const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props
     ],
   },
 ];
+
+const defaultCount: Partial<Record<TestSchemaType, number>> = {
+  [TestSchemaType.organization]: 50,
+  [TestSchemaType.project]: 60,
+  [TestSchemaType.contact]: 200,
+};
 
 export class Generator {
   private readonly _generator: SpaceObjectGenerator<TestSchemaType>;
@@ -40,19 +46,15 @@ export class Generator {
   }
 
   createTables() {
-    // TODO(burdon): Check if already exists.
     return tableDefs.map(({ type, title, props }) => {
-      const schema = this._generator.schema[type];
-      this._space.db.add(schema);
+      // TODO(burdon): Check if already exists.
+      const schema = this._space.db.add(this._generator.schema[type]);
       return this._space.db.add(new TableType({ title, schema, props }));
     });
   }
 
-  // TODO(burdon): Reconcile with typename.
-  createObjects(options: Partial<Record<TestSchemaType, number>> = { organization: 30, project: 20, person: 200 }) {
-    tableDefs.forEach(({ type }) => {
-      this._generator.createObjects({ types: [type], count: options[type] ?? 0 });
-    });
+  createObjects(count: Partial<Record<TestSchemaType, number>> = defaultCount) {
+    this._generator.createObjects(count);
   }
 
   createDocument() {
