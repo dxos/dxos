@@ -130,5 +130,10 @@ export const NodeModulesPlugin = (): Plugin => ({
         path: require.resolve('../../polyfills/empty-module-stub.js'),
       };
     });
+    onResolve({ filter: /^yargs/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
   },
 });
