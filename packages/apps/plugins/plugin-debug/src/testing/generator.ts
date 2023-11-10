@@ -62,7 +62,7 @@ export class Generator {
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    this._space.db.add(new DocumentType({ title, content: new TextObject(content) }));
+    return this._space.db.add(new DocumentType({ title, content: new TextObject(content) }));
   }
 
   updateDocument() {

@@ -27,10 +27,12 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { DebugPanel } from './DebugPanel';
+import { SchemaList } from './SchemaList';
 import { Json } from './Tree';
 import { useFileDownload } from './util';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
+import JSONStream = Mocha.reporters.JSONStream;
 
 const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;
@@ -52,6 +54,7 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
       }),
     );
   };
+
   useEffect(() => {
     void handleRefresh();
   }, [space]);
@@ -79,7 +82,7 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
     } else {
       start(
         async () => {
-          await generator.updateDocument();
+          generator.updateDocument();
         },
         {
           count: safeParseInt(mutationCount) ?? 0,
@@ -91,12 +94,14 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
   };
 
   const handleCreateObject = async (createTables: boolean) => {
+    let objects: TypedObject[];
     if (createTables) {
-      const tables = generator.createTables();
-      onAddObjects?.(tables);
+      objects = generator.createTables();
     } else {
-      generator.createDocument();
+      objects = [generator.createDocument()];
     }
+
+    onAddObjects?.(objects);
   };
 
   const handleCreateInvitation = () => {
@@ -187,6 +192,9 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
         </>
       }
     >
+      <div className={'shrink-0'}>
+        <SchemaList space={space} />
+      </div>
       <Json theme={themeMode} data={data} />
     </DebugPanel>
   );

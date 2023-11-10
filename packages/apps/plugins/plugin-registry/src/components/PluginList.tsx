@@ -20,16 +20,17 @@ export type PluginListProps = {
   plugins?: Plugin['meta'][];
   loaded?: string[];
   enabled?: string[];
+  className?: string;
   onChange?: (id: string, enabled: boolean) => void;
 };
 
-export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }: PluginListProps) => {
+export const PluginList = ({ plugins = [], loaded = [], enabled = [], className, onChange }: PluginListProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-x-hidden overflow-y-auto')}>
+    <div className={mx('flex flex-col w-full overflow-x-hidden', className)}>
       <DensityProvider density={'fine'}>
-        <List classNames='divide-y'>
+        <List>
           {plugins.map(({ id, name, description, iconComponent: Icon = Circle }) => {
             const isEnabled = enabled.includes(id);
             const isLoaded = loaded.includes(id);

@@ -21,8 +21,23 @@ export const Settings = () => {
         plugins={available}
         loaded={plugins.map(({ meta }) => meta.id)}
         enabled={enabled}
+        className={'max-w-[300px] h-[300px] overflow-y-auto'}
         onChange={(id, enabled) => (enabled ? enablePlugin(id) : disablePlugin(id))}
       />
+      {/* TODO(burdon): ScrollArea clashes with Tabster and disables checkboxes. */}
+      {/* <ScrollArea.Root classNames={'max-h-[300px], h-[300px]'}> */}
+      {/*  <ScrollArea.Viewport> */}
+      {/*    <PluginList */}
+      {/*      plugins={available} */}
+      {/*      loaded={plugins.map(({ meta }) => meta.id)} */}
+      {/*      enabled={enabled} */}
+      {/*      onChange={(id, enabled) => (enabled ? enablePlugin(id) : disablePlugin(id))} */}
+      {/*    /> */}
+      {/*  </ScrollArea.Viewport> */}
+      {/*  <ScrollArea.Scrollbar orientation='vertical'> */}
+      {/*    <ScrollArea.Thumb /> */}
+      {/*  </ScrollArea.Scrollbar> */}
+      {/* </ScrollArea.Root> */}
     </Input.Root>
   );
 };
