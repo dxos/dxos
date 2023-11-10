@@ -243,7 +243,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   override _itemUpdate(): void {
     super._itemUpdate();
-    this._signal?.notifyWrite();
+    this._signal.notifyWrite();
   }
 
   private _transform(value: any, visitors: ConvertVisitors = {}) {
@@ -292,7 +292,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @param meta If true then get from `meta` key-space.
    */
   private _get(key: string, meta?: boolean): any {
-    this._signal?.notifyRead();
+    this._signal.notifyRead();
 
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
@@ -552,7 +552,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   }
 
   private _onLinkResolved = () => {
-    this._signal?.notifyWrite();
+    this._signal.notifyWrite();
     this._emitUpdate();
   };
 
