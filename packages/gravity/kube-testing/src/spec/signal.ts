@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { type TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import { type AgentRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
 import { type TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 
@@ -68,7 +68,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     };
   }
 
-  async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
+  async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<AgentRunOptions<SignalAgentConfig>[]> {
     await Promise.all(
       range(spec.servers).map((num) =>
         this.builder.createSignalServer(num, outDir, spec.signalArguments, (err) => {
@@ -80,7 +80,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
 
-    return range(spec.agents).map((): SignalAgentConfig => {
+    return range(spec.agents).map((): AgentRunOptions<SignalAgentConfig> => {
       const servers = spec.serverOverride
         ? [spec.serverOverride]
         : randomArraySlice(
@@ -89,8 +89,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
           );
 
       return {
-        servers,
-        topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex()),
+        config: { servers, topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex()) },
       };
     });
   }

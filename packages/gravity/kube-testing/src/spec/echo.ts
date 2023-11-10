@@ -23,7 +23,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
 import { type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import { type AgentRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type EchoTestSpec = {
@@ -87,7 +87,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     };
   }
 
-  async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
+  async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<AgentRunOptions<EchoAgentConfig>[]> {
     const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
       log.error('error in signal server', { err });
       this.onError?.(err);
@@ -95,11 +95,13 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
     const invitationTopic = PublicKey.random().toHex();
     return range(spec.agents).map((agentIdx) => ({
-      agentIdx,
-      signalUrl: signal.url(),
-      invitationTopic,
-      creator: agentIdx === 0,
-      ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && agentIdx === spec.agents - 1,
+      config: {
+        agentIdx,
+        signalUrl: signal.url(),
+        invitationTopic,
+        creator: agentIdx === 0,
+        ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && agentIdx === spec.agents - 1,
+      },
     }));
   }
 
