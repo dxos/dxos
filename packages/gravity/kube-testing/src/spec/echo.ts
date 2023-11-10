@@ -2,42 +2,42 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChartConfiguration } from 'chart.js';
-import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
-import { exec } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
-import { Client, Config, Invitation, Space, Text, LocalClientServices } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
+import { type Space, TextObject } from '@dxos/client/echo';
+import { Invitation } from '@dxos/client/invitations';
+import { type LocalClientServices } from '@dxos/client/services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { type Space as EchoSpace } from '@dxos/echo-pipeline';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TransportKind } from '@dxos/network-manager';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
-import { SerializedLogEntry, getReader } from '../analysys';
+import { type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
+import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
-import { AgentEnv } from './agent-env';
-import { PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type EchoTestSpec = {
   agents: number;
   duration: number;
   iterationDelay: number;
-
   epochPeriod: number;
-
   measureNewAgentSyncTime: boolean;
-
   insertionSize: number;
   operationCount: number;
-
   signalArguments: string[];
+  transport: TransportKind;
+  showPNG: boolean;
+  withReconnects: boolean;
 };
 
 export type EchoAgentConfig = {
@@ -60,14 +60,38 @@ export type EchoAgentConfig = {
 
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   signalBuilder = new SignalTestBuilder();
-  builder = new TestBuilder();
+  builder!: TestBuilder;
 
   services!: LocalClientServices;
   client!: Client;
   space!: Space;
+  spaceKey?: PublicKey;
+  onError?: (err: Error) => void;
+
+  defaultSpec(): EchoTestSpec {
+    return {
+      agents: 4,
+      duration: 1_800_000,
+      iterationDelay: 2000,
+      epochPeriod: 8,
+      // measureNewAgentSyncTime: true,
+      measureNewAgentSyncTime: false,
+      insertionSize: 128,
+      operationCount: 20,
+      signalArguments: ['globalsubserver'],
+      showPNG: false,
+      // transport: TransportKind.TCP,
+      transport: TransportKind.SIMPLE_PEER,
+      // withReconnects: false,
+      withReconnects: true,
+    };
+  }
 
   async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
-    const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
+      log.error('error in signal server', { err });
+      this.onError?.(err);
+    });
 
     const invitationTopic = PublicKey.random().toHex();
     return range(spec.agents).map((agentIdx) => ({
@@ -83,6 +107,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     const { config, spec } = env.params;
     const { agentIdx, signalUrl } = config;
 
+    if (!this.builder) {
+      this.builder = new TestBuilder(undefined, undefined, undefined, spec.transport);
+    }
+
     this.builder.config = new Config({
       runtime: {
         services: {
@@ -95,7 +123,12 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       },
     });
 
-    this.builder.storage = createStorage({ type: StorageType.RAM });
+    this.builder.storage = !spec.withReconnects
+      ? createStorage({ type: StorageType.RAM })
+      : createStorage({
+          type: StorageType.NODE,
+          root: `/tmp/dxos/gravity/${env.params.testId}/${env.params.agentId}`,
+        });
     await this._init(env);
 
     const getMaximalTimeframe = async () => {
@@ -110,7 +143,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     };
 
     if (config.creator) {
-      this.space.db.add(new Text('', TextKind.PLAIN));
+      this.space.db.add(new TextObject('', TextKind.PLAIN));
       await this.space.db.flush();
     }
 
@@ -127,6 +160,12 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       async () => {
         log.info('iter', { iter, agentIdx });
 
+        // Reconnect previously disconnected agent.
+        if (!config.ephemeral && !this.client.initialized) {
+          log.trace('dxos.test.echo.reconnect', { agentIdx, iter } satisfies ReconnectLog);
+          await this._init(env);
+        }
+
         if (!config.ephemeral) {
           await env.redis.set(
             `${env.params.testId}:timeframe:${env.params.agentId}`,
@@ -137,12 +176,11 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         await env.syncBarrier(`iter ${iter}`);
 
         if (!config.ephemeral) {
-          // compute lag
           const maximalTimeframe = await getMaximalTimeframe();
           const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
           const totalMutations = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
 
-          // compute throughput
+          // Compute throughput.
           const mutationsSinceLastIter =
             this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
           const timeSinceLastIter = Date.now() - lastTime;
@@ -160,28 +198,35 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
             totalMutations,
           } satisfies StatsLog);
 
-          for (const idx of range(spec.operationCount)) {
-            // TODO: extract size and random seed
-            this.getObj().model!.content.insert(
-              randomInt(this.getObj().text.length, 0),
-              randomBytes(spec.insertionSize).toString('hex') as any,
-            );
-            if (this.getObj().text.length > 100) {
-              this.getObj().model!.content.delete(
+          // Disconnect some of the agents for one iteration.
+          const skipIterration =
+            spec.withReconnects && iter > 0 && agentIdx > 0 && iter % agentIdx === 0 && iter % 5 === 0;
+          if (skipIterration) {
+            await this.client.destroy();
+          } else {
+            for (const idx of range(spec.operationCount)) {
+              // TODO: extract size and random seed
+              this.getObj().model!.content.insert(
                 randomInt(this.getObj().text.length, 0),
-                randomInt(this.getObj().text.length, 100),
+                randomBytes(spec.insertionSize).toString('hex') as any,
               );
+              if (this.getObj().text.length > 100) {
+                this.getObj().model!.content.delete(
+                  randomInt(this.getObj().text.length, 0),
+                  randomInt(this.getObj().text.length, 100),
+                );
+              }
+
+              if (idx % 100 === 0) {
+                await this.space.db.flush();
+              }
             }
 
-            if (idx % 100 === 0) {
-              await this.space.db.flush();
+            await this.space.db.flush();
+
+            if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
+              await this.space.internal.createEpoch();
             }
-          }
-
-          await this.space.db.flush();
-
-          if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
-            await this.space.internal.createEpoch();
           }
         } else {
           const begin = performance.now();
@@ -211,35 +256,53 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     this.services = this.builder.createLocal();
     this.client = new Client({ services: this.services });
     await this.client.initialize();
-    await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
 
-    if (env.params.config.creator) {
-      this.space = await this.client.createSpace({ name: 'test space' });
-      this.space.createInvitation({
-        swarmKey: PublicKey.from(env.params.config.invitationTopic),
-        authMethod: Invitation.AuthMethod.NONE,
-        type: Invitation.Type.MULTIUSE,
-      });
-    } else {
-      const invitation = this.client.acceptInvitation({
-        swarmKey: PublicKey.from(env.params.config.invitationTopic),
-        authMethod: Invitation.AuthMethod.NONE,
-        type: Invitation.Type.MULTIUSE,
-        kind: Invitation.Kind.SPACE,
-      } as any); // TODO(dmaretskyi): Fix types.
-      this.space = await new Promise<Space>((resolve) => {
-        invitation.subscribe((event) => {
-          switch (event.state) {
-            case Invitation.State.SUCCESS:
-              resolve(this.client.getSpace(event.spaceKey!)!);
-          }
+    if (!this.spaceKey) {
+      await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
+      if (env.params.config.creator) {
+        this.space = await this.client.spaces.create({ name: 'test space' });
+        this.space.share({
+          swarmKey: PublicKey.from(env.params.config.invitationTopic),
+          authMethod: Invitation.AuthMethod.NONE,
+          type: Invitation.Type.MULTIUSE,
         });
-      });
+      } else {
+        const invitation = this.client.spaces.join({
+          swarmKey: PublicKey.from(env.params.config.invitationTopic),
+          authMethod: Invitation.AuthMethod.NONE,
+          type: Invitation.Type.MULTIUSE,
+          kind: Invitation.Kind.SPACE,
+        } as any); // TODO(dmaretskyi): Fix types.
+        this.space = await new Promise<Space>((resolve) => {
+          invitation.subscribe((event) => {
+            switch (event.state) {
+              case Invitation.State.SUCCESS:
+                this.client.spaces.subscribe({
+                  next: (spaces) => {
+                    const space = spaces.find((space) => space.key === event.spaceKey);
+                    if (space) {
+                      resolve(space);
+                    }
+                  },
+                });
+            }
+          });
+        });
+      }
+      this.spaceKey = this.space.key;
+    } else {
+      this.space = await this.client.spaces.get(this.spaceKey)!;
     }
+
+    invariant(
+      this.space,
+      `Space is not defined for agent:${env.params.config.agentIdx} creator:${env.params.config.creator}`,
+    );
     await this.space.waitUntilReady();
   }
 
-  getSpaceBackend = () => this.services.host._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
+  getSpaceBackend = (): EchoSpace =>
+    this.services.host?.context.spaceManager.spaces.get(this.space.key) ?? failUndefined();
 
   getObj = () => this.space.db.objects.find((obj) => obj instanceof Text) as Text;
 
@@ -248,6 +311,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
     const statsLogs: SerializedLogEntry<StatsLog>[] = [];
     const syncLogs: SerializedLogEntry<SyncTimeLog>[] = [];
+    const reconnectLogs: SerializedLogEntry<ReconnectLog>[] = [];
 
     const reader = getReader(results);
     for await (const entry of reader) {
@@ -258,11 +322,86 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         case 'dxos.test.echo.sync':
           syncLogs.push(entry);
           break;
+        case 'dxos.test.echo.reconnect':
+          reconnectLogs.push(entry);
+          break;
       }
     }
 
+    const resultsSummary: Record<string, any> = {};
+    if (reconnectLogs.length) {
+      const reconnectsCountByAgent = Object.fromEntries(
+        range(params.spec.agents).map((agentIdx) => [
+          agentIdx,
+          reconnectLogs.filter((entry) => entry.context.agentIdx === agentIdx).length,
+        ]),
+      );
+      log.info('reconnects by agent', reconnectsCountByAgent);
+      resultsSummary['reconnects by agent'] = reconnectsCountByAgent;
+    }
+
+    const mutationsByAgent = Object.fromEntries(
+      range(params.spec.agents).map((agentIdx) => {
+        const mutationRates = statsLogs
+          .filter((entry) => entry.context.agentIdx === agentIdx)
+          .map((entry) => entry.context.mutationsPerSec)
+          .sort((n1, n2) => n1 - n2);
+
+        const meanMutationRate = mutationRates.reduce((sum, rate) => sum + rate, 0) / mutationRates.length;
+        const medianMutationRate = mutationRates[Math.floor(mutationRates.length / 2)];
+        const ninetyfifthPercentileMutationRate =
+          mutationRates
+            .reverse()
+            .slice(0, Math.floor(mutationRates.length * 0.95))
+            .reduce((sum, rate) => sum + rate, 0) / mutationRates.length;
+
+        return [
+          agentIdx,
+          {
+            totalMutations:
+              statsLogs.filter((entry) => entry.context.agentIdx === agentIdx).findLast(() => true)?.context
+                .totalMutations ?? 0,
+            meanMutationRate,
+            medianMutationRate,
+            ninetyfifthPercentileMutationRate,
+          },
+        ];
+      }),
+    );
+    log.info('mutations by agent', mutationsByAgent);
+    resultsSummary['mutations by agent'] = mutationsByAgent;
+
+    const totalMutations = Object.values(mutationsByAgent).map((entry) => entry.totalMutations);
+    const mutationsMatch = totalMutations.every((val, i, arr) => Math.abs(val - arr[0]) < 2);
+
+    if (!mutationsMatch) {
+      log.warn('not all agents have the same number of mutations +/-1', { totalMutations });
+    }
+
+    resultsSummary['agent mutations summary'] = {
+      mutationsMatch,
+      totalMutations: totalMutations[0],
+      mutationRate:
+        Object.values(mutationsByAgent).reduce((sum, entry) => sum + entry.medianMutationRate, 0) /
+        Object.keys(mutationsByAgent).length,
+    };
+
+    log.info('mutation summary', resultsSummary['agent mutations summary']);
+
+    if (params.spec.showPNG) {
+      await this.generatePNG(params, statsLogs, syncLogs);
+    }
+
+    return resultsSummary;
+  }
+
+  private async generatePNG(
+    params: TestParams<EchoTestSpec>,
+    statsLogs: SerializedLogEntry<StatsLog>[],
+    syncLogs: SerializedLogEntry<SyncTimeLog>[],
+  ) {
     if (!params.spec.measureNewAgentSyncTime) {
-      showPng(
+      showPNG(
         await renderPNG({
           type: 'scatter',
           data: {
@@ -282,7 +421,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         }),
       );
     } else {
-      showPng(
+      showPNG(
         await renderPNG({
           type: 'scatter',
           data: {
@@ -325,29 +464,7 @@ type SyncTimeLog = {
   iter: number;
 };
 
-const renderPNG = async (
-  configuration: ChartConfiguration,
-  opts: ChartJSNodeCanvasOptions = { width: 1920, height: 1080, backgroundColour: 'white' },
-) => {
-  // Uses https://www.w3schools.com/tags/canvas_fillstyle.asp
-  const chartJSNodeCanvas = new ChartJSNodeCanvas(opts);
-
-  const image = await chartJSNodeCanvas.renderToBuffer(configuration as any);
-  return image;
+type ReconnectLog = {
+  agentIdx: number;
+  iter: number;
 };
-
-const showPng = (data: Buffer) => {
-  const filename = `/tmp/${Math.random().toString(36).substring(7)}.png`;
-  writeFileSync(filename, data);
-  exec(`open ${filename}`);
-};
-
-const BORDER_COLORS = [
-  'rgb(54, 162, 235)', // blue
-  'rgb(255, 99, 132)', // red
-  'rgb(255, 159, 64)', // orange
-  'rgb(255, 205, 86)', // yellow
-  'rgb(75, 192, 192)', // green
-  'rgb(153, 102, 255)', // purple
-  'rgb(201, 203, 207)', // grey
-];
