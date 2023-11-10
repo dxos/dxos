@@ -17,7 +17,6 @@ import { Client } from '@dxos/client';
 import { SystemStatus, type ClientServices, type ClientServicesProvider } from '@dxos/client/services';
 import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
@@ -77,11 +76,6 @@ export interface ClientProviderProps {
   fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
   /**
-   * Set to false to stop default signal factory from being registered.
-   */
-  registerSignalFactory?: boolean;
-
-  /**
    * Post initialization hook to enable to caller to do custom initialization.
    *
    * @param Client
@@ -99,15 +93,8 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
-  registerSignalFactory: register = true,
   onInitialized,
 }: ClientProviderProps) => {
-  useMemo(() => {
-    // TODO(wittjosiah): Ideally this should be imported asynchronosly because it is optional.
-    //   Unfortunately, aysnc import seemed to break signals React instrumentation.
-    register && registerSignalFactory();
-  }, []);
-
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [error, setError] = useState();
