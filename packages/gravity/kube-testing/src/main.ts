@@ -6,6 +6,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runAgentForPlan } from './plan';
 import { ReplicationTestPlan, EmptyTestPlan } from './spec';
@@ -73,7 +74,7 @@ const start = async () => {
   }
 
   if (argv.specfile) {
-    console.info(`\nusing spec file: ${argv.specfile}`);
+    log.info(`using spec file: ${argv.specfile}`);
     plan = await readYAMLSpecFile(argv.specfile, planGenerator(), options);
   } else {
     plan = () => ({
