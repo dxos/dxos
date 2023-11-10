@@ -37,7 +37,6 @@ export const ClientPlugin = ({
   ...options
 }: ClientPluginOptions): PluginDefinition<{}, ClientPluginProvides> => {
   // TODO(burdon): Document.
-  registerSignalFactory();
 
   const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
 

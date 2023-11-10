@@ -40,6 +40,10 @@ export const SpaceListPanel: FC = () => {
       id: 'objects',
       ...builder.number(),
     }),
+    helper.accessor((space) => space.members.get().length, {
+      id: 'members',
+      ...builder.number(),
+    }),
     helper.accessor(
       (space) => {
         const { open, ready } = space.internal.data.metrics ?? {};
