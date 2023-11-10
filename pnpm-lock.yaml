@@ -7869,46 +7869,6 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
 
-  packages/ui/react-ui-kombobox:
-    dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      cmdk:
-        specifier: ^0.2.0
-        version: 0.2.0(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-    devDependencies:
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.2.0
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      chromatic:
-        specifier: ^7.5.0
-        version: 7.5.0
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-      vite-plugin-turbosnap:
-        specifier: ^1.0.2
-        version: 1.0.2
-
   packages/ui/react-ui-mosaic:
     dependencies:
       '@dnd-kit/core':
@@ -8042,6 +8002,46 @@ importers:
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      chromatic:
+        specifier: ^7.5.0
+        version: 7.5.0
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+      vite-plugin-turbosnap:
+        specifier: ^1.0.2
+        version: 1.0.2
+
+  packages/ui/react-ui-searchmenu:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      cmdk:
+        specifier: ^0.2.0
+        version: 0.2.0(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.2.0
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)

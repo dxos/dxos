@@ -669,17 +669,17 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-kombobox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-mosaic/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/ui/react-ui-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-searchmenu/package.json",
           "jsonpath": "$.version"
         },
         {

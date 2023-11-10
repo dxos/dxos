@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { type FC } from 'react';
 
-import { Kombobox } from './Kombobox';
+import { Searchmenu } from './Searchmenu';
 
 type StoryItems = Record<string, string>;
 
@@ -19,26 +19,26 @@ const defaultItems: StoryItems = faker.helpers
     return acc;
   }, {});
 
-const KomboboxStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) => {
+const SearchmenuStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) => {
   return (
-    <Kombobox.Root
+    <Searchmenu.Root
       filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
       classNames='flex flex-col w-full bg-neutral-100 dark:bg-neutral-800'
     >
-      <Kombobox.Input placeholder='Select...' />
-      <Kombobox.List>
+      <Searchmenu.Input placeholder='Select...' />
+      <Searchmenu.List>
         {Object.entries(items).map(([value, label]) => (
-          <Kombobox.Item key={value} value={value}>
+          <Searchmenu.Item key={value} value={value}>
             {label}
-          </Kombobox.Item>
+          </Searchmenu.Item>
         ))}
-      </Kombobox.List>
-    </Kombobox.Root>
+      </Searchmenu.List>
+    </Searchmenu.Root>
   );
 };
 
 export default {
-  component: KomboboxStory,
+  component: SearchmenuStory,
 };
 
 // TODO(burdon): Test controlled and uncontrolled.

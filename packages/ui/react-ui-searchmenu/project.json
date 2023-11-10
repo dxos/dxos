@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/ui/react-ui-kombobox/src",
+  "sourceRoot": "packages/ui/react-ui-searchmenu/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/ui/react-ui-kombobox/src/index.ts",
-        "outputPath": "packages/ui/react-ui-kombobox/dist/types",
-        "tsConfig": "packages/ui/react-ui-kombobox/tsconfig.json"
+        "main": "packages/ui/react-ui-searchmenu/src/index.ts",
+        "outputPath": "packages/ui/react-ui-searchmenu/dist/types",
+        "tsConfig": "packages/ui/react-ui-searchmenu/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-kombobox/src/index.ts"
+          "packages/ui/react-ui-searchmenu/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-kombobox/dist/lib",
+        "outputPath": "packages/ui/react-ui-searchmenu/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/ui/react-ui-kombobox/src/**/*.{js,jsx,ts,tsx}"
+          "packages/ui/react-ui-searchmenu/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },
@@ -49,7 +49,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/ui/react-ui-kombobox/.storybook"
+        "configDir": "packages/ui/react-ui-searchmenu/.storybook"
       }
     },
     "storybook-build": {
@@ -60,8 +60,8 @@
       },
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "packages/ui/react-ui-kombobox/.storybook",
-        "outputDir": "packages/ui/react-ui-kombobox/out/react-ui"
+        "configDir": "packages/ui/react-ui-searchmenu/.storybook",
+        "outputDir": "packages/ui/react-ui-searchmenu/out/react-ui"
       },
       "outputs": [
         "{options.outputDir}"

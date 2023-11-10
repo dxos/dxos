@@ -13,9 +13,9 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-type KomboboxRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>>;
+type SearchmenuRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>>;
 
-const KomboboxRoot = forwardRef<HTMLDivElement, KomboboxRootProps>(
+const SearchmenuRoot = forwardRef<HTMLDivElement, SearchmenuRootProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandRoot {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -28,10 +28,10 @@ const KomboboxRoot = forwardRef<HTMLDivElement, KomboboxRootProps>(
 type CommandInputPrimitiveProps = ComponentPropsWithRef<typeof CommandInput>;
 
 // TODO: Harmonize with other inputs’ `onChange` prop.
-type KomboboxInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onChange'> &
+type SearchmenuInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onChange'> &
   Pick<CommandInputPrimitiveProps, 'value' | 'onValueChange' | 'defaultValue'>;
 
-const KomboboxInput = forwardRef<HTMLInputElement, KomboboxInputProps>(
+const SearchmenuInput = forwardRef<HTMLInputElement, SearchmenuInputProps>(
   (
     { children, classNames, density: propsDensity, elevation: propsElevation, variant = 'subdued', ...props },
     forwardedRef,
@@ -63,9 +63,9 @@ const KomboboxInput = forwardRef<HTMLInputElement, KomboboxInputProps>(
   },
 );
 
-type KomboboxListProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
+type SearchmenuListProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
 
-const KomboboxList = forwardRef<HTMLDivElement, KomboboxListProps>(
+const SearchmenuList = forwardRef<HTMLDivElement, SearchmenuListProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandList {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -75,9 +75,9 @@ const KomboboxList = forwardRef<HTMLDivElement, KomboboxListProps>(
   },
 );
 
-type KomboboxEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof CommandEmpty>>;
+type SearchmenuEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof CommandEmpty>>;
 
-const KomboboxEmpty = forwardRef<HTMLDivElement, KomboboxEmptyProps>(
+const SearchmenuEmpty = forwardRef<HTMLDivElement, SearchmenuEmptyProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandEmpty {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -87,9 +87,9 @@ const KomboboxEmpty = forwardRef<HTMLDivElement, KomboboxEmptyProps>(
   },
 );
 
-type KomboboxItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
+type SearchmenuItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
-const KomboboxItem = forwardRef<HTMLDivElement, KomboboxItemProps>(
+const SearchmenuItem = forwardRef<HTMLDivElement, SearchmenuItemProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandItem {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -99,12 +99,18 @@ const KomboboxItem = forwardRef<HTMLDivElement, KomboboxItemProps>(
   },
 );
 
-export const Kombobox = {
-  Root: KomboboxRoot,
-  Input: KomboboxInput,
-  List: KomboboxList,
-  Empty: KomboboxEmpty,
-  Item: KomboboxItem,
+export const Searchmenu = {
+  Root: SearchmenuRoot,
+  Input: SearchmenuInput,
+  List: SearchmenuList,
+  Empty: SearchmenuEmpty,
+  Item: SearchmenuItem,
 };
 
-export type { KomboboxRootProps, KomboboxInputProps, KomboboxListProps, KomboboxEmptyProps, KomboboxItemProps };
+export type {
+  SearchmenuRootProps,
+  SearchmenuInputProps,
+  SearchmenuListProps,
+  SearchmenuEmptyProps,
+  SearchmenuItemProps,
+};

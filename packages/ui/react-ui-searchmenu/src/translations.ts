@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'kombobox';
+export const translationKey = 'searchmenu';
 
 export default [
   {
     'en-US': {
-      [translationKey]: {
-      },
+      [translationKey]: {},
     },
   },
 ];
