@@ -57,7 +57,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   private readonly _space: Space;
 
   constructor(space: Space, schemaMap: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
-    super(merge(space, schemaMap), generators, (type: T) => {
+    super(mergeSchemaMap(space, schemaMap), generators, (type: T) => {
       const { objects } = this._space.db.query((object) => {
         return object.__schema === schemaMap[type];
       });
@@ -78,7 +78,10 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 }
 
-const merge = <T extends string>(space: Space, schemaMap: TestSchemaMap<T>) => {
+/**
+ * Merge existing schema in space with defaults.
+ */
+const mergeSchemaMap = <T extends string>(space: Space, schemaMap: TestSchemaMap<T>) => {
   const { objects } = space.db.query(Schema.filter());
   Object.keys(schemaMap).forEach((type) => {
     const schema = objects.find((object) => object.typename === type);
