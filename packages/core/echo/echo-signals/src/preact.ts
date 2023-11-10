@@ -1,11 +1,17 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { signal, batch } from '@preact/signals';
 
 import { registerSignalRuntime as registerRuntimeForEcho } from '@dxos/echo-schema';
 
-let registered = false;
+const registered = false;
 
 export const registerSignalRuntime = () => {
-  if (registered) return false;
+  if (registered) {
+    return false;
+  }
 
   registerRuntimeForEcho({
     createSignal: () => {
@@ -21,8 +27,8 @@ export const registerSignalRuntime = () => {
       };
     },
     batch,
-  })
-}
+  });
+};
 /**
  * @deprecated Use `registerSignalRuntime`.
  */

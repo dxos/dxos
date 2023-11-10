@@ -6,10 +6,12 @@ import { signal, batch } from '@preact/signals-react';
 
 import { registerSignalRuntime as registerRuntimeForEcho } from '@dxos/echo-schema';
 
-let registered = false;
+const registered = false;
 
 export const registerSignalRuntime = () => {
-  if(registered) return false;
+  if (registered) {
+    return false;
+  }
 
   registerRuntimeForEcho({
     createSignal: () => {
@@ -25,10 +27,10 @@ export const registerSignalRuntime = () => {
       };
     },
     batch,
-  })
+  });
 
   return true;
-}
+};
 
 /**
  * @deprecated Use `registerSignalRuntime`.

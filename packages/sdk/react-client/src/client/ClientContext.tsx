@@ -10,7 +10,6 @@ import React, {
   useContext,
   useEffect,
   type FunctionComponent,
-  useMemo,
 } from 'react';
 
 import { Client } from '@dxos/client';

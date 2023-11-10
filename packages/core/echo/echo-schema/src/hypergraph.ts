@@ -151,13 +151,13 @@ export class Hypergraph {
           }
           const obj = db.getObjectById(item.id);
           if (!obj) {
-            continue; 
+            continue;
           }
           log('resolve', { spaceKey: updateEvent.spaceKey, itemId: obj.id });
           listeners.emit(obj);
           listenerMap.delete(item.id);
         }
-      })
+      });
     }
 
     this._updateEvent.emit(updateEvent);
@@ -186,7 +186,7 @@ class GraphQueryContext implements QueryContext {
   public added = new Event<QuerySource>();
   public removed = new Event<QuerySource>();
 
-  constructor(private _onStart: () => void) { }
+  constructor(private _onStart: () => void) {}
 
   start() {
     this._onStart();
@@ -203,7 +203,7 @@ class SpaceQuerySource implements QuerySource {
   private _filter: Filter | undefined = undefined;
   private _results?: QueryResult<EchoObject>[] = undefined;
 
-  constructor(private readonly _database: EchoDatabase) { }
+  constructor(private readonly _database: EchoDatabase) {}
 
   get spaceKey() {
     return this._database._backend.spaceKey;
