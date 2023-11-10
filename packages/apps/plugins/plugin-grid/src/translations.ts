@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [GRID_PLUGIN]: {
-        'plugin name': 'Grid',
+        'plugin name': 'Grids',
         'grid title placeholder': 'New grid',
         'create grid label': 'Create grid',
         'title placeholder': 'Enter title...',
