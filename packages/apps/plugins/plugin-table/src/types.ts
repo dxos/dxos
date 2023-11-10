@@ -12,7 +12,7 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/react-client/echo';
 
-export const TABLE_PLUGIN = 'dxos.org/plugin/table';
+import { TABLE_PLUGIN } from './meta';
 
 const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
 

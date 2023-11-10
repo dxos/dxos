@@ -11,8 +11,9 @@ import { isStack } from '@braneframe/plugin-stack';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
+import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
-import { PRESENTER_PLUGIN, PresenterContext, type PresenterPluginProvides } from './types';
+import { PresenterContext, type PresenterPluginProvides } from './types';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
@@ -26,9 +27,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
   const state = deepSignal<PresenterState>({ presenting: false });
 
   return {
-    meta: {
-      id: PRESENTER_PLUGIN,
-    },
+    meta,
     provides: {
       translations,
       graph: {
@@ -71,7 +70,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         );
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isStack(data.active) && state.presenting ? <PresenterMain stack={data.active} /> : null;

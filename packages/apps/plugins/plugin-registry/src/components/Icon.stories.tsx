@@ -5,11 +5,17 @@
 import '@dxosTheme';
 
 import { type Icon, IconBase, type IconWeight, GithubLogo } from '@phosphor-icons/react';
-import React, { forwardRef, type ReactElement } from 'react';
+import React, { forwardRef, type SVGProps, type ReactElement } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { type IconProps } from './types';
+/**
+ * Serializable icon props.
+ */
+export type IconProps = {
+  name: string;
+  weights: Record<string, SVGProps<SVGPathElement>[]>;
+};
 
 /**
  * Create icon from serializable data.

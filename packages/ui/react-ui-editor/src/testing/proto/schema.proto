@@ -6,9 +6,9 @@ syntax = "proto3";
 
 import "dxos/schema.proto";
 
-package dxos.testing.composer;
+package dxos.testing.editor;
 
-message ComposerDocument {
+message EditorDocument {
   option (object) = true;
 
   dxos.schema.Text content = 1;

@@ -4,6 +4,7 @@
 
 import { type PluginDefinition } from '@dxos/app-framework';
 
+import meta from './meta';
 import { type AppTelemetryOptions, initializeAppTelemetry } from './telemetry';
 import { useTelemetry } from './useTelemetry';
 
@@ -13,9 +14,7 @@ export const TelemetryPlugin = (options: AppTelemetryOptions): PluginDefinition 
   void initializeAppTelemetry(options);
 
   return {
-    meta: {
-      id: 'dxos.org/plugin/telemetry',
-    },
+    meta,
     provides: {
       root: () => {
         useTelemetry({ namespace: options.namespace });

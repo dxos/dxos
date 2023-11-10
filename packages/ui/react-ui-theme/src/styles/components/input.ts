@@ -29,6 +29,8 @@ import {
   getSize,
   computeSize,
   sizeValue,
+  getSizeHeight,
+  getSizeWidth,
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -119,6 +121,21 @@ export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, 
 export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(getSize(computeSize(sizeValue(size) * 0.7, 4)), ...etc);
 
+export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+  mx(
+    getSizeHeight(size),
+    getSizeWidth(computeSize(sizeValue(size) * 1.75, 9)),
+    'cursor-pointer shrink-0 bg-transparent rounded-full pli-0.5 border-2 border-neutral-500 relative data-[state=checked]:border-primary-500 data-[state=checked]:bg-primary-500 outline-none cursor-default',
+    ...etc,
+  );
+
+export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+  mx(
+    getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
+    'block bg-neutral-500 rounded-full border-neutral-100 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%] data-[state=checked]:bg-white',
+    ...etc,
+  );
+
 export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
@@ -142,5 +159,7 @@ export const inputTheme = {
   label: inputLabel,
   description: inputDescription,
   validation: inputValidation,
+  switch: inputSwitch,
+  switchThumb: inputSwitchThumb,
   descriptionAndValidation: inputDescriptionAndValidation,
 };

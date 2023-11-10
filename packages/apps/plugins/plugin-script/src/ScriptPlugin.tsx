@@ -11,8 +11,9 @@ import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction }
 import { type Filter, type EchoObject, type Schema, TextObject, isTypedObject } from '@dxos/client/echo';
 
 import { ScriptMain, ScriptSection } from './components';
+import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
-import { SCRIPT_PLUGIN, ScriptAction, type ScriptPluginProvides } from './types';
+import { ScriptAction, type ScriptPluginProvides } from './types';
 
 // TODO(burdon): Make generic and remove need for filter.
 const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
@@ -25,9 +26,7 @@ export type ScriptPluginProps = {
 
 export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
   return {
-    meta: {
-      id: SCRIPT_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -85,7 +84,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         ],
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (

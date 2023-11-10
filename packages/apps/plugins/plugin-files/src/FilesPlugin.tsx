@@ -21,15 +21,9 @@ import {
 import { EventSubscriptions, Trigger } from '@dxos/async';
 
 import { LocalFileMain } from './components';
+import meta, { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID } from './meta';
 import translations from './translations';
-import {
-  FILES_PLUGIN,
-  FILES_PLUGIN_SHORT_ID,
-  type LocalEntity,
-  type LocalFile,
-  LocalFilesAction,
-  type LocalFilesPluginProvides,
-} from './types';
+import { type LocalEntity, type LocalFile, LocalFilesAction, type LocalFilesPluginProvides } from './types';
 import {
   findFile,
   getDirectoryChildren,
@@ -61,10 +55,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
   };
 
   return {
-    meta: {
-      id: FILES_PLUGIN,
-      shortId: FILES_PLUGIN_SHORT_ID,
-    },
+    meta,
     initialize: async () => {
       return {
         markdown: {
@@ -122,7 +113,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     provides: {
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           if (!isLocalFile(data.active)) {
             return null;
           }
