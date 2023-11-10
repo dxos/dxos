@@ -27,10 +27,9 @@ const KomboboxRoot = forwardRef<HTMLDivElement, KomboboxRootProps>(
 
 type CommandInputPrimitiveProps = ComponentPropsWithRef<typeof CommandInput>;
 
+// TODO: Harmonize with other inputs’ `onChange` prop.
 type KomboboxInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onChange'> &
-  Pick<CommandInputPrimitiveProps, 'value' | 'defaultValue'> & {
-    onChange: CommandInputPrimitiveProps['onValueChange'];
-  };
+  Pick<CommandInputPrimitiveProps, 'value' | 'onValueChange' | 'defaultValue'>;
 
 const KomboboxInput = forwardRef<HTMLInputElement, KomboboxInputProps>(
   (
