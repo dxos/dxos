@@ -634,11 +634,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/primitives/react-combobox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/primitives/react-hooks/package.json",
           "jsonpath": "$.version"
         },
@@ -670,6 +665,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-kombobox/package.json",
           "jsonpath": "$.version"
         },
         {

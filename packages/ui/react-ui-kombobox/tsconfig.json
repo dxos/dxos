@@ -1,5 +1,5 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -17,7 +17,10 @@
   ],
   "references": [
     {
-      "path": "../react-hooks"
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-theme"
     }
   ]
 }
