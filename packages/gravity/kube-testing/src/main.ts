@@ -9,15 +9,15 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runAgentForPlan } from './plan';
-import { ReplicationTestPlan, EmptyTestPlan } from './spec';
+import { ReplicationTestPlan, EmptyTestPlan, SignalTestPlan, TransportTestPlan, EchoTestPlan } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
-  // signal: () => new SignalTestPlan(),
-  // transport: () => new TransportTestPlan(),
-  // echo: () => new EchoTestPlan(),
+  signal: () => new SignalTestPlan(),
+  transport: () => new TransportTestPlan(),
+  echo: () => new EchoTestPlan(),
   replication: () => new ReplicationTestPlan(),
   empty: () => new EmptyTestPlan(),
 };
