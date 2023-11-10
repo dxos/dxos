@@ -94,6 +94,7 @@ export const runNode = async <S, C>(
 };
 
 export const runBrowser = async <S, C>(
+  planName: string,
   agentParams: AgentParams<S, C>,
   options: PlanOptions,
 ): Promise<ProcessHandle> => {
@@ -128,6 +129,7 @@ export const runBrowser = async <S, C>(
       window.dxgravity_env = ${JSON.stringify({
         ...process.env,
         GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+        GRAVITY_SPEC: planName,
       })}
     </script>
     <script src="index.js"></script>
@@ -143,6 +145,10 @@ export const runBrowser = async <S, C>(
 
   const port = (server.address() as AddressInfo).port;
   await page.goto(`http://localhost:${port}`);
+
+  await new Promise((resolve) => {
+    page.on('close', resolve);
+  });
 
   return {
     // TODO(mykola): Result should be a promise that resolves when the agent finishes.

@@ -146,7 +146,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
       const { result, kill } =
         agentParams.runtime.platform === 'nodejs'
           ? await runNode(name, agentParams, options)
-          : await runBrowser(agentParams, options);
+          : await runBrowser(name, agentParams, options);
       killCallbacks.push(kill);
       promises.push(
         result.then((result) => {
