@@ -10,6 +10,7 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { registerSignalFactory } from '@dxos/echo-signals/react';
 
 import meta from './meta';
 
@@ -36,6 +37,7 @@ export const ClientPlugin = ({
   ...options
 }: ClientPluginOptions): PluginDefinition<{}, ClientPluginProvides> => {
   // TODO(burdon): Document.
+  registerSignalFactory();
 
   const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
 

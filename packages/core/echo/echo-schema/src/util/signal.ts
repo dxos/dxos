@@ -29,9 +29,10 @@ let runtimeUsed = false;
  */
 export const registerSignalRuntime = (runtime: SignalRuntime) => {
   if (runtimeUsed) {
-    log.warn(
-      'Signal runtime registration is done after the first usage of the runtime. This may cause issues with reactivity.',
-    );
+    // TODO(dmaretskyi): This is always taken because echo schema stuff creates typed objects when echo-schema package is imported.
+    // log.warn(
+    //   'Signal runtime registration is done after the first usage of the runtime. This may cause issues with reactivity.',
+    // );
   }
 
   runtimeList.push(runtime);
