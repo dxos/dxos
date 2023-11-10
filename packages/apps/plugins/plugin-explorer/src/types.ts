@@ -12,7 +12,7 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/react-client/echo';
 
-export const EXPLORER_PLUGIN = 'dxos.org/plugin/explorer';
+import { EXPLORER_PLUGIN } from './meta';
 
 const EXPLORER_ACTION = `${EXPLORER_PLUGIN}/action`;
 

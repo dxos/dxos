@@ -6,7 +6,7 @@ import { File as FileType } from '@braneframe/types';
 import type { SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
 import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 
-export const IPFS_PLUGIN = 'dxos.org/plugin/template';
+import { IPFS_PLUGIN } from './meta';
 
 const IPFS_ACTION = `${IPFS_PLUGIN}/action`;
 

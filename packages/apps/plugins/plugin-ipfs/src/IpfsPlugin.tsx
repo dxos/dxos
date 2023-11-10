@@ -7,18 +7,17 @@ import React from 'react';
 import { type PluginDefinition } from '@dxos/app-framework';
 
 import { FileMain, FileSection, FileSlide } from './components';
+import meta from './meta';
 import translations from './translations';
-import { IPFS_PLUGIN, type IpfsPluginProvides, isFile } from './types';
+import { type IpfsPluginProvides, isFile } from './types';
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
   return {
-    meta: {
-      id: IPFS_PLUGIN,
-    },
+    meta,
     provides: {
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isFile(data.active) ? <FileMain file={data.active} /> : null;

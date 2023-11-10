@@ -10,8 +10,9 @@ import { Folder, Kanban as KanbanType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
 import { KanbanMain } from './components';
+import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { KANBAN_PLUGIN, KanbanAction, type KanbanPluginProvides, isKanban } from './types';
+import { KanbanAction, type KanbanPluginProvides, isKanban } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -19,9 +20,7 @@ import { KANBAN_PLUGIN, KanbanAction, type KanbanPluginProvides, isKanban } from
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   return {
-    meta: {
-      id: KANBAN_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -65,7 +64,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isKanban(data.active) ? <KanbanMain kanban={data.active} /> : null;

@@ -83,10 +83,11 @@ export const DashboardPanel = () => {
       <div className='flex-1 flex-col w-50%'>
         <AgentStat status={agentState} />
       </div>
+
       {agentState.plugins ? (
         <PluginList plugins={agentState.plugins} togglePlugin={togglePlugin} />
       ) : (
-        <div>No plugins are running in agent</div>
+        <div>No plugins are running on the agent.</div>
       )}
     </PanelContainer>
   );

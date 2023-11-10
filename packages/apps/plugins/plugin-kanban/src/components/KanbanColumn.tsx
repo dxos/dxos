@@ -14,7 +14,7 @@ import { chromeSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
-import { KANBAN_PLUGIN } from '../types';
+import { KANBAN_PLUGIN } from '../meta';
 
 export type ItemsMapper = (column: string, items: KanbanType.Item[]) => KanbanType.Item[];
 

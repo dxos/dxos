@@ -32,11 +32,14 @@ import { useFileDownload } from './util';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
-export const DEFAULT_COUNT = 100;
-export const DEFAULT_PERIOD = 500;
-export const DEFAULT_JITTER = 50;
+const DEFAULT_COUNT = 100;
+const DEFAULT_PERIOD = 500;
+const DEFAULT_JITTER = 50;
 
-const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({ space, onAddObjects }) => {
+export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({
+  space,
+  onAddObjects,
+}) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
@@ -188,5 +191,3 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => 
     </DebugPanel>
   );
 };
-
-export default DebugSpace;
