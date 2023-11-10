@@ -64,7 +64,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isGrid(data.active) ? <GridMain grid={data.active} /> : null;

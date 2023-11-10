@@ -11,6 +11,8 @@ import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 import { SPACE_PLUGIN } from '../meta';
 import { SpaceAction } from '../types';
 
+const WAIT_FOR_OBJECT_TIMEOUT = 1_000;
+
 export const MissingObject = ({ id }: { id: string }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
@@ -20,11 +22,17 @@ export const MissingObject = ({ id }: { id: string }) => {
       return;
     }
 
-    void intentPlugin.provides.intent.dispatch({
-      plugin: SPACE_PLUGIN,
-      action: SpaceAction.WAIT_FOR_OBJECT,
-      data: { id },
-    });
+    const timeout = setTimeout(
+      () =>
+        intentPlugin.provides.intent.dispatch({
+          plugin: SPACE_PLUGIN,
+          action: SpaceAction.WAIT_FOR_OBJECT,
+          data: { id },
+        }),
+      WAIT_FOR_OBJECT_TIMEOUT,
+    );
+
+    return () => clearTimeout(timeout);
   }, [intentPlugin, id]);
 
   return (

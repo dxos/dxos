@@ -68,7 +68,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main': {
               return isObject(data.active) ? <TemplateMain object={data.active} /> : null;

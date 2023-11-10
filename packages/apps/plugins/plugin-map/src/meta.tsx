@@ -11,6 +11,6 @@ export const MAP_PLUGIN = 'dxos.org/plugin/map';
 
 export default pluginMeta({
   id: MAP_PLUGIN,
-  name: 'Map',
+  name: 'Maps',
   iconComponent: (props) => <Compass {...props} />,
 });

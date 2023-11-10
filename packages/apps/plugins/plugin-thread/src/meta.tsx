@@ -11,6 +11,6 @@ export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
 
 export default pluginMeta({
   id: THREAD_PLUGIN,
-  name: 'Thread',
+  name: 'Threads',
   iconComponent: (props) => <Chat {...props} />,
 });

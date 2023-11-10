@@ -65,7 +65,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       },
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isObject(data.active) ? <ChessMain game={data.active} /> : null;

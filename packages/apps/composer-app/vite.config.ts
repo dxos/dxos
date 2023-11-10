@@ -96,11 +96,11 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@braneframe/plugin-layout/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-table/node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
 
         // TODO(burdon): Hoisted as direct dependencies.
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
+        // resolve(__dirname, './node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],

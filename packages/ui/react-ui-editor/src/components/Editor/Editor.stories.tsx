@@ -12,20 +12,20 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
 
-import { Composer, type ComposerProps } from './Composer';
-import { ComposerDocument, types as schema } from '../../testing';
+import { Editor, type EditorProps } from './Editor';
+import { EditorDocument, types as schema } from '../../testing';
 
 export default {
-  component: Composer,
+  component: Editor,
 };
 
-const Story = ({ spaceKey, ...args }: Pick<ComposerProps, 'slots'> & { spaceKey: PublicKey }) => {
+const Story = ({ spaceKey, ...args }: Pick<EditorProps, 'slots'> & { spaceKey: PublicKey }) => {
   const [generate, setGenerate] = useState(false);
   const generateId = useId('generate');
 
   const identity = useIdentity();
   const space = useSpace(spaceKey);
-  const [document] = useQuery(space, ComposerDocument.filter());
+  const [document] = useQuery(space, EditorDocument.filter());
 
   useDataGenerator({
     generator: generate ? textGenerator : undefined,
@@ -39,7 +39,7 @@ const Story = ({ spaceKey, ...args }: Pick<ComposerProps, 'slots'> & { spaceKey:
         Generate Data
       </div>
       {document?.content.toString().length}
-      <Composer identity={identity} space={space} text={document?.content} {...args} />
+      <Editor identity={identity} space={space} text={document?.content} {...args} />
     </main>
   );
 };
@@ -48,7 +48,7 @@ const { spaceKey: markdownSpaceKey, clients: markdownClients } = await setupPeer
   count: 2,
   schema,
   onCreateSpace: async (space) => {
-    const document = new ComposerDocument({ content: new TextObject('Hello, Storybook!') });
+    const document = new EditorDocument({ content: new TextObject('Hello, Storybook!') });
     await space?.db.add(document);
   },
 });
@@ -62,7 +62,7 @@ const { spaceKey: richSpaceKey, clients: richClients } = await setupPeersInSpace
   count: 2,
   schema,
   onCreateSpace: async (space) => {
-    const document = new ComposerDocument({ content: new TextObject('Hello, Storybook!', TextKind.RICH) });
+    const document = new EditorDocument({ content: new TextObject('Hello, Storybook!', TextKind.RICH) });
     await space?.db.add(document);
   },
 });
