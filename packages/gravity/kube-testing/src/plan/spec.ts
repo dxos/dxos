@@ -4,8 +4,17 @@
 
 import { type AgentEnv } from './env';
 
-export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
+export const AGENT_LOG_FILE = 'agent.log';
 
+export type PlanOptions = {
+  staggerAgents?: number;
+  repeatAnalysis?: string;
+  randomSeed?: string;
+  profile?: boolean;
+  debug?: boolean;
+};
+
+export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 export type TestParams<S> = {
   testId: string;
   outDir: string;
