@@ -46,60 +46,6 @@ const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, v
   return items.map((item) => (item.publicKey.equals(key) ? { ...item, [id]: value } : item));
 };
 
-/*
-// TODO(burdon): Remove.
-const schamas: TableSchema[] = [
-  {
-    id: 'a',
-    props: [
-      {
-        id: 'complete',
-        type: 'boolean',
-        label: 'ok',
-        fixed: true,
-        editable: true,
-      },
-      {
-        id: 'name',
-        type: 'string',
-        editable: true,
-        resizable: true,
-      },
-      {
-        id: 'count',
-        type: 'number',
-        size: 160,
-        editable: true,
-        resizable: true,
-      },
-    ],
-  },
-  {
-    id: 'b',
-    props: [
-      {
-        id: 'name',
-        type: 'string',
-        editable: true,
-        resizable: true,
-      },
-    ],
-  },
-  {
-    id: 'c',
-    props: [
-      {
-        id: 'count',
-        type: 'number',
-        size: 160,
-        editable: true,
-        resizable: true,
-      },
-    ],
-  },
-];
-*/
-
 const { helper, builder } = createColumnBuilder<Item>();
 const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
   helper.accessor(
@@ -116,10 +62,11 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
     'name',
     builder.string({ onUpdate, meta: { expand: true }, footer: (props) => props.table.getRowModel().rows.length }),
   ),
-  helper.accessor('started', builder.date({ relative: true })),
+  helper.accessor('started', builder.date({ relative: true, meta: { resizable: true } })),
   helper.accessor(
     'count',
     builder.number({
+      meta: { resizable: true },
       // TODO(burdon): Sorting.
       getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
     }),
@@ -275,6 +222,32 @@ export const Editable = {
           columns={columns(onUpdate)}
           data={items}
           fullWidth
+        />
+      </div>
+    );
+  },
+};
+
+export const Resizable = {
+  render: () => {
+    const [items, setItems] = useState<Item[]>(createItems(10));
+    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
+      setItems((items) => updateItems(items, item.publicKey, prop, value));
+    };
+
+    const handleColumnResize = (state) => {
+      console.log('resize', state);
+    };
+
+    return (
+      <div className='flex grow overflow-hidden'>
+        {/* prettier-ignore */}
+        <Table<Item>
+          keyAccessor={row => row.publicKey.toHex()}
+          columns={columns(onUpdate)}
+          data={items}
+          fullWidth
+          onColumnResize={handleColumnResize}
         />
       </div>
     );

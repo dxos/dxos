@@ -184,30 +184,33 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   testId={primaryAction.properties.testId}
                 />
               )}
-              {actions.length === 1 ? (
-                <NavTreeItemActionMenu
-                  id={node.id}
-                  label={Array.isArray(actions[0].label) ? t(...actions[0].label) : actions[0].label}
-                  icon={actions[0].icon ?? Placeholder}
-                  action={actions[0].actions.length === 0 ? actions[0] : undefined}
-                  actions={actions[0].actions}
-                  level={level}
-                  active={active}
-                  popoverAnchorId={popoverAnchorId}
-                  testId={actions[0].properties.testId}
-                />
-              ) : actions.length > 1 ? (
-                <NavTreeItemActionMenu
-                  id={node.id}
-                  // label={t('tree item actions label')}
-                  icon={DotsThreeVertical}
-                  actions={actions}
-                  level={level}
-                  active={active}
-                  popoverAnchorId={popoverAnchorId}
-                  testId={`navtree.treeItem.actionsLevel${level}`}
-                />
-              ) : null}
+              {
+                //   actions.length === 1 ? (
+                //   <NavTreeItemActionMenu
+                //     id={node.id}
+                //     label={Array.isArray(actions[0].label) ? t(...actions[0].label) : actions[0].label}
+                //     icon={actions[0].icon ?? Placeholder}
+                //     action={actions[0].actions.length === 0 ? actions[0] : undefined}
+                //     actions={actions[0].actions}
+                //     level={level}
+                //     active={active}
+                //     popoverAnchorId={popoverAnchorId}
+                //     testId={actions[0].properties.testId}
+                //   />
+                // ) :
+                actions.length > 0 ? (
+                  <NavTreeItemActionMenu
+                    id={node.id}
+                    // label={t('tree item actions label')}
+                    icon={DotsThreeVertical}
+                    actions={actions}
+                    level={level}
+                    active={active}
+                    popoverAnchorId={popoverAnchorId}
+                    testId={`navtree.treeItem.actionsLevel${level}`}
+                  />
+                ) : null
+              }
               {renderPresence?.(node)}
             </div>
             {!active &&
