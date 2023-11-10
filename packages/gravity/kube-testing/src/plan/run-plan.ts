@@ -261,7 +261,11 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
 
 const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');
 
-const runNode = async <S, C>(planName: string, agentParams: AgentParams<S, C>, options: PlanOptions): Promise<ProcessHandle> => {
+const runNode = async <S, C>(
+  planName: string,
+  agentParams: AgentParams<S, C>,
+  options: PlanOptions,
+): Promise<ProcessHandle> => {
   const execArgv = process.execArgv;
 
   if (options.profile) {
@@ -312,8 +316,6 @@ const runNode = async <S, C>(planName: string, agentParams: AgentParams<S, C>, o
           outDir: agentParams.outDir,
           logFile: join(agentParams.outDir, AGENT_LOG_FILE),
         });
-
-        log.info('agent process exited successfully', { agentId: agentParams.agentId });
       });
       // TODO(nf): add timeout for agent completion
     }),
