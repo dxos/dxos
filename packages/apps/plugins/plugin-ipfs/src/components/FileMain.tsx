@@ -43,7 +43,7 @@ export const FileSection: FC<{ file: TypedObject }> = ({ file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <div style={{ height }} className='p-2 flex justify-center align-center'>
+    <div style={{ height }} className='flex w-full p-2 justify-center align-center'>
       <FilePreview type={file.type} url={url} className='object-contain' />
     </div>
   );
