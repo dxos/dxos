@@ -178,7 +178,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
 
       const { result, kill } =
         agentParams.runtime.platform === 'nodejs'
-          ? await runNode(agentParams, options)
+          ? await runNode(name, agentParams, options)
           : await runBrowser(agentParams, options);
       killCallbacks.push(kill);
       promises.push(
@@ -261,7 +261,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
 
 const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');
 
-const runNode = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<ProcessHandle> => {
+const runNode = async <S, C>(planName: string, agentParams: AgentParams<S, C>, options: PlanOptions): Promise<ProcessHandle> => {
   const execArgv = process.execArgv;
 
   if (options.profile) {
@@ -284,6 +284,7 @@ const runNode = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOption
     env: {
       ...process.env,
       GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+      GRAVITY_SPEC: planName,
     },
   });
 
@@ -297,11 +298,13 @@ const runNode = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOption
         if (exitCode == null) {
           log.warn('agent exited with signal', { signal });
           reject(new Error(`agent exited with signal ${signal}`));
+          return;
         }
 
         if (exitCode !== 0) {
           log.warn('agent exited with non-zero exit code', { exitCode });
           reject(new Error(`agent exited with non-zero exit code ${exitCode}`));
+          return;
         }
 
         resolve({
