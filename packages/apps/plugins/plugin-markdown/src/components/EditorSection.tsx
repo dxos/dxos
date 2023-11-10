@@ -4,14 +4,14 @@
 
 import React, { type HTMLAttributes, useRef } from 'react';
 
-import { type ComposerModel, MarkdownComposer, type MarkdownComposerRef } from '@dxos/react-ui-editor';
+import { type EditorModel, MarkdownEditor, type MarkdownEditorRef } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-export const EditorSection = ({ content: document }: { content: ComposerModel }) => {
-  const editorRef = useRef<MarkdownComposerRef>(null);
+export const EditorSection = ({ content: document }: { content: EditorModel }) => {
+  const editorRef = useRef<MarkdownEditorRef>(null);
 
   return (
-    <MarkdownComposer
+    <MarkdownEditor
       ref={editorRef}
       model={document}
       slots={{

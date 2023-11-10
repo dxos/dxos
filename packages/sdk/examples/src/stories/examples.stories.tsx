@@ -61,7 +61,7 @@ const DemoToggles = ({
 
   return (Story, context) => (
     <>
-      <div className='demo-buttons'>
+      <div className='demo-buttons space-b-2'>
         <div className='flex'>
           <Input.Root>
             <Input.Switch classNames='me-2' onCheckedChange={handleToggleNetwork} />

@@ -16,6 +16,7 @@ import {
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
   mx,
+  subtleHover,
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
@@ -149,7 +150,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 level < 1 && topLevelCollapsibleSpacing,
                 (active && active !== 'overlay') || path === current
                   ? 'bg-neutral-75 dark:bg-neutral-850'
-                  : 'hover:bg-neutral-450/5 dark:hover:bg-25/5',
+                  : subtleHover,
               )}
             >
               <NavTreeItemHeading

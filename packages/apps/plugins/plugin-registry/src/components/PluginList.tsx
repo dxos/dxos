@@ -6,15 +6,10 @@ import { Circle } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
-import { DensityProvider, Input, List, ListItem, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { DensityProvider, Input, List, ListItem, useId, useTranslation } from '@dxos/react-ui';
+import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
-
-// TODO(burdon): Factor out.
-const styles = {
-  hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
-};
 
 export type PluginListProps = {
   plugins?: Plugin['meta'][];
@@ -28,38 +23,44 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], className,
   const { t } = useTranslation(REGISTRY_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-x-hidden', className)}>
-      <DensityProvider density={'fine'}>
-        <List>
-          {plugins.map(({ id, name, description, iconComponent: Icon = Circle }) => {
-            const isEnabled = enabled.includes(id);
-            const isLoaded = loaded.includes(id);
-            const reloadRequired = isEnabled !== isLoaded;
+    <DensityProvider density='fine'>
+      <List classNames='select-none'>
+        {plugins.map(({ id, name, description, iconComponent: Icon = Circle }) => {
+          const isEnabled = enabled.includes(id);
+          const isLoaded = loaded.includes(id);
+          const reloadRequired = isEnabled !== isLoaded;
+          const inputId = useId('plugin');
+          const labelId = useId('pluginName');
+          const descriptionId = useId('pluginDescription');
 
-            return (
+          return (
+            <Input.Root key={id} id={inputId}>
               <ListItem.Root
-                key={id}
-                classNames={mx('flex is-full cursor-pointer p-1', styles.hover)}
+                labelId={labelId}
+                classNames={['flex gap-2 cursor-pointer plb-1 pli-2 -mli-2 rounded', ghostHover]}
                 onClick={() => onChange?.(id, !isEnabled)}
+                aria-describedby={descriptionId}
               >
-                <ListItem.Endcap classNames={'items-center mr-4'}>
-                  <Icon className={getSize(6)} />
-                </ListItem.Endcap>
-                <div className='flex flex-col grow'>
-                  <ListItem.Heading classNames='flex grow truncate items-center'>{name ?? id}</ListItem.Heading>
-                  {description && <div className='text-sm pb-1 font-thin'>{description}</div>}
-                  {reloadRequired && <div className='text-sm font-bold'>{t('reload required message')}</div>}
+                <Icon weight='duotone' className={mx(getSize(6), 'mbs-1')} />
+                <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
+                  <label htmlFor={inputId} id={labelId} className='truncate'>
+                    {name ?? id}
+                  </label>
+                  {(description || reloadRequired) && (
+                    <div id={descriptionId} className='space-b-1 pbe-1'>
+                      <p className={descriptionText}>{description}</p>
+                      {reloadRequired && <p className='text-sm font-system-medium'>{t('reload required message')}</p>}
+                    </div>
+                  )}
                 </div>
-                <ListItem.Endcap classNames='items-center'>
-                  <Input.Root>
-                    <Input.Checkbox checked={!!isEnabled} />
-                  </Input.Root>
-                </ListItem.Endcap>
+                <div className='pbs-1'>
+                  <Input.Switch classNames='self-center' checked={!!isEnabled} />
+                </div>
               </ListItem.Root>
-            );
-          })}
-        </List>
-      </DensityProvider>
-    </div>
+            </Input.Root>
+          );
+        })}
+      </List>
+    </DensityProvider>
   );
 };

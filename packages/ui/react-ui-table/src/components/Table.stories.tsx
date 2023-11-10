@@ -235,9 +235,9 @@ export const Resizable = {
       setItems((items) => updateItems(items, item.publicKey, prop, value));
     };
 
-    const handleColumnResize = (state) => {
-      console.log('resize', state);
-    };
+    // const handleColumnResize = (state) => {
+    //   console.log('resize', state);
+    // };
 
     return (
       <div className='flex grow overflow-hidden'>
@@ -247,7 +247,7 @@ export const Resizable = {
           columns={columns(onUpdate)}
           data={items}
           fullWidth
-          onColumnResize={handleColumnResize}
+          // onColumnResize={handleColumnResize}
         />
       </div>
     );

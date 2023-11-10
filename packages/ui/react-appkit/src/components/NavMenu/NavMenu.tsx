@@ -8,12 +8,12 @@ import React, { type ComponentProps, type ForwardedRef, forwardRef, type ReactNo
 import { Tooltip, type TooltipContentProps } from '@dxos/react-ui';
 import {
   focusRing,
-  hoverColors,
   inlineSeparator,
   mx,
   defaultAppButtonColors,
   primaryAppButtonColors,
   surfaceElevation,
+  ghostHover,
 } from '@dxos/react-ui-theme';
 
 interface NavMenuItemSharedProps {
@@ -69,7 +69,7 @@ const NavMenuInvokerItem = forwardRef(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryAppButtonColors : defaultAppButtonColors,
             focusRing,
-            hoverColors,
+            ghostHover,
           )}
         >
           {children}
@@ -101,7 +101,7 @@ const NavMenuLinkItem = forwardRef(
           active ? primaryAppButtonColors : defaultAppButtonColors,
           active ? 'font-medium' : 'font-normal',
           focusRing,
-          hoverColors,
+          ghostHover,
           triggerLinkProps.className,
         )}
       >
@@ -126,7 +126,7 @@ const NavMenuTooltipLinkItem = forwardRef(
               active ? primaryAppButtonColors : defaultAppButtonColors,
               active ? 'font-medium' : 'font-normal',
               focusRing,
-              hoverColors,
+              ghostHover,
               triggerLinkProps.className,
             )}
           >

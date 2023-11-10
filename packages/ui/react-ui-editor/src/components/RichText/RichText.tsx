@@ -14,7 +14,7 @@ import React, { forwardRef, useImperativeHandle, useMemo } from 'react';
 import { generateName } from '@dxos/display-name';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type ComposerModel, type ComposerSlots } from '../../model';
+import { type EditorModel, type EditorSlots } from '../../model';
 import {
   blockquote,
   bold,
@@ -35,9 +35,9 @@ import { cursorColor } from '../../yjs';
 export type TipTapEditor = Editor;
 
 type UseEditorOptions = {
-  model?: ComposerModel;
+  model?: EditorModel;
   placeholder?: string;
-  slots?: Pick<ComposerSlots, 'editor'>;
+  slots?: Pick<EditorSlots, 'editor'>;
 };
 
 const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
@@ -161,15 +161,15 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
   );
 };
 
-export type RichTextComposerProps = UseEditorOptions & {
-  slots?: ComposerSlots;
+export type RichTextEditorProps = UseEditorOptions & {
+  slots?: EditorSlots;
 };
 
 /**
  * @deprecated
  */
 // TODO(burdon): Currently broken.
-export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>((props, ref) => {
+export const RichTextEditor = forwardRef<Editor | null, RichTextEditorProps>((props, ref) => {
   const editor = useEditor(props);
   useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);
 
