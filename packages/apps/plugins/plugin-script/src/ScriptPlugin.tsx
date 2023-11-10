@@ -84,7 +84,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         ],
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (

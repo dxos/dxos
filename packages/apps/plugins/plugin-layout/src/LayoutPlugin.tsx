@@ -121,7 +121,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
         const layout = useLayout();
         const [shortId, component] = layout.active?.split(':') ?? [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
-        const result = plugin?.provides.surface.component({ data: { component } });
 
         // Update selection based on browser navigation.
         useEffect(() => {
@@ -156,7 +155,9 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           }
         }, [state.values.active]);
 
-        const surfaceProps: SurfaceProps = layout.activeNode
+        const surfaceProps: SurfaceProps = plugin
+          ? { data: { component: `${plugin.meta.id}/${component}` } }
+          : layout.activeNode
           ? state.values.fullscreen
             ? {
                 data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
@@ -194,18 +195,18 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
         return (
           <>
-            {result || <Surface {...surfaceProps} />}
+            <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
           </>
         );
       },
       surface: {
-        component: ({ component }, role) => {
+        component: ({ data, role }) => {
           if (role === 'settings') {
             return <LayoutSettings />;
           }
 
-          switch (component) {
+          switch (data.component) {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout

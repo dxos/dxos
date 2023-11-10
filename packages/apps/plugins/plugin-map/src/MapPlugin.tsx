@@ -67,7 +67,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main': {
               return isObject(data.active) ? <MapMain map={data.active} /> : null;

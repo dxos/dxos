@@ -12,6 +12,6 @@ export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 export default pluginMeta({
   id: MARKDOWN_PLUGIN,
   name: 'Markdown',
-  description: 'Edit text in Markdown format',
+  description: 'Markdown text editor.',
   iconComponent: (props) => <ArticleMedium {...props} />,
 });

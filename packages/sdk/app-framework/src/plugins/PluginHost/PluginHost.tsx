@@ -56,6 +56,7 @@ export const PluginHost = ({
   return {
     meta: {
       id: PLUGIN_HOST,
+      name: 'Plugin host',
     },
     provides: {
       plugins: state.values,

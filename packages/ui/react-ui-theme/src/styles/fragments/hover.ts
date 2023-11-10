@@ -8,6 +8,9 @@
 export const hoverColors =
   'transition-colors duration-100 linear hover:text-black dark:hover:text-white hover:bg-neutral-25 dark:hover:bg-neutral-750';
 
+export const ghostHover = 'hover:bg-neutral-450/10 dark:hover:bg-25/10';
+export const subtleHover = 'hover:bg-neutral-450/5 dark:hover:bg-25/5';
+
 export const hoverableControls =
   '[--controls-opacity:1] hover-hover:[--controls-opacity:0] hover-hover:hover:[--controls-opacity:1]';
 

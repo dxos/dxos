@@ -78,7 +78,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         ],
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;

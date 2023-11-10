@@ -49,25 +49,25 @@ import { YText } from '@dxos/text-model';
 
 import { markdownTagsExtension } from './markdownTags';
 import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
-import { type ComposerModel, type ComposerSlots } from '../../model';
+import { type EditorModel, type EditorSlots } from '../../model';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
-export type MarkdownComposerProps = {
-  model?: ComposerModel;
-  slots?: ComposerSlots;
+export type MarkdownEditorProps = {
+  model?: EditorModel;
+  slots?: EditorSlots;
   editorMode?: EditorMode;
   onChange?: (content: string | Text) => void;
 };
 
-export type MarkdownComposerRef = {
+export type MarkdownEditorRef = {
   editor: HTMLDivElement | null;
   state?: EditorState;
   view?: EditorView;
 };
 
-export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(
+export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
   ({ model, slots = {}, onChange, editorMode }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();

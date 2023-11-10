@@ -11,11 +11,11 @@ import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
 
-import { MarkdownComposer } from './Markdown';
+import { MarkdownEditor } from './Markdown';
 import { Replicator, useYjsModel } from '../../testing';
 
 export default {
-  component: MarkdownComposer,
+  component: MarkdownEditor,
 };
 
 export const Default = {
@@ -47,7 +47,7 @@ export const WithYjs = {
           <input type='checkbox' onChange={(event) => setGenerate(event.target.checked)} />
           Generate Data
         </div>
-        <MarkdownComposer model={model} />
+        <MarkdownEditor model={model} />
       </main>
     );
   },
