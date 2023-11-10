@@ -17,7 +17,7 @@ import {
 
 import { type EchoObject, base, db, subscribe } from './types';
 import { type EchoDatabase } from '../database';
-import { createSignal } from '../util';
+import { compositeRuntime } from '../util';
 
 /**
  * Base class for all echo objects.
@@ -58,7 +58,7 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
 
   private readonly _callbacks = new Set<(value: any) => void>();
 
-  protected readonly _signal = createSignal?.();
+  protected readonly _signal = compositeRuntime.createSignal();
 
   protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;

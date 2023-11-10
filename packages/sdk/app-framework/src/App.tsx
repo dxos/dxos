@@ -36,7 +36,7 @@ import SurfaceMeta from './plugins/SurfacePlugin/meta';
  * @param params.default Default plugins are enabled by default but can be disabled by the user.
  * @param params.fallback Fallback component to render while plugins are initializing.
  */
-export const createApp = ({ order, plugins, core = [], ...params }: BootstrapPluginsParams) => {
+export const createApp = ({ order, plugins, core = order.map(({ id }) => id), ...params }: BootstrapPluginsParams) => {
   const host = PluginHost({
     order: [SurfaceMeta, IntentMeta, ...order],
     plugins: {

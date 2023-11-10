@@ -5,7 +5,7 @@
 import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
-import { LayoutAction, parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { LayoutAction, parseIntentPlugin, useResolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -17,10 +17,12 @@ const WAIT_FOR_OBJECT_TIMEOUT = 180e3; // 3 minutes
 const TOAST_TIMEOUT = 240e3; // 4 minutes
 
 export const AwaitingObject = ({ id }: { id: string }) => {
+  const [open, setOpen] = useState(true);
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
   const { t } = useTranslation(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
 
   const client = useClient();
   const query = useMemo(() => client.spaces.query(), []);
@@ -44,6 +46,10 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   useEffect(() => {
     if (objects.findIndex((object) => object.id === id) > -1) {
       setFound(true);
+
+      if (layoutPlugin?.provides.layout.active === id) {
+        setOpen(false);
+      }
     }
   }, [id, objects, intentPlugin]);
 
@@ -63,7 +69,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   };
 
   return (
-    <Toast.Root defaultOpen duration={TOAST_TIMEOUT}>
+    <Toast.Root open={open} duration={TOAST_TIMEOUT} onOpenChange={setOpen}>
       <Toast.Body>
         <Toast.Title classNames='flex items-center gap-2'>
           {found ? (
