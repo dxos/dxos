@@ -16,6 +16,7 @@ import { type TestGeneratorMap, type TestSchemaMap } from './types';
 export const Status = ['pending', 'active', 'done'];
 export const Priority = [1, 2, 3, 4, 5];
 
+// TODO(burdon): Reconcile with typename.
 export type TestSchemaType = 'document' | 'organization' | 'person' | 'project';
 
 export const testSchemas = (): TestSchemaMap<TestSchemaType> => {

@@ -7,11 +7,10 @@ import '@dxosTheme';
 import React, { type FC, useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type Schema } from '@dxos/echo-schema';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
-import { SchemaList } from './SchemaList';
+import { DebugSpace } from './DebugSpace';
 
 const Story: FC = () => {
   const [space] = useSpaces();
@@ -20,15 +19,11 @@ const Story: FC = () => {
     generator.addSchemas();
   }, [space]);
 
-  const handleCreate = (schema: Schema, count: number) => {
-    console.log(schema.id, count);
-  };
-
-  return <SchemaList space={space} onCreate={handleCreate} />;
+  return <DebugSpace space={space} />;
 };
 
 export default {
-  component: SchemaList,
+  component: DebugSpace,
   render: Story,
   decorators: [ClientSpaceDecorator()],
   parameters: {

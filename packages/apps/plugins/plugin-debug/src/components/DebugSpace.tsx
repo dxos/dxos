@@ -4,6 +4,7 @@
 
 import {
   ArrowClockwise,
+  DotsThreeVertical,
   DownloadSimple,
   Flag,
   FlagPennant,
@@ -18,11 +19,11 @@ import React, { type FC, useContext, useEffect, useMemo, useState } from 'react'
 
 import { type Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
-import { type TypedObject } from '@dxos/echo-schema';
+import { type Schema, type TypedObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
-import { Button, Input, useThemeContext } from '@dxos/react-ui';
+import { Button, DropdownMenu, Input, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
@@ -32,7 +33,6 @@ import { Json } from './Tree';
 import { useFileDownload } from './util';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
-import JSONStream = Mocha.reporters.JSONStream;
 
 const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;
@@ -93,15 +93,9 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
     }
   };
 
-  const handleCreateObject = async (createTables: boolean) => {
-    let objects: TypedObject[];
-    if (createTables) {
-      objects = generator.createTables();
-    } else {
-      objects = [generator.createDocument()];
-    }
-
-    onAddObjects?.(objects);
+  // TODO(burdon): Call generator.
+  const handleCreate = (schema: Schema, count: number) => {
+    // generator.createObjects();
   };
 
   const handleCreateInvitation = () => {
@@ -127,12 +121,30 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
     <DebugPanel
       menu={
         <>
-          <Button
-            onClick={(event) => handleCreateObject(event.shiftKey)}
-            title={'Create content; hold SHIFT to create tables.'}
-          >
-            <Plus className={getSize(5)} />
-          </Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button>
+                <DotsThreeVertical />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item onClick={() => onAddObjects?.([generator.createDocument()])}>
+                  <Plus className={getSize(5)} />
+                  <p>Create document</p>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => onAddObjects?.(generator.createTables())}>
+                  <Plus className={getSize(5)} />
+                  <p>Create tables</p>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => generator.createObjects()}>
+                  <Plus className={getSize(5)} />
+                  <p>Create objects</p>
+                </DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+
           <div className='relative' title='mutation count'>
             <Input.Root>
               <Input.TextInput
@@ -193,7 +205,7 @@ export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject
       }
     >
       <div className={'shrink-0'}>
-        <SchemaList space={space} />
+        <SchemaList space={space} onCreate={handleCreate} />
       </div>
       <Json theme={themeMode} data={data} />
     </DebugPanel>

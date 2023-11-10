@@ -16,7 +16,7 @@ type SchemaRecord = {
   count?: number;
 };
 
-export const SchemaList: FC<{ space: Space; onCreate?: (id: string, count: number) => void }> = ({
+export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: number) => void }> = ({
   space,
   onCreate,
 }) => {
@@ -32,7 +32,10 @@ export const SchemaList: FC<{ space: Space; onCreate?: (id: string, count: numbe
 
   const handleCreate = (id: string) => {
     const count = schemaCount[id] ?? 1;
-    onCreate?.(id, count);
+    const schema = objects.find((schema) => schema.id === id);
+    if (schema) {
+      onCreate?.(schema, count);
+    }
   };
 
   const { helper, builder } = createColumnBuilder<SchemaRecord>();

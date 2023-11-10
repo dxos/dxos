@@ -6,54 +6,53 @@ import { faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
 import { type Space, TextObject } from '@dxos/client/echo';
-import { createSpaceObjectGenerator, type TestSchemaType } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator, type SpaceObjectGenerator, type TestSchemaType } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
+const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
+  {
+    type: 'organization', // TODO(burdon): Reference schema type.
+    title: 'Organizations',
+  },
+  {
+    type: 'project',
+    title: 'Projects',
+  },
+  {
+    type: 'person',
+    title: 'People',
+    props: [
+      {
+        id: 'org',
+        refProp: 'name',
+      },
+    ],
+  },
+];
+
 export class Generator {
+  private readonly _generator: SpaceObjectGenerator<TestSchemaType>;
+
   constructor(private readonly _space: Space) {
     invariant(this._space);
+    this._generator = createSpaceObjectGenerator(this._space);
   }
 
-  createTables(options: Partial<Record<TestSchemaType, number>> = { organization: 30, project: 20, person: 200 }) {
-    const generator = createSpaceObjectGenerator(this._space);
-
-    const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
-      {
-        type: 'organization',
-        title: 'Organizations',
-      },
-      {
-        type: 'project',
-        title: 'Projects',
-      },
-      {
-        type: 'person',
-        title: 'People',
-        props: [
-          {
-            id: 'org',
-            refProp: 'name',
-          },
-        ],
-      },
-    ];
-
-    // Generate tables.
-    const tables = tableDefs.map(({ type, title, props }) => {
-      const schema = generator.schema[type];
+  createTables() {
+    // TODO(burdon): Check if already exists.
+    return tableDefs.map(({ type, title, props }) => {
+      const schema = this._generator.schema[type];
       this._space.db.add(schema);
       return this._space.db.add(new TableType({ title, schema, props }));
     });
+  }
 
-    // Generate objects.
+  // TODO(burdon): Reconcile with typename.
+  createObjects(options: Partial<Record<TestSchemaType, number>> = { organization: 30, project: 20, person: 200 }) {
     tableDefs.forEach(({ type }) => {
-      generator.createObjects({ types: [type], count: options[type] ?? 0 });
+      this._generator.createObjects({ types: [type], count: options[type] ?? 0 });
     });
-
-    log('created objects', options);
-    return tables;
   }
 
   createDocument() {
