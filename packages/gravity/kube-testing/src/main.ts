@@ -8,8 +8,7 @@ import { hideBin } from 'yargs/helpers';
 import { PublicKey } from '@dxos/keys';
 
 import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runAgentForPlan } from './plan';
-import { EchoTestPlan, ReplicationTestPlan, SignalTestPlan, TransportTestPlan, EmptyTestPlan } from './spec';
-import { log } from '@dxos/log';
+import { ReplicationTestPlan, EmptyTestPlan } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
@@ -33,7 +32,6 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
 const start = async () => {
   if (process.env.GRAVITY_SPEC) {
     const name = process.env.GRAVITY_SPEC;
-    log.info('params', { name, params: process.env.GRAVITY_AGENT_PARAMS });
     await runAgentForPlan(name, process.env.GRAVITY_AGENT_PARAMS!, plans[name]());
     return;
   }
