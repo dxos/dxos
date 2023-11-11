@@ -6,11 +6,13 @@ import React, { type FC, useMemo, useState } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { Table as TableType } from '@braneframe/types';
-import { Expando, type TypedObject, type Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { PublicKey } from '@dxos/keys';
+import { Expando, type TypedObject, Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
+import { TableSettings } from './TableSettings';
 import { getSchema, schemaPropMapper, TableColumnBuilder } from '../schema';
 
 // TODO(burdon): Factor out echo fn to update when changed.
@@ -51,7 +53,7 @@ export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
-    (object) => (object.__schema as any)?.id === table.schema.id,
+    (object) => table.schema && (object.__schema as any)?.id === table.schema.id,
     // TODO(burdon): Toggle deleted.
     {},
     [table.schema],
@@ -82,7 +84,7 @@ export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
   };
 
   const columns = useMemo(() => {
-    if (!space || !tables.length) {
+    if (!space || !table.schema || !tables.length) {
       return [];
     }
 
@@ -135,6 +137,32 @@ export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
   };
 
   const debug = false;
+
+  if (!space) {
+    return null;
+  }
+
+  const handleClose = (success: boolean) => {
+    if (!table.schema) {
+      // TODO(burdon): Set typename for schema.
+      table.schema = space.db.add(
+        new Schema({
+          typename: `example.com/${PublicKey.random().truncate()}`,
+          props: [
+            {
+              id: 'title',
+              type: Schema.PropType.STRING,
+            },
+          ],
+        }),
+      );
+    }
+  };
+
+  if (!table.schema) {
+    const { objects: schemas } = space.db.query(Schema.filter());
+    return <TableSettings table={table} schemas={schemas} open={true} onClose={handleClose} />;
+  }
 
   return (
     <DensityProvider density='fine'>
