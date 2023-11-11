@@ -47,8 +47,7 @@ export class Generator {
 
   createTables() {
     return tableDefs.map(({ type, title, props }) => {
-      // TODO(burdon): Check if already exists.
-      const schema = this._space.db.add(this._generator.schema[type]);
+      const schema = this._generator.getSchema(type);
       return this._space.db.add(new TableType({ title, schema, props }));
     });
   }
