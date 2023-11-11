@@ -8,18 +8,19 @@ export { type ItemID, DocumentModel } from '@dxos/document-model';
 export { Item } from '@dxos/echo-db';
 export {
   base,
+  debug,
+  subscribe,
   createSubscription,
   isTypedObject,
-  subscribe,
   EchoDatabase,
   Expando,
+  Filter,
   Query,
   Schema,
   Text, // TODO(burdon): Deprecated.
-  TextObject,
   TypeCollection,
+  TextObject,
   TypedObject,
-  Filter,
   type EchoObject, // TODO(burdon): Remove?
   type FilterSource,
   type ObjectMeta,
