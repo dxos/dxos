@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { Client } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
-import { createSpaceObjectGenerator, createTestObjectGenerator } from './data';
+import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';
 
 faker.seed(3);
 
@@ -17,7 +17,7 @@ describe('TestObjectGenerator', () => {
     const generator = createTestObjectGenerator();
 
     // Create raw object.
-    const object = generator.createObject({ types: ['person'] });
+    const object = generator.createObject({ types: [TestSchemaType.contact] });
     expect(object).to.exist;
   });
 
@@ -32,11 +32,11 @@ describe('TestObjectGenerator', () => {
     generator.addSchemas();
 
     // Create org object.
-    const organization = generator.createObject({ types: ['organization'] });
+    const organization = generator.createObject({ types: [TestSchemaType.organization] });
     expect(organization.__schema).to.exist;
 
     // Expect at least one person object with a linked org reference.
-    const objects = generator.createObjects({ types: ['person'], count: 10 });
+    const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
     expect(objects.some((object) => object.org === organization)).to.be.true;
 
     await client.destroy();
