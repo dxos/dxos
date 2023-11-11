@@ -13,9 +13,13 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-type SearchmenuRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>>;
+type SearchListVariant = 'list' | 'menu' | 'listbox';
 
-const SearchmenuRoot = forwardRef<HTMLDivElement, SearchmenuRootProps>(
+type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>> & {
+  variant?: SearchListVariant;
+};
+
+const SearchListRoot = forwardRef<HTMLDivElement, SearchListRootProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandRoot {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -28,10 +32,10 @@ const SearchmenuRoot = forwardRef<HTMLDivElement, SearchmenuRootProps>(
 type CommandInputPrimitiveProps = ComponentPropsWithRef<typeof CommandInput>;
 
 // TODO: Harmonize with other inputs’ `onChange` prop.
-type SearchmenuInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onChange'> &
+type SearchListInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onChange'> &
   Pick<CommandInputPrimitiveProps, 'value' | 'onValueChange' | 'defaultValue'>;
 
-const SearchmenuInput = forwardRef<HTMLInputElement, SearchmenuInputProps>(
+const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
   (
     { children, classNames, density: propsDensity, elevation: propsElevation, variant = 'subdued', ...props },
     forwardedRef,
@@ -63,9 +67,9 @@ const SearchmenuInput = forwardRef<HTMLInputElement, SearchmenuInputProps>(
   },
 );
 
-type SearchmenuListProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
+type SearchListListProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
 
-const SearchmenuList = forwardRef<HTMLDivElement, SearchmenuListProps>(
+const SearchListList = forwardRef<HTMLDivElement, SearchListListProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandList {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -75,9 +79,9 @@ const SearchmenuList = forwardRef<HTMLDivElement, SearchmenuListProps>(
   },
 );
 
-type SearchmenuEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof CommandEmpty>>;
+type SearchListEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof CommandEmpty>>;
 
-const SearchmenuEmpty = forwardRef<HTMLDivElement, SearchmenuEmptyProps>(
+const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandEmpty {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -87,9 +91,9 @@ const SearchmenuEmpty = forwardRef<HTMLDivElement, SearchmenuEmptyProps>(
   },
 );
 
-type SearchmenuItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
+type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
-const SearchmenuItem = forwardRef<HTMLDivElement, SearchmenuItemProps>(
+const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
       <CommandItem {...props} className={mx('', classNames)} ref={forwardedRef}>
@@ -99,18 +103,18 @@ const SearchmenuItem = forwardRef<HTMLDivElement, SearchmenuItemProps>(
   },
 );
 
-export const Searchmenu = {
-  Root: SearchmenuRoot,
-  Input: SearchmenuInput,
-  List: SearchmenuList,
-  Empty: SearchmenuEmpty,
-  Item: SearchmenuItem,
+export const SearchList = {
+  Root: SearchListRoot,
+  Input: SearchListInput,
+  List: SearchListList,
+  Empty: SearchListEmpty,
+  Item: SearchListItem,
 };
 
 export type {
-  SearchmenuRootProps,
-  SearchmenuInputProps,
-  SearchmenuListProps,
-  SearchmenuEmptyProps,
-  SearchmenuItemProps,
+  SearchListRootProps,
+  SearchListInputProps,
+  SearchListListProps,
+  SearchListEmptyProps,
+  SearchListItemProps,
 };

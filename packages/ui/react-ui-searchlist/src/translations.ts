@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'searchmenu';
+export const translationKey = 'searchlist';
 
 export default [
   {

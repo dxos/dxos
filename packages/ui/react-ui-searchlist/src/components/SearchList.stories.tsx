@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { type FC } from 'react';
 
-import { Searchmenu } from './Searchmenu';
+import { SearchList } from './SearchList';
 
 type StoryItems = Record<string, string>;
 
@@ -19,26 +19,26 @@ const defaultItems: StoryItems = faker.helpers
     return acc;
   }, {});
 
-const SearchmenuStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) => {
+const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) => {
   return (
-    <Searchmenu.Root
+    <SearchList.Root
       filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
       classNames='flex flex-col w-full bg-neutral-100 dark:bg-neutral-800'
     >
-      <Searchmenu.Input placeholder='Select...' />
-      <Searchmenu.List>
+      <SearchList.Input placeholder='Select...' />
+      <SearchList.List>
         {Object.entries(items).map(([value, label]) => (
-          <Searchmenu.Item key={value} value={value}>
+          <SearchList.Item key={value} value={value}>
             {label}
-          </Searchmenu.Item>
+          </SearchList.Item>
         ))}
-      </Searchmenu.List>
-    </Searchmenu.Root>
+      </SearchList.List>
+    </SearchList.Root>
   );
 };
 
 export default {
-  component: SearchmenuStory,
+  component: SearchListStory,
 };
 
 // TODO(burdon): Test controlled and uncontrolled.

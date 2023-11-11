@@ -8027,7 +8027,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
 
-  packages/ui/react-ui-searchmenu:
+  packages/ui/react-ui-searchlist:
     dependencies:
       '@dxos/react-ui':
         specifier: workspace:*
