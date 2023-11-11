@@ -36,7 +36,8 @@ export class TestObjectGenerator<T extends string> {
   createObject({ types }: { types?: T[] } = {}): TypedObject {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = this._generators[type](this._provider);
-    return new Expando(data, { schema: this.getSchema(type) });
+    const schema = this.getSchema(type);
+    return new Expando(data, { schema });
   }
 
   // TODO(burdon): Create batch.
@@ -58,7 +59,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   constructor(private readonly _space: Space, schemaMap: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
     super(schemaMap, generators, (type: T) => {
       const { objects } = this._space.db.query((object) => {
-        return object.__schema === this.getSchema(type);
+        return object.__schema?.id === this.getSchema(type)?.id;
       });
 
       return objects;
