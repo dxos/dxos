@@ -6,22 +6,22 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { base, TypedObject, dangerouslyMutateImmutableObject } from './object';
-import type { SchemaProps, Schema as SchemaProto } from './proto';
+import type { SchemaProps, Schema as SchemaType } from './proto';
 
 type Prototype = {
   new (...args: any): any;
-  schema: SchemaProto;
+  schema: SchemaType;
 };
 
 /**
  * Constructed via generated protobuf class.
  */
 export class TypeCollection {
+  private readonly _types = new Map<string, SchemaType>();
   private readonly _prototypes = new Map<string, Prototype>();
-  private readonly _types = new Map<string, SchemaProto>();
   private readonly _schemaDefs = new Map<string, SchemaProps>();
 
-  get schemas(): SchemaProto[] {
+  get schemas(): SchemaType[] {
     log.info('schemas', {
       types: this._types.size,
       prototypes: this._prototypes.size,
@@ -60,7 +60,7 @@ export class TypeCollection {
     return this._prototypes.get(name);
   }
 
-  getSchema(name: string): SchemaProto | undefined {
+  getSchema(name: string): SchemaType | undefined {
     return this._types.get(name);
   }
 
