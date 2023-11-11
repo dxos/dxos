@@ -163,6 +163,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     return this[base]._getSchema();
   }
 
+  // TODO(burdon): Make immutable.
   get [meta](): ObjectMeta {
     return this[base]._createProxy({}, undefined, true);
   }
