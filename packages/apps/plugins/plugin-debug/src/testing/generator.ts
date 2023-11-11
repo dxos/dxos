@@ -32,9 +32,9 @@ const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props
 ];
 
 const defaultCount: Partial<Record<TestSchemaType, number>> = {
-  [TestSchemaType.organization]: 50,
-  [TestSchemaType.project]: 60,
-  [TestSchemaType.contact]: 200,
+  [TestSchemaType.organization]: 40,
+  [TestSchemaType.project]: 80,
+  [TestSchemaType.contact]: 320,
 };
 
 export class Generator {
@@ -47,8 +47,7 @@ export class Generator {
 
   createTables() {
     return tableDefs.map(({ type, title, props }) => {
-      // TODO(burdon): Check if already exists.
-      const schema = this._space.db.add(this._generator.schema[type]);
+      const schema = this._generator.getSchema(type);
       return this._space.db.add(new TableType({ title, schema, props }));
     });
   }
