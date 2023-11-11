@@ -44,7 +44,7 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: n
       id: 'id',
       ...builder.string({ size: 120, className: 'font-mono' }),
     }),
-    helper.accessor('typename', builder.string({ className: 'font-mono' })),
+    helper.accessor('typename', builder.string({ className: 'font-mono', meta: { expand: true } })),
     helper.accessor(
       'count',
       builder.number({
