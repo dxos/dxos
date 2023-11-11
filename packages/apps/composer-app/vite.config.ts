@@ -85,6 +85,7 @@ export default defineConfig({
       ],
     }),
     ThemePlugin({
+      extensions: [osThemeExtension],
       root: __dirname,
       content: [
         resolve(__dirname, './index.html'),
@@ -102,7 +103,6 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
-      extensions: [osThemeExtension],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
