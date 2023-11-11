@@ -7,7 +7,7 @@
 
 import { faker } from '@faker-js/faker';
 
-import { Expando, type Schema, type Space } from '@dxos/client/echo';
+import { Expando, type TypedObject, Schema, type Space } from '@dxos/client/echo';
 
 import { type TestGeneratorMap, type TestObjectProvider, type TestSchemaMap } from './types';
 import { range } from './util';
@@ -31,17 +31,22 @@ export class TestObjectGenerator<T extends string> {
     return this.schemas.find((schema) => schema.typename === typename);
   }
 
-  createObject({ types }: { types?: T[] } = {}): Expando {
+  createObject({ types }: { types?: T[] } = {}): TypedObject {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this.schema) as T[]));
-    const factory = this._generators[type];
-    const data = factory(this._provider);
+    const data = this._generators[type](this._provider);
     // TODO(burdon): Runtime type check via: https://github.com/Effect-TS/schema (or zod).
     return new Expando(data, { schema: this.schema[type] });
   }
 
   // TODO(burdon): Create batch.
-  createObjects({ types, count }: { types?: T[]; count: number }): Expando[] {
-    return range(() => this.createObject({ types }), count);
+  // TODO(burdon): Based on dependencies (e.g., organization before contact).
+  createObjects(map: Partial<Record<T, number>>): Expando[] {
+    const objects: Expando[] = [];
+    Object.entries<number>(map as any).forEach(([type, count]) => {
+      range(() => objects.push(this.createObject({ types: [type as T] })), count);
+    });
+
+    return objects;
   }
 }
 
@@ -49,15 +54,18 @@ export class TestObjectGenerator<T extends string> {
  * Typed object generator for a space.
  */
 export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<T> {
-  constructor(private readonly _space: Space, schema: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
-    super(schema, generators, (type: T) => {
-      // TODO(burdon): Query by schema.
+  private readonly _space: Space;
+
+  constructor(space: Space, schemaMap: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
+    super(mergeSchemaMap(space, schemaMap), generators, (type: T) => {
       const { objects } = this._space.db.query((object) => {
-        return object.__schema === schema[type];
+        return object.__schema === schemaMap[type];
       });
 
       return objects;
     });
+
+    this._space = space;
   }
 
   addSchemas() {
@@ -69,3 +77,18 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(super.createObject({ types }));
   }
 }
+
+/**
+ * Merge existing schema in space with defaults.
+ */
+const mergeSchemaMap = <T extends string>(space: Space, schemaMap: TestSchemaMap<T>) => {
+  const { objects } = space.db.query(Schema.filter());
+  Object.keys(schemaMap).forEach((type) => {
+    const schema = objects.find((object) => object.typename === type);
+    if (schema) {
+      (schemaMap as any)[type] = schema;
+    }
+  });
+
+  return schemaMap;
+};

@@ -97,12 +97,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               id: LayoutAction.TOGGLE_FULLSCREEN,
               label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
               icon: (props) => <ArrowsOut {...props} />,
+              keyBinding: 'ctrl+meta+f',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
                   action: 'toggle-fullscreen',
                 }),
-              keyBinding: 'ctrl+meta+f',
             });
           }
         },

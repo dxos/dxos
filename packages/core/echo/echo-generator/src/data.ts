@@ -16,15 +16,20 @@ import { type TestGeneratorMap, type TestSchemaMap } from './types';
 export const Status = ['pending', 'active', 'done'];
 export const Priority = [1, 2, 3, 4, 5];
 
-export type TestSchemaType = 'document' | 'organization' | 'person' | 'project';
+export enum TestSchemaType {
+  document = 'example.com/schema/document',
+  organization = 'example.com/schema/organization',
+  contact = 'example.com/schema/contact',
+  project = 'example.com/schema/project',
+}
 
 export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = new Schema({
+    typename: TestSchemaType.document,
     props: [
       {
         id: 'name',
         type: Schema.PropType.STRING,
-        // TODO(burdon): primary: true,
       },
       {
         id: 'content',
@@ -34,7 +39,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   });
 
   const organization = new Schema({
-    typename: 'example.com/schema/organization',
+    typename: TestSchemaType.organization,
     props: [
       {
         id: 'name',
@@ -51,8 +56,8 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     ],
   });
 
-  const person = new Schema({
-    typename: 'example.com/schema/person',
+  const contact = new Schema({
+    typename: TestSchemaType.contact,
     props: [
       {
         id: 'name',
@@ -80,7 +85,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   });
 
   const project = new Schema({
-    typename: 'example.com/schema/project',
+    typename: TestSchemaType.project,
     props: [
       {
         id: 'title',
@@ -109,23 +114,28 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     ],
   });
 
-  return { document, organization, person, project };
+  return {
+    [TestSchemaType.document]: document,
+    [TestSchemaType.organization]: organization,
+    [TestSchemaType.contact]: contact,
+    [TestSchemaType.project]: project,
+  };
 };
 
 export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
-  document: () => ({
+  [TestSchemaType.document]: () => ({
     title: faker.lorem.sentence(3),
     content: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
   }),
 
-  organization: () => ({
+  [TestSchemaType.organization]: () => ({
     name: faker.company.name(),
     website: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
     description: new TextObject(faker.lorem.sentences()),
   }),
 
-  person: (provider) => {
-    const organizations = provider?.('organization');
+  [TestSchemaType.contact]: (provider) => {
+    const organizations = provider?.(TestSchemaType.organization);
     const location = faker.datatype.boolean() ? faker.helpers.arrayElement(locations) : undefined;
     return {
       name: faker.person.fullName(),
@@ -138,7 +148,7 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
     };
   },
 
-  project: () => ({
+  [TestSchemaType.project]: () => ({
     title: faker.commerce.productName(),
     repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
     status: faker.helpers.arrayElement(Status),
@@ -251,6 +261,6 @@ const locations = [
   { lat: 28.028063865019476, lng: -26.16809888138414 },
   { lat: 13.399602764700546, lng: 52.523764522251156 },
   { lat: 3.048606670909237, lng: 36.765010656628135 },
-  { lat: 12.481312562873995, lng: 41.89790148509894 },
   { lat: 125.75274485499392, lng: 39.02138455800434 },
+  { lat: 12.481312562873995, lng: 41.89790148509894 },
 ];

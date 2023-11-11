@@ -10,7 +10,7 @@ import type { ReactRenderer } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { View as ViewType, types } from '@braneframe/types';
-import { createSpaceObjectGenerator } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
@@ -38,7 +38,7 @@ const Story = () => {
 
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ count: 100 });
+    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
 
     const view = space.db.add(new ViewType({}));
 

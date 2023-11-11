@@ -15,10 +15,11 @@ export type PluginListProps = {
   plugins?: Plugin['meta'][];
   loaded?: string[];
   enabled?: string[];
+  className?: string;
   onChange?: (id: string, enabled: boolean) => void;
 };
 
-export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }: PluginListProps) => {
+export const PluginList = ({ plugins = [], loaded = [], enabled = [], className, onChange }: PluginListProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
 
   return (
