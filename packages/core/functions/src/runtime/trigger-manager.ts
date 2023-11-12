@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type FunctionTrigger } from '../function';
+import { type FunctionsManifest, type FunctionTrigger } from '../types';
 
 // TODO(burdon): Rename.
 export type InvokeOptions = {
@@ -29,7 +29,7 @@ export class TriggerManager {
 
   constructor(
     private readonly _client: Client,
-    private readonly _triggers: FunctionTrigger[],
+    private readonly _manifest: FunctionsManifest,
     private readonly _invokeOptions: InvokeOptions,
   ) {}
 
@@ -38,7 +38,7 @@ export class TriggerManager {
     this._client.spaces.subscribe(async (spaces) => {
       for (const space of spaces) {
         await space.waitUntilReady();
-        for (const trigger of this._triggers) {
+        for (const trigger of this._manifest.triggers) {
           // TODO(burdon): New context? Shared?
           await this.mount(new Context(), space, trigger);
         }
@@ -54,6 +54,8 @@ export class TriggerManager {
 
   private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
     const key = { name: trigger.function, spaceKey: space.key };
+    const config = this._manifest.functions.find((config) => config.id === trigger.function);
+    invariant(config, `Function not found: ${trigger.function}`);
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
@@ -62,11 +64,10 @@ export class TriggerManager {
         return;
       }
 
-      // TODO(burdon): Trigger binding.
       // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
       const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
-        await this.invokeFunction(this._invokeOptions, trigger.function, {
+        await this.execFunction(this._invokeOptions, config.endpoint, {
           space: space.key,
           objects: Array.from(objectIds),
         });
@@ -115,7 +116,7 @@ export class TriggerManager {
     }
   }
 
-  private async invokeFunction(options: InvokeOptions, functionName: string, data: any) {
+  private async execFunction(options: InvokeOptions, functionName: string, data: any) {
     const { endpoint, runtime } = options;
     invariant(endpoint, 'Missing endpoint');
     invariant(runtime, 'Missing runtime');

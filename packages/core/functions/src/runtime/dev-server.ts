@@ -11,7 +11,7 @@ import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { type FunctionContext, type FunctionHandler, type FunctionsManifest, type Response } from '../function';
+import { type FunctionContext, type FunctionHandler, type FunctionsManifest, type Response } from '../types';
 
 const DEFAULT_PORT = 7000;
 
@@ -49,18 +49,18 @@ export class DevServer {
   }
 
   async initialize() {
-    for (const { id, path } of this._options.manifest.functions) {
+    for (const { id, endpoint, handler: path } of this._options.manifest.functions) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const module = require(join(this._options.directory, path ?? id));
+        const module = require(join(this._options.directory, path));
         const handler = module.default;
         if (typeof handler !== 'function') {
           throw new Error(`Handler must export default function: ${id}`);
         }
 
-        this._handlers[id] = handler;
+        this._handlers[endpoint] = handler;
       } catch (err) {
-        log.error('parsing function (check functions.yml manifest)', err);
+        log.error('parsing function (check manifest)', err);
       }
     }
   }
@@ -69,9 +69,9 @@ export class DevServer {
     const app = express();
     app.use(express.json());
 
-    app.post('/:functionName', async (req, res) => {
-      const functionName = req.params.functionName;
-      log('invoke', { function: functionName, data: req.body });
+    app.post('/:endpoint', async (req, res) => {
+      const endpoint = req.params.endpoint;
+      log('invoke', { endpoint, data: req.body });
 
       const builder: Response = {
         status: (code: number) => {
@@ -92,7 +92,7 @@ export class DevServer {
       void (async () => {
         try {
           // TODO(burdon): Typed event handler.
-          await this._handlers[functionName]({ event: req.body, context });
+          await this._handlers[endpoint]({ event: req.body, context });
         } catch (err: any) {
           res.statusCode = 500;
           res.end(err.message);

@@ -53,23 +53,22 @@ describe('Chess', () => {
     });
     await openAndClose(functionsPlugin);
 
-    const functionsManifest = load(
-      await readFile(join(__dirname, '../../../functions.yml'), 'utf8'),
-    ) as FunctionsManifest;
+    const manifest = load(await readFile(join(__dirname, '../../../functions.yml'), 'utf8')) as FunctionsManifest;
 
     const devServer = new DevServer(client, {
       directory: join(__dirname, '../../functions'),
-      manifest: functionsManifest,
+      manifest,
     });
 
     await devServer.initialize();
     await devServer.start();
     afterTest(() => devServer.stop());
 
-    const triggers = new TriggerManager(client, functionsManifest.triggers, {
+    const triggers = new TriggerManager(client, manifest, {
       runtime: 'dev',
       endpoint: `http://localhost:${HUB_PORT}`,
     });
+
     await triggers.start();
     afterTest(() => triggers.stop());
 

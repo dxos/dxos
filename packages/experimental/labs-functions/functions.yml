@@ -4,23 +4,31 @@
 ##
 
 functions:
-  - id: 'chat'
+  - id: 'dxos.org/function/chat'
+    endpoint: 'chat'
+    handler: 'chat'
     description: 'AI Chat'
 
-  - id: 'chess'
+  - id: 'dxos.org/function/chess'
+    endpoint: 'chat'
+    handler: 'chess'
     description: 'Chess'
 
-  - id: 'hello'
+  - id: 'dxos.org/function/hello'
+    endpoint: 'chat'
+    handler: 'hello'
     description: 'Test'
 
-  - id: 'email'
+  - id: 'dxos.org/function/email'
+    endpoint: 'chat'
+    handler: 'email'
     description: 'Protonmail Sync'
 
 triggers:
-  - function: 'chat'
+  - function: 'dxos.org/function/chat'
     subscription:
       type: 'braneframe.Thread.Block'
 
-  - function: 'chess'
+  - function: 'dxos.org/function/chess'
     subscription:
       type: 'dxos.experimental.chess.Game'
