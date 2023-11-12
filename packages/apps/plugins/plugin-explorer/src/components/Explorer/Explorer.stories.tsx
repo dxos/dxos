@@ -5,29 +5,17 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { View as ViewType, types } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { mx } from '@dxos/react-ui-theme';
+import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Explorer } from './Explorer';
 
 faker.seed(1);
-
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
-      <Story />
-    </div>
-  );
-};
 
 const Story = () => {
   const client = useClient();

@@ -13,7 +13,6 @@ import { GITHUB_PLUGIN } from '../meta';
 export const UrlDialog = ({ properties }: { properties: MarkdownProperties }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const [ghUrlValue, setGhUrlValue] = useState('');
-
   const ghId = useGhIdFromUrl(ghUrlValue);
 
   return (
@@ -39,6 +38,7 @@ export const UrlDialog = ({ properties }: { properties: MarkdownProperties }) =>
             classNames='mbs-2'
             onClick={() => {
               if (ghId && document) {
+                // TODO(burdon): Meta should be immutable.
                 properties.__meta.keys.push({ source: 'github.com', id: ghId });
               }
             }}

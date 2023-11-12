@@ -2259,6 +2259,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

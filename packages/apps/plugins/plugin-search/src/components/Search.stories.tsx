@@ -9,11 +9,11 @@ import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
-import { FullscreenDecorator } from './util';
 import { SearchContextProvider, useSearch, useSearchResults } from '../context';
 
 faker.seed(1);
