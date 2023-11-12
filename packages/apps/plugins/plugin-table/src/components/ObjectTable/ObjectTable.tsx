@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { Table as TableType } from '@braneframe/types';
@@ -66,11 +66,13 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
       return [];
     }
 
-    const tableDefs: TableDef[] = tables.map((table) => ({
-      id: table.schema.id,
-      name: table.schema.typename ?? table.title, // TODO(burdon): Typename?
-      columns: table.schema.props.map(schemaPropMapper(table)),
-    }));
+    const tableDefs: TableDef[] = tables
+      .filter((table) => table.schema)
+      .map((table) => ({
+        id: table.schema.id,
+        name: table.schema.typename ?? table.title,
+        columns: table.schema.props.map(schemaPropMapper(table)),
+      }));
 
     const builder = new TableColumnBuilder(tableDefs, table.schema?.id, space!, {
       onColumnUpdate: (id, column) => {
@@ -116,15 +118,25 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
 
   const debug = false;
 
+  const [showSettings, setShowSettings] = useState(false);
+  useEffect(() => {
+    setShowSettings(!table.schema);
+  }, [table]);
+
   if (!space) {
     return null;
   }
 
   const handleClose = (success: boolean) => {
+    // TODO(burdon): If cancel then undo create?
+    if (!success) {
+      return;
+    }
+
     if (!table.schema) {
-      // TODO(burdon): Set typename for schema.
       table.schema = space.db.add(
         new Schema({
+          // TODO(burdon): How should user update schema?
           typename: `example.com/${PublicKey.random().truncate()}`,
           props: [
             {
@@ -135,11 +147,13 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
         }),
       );
     }
+
+    setShowSettings(false);
   };
 
-  if (!table.schema) {
+  if (showSettings) {
     const { objects: schemas } = space.db.query(Schema.filter());
-    return <TableSettings table={table} schemas={schemas} open={true} onClose={handleClose} />;
+    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
   }
 
   return (

@@ -27,7 +27,6 @@ const Story = () => {
   }, []);
 
   const handleClose = (success: boolean) => {
-    console.log(JSON.stringify(table, undefined, 2), success);
     setOpen(false);
   };
 
