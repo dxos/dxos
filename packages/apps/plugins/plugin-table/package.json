@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
