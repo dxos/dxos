@@ -4,7 +4,9 @@
 
 import '@dxosTheme';
 
-import React, { SettingsDialog } from './SettingsDialog';
+import React from 'react';
+
+import { SettingsDialog } from './SettingsDialog';
 
 export default {
   component: SettingsDialog,
