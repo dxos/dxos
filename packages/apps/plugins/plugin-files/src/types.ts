@@ -9,9 +9,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
-export const FILES_PLUGIN = 'dxos.org/plugin/files';
-
-export const FILES_PLUGIN_SHORT_ID = 'fs';
+import { FILES_PLUGIN } from './meta';
 
 const FILES_ACTION = `${FILES_PLUGIN}/action`;
 export enum LocalFilesAction {

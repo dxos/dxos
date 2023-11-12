@@ -9,7 +9,7 @@ import { usePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { type GithubPluginProvides } from '../../GithubPlugin';
-import { GITHUB_PLUGIN } from '../../props';
+import { GITHUB_PLUGIN } from '../../meta';
 
 export type OctokitContextValue = {
   pat: string;

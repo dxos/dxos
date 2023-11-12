@@ -9,7 +9,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
-export const SEARCH_PLUGIN = 'dxos.org/plugin/search';
+import { SEARCH_PLUGIN } from './meta';
 
 const SEARCH_ACTION = `${SEARCH_PLUGIN}/action`;
 

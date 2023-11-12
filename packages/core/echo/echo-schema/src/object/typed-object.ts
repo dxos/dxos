@@ -24,12 +24,13 @@ import {
   type EchoObject,
   type ObjectMeta,
   type TypedObjectProperties,
+  debug,
 } from './types';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
-const isValidKey = (key: string | symbol) =>
-  !(
+const isValidKey = (key: string | symbol) => {
+  return !(
     typeof key === 'symbol' ||
     key.startsWith('@@__') ||
     key === 'constructor' ||
@@ -39,9 +40,10 @@ const isValidKey = (key: string | symbol) =>
     key === 'id' ||
     key === '__meta' ||
     key === '__schema' ||
-    key === '__typename' || // TODO(burdon): Reconcile with schema name (and document).
+    key === '__typename' ||
     key === '__deleted'
   );
+};
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
@@ -155,6 +157,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     return this.__schema?.typename ?? 'Expando';
   }
 
+  get [debug]() {
+    return `TypedObject(${JSON.stringify({ id: this[base]._id.slice(0, 8), schema: this.__schema?.typename })})`;
+  }
+
   /**
    * Returns the schema type descriptor for the object.
    * @deprecated Use `__schema` instead.
@@ -163,6 +169,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     return this[base]._getSchema();
   }
 
+  // TODO(burdon): Make immutable.
   get [meta](): ObjectMeta {
     return this[base]._createProxy({}, undefined, true);
   }
@@ -175,6 +182,19 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
 
   get [immutable](): boolean {
     return !!this[base]?._immutable;
+  }
+
+  // TODO(burdon): Reconcile with inspect.
+  get __info() {
+    return JSON.stringify({ id: this._id.slice(0, 8), schema: this.__schema?.typename });
+  }
+
+  get __meta(): ObjectMeta {
+    return this[meta];
+  }
+
+  get __deleted(): boolean {
+    return this[base]._item?.deleted ?? false;
   }
 
   get __schema(): Schema | undefined {
@@ -194,14 +214,6 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     } else {
       return undefined;
     }
-  }
-
-  get __meta(): ObjectMeta {
-    return this[meta];
-  }
-
-  get __deleted(): boolean {
-    return this[base]._item?.deleted ?? false;
   }
 
   /**
@@ -243,7 +255,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   override _itemUpdate(): void {
     super._itemUpdate();
-    this._signal?.notifyWrite();
+    this._signal.notifyWrite();
   }
 
   private _transform(value: any, visitors: ConvertVisitors = {}) {
@@ -292,7 +304,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @param meta If true then get from `meta` key-space.
    */
   private _get(key: string, meta?: boolean): any {
-    this._signal?.notifyRead();
+    this._signal.notifyRead();
 
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
@@ -543,7 +555,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   _lookupLink(ref: Reference): EchoObject | undefined {
     if (this._database) {
-      // This doesn't cleanup properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
+      // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
       return this._database.graph._lookupLink(ref, this._database, this._onLinkResolved);
     } else {
       invariant(this._linkCache);
@@ -552,7 +564,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   }
 
   private _onLinkResolved = () => {
-    this._signal?.notifyWrite();
+    this._signal.notifyWrite();
     this._emitUpdate();
   };
 

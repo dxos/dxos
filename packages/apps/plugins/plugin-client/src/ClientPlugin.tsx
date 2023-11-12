@@ -12,11 +12,20 @@ import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
-import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
+import meta from './meta';
 
 const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
+
+export type ClientPluginProvides = {
+  client: Client;
+
+  /**
+   * True if this is the first time the current app has been used by this identity.
+   */
+  firstRun: boolean;
+};
 
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
@@ -33,9 +42,7 @@ export const ClientPlugin = ({
   const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
 
   return {
-    meta: {
-      id: CLIENT_PLUGIN,
-    },
+    meta,
     initialize: async () => {
       let error: unknown = null;
 

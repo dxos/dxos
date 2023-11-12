@@ -4,24 +4,13 @@
 
 import '@dxosTheme';
 
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { Sketch as SketchType } from '@braneframe/types';
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { SketchComponent } from './Sketch';
-
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
-      <Story />
-    </div>
-  );
-};
 
 const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(new SketchType());

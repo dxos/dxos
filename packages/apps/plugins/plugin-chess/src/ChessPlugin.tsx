@@ -11,17 +11,17 @@ import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction }
 import { Game } from '@dxos/chess-app';
 
 import { ChessMain } from './components';
+import meta, { CHESS_PLUGIN } from './meta';
 import translations from './translations';
-import { CHESS_PLUGIN, ChessAction, type ChessPluginProvides, isObject } from './types';
+import { ChessAction, type ChessPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Game.name] = Game;
+
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
   return {
-    meta: {
-      id: CHESS_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -65,7 +65,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       },
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isObject(data.active) ? <ChessMain game={data.active} /> : null;

@@ -12,11 +12,11 @@ import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-cl
 import { useId } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { RichTextComposer, type RichTextComposerProps } from './RichText';
+import { RichTextEditor, type RichTextEditorProps } from './RichText';
 import { Replicator, useYjsModel } from '../../testing';
 
 export default {
-  component: RichTextComposer,
+  component: RichTextEditor,
 };
 
 export const Default = {
@@ -30,7 +30,7 @@ export const Default = {
 
 const replicator = new Replicator(TextKind.RICH);
 export const WithYjs = {
-  render: (args: Omit<RichTextComposerProps, 'model'>) => {
+  render: (args: Omit<RichTextEditorProps, 'model'>) => {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
 
@@ -48,7 +48,7 @@ export const WithYjs = {
           <input type='checkbox' onChange={(event) => setGenerate(event.target.checked)} />
           Generate Data
         </div>
-        <RichTextComposer
+        <RichTextEditor
           {...args}
           model={model}
           slots={{
