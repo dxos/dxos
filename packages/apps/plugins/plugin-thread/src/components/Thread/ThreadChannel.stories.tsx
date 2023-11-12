@@ -11,10 +11,9 @@ import { Thread as ThreadType, types } from '@braneframe/types';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { ThreadChannel } from './ThreadChannel';
-import { FullscreenDecorator } from '../../testing';
 import { blockPropertiesProvider } from '../ThreadContainer';
 
 faker.seed(1);
