@@ -1,3 +1,8 @@
+##
+## Test:
+## curl -s -X POST -H "Content-Type: application/json" http://localhost:7001/dev/hello | jq
+##
+
 functions:
   - id: 'chat'
     description: 'AI Chat'
@@ -7,6 +12,9 @@ functions:
 
   - id: 'hello'
     description: 'Test'
+
+  - id: 'email'
+    description: 'Protonmail Sync'
 
 triggers:
   - function: 'chat'
