@@ -137,7 +137,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
       table.schema = space.db.add(
         new Schema({
           // TODO(burdon): How should user update schema?
-          typename: `example.com/${PublicKey.random().truncate()}`,
+          typename: `example.com/schema/${PublicKey.random().truncate()}`,
           props: [
             {
               id: 'title',
