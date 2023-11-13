@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
 import { type EchoObject, type TypedObject } from '../object';
-import { createSignal } from '../util';
+import { compositeRuntime } from '../util';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
@@ -94,7 +94,7 @@ export class Query<T extends TypedObject = TypedObject> {
   private _sources = new Set<QuerySource>();
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: T[] | undefined = undefined;
-  private _signal = createSignal?.();
+  private _signal = compositeRuntime.createSignal();
   private _event = new Event<Query<T>>();
 
   constructor(private readonly _queryContext: QueryContext, filter: Filter) {
@@ -102,10 +102,10 @@ export class Query<T extends TypedObject = TypedObject> {
 
     this._queryContext.added.on((source) => {
       this._sources.add(source);
-      source.changed.on(() => {
+      source.changed.on(this._ctx, () => {
         this._resultCache = undefined;
         this._objectCache = undefined;
-        this._signal?.notifyWrite();
+        this._signal.notifyWrite();
         this._event.emit(this);
       });
       source.update(this._filter);
@@ -121,13 +121,13 @@ export class Query<T extends TypedObject = TypedObject> {
   }
 
   get results(): QueryResult<T>[] {
-    this._signal?.notifyRead();
+    this._signal.notifyRead();
     this._ensureCachePresent();
     return this._resultCache!;
   }
 
   get objects(): T[] {
-    this._signal?.notifyRead();
+    this._signal.notifyRead();
     this._ensureCachePresent();
     return this._objectCache!;
   }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SPACE_PLUGIN } from './types';
+import { SPACE_PLUGIN } from './meta';
 
 export default [
   {
@@ -26,7 +26,8 @@ export default [
         'confirm restore title': 'Overwrite files in this space?',
         'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',
         'upload file message': 'Drag file here or click to browse',
-        'presence label': 'Members viewing this item',
+        'presence label_one': '{{count}} other viewing this item',
+        'presence label_other': '{{count}} others viewing this item',
         'object title placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
         'shared spaces label': 'Shared Spaces',
@@ -34,7 +35,18 @@ export default [
         'show hidden spaces label': 'Show hidden spaces',
         'rename object label': 'Rename',
         'delete object label': 'Delete',
-        'add folder label': 'Add folder',
+        'go to object label': 'Open',
+        'found object label': 'Ready.',
+        'found object description': 'The requested object is now available.',
+        'waiting for object label': 'Loading…',
+        'waiting for object description': 'The requested object is still being synchronized.',
+        'object not found label': 'Nothing found.',
+        'object not found description':
+          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+        'missing object message': 'Object not available.',
+        'missing object description':
+          'TThe requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+        'create folder label': 'Create folder',
         'unnamed object label': 'New object',
         'unnamed folder label': 'New folder',
         'create object group label': 'Add to space',

@@ -9,9 +9,10 @@ import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
 import { baseSurface, coarseBlockSize, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
+import { ContentFallback } from './ContentFallback';
 import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
-import { LAYOUT_PLUGIN } from '../types';
+import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
   fullscreen?: boolean;
@@ -26,7 +27,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
   if (fullscreen) {
     return (
       <div className={fixedInsetFlexLayout}>
-        <Surface role='main' limit={1} />
+        <Surface role='main' limit={1} fallback={Fallback} />
       </div>
     );
   }
@@ -68,37 +69,40 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         )}
 
         {/* Top (header) bar. */}
-        <Main.Content
-          asChild
-          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, baseSurface]}
-        >
-          <div role='none' aria-label={t('main header label')}>
-            <DensityProvider density='fine'>
-              <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
-                <span className='sr-only'>{t('open navigation sidebar label')}</span>
-                <MenuIcon weight='light' className={getSize(4)} />
-              </Button>
-
-              <Surface role='heading' limit={2} />
-              <div role='none' className='grow' />
-
-              {/* TODO(burdon): Too specific? status? contentinfo? */}
-              <Surface role='presence' limit={1} />
-
-              {complementarySidebarOpen !== null && showComplementarySidebar && (
+        <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[1]', baseSurface]} asChild>
+          <div aria-label={t('main header label')} role='none'>
+            <div role='none' className={mx('flex gap-1 p-1', coarseBlockSize)}>
+              <DensityProvider density='coarse'>
                 <Button
-                  onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+                  onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
                   variant='ghost'
+                  classNames='pli-2.5'
                 >
-                  <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                  <CaretDoubleLeft
-                    mirrored={!!context.complementarySidebarOpen}
-                    weight='light'
-                    className={getSize(4)}
-                  />
+                  <span className='sr-only'>{t('open navigation sidebar label')}</span>
+                  <MenuIcon weight='light' className={getSize(4)} />
                 </Button>
-              )}
-            </DensityProvider>
+
+                <Surface role='heading' limit={2} />
+                <div role='none' className='grow' />
+
+                {/* TODO(burdon): Too specific? status? contentinfo? */}
+                <Surface role='presence' limit={1} />
+
+                {complementarySidebarOpen !== null && showComplementarySidebar && (
+                  <Button
+                    onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+                    variant='ghost'
+                  >
+                    <span className='sr-only'>{t('open complementary sidebar label')}</span>
+                    <CaretDoubleLeft
+                      mirrored={!!context.complementarySidebarOpen}
+                      weight='light'
+                      className={getSize(4)}
+                    />
+                  </Button>
+                )}
+              </DensityProvider>
+            </div>
           </div>
         </Main.Content>
 
@@ -112,7 +116,8 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface role='main' limit={1} fallback={Fallback} />
+        {/* TODO(wittjosiah): Check if anything fulfills this Surface, if not, show 404. */}
+        <Surface role='main' limit={1} fallback={Fallback} contentFallback={ContentFallback} />
 
         {/* Global popovers. */}
         {/* TODO(burdon): Doesn't allow client to control the popover. */}
@@ -137,10 +142,10 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
             <Dialog.Overlay>
               {/* TODO(burdon): Move (thure)[ProfileSettings dialog in particular] dialog to settings-plugin. */}
               {dialogContent.component === 'dxos.org/plugin/layout/ProfileSettings' ? (
-                <Dialog.Content>
+                <Dialog.Content classNames='max-is-[32rem]'>
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                   {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
-                  <div className='flex flex-col my-2 gap-4'>
+                  <div className='mlb-4 space-b-4'>
                     <Surface role='settings' data={dialogContent} />
                   </div>
                   <Dialog.Close asChild>

@@ -13,6 +13,7 @@ import {
 import { GraphBuilder } from '@dxos/app-graph';
 
 import { GraphContext } from './GraphContext';
+import meta from './meta';
 
 /**
  * Manages the state of the graph for the application.
@@ -24,9 +25,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const graph = builder.build();
 
   return {
-    meta: {
-      id: 'dxos.org/plugin/graph',
-    },
+    meta,
     ready: async (plugins) => {
       filterPlugins(plugins, parseGraphBuilderPlugin).forEach((plugin) =>
         builder.addNodeBuilder(plugin.meta.id, (parent) => plugin.provides.graph.builder({ parent, plugins })),

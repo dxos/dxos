@@ -44,8 +44,7 @@ export class AppManager {
     return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
 
-  async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
+  joinSpace() {
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
@@ -67,8 +66,8 @@ export class AppManager {
     return openCount + closedCount;
   }
 
-  getDocumentItemsCount() {
-    return this.page.getByTestId('markdownPlugin.document').count();
+  getObjectsCount() {
+    return this.page.getByTestId('spacePlugin.object').count();
   }
 
   getMarkdownTextbox() {
@@ -90,8 +89,8 @@ export class AppManager {
     return this.page.getByTestId('composer.documentTitle');
   }
 
-  getDocumentLinks() {
-    return this.page.getByTestId('markdownPlugin.document');
+  getObjectLinks() {
+    return this.page.getByTestId('spacePlugin.object');
   }
 
   getCollaboratorCursors() {

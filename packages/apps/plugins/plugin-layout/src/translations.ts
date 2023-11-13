@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { LAYOUT_PLUGIN } from './types';
+import { LAYOUT_PLUGIN } from './meta';
 
 export default [
   {
@@ -11,7 +11,12 @@ export default [
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open navigation sidebar',
         'open complementary sidebar label': 'Open complementary sidebar',
+        'plugin error message': 'Content failed to render',
         'first run message': 'Nothing selected.',
+        'content fallback message': 'Unsupported',
+        'content fallback description':
+          'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
+        'enable complementary sidebar label': 'Enable complementary sidebar',
       },
     },
   },

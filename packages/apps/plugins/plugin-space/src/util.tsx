@@ -23,11 +23,12 @@ import type { Graph, Node } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { LayoutAction, type DispatchIntent, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { clone } from '@dxos/echo-schema';
+import { type Query, clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN, SpaceAction } from './types';
+import { SPACE_PLUGIN } from './meta';
+import { SpaceAction } from './types';
 
 export const ROOT = 'root';
 export const SHARED = 'shared-spaces';
@@ -108,7 +109,7 @@ export const objectToGraphNode = ({
       properties: {
         // TODO(burdon): Factor out palette constants.
         palette: isPersonalSpace ? 'teal' : isSharedSpacesFolder ? 'pink' : undefined,
-        'data-testid': isPersonalSpace
+        testId: isPersonalSpace
           ? 'spacePlugin.personalSpace'
           : isSharedSpacesFolder
           ? 'spacePlugin.sharedSpaces'
@@ -116,7 +117,7 @@ export const objectToGraphNode = ({
           ? 'spacePlugin.space'
           : isFolder
           ? 'spacePlugin.folder'
-          : undefined,
+          : 'spacePlugin.object',
         persistenceClass: isSpaceFolder ? undefined : 'folder',
         ...(isFolder
           ? {
@@ -169,7 +170,7 @@ export const objectToGraphNode = ({
         {
           id: 'create-space',
           label: ['create space label', { ns: 'os' }],
-          icon: (props) => <Planet {...props} />,
+          icon: (props) => <Plus {...props} />,
           properties: {
             disposition: 'toolbar',
             testId: 'spacePlugin.createSpace',
@@ -228,7 +229,7 @@ export const objectToGraphNode = ({
     if (isSpaceFolder) {
       node.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
         id: 'folder/create',
-        label: ['add folder label', { ns: SPACE_PLUGIN }],
+        label: ['create folder label', { ns: SPACE_PLUGIN }],
         icon: (props) => <FolderPlus {...props} />,
         invoke: () =>
           dispatch({
@@ -365,4 +366,24 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   return getSpaceForObject(node.data);
+};
+
+export const indexSpaceFolder = ({ space, defaultSpace }: { space: Space; defaultSpace: Space }) => {
+  const {
+    objects: [sharedSpacesFolder],
+  } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
+  const query = space.db.query(Folder.filter({ name: space.key.toHex() }));
+  return new Promise<Folder>((resolve) => {
+    const push = ({ objects: [folder] }: Query<Folder>) => {
+      console.log({ folder });
+      if (folder) {
+        sharedSpacesFolder.objects.push(folder);
+        subscription?.();
+        resolve(folder);
+      }
+    };
+
+    const subscription = query.subscribe(push);
+    push(query);
+  });
 };

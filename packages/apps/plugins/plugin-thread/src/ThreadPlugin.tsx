@@ -5,22 +5,38 @@
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  LayoutAction,
+  type GraphPluginProvides,
+  type LayoutProvides,
+  type Plugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  parseLayoutPlugin,
+  parseGraphPlugin,
+  resolvePlugin,
+} from '@dxos/app-framework';
 
 import { ThreadMain, ThreadSidebar } from './components';
+import meta, { THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides, isThread } from './types';
+import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
+  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
+
   return {
-    meta: {
-      id: THREAD_PLUGIN,
+    meta,
+    ready: async (plugins) => {
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
     },
     provides: {
       metadata: {
@@ -65,14 +81,19 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main': {
               return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
             }
 
-            case 'context-thread':
-              return <ThreadSidebar />;
+            // TODO(burdon): Better way to get this?
+            case 'context-thread': {
+              const graph = graphPlugin?.provides.graph;
+              const layout = layoutPlugin?.provides.layout;
+              const space = getActiveSpace(graph!, layout!.active);
+              return <ThreadSidebar space={space} />;
+            }
 
             default:
               return null;

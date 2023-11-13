@@ -9,9 +9,10 @@ import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Sketch as SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
-import { SketchMain, SketchSection, SketchSlide } from './components';
+import { SketchMain, SketchComponent } from './components';
+import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SKETCH_PLUGIN, SketchAction, type SketchPluginProvides, isSketch } from './types';
+import { SketchAction, type SketchPluginProvides, isSketch } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -19,9 +20,7 @@ import { SKETCH_PLUGIN, SketchAction, type SketchPluginProvides, isSketch } from
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
-    meta: {
-      id: SKETCH_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -79,14 +78,18 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         ],
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
-            case 'section':
-              return isSketch(data.object) ? <SketchSection sketch={data.object} /> : null;
             case 'slide':
-              return isSketch(data.slide) ? <SketchSlide sketch={data.slide} /> : null;
+              return isSketch(data.slide) ? (
+                <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
+              ) : null;
+            case 'section':
+              return isSketch(data.object) ? (
+                <SketchComponent sketch={data.object} readonly={true} autoZoom={true} className={'h-[400px]'} />
+              ) : null;
             default:
               return null;
           }

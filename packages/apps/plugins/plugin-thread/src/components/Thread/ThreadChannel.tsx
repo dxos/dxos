@@ -11,7 +11,7 @@ import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { type BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
-import { THREAD_PLUGIN } from '../../types';
+import { THREAD_PLUGIN } from '../../meta';
 
 // TODO(burdon): Create storybook.
 
@@ -37,16 +37,24 @@ export type ThreadChannelProps = {
   thread: ThreadType;
   identityKey: PublicKey;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
-  onSubmit: (text: string) => boolean | void;
+  fullWidth?: boolean;
+  onSubmit?: (text: string) => boolean | void;
   onDelete?: (blockId: string, idx: number) => void;
 };
 
-export const ThreadChannel = ({ thread, identityKey, getBlockProperties, onSubmit, onDelete }: ThreadChannelProps) => {
+export const ThreadChannel = ({
+  thread,
+  identityKey,
+  getBlockProperties,
+  fullWidth = true,
+  onSubmit,
+  onDelete,
+}: ThreadChannelProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (text: string) => {
-    if (onSubmit(text)) {
+    if (onSubmit?.(text)) {
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
@@ -56,12 +64,7 @@ export const ThreadChannel = ({ thread, identityKey, getBlockProperties, onSubmi
   };
 
   return (
-    <div
-      className={mx(
-        'grow flex flex-col w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-0 md:m-auto',
-        groupSurface,
-      )}
-    >
+    <div className={mx('flex flex-col grow overflow-hidden', groupSurface)}>
       <div className='flex px-2'>
         <Input.Root>
           <Input.Label srOnly>{t('thread name placeholder')}</Input.Label>
@@ -77,28 +80,34 @@ export const ThreadChannel = ({ thread, identityKey, getBlockProperties, onSubmi
       </div>
 
       <div className='flex flex-grow overflow-hidden'>
-        {/* TODO(burdon): Scroll panel. */}
         {/* TODO(burdon): Break into days. */}
         <div className='flex flex-col-reverse grow overflow-auto px-2 pt-4'>
           <div ref={bottomRef} />
-          {/* TODO(wittjosiah): This shouldn't ever be undefined, but it is. */}
           {(thread.blocks ?? [])
             .map((block) => (
-              <div key={block.id} className='my-1'>
-                <ThreadBlock
-                  block={block}
-                  identityKey={identityKey}
-                  getBlockProperties={getBlockProperties}
-                  onDelete={onDelete}
-                />
+              <div
+                key={block.id}
+                className={mx('flex my-1', !fullWidth && identityKey.toHex() === block.identityKey && 'justify-end')}
+              >
+                <div className={mx('flex flex-col', fullWidth ? 'w-full' : 'md:min-w-[400px] max-w-[600px]')}>
+                  <ThreadBlock
+                    block={block}
+                    identityKey={identityKey}
+                    getBlockProperties={getBlockProperties}
+                    onDelete={onDelete}
+                  />
+                </div>
               </div>
             ))
             .reverse()}
         </div>
       </div>
-      <div className='flex px-2 py-2'>
-        <ThreadInput onMessage={handleSubmit} />
-      </div>
+
+      {handleSubmit && (
+        <div className='flex px-2 py-2'>
+          <ThreadInput onMessage={handleSubmit} />
+        </div>
+      )}
     </div>
   );
 };

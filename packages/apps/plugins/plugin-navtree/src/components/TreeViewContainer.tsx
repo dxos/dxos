@@ -5,24 +5,48 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, useIntent } from '@dxos/app-framework';
-import { type Graph } from '@dxos/app-graph';
+import { LayoutAction, Surface, useIntent } from '@dxos/app-framework';
+import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DensityProvider,
+  ElevationProvider,
+  Tooltip,
+  useMediaQuery,
+  useSidebars,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
-import { NavTree, type NavTreeContextType, type TreeNode, type NavTreeProps } from '@dxos/react-ui-navtree';
+import {
+  NavTree,
+  type NavTreeContextType,
+  type TreeNode,
+  type NavTreeProps,
+  emptyBranchDroppableId,
+} from '@dxos/react-ui-navtree';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
-import { NAVTREE_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
 
 const getMosaicPath = (graph: Graph, id: string) => {
   const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
   return parts ? Path.create('root', ...parts) : undefined;
+};
+
+const trimPlaceholder = (path: string) => (Path.last(path) === emptyBranchDroppableId ? Path.parent(path) : path);
+
+const renderPresence = (node: TreeNode) => {
+  if (isGraphNode(node)) {
+    return <Surface role='presence' data={{ object: node.data }} />;
+  }
+
+  return null;
 };
 
 export const TreeViewContainer = ({
@@ -39,25 +63,32 @@ export const TreeViewContainer = ({
   const identity = useIdentity();
 
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
+  const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+  const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatch } = useIntent();
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
+    if (!(node as Node).data) {
+      return;
+    }
+
     await dispatch({
       action: LayoutAction.ACTIVATE,
       data: {
         id: node.id,
       },
     });
-    // void defaultAction?.invoke();
-    // !isLg && closeNavigationSidebar();
+
+    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
+    void defaultAction?.invoke();
+    !isLg && closeNavigationSidebar();
   };
 
   const currentPath = (activeId && getMosaicPath(graph, activeId)) ?? 'never';
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && graph.findNode(Path.last(activeItem.path));
-    const overNode = overItem && graph.findNode(Path.last(overItem.path));
+    const overNode = overItem && graph.findNode(Path.last(trimPlaceholder(overItem.path)));
     if (
       !activeNode ||
       !overNode ||
@@ -69,7 +100,7 @@ export const TreeViewContainer = ({
 
     const activeClass = activeNode.properties.persistenceClass;
     if (overNode.properties.acceptPersistenceClass?.has(activeClass)) {
-      return overItem.path === path;
+      return trimPlaceholder(overItem.path) === path;
     } else {
       const overAcceptParent = getPersistenceParent(overNode, activeClass);
       return overAcceptParent ? getMosaicPath(graph, overAcceptParent.id) === path : false;
@@ -94,7 +125,9 @@ export const TreeViewContainer = ({
       }
       // Check if transfer is supported
       else {
-        const overNode = graph.findNode(Path.last(over.path));
+        // Adjust overPath if over is empty placeholder.
+        const overPath = trimPlaceholder(over.path);
+        const overNode = graph.findNode(Path.last(overPath));
         const activeNode = graph.findNode(Path.last(active.path));
         if (overNode && activeNode && activeNode.properties.persistenceClass) {
           const activeClass = activeNode.properties.persistenceClass;
@@ -112,8 +145,9 @@ export const TreeViewContainer = ({
 
   const handleDrop = useCallback(
     ({ operation, active, over }: MosaicDropEvent<number>) => {
+      const overPath = trimPlaceholder(over.path);
       const activeNode = graph.findNode(Path.last(active.path));
-      const overNode = graph.findNode(Path.last(over.path));
+      const overNode = graph.findNode(Path.last(overPath));
       if (activeNode && overNode) {
         const activeClass = activeNode.properties.persistenceClass;
         if (operation === 'rearrange') {
@@ -142,25 +176,22 @@ export const TreeViewContainer = ({
 
   return (
     <ElevationProvider elevation='chrome'>
-      <DensityProvider density='fine'>
-        <div role='none' className='flex flex-col bs-full'>
+      <div role='none' className='flex flex-col bs-full'>
+        <DensityProvider density='coarse'>
           {identity && (
             <>
-              <div
-                role='none'
-                className='shrink-0 flex items-center gap-1 pis-4 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1 bs-10'
-              >
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1'>
                 <HaloButton
                   size={6}
                   identityKey={identity?.identityKey.toHex()}
                   onClick={() => client.shell.shareIdentity()}
                 />
-                <div className='grow' />
+                <div role='none' className='grow' />
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <Button
                       variant='ghost'
-                      classNames='pli-2 pointer-fine:pli-1'
+                      classNames='pli-2.5'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
@@ -208,6 +239,8 @@ export const TreeViewContainer = ({
               {/* <Separator orientation='horizontal' /> */}
             </>
           )}
+        </DensityProvider>
+        <DensityProvider density='fine'>
           <div role='none' className='grow min-bs-0 overflow-y-auto p-0.5'>
             <NavTree
               node={graph.root}
@@ -217,11 +250,12 @@ export const TreeViewContainer = ({
               onOver={handleOver}
               onDrop={handleDrop}
               popoverAnchorId={popoverAnchorId}
+              renderPresence={renderPresence}
             />
           </div>
           <VersionInfo config={config} />
-        </div>
-      </DensityProvider>
+        </DensityProvider>
+      </div>
     </ElevationProvider>
   );
 };

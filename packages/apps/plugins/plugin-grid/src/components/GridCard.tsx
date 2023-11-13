@@ -7,18 +7,25 @@ import React, { forwardRef } from 'react';
 import { type TextObject, type TypedObject } from '@dxos/client/echo';
 import { useConfig } from '@dxos/react-client';
 import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
+import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
-import { mx } from '@dxos/react-ui-theme';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { GRID_PLUGIN } from '../types';
+import { GRID_PLUGIN } from '../meta';
 
 export const colors: Record<string, string> = {
-  gray: 'bg-neutral-50',
-  red: 'bg-indigo-50',
-  orange: 'bg-orange-50',
-  green: 'bg-teal-50',
-  blue: 'bg-cyan-50',
+  gray: '!bg-neutral-50',
+  red: '!bg-rose-50',
+  indigo: '!bg-indigo-50',
+  yellow: '!bg-orange-50',
+  green: '!bg-teal-50',
+  blue: '!bg-cyan-50',
+  // gray: '!bg-neutral-50 border-neutral-200 border shadow-none',
+  // red: '!bg-rose-50 border-rose-200 border shadow-none',
+  // indigo: '!bg-indigo-50 border-indigo-200 border shadow-none',
+  // yellow: '!bg-yellow-50 border-yellow-200 border shadow-none',
+  // green: '!bg-teal-50 border-teal-200 border shadow-none',
+  // blue: '!bg-cyan-50 border-cyan-200 border shadow-none',
 };
 
 // TODO(burdon): Need lenses (which should be normalized outside of card).
@@ -86,11 +93,12 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
           </Card.Header>
           {!url && (
             <Card.Body>
-              <MarkdownComposer
+              <MarkdownEditor
                 model={content}
                 slots={{
                   root: {
                     className: mx(
+                      focusRing,
                       'h-full p-1 text-sm',
                       // TODO(burdon): Hack since classname ignored below.
                       '[&>div]:h-full',

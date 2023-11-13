@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Planet } from '@phosphor-icons/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, useId, useTranslation } from '@dxos/react-ui';
 
 import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
 import { useSpaceMachine } from './spaceMachine';
@@ -19,21 +20,16 @@ import { stepStyles } from '../../styles';
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
   const { t } = useTranslation('os');
   const name = space.properties.name;
-  const fallbackHref = useJdenticonHref(space.key.toHex(), 8);
   return (
     <Heading
       titleId={titleId}
       title={t('space panel heading')}
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
-      <Avatar.Root variant='square' size={8}>
-        <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
-          <Avatar.Frame>
-            <Avatar.Fallback href={fallbackHref} />
-          </Avatar.Frame>
-          <Avatar.Label classNames='block text-start font-light text-xl'>{name ?? space.key.truncate()}</Avatar.Label>
-        </div>
-      </Avatar.Root>
+      <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
+        <Planet size={32} />
+        <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
+      </div>
     </Heading>
   );
 };

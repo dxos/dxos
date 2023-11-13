@@ -11,10 +11,11 @@ import { type Schema } from '../proto';
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');
 export const meta = Symbol.for('dxos.echo.meta');
-export const data = Symbol.for('dxos.echo.data');
+export const data = Symbol.for('dxos.echo.data'); // TODO(burdon): Document.
 export const immutable = Symbol.for('dxos.echo.immutable');
 
 // Misc
+export const debug = Symbol.for('dxos.echo.debug');
 export const proxy = Symbol.for('dxos.echo.proxy');
 export const base = Symbol.for('dxos.echo.base');
 export const db = Symbol.for('dxos.echo.db');
@@ -28,12 +29,9 @@ export interface EchoObject {
   readonly id: string;
 
   /**
-   *
-   * @param callback
-   * @returns Unsubscribe function.
+   * Debug info (ID, schema, etc.)
    */
-  // TODO(dmaretskyi): Document `value`.
-  [subscribe](callback: (value: any) => void): () => void;
+  [debug]: string;
 
   /**
    * Returns the underlying object.
@@ -46,6 +44,13 @@ export interface EchoObject {
    * Returns `undefined` for non-persisted objects.
    */
   [db]: EchoDatabase | undefined;
+
+  /**
+   * @param callback
+   * @returns Unsubscribe function.
+   */
+  // TODO(dmaretskyi): Document `value`.
+  [subscribe](callback: (value: any) => void): () => void;
 }
 
 /**

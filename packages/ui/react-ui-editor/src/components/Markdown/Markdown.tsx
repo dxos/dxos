@@ -44,55 +44,30 @@ import { yCollab } from 'y-codemirror.next';
 
 import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
-import { configColors } from '@dxos/react-ui-theme';
+import { getColorForValue } from '@dxos/react-ui-theme';
 import { YText } from '@dxos/text-model';
 
 import { markdownTagsExtension } from './markdownTags';
 import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
-import { type ComposerModel, type ComposerSlots } from '../../model';
+import { type EditorModel, type EditorSlots } from '../../model';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
-export type MarkdownComposerProps = {
-  model?: ComposerModel;
-  slots?: ComposerSlots;
+export type MarkdownEditorProps = {
+  model?: EditorModel;
+  slots?: EditorSlots;
   editorMode?: EditorMode;
   onChange?: (content: string | Text) => void;
 };
 
-export type MarkdownComposerRef = {
+export type MarkdownEditorRef = {
   editor: HTMLDivElement | null;
   state?: EditorState;
   view?: EditorView;
 };
 
-const hexadecimalPaletteSeries: (keyof typeof configColors)[] = [
-  'red' as const,
-  'orange' as const,
-  'amber' as const,
-  'yellow' as const,
-  'lime' as const,
-  'green' as const,
-  'emerald' as const,
-  'teal' as const,
-  'cyan' as const,
-  'sky' as const,
-  'indigo' as const,
-  'violet' as const,
-  'purple' as const,
-  'fuchsia' as const,
-  'pink' as const,
-  'rose' as const,
-];
-
-const shadeKeys = {
-  color: '450' as const,
-  highlightDark: '800' as const,
-  highlightLight: '100' as const,
-};
-
-export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(
+export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
   ({ model, slots = {}, onChange, editorMode }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
@@ -124,19 +99,10 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
 
     useEffect(() => {
       if (provider && peer) {
-        let peerColorDigit = Math.floor(16 * Math.random());
-        try {
-          // TODO(wittjosiah): Factor out for use w/ html-only story and RichText component.
-          // `peer.id` is already a `string`, so we attempt `parseInt` within a `try` since we can’t be certain it is hexadecimal.
-          peerColorDigit = parseInt(peer.id.slice(-1), 16);
-        } catch (_) {}
         provider.awareness.setLocalStateField('user', {
           name: peer.name ?? generateName(peer.id),
-          color: configColors[hexadecimalPaletteSeries[peerColorDigit]][shadeKeys.color],
-          colorLight:
-            configColors[hexadecimalPaletteSeries[peerColorDigit]][
-              shadeKeys[themeMode === 'dark' ? 'highlightDark' : 'highlightLight']
-            ],
+          color: getColorForValue({ value: peer.id, type: 'color' }),
+          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
         });
       }
     }, [provider, peer, themeMode]);

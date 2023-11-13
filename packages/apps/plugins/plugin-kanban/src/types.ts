@@ -12,6 +12,8 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/react-client/echo';
 
+import { KANBAN_PLUGIN } from './meta';
+
 /**
  * Kanban data model.
  * A Kanban board is a collection of columns, each of which contains a collection of items.
@@ -20,9 +22,6 @@ import { isTypedObject } from '@dxos/react-client/echo';
  * (e.g., a column object containing an array of ordered items) or projections constructed
  * by the model (e.g., a query of items based on metadata within a column object).
  */
-
-// TODO(burdon): Make id consistent with other plugins.
-export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 
 const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
 

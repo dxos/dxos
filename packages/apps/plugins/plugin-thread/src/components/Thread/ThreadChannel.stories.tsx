@@ -4,17 +4,19 @@
 
 import '@dxosTheme';
 
+import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
 import { Thread as ThreadType, types } from '@braneframe/types';
-import { useClient } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { ThreadChannel } from './ThreadChannel';
-import { FullscreenDecorator } from '../../testing';
 import { blockPropertiesProvider } from '../ThreadContainer';
+
+faker.seed(1);
 
 const Story = () => {
   const client = useClient();
@@ -27,9 +29,23 @@ const Story = () => {
   useEffect(() => {
     setTimeout(async () => {
       const space = await client.spaces.create();
-      const thread = space.db.add(new ThreadType());
+      const thread = space.db.add(
+        new ThreadType({
+          blocks: Array.from({ length: 5 }).map(
+            () =>
+              new ThreadType.Block({
+                identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
+                messages: [
+                  {
+                    text: faker.lorem.sentences(3),
+                  },
+                ],
+              }),
+          ),
+        }),
+      );
       setSpace(space);
-      setThread(thread as ThreadType);
+      setThread(thread);
     });
   }, []);
 
@@ -79,7 +95,7 @@ const Story = () => {
 export default {
   component: ThreadChannel,
   decorators: [
-    FullscreenDecorator('bg-neutral-200 dark:bg-neutral-800'),
+    FullscreenDecorator(),
     ClientSpaceDecorator({
       schema: types,
     }),
@@ -87,6 +103,4 @@ export default {
   render: Story,
 };
 
-export const Default = {
-  args: {},
-};
+export const Default = {};

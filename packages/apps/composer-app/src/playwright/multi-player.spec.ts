@@ -43,14 +43,18 @@ test.describe('Basic test', () => {
       await host.createDocument();
       await perfomInvitation(host, guest);
 
-      await guest.waitForMarkdownTextbox();
-      await waitForExpect(async () => {
-        expect(await host.page.url()).to.include(await guest.page.url());
-      });
+      // TODO(wittjosiah): Currently the guest lands on the space folder, not the document.
+      //  Consider whether this is the desired behavior before removing this check.
+      // await guest.waitForMarkdownTextbox();
+      // await waitForExpect(async () => {
+      //   expect(await host.page.url()).to.include(await guest.page.url());
+      // });
 
-      const hostLink = await host.getDocumentLinks().last().getAttribute('data-itemid');
-      const guestLink = await guest.getDocumentLinks().last().getAttribute('data-itemid');
-      expect(hostLink).to.equal(guestLink);
+      await waitForExpect(async () => {
+        const hostLink = await host.getObjectLinks().last().getAttribute('data-itemid');
+        const guestLink = await guest.getObjectLinks().last().getAttribute('data-itemid');
+        expect(hostLink).to.equal(guestLink);
+      });
     });
 
     test('host and guest can see each others’ presence when same document is in focus', async () => {
@@ -58,9 +62,14 @@ test.describe('Basic test', () => {
 
       await host.createSpace();
       await host.createDocument();
+      await host.waitForMarkdownTextbox();
       await perfomInvitation(host, guest);
 
-      await Promise.all([host.waitForMarkdownTextbox(), guest.waitForMarkdownTextbox()]);
+      await waitForExpect(async () => {
+        expect(await guest.getObjectsCount()).to.equal(2);
+      });
+      await guest.getObjectLinks().last().click();
+      await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
         expect(await host.getCollaboratorCursors().count()).to.equal(0);
         expect(await guest.getCollaboratorCursors().count()).to.equal(0);
@@ -73,13 +82,12 @@ test.describe('Basic test', () => {
       });
     });
 
-    // TODO(wittjosiah): Replication is failing for parts[2].
-    //  https://github.com/dxos/dxos/issues/4512
-    test.skip('host and guest can see each others’ changes in same document', async () => {
+    test('host and guest can see each others’ changes in same document', async () => {
       test.slow();
 
       await host.createSpace();
       await host.createDocument();
+      await host.waitForMarkdownTextbox();
       await perfomInvitation(host, guest);
 
       const parts = [
@@ -89,7 +97,11 @@ test.describe('Basic test', () => {
       ];
       const allParts = parts.join('');
 
-      await Promise.all([host.waitForMarkdownTextbox(), guest.waitForMarkdownTextbox()]);
+      await waitForExpect(async () => {
+        expect(await guest.getObjectsCount()).to.equal(2);
+      });
+      await guest.getObjectLinks().last().click();
+      await guest.waitForMarkdownTextbox();
       await host.getMarkdownTextbox().type(parts[0]);
       await guest.getMarkdownTextbox().getByText(parts[0]).waitFor();
       await guest.getMarkdownTextbox().press('End');

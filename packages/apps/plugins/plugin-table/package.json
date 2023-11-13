@@ -1,21 +1,30 @@
 {
   "name": "@braneframe/plugin-table",
-  "version": "0.3.4",
+  "version": "0.3.6",
   "description": "Table surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",

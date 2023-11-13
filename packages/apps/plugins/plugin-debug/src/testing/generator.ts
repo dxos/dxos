@@ -6,53 +6,54 @@ import { faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
 import { type Space, TextObject } from '@dxos/client/echo';
-import { createSpaceObjectGenerator, type TestSchemaType } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
+const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
+  {
+    type: TestSchemaType.organization,
+    title: 'Organizations',
+  },
+  {
+    type: TestSchemaType.project,
+    title: 'Projects',
+  },
+  {
+    type: TestSchemaType.contact,
+    title: 'Contacts',
+    props: [
+      {
+        id: 'org',
+        refProp: 'name',
+      },
+    ],
+  },
+];
+
+const defaultCount: Partial<Record<TestSchemaType, number>> = {
+  [TestSchemaType.organization]: 40,
+  [TestSchemaType.project]: 80,
+  [TestSchemaType.contact]: 320,
+};
+
 export class Generator {
+  private readonly _generator: SpaceObjectGenerator<TestSchemaType>;
+
   constructor(private readonly _space: Space) {
     invariant(this._space);
+    this._generator = createSpaceObjectGenerator(this._space);
   }
 
-  createTables(options: Partial<Record<TestSchemaType, number>> = { organization: 30, project: 20, person: 200 }) {
-    const generator = createSpaceObjectGenerator(this._space);
-
-    const tables: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
-      {
-        type: 'organization',
-        title: 'Organizations',
-      },
-      {
-        type: 'project',
-        title: 'Projects',
-      },
-      {
-        type: 'person',
-        title: 'People',
-        props: [
-          {
-            id: 'org',
-            refProp: 'name',
-          },
-        ],
-      },
-    ];
-
-    // Generate tables.
-    tables.forEach(({ type, title, props }) => {
-      const schema = generator.schema[type];
-      this._space.db.add(schema);
-      this._space.db.add(new TableType({ title, schema, props }));
+  createTables() {
+    return tableDefs.map(({ type, title, props }) => {
+      const schema = this._generator.getSchema(type);
+      return this._space.db.add(new TableType({ title, schema, props }));
     });
+  }
 
-    // Generate objects.
-    tables.forEach(({ type }) => {
-      generator.createObjects({ types: [type], count: options[type] ?? 0 });
-    });
-
-    log('created objects', options);
+  createObjects(count: Partial<Record<TestSchemaType, number>> = defaultCount) {
+    this._generator.createObjects(count);
   }
 
   createDocument() {
@@ -61,7 +62,7 @@ export class Generator {
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    this._space.db.add(new DocumentType({ title, content: new TextObject(content) }));
+    return this._space.db.add(new DocumentType({ title, content: new TextObject(content) }));
   }
 
   updateDocument() {

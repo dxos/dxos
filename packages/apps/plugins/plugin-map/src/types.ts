@@ -11,7 +11,7 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject, type Expando, type TypedObject } from '@dxos/react-client/echo';
 
-export const MAP_PLUGIN = 'dxos.org/plugin/map';
+import { MAP_PLUGIN } from './meta';
 
 const MAP_ACTION = `${MAP_PLUGIN}/action`;
 

@@ -10,9 +10,9 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { PublicKey } from '@dxos/react-client';
+import type { ItemID } from '@dxos/react-client/echo';
 
-export const SPACE_PLUGIN = 'dxos.org/plugin/space';
-export const SPACE_PLUGIN_SHORT_ID = 'space';
+import { SPACE_PLUGIN } from './meta';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -27,6 +27,7 @@ export enum SpaceAction {
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
+  WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
   ADD_TO_FOLDER = `${SPACE_ACTION}/add-to-folder`,
   REMOVE_FROM_FOLDER = `${SPACE_ACTION}/remove-from-folder`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
@@ -39,21 +40,22 @@ export type ObjectViewer = {
   lastSeen: number;
 };
 
-/**
- * The state of the space plugin.
- */
 export type PluginState = {
   /**
    * Which objects peers are currently viewing.
    */
   viewers: ObjectViewer[];
+
+  /**
+   * Object that was linked to directly but not found and is being awaited.
+   */
+  awaiting: ItemID | undefined;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  MetadataRecordsProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides & {

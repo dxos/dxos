@@ -2,45 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass, Plus } from '@phosphor-icons/react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
+import { Folder } from '@braneframe/types';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
+import meta, { SEARCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SEARCH_PLUGIN, SearchAction, type SearchPluginProvides } from './types';
+import { SearchAction, type SearchPluginProvides } from './types';
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
   return {
-    meta: {
-      id: SEARCH_PLUGIN,
-    },
+    meta,
     provides: {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          if (parent.id === 'root') {
-            parent.addAction({
-              id: SearchAction.SEARCH,
-              label: ['search action label', { ns: SEARCH_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: SEARCH_PLUGIN,
-                  action: SearchAction.SEARCH,
-                }),
-              properties: {
-                testId: 'searchPlugin.search',
-              },
-            });
-          }
-
-          if (parent.data instanceof SpaceProxy) {
+          if (parent.id === 'root' || parent.data instanceof Folder) {
             parent.addAction({
               id: SearchAction.SEARCH,
               label: ['search action label', { ns: SEARCH_PLUGIN }],
@@ -60,7 +42,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       },
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'context-search':
               return <SearchMain />;

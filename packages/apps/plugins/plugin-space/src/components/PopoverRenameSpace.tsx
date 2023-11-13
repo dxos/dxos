@@ -7,7 +7,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../types';
+import { SPACE_PLUGIN } from '../meta';
 
 export const PopoverRenameSpace = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);

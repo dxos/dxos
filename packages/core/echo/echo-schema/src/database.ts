@@ -53,7 +53,7 @@ export class EchoDatabase {
     this._update(new UpdateEvent(this._backend.spaceKey)); // TODO: Seems hacky.
   }
 
-  get objects() {
+  get objects(): EchoObject[] {
     return Array.from(this._objects.values());
   }
 

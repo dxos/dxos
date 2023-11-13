@@ -28,7 +28,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override flags = {
     ...BaseCommand.flags,
     require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
-    manifest: Flags.string({ default: 'functions.yml' }),
+    baseDir: Flags.string({ default: join(process.cwd(), 'src/functions') }),
+    manifest: Flags.string({ default: join(process.cwd(), 'functions.yml') }),
   };
 
   async run(): Promise<any> {
@@ -37,13 +38,10 @@ export default class Dev extends BaseCommand<typeof Dev> {
       require(requirePath);
     }
 
-    const functionsManifest = load(
-      await readFile(join(process.cwd(), this.flags.manifest), 'utf8'),
-    ) as FunctionsManifest;
-
     await this.execWithClient(async (client) => {
+      const functionsManifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionsManifest;
       const server = new DevServer(client, {
-        directory: join(process.cwd(), 'src/functions'),
+        directory: this.flags.baseDir,
         manifest: functionsManifest,
       });
 
@@ -53,8 +51,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
       const functionsConfig = config.values.runtime?.agent?.plugins?.find(
-        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions',
+        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Const.
       );
+
       invariant(functionsConfig?.config?.port, 'Port not set.');
       const endpoint = `http://localhost:${functionsConfig?.config?.port}`;
       const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
@@ -62,7 +61,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       this.log(`Function dev-server: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
-        await triggers.start();
+        await triggers.stop();
         await server.stop();
         process.exit();
       });

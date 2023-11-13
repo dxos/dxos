@@ -34,11 +34,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/labs-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-chess/package.json",
           "jsonpath": "$.version"
         },
@@ -130,6 +125,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-script/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -560,11 +560,6 @@
         {
           "type": "json",
           "path": "packages/experimental/spyglass/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/gravity-agent/package.json",
           "jsonpath": "$.version"
         },
         {

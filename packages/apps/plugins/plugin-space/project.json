@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-space/src/index.ts"
+          "packages/apps/plugins/plugin-space/src/index.ts",
+          "packages/apps/plugins/plugin-space/src/meta.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-space/dist/lib",
         "platforms": [
@@ -40,6 +41,17 @@
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-space/.storybook"
+      }
     }
   },
   "implicitDependencies": [

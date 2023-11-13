@@ -32,7 +32,7 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey: space.key,
         role: SpaceMember.Role.ADMIN,
-        profile: signingContext.profile,
+        profile: signingContext.getProfile(),
         genesisFeedKey: space.controlFeedKey ?? failUndefined(),
       },
     }),

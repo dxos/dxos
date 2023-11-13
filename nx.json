@@ -86,6 +86,12 @@
           "env": "REMOTE_SOURCE"
         },
         {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PREFIX"
+        },
+        {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"
         }
       ],

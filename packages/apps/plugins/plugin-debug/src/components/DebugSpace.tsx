@@ -4,13 +4,16 @@
 
 import {
   ArrowClockwise,
+  DotsThreeVertical,
   DownloadSimple,
+  FileText,
   Flag,
   FlagPennant,
   HandPalm,
   Play,
   Plus,
   PlusMinus,
+  Table,
   Timer,
   UserCirclePlus,
 } from '@phosphor-icons/react';
@@ -18,23 +21,29 @@ import React, { type FC, useContext, useEffect, useMemo, useState } from 'react'
 
 import { type Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
+import { type Schema, type TypedObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
-import { Button, Input, useThemeContext } from '@dxos/react-ui';
+import { Button, DropdownMenu, Input, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { DebugPanel } from './DebugPanel';
+import { SchemaList } from './SchemaList';
 import { Json } from './Tree';
 import { useFileDownload } from './util';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
-export const DEFAULT_COUNT = 100;
-export const DEFAULT_PERIOD = 500;
-export const DEFAULT_JITTER = 50;
-const DebugSpace: FC<{ space: Space }> = ({ space }) => {
+const DEFAULT_COUNT = 100;
+const DEFAULT_PERIOD = 500;
+const DEFAULT_JITTER = 50;
+
+export const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({
+  space,
+  onAddObjects,
+}) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
@@ -47,6 +56,7 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
       }),
     );
   };
+
   useEffect(() => {
     void handleRefresh();
   }, [space]);
@@ -74,7 +84,7 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
     } else {
       start(
         async () => {
-          await generator.updateDocument();
+          generator.updateDocument();
         },
         {
           count: safeParseInt(mutationCount) ?? 0,
@@ -85,12 +95,8 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
     }
   };
 
-  const handleCreateObject = async (createTables: boolean) => {
-    if (createTables) {
-      generator.createTables();
-    } else {
-      generator.createDocument();
-    }
+  const handleCreate = (schema: Schema, count: number) => {
+    generator.createObjects({ [schema.typename]: count });
   };
 
   const handleCreateInvitation = () => {
@@ -116,12 +122,32 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
     <DebugPanel
       menu={
         <>
-          <Button
-            onClick={(event) => handleCreateObject(event.shiftKey)}
-            title={'Create content; hold SHIFT to create tables.'}
-          >
-            <Plus className={getSize(5)} />
-          </Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button>
+                <DotsThreeVertical />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content>
+                <DropdownMenu.Viewport>
+                  <DropdownMenu.Item onClick={() => onAddObjects?.([generator.createDocument()])}>
+                    <FileText className={getSize(5)} />
+                    <p>Create document</p>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => onAddObjects?.(generator.createTables())}>
+                    <Table className={getSize(5)} />
+                    <p>Create tables</p>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => generator.createObjects()}>
+                    <Plus className={getSize(5)} />
+                    <p>Create objects</p>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+
           <div className='relative' title='mutation count'>
             <Input.Root>
               <Input.TextInput
@@ -181,9 +207,10 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
         </>
       }
     >
+      <div className={'shrink-0'}>
+        <SchemaList space={space} onCreate={handleCreate} />
+      </div>
       <Json theme={themeMode} data={data} />
     </DebugPanel>
   );
 };
-
-export default DebugSpace;

@@ -12,7 +12,7 @@ import type {
 import { Game } from '@dxos/chess-app';
 import { isTypedObject } from '@dxos/react-client/echo';
 
-export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
+import { CHESS_PLUGIN } from './meta';
 
 const CHESS_ACTION = `${CHESS_PLUGIN}/action`;
 
