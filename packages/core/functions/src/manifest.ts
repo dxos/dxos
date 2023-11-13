@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Client } from '@dxos/client';
-
 export type FunctionDef = {
   // FQ function name.
   id: string;
@@ -29,28 +27,10 @@ export type FunctionTrigger = {
   subscription: TriggerSubscription;
 };
 
+/**
+ * Function manifest file.
+ */
 export type FunctionManifest = {
   functions: FunctionDef[];
   triggers: FunctionTrigger[];
-};
-
-export interface Response {
-  status(code: number): Response;
-  succeed(data?: object): Response;
-}
-
-export interface FunctionContext {
-  client: Client;
-  status(code: number): Response;
-}
-
-export type FunctionHandler<T extends {}> = (params: {
-  event: T;
-  context: FunctionContext;
-}) => Promise<Response | void>;
-
-// TODO(burdon): Types.
-export type FunctionSubscriptionEvent = {
-  space: string;
-  objects: string[];
 };

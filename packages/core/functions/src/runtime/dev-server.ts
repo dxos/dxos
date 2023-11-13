@@ -11,13 +11,8 @@ import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import {
-  type FunctionContext,
-  type FunctionDef,
-  type FunctionHandler,
-  type FunctionManifest,
-  type Response,
-} from '../types';
+import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
+import { type FunctionDef, type FunctionManifest } from '../manifest';
 
 const DEFAULT_PORT = 7001;
 
@@ -81,30 +76,31 @@ export class DevServer {
     app.use(express.json());
 
     app.post('/:endpoint', async (req, res) => {
-      const endpoint = req.params.endpoint;
-      log('invoke', { endpoint, data: req.body });
+      const { endpoint } = req.params;
 
-      const builder: Response = {
+      const response: Response = {
         status: (code: number) => {
           res.statusCode = code;
-          return builder;
+          return response;
         },
+
         succeed: (result = {}) => {
           res.end(JSON.stringify(result));
-          return builder;
+          return response;
         },
       };
 
       const context: FunctionContext = {
         client: this._client,
-        status: builder.status.bind(builder),
+        status: response.status.bind(response),
       };
 
       void (async () => {
         try {
-          // TODO(burdon): Typed event handler.
+          log('invoking', { endpoint });
           const { handler } = this._handlers[endpoint];
-          await handler({ event: req.body, context });
+          const response = await handler({ context, event: req.body });
+          log('done', { response });
         } catch (err: any) {
           res.statusCode = 500;
           res.end(err.message);

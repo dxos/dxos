@@ -32,7 +32,8 @@ export class FunctionsPlugin extends Plugin {
 
     this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
 
-    this._dispatchers.set('dev', this._devDispatcher);
+    const runtime = 'dev'; // TODO(burdon): Const.
+    this._dispatchers.set(runtime, this._devDispatcher);
     this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
 
     const app = express();

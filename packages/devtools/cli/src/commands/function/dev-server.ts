@@ -56,7 +56,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       invariant(functionsConfig?.config?.port, 'Port not set.');
       const endpoint = `http://localhost:${functionsConfig?.config?.port}`;
-      const triggers = new TriggerManager(client, manifest, { runtime: 'dev', endpoint });
+      const runtime = 'dev'; // TODO(burdon): Const.
+      const triggers = new TriggerManager(client, manifest, { endpoint, runtime });
       await triggers.start();
 
       this.log(`Function dev-server: ${server.endpoint} (ctrl-c to exit)`);
@@ -69,7 +70,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
       if (this.flags.verbose) {
         this.log(
           chalk`{green Function endpoints}:\n${server.functions
-            .map(({ def: { id, endpoint: path } }) => chalk`- {blue ${join(endpoint, path).padEnd(40)}} => ${id}`)
+            .map(
+              ({ def: { id, endpoint: path } }) => chalk`- {blue ${join(endpoint, runtime, path).padEnd(40)}} => ${id}`,
+            )
             .join('\n')}`,
         );
       }

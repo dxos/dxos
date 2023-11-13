@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type FunctionManifest, type FunctionTrigger } from '../types';
+import { type FunctionManifest, type FunctionTrigger } from '../manifest';
 
 // TODO(burdon): Rename.
 export type InvokeOptions = {
