@@ -8127,6 +8127,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../react-ui-searchlist
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme

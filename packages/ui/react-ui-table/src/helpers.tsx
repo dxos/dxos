@@ -8,10 +8,11 @@ import { createColumnHelper, type ColumnDef, type ColumnMeta, type RowData } fro
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
-import { ComboBox, type ComboBoxItem, Input, Tooltip } from '@dxos/react-ui';
+import { Input, Popover, Tooltip } from '@dxos/react-ui';
+import { SearchList } from '@dxos/react-ui-searchlist';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -94,48 +95,71 @@ const defaults = <TData extends RowData, TValue>(
   return stripUndefinedValues(defaultsDeep({}, options, ...sources));
 };
 
-/**
- * Lazy cell selector (click to activate).
- */
+type CellSelectorItems<TData extends RowData> = Record<string, { label: string; data: TData }>;
+
+const initialItems = <TData extends RowData>(model: SelectQueryModel<TData>, value?: TData) =>
+  value
+    ? {
+        [model.getId(value)]: { label: model.getText(value), data: value },
+      }
+    : {};
+
 const CellSelector = <TData extends RowData>({
   model,
-  value: _value,
-  onUpdate,
+  value,
+  onValueChange,
 }: {
   model: SelectQueryModel<TData>;
   value: TData;
-  onUpdate: (value: TData) => void;
+  onValueChange: (value: TData) => void;
 }) => {
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState<ComboBoxItem>();
-  useEffect(() => setValue(_value ? { id: model.getId(_value), label: model.getText(_value) } : undefined), [_value]);
-  const [items, setItems] = useState<ComboBoxItem[]>([]);
-  const handleUpdate = async (text?: string) => {
+  const [items, setItems] = useState<CellSelectorItems<TData>>(initialItems(model, value));
+  const [_loading, setLoading] = useState(false);
+  const [searchInputValue, setSearchInputValue] = useState('');
+  const handleSearchInputValueChange = async (text?: string) => {
+    setSearchInputValue(text ?? '');
+    setLoading(true);
     const items = await model.query(text);
-    setItems(items.map((item) => ({ id: model.getId(item), label: model.getText(item), data: item })));
+    setItems(
+      items.reduce((acc: CellSelectorItems<TData>, item) => {
+        acc[model.getId(item)] = {
+          label: model.getText(item),
+          data: item,
+        };
+        return acc;
+      }, initialItems(model, value)),
+    );
+    setLoading(false);
   };
 
-  if (!edit) {
-    const text = _value ? model.getText(_value) : undefined;
-    return (
-      // TODO(burdon): Hack to prevent div from collapsing.
-      <div className={mx('w-full px-2', !text && 'opacity-0')} onClick={() => setEdit(true)}>
-        {text ?? '-'}
-      </div>
-    );
-  }
+  const handleValueChange = useCallback(
+    (id: string) => {
+      onValueChange(items[id]?.data);
+    },
+    [items, onValueChange],
+  );
 
   return (
-    <ComboBox.Root items={items} value={value} onChange={(value) => onUpdate(value?.data)} onInputChange={handleUpdate}>
-      <ComboBox.Input />
-      <ComboBox.Content>
-        {items.map((item) => (
-          <ComboBox.Item key={item.id} item={item}>
-            {item.label}
-          </ComboBox.Item>
-        ))}
-      </ComboBox.Content>
-    </ComboBox.Root>
+    <Popover.Root>
+      <Popover.Trigger>Open</Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content side='bottom' collisionPadding={64}>
+          <SearchList.Root shouldFilter={false}>
+            <SearchList.Input value={searchInputValue} onValueChange={handleSearchInputValueChange} />
+            <Popover.Viewport>
+              <SearchList.Content>
+                {Object.entries(items).map(([id, { label }]) => (
+                  <SearchList.Item key={id} value={id} onSelect={handleValueChange}>
+                    {label}
+                  </SearchList.Item>
+                ))}
+              </SearchList.Content>
+            </Popover.Viewport>
+          </SearchList.Root>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 };
 
@@ -158,7 +182,7 @@ export class ColumnBuilder<TData extends RowData> {
               <CellSelector<any>
                 model={model}
                 value={cell.getValue()}
-                onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+                onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
               />
             )
           : (cell) => {

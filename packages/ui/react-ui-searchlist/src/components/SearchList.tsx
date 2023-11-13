@@ -67,12 +67,12 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
   },
 );
 
-type SearchListListProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
+type SearchListContentProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
 
-const SearchListList = forwardRef<HTMLDivElement, SearchListListProps>(
+const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandList {...props} className={mx('', classNames)} ref={forwardedRef}>
+      <CommandList {...props} className={mx('p-1', classNames)} ref={forwardedRef}>
         {children}
       </CommandList>
     );
@@ -96,7 +96,11 @@ type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandI
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandItem {...props} className={mx('', classNames)} ref={forwardedRef}>
+      <CommandItem
+        {...props}
+        className={mx('p-1 rounded data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10', classNames)}
+        ref={forwardedRef}
+      >
         {children}
       </CommandItem>
     );
@@ -106,7 +110,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
 export const SearchList = {
   Root: SearchListRoot,
   Input: SearchListInput,
-  List: SearchListList,
+  Content: SearchListContent,
   Empty: SearchListEmpty,
   Item: SearchListItem,
 };
@@ -114,7 +118,7 @@ export const SearchList = {
 export type {
   SearchListRootProps,
   SearchListInputProps,
-  SearchListListProps,
+  SearchListContentProps,
   SearchListEmptyProps,
   SearchListItemProps,
 };

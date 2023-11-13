@@ -21,18 +21,15 @@ const defaultItems: StoryItems = faker.helpers
 
 const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) => {
   return (
-    <SearchList.Root
-      filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
-      classNames='flex flex-col w-full bg-neutral-100 dark:bg-neutral-800'
-    >
+    <SearchList.Root filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
       <SearchList.Input placeholder='Select...' />
-      <SearchList.List>
+      <SearchList.Content>
         {Object.entries(items).map(([value, label]) => (
-          <SearchList.Item key={value} value={value}>
+          <SearchList.Item key={value} value={value} onSelect={(value) => console.log('[item select]', value)}>
             {label}
           </SearchList.Item>
         ))}
-      </SearchList.List>
+      </SearchList.Content>
     </SearchList.Root>
   );
 };
