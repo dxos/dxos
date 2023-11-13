@@ -13,7 +13,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { type PublicKey } from '@dxos/keys';
 import { Input, Popover, Tooltip } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
 
 // TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?
@@ -114,7 +114,7 @@ const CellSelector = <TData extends RowData>({
   onValueChange: (value: TData) => void;
 }) => {
   const [items, setItems] = useState<CellSelectorItems<TData>>(initialItems(model, value));
-  const [_loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [searchInputValue, setSearchInputValue] = useState('');
   const handleSearchInputValueChange = async (text?: string) => {
     setSearchInputValue(text ?? '');
@@ -143,16 +143,25 @@ const CellSelector = <TData extends RowData>({
     <Popover.Root>
       <Popover.Trigger>Open</Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content side='bottom' collisionPadding={64}>
+        <Popover.Content side='bottom' collisionPadding={48} classNames='is-60'>
           <SearchList.Root shouldFilter={false}>
             <SearchList.Input value={searchInputValue} onValueChange={handleSearchInputValueChange} />
             <Popover.Viewport>
               <SearchList.Content>
-                {Object.entries(items).map(([id, { label }]) => (
-                  <SearchList.Item key={id} value={id} onSelect={handleValueChange}>
-                    {label}
-                  </SearchList.Item>
-                ))}
+                {searchInputValue.length < 1 ? (
+                  <p className={mx('text-center', descriptionText)}>Start typing to search</p>
+                ) : loading ? (
+                  <p className={mx('text-center', descriptionText)}>Searching…</p>
+                ) : (
+                  <>
+                    <SearchList.Empty classNames={['text-center', descriptionText]}>No results</SearchList.Empty>
+                    {Object.entries(items).map(([id, { label }]) => (
+                      <SearchList.Item key={id} value={id} onSelect={handleValueChange} classNames='truncate'>
+                        {label}
+                      </SearchList.Item>
+                    ))}
+                  </>
+                )}
               </SearchList.Content>
             </Popover.Viewport>
           </SearchList.Root>
