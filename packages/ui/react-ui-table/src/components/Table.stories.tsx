@@ -91,7 +91,7 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
     builder.select({
       label: 'Company',
       model: tableStorySelectModel,
-      onUpdate: (...args) => console.log('[on update]', args),
+      onUpdate,
     }),
   ),
   helper.accessor('started', builder.date({ relative: true })),

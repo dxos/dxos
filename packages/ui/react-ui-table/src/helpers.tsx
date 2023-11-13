@@ -3,7 +3,7 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import { Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
+import { CaretDown, Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
 import { createColumnHelper, type ColumnDef, type ColumnMeta, type RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
@@ -11,7 +11,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
-import { Input, Popover, Tooltip } from '@dxos/react-ui';
+import { Button, Input, Popover, Tooltip } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
@@ -141,9 +141,14 @@ const CellSelector = <TData extends RowData>({
 
   return (
     <Popover.Root>
-      <Popover.Trigger>Open</Popover.Trigger>
+      <Popover.Trigger asChild>
+        <Button variant='ghost' classNames='is-full font-normal'>
+          <span className='flex-1 text-start truncate'>{value ? model.getText(value) : ' '}</span>
+          <CaretDown />
+        </Button>
+      </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content side='bottom' collisionPadding={48} classNames='is-60'>
+        <Popover.Content side='bottom' collisionPadding={48} classNames='is-[--radix-popover-trigger-width]'>
           <SearchList.Root shouldFilter={false}>
             <SearchList.Input value={searchInputValue} onValueChange={handleSearchInputValueChange} />
             <Popover.Viewport>
