@@ -3,17 +3,17 @@
 //
 
 import {
+  ClockCounterClockwise,
+  Download,
   FolderPlus,
   PencilSimpleLine,
   Planet,
+  Plus,
   Placeholder,
   Trash,
   Users,
-  Download,
   Upload,
   X,
-  ClockCounterClockwise,
-  Plus,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
