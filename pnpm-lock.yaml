@@ -521,6 +521,9 @@ importers:
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
+      '@braneframe/plugin-registry':
+        specifier: workspace:*
+        version: link:../plugins/plugin-registry
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugins/plugin-space

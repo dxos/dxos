@@ -7,23 +7,25 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ChessPlugin } from '@braneframe/plugin-chess';
-import { ClientPlugin } from '@braneframe/plugin-client';
-import { DebugPlugin } from '@braneframe/plugin-debug';
-import { ErrorPlugin } from '@braneframe/plugin-error';
-import { GraphPlugin } from '@braneframe/plugin-graph';
-import { LayoutPlugin } from '@braneframe/plugin-layout';
-import { MetadataPlugin } from '@braneframe/plugin-metadata';
-import { NavTreePlugin } from '@braneframe/plugin-navtree';
-import { PwaPlugin } from '@braneframe/plugin-pwa';
-import { SpacePlugin } from '@braneframe/plugin-space';
-import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
-import { ThemePlugin } from '@braneframe/plugin-theme';
+import ChessMeta from '@braneframe/plugin-chess/meta';
+import ClientMeta from '@braneframe/plugin-client/meta';
+import DebugMeta from '@braneframe/plugin-debug/meta';
+import ErrorMeta from '@braneframe/plugin-error/meta';
+import GraphMeta from '@braneframe/plugin-graph/meta';
+import LayoutMeta from '@braneframe/plugin-layout/meta';
+import MetadataMeta from '@braneframe/plugin-metadata/meta';
+import NavTreeMeta from '@braneframe/plugin-navtree/meta';
+import PwaMeta from '@braneframe/plugin-pwa/meta';
+import RegistryMeta from '@braneframe/plugin-registry/meta';
+import SpaceMeta from '@braneframe/plugin-space/meta';
+import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
+import ThemeMeta from '@braneframe/plugin-theme/meta';
+
 import { types } from '@braneframe/types';
-import { createApp } from '@dxos/app-framework';
+import { Plugin, createApp } from '@dxos/app-framework';
 import { Remote, createClientServices } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/react-client';
-import { defaultTheme, bindTheme } from '@dxos/react-ui-theme';
+import { bindTheme, defaultTheme } from '@dxos/react-ui-theme';
 
 const APP = 'arena.dxos.org';
 
@@ -43,29 +45,57 @@ const main = async () => {
   });
 
   const App = createApp({
-    plugins: [
-      TelemetryPlugin({ namespace: APP, config: new Config(Defaults()) }),
-
-      ThemePlugin({ appName: 'Arena', tx: arenaTx }),
-
-      // Outside of error boundary so that updates are not blocked by errors.
-      PwaPlugin(),
-
-      // Core framework.
-      ErrorPlugin(),
-      GraphPlugin(),
-      MetadataPlugin(),
-      ClientPlugin({ appKey: APP, config, services, debugIdentity: debug, types }),
-
-      // Core UX.
-      LayoutPlugin(),
-      NavTreePlugin(),
-
-      SpacePlugin(),
-      DebugPlugin(),
-
-      // Presentation plugins.
-      ChessPlugin(),
+    order: [
+      TelemetryMeta,
+      ThemeMeta,
+      PwaMeta,
+      ErrorMeta,
+      GraphMeta,
+      MetadataMeta,
+      ClientMeta,
+      LayoutMeta,
+      NavTreeMeta,
+      SpaceMeta,
+      DebugMeta,
+      ChessMeta,
+    ],
+    plugins: {
+      [TelemetryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-telemetry'), {
+        namespace: APP,
+        config: new Config(Defaults()),
+      }),
+      [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), { appName: 'Arena', tx: arenaTx }),
+      [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')),
+      [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
+      [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
+      [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
+      [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
+      [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
+        appKey: APP,
+        config,
+        services,
+        debugIdentity: debug,
+        types,
+      }),
+      [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout')),
+      [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navTree')),
+      [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space')),
+      [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
+      [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
+    },
+    core: [
+      ClientMeta.id,
+      ErrorMeta.id,
+      GraphMeta.id,
+      LayoutMeta.id,
+      MetadataMeta.id,
+      NavTreeMeta.id,
+      PwaMeta.id,
+      RegistryMeta.id,
+      SpaceMeta.id,
+      ThemeMeta.id,
+      TelemetryMeta.id,
+      ChessMeta.id,
     ],
   });
 
