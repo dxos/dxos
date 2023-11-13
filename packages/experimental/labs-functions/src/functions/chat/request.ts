@@ -8,6 +8,8 @@ import { type Thread } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { type Schema, type TypedObject } from '@dxos/echo-schema';
 
+import { defaultPrompt, prompts } from './prompts';
+
 export type SchemaConfig = {
   typename: string;
   fields: string[];
@@ -41,24 +43,25 @@ export const createRequest = (space: Space, block: Thread.Block): ChatCompletion
   // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
   // TODO(burdon): Expect schema from client.
 
-  let contextObject: TypedObject | undefined;
+  const message = block.messages
+    .map((message) => message.text)
+    .filter(Boolean)
+    .join('\n');
+
+  let context: TypedObject | undefined;
   if (block?.context.object) {
     const { objects } = space.db.query({ id: block.context.object });
-    contextObject = objects[0];
+    context = objects[0];
   }
 
-  const messages: ChatCompletionRequestMessage[] = [
-    {
-      role: 'system',
-      content: 'you are a helpful assistant.',
-    },
-  ];
-
-  block.messages.forEach((message) => {
-    if (message.text) {
-      messages.push({ role: 'user', content: message.text });
+  let messages = defaultPrompt({ message })!;
+  for (const prompt of prompts) {
+    const m = prompt({ message, context });
+    if (m) {
+      messages = m;
+      break;
     }
-  });
+  }
 
-  return messages;
+  return messages.map(({ role, content }) => ({ role, content } as ChatCompletionRequestMessage));
 };

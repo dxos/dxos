@@ -4,18 +4,10 @@
 
 import { ChatMessage } from 'langchain/schema';
 
-// TODO(burdon): https://js.langchain.com/docs/get_started/introduction
-//  https://www.npmjs.com/package/langchain
-//  https://js.langchain.com/docs/integrations/chat/openai
+import { type Schema } from '@dxos/echo-schema';
 
-// TODO(burdon): Use ECHO type.
-export type Schema = {
-  fields: {
-    name: string;
-    description?: string;
-    type: 'string' | 'number';
-  }[];
-};
+// TODO(burdon): Investigate libs.
+//  https://js.langchain.com/docs/integrations/chat/openai
 
 export type PromptGenerator = (props: { message: string; context?: any; schema?: Schema }) => ChatMessage[] | null;
 
@@ -36,9 +28,9 @@ export const prompts: PromptGenerator[] = [
       new ChatMessage(
         [
           'You are a machine that only returns and replies with valid, iterable RFC8259 compliant JSON in your responses',
-          `Each item should contain the following fields: ${schema.fields.map(({ name }) => name).join(',')}.`,
-          ...schema.fields
-            .map(({ name, description }) => description && `The field "${name}" should be the ${description}`)
+          `Each item should contain the following fields: ${schema.props.map(({ id }) => id).join(',')}.`,
+          ...schema.props
+            .map(({ id, description }) => description && `The field "${id}" should be the ${description}`)
             .filter(Boolean),
         ].join(' '),
         'user',
@@ -57,9 +49,15 @@ export const prompts: PromptGenerator[] = [
     }
 
     return [
-      new ChatMessage('You are a helpful assistant.', 'system'),
+      new ChatMessage('You are a machine and a helpful assistant that is an expert chess player.', 'system'),
       new ChatMessage([`I am currently playing chess and the move history is ${context.pgn}`].join(' '), 'user'),
+      new ChatMessage('First suggest a move, then write one sentence about why this is a good move.', 'user'),
       new ChatMessage(message, 'user'),
     ];
   },
+];
+
+export const defaultPrompt: PromptGenerator = ({ message }) => [
+  new ChatMessage('You are a helpful assistant.', 'system'),
+  new ChatMessage(message, 'user'),
 ];

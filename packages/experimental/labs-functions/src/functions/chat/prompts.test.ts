@@ -7,9 +7,10 @@ import { type BaseChatModel } from 'langchain/chat_models/base';
 import { FakeListChatModel } from 'langchain/chat_models/fake';
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 
+import { Schema } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
-import { type Schema, prompts } from './prompts';
+import { prompts } from './prompts';
 import { getConfig, getKey } from '../../util';
 
 describe('Prompts', () => {
@@ -26,29 +27,29 @@ describe('Prompts', () => {
 
   test('json', async () => {
     // TODO(burdon): App should allow prompt tuning. Associated with schema?
-    const schema: Schema = {
-      fields: [
+    const schema = new Schema({
+      props: [
         {
-          name: 'name',
-          type: 'string',
+          id: 'name',
+          type: Schema.PropType.STRING,
         },
         {
-          name: 'description',
+          id: 'description',
           description: 'Short summary',
-          type: 'string',
+          type: Schema.PropType.STRING,
         },
         {
-          name: 'website',
+          id: 'website',
           description: 'Web site URL (not github)',
-          type: 'string',
+          type: Schema.PropType.STRING,
         },
         {
-          name: 'repo',
+          id: 'repo',
           description: 'Github repo URL',
-          type: 'string',
+          type: Schema.PropType.STRING,
         },
       ],
-    };
+    });
 
     const f = prompts[0];
     const messages = f({ message: 'List the 3 most popular open source projects that implement CRDTs.', schema });
