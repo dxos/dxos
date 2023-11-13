@@ -120,7 +120,7 @@ export class DevServer {
     try {
       const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
         endpoint: this.endpoint!,
-        functions: this.functions.map(({ def: { id } }) => ({ name: id })), // TODO(burdon): Change proto name => id.
+        functions: this.functions.map(({ def: { endpoint } }) => ({ name: endpoint })), // TODO(burdon): Change proto name => id.
       });
 
       this._registrationId = registrationId;
