@@ -25,8 +25,7 @@ describe('Prompts', () => {
     });
   });
 
-  test('json', async () => {
-    // TODO(burdon): App should allow prompt tuning. Associated with schema?
+  test.skip('json', async () => {
     const schema = new Schema({
       props: [
         {

@@ -6,7 +6,7 @@ import { type ChatCompletionRequestMessage } from 'openai';
 
 import { type Thread } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { type Schema, type TypedObject } from '@dxos/echo-schema';
+import { Schema, type TypedObject } from '@dxos/echo-schema';
 
 import { defaultPrompt, prompts } from './prompts';
 
@@ -39,10 +39,6 @@ const formatSchema = (schema: Schema) => {
 };
 
 export const createRequest = (space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
-  // TODO(burdon): Generate prompts.
-  // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
-  // TODO(burdon): Expect schema from client.
-
   const message = block.messages
     .map((message) => message.text)
     .filter(Boolean)
@@ -54,14 +50,43 @@ export const createRequest = (space: Space, block: Thread.Block): ChatCompletion
     context = objects[0];
   }
 
+  // TODO(burdon): Expect client to set schema.
+  let schema: Schema | undefined;
+  if (context?.__typename === 'braneframe.Grid.Item') {
+    schema = new Schema({
+      props: [
+        {
+          id: 'name',
+          type: Schema.PropType.STRING,
+        },
+        {
+          id: 'description',
+          description: 'Short summary',
+          type: Schema.PropType.STRING,
+        },
+        {
+          id: 'website',
+          description: 'Web site URL (not github)',
+          type: Schema.PropType.STRING,
+        },
+        {
+          id: 'repo',
+          description: 'Github repo URL',
+          type: Schema.PropType.STRING,
+        },
+      ],
+    });
+  }
+
   let messages = defaultPrompt({ message })!;
   for (const prompt of prompts) {
-    const m = prompt({ message, context });
+    const m = prompt({ message, context, schema });
     if (m) {
       messages = m;
       break;
     }
   }
 
+  // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
   return messages.map(({ role, content }) => ({ role, content } as ChatCompletionRequestMessage));
 };
