@@ -270,7 +270,7 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Message with broken signal server', async () => {
-    const builder = new TestBuilder({ signalHosts: [{ server: 'ws://broken.kube' }, { server: broker.url() }] });
+    const builder = new TestBuilder({ signalHosts: [{ server: 'ws://broken.kube.' }, { server: broker.url() }] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
