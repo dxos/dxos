@@ -3,18 +3,18 @@
 //
 
 import {
+  ClockCounterClockwise,
+  Download,
   FolderPlus,
   PencilSimpleLine,
   Planet,
+  Plus,
   Placeholder,
+  SignIn,
   Trash,
   Users,
-  Intersect,
-  Download,
   Upload,
   X,
-  ClockCounterClockwise,
-  Plus,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
@@ -184,7 +184,7 @@ export const objectToGraphNode = ({
         {
           id: 'join-space',
           label: ['join space label', { ns: 'os' }],
-          icon: (props) => <Intersect {...props} />,
+          icon: (props) => <SignIn {...props} />,
           properties: {
             testId: 'spacePlugin.joinSpace',
           },
