@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-table",
+  "name": "@dxos/react-ui-searchlist",
   "version": "0.3.6",
-  "description": "A table component.",
+  "description": "A themed ⌘K-style combobox component, triggered by a button (or keyboard shortcut), where values are queried only within the invoked modal.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -19,28 +19,16 @@
     "chromatic": "true"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.12.0",
-    "@tanstack/react-table": "^8.9.3",
-    "date-fns": "^2.29.3",
-    "lodash.defaultsdeep": "^4.6.1"
+    "cmdk": "^0.2.0"
   },
   "devDependencies": {
-    "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
-    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "chromatic": "^7.5.0",
-    "deepsignal": "1.4.0-shallow.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "vite": "^4.3.9",
