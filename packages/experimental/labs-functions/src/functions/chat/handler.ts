@@ -53,7 +53,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       // TODO(burdon): Create set of messages.
       const block = thread.blocks[thread.blocks.length - 1];
       if (block.__meta.keys.length === 0) {
-        const messages = createRequest(client, space, block);
+        const messages = createRequest(space, block);
         log.info('request', { messages });
         console.log(JSON.stringify(messages, null, 2));
 
