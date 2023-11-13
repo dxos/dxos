@@ -34,7 +34,7 @@ const PLUGIN_HOST = 'dxos.org/plugin/host';
 export const PluginHost = ({
   order,
   plugins: definitions,
-  core = order.map(({ id }) => id),
+  core = [],
   defaults = [],
   fallback = null,
 }: BootstrapPluginsParams): PluginDefinition<PluginHostProvides> => {
@@ -56,6 +56,7 @@ export const PluginHost = ({
   return {
     meta: {
       id: PLUGIN_HOST,
+      name: 'Plugin host',
     },
     provides: {
       plugins: state.values,

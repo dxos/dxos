@@ -117,7 +117,7 @@
         "description": "Devices in your HALO."
       },
       "function": {
-        "description": "Runtime plugable code with data/event specific triggers."
+        "description": "Runtime pluggable code with data/event specific triggers."
       },
       "halo": {
         "description": "HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements."

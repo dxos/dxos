@@ -15,10 +15,11 @@ export type PluginListProps = {
   plugins?: Plugin['meta'][];
   loaded?: string[];
   enabled?: string[];
+  className?: string;
   onChange?: (id: string, enabled: boolean) => void;
 };
 
-export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }: PluginListProps) => {
+export const PluginList = ({ plugins = [], loaded = [], enabled = [], className, onChange }: PluginListProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
 
   return (
@@ -41,7 +42,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                 aria-describedby={descriptionId}
               >
                 <Icon weight='duotone' className={mx(getSize(6), 'mbs-1')} />
-                <div role='none' className={mx(fineBlockSize, 'grow pbs-1')}>
+                <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
                   <label htmlFor={inputId} id={labelId} className='truncate'>
                     {name ?? id}
                   </label>
@@ -52,7 +53,9 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                     </div>
                   )}
                 </div>
-                <Input.Switch classNames='self-center' checked={!!isEnabled} />
+                <div className='pbs-1'>
+                  <Input.Switch classNames='self-center' checked={!!isEnabled} />
+                </div>
               </ListItem.Root>
             </Input.Root>
           );

@@ -59,6 +59,10 @@ export class Context {
     return this._isDisposed;
   }
 
+  get disposeCallbacksLength() {
+    return this._disposeCallbacks.length;
+  }
+
   /**
    * Schedules a callback to run when the context is disposed.
    * May be async, in this case the disposer might choose to wait for all resource to released.

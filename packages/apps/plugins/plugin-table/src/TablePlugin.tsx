@@ -8,7 +8,6 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Table as TableType, Folder } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { Schema } from '@dxos/react-client/echo';
 
 import { TableMain, TableSection, TableSlide } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -82,16 +81,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              const schema = new Schema({
-                props: [
-                  {
-                    id: 'title',
-                    type: Schema.PropType.STRING,
-                  },
-                ],
-              });
-
-              return { object: new TableType({ schema }) };
+              return { object: new TableType() };
             }
           }
         },

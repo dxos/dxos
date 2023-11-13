@@ -85,25 +85,24 @@ export default defineConfig({
       ],
     }),
     ThemePlugin({
+      extensions: [osThemeExtension],
       root: __dirname,
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
 
-        // TODO(burdon): Reconcile vs. direct deps.
+        // TODO(burdon): Indirect deps.
         resolve(__dirname, './node_modules/@braneframe/plugin-grid/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-layout/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-table/node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
 
-        // TODO(burdon): Hoisted as direct dependencies.
+        // TODO(burdon): Hoisted as direct deps.
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
-      extensions: [osThemeExtension],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),

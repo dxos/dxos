@@ -11,6 +11,6 @@ export const GRID_PLUGIN = 'dxos.org/plugin/grid';
 
 export default pluginMeta({
   id: GRID_PLUGIN,
-  name: 'Grid',
+  name: 'Grids',
   iconComponent: (props) => <SquaresFour {...props} />,
 });

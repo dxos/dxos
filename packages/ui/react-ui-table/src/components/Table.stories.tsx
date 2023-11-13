@@ -94,10 +94,11 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
       onUpdate,
     }),
   ),
-  helper.accessor('started', builder.date({ relative: true })),
+  helper.accessor('started', builder.date({ relative: true, meta: { resizable: true } })),
   helper.accessor(
     'count',
     builder.number({
+      meta: { resizable: true },
       // TODO(burdon): Sorting.
       getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
     }),
@@ -246,6 +247,32 @@ export const Editable = {
           columns={columns(onUpdate)}
           data={items}
           fullWidth
+        />
+      </div>
+    );
+  },
+};
+
+export const Resizable = {
+  render: () => {
+    const [items, setItems] = useState<Item[]>(createItems(10));
+    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
+      setItems((items) => updateItems(items, item.publicKey, prop, value));
+    };
+
+    // const handleColumnResize = (state) => {
+    //   console.log('resize', state);
+    // };
+
+    return (
+      <div className='flex grow overflow-hidden'>
+        {/* prettier-ignore */}
+        <Table<Item>
+          keyAccessor={row => row.publicKey.toHex()}
+          columns={columns(onUpdate)}
+          data={items}
+          fullWidth
+          // onColumnResize={handleColumnResize}
         />
       </div>
     );
