@@ -17,6 +17,10 @@ export const createResponse = (client: Client, content: string) => {
     const { pre, data, post } = result;
     pre && messages.push({ timestamp, text: pre });
     const dataArray = Array.isArray(data) ? data : [data];
+
+    // TODO(burdon): Create test.
+    console.log('response', { dataArray });
+
     messages.push(
       ...dataArray.map((data): ThreadType.Message => {
         if (typeof data['@type'] === 'string') {
