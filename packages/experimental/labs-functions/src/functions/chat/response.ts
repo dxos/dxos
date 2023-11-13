@@ -19,6 +19,7 @@ export const createResponse = (client: Client, content: string) => {
     const dataArray = Array.isArray(data) ? data : [data];
 
     // TODO(burdon): Create test.
+    // TODO(burdon): What format does the Thread messenger require?
     console.log('response', { dataArray });
 
     messages.push(
@@ -49,7 +50,7 @@ export const createResponse = (client: Client, content: string) => {
       }),
     );
 
-    post && messages.push({ timestamp, text: post }); // TODO(burdon): Skip TS.
+    post && messages.push({ timestamp, text: post });
   } else {
     messages.push({
       timestamp,
