@@ -4,7 +4,7 @@
 
 import { type Client } from '@dxos/client';
 
-export type FunctionConfig = {
+export type FunctionDef = {
   // FQ function name.
   id: string;
   // HTTP endpoint.
@@ -29,8 +29,8 @@ export type FunctionTrigger = {
   subscription: TriggerSubscription;
 };
 
-export type FunctionsManifest = {
-  functions: FunctionConfig[];
+export type FunctionManifest = {
+  functions: FunctionDef[];
   triggers: FunctionTrigger[];
 };
 

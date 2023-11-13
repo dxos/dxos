@@ -10,17 +10,17 @@ functions:
     description: 'AI Chat'
 
   - id: 'dxos.org/function/chess'
-    endpoint: 'chat'
+    endpoint: 'chess'
     handler: 'chess'
     description: 'Chess'
 
   - id: 'dxos.org/function/hello'
-    endpoint: 'chat'
+    endpoint: 'hello'
     handler: 'hello'
     description: 'Test'
 
   - id: 'dxos.org/function/email'
-    endpoint: 'chat'
+    endpoint: 'email'
     handler: 'email'
     description: 'Protonmail Sync'
 

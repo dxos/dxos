@@ -11,20 +11,26 @@ import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { type FunctionContext, type FunctionHandler, type FunctionsManifest, type Response } from '../types';
+import {
+  type FunctionContext,
+  type FunctionDef,
+  type FunctionHandler,
+  type FunctionManifest,
+  type Response,
+} from '../types';
 
-const DEFAULT_PORT = 7000;
+const DEFAULT_PORT = 7001;
 
 export type DevServerOptions = {
   directory: string;
-  manifest: FunctionsManifest;
+  manifest: FunctionManifest;
 };
 
 /**
  * Functions dev server provides a local HTTP server for testing functions.
  */
 export class DevServer {
-  private readonly _handlers: Record<string, FunctionHandler<any>> = {};
+  private readonly _handlers: Record<string, { def: FunctionDef; handler: FunctionHandler<any> }> = {};
 
   private _server?: http.Server;
   private _port?: number;
@@ -45,11 +51,12 @@ export class DevServer {
   }
 
   get functions() {
-    return Object.keys(this._handlers);
+    return Object.values(this._handlers);
   }
 
   async initialize() {
-    for (const { id, endpoint, handler: path } of this._options.manifest.functions) {
+    for (const def of this._options.manifest.functions) {
+      const { id, endpoint, handler: path } = def;
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const module = require(join(this._options.directory, path));
@@ -58,7 +65,11 @@ export class DevServer {
           throw new Error(`Handler must export default function: ${id}`);
         }
 
-        this._handlers[endpoint] = handler;
+        if (this._handlers[endpoint]) {
+          log.warn(`Function already registered: ${id}`);
+        }
+
+        this._handlers[endpoint] = { def, handler };
       } catch (err) {
         log.error('parsing function (check manifest)', err);
       }
@@ -92,7 +103,8 @@ export class DevServer {
       void (async () => {
         try {
           // TODO(burdon): Typed event handler.
-          await this._handlers[endpoint]({ event: req.body, context });
+          const { handler } = this._handlers[endpoint];
+          await handler({ event: req.body, context });
         } catch (err: any) {
           res.statusCode = 500;
           res.end(err.message);
@@ -108,8 +120,9 @@ export class DevServer {
     try {
       const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
         endpoint: this.endpoint!,
-        functions: this.functions.map((name) => ({ name })),
+        functions: this.functions.map(({ def: { id } }) => ({ name: id })), // TODO(burdon): Change proto name => id.
       });
+
       this._registrationId = registrationId;
     } catch (err: any) {
       await this.stop();

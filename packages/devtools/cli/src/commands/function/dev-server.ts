@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { DevServer, type FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
@@ -39,7 +39,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
     }
 
     await this.execWithClient(async (client) => {
-      const manifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionsManifest;
+      const manifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionManifest;
       const server = new DevServer(client, {
         directory: this.flags.baseDir,
         manifest,

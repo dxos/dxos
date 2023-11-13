@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type FunctionsManifest, type FunctionTrigger } from '../types';
+import { type FunctionManifest, type FunctionTrigger } from '../types';
 
 // TODO(burdon): Rename.
 export type InvokeOptions = {
@@ -29,7 +29,7 @@ export class TriggerManager {
 
   constructor(
     private readonly _client: Client,
-    private readonly _manifest: FunctionsManifest,
+    private readonly _manifest: FunctionManifest,
     private readonly _invokeOptions: InvokeOptions,
   ) {}
 
@@ -38,7 +38,7 @@ export class TriggerManager {
     this._client.spaces.subscribe(async (spaces) => {
       for (const space of spaces) {
         await space.waitUntilReady();
-        for (const trigger of this._manifest.triggers) {
+        for (const trigger of this._manifest.triggers ?? []) {
           // TODO(burdon): New context? Shared?
           await this.mount(new Context(), space, trigger);
         }
