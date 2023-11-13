@@ -68,9 +68,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       if (this.flags.verbose) {
         this.log(
-          chalk`{green Function endpoints:\n${server.functions
-            .map(({ def: { id, endpoint: path } }) => `- ${join(endpoint, path).padEnd(40)} => ${id}`)
-            .join('\n')}}`,
+          chalk`{green Function endpoints}:\n${server.functions
+            .map(({ def: { id, endpoint: path } }) => chalk`- {blue ${join(endpoint, path).padEnd(40)}} => ${id}`)
+            .join('\n')}`,
         );
       }
 
