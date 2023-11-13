@@ -52,7 +52,7 @@ export const createRequest = (space: Space, block: Thread.Block): ChatCompletion
 
   // TODO(burdon): Expect client to set schema.
   let schema: Schema | undefined;
-  if (context?.__typename === 'braneframe.Grid.Item') {
+  if (context?.__typename === 'braneframe.Grid') {
     schema = new Schema({
       props: [
         {
