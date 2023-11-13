@@ -25,9 +25,16 @@ import { types } from '@braneframe/types';
 import { Plugin, createApp } from '@dxos/app-framework';
 import { Remote, createClientServices } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/react-client';
+import { EchoDatabase, SpaceProxy, TypedObject } from '@dxos/react-client/echo';
 import { bindTheme, defaultTheme } from '@dxos/react-ui-theme';
 
 const APP = 'arena.dxos.org';
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[TypedObject.name] = TypedObject;
+(globalThis as any)[EchoDatabase.name] = EchoDatabase;
+(globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 const main = async () => {
   // Dynamics allows configuration to be supplied by the hosting KUBE.
