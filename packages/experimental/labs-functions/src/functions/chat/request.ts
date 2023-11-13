@@ -39,7 +39,7 @@ const formatSchema = (schema: Schema) => {
 export const createRequest = (space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
   // TODO(burdon): Generate prompts.
   // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
-  // TODO(burdon): Schema.
+  // TODO(burdon): Expect schema from client.
 
   let contextObject: TypedObject | undefined;
   if (block?.context.object) {
