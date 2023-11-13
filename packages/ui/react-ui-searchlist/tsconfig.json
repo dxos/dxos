@@ -17,31 +17,10 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-searchlist"
-    },
-    {
       "path": "../react-ui-theme"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../react-ui-types"
     }
   ]
 }

@@ -168,7 +168,6 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   },
 );
 
-// TODO(burdon): Input width is overridden by default 'is-full' style.
 // TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
 
 type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
