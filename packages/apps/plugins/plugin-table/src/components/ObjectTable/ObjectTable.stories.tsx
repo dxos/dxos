@@ -8,14 +8,15 @@ import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
 import { Table as TableType } from '@braneframe/types';
-import { createSpaceObjectGenerator } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
 
-import { TableComponent } from './TableMain';
+import { ObjectTable } from './ObjectTable';
 
 faker.seed(1);
 
+// TODO(burdon): Move into ClientSpaceDecorator callback.
 const Story = () => {
   const client = useClient();
   const [table, setTable] = useState<TableType>();
@@ -23,9 +24,9 @@ const Story = () => {
     const space = client.spaces.default;
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ count: 100 });
+    generator.createObjects({ [TestSchemaType.organization]: 20 });
 
-    const schema = generator.schemas[2];
+    const schema = generator.getSchema(TestSchemaType.organization);
     const table = space.db.add(new TableType({ schema }));
     setTable(table);
   }, []);
@@ -34,17 +35,13 @@ const Story = () => {
     return null;
   }
 
-  return (
-    <div className='grow p-2'>
-      <TableComponent table={table} />
-    </div>
-  );
+  return <ObjectTable table={table} />;
 };
 
 export default {
-  component: TableComponent,
+  component: ObjectTable,
   render: Story,
-  decorators: [ClientSpaceDecorator()],
+  decorators: [FullscreenDecorator(), ClientSpaceDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

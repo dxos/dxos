@@ -888,6 +888,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-table
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
@@ -2256,6 +2259,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
