@@ -3,7 +3,7 @@ import React, { MutableRefObject, useEffect, useRef, useState } from "react"
 import { EditorView } from "@codemirror/view"
 import { basicSetup } from "codemirror"
 import { Prop } from "@automerge/automerge"
-import { plugin as amgPlugin, PatchSemaphore } from "@automerge/automerge-codemirror"
+import { plugin as amgPlugin, PatchSemaphore } from "./automerge-plugin"
 import { next as automerge, type Doc } from "@automerge/automerge"
 import { Repo, type DocHandle, PeerId, DocumentId } from "@automerge/automerge-repo"
 
