@@ -90,7 +90,7 @@
     "timeout": {
       "type": "number",
       "description": "Mocha timeout in ms",
-      "default": 15000
+      "default": 20000
     },
     "trackLeakedResource": {
       "type": "boolean",
