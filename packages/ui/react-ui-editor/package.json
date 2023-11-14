@@ -16,16 +16,16 @@
     "prebuild": "dxtype src/testing/proto/schema.proto src/testing/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.4.2",
-    "@codemirror/commands": "^6.2.2",
-    "@codemirror/lang-markdown": "^6.1.0",
-    "@codemirror/language": "^6.6.0",
-    "@codemirror/language-data": "^6.1.0",
-    "@codemirror/lint": "^6.2.0",
-    "@codemirror/search": "^6.3.0",
-    "@codemirror/state": "^6.2.0",
-    "@codemirror/theme-one-dark": "^6.1.1",
-    "@codemirror/view": "^6.9.2",
+    "@codemirror/autocomplete": "^6.11.0",
+    "@codemirror/commands": "^6.3.0",
+    "@codemirror/lang-markdown": "^6.2.2",
+    "@codemirror/language": "^6.9.2",
+    "@codemirror/language-data": "^6.3.1",
+    "@codemirror/lint": "^6.4.2",
+    "@codemirror/search": "^6.5.4",
+    "@codemirror/state": "^6.3.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.22.0",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -61,6 +61,9 @@
     "yjs": "^13.6.8"
   },
   "devDependencies": {
+    "@automerge/automerge": "^2.1.7",
+    "@automerge/automerge-codemirror": "^0.0.7",
+    "@automerge/automerge-repo": "^1.0.17",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
@@ -69,7 +72,8 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "vite-plugin-wasm": "^3.2.2"
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
