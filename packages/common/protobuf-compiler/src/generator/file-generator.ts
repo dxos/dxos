@@ -50,7 +50,7 @@ export const createNamespaceSourceFile = (
 
   return ts.factory.createSourceFile(
     [
-      createStreamImport(),
+      createRuntimeImports(),
       ...(substitutionsImport ? [substitutionsImport] : []),
       ...otherNamespaceImports,
       ...declarations,
@@ -113,13 +113,16 @@ export const getFileNameForNamespace = (namespace: string) => {
   return `${name.join('/')}.ts`;
 };
 
-const createStreamImport = () =>
+const createRuntimeImports = () =>
   f.createImportDeclaration(
     [],
     f.createImportClause(
       true,
       undefined,
-      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))]),
+      f.createNamedImports([
+        f.createImportSpecifier(false, undefined, f.createIdentifier('Stream')),
+        f.createImportSpecifier(false, undefined, f.createIdentifier('RequestOptions')),
+      ]),
     ),
     f.createStringLiteral(CODEC_MODULE.importSpecifier('')),
   );

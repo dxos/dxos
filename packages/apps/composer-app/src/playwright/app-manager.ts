@@ -44,7 +44,8 @@ export class AppManager {
     return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
 
-  joinSpace() {
+  async joinSpace() {
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
