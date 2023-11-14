@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
-import { createSpaceObjectGenerator } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useClient } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
@@ -38,7 +38,7 @@ const Story = () => {
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
     generator.addSchemas();
-    generator.createObjects({ count: 300 });
+    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
   }, []);
 
   if (!source) {

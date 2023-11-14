@@ -3,25 +3,24 @@
 //
 
 import {
+  ClockCounterClockwise,
+  Download,
   FolderPlus,
   PencilSimpleLine,
   Planet,
+  Plus,
   Placeholder,
   Trash,
   Users,
-  Intersect,
-  Download,
   Upload,
   X,
-  ClockCounterClockwise,
-  Plus,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
 
 import type { Graph, Node } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
-import { LayoutAction, type DispatchIntent, type MetadataResolver } from '@dxos/app-framework';
+import { type DispatchIntent, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { type Query, clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -30,7 +29,6 @@ import { EchoDatabase, type Space, SpaceState, TypedObject, getSpaceForObject } 
 import { SPACE_PLUGIN } from './meta';
 import { SpaceAction } from './types';
 
-export const ROOT = 'root';
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
 
@@ -47,7 +45,6 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
-// TODO(wittjosiah): Remove space folders from graph when closed.
 export const objectToGraphNode = ({
   object,
   parent,
@@ -63,8 +60,7 @@ export const objectToGraphNode = ({
   const metadata = object.__typename ? resolve(object.__typename) : object.type ? resolve(object.type) : {};
   const isFolder = object instanceof Folder;
   const isSpaceFolder = isFolder && space && object.name === space.key.toHex();
-  const isPersonalSpace = isSpaceFolder && parent.id === ROOT;
-  const isSharedSpacesFolder = isFolder && object.name === SHARED && parent.id === ROOT;
+  const isPersonalSpace = isSpaceFolder && parent.id === 'root';
 
   let previousObjects: TypedObject[] = [];
   return effect(() => {
@@ -76,43 +72,50 @@ export const objectToGraphNode = ({
       id: object.id,
       label: isPersonalSpace
         ? ['personal space label', { ns: SPACE_PLUGIN }]
-        : isSharedSpacesFolder
-        ? ['shared spaces label', { ns: SPACE_PLUGIN }]
         : isSpaceFolder
         ? getSpaceDisplayName(space)
         : object.name || object.title || metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
       description: isSpaceFolder ? space.properties.description : object.description,
-      icon:
-        isPersonalSpace || isSharedSpacesFolder
-          ? undefined
-          : isSpaceFolder
-          ? (props) => <Planet {...props} />
-          : metadata.icon ?? ((props) => <Placeholder {...props} />),
-      data: isSharedSpacesFolder ? null : object,
-      actions:
-        isFolder && !isSharedSpacesFolder
-          ? [
-              {
-                id: `${SPACE_PLUGIN}/create`,
-                label: ['create object group label', { ns: SPACE_PLUGIN }],
-                icon: (props) => <Plus {...props} />,
-                invoke: () => {
-                  // No-op.
-                },
-                properties: {
-                  disposition: 'toolbar',
-                  testId: 'spacePlugin.createObject',
-                },
+      icon: isPersonalSpace
+        ? undefined
+        : isSpaceFolder
+        ? (props) => <Planet {...props} />
+        : metadata.icon ?? ((props) => <Placeholder {...props} />),
+      data: object,
+      actions: isFolder
+        ? [
+            {
+              id: `${SPACE_PLUGIN}/create`,
+              label: ['create object group label', { ns: SPACE_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              invoke: () => {
+                // No-op.
               },
-            ]
-          : [],
+              actions: [
+                {
+                  id: 'folder/create',
+                  label: ['create folder label', { ns: SPACE_PLUGIN }],
+                  icon: (props) => <FolderPlus {...props} />,
+                  invoke: () =>
+                    dispatch({
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.ADD_TO_FOLDER,
+                      data: { folder: object, object: new Folder() },
+                    }),
+                },
+              ],
+              properties: {
+                disposition: 'toolbar',
+                testId: 'spacePlugin.createObject',
+              },
+            },
+          ]
+        : [],
       properties: {
         // TODO(burdon): Factor out palette constants.
-        palette: isPersonalSpace ? 'teal' : isSharedSpacesFolder ? 'pink' : undefined,
+        palette: isPersonalSpace ? 'teal' : undefined,
         testId: isPersonalSpace
           ? 'spacePlugin.personalSpace'
-          : isSharedSpacesFolder
-          ? 'spacePlugin.sharedSpaces'
           : isSpaceFolder
           ? 'spacePlugin.space'
           : isFolder
@@ -121,7 +124,7 @@ export const objectToGraphNode = ({
         persistenceClass: isSpaceFolder ? undefined : 'folder',
         ...(isFolder
           ? {
-              acceptPersistenceClass: isSharedSpacesFolder ? undefined : new Set(['folder']),
+              acceptPersistenceClass: new Set(['folder']),
               role: 'branch',
               onRearrangeChildren: (nextOrder: TypedObject[]) => {
                 object.objects = nextOrder;
@@ -165,43 +168,6 @@ export const objectToGraphNode = ({
       },
     });
 
-    if (isSharedSpacesFolder) {
-      node.addAction(
-        {
-          id: 'create-space',
-          label: ['create space label', { ns: 'os' }],
-          icon: (props) => <Plus {...props} />,
-          properties: {
-            disposition: 'toolbar',
-            testId: 'spacePlugin.createSpace',
-          },
-          invoke: () =>
-            dispatch({
-              plugin: SPACE_PLUGIN,
-              action: SpaceAction.CREATE,
-            }),
-        },
-        {
-          id: 'join-space',
-          label: ['join space label', { ns: 'os' }],
-          icon: (props) => <Intersect {...props} />,
-          properties: {
-            testId: 'spacePlugin.joinSpace',
-          },
-          invoke: () =>
-            dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.JOIN,
-              },
-              {
-                action: LayoutAction.ACTIVATE,
-              },
-            ]),
-        },
-      );
-    }
-
     if (isSpaceFolder && !isPersonalSpace) {
       node.addAction(
         {
@@ -227,18 +193,6 @@ export const objectToGraphNode = ({
     }
 
     if (isSpaceFolder) {
-      node.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-        id: 'folder/create',
-        label: ['create folder label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <FolderPlus {...props} />,
-        invoke: () =>
-          dispatch({
-            plugin: SPACE_PLUGIN,
-            action: SpaceAction.ADD_TO_FOLDER,
-            data: { folder: object, object: new Folder() },
-          }),
-      });
-
       node.addAction(
         {
           id: 'backup-space',
@@ -255,7 +209,7 @@ export const objectToGraphNode = ({
       );
     }
 
-    if (!isSpaceFolder && !isSharedSpacesFolder) {
+    if (!isSpaceFolder) {
       node.addAction(
         {
           id: 'rename',
@@ -375,7 +329,6 @@ export const indexSpaceFolder = ({ space, defaultSpace }: { space: Space; defaul
   const query = space.db.query(Folder.filter({ name: space.key.toHex() }));
   return new Promise<Folder>((resolve) => {
     const push = ({ objects: [folder] }: Query<Folder>) => {
-      console.log({ folder });
       if (folder) {
         sharedSpacesFolder.objects.push(folder);
         subscription?.();

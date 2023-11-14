@@ -14,7 +14,7 @@ import { DensityProvider } from '@dxos/react-ui';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
-import { createColumnBuilder, type ValueUpdater } from '../helpers';
+import { createColumnBuilder, type SelectQueryModel, type ValueUpdater } from '../helpers';
 import { type TableColumnDef } from '../types';
 
 // TODO(burdon): Header menu builder.
@@ -23,11 +23,13 @@ import { type TableColumnDef } from '../types';
 type Item = {
   publicKey: PublicKey;
   name: string;
+  company?: string;
   count?: number;
   started?: Date;
   complete?: boolean;
 };
 
+// TODO(thure): …y’all okay?
 faker.seed(911);
 
 const createItems = (count: number) =>
@@ -46,59 +48,27 @@ const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, v
   return items.map((item) => (item.publicKey.equals(key) ? { ...item, [id]: value } : item));
 };
 
-/*
-// TODO(burdon): Remove.
-const schamas: TableSchema[] = [
-  {
-    id: 'a',
-    props: [
-      {
-        id: 'complete',
-        type: 'boolean',
-        label: 'ok',
-        fixed: true,
-        editable: true,
-      },
-      {
-        id: 'name',
-        type: 'string',
-        editable: true,
-        resizable: true,
-      },
-      {
-        id: 'count',
-        type: 'number',
-        size: 160,
-        editable: true,
-        resizable: true,
-      },
-    ],
+const tableStorySelectItems: Record<string, Item> = range(128).reduce((acc: Record<string, Item>, _i) => {
+  const id = PublicKey.random();
+  acc[id.toHex()] = {
+    publicKey: id,
+    name: faker.company.name(),
+  };
+  return acc;
+}, {});
+
+const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const tableStorySelectModel: SelectQueryModel<Item> = {
+  getId: (object) => object?.publicKey?.toHex() ?? 'never',
+  getText: (object) => object?.name ?? 'never',
+  query: async (search: string) => {
+    await timeout(400);
+    return Object.values(tableStorySelectItems).filter((item) => {
+      return item.name.toLowerCase().includes(search.toLowerCase());
+    });
   },
-  {
-    id: 'b',
-    props: [
-      {
-        id: 'name',
-        type: 'string',
-        editable: true,
-        resizable: true,
-      },
-    ],
-  },
-  {
-    id: 'c',
-    props: [
-      {
-        id: 'count',
-        type: 'number',
-        size: 160,
-        editable: true,
-        resizable: true,
-      },
-    ],
-  },
-];
-*/
+};
 
 const { helper, builder } = createColumnBuilder<Item>();
 const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
@@ -116,10 +86,19 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
     'name',
     builder.string({ onUpdate, meta: { expand: true }, footer: (props) => props.table.getRowModel().rows.length }),
   ),
-  helper.accessor('started', builder.date({ relative: true })),
+  helper.accessor(
+    'company',
+    builder.select({
+      label: 'Company',
+      model: tableStorySelectModel,
+      onUpdate,
+    }),
+  ),
+  helper.accessor('started', builder.date({ relative: true, meta: { resizable: true } })),
   helper.accessor(
     'count',
     builder.number({
+      meta: { resizable: true },
       // TODO(burdon): Sorting.
       getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
     }),
@@ -186,18 +165,11 @@ export default {
   },
   decorators: [
     (Story: any) => (
-      <div className='flex flex-col items-center h-screen w-full overflow-hidden bg-zinc-200'>
-        <div className='flex w-[800px] h-full'>
-          <DensityProvider density='fine'>
-            <Story />
-          </DensityProvider>
-        </div>
-      </div>
+      <DensityProvider density='fine'>
+        <Story />
+      </DensityProvider>
     ),
   ],
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 export const Default = {
@@ -275,6 +247,32 @@ export const Editable = {
           columns={columns(onUpdate)}
           data={items}
           fullWidth
+        />
+      </div>
+    );
+  },
+};
+
+export const Resizable = {
+  render: () => {
+    const [items, setItems] = useState<Item[]>(createItems(10));
+    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
+      setItems((items) => updateItems(items, item.publicKey, prop, value));
+    };
+
+    // const handleColumnResize = (state) => {
+    //   console.log('resize', state);
+    // };
+
+    return (
+      <div className='flex grow overflow-hidden'>
+        {/* prettier-ignore */}
+        <Table<Item>
+          keyAccessor={row => row.publicKey.toHex()}
+          columns={columns(onUpdate)}
+          data={items}
+          fullWidth
+          // onColumnResize={handleColumnResize}
         />
       </div>
     );

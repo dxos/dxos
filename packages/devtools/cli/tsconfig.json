@@ -8,7 +8,6 @@
     ],
     "outDir": "dist/src",
     "rootDirs": [
-      // Noli me tangere
       "./src", // <-- KEEP "./src" FIRST
       "./notebooks"
     ],
