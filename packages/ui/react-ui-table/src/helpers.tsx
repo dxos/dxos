@@ -3,18 +3,19 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import { CaretDown, Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
+import { Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
 import { createColumnHelper, type ColumnDef, type ColumnMeta, type RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
-import { Button, Input, Popover, Tooltip } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-searchlist';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { Input, Tooltip } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
+
+import { ComboboxCell } from './components';
 
 // TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?
 const findNextFocusable = (
@@ -95,88 +96,6 @@ const defaults = <TData extends RowData, TValue>(
   return stripUndefinedValues(defaultsDeep({}, options, ...sources));
 };
 
-type CellSelectorItems<TData extends RowData> = Record<string, { label: string; data: TData }>;
-
-const initialItems = <TData extends RowData>(model: SelectQueryModel<TData>, value?: TData) =>
-  value
-    ? {
-        [model.getId(value)]: { label: model.getText(value), data: value },
-      }
-    : {};
-
-const CellSelector = <TData extends RowData>({
-  model,
-  value,
-  onValueChange,
-}: {
-  model: SelectQueryModel<TData>;
-  value: TData;
-  onValueChange: (value: TData) => void;
-}) => {
-  const [items, setItems] = useState<CellSelectorItems<TData>>(initialItems(model, value));
-  const [loading, setLoading] = useState(false);
-  const [searchInputValue, setSearchInputValue] = useState('');
-  const handleSearchInputValueChange = async (text?: string) => {
-    setSearchInputValue(text ?? '');
-    setLoading(true);
-    const items = await model.query(text);
-    setItems(
-      items.reduce((acc: CellSelectorItems<TData>, item) => {
-        acc[model.getId(item)] = {
-          label: model.getText(item),
-          data: item,
-        };
-        return acc;
-      }, initialItems(model, value)),
-    );
-    setLoading(false);
-  };
-
-  const handleValueChange = useCallback(
-    (id: string) => {
-      onValueChange(items[id]?.data);
-    },
-    [items, onValueChange],
-  );
-
-  return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
-        <Button variant='ghost' classNames='is-full font-normal'>
-          <span className='flex-1 text-start truncate'>{value ? model.getText(value) : ' '}</span>
-          <CaretDown />
-        </Button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='bottom' collisionPadding={48} classNames='is-[--radix-popover-trigger-width]'>
-          <SearchList.Root shouldFilter={false}>
-            <SearchList.Input value={searchInputValue} onValueChange={handleSearchInputValueChange} />
-            <Popover.Viewport>
-              <SearchList.Content>
-                {searchInputValue.length < 1 ? (
-                  <p className={mx('text-center', descriptionText)}>Start typing to search</p>
-                ) : loading ? (
-                  <p className={mx('text-center', descriptionText)}>Searching…</p>
-                ) : (
-                  <>
-                    <SearchList.Empty classNames={['text-center', descriptionText]}>No results</SearchList.Empty>
-                    {Object.entries(items).map(([id, { label }]) => (
-                      <SearchList.Item key={id} value={id} onSelect={handleValueChange} classNames='truncate'>
-                        {label}
-                      </SearchList.Item>
-                    ))}
-                  </>
-                )}
-              </SearchList.Content>
-            </Popover.Viewport>
-          </SearchList.Root>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
-  );
-};
-
 /**
  * Util to create column definitions.
  */
@@ -193,7 +112,7 @@ export class ColumnBuilder<TData extends RowData> {
       cell:
         model && onUpdate
           ? (cell) => (
-              <CellSelector<any>
+              <ComboboxCell<any>
                 model={model}
                 value={cell.getValue()}
                 onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
