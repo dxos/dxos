@@ -45,6 +45,7 @@ export type NodeOptions = {
   executorResult?: object;
   reporter?: string;
   inspect?: boolean;
+  inspectBrk?: boolean;
   trackLeakedResources: boolean;
   grep?: string;
   bail?: boolean;
@@ -119,6 +120,7 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
       '--checkLeaks': options.checkLeaks,
       '--exit': options.forceExit,
       '--inspect': options.inspect,
+      '--inspect-brk': options.inspectBrk,
       '--bail': options.bail,
     },
     options.grep && ['--grep', options.grep],
