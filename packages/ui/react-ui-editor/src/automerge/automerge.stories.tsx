@@ -56,24 +56,35 @@ function Editor({ handle, path }: EditorProps) {
 }
 
 const Story = () => {
-  const handleRef = useRef<EchoObject>()
-  const [,forceUpdate] = useState({})
+  const [object1, setObject1] = useState<EchoObject | null>(null)
+  const [object2, setObject2] = useState<EchoObject| null>(null)
 
   useEffect(() => {
-    const handle = new EchoObject()
-    handle.doc = automerge.from({ text: 'Hello world!'})
+    const object1 = new EchoObject()
+    object1.doc = automerge.from({ text: 'Hello world!'})
 
-    handleRef.current = handle
-    window.handle = handleRef.current
-    forceUpdate({})
+    const object2 = new EchoObject()
+    object2.doc = automerge.init();
+
+    const r1 = object1.replicate();
+    const r2 = object2.replicate();
+    
+    r1.readable.pipeTo(r2.writable);
+    r2.readable.pipeTo(r1.writable);
+
+    setObject1(object1)
+    setObject2(object2)
   }, [])
 
-  if(!handleRef.current) {
+  if(!object1 || !object2) {
     return null;
   }
 
   return (
-    <Editor handle={handleRef.current} path={['text']} />
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', width: '100vw' }}>
+      <Editor handle={object1} path={['text']} />
+      <Editor handle={object2} path={['text']} />
+    </div>
   )
 }
 
