@@ -24,7 +24,7 @@ import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { TypedObject, isTypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpaceForObject, SpaceState } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
 
 import { backupSpace } from './backup';
@@ -164,11 +164,26 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         }),
       );
 
+      // TODO(wittjosiah): Remove. The SDK should provide a way to do this.
+      const introduceRootSpaceFolder = (space: Space) => {
+        if (space.state.get() !== SpaceState.READY) {
+          return;
+        }
+
+        if (space.properties[Folder.schema.typename]) {
+          return;
+        }
+
+        const [folder] = space.db.query(Folder.filter({ name: space.key.toHex() })).objects;
+        space.properties[Folder.schema.typename] = folder;
+      };
+
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
           spaces.forEach((space) => {
+            introduceRootSpaceFolder(space);
             spaceSubscriptions.add(
               space.listen('viewing', (message) => {
                 const { added, removed } = message.payload;
@@ -386,9 +401,12 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           graphSubscriptions.set(SHARED, spacesOrderQuery.subscribe(updateSpacesOrder));
 
           const foldersToGraphNodes = (folders: Folder[]) => {
-            const spaceKeys = new Set(client.spaces.get().map((space) => space.key.toHex()));
+            const spaceFolders = new Set<Folder>(
+              client.spaces.get().map((space) => space.properties[Folder.schema.typename]),
+            );
+
             folders
-              .filter((folder) => spaceKeys.has(folder.name))
+              .filter((folder) => spaceFolders.has(folder))
               .forEach((folder) => {
                 graphSubscriptions.get(folder.id)?.();
                 graphSubscriptions.set(
@@ -454,7 +472,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
               const space = await client.spaces.create(intent.data);
               const folder = new Folder({ name: space.key.toHex() });
-              space.db.add(folder);
+              space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder.objects.push(folder);
               return { space, id: space.key.toHex() };
             }
