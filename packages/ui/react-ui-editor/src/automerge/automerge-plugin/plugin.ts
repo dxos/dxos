@@ -1,6 +1,8 @@
 import {
   Annotation,
   EditorState,
+  Extension,
+  Facet,
   StateEffect,
   StateField,
   Transaction,
@@ -8,11 +10,14 @@ import {
 } from "@codemirror/state"
 import * as automerge from "@automerge/automerge"
 import { Doc, Heads, Prop } from "@automerge/automerge"
+import { PatchSemaphore } from "./PatchSemaphore"
+import { EditorView } from "codemirror"
+import { DocHandle } from "@automerge/automerge-repo"
 
 export type Value = {
   lastHeads: Heads
   path: Prop[]
-  unreconciledTransactions: Transaction[]
+  unreconciledTransactions: Transaction[],
 }
 
 type UpdateHeads = {
@@ -35,8 +40,12 @@ export function getPath(state: EditorState, field: Field): Prop[] {
 
 export type Field = StateField<Value>
 
-export function plugin<T>(doc: Doc<T>, path: Prop[]): StateField<Value> {
-  return StateField.define({
+const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
+  combine: values => values.at(-1)!, // Take last.
+});
+
+export function plugin<T>(doc: Doc<T>, path: Prop[]): Extension {
+  const stateField: StateField<Value> = StateField.define({
     create() {
       return {
         lastHeads: automerge.getHeads(doc),
@@ -45,7 +54,7 @@ export function plugin<T>(doc: Doc<T>, path: Prop[]): StateField<Value> {
       }
     },
     update(value: Value, tr: Transaction) {
-      const result = {
+      const result: Value = {
         lastHeads: value.lastHeads,
         unreconciledTransactions: value.unreconciledTransactions.slice(),
         path: path.slice(),
@@ -66,8 +75,15 @@ export function plugin<T>(doc: Doc<T>, path: Prop[]): StateField<Value> {
       }
       return result
     },
-  })
+  });
+  const semaphore = new PatchSemaphore(stateField)
+
+  return [
+    stateField,
+    semaphoreFacet.of(semaphore),
+  ]
 }
+
 
 export const reconcileAnnotationType = Annotation.define<unknown>()
 
@@ -89,4 +105,8 @@ export function makeReconcile(tr: TransactionSpec) {
   //...tr,
   //annotations: reconcileAnnotationType.of({})
   //}
+}
+
+export const reconcile = (handle: DocHandle<any>, view: EditorView) => {
+  view.state.facet(semaphoreFacet).reconcile(handle, view)
 }

@@ -6,6 +6,7 @@ import { Prop } from "@automerge/automerge"
 import { plugin as amgPlugin, PatchSemaphore } from "./automerge-plugin"
 import { next as automerge, type Doc } from "@automerge/automerge"
 import { Repo, type DocHandle, PeerId, DocumentId } from "@automerge/automerge-repo"
+import { reconcile } from "./automerge-plugin/plugin"
 
 type EditorProps = {
   handle: DocHandle<{ text: string }>
@@ -20,22 +21,20 @@ function Editor({ handle, path }: EditorProps) {
     const doc = handle.docSync();
     const source = doc.text // this should use path
     const plugin = amgPlugin(doc, path)
-    const semaphore = new PatchSemaphore(plugin)
     const view = (editorRoot.current = new EditorView({
       doc: source,
       extensions: [basicSetup, plugin],
       dispatch(transaction) {
         view.update([transaction])
-        semaphore.reconcile(handle, view)
+        reconcile(handle, view)
       },
       parent: containerRef.current,
     }))
     ;window.view = view;
-    ;window.semaphore = semaphore;
     window.am = automerge;
 
     const handleChange = ({ doc, patchInfo }) => {
-      semaphore.reconcile(handle, view)
+      reconcile(handle, view)
     }
 
     handle.addListener("change", handleChange)
