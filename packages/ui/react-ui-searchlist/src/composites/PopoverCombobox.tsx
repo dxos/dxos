@@ -13,6 +13,7 @@ import {
   type ComboboxTriggerProps,
   SearchList,
   type SearchListContentProps,
+  type SearchListEmptyProps,
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
@@ -44,6 +45,8 @@ const PopoverComboboxRoot = ({
 
 type PopoverComboboxContentProps = SearchListRootProps & PopoverContentProps;
 
+const POPOVER_COMBOBOX_CONTENT_NAME = 'PopoverComboboxContent';
+
 const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContentProps>(
   (
     {
@@ -65,10 +68,12 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
       onInteractOutside,
       forceMount,
       children,
+      classNames,
       ...props
     },
     forwardedRef,
   ) => {
+    const { modalId } = Combobox.useComboboxContext(POPOVER_COMBOBOX_CONTENT_NAME);
     return (
       <Popover.Content
         {...{
@@ -89,14 +94,21 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
           onFocusOutside,
           onInteractOutside,
           forceMount,
+          classNames,
         }}
+        id={modalId}
         ref={forwardedRef}
       >
-        <SearchList.Root {...props}>{children}</SearchList.Root>
+        {/* TODO(thure): This skips over `Command`’s root component, which renders a DOM node probably unnecessarily without supporting `asChild`. */}
+        <SearchList.Root {...props} classNames='contents' role='none'>
+          {children}
+        </SearchList.Root>
       </Popover.Content>
     );
   },
 );
+
+PopoverComboboxContent.displayName = POPOVER_COMBOBOX_CONTENT_NAME;
 
 type PopoverComboboxTriggerProps = ComboboxTriggerProps;
 
@@ -133,6 +145,10 @@ type PopoverComboboxArrowProps = PopoverArrowProps;
 
 const PopoverComboboxArrow = Popover.Arrow;
 
+type PopoverComboboxEmptyProps = SearchListEmptyProps;
+
+const PopoverComboboxEmpty = SearchList.Empty;
+
 export const PopoverCombobox = {
   Root: PopoverComboboxRoot,
   Content: PopoverComboboxContent,
@@ -141,6 +157,7 @@ export const PopoverCombobox = {
   List: PopoverComboboxList,
   Item: PopoverComboboxItem,
   Arrow: PopoverComboboxArrow,
+  Empty: PopoverComboboxEmpty,
 };
 
 export type {
@@ -151,4 +168,5 @@ export type {
   PopoverComboboxListProps,
   PopoverComboboxItemProps,
   PopoverComboboxArrowProps,
+  PopoverComboboxEmptyProps,
 };

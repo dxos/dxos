@@ -2971,7 +2971,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.2.0
+        version: 8.3.1
     devDependencies:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
@@ -4059,7 +4059,7 @@ importers:
         version: link:../echo-schema
       '@preact/signals':
         specifier: ^1.2.1
-        version: 1.2.1(preact@10.18.1)
+        version: 1.2.1(preact@10.19.2)
       '@preact/signals-core':
         specifier: ^1.5.0
         version: 1.5.0
@@ -4069,7 +4069,7 @@ importers:
     optionalDependencies:
       preact:
         specifier: ^10.11.0
-        version: 10.18.1
+        version: 10.19.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -5612,7 +5612,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.2.0
+        version: 8.3.1
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -5952,7 +5952,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.2.0
+        version: 8.3.1
     devDependencies:
       '@dxos/agent':
         specifier: workspace:*
@@ -7099,7 +7099,7 @@ importers:
         version: link:../../core/echo/text-model
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.2.0
+        version: 8.3.1
       yjs:
         specifier: ^13.6.8
         version: 13.6.8
@@ -8234,8 +8234,8 @@ importers:
         specifier: ^8.4.21
         version: 8.4.24
       tailwind-merge:
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^1.14.0
+        version: 1.14.0
       tailwindcss:
         specifier: ~3.3.2
         version: 3.3.2(ts-node@10.9.1)
@@ -12753,6 +12753,14 @@ packages:
     resolution: {integrity: sha512-VacmzZqVxdWdf9y64lDOMZNDMM/FQdtM9IsaOPKOm2suYwEatb8VkdHqOzXcDnZbk7YDE2BmsJmy/2Hmkn563g==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
     requiresBuild: true
+    dev: true
+
+  /@faker-js/faker@8.3.1:
+    resolution: {integrity: sha512-FdgpFxY6V6rLZE9mmIBb9hM0xpfvQOSNOLnzolzKwsE1DH+gC7lEKV1p1IbR0lAYyvYd5a4u3qWJzowUkw1bIw==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
+    requiresBuild: true
+    dev: false
+    optional: true
 
   /@fal-works/esbuild-plugin-global-externals@2.1.2:
     resolution: {integrity: sha512-cEee/Z+I12mZcFJshKcCqC8tuX5hG3s+d+9nZ3LabqKF1vKdF41B92pJVCBggjAGORAeOzyyDDKrZwIkLffeOQ==}
@@ -15594,13 +15602,13 @@ packages:
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
 
-  /@preact/signals@1.2.1(preact@10.18.1):
+  /@preact/signals@1.2.1(preact@10.19.2):
     resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
     peerDependencies:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.5.0
-      preact: 10.18.1
+      preact: 10.19.2
     dev: false
 
   /@protobufjs/aspromise@1.1.2:
@@ -36469,8 +36477,8 @@ packages:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
     dev: false
 
-  /preact@10.18.1:
-    resolution: {integrity: sha512-mKUD7RRkQQM6s7Rkmi7IFkoEHjuFqRQUaXamO61E6Nn7vqF/bo7EZCmSyrUnp2UWHw0O7XjZ2eeXis+m7tf4lg==}
+  /preact@10.19.2:
+    resolution: {integrity: sha512-UA9DX/OJwv6YwP9Vn7Ti/vF80XL+YA5H2l7BpCtUr3ya8LWHFzpiO5R+N7dN16ujpIxhekRFuOOF82bXX7K/lg==}
     requiresBuild: true
     dev: false
 
@@ -40135,8 +40143,8 @@ packages:
       tslib: 2.6.0
     dev: false
 
-  /tailwind-merge@1.10.0:
-    resolution: {integrity: sha512-WFnDXSS4kFTZwjKg5/oZSGzBRU/l+qcbv5NVTzLUQvJ9yovDAP05h0F2+ZFW0Lw9EcgRoc2AfURUdZvnEFrXKg==}
+  /tailwind-merge@1.14.0:
+    resolution: {integrity: sha512-3mFKyCo/MBcgyOTlrY8T7odzZFx+w+qKSMAmdFzRvqBfLlSigU6TZnlFHK0lkMwj9Bj8OYU+9yW9lmGuS0QEnQ==}
     dev: false
 
   /tailwindcss-logical@3.0.0(autoprefixer@10.4.13)(postcss@8.4.24)(ts-node@10.9.1):
