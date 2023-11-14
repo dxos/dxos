@@ -2,15 +2,11 @@ import { next as am } from "@automerge/automerge"
 import { Heads } from "@automerge/automerge"
 import { EditorState, Text, Transaction } from "@codemirror/state"
 import { type Field } from "./plugin"
-
-type Update = (
-  atHeads: Heads,
-  change: (doc: am.Doc<unknown>) => void
-) => Heads | undefined
+import { EchoObject } from "../demo"
 
 export default function (
   field: Field,
-  update: Update,
+  handle: EchoObject,
   transactions: Transaction[],
   state: EditorState
 ): Heads | undefined {
@@ -31,7 +27,7 @@ export default function (
     return undefined;
   }
 
-  const newHeads = update(lastHeads, (doc: am.Doc<unknown>) => {
+  const newHeads = handle.changeAt(lastHeads, (doc: am.Doc<unknown>) => {
     for (const tr of transactions) {
       tr.changes.iterChanges(
         (
@@ -46,5 +42,5 @@ export default function (
       )
     }
   })
-  return newHeads
+  return newHeads ?? undefined
 }

@@ -7,9 +7,10 @@ import { plugin as amgPlugin, PatchSemaphore } from "./automerge-plugin"
 import { next as automerge, type Doc } from "@automerge/automerge"
 import { Repo, type DocHandle, PeerId, DocumentId } from "@automerge/automerge-repo"
 import { reconcile } from "./automerge-plugin/plugin"
+import { EchoObject } from "./demo"
 
 type EditorProps = {
-  handle: DocHandle<{ text: string }>
+  handle: EchoObject
   path: Prop[]
 }
 
@@ -18,7 +19,7 @@ function Editor({ handle, path }: EditorProps) {
   const editorRoot = useRef<EditorView>()
 
   useEffect(() => {
-    const doc = handle.docSync();
+    const doc = handle.doc;
     const source = doc.text // this should use path
     const plugin = amgPlugin(doc, path)
     const view = (editorRoot.current = new EditorView({
@@ -33,14 +34,14 @@ function Editor({ handle, path }: EditorProps) {
     ;window.view = view;
     window.am = automerge;
 
-    const handleChange = ({ doc, patchInfo }) => {
+    const handleChange = () => {
       reconcile(handle, view)
     }
 
-    handle.addListener("change", handleChange)
+    handle.changeEvent.on(handleChange)
 
     return () => {
-      handle.removeListener("change", handleChange)
+      handle.changeEvent.off(handleChange)
       view.destroy()
     }
   }, [])
@@ -55,33 +56,24 @@ function Editor({ handle, path }: EditorProps) {
 }
 
 const Story = () => {
-  const handle = useRef<DocHandle<{ text: string }>>()
+  const handleRef = useRef<EchoObject>()
   const [,forceUpdate] = useState({})
 
   useEffect(() => {
-    const repo = new Repo({
-      network: [],
-      // storage: new IndexedDBStorageAdapter(),
-      sharePolicy: async (peerId, documentId) => true // this is the default
-    })
-    
+    const handle = new EchoObject()
+    handle.doc = automerge.from({ text: 'Hello world!'})
 
-    handle.current = repo.create()
-
-    handle.current.change((doc: any) => {
-      doc.text = "hello world"
-    });
-
-    window.handle = handle.current
+    handleRef.current = handle
+    window.handle = handleRef.current
     forceUpdate({})
   }, [])
 
-  if(!handle.current) {
+  if(!handleRef.current) {
     return null;
   }
 
   return (
-    <Editor handle={handle.current} path={['text']} />
+    <Editor handle={handleRef.current} path={['text']} />
   )
 }
 
