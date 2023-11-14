@@ -249,4 +249,6 @@ export type {
   SearchListContentProps,
   SearchListEmptyProps,
   SearchListItemProps,
+  ComboboxRootProps,
+  ComboboxTriggerProps,
 };
