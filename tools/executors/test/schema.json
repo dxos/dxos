@@ -140,6 +140,11 @@
       "description": "Enable node inspector",
       "default": false
     },
+    "inspectBrk": {
+      "type": "boolean",
+      "description": "Enable node inspector and break at start",
+      "default": false
+    },
     "grep": {
       "type": "string",
       "description": "Name of test for debugging"
