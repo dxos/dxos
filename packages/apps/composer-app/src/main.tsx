@@ -97,8 +97,8 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
-      PresenterMeta, // Before Stack.
       StackMeta,
+      PresenterMeta,
       MarkdownMeta,
       SketchMeta,
       GridMeta,

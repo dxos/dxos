@@ -73,7 +73,9 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isStack(data.active) && state.presenting ? <PresenterMain stack={data.active} /> : null;
+              return isStack(data.active) && state.presenting
+                ? { node: <PresenterMain stack={data.active} />, disposition: 'hoist' }
+                : null;
             case 'slide':
               return isMarkdownContent(data.slide) ? <MarkdownSlideMain slide={data.slide} /> : null;
           }

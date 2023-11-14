@@ -10,7 +10,7 @@ import { type ReactRenderer } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
-import { type TestSchemaType, createTestObjectGenerator, type TestObjectGenerator } from '@dxos/echo-generator';
+import { TestSchemaType, createTestObjectGenerator, type TestObjectGenerator } from '@dxos/echo-generator';
 import { Card } from '@dxos/react-ui';
 import {
   Mosaic,
@@ -33,7 +33,7 @@ const size = { x: 4, y: 4 };
 export type DemoGridProps = GridProps & {
   initialItems?: MosaicDataItem[]; // TODO(burdon): Remove or convert to controlled.
   initialLayout?: GridLayout; // TODO(burdon): Remove or convert to controlled.
-  types?: TestSchemaType[];
+  types?: Partial<Record<TestSchemaType, number>>;
   debug?: boolean;
   generator?: TestObjectGenerator;
 };
@@ -44,7 +44,7 @@ const DemoGrid = ({
   Component = DemoCard,
   initialItems,
   initialLayout,
-  types = ['document'],
+  types = { [TestSchemaType.document]: 12 },
   debug,
   className,
   generator = createTestObjectGenerator(),
@@ -53,7 +53,7 @@ const DemoGrid = ({
   const [items, setItems] = useState<MosaicDataItem[]>(
     initialItems ??
       (() => {
-        return generator.createObjects({ types, count: 12 });
+        return generator.createObjects(types);
       }),
   );
   const [layout, setLayout] = useState<GridLayout>(
