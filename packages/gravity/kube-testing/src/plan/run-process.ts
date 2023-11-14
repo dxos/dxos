@@ -11,7 +11,7 @@ import { v4 } from 'uuid';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { type LogProcessor, log, createFileProcessor, LogLevel } from '@dxos/log';
 
 import { type AgentResult, type AgentParams, type PlanOptions, type Platform, AGENT_LOG_FILE } from './spec';
 
@@ -106,6 +106,10 @@ export const runBrowser = async <S, C>(
     dxgravity_done: (code) => {
       doneTrigger.wake(code);
     },
+    dxgravity_log: createFileProcessor({
+      path: join(agentParams.outDir, AGENT_LOG_FILE),
+      levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+    }),
   };
   for (const [name, fn] of Object.entries(apis)) {
     await page.exposeFunction(name, fn);
@@ -146,14 +150,14 @@ export const runBrowser = async <S, C>(
   const port = (server.address() as AddressInfo).port;
   await page.goto(`http://localhost:${port}`);
 
-  await new Promise((resolve) => {
-    page.on('close', resolve);
-  });
+  // await new Promise((resolve) => {
+  //   page.on('close', resolve);
+  // });
 
   return {
     // TODO(mykola): Result should be a promise that resolves when the agent finishes.
     result: (async () => ({
-      result: 0,
+      result: await doneTrigger.wait(),
       outDir: agentParams.outDir,
       logFile: join(agentParams.outDir, AGENT_LOG_FILE),
     }))(),
@@ -243,4 +247,5 @@ const servePage = async (resources: Record<string, WebResource>, port = 5176) =>
 
 type EposedApis = {
   dxgravity_done: (code: number) => void;
+  dxgravity_log: LogProcessor;
 };
