@@ -8,35 +8,7 @@ import { type Thread } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { Schema, type TypedObject } from '@dxos/echo-schema';
 
-import { createMessages } from './prompts';
-
-export type SchemaConfig = {
-  typename: string;
-  fields: string[];
-};
-
-// TODO(burdon): Get schema from client.
-const schemaConfigs: SchemaConfig[] = [
-  {
-    typename: 'braneframe.Grid.Item',
-    fields: ['title', 'content'],
-  },
-];
-
-const formatSchema = (schema: Schema) => {
-  console.log(JSON.stringify(schema, undefined, 2));
-  // const props =
-  //   !config || config.fields.length === 0
-  //     ? schema.props
-  //     : schema.props.filter((prop) => config?.fields.includes(prop.id!));
-
-  return `
-    @type: ${schema.typename}
-    fields:
-      ${schema.props.map((prop) => `${prop.id}: ${prop.type}`).join('\n')}
-    \n
-  `;
-};
+import { addPrompt } from './prompts';
 
 export const createRequest = (space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
   const message = block.messages
@@ -54,6 +26,7 @@ export const createRequest = (space: Space, block: Thread.Block): ChatCompletion
   let schema: Schema | undefined;
   if (context?.__typename === 'braneframe.Grid') {
     schema = new Schema({
+      typename: 'example.com/schema/project',
       props: [
         {
           id: 'name',
@@ -78,7 +51,7 @@ export const createRequest = (space: Space, block: Thread.Block): ChatCompletion
     });
   }
 
-  const messages = createMessages({ message })!;
+  const messages = addPrompt({ message, context, schema })!;
 
   // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
   return messages.map(({ role, content }) => ({ role, content } as ChatCompletionRequestMessage));

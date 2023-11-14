@@ -19,7 +19,7 @@ export type PromptContext = { message: string; context?: any; schema?: Schema };
 
 export type PromptGenerator = (context: PromptContext) => ChatMessage[] | null;
 
-export const createMessages = (context: PromptContext): ChatMessage[] => {
+export const addPrompt = (context: PromptContext): ChatMessage[] => {
   for (const prompt of prompts) {
     const messages = prompt(context);
     if (messages) {

@@ -15,7 +15,7 @@ const handler: PromptGenerator = ({ message, context }) => {
   return [
     new ChatMessage('You are a machine and a helpful assistant that is an expert chess player.', 'system'),
     new ChatMessage([`I am currently playing chess and the move history is ${context.pgn}`].join(' '), 'user'),
-    new ChatMessage('First suggest a move, then write one sentence about why this is a good move.', 'user'),
+    new ChatMessage('Suggest the next move and write a sentence about why this is a good move.', 'user'),
     new ChatMessage(message, 'user'),
   ];
 };

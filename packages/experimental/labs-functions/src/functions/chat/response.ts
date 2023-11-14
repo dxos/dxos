@@ -4,11 +4,12 @@
 
 import { type Thread as ThreadType } from '@braneframe/types';
 import { type Client } from '@dxos/client';
-import { TextObject } from '@dxos/echo-schema';
+import { Expando, type Space } from '@dxos/client/echo';
+import { Schema, TextObject } from '@dxos/echo-schema';
 
 import { parseMessage } from './parser';
 
-export const createResponse = (client: Client, content: string) => {
+export const createResponse = (client: Client, space: Space, content: string) => {
   const messages = [];
   const timestamp = new Date().toISOString();
 
@@ -20,30 +21,48 @@ export const createResponse = (client: Client, content: string) => {
 
     // TODO(burdon): Create test.
     // TODO(burdon): What format does the Thread messenger require?
-    console.log('response', { dataArray });
+    // console.log('response', { dataArray });
 
     messages.push(
       ...dataArray.map((data): ThreadType.Message => {
-        if (typeof data['@type'] === 'string') {
-          // TODO(burdon): Experimental?
-          console.log(JSON.stringify({ types: client.experimental.types }, undefined, 2));
-          const Proto = client.experimental.types.getPrototype(data['@type']);
-          const schema = client.experimental.types.getSchema(data['@type']);
-          if (Proto && schema) {
-            // Pre-processing according to schema.
-            delete data['@type'];
-            for (const prop of schema.props) {
-              if (data[prop.id!]) {
-                if (prop.refModelType === 'dxos.org/model/text' && typeof data[prop.id!] === 'string') {
-                  data[prop.id!] = new TextObject(data[prop.id!]);
-                }
+        // TODO(burdon): Hack in the schema.
+        data['@type'] = 'example.com/schema/project';
+        const { objects: schemas } = space.db.query(Schema.filter());
+        const schema = schemas.find((schema) => schema.typename === data['@type']);
+        if (schema) {
+          for (const prop of schema.props) {
+            // console.log('::', JSON.stringify(prop), data[prop.id!]);
+            if (data[prop.id!]) {
+              if (/* prop.refModelType === 'dxos.org/model/text' && */ typeof data[prop.id!] === 'string') {
+                data[prop.id!] = new TextObject(data[prop.id!]);
               }
             }
-
-            const ref = new Proto(data);
-            return { timestamp, ref };
           }
+
+          const object = new Expando(data, { schema });
+          return { timestamp, object };
         }
+
+        // if (typeof data['@type'] === 'string') {
+        //   // TODO(burdon): Experimental?
+        //   const Type = client.experimental.types.getPrototype(data['@type']);
+        //   const schema = client.experimental.types.getSchema(data['@type']);
+        //
+        //   if (Type && schema) {
+        //     // Pre-processing according to schema.
+        //     delete data['@type'];
+        //     for (const prop of schema.props) {
+        //       if (data[prop.id!]) {
+        //         if (prop.refModelType === 'dxos.org/model/text' && typeof data[prop.id!] === 'string') {
+        //           data[prop.id!] = new TextObject(data[prop.id!]);
+        //         }
+        //       }
+        //     }
+        //
+        //     const object = new Expando(data, {});
+        //     return { timestamp, object };
+        //   }
+        // }
 
         // TODO(burdon): Create ref?
         return { timestamp, data: JSON.stringify(data) };

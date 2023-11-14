@@ -19,13 +19,13 @@ const handler: PromptGenerator = ({ message, schema }) => {
     new ChatMessage(
       [
         'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses',
-        `Each item should contain the following fields: ${schema.props.map(({ id }) => id).join(',')}.`,
-        ...schema.props
-          .map(({ id, description }) => description && `The field "${id}" should be the ${description}`)
-          .filter(Boolean),
         'Your entire response should be a single array of JSON objects.',
+        `Each item should contain the following fields: ${schema.props.map(({ id }) => id).join(',')}.`,
+        // ...schema.props
+        //   .map(({ id, description }) => description && `The field "${id}" should be the ${description}`)
+        //   .filter(Boolean),
       ].join(' '),
-      'user',
+      'system',
     ),
     new ChatMessage(message, 'user'),
   ];
