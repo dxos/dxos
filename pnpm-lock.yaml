@@ -8041,6 +8041,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       cmdk:
         specifier: ^0.2.0
         version: 0.2.0(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -15891,7 +15897,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
@@ -16473,7 +16479,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -16697,7 +16703,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -16896,7 +16902,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
