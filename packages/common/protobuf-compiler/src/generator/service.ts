@@ -37,7 +37,17 @@ const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Serv
 
   return f.createFunctionTypeNode(
     undefined,
-    [f.createParameterDeclaration(undefined, undefined, 'request', undefined, requestType)],
+    [
+      f.createParameterDeclaration(undefined, undefined, 'request', undefined, requestType),
+      f.createParameterDeclaration(
+        undefined,
+        undefined,
+        'options',
+        f.createToken(ts.SyntaxKind.QuestionToken),
+        f.createTypeReferenceNode(f.createIdentifier('RequestOptions')),
+        undefined,
+      ),
+    ],
     f.createTypeReferenceNode(outputTypeMonad, [responseType]),
   );
 };
