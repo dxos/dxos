@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-thread",
+  "name": "@braneframe/plugin-inbox",
   "version": "0.3.6",
-  "description": "DXOS Threads Surface plugin",
+  "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

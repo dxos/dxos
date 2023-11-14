@@ -8,7 +8,7 @@ import { type Thread } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { Schema, type TypedObject } from '@dxos/echo-schema';
 
-import { defaultPrompt, prompts } from './prompts';
+import { createMessages } from './prompts';
 
 export type SchemaConfig = {
   typename: string;
@@ -78,14 +78,7 @@ export const createRequest = (space: Space, block: Thread.Block): ChatCompletion
     });
   }
 
-  let messages = defaultPrompt({ message })!;
-  for (const prompt of prompts) {
-    const m = prompt({ message, context, schema });
-    if (m) {
-      messages = m;
-      break;
-    }
-  }
+  const messages = createMessages({ message })!;
 
   // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
   return messages.map(({ role, content }) => ({ role, content } as ChatCompletionRequestMessage));

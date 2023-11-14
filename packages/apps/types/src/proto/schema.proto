@@ -202,6 +202,7 @@ message Thread {
   repeated Block blocks = 2;
 }
 
+// TODO(burdon): Unify with Thread.Message.
 message Message {
   option (object) = true;
 
@@ -219,4 +220,10 @@ message Message {
   string subject = 5;
   string body = 6;
   string ref = 7; // TODO(burdon): Implement as link.
+}
+
+message Inbox {
+  option (object) = true;
+
+  string name = 1;
 }
