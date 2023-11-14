@@ -128,8 +128,8 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
 
       requestedRpcs[serviceName] = requested[serviceName].createClient(
         {
-          call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
-          callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req),
+          call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options),
+          callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options),
         },
         encodingOptions,
       );
