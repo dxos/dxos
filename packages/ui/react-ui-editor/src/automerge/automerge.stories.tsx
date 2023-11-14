@@ -7,10 +7,10 @@ import { plugin as amgPlugin, PatchSemaphore } from "./automerge-plugin"
 import { next as automerge, type Doc } from "@automerge/automerge"
 import { Repo, type DocHandle, PeerId, DocumentId } from "@automerge/automerge-repo"
 import { reconcile } from "./automerge-plugin/plugin"
-import { EchoObject } from "./demo"
+import { Peer } from "./demo"
 
 type EditorProps = {
-  handle: EchoObject
+  handle: Peer
   path: Prop[]
 }
 
@@ -31,7 +31,7 @@ function Editor({ handle, path }: EditorProps) {
       },
       parent: containerRef.current,
     }))
-    ;window.view = view;
+      ; window.view = view;
     window.am = automerge;
 
     const handleChange = () => {
@@ -56,34 +56,51 @@ function Editor({ handle, path }: EditorProps) {
 }
 
 const Story = () => {
-  const [object1, setObject1] = useState<EchoObject | null>(null)
-  const [object2, setObject2] = useState<EchoObject| null>(null)
+  const [object1, setObject1] = useState<Peer | null>(null)
+  const [object2, setObject2] = useState<Peer | null>(null)
+  const [stats1, setStats1] = useState<any>({})
+  const [stats2, setStats2] = useState<any>({})
 
   useEffect(() => {
-    const object1 = new EchoObject()
-    object1.doc = automerge.from({ text: 'Hello world!'})
+    const object1 = new Peer()
+    object1.doc = automerge.from({ text: 'Hello world!' })
 
-    const object2 = new EchoObject()
+    const object2 = new Peer()
     object2.doc = automerge.init();
 
     const r1 = object1.replicate();
     const r2 = object2.replicate();
-    
+
     r1.readable.pipeTo(r2.writable);
     r2.readable.pipeTo(r1.writable);
 
     setObject1(object1)
     setObject2(object2)
+
+    setInterval(() => {
+      setStats1({...object1.stats })
+      setStats2({...object2.stats })
+    }, 500)
   }, [])
 
-  if(!object1 || !object2) {
+  if (!object1 || !object2) {
     return null;
   }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', width: '100vw' }}>
-      <Editor handle={object1} path={['text']} />
-      <Editor handle={object2} path={['text']} />
+      <div>
+        <Editor handle={object1} path={['text']} />
+        <div style={{ whiteSpace: 'pre' }}>
+          {JSON.stringify(stats1, null, 2)}
+        </div>
+      </div>
+      <div>
+        <Editor handle={object2} path={['text']} />
+        <div style={{ whiteSpace: 'pre' }}>
+          {JSON.stringify(stats2, null, 2)}
+        </div>
+      </div>
     </div>
   )
 }

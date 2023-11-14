@@ -2,11 +2,11 @@ import { next as am } from "@automerge/automerge"
 import { Heads } from "@automerge/automerge"
 import { EditorState, Text, Transaction } from "@codemirror/state"
 import { type Field } from "./plugin"
-import { EchoObject } from "../demo"
+import { Peer } from "../demo"
 
 export default function (
   field: Field,
-  handle: EchoObject,
+  handle: Peer,
   transactions: Transaction[],
   state: EditorState
 ): Heads | undefined {

@@ -10,7 +10,7 @@ import {
   updateHeads,
   getLastHeads,
 } from "./plugin"
-import { EchoObject } from "../demo"
+import { Peer } from "../demo"
 
 type Doc<T> = automerge.Doc<T>
 type Heads = automerge.Heads
@@ -31,7 +31,7 @@ export class PatchSemaphore {
     }
   }
 
-  reconcile = (handle: EchoObject, view: EditorView) => {
+  reconcile = (handle: Peer, view: EditorView) => {
     if (this._inReconcile) {
       return
     } else {

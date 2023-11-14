@@ -13,7 +13,7 @@ import { Doc, Heads, Prop } from "@automerge/automerge"
 import { PatchSemaphore } from "./PatchSemaphore"
 import { EditorView } from "codemirror"
 import { DocHandle } from "@automerge/automerge-repo"
-import { EchoObject } from "../demo"
+import { Peer } from "../demo"
 
 export type Value = {
   lastHeads: Heads
@@ -108,6 +108,6 @@ export function makeReconcile(tr: TransactionSpec) {
   //}
 }
 
-export const reconcile = (handle: EchoObject, view: EditorView) => {
+export const reconcile = (handle: Peer, view: EditorView) => {
   view.state.facet(semaphoreFacet).reconcile(handle, view)
 }
