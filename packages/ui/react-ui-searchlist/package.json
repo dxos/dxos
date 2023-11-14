@@ -21,6 +21,8 @@
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-use-controllable-state": "^1.0.0",
     "cmdk": "^0.2.0"
   },
   "devDependencies": {
