@@ -5,7 +5,10 @@
 import { chromeSurface, inputSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
-import { type TableBodyProps, type TableFootProps, type TableHeadProps, type TableProps } from './components';
+import { type TableProps } from './components';
+import { type TableBodyProps } from './components/TableBody';
+import { type TableFooterProps } from './components/TableFooter';
+import { type TableHeadProps } from './components/TableHead';
 
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 
@@ -59,12 +62,12 @@ export const tbodyTd: ComponentFunction<TbodyStyleProps> = ({ border }, ...etc) 
 // tfoot
 //
 
-export type TfootStyleProps = Partial<TableFootProps<any>>;
+export type TfootStyleProps = Partial<TableFooterProps<any>>;
 
 export const tfootRoot: ComponentFunction<TfootStyleProps> = (_props, ...etc) =>
   mx('sticky block-end-0 z-10 pli-2', chromeSurface, ...etc);
 
-export const tfootRow: ComponentFunction<TfootStyleProps> = (_props, ...etc) => mx(...etc);
+export const tfootTr: ComponentFunction<TfootStyleProps> = (_props, ...etc) => mx(...etc);
 
 export const tfootTh: ComponentFunction<TfootStyleProps> = ({ border }, ...etc) =>
   mx('pli-2', chromeSurface, border && groupBorder, ...etc);

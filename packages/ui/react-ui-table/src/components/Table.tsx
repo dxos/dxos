@@ -3,40 +3,25 @@
 //
 
 import {
-  flexRender,
   getCoreRowModel,
   getGroupedRowModel,
   useReactTable,
   type ColumnSizingInfoState,
   type ColumnSizingState,
   type GroupingState,
-  type HeaderGroup,
   type Row,
   type RowData,
   type RowSelectionState,
-  type TableState,
   type VisibilityState,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import { insetStaticFocusRing, mx } from '@dxos/react-ui-theme';
 
-import {
-  groupTh,
-  selectedRow,
-  tableRoot,
-  tbodyTd,
-  tbodyTr,
-  tfootRoot,
-  tfootRow,
-  tfootTh,
-  theadResizeRoot,
-  theadResizeThumb,
-  theadRoot,
-  theadTh,
-  theadTr,
-} from '../theme';
+import { TableBody } from './TableBody';
+import { TableFooter } from './TableFooter';
+import { TableHead } from './TableHead';
+import { groupTh, tableRoot } from '../theme';
 import { type TableColumnDef, type KeyValue } from '../types';
 
 // TODO(burdon): Sort/filter.
@@ -125,7 +110,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   // Update controlled selection.
   // https://tanstack.com/table/v8/docs/api/features/row-selection
-  const [focus, setFocus] = useState<string>();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   useEffect(() => {
     setRowSelection(
@@ -228,8 +212,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
             {...props}
             rowSelection={rowSelection}
             expand={expand}
-            focus={focus}
-            onFocus={setFocus}
             onSelect={handleSelect}
             rows={table.getRowModel().rows}
           />
@@ -257,8 +239,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
                   {...props}
                   rowSelection={rowSelection}
                   expand={expand}
-                  focus={focus}
-                  onFocus={setFocus}
                   onSelect={handleSelect}
                   rows={row.subRows}
                 />
@@ -266,8 +246,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
             );
           })}
 
-        {/* Foot */}
-        {footer && <TableFoot {...props} footers={table.getFooterGroups()} />}
+        {footer && <TableFooter {...props} footers={table.getFooterGroups()} />}
       </table>
 
       {debug && (
@@ -276,147 +255,5 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
         </pre>
       )}
     </>
-  );
-};
-
-//
-// Head.
-//
-
-export type TableHeadProps<TData extends RowData> = Partial<TableProps<TData>> & {
-  state: TableState;
-  headers: HeaderGroup<TData>[];
-  expand?: boolean;
-};
-
-const TableHead = <TData extends RowData>(props: TableHeadProps<TData>) => {
-  const { state, headers, expand, debug, fullWidth } = props;
-  return (
-    <thead className={theadRoot(props)}>
-      {headers.map((headerGroup) => {
-        return (
-          // Group element to hover resize handles.
-          <tr key={headerGroup.id} className={theadTr(props)}>
-            {/* TODO(burdon): Calc. width. */}
-            {debug && (
-              <th className='font-system-light' style={{ width: 32 }}>
-                #
-              </th>
-            )}
-
-            {headerGroup.headers.map((header) => {
-              const isResizing = header.column.getIsResizing();
-              return (
-                <th
-                  key={header.id}
-                  style={{
-                    // Don't set width if fullWidth and no extrinsic size.
-                    width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
-                  }}
-                  className={theadTh(props, header.column.columnDef.meta?.slots?.header?.className)}
-                >
-                  {!header || header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-
-                  {/*
-                   * Resize handle.
-                   * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
-                   */}
-                  {header.column.columnDef.meta?.resizable && (
-                    <div
-                      className={theadResizeRoot(props, isResizing && 'hidden')}
-                      style={{
-                        transform: `translateX(${isResizing ? state.columnSizingInfo.deltaOffset : 0}px)`,
-                      }}
-                      onMouseDown={header.getResizeHandler()}
-                      onTouchStart={header.getResizeHandler()}
-                    >
-                      <div className={mx(theadResizeThumb(props))} />
-                    </div>
-                  )}
-                </th>
-              );
-            })}
-            {expand && <th />}
-          </tr>
-        );
-      })}
-    </thead>
-  );
-};
-
-//
-// Body.
-//
-
-export type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
-  rows: Row<TData>[];
-  rowSelection: RowSelectionState;
-  expand?: boolean;
-  focus?: string;
-  onFocus?: (id?: string) => void;
-  onSelect?: (row: Row<TData>) => void;
-};
-
-const TableBody = <TData extends RowData>(props: TableBodyProps<TData>) => {
-  const { keyAccessor, rows, rowSelection, focus, onSelect, debug, expand } = props;
-  return (
-    <tbody>
-      {rows.map((row) => {
-        return (
-          <tr
-            key={keyAccessor ? keyAccessor(row.original) : row.id}
-            onClick={() => onSelect?.(row)}
-            className={tbodyTr(props, rowSelection[row.id] && selectedRow, focus === row.id && insetStaticFocusRing)}
-          >
-            {debug && <td>{row.id}</td>}
-
-            {row.getVisibleCells().map((cell) => {
-              // TODO(burdon): Allow class override from column.
-              return (
-                <td key={cell.id} className={tbodyTd(props, cell.column.columnDef.meta?.slots?.cell?.className)}>
-                  {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
-                </td>
-              );
-            })}
-
-            {expand && <td />}
-          </tr>
-        );
-      })}
-    </tbody>
-  );
-};
-
-//
-// Footer
-//
-
-export type TableFootProps<TData extends RowData> = Partial<TableProps<TData>> & {
-  footers: HeaderGroup<TData>[];
-  expand?: boolean;
-};
-
-const TableFoot = <TData extends RowData>(props: TableFootProps<TData>) => {
-  const { footers, expand, debug } = props;
-  return (
-    <tfoot className={tfootRoot(props)}>
-      {footers.map((footerGroup) => (
-        <tr key={footerGroup.id} className={tfootRow(props)}>
-          {debug && <th />}
-
-          {footerGroup.headers.map((footer) => {
-            return (
-              <th key={footer.id} className={tfootTh(props, footer.column.columnDef.meta?.slots?.footer?.className)}>
-                {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
-              </th>
-            );
-          })}
-
-          {expand && <th />}
-        </tr>
-      ))}
-    </tfoot>
   );
 };

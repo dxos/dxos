@@ -139,9 +139,6 @@ export default {
     fullWidth: {
       control: 'boolean',
     },
-    pinToBottom: {
-      control: 'boolean',
-    },
     grouping: {
       control: 'select',
       options: ['none', 'complete', 'count'],
