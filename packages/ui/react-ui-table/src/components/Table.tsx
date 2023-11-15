@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import {
   getCoreRowModel,
   getGroupedRowModel,
@@ -9,10 +10,10 @@ import {
   type ColumnSizingInfoState,
   type ColumnSizingState,
   type GroupingState,
-  type Row,
   type RowData,
   type RowSelectionState,
   type VisibilityState,
+  type OnChangeFn,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useState } from 'react';
 
@@ -24,56 +25,12 @@ import { TableHead } from './TableHead';
 import { groupTh, tableRoot } from '../theme';
 import { type TableColumnDef, type KeyValue } from '../types';
 
-export type TableSelection<TData extends RowData> = {
-  // Controlled if undefined (by default).
-  select?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle' | undefined;
-  selected?: TData[];
-  onSelectedChange?: (selected: TData[] | undefined) => void;
-};
-
-/**
- * Util to update the selection based on the mode.
- */
-export const updateSelection = (
-  selectionState: RowSelectionState,
-  id: string,
-  selection: TableSelection<any>['select'],
-): RowSelectionState => {
-  switch (selection) {
-    case 'single': {
-      return {
-        [id]: true,
-      };
-    }
-    case 'single-toggle': {
-      return selectionState[id]
-        ? {}
-        : {
-            [id]: true,
-          };
-    }
-    case 'multiple': {
-      return {
-        [id]: true,
-        ...selectionState,
-      };
-    }
-    case 'multiple-toggle': {
-      if (selectionState[id]) {
-        const newSelectionState = { ...selectionState };
-        delete newSelectionState[id];
-        return newSelectionState;
-      } else {
-        return {
-          [id]: true,
-          ...selectionState,
-        };
-      }
-    }
-  }
-
-  return selectionState;
-};
+export type TableRowSelectionState = Partial<{
+  rowsSelectable: boolean | 'multi';
+  rowSelection: RowSelectionState;
+  defaultRowSelection: RowSelectionState;
+  onRowSelectionChange: (rowSelection: RowSelectionState) => void;
+}>;
 
 export type TableProps<TData extends RowData> = {
   keyAccessor?: KeyValue<TData>;
@@ -87,7 +44,7 @@ export type TableProps<TData extends RowData> = {
   border?: boolean;
   fullWidth?: boolean;
   debug?: boolean;
-} & TableSelection<TData>;
+} & TableRowSelectionState;
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
@@ -97,28 +54,16 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     columnVisibility,
     header = true,
     footer,
-    select,
-    selected,
-    onSelectedChange,
+    rowsSelectable,
     fullWidth,
     debug,
   } = props;
 
-  // Update controlled selection.
-  // https://tanstack.com/table/v8/docs/api/features/row-selection
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  useEffect(() => {
-    setRowSelection(
-      selected?.reduce((selectionState: RowSelectionState, selected) => {
-        const row = table.getRowModel().rows.find((row) => row.original === selected);
-        if (row) {
-          selectionState[row.id] = true;
-        }
-
-        return selectionState;
-      }, {}) ?? {},
-    );
-  }, [select, selected]);
+  const [rowSelection, setRowSelection] = useControllableState({
+    prop: props.rowSelection,
+    onChange: props.onRowSelectionChange,
+    defaultProp: props.defaultRowSelection,
+  });
 
   // Resizing.
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
@@ -161,11 +106,12 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     onGroupingChange: setGrouping,
 
     // Selection.
-    enableRowSelection: select === 'single' || select === 'single-toggle',
-    enableMultiRowSelection: select === 'multiple' || select === 'multiple-toggle',
-    onRowSelectionChange: (rows) => {
-      setRowSelection(rows);
-    },
+    ...(rowsSelectable === 'multi'
+      ? { enableMultiRowSelection: true }
+      : rowsSelectable
+      ? { enableRowSelection: true }
+      : {}),
+    onRowSelectionChange: setRowSelection as OnChangeFn<RowSelectionState>,
 
     // Resize columns.
     // TODO(burdon): Drag to re-order columns.
@@ -180,24 +126,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
-  const handleSelect = (row: Row<TData>) => {
-    if (select) {
-      // Uncontrolled.
-      setRowSelection((selectionState: RowSelectionState) => {
-        const newSelectionState = updateSelection(selectionState, row.id, select);
-        if (onSelectedChange) {
-          const rows: TData[] = Object.keys(newSelectionState).map((id) => table.getRowModel().rowsById[id].original);
-          onSelectedChange(rows);
-        }
-
-        return newSelectionState;
-      });
-    } else {
-      // Controlled.
-      onSelectedChange?.([row.original]);
-    }
-  };
-
   return (
     <>
       <table className={tableRoot(props)} style={{ width: fullWidth ? '100%' : table.getTotalSize() }}>
@@ -208,7 +136,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
             {...props}
             rowSelection={rowSelection}
             expand={expand}
-            onSelect={handleSelect}
+            onSelect={handleRowSelectionChange}
             rows={table.getRowModel().rows}
           />
         )}

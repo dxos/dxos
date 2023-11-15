@@ -10,7 +10,7 @@ import { selectedRow, tbodyTd, tbodyTr } from '../theme';
 
 export type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
   rows: Row<TData>[];
-  rowSelection: RowSelectionState;
+  rowSelection?: RowSelectionState;
   expand?: boolean;
   onSelect?: (row: Row<TData>) => void;
 };
@@ -24,7 +24,7 @@ export const TableBody = <TData extends RowData>(props: TableBodyProps<TData>) =
           <tr
             key={keyAccessor ? keyAccessor(row.original) : row.id}
             onClick={() => onSelect?.(row)}
-            className={tbodyTr(props, rowSelection[row.id] && selectedRow)}
+            className={tbodyTr(props, rowSelection?.[row.id] && selectedRow)}
           >
             {debug && <td>{row.id}</td>}
 
