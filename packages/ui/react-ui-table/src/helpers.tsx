@@ -4,7 +4,13 @@
 
 import { useFocusFinders } from '@fluentui/react-tabster';
 import { Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
-import { createColumnHelper, type ColumnDef, type ColumnMeta, type RowData } from '@tanstack/react-table';
+import {
+  createColumnHelper,
+  type ColumnDef,
+  type ColumnMeta,
+  type RowData,
+  type ColumnHelper,
+} from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -51,17 +57,18 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
 };
 
 // TODO(burdon): Better abstraction?
-export type SelectQueryModel<TData extends RowData> = {
+export type SearchListQueryModel<TData extends RowData> = {
   getId(object: TData): string;
   getText(object: TData): string;
   query(text?: string): Promise<TData[]>;
 };
 
-export type SelectColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
-  model: SelectQueryModel<TData>;
+export type ComboboxColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
+  model: SearchListQueryModel<TData>;
 };
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
+export type SelectRowColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
 
 export type NumberColumnOptions<TData extends RowData> = BaseColumnOptions<TData, number> & {
   digits?: number;
@@ -76,7 +83,7 @@ export type DateColumnOptions<TData extends RowData> = BaseColumnOptions<TData, 
   relative?: boolean;
 };
 
-export type BooleanColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
+export type SwitchColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
 
 export type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {
   on?: {
@@ -101,9 +108,15 @@ const defaults = <TData extends RowData, TValue>(
  */
 export class ColumnBuilder<TData extends RowData> {
   /**
-   * Select value
+   * Combobox value
    */
-  select({ label, className, model, onUpdate, ...props }: SelectColumnOptions<TData>): Partial<ColumnDef<TData, any>> {
+  combobox({
+    label,
+    className,
+    model,
+    onUpdate,
+    ...props
+  }: ComboboxColumnOptions<TData>): Partial<ColumnDef<TData, any>> {
     return defaults(props, {
       minSize: 100,
       header: (column) => {
@@ -337,27 +350,62 @@ export class ColumnBuilder<TData extends RowData> {
   }
 
   /**
-   * Checkbox.
+   * Row selector
    */
-  checkbox({ label, className, onUpdate, ...props }: BooleanColumnOptions<TData> = {}): Partial<
+  selectRow({ label, className, onUpdate, id = 'selectRow', ...props }: SelectRowColumnOptions<TData> = {}): Parameters<
+    ColumnHelper<TData>['display']
+  >[0] {
+    return {
+      id,
+      size: 40,
+      minSize: 40,
+      header: (column) => <div className='flex grow justify-center'>{label ?? column.header.id}</div>,
+      cell: (cell) => {
+        const { row } = cell;
+        const checked = row.getCanSelect()
+          ? row.getIsSelected()
+          : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
+        return (
+          <div className='flex grow justify-center'>
+            <Input.Root>
+              <Input.Checkbox
+                checked={checked}
+                onCheckedChange={(event) => {
+                  if (row.getCanSelect()) {
+                    row.getToggleSelectedHandler()(event);
+                  }
+                }}
+                disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
+              />
+            </Input.Root>
+          </div>
+        );
+      },
+    };
+  }
+
+  /**
+   * Switch
+   */
+  switch({ label, className, onUpdate, ...props }: SwitchColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, boolean>
   > {
     return defaults(props, {
       size: 40,
       minSize: 40,
-      header: (column) => <div className={'flex grow justify-center'}>{label ?? column.header.id}</div>,
+      header: (column) => <div className='flex grow justify-center'>{label ?? column.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
-        // TODO(burdon): Center.
         return (
           <div className='flex grow justify-center'>
             <Input.Root>
-              <Input.Checkbox
+              <Input.Switch
                 onClick={(event) => event.stopPropagation()}
                 classNames={className}
                 disabled={!onUpdate}
                 checked={!!value}
                 onCheckedChange={(value) => {
+                  console.log('[switch oncheckedchange]', value);
                   onUpdate?.(cell.row.original, cell.column.id, !!value);
                 }}
               />

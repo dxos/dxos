@@ -10,12 +10,12 @@ import { Popover, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx, staticPlaceholderText } from '@dxos/react-ui-theme';
 
-import { type SelectQueryModel } from '../helpers';
+import { type SearchListQueryModel } from '../helpers';
 import { translationKey } from '../translations';
 
 export type ComboboxCellItems<TData extends RowData> = Record<string, { label: string; data: TData }>;
 
-const initialItems = <TData extends RowData>(model: SelectQueryModel<TData>, value?: TData) =>
+const initialItems = <TData extends RowData>(model: SearchListQueryModel<TData>, value?: TData) =>
   value
     ? {
         [model.getId(value)]: { label: model.getText(value), data: value },
@@ -27,7 +27,7 @@ export const ComboboxCell = <TData extends RowData>({
   value,
   onValueChange,
 }: {
-  model: SelectQueryModel<TData>;
+  model: SearchListQueryModel<TData>;
   value: TData;
   onValueChange: (value: TData) => void;
 }) => {

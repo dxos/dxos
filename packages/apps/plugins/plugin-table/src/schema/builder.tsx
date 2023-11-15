@@ -11,7 +11,7 @@ import {
   createColumnBuilder,
   type BaseColumnOptions,
   ColumnMenu,
-  type SelectQueryModel,
+  type SearchListQueryModel,
   type TableColumnDef,
   type ColumnProps,
   type TableDef,
@@ -92,12 +92,12 @@ export const createColumns = (
       case 'ref':
         return helper.accessor(
           id,
-          builder.select({ ...options, model: new QueryModel(space!.db, column.refTable!, column.refProp!) }),
+          builder.combobox({ ...options, model: new QueryModel(space!.db, column.refTable!, column.refProp!) }),
         );
       case 'number':
         return helper.accessor(id, builder.number(options));
       case 'boolean':
-        return helper.accessor(id, builder.checkbox(options));
+        return helper.accessor(id, builder.switch(options));
       case 'date':
         return helper.accessor(id, builder.date(options));
       case 'string':
@@ -163,7 +163,7 @@ export const createActionColumn = (
 };
 
 // TODO(burdon): Factor out.
-class QueryModel implements SelectQueryModel<TypedObject> {
+class QueryModel implements SearchListQueryModel<TypedObject> {
   constructor(private readonly _db: EchoDatabase, private readonly _schema: string, private readonly _prop: string) {}
 
   getId(object: TypedObject) {

@@ -12,18 +12,16 @@ export type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> &
   rows: Row<TData>[];
   rowSelection?: RowSelectionState;
   expand?: boolean;
-  onSelect?: (row: Row<TData>) => void;
 };
 
 export const TableBody = <TData extends RowData>(props: TableBodyProps<TData>) => {
-  const { keyAccessor, rows, rowSelection, onSelect, debug, expand } = props;
+  const { keyAccessor, rows, rowSelection, debug, expand } = props;
   return (
     <tbody>
       {rows.map((row) => {
         return (
           <tr
             key={keyAccessor ? keyAccessor(row.original) : row.id}
-            onClick={() => onSelect?.(row)}
             className={tbodyTr(props, rowSelection?.[row.id] && selectedRow)}
           >
             {debug && <td>{row.id}</td>}

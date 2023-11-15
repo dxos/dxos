@@ -59,13 +59,14 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debug,
   } = props;
 
-  const [rowSelection, setRowSelection] = useControllableState({
+  // Selection
+  const [rowSelection = {}, setRowSelection] = useControllableState({
     prop: props.rowSelection,
     onChange: props.onRowSelectionChange,
     defaultProp: props.defaultRowSelection,
   });
 
-  // Resizing.
+  // Resizing
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
   const onColumnResizeDebounced = debounce<ColumnSizingState>((info) => onColumnResize?.(info), 500);
   useEffect(() => {
@@ -77,23 +78,22 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const [grouping, setGrouping] = useState<GroupingState>(props.grouping ?? []);
   useEffect(() => setGrouping(props.grouping ?? []), [props.grouping]);
 
-  //
-  // Update table state.
-  // https://tanstack.com/table/v8/docs/api/core/table
-  //
   const table = useReactTable({
+    // Data
+    meta: {},
     data,
+
+    // Columns
     columns,
     defaultColumn: {
       size: 400, // Required in order remove default width.
       maxSize: 800,
     },
-    getCoreRowModel: getCoreRowModel(),
-    meta: {},
 
-    // TODO(burdon): Pagination.
-    // TODO(burdon): Sorting.
-    // TODO(burdon): Filtering.
+    // Rows
+    getCoreRowModel: getCoreRowModel(),
+
+    // State
     state: {
       columnVisibility,
       columnSizingInfo,
@@ -101,11 +101,11 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       grouping,
     },
 
-    // Grouping.
+    // Grouping
     getGroupedRowModel: getGroupedRowModel(),
     onGroupingChange: setGrouping,
 
-    // Selection.
+    // Selection
     ...(rowsSelectable === 'multi'
       ? { enableMultiRowSelection: true }
       : rowsSelectable
@@ -113,16 +113,15 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       : {}),
     onRowSelectionChange: setRowSelection as OnChangeFn<RowSelectionState>,
 
-    // Resize columns.
-    // TODO(burdon): Drag to re-order columns.
+    // Resize columns
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
     onColumnSizingInfoChange: setColumnSizingInfo,
 
+    // Debug
     debugTable: debug,
   });
 
-  // TODO(burdon): Add flex if not resizable.
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
@@ -132,13 +131,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
         <TableHead {...props} header={header} state={table.getState()} headers={table.getHeaderGroups()} />
 
         {grouping.length === 0 && (
-          <TableBody
-            {...props}
-            rowSelection={rowSelection}
-            expand={expand}
-            onSelect={handleRowSelectionChange}
-            rows={table.getRowModel().rows}
-          />
+          <TableBody {...props} rowSelection={rowSelection} expand={expand} rows={table.getRowModel().rows} />
         )}
 
         {grouping.length !== 0 &&
@@ -159,13 +152,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
                   </tr>
                 </thead>
 
-                <TableBody
-                  {...props}
-                  rowSelection={rowSelection}
-                  expand={expand}
-                  onSelect={handleSelect}
-                  rows={row.subRows}
-                />
+                <TableBody {...props} rowSelection={rowSelection} expand={expand} rows={row.subRows} />
               </Fragment>
             );
           })}

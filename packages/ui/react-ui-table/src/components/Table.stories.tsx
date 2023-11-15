@@ -14,7 +14,7 @@ import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
-import { createColumnBuilder, type SelectQueryModel, type ValueUpdater } from '../helpers';
+import { createColumnBuilder, type SearchListQueryModel, type ValueUpdater } from '../helpers';
 import { type TableColumnDef } from '../types';
 
 // TODO(burdon): Header menu builder.
@@ -59,7 +59,7 @@ const tableStorySelectItems: Record<string, Item> = range(128).reduce((acc: Reco
 
 const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const tableStorySelectModel: SelectQueryModel<Item> = {
+const tableStorySelectModel: SearchListQueryModel<Item> = {
   getId: (object) => object?.publicKey?.toHex() ?? 'never',
   getText: (object) => object?.name ?? 'never',
   query: async (search: string) => {
@@ -73,27 +73,11 @@ const tableStorySelectModel: SelectQueryModel<Item> = {
 const { helper, builder } = createColumnBuilder<Item>();
 
 const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
-  helper.accessor(
-    'complete',
-    builder.checkbox({
-      // enableGrouping: true,
-      getGroupingValue: (row) => row.complete === true,
-      label: '',
-      onUpdate,
-    }),
-  ),
+  helper.display(builder.selectRow()),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor(
     'name',
     builder.string({ onUpdate, meta: { expand: true }, footer: (props) => props.table.getRowModel().rows.length }),
-  ),
-  helper.accessor(
-    'company',
-    builder.select({
-      label: 'Company',
-      model: tableStorySelectModel,
-      onUpdate,
-    }),
   ),
   helper.accessor('started', builder.date({ relative: true, meta: { resizable: true } })),
   helper.accessor(
@@ -102,6 +86,23 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
       meta: { resizable: true },
       // TODO(burdon): Sorting.
       getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
+    }),
+  ),
+  helper.accessor(
+    'company',
+    builder.combobox({
+      label: 'Company',
+      model: tableStorySelectModel,
+      onUpdate,
+    }),
+  ),
+  helper.accessor(
+    'complete',
+    builder.switch({
+      // enableGrouping: true,
+      getGroupingValue: (row) => row.complete === true,
+      label: '',
+      onUpdate,
     }),
   ),
   helper.accessor('complete', builder.icon({ id: 'done', label: '' })),
@@ -156,9 +157,9 @@ export default {
         limited: { key: false, started: false },
       },
     },
-    select: {
+    rowsSelectable: {
       control: 'select',
-      options: ['single', 'single-toggle', 'multiple', 'multiple-toggle'],
+      options: [false, true, 'multi'],
     },
   },
   decorators: [
