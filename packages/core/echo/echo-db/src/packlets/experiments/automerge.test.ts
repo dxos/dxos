@@ -51,7 +51,7 @@ describe.only('Automerge', () => {
     console.log('diff', numericalValues(diffSizes, x => x));
   });
 
-  test.only('diff', () => {
+  test.skip('diff', () => {
     let doc = automerge.init<any>();
     const before = automerge.getHeads(doc);
 
@@ -68,7 +68,7 @@ describe.only('Automerge', () => {
     console.log(diff)
   })
 
-  test.skip('repo', async () => {
+  test.only('repo', async () => {
     const { Repo } = await eval('import("@automerge/automerge-repo")');
 
     const repo = new Repo({
@@ -80,16 +80,8 @@ describe.only('Automerge', () => {
 
     handle.change((doc: any) => {
       doc.text = "hello world"
+
+      console.log(doc.text)
     });
-
-    handle.change((doc: any) => {
-      doc.text = 'bar';
-    });
-
-    const heads = automerge.getHeads(handle.docSync());
-    const diff = automerge.diff(handle.docSync(), heads, heads);
-
-    console.log(diff)
-    debugger;
   })
 });
