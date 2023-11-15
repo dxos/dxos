@@ -104,7 +104,6 @@ type SelectItemProps = ThemedClassName<SelectPrimitive.SelectItemProps>;
 
 const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  // TODO(burdon): Why 'option'?
   return <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef} />;
 });
 
@@ -137,8 +136,7 @@ const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, cl
   return (
     <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-      {/* TODO(burdon): Make optional; and shift left to align value with closed state. */}
-      <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {}, classNames)}>
+      <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {})}>
         <Check weight='bold' />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>

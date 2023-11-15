@@ -8,7 +8,8 @@ import { useGraph } from '@braneframe/plugin-graph';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { FILES_PLUGIN, type LocalEntity } from '../types';
+import { FILES_PLUGIN } from '../meta';
+import type { LocalEntity } from '../types';
 
 export const LocalFileMainPermissions = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);

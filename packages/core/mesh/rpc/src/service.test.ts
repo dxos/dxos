@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'earljs';
+import expectJest from 'expect';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -546,5 +547,43 @@ describe('Protobuf service', () => {
       expect(response.payload.type_url).toEqual('example.testing.Example');
       expect(response.payload.value).toEqual(Buffer.from('world'));
     });
+  });
+
+  test('timeouts on methods', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
+    const server = createProtoRpcPeer({
+      exposed: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      handlers: {
+        TestService: {
+          testCall: async (req) => {
+            await sleep(10);
+            return { data: 'responseData' };
+          },
+          voidCall: async () => {},
+        },
+      },
+      port: alicePort,
+    });
+
+    const client = createProtoRpcPeer({
+      requested: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      port: bobPort,
+      timeout: 10_000,
+    });
+
+    await Promise.all([server.open(), client.open()]);
+
+    const promise = client.rpc.TestService.testCall(
+      {
+        data: 'requestData',
+      },
+      { timeout: 1 },
+    );
+    await expectJest(promise).rejects.toThrow(/Timeout/);
   });
 });

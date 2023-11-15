@@ -82,7 +82,7 @@ test.describe('Basic test', () => {
       });
     });
 
-    test.only('host and guest can see each others’ changes in same document', async () => {
+    test('host and guest can see each others’ changes in same document', async () => {
       test.slow();
 
       await host.createSpace();

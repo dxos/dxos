@@ -8,7 +8,7 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { createSpaceObjectGenerator, testSchemas } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator, testSchemas, TestSchemaType } from '@dxos/echo-generator';
 import { Filter, base, type TypedObject, type Query } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
@@ -55,7 +55,7 @@ describe('QueryPlugin', () => {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
 
-      org = generator.createObject({ types: ['organization'] });
+      org = generator.createObject({ types: [TestSchemaType.organization] });
       await space.db.flush();
     }
     const plugin = new QueryPlugin();
@@ -146,8 +146,8 @@ describe('QueryPlugin', () => {
         const generator = createSpaceObjectGenerator(space);
         generator.addSchemas();
 
-        generator.createObject({ types: ['organization'] });
-        const objects = generator.createObjects({ types: ['person'], count: 10 });
+        generator.createObject({ types: [TestSchemaType.organization] });
+        const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
         testName = objects[0].name;
         await space.db.flush();
       }
@@ -200,7 +200,7 @@ describe('QueryPlugin', () => {
 
     // TODO(mykola): Will not work because @dxos/echo-generator fo not register types
     test.skip('Schema query', async () => {
-      const orgSchema = client.experimental.types.getSchema(testSchemas().organization.typename)!;
+      const orgSchema = client.experimental.types.getSchema(testSchemas()[TestSchemaType.organization].typename)!;
       const query = client.spaces.query(Filter.schema(orgSchema), {
         dataLocation: QueryOptions.DataLocation.REMOTE,
       });

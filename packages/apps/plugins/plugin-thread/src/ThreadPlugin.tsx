@@ -20,8 +20,9 @@ import {
 } from '@dxos/app-framework';
 
 import { ThreadMain, ThreadSidebar } from './components';
+import meta, { THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides, isThread } from './types';
+import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -32,9 +33,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
   return {
-    meta: {
-      id: THREAD_PLUGIN,
-    },
+    meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
@@ -82,7 +81,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main': {
               return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;

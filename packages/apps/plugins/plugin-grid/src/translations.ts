@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GRID_PLUGIN } from './types';
+import { GRID_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
       [GRID_PLUGIN]: {
-        'plugin name': 'Grid',
+        'plugin name': 'Grids',
         'grid title placeholder': 'New grid',
         'create grid label': 'Create grid',
         'title placeholder': 'Enter title...',

@@ -30,4 +30,4 @@ declare module '@tanstack/react-table' {
 
 export type KeyValue<TData extends RowData> = (row: TData) => string;
 
-export type TableColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
+export type TableColumnDef<TData extends RowData, TValue = any> = ColumnDef<TData, TValue>;

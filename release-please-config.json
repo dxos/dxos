@@ -34,11 +34,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/labs-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-chess/package.json",
           "jsonpath": "$.version"
         },
@@ -680,6 +675,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-searchlist/package.json",
           "jsonpath": "$.version"
         },
         {
