@@ -8,12 +8,14 @@ import { createColumnHelper, type ColumnDef, type ColumnMeta, type RowData } fro
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
-import { ComboBox, type ComboBoxItem, Input, Tooltip } from '@dxos/react-ui';
+import { Input, Tooltip } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
+
+import { ComboboxCell } from './components';
 
 // TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?
 const findNextFocusable = (
@@ -95,51 +97,6 @@ const defaults = <TData extends RowData, TValue>(
 };
 
 /**
- * Lazy cell selector (click to activate).
- */
-const CellSelector = <TData extends RowData>({
-  model,
-  value: _value,
-  onUpdate,
-}: {
-  model: SelectQueryModel<TData>;
-  value: TData;
-  onUpdate: (value: TData) => void;
-}) => {
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState<ComboBoxItem>();
-  useEffect(() => setValue(_value ? { id: model.getId(_value), label: model.getText(_value) } : undefined), [_value]);
-  const [items, setItems] = useState<ComboBoxItem[]>([]);
-  const handleUpdate = async (text?: string) => {
-    const items = await model.query(text);
-    setItems(items.map((item) => ({ id: model.getId(item), label: model.getText(item), data: item })));
-  };
-
-  if (!edit) {
-    const text = _value ? model.getText(_value) : undefined;
-    return (
-      // TODO(burdon): Hack to prevent div from collapsing.
-      <div className={mx('w-full px-2', !text && 'opacity-0')} onClick={() => setEdit(true)}>
-        {text ?? '-'}
-      </div>
-    );
-  }
-
-  return (
-    <ComboBox.Root items={items} value={value} onChange={(value) => onUpdate(value?.data)} onInputChange={handleUpdate}>
-      <ComboBox.Input />
-      <ComboBox.Content>
-        {items.map((item) => (
-          <ComboBox.Item key={item.id} item={item}>
-            {item.label}
-          </ComboBox.Item>
-        ))}
-      </ComboBox.Content>
-    </ComboBox.Root>
-  );
-};
-
-/**
  * Util to create column definitions.
  */
 export class ColumnBuilder<TData extends RowData> {
@@ -155,10 +112,10 @@ export class ColumnBuilder<TData extends RowData> {
       cell:
         model && onUpdate
           ? (cell) => (
-              <CellSelector<any>
+              <ComboboxCell<any>
                 model={model}
                 value={cell.getValue()}
-                onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+                onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
               />
             )
           : (cell) => {

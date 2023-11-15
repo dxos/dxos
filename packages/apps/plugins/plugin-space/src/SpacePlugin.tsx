@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Folder as FolderIcon, type IconProps } from '@phosphor-icons/react';
+import { Folder as FolderIcon, Plus, type IconProps, Intersect } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -24,7 +24,8 @@ import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { TypedObject, isTypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpaceForObject, SpaceState } from '@dxos/react-client/echo';
+import { inferRecordOrder } from '@dxos/util';
 
 import { backupSpace } from './backup';
 import {
@@ -43,15 +44,7 @@ import {
 import meta, { SPACE_PLUGIN } from './meta';
 import translations from './translations';
 import { SpaceAction, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
-import {
-  ROOT,
-  SHARED,
-  getActiveSpace,
-  hiddenSpacesToGraphNodes,
-  indexSpaceFolder,
-  isSpace,
-  objectToGraphNode,
-} from './util';
+import { SHARED, getActiveSpace, hiddenSpacesToGraphNodes, indexSpaceFolder, isSpace, objectToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -68,15 +61,13 @@ export type SpacePluginOptions = {
    *
    * @param params.client DXOS Client
    * @param params.defaultSpace Default space
-   * @param params.rootFolder Root of identity's folder structure, stored in default space
    * @param params.personalSpaceFolder Folder representing the contents of the default space
-   * @param params.sharedSpacesFolder Folder grouping all other space folders, stored in default space where contents is cross-space references
+   * @param params.sharedSpacesFolder Folder ordering all other space folders, stored in default space where contents is cross-space references
    * @param params.dispatch Function to dispatch intents
    */
   onFirstRun?: (params: {
     client: Client;
     defaultSpace: Space;
-    rootFolder: Folder;
     personalSpaceFolder: Folder;
     sharedSpacesFolder: Folder;
     dispatch: DispatchIntent;
@@ -113,16 +104,13 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
       // Create root folder structure.
       const defaultSpace = client.spaces.default;
-      const query = defaultSpace.db.query(Folder.filter({ name: ROOT }));
-      if (clientPlugin.provides.firstRun && query.objects.length === 0) {
-        const personalSpaceFolder = new Folder({ name: client.spaces.default.key.toHex() });
-        const sharedSpacesFolder = new Folder({ name: SHARED });
-        const rootFolder = new Folder({ name: ROOT, objects: [personalSpaceFolder, sharedSpacesFolder] });
-        client.spaces.default.db.add(rootFolder);
+      if (clientPlugin.provides.firstRun) {
+        // TODO(wittjosiah): These should be guarunteed to be unique within the space.
+        const personalSpaceFolder = defaultSpace.db.add(new Folder({ name: client.spaces.default.key.toHex() }));
+        const sharedSpacesFolder = defaultSpace.db.add(new Folder({ name: SHARED }));
         onFirstRun?.({
           client,
           defaultSpace,
-          rootFolder,
           personalSpaceFolder,
           sharedSpacesFolder,
           dispatch,
@@ -176,11 +164,26 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         }),
       );
 
+      // TODO(wittjosiah): Remove. The SDK should provide a way to do this.
+      const introduceRootSpaceFolder = (space: Space) => {
+        if (space.state.get() !== SpaceState.READY) {
+          return;
+        }
+
+        if (space.properties[Folder.schema.typename]) {
+          return;
+        }
+
+        const [folder] = space.db.query(Folder.filter({ name: space.key.toHex() })).objects;
+        space.properties[Folder.schema.typename] = folder;
+      };
+
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
           spaces.forEach((space) => {
+            introduceRootSpaceFolder(space);
             spaceSubscriptions.add(
               space.listen('viewing', (message) => {
                 const { added, removed } = message.payload;
@@ -316,30 +319,122 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             return;
           }
 
-          const update = (rootFolder?: Folder) => {
-            rootFolder?.objects.forEach((object) => {
-              graphSubscriptions.get(object.id)?.();
-              graphSubscriptions.set(object.id, objectToGraphNode({ object, parent, dispatch, resolve }));
-            });
-          };
-          const rootQuery = client.spaces.default.db.query(Folder.filter({ name: ROOT }));
-          update(rootQuery.objects[0]);
-          const unsubscribe = rootQuery.subscribe(({ objects }) => update(objects[0]));
+          // Ensure default space is first.
+          const [defaultFolder] = client.spaces.default.db.query(
+            Folder.filter({ name: client.spaces.default.key.toHex() }),
+          ).objects;
+          graphSubscriptions.get(client.spaces.default.key.toHex())?.();
+          graphSubscriptions.set(
+            client.spaces.default.key.toHex(),
+            objectToGraphNode({ object: defaultFolder, parent, dispatch, resolve }),
+          );
 
-          const spacesSubscription = client.spaces.subscribe(() => {
-            const {
-              objects: [sharedSpacesFolder],
-            } = client.spaces.default.db.query(Folder.filter({ name: SHARED }));
-            graphSubscriptions.get(sharedSpacesFolder.id)?.();
-            graphSubscriptions.set(
-              sharedSpacesFolder.id,
-              objectToGraphNode({ object: sharedSpacesFolder, parent, dispatch, resolve }),
+          let spacesOrder: Folder | undefined;
+          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
+            id: SHARED,
+            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
+            actions: [
+              {
+                id: 'create-space',
+                label: ['create space label', { ns: 'os' }],
+                icon: (props) => <Plus {...props} />,
+                properties: {
+                  disposition: 'toolbar',
+                  testId: 'spacePlugin.createSpace',
+                },
+                invoke: () =>
+                  dispatch({
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.CREATE,
+                  }),
+              },
+              {
+                id: 'join-space',
+                label: ['join space label', { ns: 'os' }],
+                icon: (props) => <Intersect {...props} />,
+                properties: {
+                  testId: 'spacePlugin.joinSpace',
+                },
+                invoke: () =>
+                  dispatch([
+                    {
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.JOIN,
+                    },
+                    {
+                      action: LayoutAction.ACTIVATE,
+                    },
+                  ]),
+              },
+            ],
+            properties: {
+              testId: 'spacePlugin.sharedSpaces',
+              role: 'branch',
+              // TODO(burdon): Factor out palette constants.
+              palette: 'pink',
+              childrenPersistenceClass: 'folder',
+              onRearrangeChildren: (nextOrder: TypedObject[]) => {
+                if (!spacesOrder) {
+                  const nextObjectOrder = new Folder({
+                    name: SHARED,
+                    objects: nextOrder,
+                  });
+                  client.spaces.default.db.add(nextObjectOrder);
+                  spacesOrder = nextObjectOrder;
+                } else {
+                  spacesOrder.objects = nextOrder;
+                }
+                updateSpacesOrder({ objects: [spacesOrder] });
+              },
+            },
+          });
+
+          const updateSpacesOrder = ({ objects: spacesOrders }: { objects: Folder[] }) => {
+            spacesOrder = spacesOrders[0];
+            groupNode.childrenMap = inferRecordOrder(
+              groupNode.childrenMap,
+              spacesOrder?.objects.map(({ id }) => id),
             );
+          };
+          const spacesOrderQuery = client.spaces.default.db.query(Folder.filter({ name: SHARED }));
+          updateSpacesOrder(spacesOrderQuery);
+          graphSubscriptions.set(SHARED, spacesOrderQuery.subscribe(updateSpacesOrder));
+
+          const foldersToGraphNodes = (folders: Folder[]) => {
+            const spaceFolders = new Set<Folder>(
+              client.spaces.get().map((space) => space.properties[Folder.schema.typename]),
+            );
+
+            folders
+              .filter((folder) => spaceFolders.has(folder))
+              .forEach((folder) => {
+                graphSubscriptions.get(folder.id)?.();
+                graphSubscriptions.set(
+                  folder.id,
+                  objectToGraphNode({
+                    object: folder,
+                    parent: folder.name === client.spaces.default.key.toHex() ? parent : groupNode,
+                    dispatch,
+                    resolve,
+                  }),
+                );
+              });
+            groupNode.childrenMap = inferRecordOrder(
+              groupNode.childrenMap,
+              spacesOrder?.objects.map(({ id }) => id),
+            );
+          };
+          const foldersQuery = client.spaces.query(Folder.filter());
+          const unsubscribe = foldersQuery.subscribe(({ objects: folders }) => foldersToGraphNodes(folders));
+          foldersToGraphNodes(foldersQuery.objects);
+
+          const spacesSubscription = client.spaces.subscribe((spaces) => {
+            foldersToGraphNodes(foldersQuery.objects);
 
             hiddenSpacesToGraphNodes({
               parent,
               hidden: settings.values.showHidden,
-              spaces: client.spaces.get(),
+              spaces,
               dispatch,
             });
           });
@@ -377,7 +472,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
               const space = await client.spaces.create(intent.data);
               const folder = new Folder({ name: space.key.toHex() });
-              space.db.add(folder);
+              space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder.objects.push(folder);
               return { space, id: space.key.toHex() };
             }

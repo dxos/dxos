@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
-import { type Any, Stream } from '@dxos/codec-protobuf';
+import { type Any, Stream, type RequestOptions } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -359,7 +359,7 @@ export class RpcPeer {
    * Make RPC call. Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  async call(method: string, request: Any): Promise<Any> {
+  async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
     log('calling', { method });
     throwIfNotOpen(this._state);
 
@@ -382,7 +382,7 @@ export class RpcPeer {
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
-      const waiting = asyncTimeout<any>(responseReceived, this._params.timeout ?? DEFAULT_TIMEOUT);
+      const waiting = asyncTimeout<any>(responseReceived, options?.timeout ?? this._params.timeout ?? DEFAULT_TIMEOUT);
       await Promise.race([sending, waiting]);
       response = await waiting;
       invariant(response.id === id);
@@ -411,7 +411,7 @@ export class RpcPeer {
    * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  callStream(method: string, request: Any): Stream<Any> {
+  callStream(method: string, request: Any, options?: RequestOptions): Stream<Any> {
     throwIfNotOpen(this._state);
     const id = this._nextId++;
 
