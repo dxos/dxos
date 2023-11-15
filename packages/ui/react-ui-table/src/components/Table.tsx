@@ -17,12 +17,26 @@ import {
   type TableState,
   type VisibilityState,
 } from '@tanstack/react-table';
-import React, { Fragment, useEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import { groupBorder, inputSurface, mx } from '@dxos/react-ui-theme';
+import { insetStaticFocusRing, mx } from '@dxos/react-ui-theme';
 
-import { defaultTableSlots, type TableSlots } from '../theme';
+import {
+  groupTh,
+  selectedRow,
+  tableRoot,
+  tbodyTd,
+  tbodyTr,
+  tfootRoot,
+  tfootRow,
+  tfootTh,
+  theadResizeRoot,
+  theadResizeThumb,
+  theadRoot,
+  theadTh,
+  theadTr,
+} from '../theme';
 import { type TableColumnDef, type KeyValue } from '../types';
 
 // TODO(burdon): Sort/filter.
@@ -91,12 +105,10 @@ export type TableProps<TData extends RowData> = {
   footer?: boolean;
   border?: boolean;
   fullWidth?: boolean;
-  pinToBottom?: boolean;
-  slots?: TableSlots;
   debug?: boolean;
 } & TableSelection<TData>;
 
-export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...props }: TableProps<TData>) => {
+export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
     data = [],
     columns = [],
@@ -108,7 +120,6 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
     selected,
     onSelectedChange,
     fullWidth,
-    pinToBottom,
     debug,
   } = props;
 
@@ -189,9 +200,6 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
-  // Pin scrollbar to bottom.
-  const containerRef = usePinToBottom(data, pinToBottom);
-
   const handleSelect = (row: Row<TData>) => {
     if (select) {
       // Uncontrolled.
@@ -210,32 +218,14 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
     }
   };
 
-  // TODO(burdon): Use radix ScrollArea.
-  // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
-    <div ref={containerRef} className={mx('grow overflow-auto', slots?.root?.className)}>
-      <table
-        // Styles:
-        // table-fixed: Prevents fixed sized columns from shrinking.
-        className={mx(!fullWidth && 'table-fixed', inputSurface, slots?.table?.className)}
-        style={{
-          width: fullWidth ? '100%' : table.getTotalSize(),
-        }}
-      >
-        {/* Head */}
-        <TableHead
-          {...props}
-          slots={slots}
-          header={header}
-          state={table.getState()}
-          headers={table.getHeaderGroups()}
-        />
+    <>
+      <table className={tableRoot(props)} style={{ width: fullWidth ? '100%' : table.getTotalSize() }}>
+        <TableHead {...props} header={header} state={table.getState()} headers={table.getHeaderGroups()} />
 
-        {/* Rows */}
         {grouping.length === 0 && (
           <TableBody
             {...props}
-            slots={slots}
             rowSelection={rowSelection}
             expand={expand}
             focus={focus}
@@ -245,7 +235,6 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
           />
         )}
 
-        {/* Groups */}
         {grouping.length !== 0 &&
           table.getGroupedRowModel().rows.map((row, i) => {
             return (
@@ -253,12 +242,11 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
                 {/* TODO(burdon): Customize group header renderer. */}
                 <thead>
                   <tr>
-                    {slots?.margin && <th className={mx(slots?.margin?.className)} />}
                     {debug && <th />}
                     <th
                       // TODO(burdon): Calculate row span.
                       colSpan={table.getHeaderGroups()[0].headers.length}
-                      className={mx('text-left', slots?.group?.className)}
+                      className={groupTh(props)}
                     >
                       {table.getState().grouping[0]}[{String(row.getGroupingValue(table.getState().grouping[0]))}]
                     </th>
@@ -267,7 +255,6 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
 
                 <TableBody
                   {...props}
-                  slots={slots}
                   rowSelection={rowSelection}
                   expand={expand}
                   focus={focus}
@@ -280,7 +267,7 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
           })}
 
         {/* Foot */}
-        {footer && <TableFoot {...props} slots={slots} footers={table.getFooterGroups()} />}
+        {footer && <TableFoot {...props} footers={table.getFooterGroups()} />}
       </table>
 
       {debug && (
@@ -288,97 +275,45 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
           <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
         </pre>
       )}
-    </div>
+    </>
   );
-};
-
-/**
- * Glue to bottom as rows are added.
- */
-// TODO(burdon): Causes scrollbar to be constantly visible.
-//  https://css-tricks.com/books/greatest-css-tricks/pin-scrolling-to-bottom
-const usePinToBottom = <TData extends RowData>(data: TData[], pinToBottom?: boolean) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [stickyScrolling, setStickyScrolling] = useState(true);
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!pinToBottom || !container) {
-      return;
-    }
-
-    // TODO(burdon): Set when scrolled to bottom and unset when manually scrolled away.
-    const handler = () => {
-      const bottom = container.scrollHeight - container.scrollTop - container.clientHeight === 0;
-      setStickyScrolling(bottom);
-    };
-
-    container.addEventListener('scroll', handler);
-    return () => container.removeEventListener('scroll', handler);
-  }, []);
-
-  useEffect(() => {
-    if (!pinToBottom || !containerRef.current || !stickyScrolling) {
-      return;
-    }
-
-    containerRef.current?.scroll({ top: containerRef.current.scrollHeight });
-  }, [data]);
-
-  return containerRef;
 };
 
 //
 // Head.
 //
 
-type TableHeadProps<TData extends RowData> = Partial<TableProps<TData>> & {
+export type TableHeadProps<TData extends RowData> = Partial<TableProps<TData>> & {
   state: TableState;
   headers: HeaderGroup<TData>[];
   expand?: boolean;
 };
 
-const TableHead = <TData extends RowData>({
-  state,
-  headers,
-  expand,
-  header,
-  debug,
-  fullWidth,
-  border,
-  slots,
-}: TableHeadProps<TData>) => {
+const TableHead = <TData extends RowData>(props: TableHeadProps<TData>) => {
+  const { state, headers, expand, debug, fullWidth } = props;
   return (
-    <thead className={mx(header ? ['sticky top-0 z-10'] : 'collapse')}>
+    <thead className={theadRoot(props)}>
       {headers.map((headerGroup) => {
         return (
           // Group element to hover resize handles.
-          <tr key={headerGroup.id} className='font-light group'>
-            {slots?.margin && <th className={mx(slots?.margin?.className)} />}
-
+          <tr key={headerGroup.id} className={theadTr(props)}>
             {/* TODO(burdon): Calc. width. */}
             {debug && (
-              <th className='text-left' style={{ width: 32 }}>
+              <th className='font-system-light' style={{ width: 32 }}>
                 #
               </th>
             )}
 
             {headerGroup.headers.map((header) => {
+              const isResizing = header.column.getIsResizing();
               return (
                 <th
                   key={header.id}
                   style={{
-                    // Don't set width if fullWidth and no explicit size.
+                    // Don't set width if fullWidth and no extrinsic size.
                     width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
                   }}
-                  // Relative for resize handle.
-                  // TODO(burdon): Border scrolls with main content.
-                  //  https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
-                  className={mx(
-                    'relative text-left',
-                    border && groupBorder,
-                    slots?.header?.className,
-                    header.column.columnDef.meta?.slots?.header?.className,
-                  )}
+                  className={theadTh(props, header.column.columnDef.meta?.slots?.header?.className)}
                 >
                   {!header || header.isPlaceholder
                     ? null
@@ -390,27 +325,20 @@ const TableHead = <TData extends RowData>({
                    */}
                   {header.column.columnDef.meta?.resizable && (
                     <div
-                      className={mx(
-                        'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px]',
-                        'cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
-                        header.column.getIsResizing() && 'hidden',
-                      )}
+                      className={theadResizeRoot(props, isResizing && 'hidden')}
                       style={{
-                        transform: header.column.getIsResizing()
-                          ? `translateX(${state.columnSizingInfo.deltaOffset}px)`
-                          : undefined,
+                        transform: `translateX(${isResizing ? state.columnSizingInfo.deltaOffset : 0}px)`,
                       }}
                       onMouseDown={header.getResizeHandler()}
                       onTouchStart={header.getResizeHandler()}
                     >
-                      <div className='flex group-hover:bg-neutral-700 -ml-[2px] w-[1px] h-full' />
+                      <div className={mx(theadResizeThumb(props))} />
                     </div>
                   )}
                 </th>
               );
             })}
             {expand && <th />}
-            {slots?.margin && <th className={mx(slots?.margin?.className)} />}
           </tr>
         );
       })}
@@ -422,7 +350,7 @@ const TableHead = <TData extends RowData>({
 // Body.
 //
 
-type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
+export type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
   rows: Row<TData>[];
   rowSelection: RowSelectionState;
   expand?: boolean;
@@ -431,18 +359,8 @@ type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
   onSelect?: (row: Row<TData>) => void;
 };
 
-const TableBody = <TData extends RowData>({
-  keyAccessor,
-  rows,
-  rowSelection,
-  focus,
-  onFocus,
-  onSelect,
-  debug,
-  border,
-  expand,
-  slots,
-}: TableBodyProps<TData>) => {
+const TableBody = <TData extends RowData>(props: TableBodyProps<TData>) => {
+  const { keyAccessor, rows, rowSelection, focus, onSelect, debug, expand } = props;
   return (
     <tbody>
       {rows.map((row) => {
@@ -450,58 +368,20 @@ const TableBody = <TData extends RowData>({
           <tr
             key={keyAccessor ? keyAccessor(row.original) : row.id}
             onClick={() => onSelect?.(row)}
-            role='button' // TODO(burdon): ???
-            className={mx(
-              'group',
-              rowSelection[row.id] && slots?.selected?.className,
-              focus === row.id && slots?.focus?.className,
-              slots?.row?.className,
-            )}
+            className={tbodyTr(props, rowSelection[row.id] && selectedRow, focus === row.id && insetStaticFocusRing)}
           >
-            {/* TODO(burdon): Dummy button for focus (don't alter geometry). */}
-            {slots?.margin && (
-              <td className={mx(slots?.margin?.className)}>
-                <button
-                  role='button'
-                  style={{ width: 1, height: 1 }}
-                  className='focus:outline-none'
-                  onFocus={() => onFocus?.(keyAccessor ? keyAccessor(row.original) : row.id)}
-                  onBlur={() => onFocus?.(undefined)}
-                  onKeyDown={(event) => {
-                    // TODO(burdon): Move focus.
-                    switch (event.key) {
-                      case 'ArrowUp': {
-                        break;
-                      }
-                      case 'ArrowDown': {
-                        break;
-                      }
-                    }
-                  }}
-                />
-              </td>
-            )}
-
             {debug && <td>{row.id}</td>}
 
             {row.getVisibleCells().map((cell) => {
               // TODO(burdon): Allow class override from column.
               return (
-                <td
-                  key={cell.id}
-                  className={mx(
-                    border && groupBorder,
-                    slots?.cell?.className,
-                    cell.column.columnDef.meta?.slots?.cell?.className,
-                  )}
-                >
-                  {flexRender(cell.column.columnDef.cell, { className: 'px-2', ...cell.getContext() })}
+                <td key={cell.id} className={tbodyTd(props, cell.column.columnDef.meta?.slots?.cell?.className)}>
+                  {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
                 </td>
               );
             })}
 
             {expand && <td />}
-            {slots?.margin && <td className={mx(slots?.margin?.className)} />}
           </tr>
         );
       })}
@@ -513,37 +393,28 @@ const TableBody = <TData extends RowData>({
 // Footer
 //
 
-type TableFootProps<TData extends RowData> = Partial<TableProps<TData>> & {
+export type TableFootProps<TData extends RowData> = Partial<TableProps<TData>> & {
   footers: HeaderGroup<TData>[];
   expand?: boolean;
 };
 
-const TableFoot = <TData extends RowData>({ footers, expand, slots, debug, border }: TableFootProps<TData>) => {
+const TableFoot = <TData extends RowData>(props: TableFootProps<TData>) => {
+  const { footers, expand, debug } = props;
   return (
-    <tfoot className={mx('sticky bottom-0 z-[10]', slots?.footer?.className)}>
+    <tfoot className={tfootRoot(props)}>
       {footers.map((footerGroup) => (
-        <tr key={footerGroup.id} className='font-thin'>
-          {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+        <tr key={footerGroup.id} className={tfootRow(props)}>
           {debug && <th />}
 
           {footerGroup.headers.map((footer) => {
             return (
-              <th
-                key={footer.id}
-                className={mx(
-                  border && groupBorder,
-                  'text-left',
-                  slots?.footer?.className,
-                  footer.column.columnDef.meta?.slots?.footer?.className,
-                )}
-              >
+              <th key={footer.id} className={tfootTh(props, footer.column.columnDef.meta?.slots?.footer?.className)}>
                 {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
               </th>
             );
           })}
 
           {expand && <th />}
-          {slots?.margin && <th className={mx(slots?.margin?.className)} />}
         </tr>
       ))}
     </tfoot>

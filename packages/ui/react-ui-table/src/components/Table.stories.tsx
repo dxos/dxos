@@ -71,6 +71,7 @@ const tableStorySelectModel: SelectQueryModel<Item> = {
 };
 
 const { helper, builder } = createColumnBuilder<Item>();
+
 const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
   helper.accessor(
     'complete',
@@ -209,25 +210,13 @@ export const Dynamic = {
           if (items.length >= 200) {
             clearInterval(interval);
           }
-
           return [...items, ...createItems(1)];
         });
       }, 500);
       return () => clearInterval(interval);
     }, []);
-
     return (
-      <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
-        <Table<Item>
-          keyAccessor={row => row.publicKey.toHex()}
-          columns={columns()}
-          data={items}
-          fullWidth
-          pinToBottom
-          footer
-        />
-      </div>
+      <Table<Item> keyAccessor={(row) => row.publicKey.toHex()} columns={columns()} data={items} fullWidth footer />
     );
   },
 };
@@ -240,15 +229,7 @@ export const Editable = {
     };
 
     return (
-      <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
-        <Table<Item>
-          keyAccessor={row => row.publicKey.toHex()}
-          columns={columns(onUpdate)}
-          data={items}
-          fullWidth
-        />
-      </div>
+      <Table<Item> keyAccessor={(row) => row.publicKey.toHex()} columns={columns(onUpdate)} data={items} fullWidth />
     );
   },
 };
@@ -265,16 +246,13 @@ export const Resizable = {
     // };
 
     return (
-      <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
-        <Table<Item>
-          keyAccessor={row => row.publicKey.toHex()}
-          columns={columns(onUpdate)}
-          data={items}
-          fullWidth
-          // onColumnResize={handleColumnResize}
-        />
-      </div>
+      <Table<Item>
+        keyAccessor={(row) => row.publicKey.toHex()}
+        columns={columns(onUpdate)}
+        data={items}
+        fullWidth
+        // onColumnResize={handleColumnResize}
+      />
     );
   },
 };

@@ -2,66 +2,69 @@
 // Copyright 2023 DXOS.org
 //
 
-import { chromeSurface } from '@dxos/react-ui-theme';
+import { chromeSurface, inputSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { type ComponentFunction } from '@dxos/react-ui-types';
 
-// TODO(burdon): Remove nested classNames? Add to theme?
-export type TableSlots = {
-  root?: {
-    className?: string | string[];
-  };
-  table?: {
-    className?: string | string[];
-  };
-  header?: {
-    className?: string | string[];
-  };
-  footer?: {
-    className?: string | string[];
-  };
-  group?: {
-    className?: string | string[];
-  };
-  row?: {
-    className?: string | string[];
-  };
-  cell?: {
-    className?: string | string[];
-  };
-  focus?: {
-    className?: string | string[];
-  };
-  selected?: {
-    className?: string | string[];
-  };
-  margin?: {
-    className?: string | string[];
-  };
-};
+import { type TableBodyProps, type TableFootProps, type TableHeadProps, type TableProps } from './components';
 
-// TODO(burdon): Change to groups.
-/*
-head: {
-  default:
-  cell:
-}
-row: {
-  default: '',
-  selected: ''
-}
-*/
+export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 
-// TODO(burdon): Scrollbar area.
-// TODO(burdon): Overscroll horizontal (full width).
+//
+// table
+//
 
-// TODO(burdon): Integrate with DXOS UI theme (direct dependency -- see react-ui-editor, tailwind.ts).
-//  See Link.tsx const { tx } = useThemeContext();
-//  Reuse button fragments for hoverColors, selected, primary, etc.
-export const defaultTableSlots: TableSlots = {
-  // TODO(burdon): head/body/table rows.
-  header: { className: [chromeSurface, 'px-2 font-light select-none'] },
-  footer: { className: [chromeSurface, 'px-2 font-light'] },
-  cell: { className: 'px-2' },
-  group: { className: 'px-2 font-light text-xs text-left' },
-  focus: { className: 'ring ring-primary-600 ring-inset' },
-  selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
-};
+export type TableStyleProps = Partial<TableProps<any>>;
+
+export const tableRoot: ComponentFunction<TableStyleProps> = ({ fullWidth }, ...etc) =>
+  mx(inputSurface, fullWidth && 'table-fixed', ...etc);
+
+export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
+  mx('px-2 font-light text-xs text-left', ...etc);
+
+//
+// thead
+//
+
+export type TheadStyleProps = Partial<TableHeadProps<any>>;
+
+export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header }, ...etc) =>
+  mx(header ? 'sticky block-start-0 z-10' : 'collapse', ...etc);
+
+export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
+
+export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) =>
+  mx('relative text-start font-medium pli-2 select-none', border && groupBorder, ...etc);
+
+export const theadResizeRoot: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
+  mx(
+    'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
+    ...etc,
+  );
+
+export const theadResizeThumb: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
+  mx('flex group-hover:bg-neutral-700 -ml-[2px] w-[1px] h-full', ...etc);
+
+//
+// tbody
+//
+
+export type TbodyStyleProps = Partial<TableBodyProps<any>>;
+
+export const tbodyRoot: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx(...etc);
+export const tbodyTr: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx('group', ...etc);
+export const tbodyTd: ComponentFunction<TbodyStyleProps> = ({ border }, ...etc) =>
+  mx('pli-2', border && groupBorder, ...etc);
+
+//
+// tfoot
+//
+
+export type TfootStyleProps = Partial<TableFootProps<any>>;
+
+export const tfootRoot: ComponentFunction<TfootStyleProps> = (_props, ...etc) =>
+  mx('sticky block-end-0 z-10 pli-2', chromeSurface, ...etc);
+
+export const tfootRow: ComponentFunction<TfootStyleProps> = (_props, ...etc) => mx(...etc);
+
+export const tfootTh: ComponentFunction<TfootStyleProps> = ({ border }, ...etc) =>
+  mx('pli-2', chromeSurface, border && groupBorder, ...etc);
