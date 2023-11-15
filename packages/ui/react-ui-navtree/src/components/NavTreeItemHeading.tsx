@@ -51,20 +51,17 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
         )}
       >
         {branch && (
-          <TreeItem.OpenTrigger asChild>
-            <Button
-              classNames='-translate-x-3 pli-1.5'
-              variant='ghost'
-              disabled={disabled}
-              data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
-              onKeyDown={(event) => {
-                if (event.key === ' ' || event.key === 'Enter') {
-                  event.stopPropagation();
-                }
-              }}
-            >
-              <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
-            </Button>
+          <TreeItem.OpenTrigger
+            classNames='-translate-x-3 pli-1.5'
+            disabled={disabled}
+            data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
+            onKeyDown={(event) => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.stopPropagation();
+              }
+            }}
+          >
+            <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
           </TreeItem.OpenTrigger>
         )}
         <TreeItem.Heading data-testid='navtree.treeItem.heading' title={id} asChild>

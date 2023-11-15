@@ -17,6 +17,7 @@ export const fixedBorder = 'border-neutral-50 dark:border-neutral-800';
 
 // Cards, dialogs, other such groups.
 export const groupSurface = 'group-surface';
+export const groupBorder = 'border-neutral-50 dark:border-neutral-800';
 
 // Tooltips, popovers, menus, etc. – not dialogs.
 export const chromeSurface = 'chrome-surface';
