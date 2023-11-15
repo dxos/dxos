@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.3.7](https://github.com/dxos/dxos/compare/v0.3.6...v0.3.7) (2023-11-14)
+
+
+### Features
+
+* Add ability to set RPC timeout for individual call ([#4694](https://github.com/dxos/dxos/issues/4694)) ([5c6d892](https://github.com/dxos/dxos/commit/5c6d8926727361cb60a11400bda1e5852e99abc7))
+* configurable plugins ([#4596](https://github.com/dxos/dxos/issues/4596)) ([fcec8cd](https://github.com/dxos/dxos/commit/fcec8cdf35c9e9cdb93ed29391475f378b30e58c))
+* Debug plugin options for schema generation ([#4687](https://github.com/dxos/dxos/issues/4687)) ([0ee8374](https://github.com/dxos/dxos/commit/0ee8374af448c8fd19363dbea0edb107b8282bed))
+* Initial dialog for creating table ([#4689](https://github.com/dxos/dxos/issues/4689)) ([c3c2c7d](https://github.com/dxos/dxos/commit/c3c2c7d4a72a866c834a7d1d606a49376047d356))
+* Plugin registry style fix. ([#4674](https://github.com/dxos/dxos/issues/4674)) ([73d84f2](https://github.com/dxos/dxos/commit/73d84f2b461cc5f9839736f672517c94d298e78b))
+* Remove special casing of nav tree menu items ([#4676](https://github.com/dxos/dxos/issues/4676)) ([3a11801](https://github.com/dxos/dxos/commit/3a11801860c3be597a085d5c952991287000ef3c))
+* Replace `ComboBox` with ⌘K-style component `SearchList` ([#4686](https://github.com/dxos/dxos/issues/4686)) ([538cd9d](https://github.com/dxos/dxos/commit/538cd9d2525de4b79aa5f4e82baaa3323146fa5e))
+* Table settings dialog ([#4691](https://github.com/dxos/dxos/issues/4691)) ([ea9e237](https://github.com/dxos/dxos/commit/ea9e237b009ae886bf749f141b2748afd4262e4e))
+
+
+### Bug Fixes
+
+* Composer app vite config for table tailwind deps ([#4675](https://github.com/dxos/dxos/issues/4675)) ([7d9cfe7](https://github.com/dxos/dxos/commit/7d9cfe7536816e7a7ab253aea4020914a20cd790))
+* flaky test ([#4695](https://github.com/dxos/dxos/issues/4695)) ([3ea49a6](https://github.com/dxos/dxos/commit/3ea49a6b235f25c3c2b776b6b93be93c0300fa3e))
+* **halo-app:** ensure plugins are enabled ([#4682](https://github.com/dxos/dxos/issues/4682)) ([8f93ef7](https://github.com/dxos/dxos/commit/8f93ef759091282d9cb1ecd83066826b2d1efb82))
+* **plugin-space:** improve folders stability ([#4681](https://github.com/dxos/dxos/issues/4681)) ([47bb2c4](https://github.com/dxos/dxos/commit/47bb2c4dfe2f7cc90df53848873135490c915d8d))
+* **plugin-space:** introduce space folder singleton in space properties ([#4702](https://github.com/dxos/dxos/issues/4702)) ([212fc82](https://github.com/dxos/dxos/commit/212fc82a9f8a9a750a20ab29b7ebb7145582be4d))
+* **plugin-space:** make awaiting object toast less aggressive ([#4683](https://github.com/dxos/dxos/issues/4683)) ([4df0bc8](https://github.com/dxos/dxos/commit/4df0bc8491105d6e59e1f271b1e42bd26e479b80))
+* Polish app settings dialog and surface contributors ([#4673](https://github.com/dxos/dxos/issues/4673)) ([cdda206](https://github.com/dxos/dxos/commit/cdda206a70b7becca349ddd448c456e83c405aae))
+* **react-ui-editor:** Style polish and refactor ‘composer’ terms to ‘editor’ ([#4670](https://github.com/dxos/dxos/issues/4670)) ([645bcb5](https://github.com/dxos/dxos/commit/645bcb5dedea8f8076e6bafbcff473d2469f0190))
+* Remove .only ([#4659](https://github.com/dxos/dxos/issues/4659)) ([634f9a3](https://github.com/dxos/dxos/commit/634f9a367af422619f71bbb8e056fe96cdf85be7))
+* supress yjs gossip messages after timeouts ([#4655](https://github.com/dxos/dxos/issues/4655)) ([e08407b](https://github.com/dxos/dxos/commit/e08407be93b470e82c1d2e3b9aa69461dd0740f8))
+* Update vite rule for table classes ([#4690](https://github.com/dxos/dxos/issues/4690)) ([be1ccb9](https://github.com/dxos/dxos/commit/be1ccb9fb32ad69b3b9779c48b8ec000a469e4aa))
+
+
+### Performance Improvements
+
+* Batch hypergraph updates ([#4677](https://github.com/dxos/dxos/issues/4677)) ([0bad7ea](https://github.com/dxos/dxos/commit/0bad7ea5c055577ab652528571ad679738ebc4e3))
+
 ## [0.3.6](https://github.com/dxos/dxos/compare/v0.3.5...v0.3.6) (2023-11-09)
 
 
