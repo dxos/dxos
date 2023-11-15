@@ -40,7 +40,6 @@ export class AgentEnv<S, C> {
     const syncKey = `${this.params.testId}:${key}`;
 
     const listener: Callback<unknown> = async (error, result) => {
-      // await sleep(100);
       const value = await this.redis.get(syncKey);
 
       if (parseInt(value!) === agentCount) {

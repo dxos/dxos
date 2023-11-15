@@ -5,7 +5,7 @@
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { type AgentEnv } from '../plan/env';
+import { type AgentEnv } from '../plan';
 import { type AgentRunOptions, type PlanResults, type Platform, type TestParams, type TestPlan } from '../plan/spec';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
