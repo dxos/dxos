@@ -4,7 +4,7 @@
 
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import { STACK_PLUGIN } from './types';
+import { STACK_PLUGIN } from './meta';
 
 export default [
   {

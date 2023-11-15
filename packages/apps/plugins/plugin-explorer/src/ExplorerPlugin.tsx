@@ -10,8 +10,9 @@ import { Folder, View as ViewType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
 
 import { ExplorerMain } from './components';
+import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
-import { EXPLORER_PLUGIN, ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
+import { ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -19,9 +20,7 @@ import { EXPLORER_PLUGIN, ExplorerAction, type ExplorerPluginProvides, isExplore
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
   return {
-    meta: {
-      id: EXPLORER_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -66,7 +65,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isExplorer(data.active) ? <ExplorerMain view={data.active} /> : null;

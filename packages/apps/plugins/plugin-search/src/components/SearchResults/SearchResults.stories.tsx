@@ -7,11 +7,11 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { type FC, useState } from 'react';
 
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
 import { filterObjects } from '../../search';
-import { FullscreenDecorator } from '../util';
 
 faker.seed(1);
 

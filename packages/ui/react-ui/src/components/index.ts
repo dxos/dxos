@@ -7,7 +7,6 @@ export * from './Breadcrumb';
 export * from './Buttons';
 export * from './Card';
 export * from './Center';
-export * from './ComboBox';
 export * from './Dialogs';
 export * from './DropdownMenu';
 export * from './Input';

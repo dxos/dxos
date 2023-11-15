@@ -12,8 +12,6 @@ import type {
 } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
 
-export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
-
 export type DebugContextType = {
   running: boolean;
   start: (cb: TimerCallback, options: TimerOptions) => void;

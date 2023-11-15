@@ -6,10 +6,11 @@ import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/react-ui';
-import { type ComposerModel } from '@dxos/react-ui-editor';
+import { type EditorModel } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
-import { type ExportViewState, GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier } from '../props';
+import { GITHUB_PLUGIN } from '../meta';
+import type { ExportViewState, GhFileIdentifier, GhIdentifier } from '../props';
 
 export const ExportDialog = ({
   type,
@@ -19,7 +20,7 @@ export const ExportDialog = ({
 }: {
   type: ExportViewState;
   target: string | null;
-  model: ComposerModel;
+  model: EditorModel;
   docGhId: GhIdentifier;
 }) => {
   const content = model.content;

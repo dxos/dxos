@@ -17,7 +17,7 @@ import { describe } from '@dxos/test';
 
 // TODO(burdon): SecurityError: localStorage is not available for opaque origins
 describe('config', () => {
-  const configPath = path.join(__dirname, '../../../config/config.yml');
+  const configPath = path.join(__dirname, '../../../config/config-default.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
   test

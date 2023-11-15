@@ -11,8 +11,9 @@ import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction }
 import { Expando } from '@dxos/react-client/echo';
 
 import { MapMain } from './components';
+import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
-import { MAP_PLUGIN, MapAction, type MapPluginProvides, isObject } from './types';
+import { MapAction, type MapPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -22,9 +23,7 @@ const typename = 'map';
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
-    meta: {
-      id: MAP_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -68,7 +67,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main': {
               return isObject(data.active) ? <MapMain map={data.active} /> : null;
