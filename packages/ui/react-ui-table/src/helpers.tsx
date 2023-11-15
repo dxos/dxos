@@ -190,7 +190,7 @@ export class ColumnBuilder<TData extends RowData> {
                   ref={inputRef}
                   variant='subdued'
                   placeholder={placeholder ? 'Add row...' : undefined}
-                  classNames={'px-2'}
+                  classNames='is-full'
                   value={(value as string) ?? ''}
                   onBlur={() => handleSave(false)}
                   onChange={(event) => setValue(event.target.value)}
@@ -241,28 +241,23 @@ export class ColumnBuilder<TData extends RowData> {
 
         if (text !== undefined) {
           return (
-            <div className={mx('grow text-right font-mono', className)}>
-              <Input.Root>
-                <Input.TextInput
-                  autoFocus
-                  value={text}
-                  classNames={'px-2'}
-                  onBlur={handleSave}
-                  onChange={(event) => setText(event.target.value)}
-                  onKeyDown={(event) =>
-                    (event.key === 'Escape' && handleCancel()) || (event.key === 'Enter' && handleSave())
-                  }
-                />
-              </Input.Root>
-            </div>
+            <Input.Root>
+              <Input.TextInput
+                autoFocus
+                value={text}
+                classNames={'is-full pli-2 text-end font-mono'}
+                onBlur={handleSave}
+                onChange={(event) => setText(event.target.value)}
+                onKeyDown={(event) =>
+                  (event.key === 'Escape' && handleCancel()) || (event.key === 'Enter' && handleSave())
+                }
+              />
+            </Input.Root>
           );
         }
 
         return (
-          <div
-            className={mx('grow w-full text-right font-mono empty:after:content-[" "]', className)}
-            onClick={handleEdit}
-          >
+          <div className={mx('is-full text-end font-mono empty:after:content-[" "]', className)} onClick={handleEdit}>
             {value?.toLocaleString(undefined, {
               minimumFractionDigits: digits ?? 0,
               maximumFractionDigits: digits ?? 2,
@@ -328,22 +323,20 @@ export class ColumnBuilder<TData extends RowData> {
         }
 
         return (
-          <div className='group inline-flex gap-2 items-center'>
-            <Tooltip.Provider>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>{element}</Tooltip.Trigger>
-                <Tooltip.Content side='right'>
-                  <Tooltip.Arrow />
-                  <ClipboardText
-                    onClick={(ev) => {
-                      ev.stopPropagation(); // Prevent select row.
-                      void navigator.clipboard.writeText(value.toHex());
-                    }}
-                  />
-                </Tooltip.Content>
-              </Tooltip.Root>
-            </Tooltip.Provider>
-          </div>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>{element}</Tooltip.Trigger>
+              <Tooltip.Content side='right'>
+                <Tooltip.Arrow />
+                <ClipboardText
+                  onClick={(ev) => {
+                    ev.stopPropagation(); // Prevent select row.
+                    void navigator.clipboard.writeText(value.toHex());
+                  }}
+                />
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
         );
       },
     });
@@ -366,19 +359,18 @@ export class ColumnBuilder<TData extends RowData> {
           ? row.getIsSelected()
           : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
         return (
-          <div className='flex grow justify-center'>
-            <Input.Root>
-              <Input.Checkbox
-                checked={checked}
-                onCheckedChange={(event) => {
-                  if (row.getCanSelect()) {
-                    row.getToggleSelectedHandler()(event);
-                  }
-                }}
-                disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
-              />
-            </Input.Root>
-          </div>
+          <Input.Root>
+            <Input.Checkbox
+              classNames={['mli-auto', className]}
+              checked={checked}
+              onCheckedChange={(event) => {
+                if (row.getCanSelect()) {
+                  row.getToggleSelectedHandler()(event);
+                }
+              }}
+              disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
+            />
+          </Input.Root>
         );
       },
     };
@@ -397,20 +389,18 @@ export class ColumnBuilder<TData extends RowData> {
       cell: (cell) => {
         const value = cell.getValue();
         return (
-          <div className='flex grow justify-center'>
-            <Input.Root>
-              <Input.Switch
-                onClick={(event) => event.stopPropagation()}
-                classNames={className}
-                disabled={!onUpdate}
-                checked={!!value}
-                onCheckedChange={(value) => {
-                  console.log('[switch oncheckedchange]', value);
-                  onUpdate?.(cell.row.original, cell.column.id, !!value);
-                }}
-              />
-            </Input.Root>
-          </div>
+          <Input.Root>
+            <Input.Switch
+              classNames={['block mli-auto', className]}
+              onClick={(event) => event.stopPropagation()}
+              disabled={!onUpdate}
+              checked={!!value}
+              onCheckedChange={(value) => {
+                console.log('[switch oncheckedchange]', value);
+                onUpdate?.(cell.row.original, cell.column.id, !!value);
+              }}
+            />
+          </Input.Root>
         );
       },
     });
@@ -428,17 +418,9 @@ export class ColumnBuilder<TData extends RowData> {
       cell: (cell) => {
         const value = cell.getValue();
         if (value) {
-          return (
-            <div className='flex grow justify-center'>
-              <IconOn className={mx(getSize(6), on?.className ?? 'text-green-700')} />
-            </div>
-          );
+          return <IconOn className={mx('block mli-auto', getSize(6), on?.className ?? 'text-green-700')} />;
         } else if (value === false) {
-          return (
-            <div className='flex grow justify-center'>
-              <IconOff className={mx(getSize(6), off?.className ?? 'text-red-700')} />
-            </div>
-          );
+          return <IconOff className={mx('block mli-auto', getSize(6), off?.className ?? 'text-red-700')} />;
         } else {
           return null;
         }

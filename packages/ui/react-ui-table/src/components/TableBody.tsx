@@ -6,7 +6,7 @@ import { flexRender, type Row, type RowData, type RowSelectionState } from '@tan
 import React from 'react';
 
 import { type TableProps } from './Table';
-import { selectedRow, tbodyTd, tbodyTr } from '../theme';
+import { selectedRow, tdRoot, tbodyTr } from '../theme';
 
 export type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
   rows: Row<TData>[];
@@ -29,7 +29,7 @@ export const TableBody = <TData extends RowData>(props: TableBodyProps<TData>) =
             {row.getVisibleCells().map((cell) => {
               // TODO(burdon): Allow class override from column.
               return (
-                <td key={cell.id} className={tbodyTd(props, cell.column.columnDef.meta?.slots?.cell?.className)}>
+                <td key={cell.id} className={tdRoot(props, cell.column.columnDef.meta?.slots?.cell?.className)}>
                   {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
                 </td>
               );

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type CellContext } from '@tanstack/react-table';
+
 import { chromeSurface, inputSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
@@ -55,8 +57,14 @@ export type TbodyStyleProps = Partial<TableBodyProps<any>>;
 
 export const tbodyRoot: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx(...etc);
 export const tbodyTr: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx('group', ...etc);
-export const tbodyTd: ComponentFunction<TbodyStyleProps> = ({ border }, ...etc) =>
+
+//
+// td, th
+//
+
+export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border }, ...etc) =>
   mx('pli-2', border && groupBorder, ...etc);
+export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...etc) => mx(...etc);
 
 //
 // tfoot
