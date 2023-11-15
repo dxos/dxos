@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 
+import { AnchoredOverflow } from '@dxos/react-ui';
 import { Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -26,16 +27,16 @@ export const MasterDetailTable = <T extends {}>({
 
   return (
     <div className='flex grow overflow-hidden divide-x'>
-      <div className={mx('flex overflow-hidden', widths[0])}>
-        <Table<T>
-          columns={columns}
-          data={data}
-          selected={selected}
-          onSelectedChange={setSelected}
-          pinToBottom={pinToBottom}
-        />
-      </div>
-
+      {pinToBottom ? (
+        <AnchoredOverflow.Root classNames={['flex overflow-hidden', widths[0]]}>
+          <Table<T> columns={columns} data={data} selected={selected} onSelectedChange={setSelected} />
+          <AnchoredOverflow.Anchor />
+        </AnchoredOverflow.Root>
+      ) : (
+        <div className={mx('flex overflow-hidden', widths[0])}>
+          <Table<T> columns={columns} data={data} selected={selected} onSelectedChange={setSelected} />
+        </div>
+      )}
       <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected?.[0]} />}</div>
     </div>
   );

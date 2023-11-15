@@ -65,6 +65,8 @@
   }
 }
 
+/* SURFACES */
+
 :root {
   --surface-bg: theme(colors.neutral.12);
   --surface-text: theme(colors.neutral.900);
@@ -131,4 +133,14 @@ html {
   background-color: var(--surface-bg);
   color: var(--surface-text);
   @apply font-body;
+}
+
+/* FEATURES */
+
+.overflow-anchored * {
+  overflow-anchor: none;
+}
+
+.overflow-anchor {
+  overflow-anchor: auto;
 }

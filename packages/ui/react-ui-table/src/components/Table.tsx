@@ -24,10 +24,6 @@ import { TableHead } from './TableHead';
 import { groupTh, tableRoot } from '../theme';
 import { type TableColumnDef, type KeyValue } from '../types';
 
-// TODO(burdon): Sort/filter.
-// TODO(burdon): Drag-and-drop.
-// TODO(burdon): Virtual (e.g., log panel).
-
 export type TableSelection<TData extends RowData> = {
   // Controlled if undefined (by default).
   select?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle' | undefined;

@@ -10,7 +10,7 @@ import { deepSignal } from 'deepsignal';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { DensityProvider } from '@dxos/react-ui';
+import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
@@ -213,7 +213,10 @@ export const Dynamic = {
       return () => clearInterval(interval);
     }, []);
     return (
-      <Table<Item> keyAccessor={(row) => row.publicKey.toHex()} columns={columns()} data={items} fullWidth footer />
+      <AnchoredOverflow.Root classNames='max-bs-[80dvh]'>
+        <Table<Item> keyAccessor={(row) => row.publicKey.toHex()} columns={columns()} data={items} fullWidth footer />
+        <AnchoredOverflow.Anchor />
+      </AnchoredOverflow.Root>
     );
   },
 };
