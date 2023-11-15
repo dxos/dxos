@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
+import React, { forwardRef, type FC, type ReactNode, Fragment, type ForwardedRef, type PropsWithChildren } from 'react';
 import { createContext, useContext } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
@@ -13,7 +13,7 @@ import { type SurfaceComponent, useSurface } from './SurfaceRootContext';
  */
 export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
 
-export type SurfaceProps = {
+export type SurfaceProps = PropsWithChildren<{
   /**
    * Role defines how the data should be rendered.
    */
@@ -56,35 +56,43 @@ export type SurfaceProps = {
    * NOTE: This is not yet implemented.
    */
   direction?: Direction;
-};
+
+  /**
+   * Additional props to pass to the component.
+   * These props are not used by Surface itself but may be used by components which resolve the surface.
+   */
+  [key: string]: unknown;
+}>;
 
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-export const Surface = ({ role, name = role, fallback, ...rest }: SurfaceProps) => {
-  const props = { role, name, fallback, ...rest };
-  const context = useContext(SurfaceContext);
-  const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
+export const Surface = forwardRef<HTMLElement, SurfaceProps>(
+  ({ role, name = role, fallback, ...rest }, forwardedRef) => {
+    const props = { role, name, fallback, ...rest };
+    const context = useContext(SurfaceContext);
+    const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
 
-  return (
-    <>
-      {fallback ? (
-        <ErrorBoundary data={data} fallback={fallback}>
-          <SurfaceResolver {...props} />
-        </ErrorBoundary>
-      ) : (
-        <SurfaceResolver {...props} />
-      )}
-    </>
-  );
-};
+    return (
+      <>
+        {fallback ? (
+          <ErrorBoundary data={data} fallback={fallback}>
+            <SurfaceResolver {...props} ref={forwardedRef} />
+          </ErrorBoundary>
+        ) : (
+          <SurfaceResolver {...props} ref={forwardedRef} />
+        )}
+      </>
+    );
+  },
+);
 
 const SurfaceContext = createContext<SurfaceProps | null>(null);
 
-const SurfaceResolver = (props: SurfaceProps) => {
+const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedRef) => {
   const { components } = useSurface();
   const parent = useContext(SurfaceContext);
-  const nodes = resolveNodes(components, props, parent);
+  const nodes = resolveNodes(components, props, parent, forwardedRef);
   const currentContext: SurfaceProps = {
     ...props,
     surfaces: {
@@ -98,12 +106,13 @@ const SurfaceResolver = (props: SurfaceProps) => {
       {nodes.length > 0 ? nodes : props.contentFallback ? <props.contentFallback /> : null}
     </SurfaceContext.Provider>
   );
-};
+});
 
 const resolveNodes = (
   components: Record<string, SurfaceComponent>,
   props: SurfaceProps,
   context: SurfaceProps | null,
+  forwardedRef: ForwardedRef<HTMLElement>,
 ): ReactNode[] => {
   const data = {
     ...((props.name && context?.surfaces?.[props.name]?.data) || {}),
@@ -112,12 +121,10 @@ const resolveNodes = (
 
   const nodes = Object.entries(components)
     .map(([key, component]) => {
-      const result = component(data, props.role);
-      return result ? <Wrapper key={key}>{result}</Wrapper> : undefined;
+      const result = component({ ...props, data }, forwardedRef);
+      return result ? <Fragment key={key}>{result}</Fragment> : undefined;
     })
     .filter((Component): Component is JSX.Element => Boolean(Component));
 
   return props.limit ? nodes.slice(0, props.limit) : nodes;
 };
-
-const Wrapper = ({ children }: PropsWithChildren) => <>{children}</>;

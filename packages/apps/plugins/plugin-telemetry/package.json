@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-telemetry",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "DXOS Surface plugin for hooking up app telemetry",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,13 +8,17 @@
   "author": "DXOS.org",
   "exports": {
     ".": "./dist/lib/browser/index.mjs",
-    "./headless": "./dist/lib/browser/telemetry/index.mjs"
+    "./headless": "./dist/lib/browser/telemetry/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "headless": [
         "dist/types/src/telemetry/index.d.ts"
+      ],
+      "meta": [
+        "dist/types/src/meta.d.ts"
       ]
     }
   },

@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-theme/src/index.ts"
+          "packages/apps/plugins/plugin-theme/src/index.ts",
+          "packages/apps/plugins/plugin-theme/src/meta.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-theme/dist/lib",
         "platforms": [

@@ -10,7 +10,7 @@ import { useTranslation, TreeItem } from '@dxos/react-ui';
 import { TextKind } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { GITHUB_PLUGIN } from '../../props';
+import { GITHUB_PLUGIN } from '../../meta';
 
 export const DocumentTreeItem = ({ document }: { document: Document }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);

@@ -6,16 +6,17 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import {
-  type ComposerModel,
-  MarkdownComposer,
-  type MarkdownComposerProps,
-  type MarkdownComposerRef,
+  type EditorModel,
+  MarkdownEditor,
+  type MarkdownEditorProps,
+  type MarkdownEditorRef,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { MARKDOWN_PLUGIN, type MarkdownProperties } from '../types';
+import { MARKDOWN_PLUGIN } from '../meta';
+import type { MarkdownProperties } from '../types';
 
 export const EditorMain = ({
   model,
@@ -25,19 +26,19 @@ export const EditorMain = ({
   onChange,
   editorRefCb,
 }: {
-  model: ComposerModel;
+  model: EditorModel;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
-  editorMode?: MarkdownComposerProps['editorMode'];
-  onChange?: MarkdownComposerProps['onChange'];
-  editorRefCb: RefCallback<MarkdownComposerRef>;
+  editorMode?: MarkdownEditorProps['editorMode'];
+  onChange?: MarkdownEditorProps['onChange'];
+  editorRefCb: RefCallback<MarkdownEditorRef>;
 }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
 
   return (
     <Root properties={properties} model={model}>
-      <MarkdownComposer
+      <MarkdownEditor
         ref={editorRefCb}
         model={model}
         editorMode={editorMode}

@@ -8,7 +8,7 @@ import { ErrorBoundary, type PluginDefinition, type TranslationsProvides } from 
 import { Config, Defaults, Envs, Local } from '@dxos/react-client';
 
 import { ResetDialog } from './components';
-import { ERROR_PLUGIN } from './constants';
+import meta from './meta';
 import translations from './translations';
 
 // TODO(wittjosiah): This is probably too naive and probably needs to be better integrated with the framework.
@@ -18,9 +18,7 @@ import translations from './translations';
 export const ErrorPlugin = (
   { config }: { config: Config } = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<TranslationsProvides> => ({
-  meta: {
-    id: ERROR_PLUGIN,
-  },
+  meta,
   provides: {
     translations,
     context: ({ children }) => (

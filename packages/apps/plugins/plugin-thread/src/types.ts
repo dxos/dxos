@@ -12,7 +12,7 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/react-client/echo';
 
-export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
+import { THREAD_PLUGIN } from './meta';
 
 const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 export enum ThreadAction {

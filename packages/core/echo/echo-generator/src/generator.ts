@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
-// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
-
 import { faker } from '@faker-js/faker';
 
-import { Expando, type Schema, type Space } from '@dxos/client/echo';
+import { Expando, type TypedObject, Schema, type Space } from '@dxos/client/echo';
 
 import { type TestGeneratorMap, type TestObjectProvider, type TestSchemaMap } from './types';
 import { range } from './util';
@@ -18,30 +15,40 @@ import { range } from './util';
 export class TestObjectGenerator<T extends string> {
   // prettier-ignore
   constructor(
-    public readonly schema: TestSchemaMap<T>,
+    private readonly _schemas: TestSchemaMap<T>,
     private readonly _generators: TestGeneratorMap<T>,
     private readonly _provider?: TestObjectProvider<T>
   ) {}
 
   get schemas(): Schema[] {
-    return Object.values(this.schema);
+    return Object.values(this._schemas);
   }
 
-  getSchema(typename: string) {
-    return this.schemas.find((schema) => schema.typename === typename);
+  getSchema(type: T) {
+    return this.schemas.find((schema) => schema.typename === type);
   }
 
-  createObject({ types }: { types?: T[] } = {}): Expando {
-    const type = faker.helpers.arrayElement(types ?? (Object.keys(this.schema) as T[]));
-    const factory = this._generators[type];
-    const data = factory(this._provider);
-    // TODO(burdon): Runtime type check via: https://github.com/Effect-TS/schema (or zod).
-    return new Expando(data, { schema: this.schema[type] });
+  protected setSchema(type: T, schema: Schema) {
+    this._schemas[type] = schema;
+  }
+
+  // TODO(burdon): Runtime type check via: https://github.com/Effect-TS/schema (or zod).
+  createObject({ types }: { types?: T[] } = {}): TypedObject {
+    const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
+    const data = this._generators[type](this._provider);
+    const schema = this.getSchema(type);
+    return new Expando(data, { schema });
   }
 
   // TODO(burdon): Create batch.
-  createObjects({ types, count }: { types?: T[]; count: number }): Expando[] {
-    return range(() => this.createObject({ types }), count);
+  // TODO(burdon): Based on dependencies (e.g., organization before contact).
+  createObjects(map: Partial<Record<T, number>>): Expando[] {
+    const objects: Expando[] = [];
+    Object.entries<number>(map as any).forEach(([type, count]) => {
+      range(() => objects.push(this.createObject({ types: [type as T] })), count);
+    });
+
+    return objects;
   }
 }
 
@@ -49,19 +56,34 @@ export class TestObjectGenerator<T extends string> {
  * Typed object generator for a space.
  */
 export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<T> {
-  constructor(private readonly _space: Space, schema: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
-    super(schema, generators, (type: T) => {
-      // TODO(burdon): Query by schema.
+  constructor(private readonly _space: Space, schemaMap: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
+    super(schemaMap, generators, (type: T) => {
       const { objects } = this._space.db.query((object) => {
-        return object.__schema === schema[type];
+        return object.__schema?.id === this.getSchema(type)?.id;
       });
 
       return objects;
     });
+
+    // TODO(burdon): Map initially are objects that have not been added to the space.
+    // Merge existing schema in space with defaults.
+    const { objects } = this._space.db.query(Schema.filter());
+    Object.keys(schemaMap).forEach((type) => {
+      const schema = objects.find((object) => object.typename === type);
+      if (schema) {
+        this.setSchema(type as T, schema);
+      }
+    });
   }
 
   addSchemas() {
-    this.schemas.forEach((schema) => this._space.db.add(schema));
+    const { objects } = this._space.db.query(Schema.filter());
+    this.schemas.forEach((schema) => {
+      if (!objects.find((object) => object.typename === schema.typename)) {
+        this._space.db.add(schema);
+      }
+    });
+
     return this.schemas;
   }
 

@@ -9,10 +9,6 @@ import { useConfig } from '@dxos/react-client';
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const DEFAULT_COUNT = 100;
-export const DEFAULT_PERIOD = 500;
-export const DEFAULT_JITTER = 50;
-
 export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, children }) => {
   const config = useConfig();
   return (

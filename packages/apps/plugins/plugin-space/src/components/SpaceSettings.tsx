@@ -7,7 +7,8 @@ import React from 'react';
 import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides } from '../types';
+import { SPACE_PLUGIN } from '../meta';
+import { SpaceAction, type SpacePluginProvides } from '../types';
 
 export const SpaceSettings = () => {
   const { t } = useTranslation(SPACE_PLUGIN);
@@ -39,5 +40,3 @@ export const SpaceSettings = () => {
     </>
   );
 };
-
-export default SpaceSettings;

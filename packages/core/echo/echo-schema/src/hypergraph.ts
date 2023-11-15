@@ -24,6 +24,7 @@ import {
   type QuerySource,
 } from './query';
 import { TypeCollection } from './type-collection';
+import { compositeRuntime } from './util';
 
 /**
  * Manages cross-space database interactions.
@@ -137,24 +138,26 @@ export class Hypergraph {
   private _onUpdate(updateEvent: UpdateEvent) {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {
-      // TODO(dmaretskyi): We only care about created items.
-      for (const item of updateEvent.itemsUpdated) {
-        const listeners = listenerMap.get(item.id);
-        if (!listeners) {
-          continue;
+      compositeRuntime.batch(() => {
+        // TODO(dmaretskyi): We only care about created items.
+        for (const item of updateEvent.itemsUpdated) {
+          const listeners = listenerMap.get(item.id);
+          if (!listeners) {
+            continue;
+          }
+          const db = this._databases.get(updateEvent.spaceKey);
+          if (!db) {
+            continue;
+          }
+          const obj = db.getObjectById(item.id);
+          if (!obj) {
+            continue;
+          }
+          log('resolve', { spaceKey: updateEvent.spaceKey, itemId: obj.id });
+          listeners.emit(obj);
+          listenerMap.delete(item.id);
         }
-        const db = this._databases.get(updateEvent.spaceKey);
-        if (!db) {
-          continue;
-        }
-        const obj = db.getObjectById(item.id);
-        if (!obj) {
-          continue;
-        }
-        log('resolve', { spaceKey: updateEvent.spaceKey, itemId: obj.id });
-        listeners.emit(obj);
-        listenerMap.delete(item.id);
-      }
+      });
     }
 
     this._updateEvent.emit(updateEvent);

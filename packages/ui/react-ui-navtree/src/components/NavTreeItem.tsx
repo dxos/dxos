@@ -16,6 +16,7 @@ import {
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
   mx,
+  subtleHover,
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
@@ -149,7 +150,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 level < 1 && topLevelCollapsibleSpacing,
                 (active && active !== 'overlay') || path === current
                   ? 'bg-neutral-75 dark:bg-neutral-850'
-                  : 'hover:bg-neutral-450/5 dark:hover:bg-25/5',
+                  : subtleHover,
               )}
             >
               <NavTreeItemHeading
@@ -184,19 +185,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   testId={primaryAction.properties.testId}
                 />
               )}
-              {actions.length === 1 ? (
-                <NavTreeItemActionMenu
-                  id={node.id}
-                  label={Array.isArray(actions[0].label) ? t(...actions[0].label) : actions[0].label}
-                  icon={actions[0].icon ?? Placeholder}
-                  action={actions[0].actions.length === 0 ? actions[0] : undefined}
-                  actions={actions[0].actions}
-                  level={level}
-                  active={active}
-                  popoverAnchorId={popoverAnchorId}
-                  testId={actions[0].properties.testId}
-                />
-              ) : actions.length > 1 ? (
+              {actions.length > 0 && (
                 <NavTreeItemActionMenu
                   id={node.id}
                   // label={t('tree item actions label')}
@@ -207,7 +196,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   popoverAnchorId={popoverAnchorId}
                   testId={`navtree.treeItem.actionsLevel${level}`}
                 />
-              ) : null}
+              )}
               {renderPresence?.(node)}
             </div>
             {!active &&
