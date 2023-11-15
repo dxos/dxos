@@ -116,10 +116,8 @@ const Pill: MosaicTileComponent<Expando> = forwardRef(
       title = title.text;
     }
 
-    console.log('>>>>>>>>>', JSON.stringify(item));
-
     return (
-      <Card.Root ref={forwardRef} style={draggableStyle} classNames='w-full bg-neutral-50 m-1 ring'>
+      <Card.Root ref={forwardRef} style={draggableStyle} classNames='w-full bg-neutral-50'>
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
           <Card.Title title={title} />

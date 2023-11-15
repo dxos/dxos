@@ -31,7 +31,6 @@ export const createResponse = (client: Client, space: Space, content: string) =>
         const schema = schemas.find((schema) => schema.typename === data['@type']);
         if (schema) {
           for (const prop of schema.props) {
-            // console.log('::', JSON.stringify(prop), data[prop.id!]);
             if (data[prop.id!]) {
               if (/* prop.refModelType === 'dxos.org/model/text' && */ typeof data[prop.id!] === 'string') {
                 data[prop.id!] = new TextObject(data[prop.id!]);
