@@ -9,13 +9,13 @@ import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Inbox as InboxType } from '@braneframe/types';
 import {
   LayoutAction,
-  type GraphPluginProvides,
-  type LayoutProvides,
-  type Plugin,
+  // type GraphPluginProvides,
+  // type LayoutProvides,
+  // type Plugin,
   type PluginDefinition,
   parseIntentPlugin,
-  parseLayoutPlugin,
-  parseGraphPlugin,
+  // parseLayoutPlugin,
+  // parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
 
@@ -28,14 +28,14 @@ import { InboxAction, type InboxPluginProvides, isInbox } from './types';
 (globalThis as any)[InboxType.name] = InboxType;
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
-  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
-  let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
+  // let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  // let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
   return {
     meta,
     ready: async (plugins) => {
-      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      // graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      // layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
     },
     provides: {
       metadata: {
