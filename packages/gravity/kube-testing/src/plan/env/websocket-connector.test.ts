@@ -19,7 +19,30 @@ import { type AgentParams } from '../spec';
  *               `redis-server --port 6378` to start a Redis server on port 6378.
  * TODO(mykola): Mock Redis server.
  */
-describe.skip('AgentEnv', () => {
+describe('AgentEnv with WebSocketConnector', () => {
+  test('set value', async () => {
+    const server = new WebSocketRedisProxy({
+      redisTCPConnection: {
+        host: 'localhost',
+        port: 6378,
+        family: 4,
+      },
+      websocketServer: {
+        host: 'localhost',
+        port: 8080,
+      },
+    });
+    afterTest(() => server.destroy());
+
+    const client = new Redis({ Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions);
+    afterTest(() => client.disconnect());
+
+    const key = 'lastTimeframe';
+    const value = PublicKey.random().toString();
+    await client.set(key, value);
+    expect(await asyncTimeout(client.get(key), 1000)).to.equal(value);
+  });
+
   test('sync barrier', async () => {
     const server = new WebSocketRedisProxy({
       redisTCPConnection: {
@@ -56,28 +79,5 @@ describe.skip('AgentEnv', () => {
     }
 
     await asyncTimeout(Promise.all(promises), 5000);
-  });
-
-  test('Websocket proxing', async () => {
-    const server = new WebSocketRedisProxy({
-      redisTCPConnection: {
-        host: 'localhost',
-        port: 6378,
-        family: 4,
-      },
-      websocketServer: {
-        host: 'localhost',
-        port: 8080,
-      },
-    });
-    afterTest(() => server.destroy());
-
-    const client = new Redis({ Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions);
-    afterTest(() => client.disconnect());
-
-    const key = 'lastTimeframe';
-    const value = PublicKey.random().toString();
-    await client.set(key, value);
-    expect(await asyncTimeout(client.get(key), 1000)).to.equal(value);
   });
 });
