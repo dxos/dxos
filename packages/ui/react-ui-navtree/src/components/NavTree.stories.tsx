@@ -118,9 +118,9 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
               children.splice(active.position!, 1);
             }
             if (Path.last(Path.parent(over.path)) === item.id) {
-              children.splice(over.position!, 0, (active.item as NavTreeItemData).node);
+              children.splice(over.position!, 0, active.item as NavTreeItemData);
             } else if (Path.last(over.path) === item.id) {
-              children.splice(item.children.length, 0, (active.item as NavTreeItemData).node);
+              children.splice(item.children.length, 0, active.item as NavTreeItemData);
             }
             return { ...item, children };
           }),
