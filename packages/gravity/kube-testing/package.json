@@ -52,6 +52,7 @@
     "seedrandom": "^3.0.5",
     "uuid": "^8.3.2",
     "websocket-stream": "^5.5.2",
+    "ws": "^7.4.4",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
