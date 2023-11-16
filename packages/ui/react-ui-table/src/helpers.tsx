@@ -22,6 +22,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { ComboboxCell } from './components';
+import { textPadding } from './theme';
 
 // TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?
 const findNextFocusable = (
@@ -203,7 +204,7 @@ export class ColumnBuilder<TData extends RowData> {
           }
         : (cell) => {
             const value = cell.getValue();
-            return <div className={mx('truncate', className)}>{value}</div>;
+            return <div className={mx('truncate', textPadding, className)}>{value}</div>;
           },
     });
   }
@@ -246,7 +247,7 @@ export class ColumnBuilder<TData extends RowData> {
               <Input.TextInput
                 autoFocus
                 value={text}
-                classNames={'is-full pli-2 text-end font-mono'}
+                classNames={['is-full text-end font-mono']}
                 onBlur={handleSave}
                 onChange={(event) => setText(event.target.value)}
                 onKeyDown={(event) =>
@@ -258,7 +259,10 @@ export class ColumnBuilder<TData extends RowData> {
         }
 
         return (
-          <div className={mx('is-full text-end font-mono empty:after:content-[" "]', className)} onClick={handleEdit}>
+          <div
+            className={mx('is-full text-end font-mono empty:after:content-[" "]', textPadding, className)}
+            onClick={handleEdit}
+          >
             {value?.toLocaleString(undefined, {
               minimumFractionDigits: digits ?? 0,
               maximumFractionDigits: digits ?? 2,
@@ -292,7 +296,7 @@ export class ColumnBuilder<TData extends RowData> {
               : value.toISOString()
             : undefined;
 
-          return <div className={mx('font-mono', className)}>{str}</div>;
+          return <div className={mx(textPadding, className)}>{str}</div>;
         } catch (err) {
           console.log(value);
           return null;
@@ -308,6 +312,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 86,
       minSize: 86,
+      meta: { cell: { classNames: ['font-mono', textPadding] } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
@@ -316,9 +321,7 @@ export class ColumnBuilder<TData extends RowData> {
         }
 
         // TODO(burdon): Factor out styles.
-        const element = (
-          <div className='font-mono font-thin text-green-500 dark:text-green-300'>{value.truncate()}</div>
-        );
+        const element = value.truncate();
         if (!tooltip) {
           return element;
         }
@@ -326,7 +329,7 @@ export class ColumnBuilder<TData extends RowData> {
         return (
           <Tooltip.Provider>
             <Tooltip.Root>
-              <Tooltip.Trigger asChild>{element}</Tooltip.Trigger>
+              <Tooltip.Trigger>{element}</Tooltip.Trigger>
               <Tooltip.Content side='right'>
                 <Tooltip.Arrow />
                 <ClipboardText
@@ -351,8 +354,8 @@ export class ColumnBuilder<TData extends RowData> {
   >[0] {
     return {
       id,
-      size: 40,
-      minSize: 40,
+      size: 32,
+      minSize: 32,
       header: (column) => label ?? column.header.id,
       cell: (cell) => {
         const { row } = cell;
@@ -362,6 +365,7 @@ export class ColumnBuilder<TData extends RowData> {
         return (
           <Input.Root>
             <Input.Checkbox
+              size={4}
               classNames={['mli-auto', className]}
               checked={checked}
               onCheckedChange={(event) => {
@@ -384,8 +388,9 @@ export class ColumnBuilder<TData extends RowData> {
     ColumnDef<TData, boolean>
   > {
     return defaults(props, {
-      size: 40,
-      minSize: 40,
+      size: 50,
+      minSize: 50,
+      meta: { cell: { classNames: textPadding } },
       header: (column) => label ?? column.header.id,
       cell: (cell) => {
         const value = cell.getValue();

@@ -60,7 +60,7 @@ export const ComboboxCell = <TData extends RowData>({
 
   return (
     <PopoverCombobox.Root placeholder={t('no selection label')}>
-      <PopoverCombobox.Trigger variant='ghost' classNames='is-full'>
+      <PopoverCombobox.Trigger variant='ghost' classNames='is-full rounded-none'>
         {value ? (
           <>
             <span

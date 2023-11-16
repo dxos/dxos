@@ -230,7 +230,13 @@ export const Editable = {
     };
 
     return (
-      <Table<Item> keyAccessor={(row) => row.publicKey.toHex()} columns={columns(onUpdate)} data={items} fullWidth />
+      <Table<Item>
+        keyAccessor={(row) => row.publicKey.toHex()}
+        columns={columns(onUpdate)}
+        data={items}
+        fullWidth
+        border
+      />
     );
   },
 };

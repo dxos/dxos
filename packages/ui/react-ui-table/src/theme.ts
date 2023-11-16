@@ -4,7 +4,7 @@
 
 import { type CellContext } from '@tanstack/react-table';
 
-import { chromeSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { chromeSurface, fixedSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
 import { type TableProps } from './components';
@@ -13,6 +13,9 @@ import { type TableFooterProps } from './components/Table/TableFooter';
 import { type TableHeadProps } from './components/Table/TableHead';
 
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
+export const flushPadding = 'pli-0 plb-0';
+export const textPadding = 'pli-2 plb-0.5';
+export const headPadding = 'pli-2 plb-1.5';
 
 //
 // table
@@ -23,7 +26,7 @@ export type TableStyleProps = Partial<TableProps<any>>;
 export const tableRoot: ComponentFunction<TableStyleProps> = (_props, ...etc) => mx('table-fixed', ...etc);
 
 export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
-  mx('pli-2 text-start font-medium', ...etc);
+  mx('text-start font-medium', flushPadding, ...etc);
 
 //
 // thead
@@ -32,16 +35,22 @@ export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
 export type TheadStyleProps = Partial<TableHeadProps<any>>;
 
 export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header }, ...etc) =>
-  mx(header ? 'sticky block-start-0 z-10' : 'collapse', ...etc);
+  mx(header ? 'sticky block-start-0 z-10' : 'collapse', header && fixedSurface, ...etc);
 
 export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
 
 export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) =>
-  mx('relative text-start font-medium pli-2 select-none truncate', border && groupBorder, ...etc);
+  mx(
+    'relative text-start font-medium select-none truncate',
+    headPadding,
+    border && 'border',
+    border && groupBorder,
+    ...etc,
+  );
 
 export const theadResizeRoot: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
   mx(
-    'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
+    'absolute top-0 pis-1 h-full z-[10] w-[7px] -right-[5px] cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
     ...etc,
   );
 
@@ -62,7 +71,7 @@ export const tbodyTr: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => m
 //
 
 export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border }, ...etc) =>
-  mx('pli-2', border && groupBorder, ...etc);
+  mx(flushPadding, border && 'border', border && groupBorder, ...etc);
 export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...etc) => mx(...etc);
 
 //
@@ -72,9 +81,9 @@ export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...e
 export type TfootStyleProps = Partial<TableFooterProps<any>>;
 
 export const tfootRoot: ComponentFunction<TfootStyleProps> = (_props, ...etc) =>
-  mx('sticky block-end-0 z-10 pli-2', chromeSurface, ...etc);
+  mx('sticky block-end-0 z-10', chromeSurface, ...etc);
 
 export const tfootTr: ComponentFunction<TfootStyleProps> = (_props, ...etc) => mx(...etc);
 
 export const tfootTh: ComponentFunction<TfootStyleProps> = ({ border }, ...etc) =>
-  mx('pli-2', chromeSurface, border && groupBorder, ...etc);
+  mx(textPadding, chromeSurface, border && groupBorder, ...etc);
