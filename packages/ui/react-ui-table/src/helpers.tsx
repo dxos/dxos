@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
 import { Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
 import {
   createColumnHelper,
@@ -23,22 +22,6 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { CellCombobox } from './components';
 import { textPadding } from './theme';
-
-// TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?
-const findNextFocusable = (
-  findFirstFocusable: (container: HTMLElement) => HTMLElement | null | undefined,
-  container: HTMLElement,
-): HTMLElement | undefined => {
-  const next = findFirstFocusable(container as any);
-  if (next) {
-    if (next?.tagName === 'INPUT') {
-      return next;
-    }
-    if (container.nextElementSibling) {
-      return findNextFocusable(findFirstFocusable, container.nextSibling as any);
-    }
-  }
-};
 
 export type ValueUpdater<TData extends RowData, TValue> = (row: TData, id: string, value: TValue) => void;
 
@@ -155,24 +138,12 @@ export class ColumnBuilder<TData extends RowData> {
             const initialValue = cell.getValue();
             const [value, setValue] = useState(initialValue);
             const inputRef = useRef<HTMLInputElement>(null);
-            const { findFirstFocusable } = useFocusFinders();
 
-            const handleSave = (focusNext = false) => {
+            const handleSave = () => {
               if (value === initialValue) {
                 return;
               }
-
               onUpdate?.(cell.row.original, cell.column.id, value);
-
-              // TODO(burdon): More generally support keyboard navigation.
-              if (focusNext) {
-                const rowElement = inputRef.current?.parentElement?.parentElement;
-                // TODO(burdon): Hack to wait for next row to render.
-                setTimeout(() => {
-                  const next = findNextFocusable(findFirstFocusable, rowElement as HTMLElement);
-                  next?.focus();
-                });
-              }
             };
 
             const handleCancel = () => {
@@ -193,10 +164,10 @@ export class ColumnBuilder<TData extends RowData> {
                   placeholder={placeholder ? 'Add row...' : undefined}
                   classNames='is-full'
                   value={(value as string) ?? ''}
-                  onBlur={() => handleSave(false)}
+                  onBlur={() => handleSave()}
                   onChange={(event) => setValue(event.target.value)}
                   onKeyDown={(event) =>
-                    (event.key === 'Enter' && handleSave(true)) || (event.key === 'Escape' && handleCancel())
+                    (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())
                   }
                 />
               </Input.Root>
@@ -245,7 +216,6 @@ export class ColumnBuilder<TData extends RowData> {
           return (
             <Input.Root>
               <Input.TextInput
-                autoFocus
                 value={text}
                 classNames={['is-full text-end font-mono']}
                 onBlur={handleSave}
