@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical, X } from '@phosphor-icons/react';
+import { DotsSixVertical, X, ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { Card, DensityProvider, DropdownMenu, ListItem, useTranslation } from '@dxos/react-ui';
@@ -33,10 +33,11 @@ export type SectionProps = PropsWithChildren<{
   draggableProps?: MosaicTileProps['draggableProps'];
   draggableStyle?: MosaicTileProps['draggableStyle'];
   onRemove?: MosaicTileProps['onRemove'];
+  onAction?: MosaicTileProps['onAction'];
 }>;
 
 export const Section = forwardRef<HTMLLIElement, SectionProps>(
-  ({ id, title, active, draggableProps, draggableStyle, onRemove, children }, forwardedRef) => {
+  ({ id, title, active, draggableProps, draggableStyle, onRemove, onAction, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
     return (
@@ -84,9 +85,12 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 'self-stretch justify-center rounded-is flex items-center bs-auto is-auto',
                 hoverableFocusedControls,
                 active === 'destination' && 'invisible',
-                active === 'overlay' && 'text-primary-600 dark:text-primary-300',
               )}
             >
+              <DropdownMenu.Item onClick={() => onAction?.({ id, action: 'navigate' })}>
+                <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                <span className='grow'>{t('navigate to section label')}</span>
+              </DropdownMenu.Item>
               <DropdownMenu.Item onClick={onRemove}>
                 <X className={mx(getSize(5), 'mr-2')} />
                 <span className='grow'>{t('remove section label')}</span>
