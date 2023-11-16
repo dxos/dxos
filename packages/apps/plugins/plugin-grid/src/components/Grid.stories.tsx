@@ -10,19 +10,19 @@ import { type ReactRenderer } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
-import { TestSchemaType, createTestObjectGenerator, type TestObjectGenerator } from '@dxos/echo-generator';
+import { type TestObjectGenerator, TestSchemaType, createTestObjectGenerator } from '@dxos/echo-generator';
+import { TypedObject } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import {
   Mosaic,
   type MosaicTileComponent,
-  type MosaicDataItem,
   type MosaicDropEvent,
   type MosaicTileProps,
   type MosaicOperation,
 } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Grid, type GridProps, type GridLayout } from './Grid';
+import { Grid, type GridProps, type GridDataItem } from './Grid';
 import type { Position } from './layout';
 
 faker.seed(99);
@@ -31,8 +31,7 @@ const debug = true;
 const size = { x: 4, y: 4 };
 
 export type DemoGridProps = GridProps & {
-  initialItems?: MosaicDataItem[]; // TODO(burdon): Remove or convert to controlled.
-  initialLayout?: GridLayout; // TODO(burdon): Remove or convert to controlled.
+  initialItems?: GridDataItem[];
   types?: Partial<Record<TestSchemaType, number>>;
   debug?: boolean;
   generator?: TestObjectGenerator;
@@ -43,29 +42,27 @@ const DemoGrid = ({
   options = { size: { x: 8, y: 8 } },
   Component = DemoCard,
   initialItems,
-  initialLayout,
   types = { [TestSchemaType.document]: 12 },
   debug,
   className,
   generator = createTestObjectGenerator(),
 }: DemoGridProps) => {
   const [selected, setSelected] = useState<string>();
-  const [items, setItems] = useState<MosaicDataItem[]>(
+  const [items, setItems] = useState<GridDataItem[]>(
     initialItems ??
       (() => {
-        return generator.createObjects(types);
+        const objects = generator.createObjects(types);
+        // TODO(wittjosiah): Use generator to create positions.
+        return objects.map((object) => {
+          return new TypedObject<{ object: TypedObject; position: Position }>({
+            object,
+            position: {
+              x: faker.number.int({ min: 0, max: (options.size?.x ?? 1) - 1 }),
+              y: faker.number.int({ min: 0, max: (options.size?.y ?? 1) - 1 }),
+            },
+          });
+        });
       }),
-  );
-  const [layout, setLayout] = useState<GridLayout>(
-    initialLayout ??
-      (() =>
-        items.reduce<GridLayout>((map, item, i) => {
-          map[item.id] = {
-            x: faker.number.int({ min: 0, max: (options.size?.x ?? 1) - 1 }),
-            y: faker.number.int({ min: 0, max: (options.size?.y ?? 1) - 1 }),
-          };
-          return map;
-        }, {})),
   );
 
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
@@ -73,23 +70,32 @@ const DemoGrid = ({
       setItems((items) => items.filter((item) => item.id !== active.item.id));
     } else {
       setItems((items) => {
-        if (items.findIndex((item) => item.id === active.item.id) === -1) {
-          return [active.item, ...items];
+        const index = items.findIndex((item) => item.id === active.item.id);
+        if (index === -1) {
+          const item = active.item as GridDataItem;
+          item.position = over.position!;
+          return [item, ...items];
         } else {
-          return items;
+          const item = items[index];
+          item.position = over.position!;
+          const newItems = [...items];
+          newItems.splice(index, 1);
+          return [item, ...newItems];
         }
       });
-      setLayout((layout) => ({ ...layout, [active.item.id]: over.position! }));
     }
   };
 
   const handleCreate = (position: Position) => {
     setItems((items) => {
-      const item = generator.createObject();
+      const object = generator.createObject({ types: [TestSchemaType.document] });
+      const item = new TypedObject<{ object: TypedObject; position: Position }>({
+        object,
+        position,
+      });
       setTimeout(() => {
         setSelected(item.id);
       });
-      setLayout((layout) => ({ ...layout, [item.id]: position }));
       return [item, ...items];
     });
   };
@@ -98,7 +104,6 @@ const DemoGrid = ({
     <Grid
       id={id}
       items={items}
-      layout={layout}
       options={options}
       Component={Component}
       className={className}
@@ -112,13 +117,14 @@ const DemoGrid = ({
   );
 };
 
-type DemoCardProps = { id: string; title?: string; body?: string; image?: string };
+type DemoCardProps = GridDataItem & { object?: { title?: string; content?: string; image?: string } };
 
 const DemoCard: MosaicTileComponent<DemoCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, title, body, image }, grow, debug, onSelect },
+    { className, isDragging, draggableStyle, draggableProps, item: { id, object }, grow, debug, onSelect },
     forwardRef,
   ) => {
+    const { title, content, image } = object ?? {};
     const full = !title;
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
@@ -133,9 +139,9 @@ const DemoCard: MosaicTileComponent<DemoCardProps> = forwardRef(
             <Card.Menu position={full ? 'right' : undefined} />
           </Card.Header>
           {image && <Card.Media src={image} />}
-          {title && body && (
+          {title && content && (
             <Card.Body gutter classNames='line-clamp-3 text-sm'>
-              {body}
+              {content}
             </Card.Body>
           )}
           {debug && (

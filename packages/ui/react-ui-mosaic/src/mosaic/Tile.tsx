@@ -15,6 +15,7 @@ import { getTransformCSS, Path } from './util';
 
 export type MosaicActiveType = 'overlay' | 'rearrange' | 'origin' | 'destination';
 
+// TODO(wittjosiah): `id` should be `path` and `data` should be a `MosaicDataItem`.
 export type MosaicTileAction = { id: string; action: string; data?: any };
 
 /**
@@ -48,15 +49,18 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     onAction?: (action: MosaicTileAction) => void;
   };
 
+export type MosaicTileComponentProps<TData extends MosaicDataItem = MosaicDataItem> = Omit<
+  MosaicTileProps<TData>,
+  'Component' | 'operation'
+> & { operation: MosaicOperation };
+
 /**
  * Mosaic Tile component.
  */
 export type MosaicTileComponent<
   TData extends MosaicDataItem = MosaicDataItem,
   TElement extends HTMLElement = HTMLDivElement,
-> = ForwardRefExoticComponent<
-  RefAttributes<TElement> & Omit<MosaicTileProps<TData>, 'Component' | 'operation'> & { operation: MosaicOperation }
->;
+> = ForwardRefExoticComponent<RefAttributes<TElement> & MosaicTileComponentProps<TData>>;
 
 /**
  * Basic draggable mosaic tile.

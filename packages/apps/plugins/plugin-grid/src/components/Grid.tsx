@@ -16,6 +16,7 @@ import {
   Mosaic,
   Path,
   useMosaic,
+  type MosaicTileComponent,
 } from '@dxos/react-ui-mosaic';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -29,6 +30,8 @@ import {
   type Position,
   type Size,
 } from './layout';
+
+// TODO(wittjosiah): Factor out to @dxos/react-ui-grid.
 
 //
 // Selection
@@ -60,12 +63,17 @@ const defaultGridOptions: GridOptions = {
 // Container.
 //
 
-export type GridLayout = { [id: string]: Position };
+export type GridDataItem = MosaicDataItem & {
+  position: Position;
+};
 
-export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicContainerProps<TData, Position> &
+export type GridProps<TData extends GridDataItem = GridDataItem> = Omit<
+  MosaicContainerProps<TData, Position>,
+  'Component'
+> &
   ControlledSelection & {
+    Component?: MosaicTileComponent<TData, any>;
     items?: TData[];
-    layout?: GridLayout;
     options?: Partial<GridOptions>;
     margin?: boolean;
     square?: boolean;
@@ -80,13 +88,12 @@ export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicCon
 export const Grid = ({
   id,
   items = [],
-  layout = {},
   options: opts,
   margin,
   square = true,
   debug,
   selected: controlledSelected,
-  Component = Mosaic.DefaultComponent,
+  Component,
   className,
   onDrop,
   onOver,
@@ -126,7 +133,7 @@ export const Grid = ({
   const scrollToCenter = (id: string) => {
     const item = items.find((item) => item.id === id);
     if (item && width && height) {
-      const pos = getBounds(layout[item.id], cellBounds);
+      const pos = getBounds(item.position, cellBounds);
       const top = pos.top + marginSize - (height - cellBounds.height) / 2;
       const left = pos.left + marginSize - (width - cellBounds.width) / 2;
       containerRef.current!.scrollTo({ top, left, behavior: 'smooth' });
@@ -183,17 +190,16 @@ export const Grid = ({
 
             <div>
               {items.map((item) => {
-                const position = layout[item.id] ?? { x: 0, y: 0 };
                 return (
                   <Mosaic.DraggableTile
                     key={item.id}
                     item={item}
                     path={id}
-                    position={position}
+                    position={item.position}
                     Component={Component}
                     draggableStyle={{
                       position: 'absolute',
-                      ...getBounds(position, cellBounds, options.spacing),
+                      ...getBounds(item.position, cellBounds, options.spacing),
                     }}
                     onSelect={() => handleSelect(item.id)}
                     onAction={onAction}
