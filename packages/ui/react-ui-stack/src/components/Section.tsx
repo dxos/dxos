@@ -5,7 +5,7 @@
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { Button, DensityProvider, ListItem, useTranslation } from '@dxos/react-ui';
+import { Card, DensityProvider, DropdownMenu, ListItem, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import {
   fineButtonDimensions,
@@ -77,18 +77,21 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
               {children}
             </div>
 
-            <Button
-              variant='ghost'
-              classNames={[
-                'self-stretch justify-start rounded-is-none',
+            <Card.Menu
+              position={undefined}
+              classNames={mx(
+                fineButtonDimensions,
+                'self-stretch justify-center rounded-is flex items-center bs-auto is-auto',
                 hoverableFocusedControls,
                 active === 'destination' && 'invisible',
-              ]}
-              onClick={onRemove}
+                active === 'overlay' && 'text-primary-600 dark:text-primary-300',
+              )}
             >
-              <span className='sr-only'>{t('remove section label')}</span>
-              <X className={mx(getSize(4), hoverableControlItem, 'transition-opacity')} />
-            </Button>
+              <DropdownMenu.Item onClick={onRemove}>
+                <X className={mx(getSize(5), 'mr-2')} />
+                <span className='grow'>Remove</span>
+              </DropdownMenu.Item>
+            </Card.Menu>
           </div>
         </ListItem.Root>
       </DensityProvider>
