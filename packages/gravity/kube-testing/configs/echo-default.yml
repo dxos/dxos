@@ -1,4 +1,4 @@
-agents: 3
+agents: 2
 duration: 20000
 iterationDelay: 2000
 epochPeriod: 8
@@ -8,5 +8,6 @@ operationCount: 20
 signalArguments:
   - globalsubserver
 showPNG: false
-withReconnects: true
+withReconnects: false
 transport: SIMPLE_PEER
+platform: chromium
