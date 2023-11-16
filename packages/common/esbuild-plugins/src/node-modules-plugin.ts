@@ -67,7 +67,7 @@ export const NodeModulesPlugin = (): Plugin => ({
     });
     onResolve({ filter: /^(node:)?debug$/ }, (arg) => {
       return {
-        path: require.resolve('debug'), // Resolves to installed debug module.
+        path: require.resolve('debug/'), // Resolves to installed debug module.
       };
     });
     onResolve({ filter: /^(node:)?tty$/ }, (arg) => {
@@ -76,6 +76,61 @@ export const NodeModulesPlugin = (): Plugin => ({
       };
     });
     onResolve({ filter: /^(node:)?fs$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?child_process$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?fs\/promises$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?os$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?net$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?tls$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?zlib$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?dns$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?constants$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?inspector$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?readline$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^yargs/ }, (arg) => {
       return {
         path: require.resolve('../../polyfills/empty-module-stub.js'),
       };
