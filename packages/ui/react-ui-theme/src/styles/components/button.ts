@@ -9,23 +9,21 @@ import {
   hoverColors,
   coarseButtonDimensions,
   fineButtonDimensions,
-  openOutline,
   staticDisabled,
   focusRing,
   contentElevation,
   ghostHover,
 } from '../fragments';
 
-// TODO(burdon): Ghost styles should have no border (be really flat).
-
 export const primaryAppButtonColors =
-  'bg-primary-550 dark:bg-primary-550 text-white aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 aria-pressed:text-primary-100 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
+  'bg-primary-550 dark:bg-primary-550 text-white aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 aria-pressed:text-primary-100 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 data-[state=open]:text-primary-100 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
+
 export const defaultAppButtonColors =
-  'bg-white aria-pressed:bg-primary-100 aria-checked:bg-primary-100 text-neutral-800 aria-pressed:text-primary-800 aria-checked:text-primary-800 dark:bg-neutral-800 dark:aria-pressed:bg-primary-700 dark:aria-checked:bg-primary-700 dark:text-neutral-50 dark:aria-pressed:text-primary-50 dark:aria-checked:text-primary-50';
-export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutral-750/50 dark:text-neutral-50';
+  'text-neutral-800 dark:text-neutral-50 bg-white dark:bg-neutral-800 aria-pressed:text-primary-800 aria-pressed:bg-primary-100 dark:aria-pressed:text-primary-50 dark:aria-pressed:bg-primary-700 data-[state=open]:text-primary-800 data-[state=open]:bg-primary-100 dark:data-[state=open]:text-primary-50 dark:data-[state=open]:bg-primary-700 aria-checked:text-primary-800 aria-checked:bg-primary-100 dark:aria-checked:text-primary-50 dark:aria-checked:bg-primary-700';
+
 export const ghostButtonColors =
   ghostHover +
-  ' hover:text-inherit dark:hover:text-inherit aria-pressed:text-primary-800 aria-checked:text-primary-800 dark:aria-pressed:text-primary-100 dark:aria-checked:text-primary-100';
+  ' hover:text-inherit dark:hover:text-inherit aria-pressed:bg-neutral-450/5 dark:aria-pressed:bg-neutral-25/5 data-[state=open]:bg-neutral-450/5 dark:data-[state=open]:bg-neutral-25/5 aria-checked:bg-neutral-450/5 dark:aria-checked:bg-neutral-25/5';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
@@ -57,7 +55,6 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) =
     resolvedVariant === 'outline' &&
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
     !props.disabled && focusRing,
-    openOutline,
     // Register all radix states
     'group',
     ...etc,

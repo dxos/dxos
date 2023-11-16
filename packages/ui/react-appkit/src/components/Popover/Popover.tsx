@@ -7,7 +7,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import React, { type ComponentProps, type ReactNode, useCallback, useState } from 'react';
 
-import { openOutline, focusRing, getSize, mx, ghostHover } from '@dxos/react-ui-theme';
+import { focusRing, getSize, mx, ghostHover } from '@dxos/react-ui-theme';
 
 export interface PopoverSlots {
   content?: Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'>;
@@ -94,7 +94,7 @@ export const Popover = ({
       {...slots.trigger}
       onKeyUp={onKeyUp}
       data-keyupid='open'
-      className={mx(ghostHover, focusRing, openOutline, slots.trigger?.className)}
+      className={mx(ghostHover, focusRing, slots.trigger?.className)}
     >
       {openTrigger}
     </PopoverPrimitive.Trigger>
