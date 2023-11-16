@@ -12,7 +12,6 @@ import {
   type GroupingState,
   type RowData,
   type RowSelectionState,
-  type VisibilityState,
   type OnChangeFn,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -20,32 +19,11 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { debounce } from '@dxos/async';
 
 import { TableBody } from './TableBody';
+import { TableProvider as UntypedTableProvider, type TypedTableProvider } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
+import { type TableProps } from './props';
 import { groupTh, tableRoot } from '../../theme';
-import { type TableColumnDef, type KeyValue } from '../../types';
-
-export type TableRowSelectionState = Partial<{
-  rowsSelectable: boolean | 'multi';
-  rowSelection: RowSelectionState;
-  defaultRowSelection: RowSelectionState;
-  onRowSelectionChange: (rowSelection: RowSelectionState) => void;
-}>;
-
-export type TableProps<TData extends RowData> = {
-  keyAccessor?: KeyValue<TData>;
-  data?: TData[];
-  columns?: TableColumnDef<TData>[];
-  columnVisibility?: VisibilityState;
-  onColumnResize?: (state: Record<string, number>) => void;
-  role?: 'table' | 'grid' | 'treegrid';
-  grouping?: string[];
-  header?: boolean;
-  footer?: boolean;
-  border?: boolean;
-  fullWidth?: boolean;
-  debug?: boolean;
-} & TableRowSelectionState;
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
@@ -60,7 +38,9 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debug,
   } = props;
 
-  // Selection
+  const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
+
+  // Row selection
   const [rowSelection = {}, setRowSelection] = useControllableState({
     prop: props.rowSelection,
     onChange: props.onRowSelectionChange,
@@ -87,8 +67,8 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     // Columns
     columns,
     defaultColumn: {
-      size: 400, // Required in order remove default width.
-      maxSize: 800,
+      size: 256, // Required in order remove default width.
+      maxSize: 1024,
     },
 
     // Rows
@@ -127,9 +107,9 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
   return (
-    <>
+    <TableProvider {...props} header={header} expand={expand} table={table}>
       <table className={tableRoot(props)} style={{ width: fullWidth ? '100%' : table.getTotalSize() }}>
-        <TableHead {...props} header={header} state={table.getState()} headers={table.getHeaderGroups()} />
+        <TableHead />
 
         {grouping.length === 0 && (
           <TableBody {...props} rowSelection={rowSelection} expand={expand} rows={table.getRowModel().rows} />
@@ -166,6 +146,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
           <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
         </pre>
       )}
-    </>
+    </TableProvider>
   );
 };

@@ -7,10 +7,9 @@ import { type CellContext } from '@tanstack/react-table';
 import { chromeSurface, fixedSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
-import { type TableProps } from './components';
 import { type TableBodyProps } from './components/Table/TableBody';
 import { type TableFooterProps } from './components/Table/TableFooter';
-import { type TableHeadProps } from './components/Table/TableHead';
+import { type TableFlags, type TableProps } from './components/Table/props';
 
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 export const flushPadding = 'pli-0 plb-0';
@@ -32,7 +31,7 @@ export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
 // thead
 //
 
-export type TheadStyleProps = Partial<TableHeadProps<any>>;
+export type TheadStyleProps = Partial<TableFlags>;
 
 export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header }, ...etc) =>
   mx(header ? 'sticky block-start-0 z-10' : 'collapse', header && fixedSurface, ...etc);

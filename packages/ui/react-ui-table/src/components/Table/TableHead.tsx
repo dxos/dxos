@@ -2,30 +2,30 @@
 // Copyright 2023 DXOS.org
 //
 
-import { flexRender, type HeaderGroup, type RowData, type TableState } from '@tanstack/react-table';
+import { flexRender, type RowData } from '@tanstack/react-table';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { type TableProps } from './Table';
+import { useTableContext } from './TableContext';
 import { theadResizeRoot, theadResizeThumb, theadRoot, theadTh, theadTr } from '../../theme';
 
-export type TableHeadProps<TData extends RowData> = Partial<TableProps<TData>> & {
-  state: TableState;
-  headers: HeaderGroup<TData>[];
-  expand?: boolean;
-};
+const TABLE_HEAD_NAME = 'TableHead';
 
-export const TableHead = <TData extends RowData>(props: TableHeadProps<TData>) => {
-  const { state, headers, expand, debug, fullWidth } = props;
+type TableHeadProps = {};
+
+const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
+  const tableContext = useTableContext<TData>(TABLE_HEAD_NAME);
+  const headerGroups = tableContext.table.getHeaderGroups();
+  const state = tableContext.table.getState();
   return (
-    <thead className={theadRoot(props)}>
-      {headers.map((headerGroup) => {
+    <thead className={theadRoot(tableContext)}>
+      {headerGroups.map((headerGroup) => {
         return (
           // Group element to hover resize handles.
-          <tr key={headerGroup.id} className={theadTr(props)}>
+          <tr key={headerGroup.id} className={theadTr(tableContext)}>
             {/* TODO(burdon): Calc. width. */}
-            {debug && (
+            {tableContext.debug && (
               <th className='font-system-light' style={{ width: 32 }}>
                 #
               </th>
@@ -38,9 +38,10 @@ export const TableHead = <TData extends RowData>(props: TableHeadProps<TData>) =
                   key={header.id}
                   style={{
                     // Don't set width if fullWidth and no extrinsic size.
-                    width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
+                    width:
+                      tableContext.fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
                   }}
-                  className={theadTh(props, header.column.columnDef.meta?.header?.classNames)}
+                  className={theadTh(tableContext, header.column.columnDef.meta?.header?.classNames)}
                 >
                   {!header || header.isPlaceholder
                     ? null
@@ -52,23 +53,29 @@ export const TableHead = <TData extends RowData>(props: TableHeadProps<TData>) =
                    */}
                   {header.column.columnDef.meta?.resizable && (
                     <div
-                      className={theadResizeRoot(props, isResizing && 'hidden')}
+                      className={theadResizeRoot(tableContext, isResizing && 'hidden')}
                       style={{
                         transform: `translateX(${isResizing ? state.columnSizingInfo.deltaOffset : 0}px)`,
                       }}
                       onMouseDown={header.getResizeHandler()}
                       onTouchStart={header.getResizeHandler()}
                     >
-                      <div className={mx(theadResizeThumb(props))} />
+                      <div className={mx(theadResizeThumb(tableContext))} />
                     </div>
                   )}
                 </th>
               );
             })}
-            {expand && <th />}
+            {tableContext.expand && <th />}
           </tr>
         );
       })}
     </thead>
   );
 };
+
+TableHead.displayName = TABLE_HEAD_NAME;
+
+export { TableHead };
+
+export type { TableHeadProps };
