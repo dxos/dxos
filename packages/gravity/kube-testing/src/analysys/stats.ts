@@ -21,7 +21,8 @@ const seriesToJson = (s: Series) => {
 };
 
 const getStats = (series: number[], additionalMetrics: Record<string, number> = {}) => {
-  const { Series } = require('danfojs-node')
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Series } = require('danfojs-node');
   const stats = new Series(series).describe() as Series;
 
   const values: number[] = [];
@@ -97,8 +98,9 @@ export const analyzeMessages = async (results: PlanResults) => {
 };
 
 export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: PlanResults) => {
-  const { Series } = require('danfojs-node')
- 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Series } = require('danfojs-node');
+
   const start = Date.now();
   /**
    * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}
