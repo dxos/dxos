@@ -6,8 +6,7 @@ import { FileCloud, type IconProps } from '@phosphor-icons/react';
 import React, { type Ref } from 'react';
 
 import { File } from '@braneframe/types';
-import { type PluginDefinition } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/react-client/echo';
+import { type PluginDefinition, isObject } from '@dxos/app-framework';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import { FileCard, FileMain, FileSection, FileSlide } from './components';
@@ -38,7 +37,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
             case 'section':
               return isFile(data.object) ? <FileSection file={data.object} /> : null;
             case 'card': {
-              if (isTypedObject(data.content) && typeof data.content.id === 'string' && isFile(data.content.object)) {
+              if (isObject(data.content) && typeof data.content.id === 'string' && isFile(data.content.object)) {
                 const cardProps = { ...props, item: { id: data.content.id, object: data.content.object } };
                 return isTileComponentProps(cardProps) ? (
                   <FileCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />

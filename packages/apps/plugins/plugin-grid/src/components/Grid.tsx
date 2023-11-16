@@ -33,6 +33,8 @@ import {
 
 // TODO(wittjosiah): Factor out to @dxos/react-ui-grid.
 
+const DEFAULT_TYPE = 'grid-item';
+
 //
 // Selection
 //
@@ -88,6 +90,7 @@ export type GridProps<TData extends GridDataItem = GridDataItem> = Omit<
 export const Grid = ({
   id,
   items = [],
+  type = DEFAULT_TYPE,
   options: opts,
   margin,
   square = true,
@@ -195,6 +198,7 @@ export const Grid = ({
                     key={item.id}
                     item={item}
                     path={id}
+                    type={type}
                     position={item.position}
                     Component={Component}
                     draggableStyle={{

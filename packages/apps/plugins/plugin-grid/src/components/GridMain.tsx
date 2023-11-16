@@ -5,8 +5,8 @@
 import React, { forwardRef, type FC } from 'react';
 
 import { Document as DocumentType, Grid as GridType } from '@braneframe/types';
-import { Surface } from '@dxos/app-framework';
-import { getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
+import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { getSpaceForObject, isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -35,6 +35,7 @@ export const getObject = (item: any): TypedObject => item.node?.data ?? item.obj
 
 export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const space = getSpaceForObject(grid);
+  const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
 
   if (!space) {
     return null;
@@ -66,8 +67,9 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
     if (grid.items.includes(gridItem) && over.position) {
       gridItem.position = over.position;
     } else {
-      const object: TypedObject = getObject(active.item);
-      grid.items.push(new GridType.Item({ object, position: over.position }));
+      const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
+      const object = parseData ? parseData(active.item, 'object') : undefined;
+      isTypedObject(object) && grid.items.push(new GridType.Item({ object, position: over.position }));
     }
   };
 
@@ -82,6 +84,7 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
         id='grid' // TODO(burdon): Namespace.
         // TODO(wittjosiah): Cast is needed because subtypes are currently always optional.
         items={grid.items as GridDataItem[]}
+        type={GridType.Item.schema.typename}
         onAction={handleAction}
         onCreate={handleCreate}
         onDrop={handleDrop}
@@ -93,5 +96,9 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
 };
 
 const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props }, forwardRef) => {
-  return <Surface role='card' ref={forwardRef} data={{ content: item }} {...props} />;
+  const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
+  const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
+  const content = parseData ? parseData(item, 'view-object') : item;
+
+  return <Surface role='card' ref={forwardRef} data={{ content }} {...props} />;
 });

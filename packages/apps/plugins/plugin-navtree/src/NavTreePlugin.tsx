@@ -33,6 +33,9 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 case 'object':
                   return node.data;
 
+                case 'view-object':
+                  return { id: `${node.id}-view`, object: node.data };
+
                 default:
                   return undefined;
               }

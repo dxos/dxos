@@ -79,6 +79,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
             {...container.getOverlayProps?.()}
             item={activeItem.item}
             path={activeItem.path}
+            type={activeItem.type}
             operation={operation}
             active='overlay'
           />

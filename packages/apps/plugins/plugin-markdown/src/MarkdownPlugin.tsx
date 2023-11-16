@@ -10,7 +10,7 @@ import React, { type FC, type MutableRefObject, type RefCallback, useCallback, t
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -271,11 +271,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'card': {
-              if (
-                isTypedObject(data.content) &&
-                typeof data.content.id === 'string' &&
-                isDocument(data.content.object)
-              ) {
+              if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
                 const cardProps = {
                   ...props,
                   item: {
