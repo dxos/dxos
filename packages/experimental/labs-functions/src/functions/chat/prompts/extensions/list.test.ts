@@ -12,7 +12,7 @@ import { TestBuilder } from '../testing';
 
 describe('Prompts', () => {
   const builder = new TestBuilder();
-  before(() => builder.init());
+  beforeEach(() => builder.init());
 
   test.skip('json', async () => {
     const schema = new Schema({

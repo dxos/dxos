@@ -11,7 +11,7 @@ import { TestBuilder } from '../testing';
 
 describe('Prompts', () => {
   const builder = new TestBuilder();
-  before(() => builder.init());
+  beforeEach(() => builder.init());
 
   test.skip('chess', async () => {
     const messages = handler({ message: 'Suggest the next move.', context: { pgn: '1. e4 e5' } });
