@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 
 import { fork } from 'node:child_process';
-import { readFile, mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { join } from 'node:path';
-import type { BrowserType } from 'playwright';
+import type { Browser, BrowserType } from 'playwright';
 import { v4 } from 'uuid';
 
 import { Trigger } from '@dxos/async';
@@ -180,15 +180,26 @@ const getBrowser = (browserType: Platform): BrowserType => {
   }
 };
 
+const browsers: { [key: string]: Browser } = {};
+
 const getNewBrowserContext = async (browserType: Platform, options: BrowserOptions) => {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
   await mkdir(userDataDir, { recursive: true });
 
-  const browserRunner = getBrowser(browserType);
-  const context = await browserRunner.launchPersistentContext(userDataDir, {
-    headless: options.headless,
-    args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
-  });
+  let browser = browsers[browserType];
+
+  if (!browser) {
+    const browserRunner = getBrowser(browserType);
+    browser = await browserRunner.launch({
+      headless: options.headless,
+      args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
+    });
+
+    browsers[browserType] = browser;
+  }
+
+  const context = await browser.newContext();
+
   const page = await context.newPage();
 
   return {

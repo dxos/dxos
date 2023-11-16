@@ -1,4 +1,4 @@
-agents: 2
+agents: 3
 duration: 20000
 iterationDelay: 2000
 epochPeriod: 8
@@ -10,4 +10,3 @@ signalArguments:
 showPNG: false
 withReconnects: false
 transport: SIMPLE_PEER
-platform: chromium

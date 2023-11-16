@@ -35,6 +35,7 @@ export type SignalTestSpec = {
   repeatInterval: number;
   agentWaitTime: number;
   duration: number;
+  platform: 'nodejs';
 };
 
 export type SignalAgentConfig = {
@@ -64,6 +65,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
       agentWaitTime: 5_000,
       duration: 20_000,
       type: 'discovery',
+      platform: 'nodejs',
       // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
     };
   }
@@ -90,6 +92,9 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
       return {
         config: { servers, topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex()) },
+        runtime: {
+          platform: spec.platform,
+        },
       };
     });
   }
