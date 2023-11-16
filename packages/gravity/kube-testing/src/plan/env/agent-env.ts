@@ -12,7 +12,7 @@ export const REDIS_PORT = 6379;
 
 export type AgentEnvParams<S, C> = {
   agentParams: AgentParams<S, C>;
-  redisOptions: RedisOptions;
+  redisOptions?: RedisOptions;
 };
 
 export class AgentEnv<S, C> {
@@ -22,8 +22,8 @@ export class AgentEnv<S, C> {
   public redisSub: Redis;
 
   constructor(public params: AgentEnvParams<S, C>) {
-    this.redis = new Redis(this.params.redisOptions);
-    this.redisSub = new Redis(this.params.redisOptions);
+    this.redis = new Redis(this.params.redisOptions ?? { port: REDIS_PORT });
+    this.redisSub = new Redis(this.params.redisOptions ?? { port: REDIS_PORT });
 
     this.redis.on('error', (err) => console.log('Redis Client Error', err));
     this.redisSub.on('error', (err) => console.log('Redis Client Error', err));

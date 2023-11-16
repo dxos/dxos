@@ -22,7 +22,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
   try {
     initLogProcessor(params);
 
-    const env = new AgentEnv<S, C>(params);
+    const env = new AgentEnv<S, C>({ agentParams: params });
     await env.open();
     await plan.run(env);
   } catch (err) {
