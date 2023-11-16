@@ -120,7 +120,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       minSize: 100,
       header: (column) => {
-        return <div className={'truncate'}>{label ?? column.header.id}</div>;
+        return label ?? column.header.id;
       },
       cell:
         model && onUpdate
@@ -146,7 +146,7 @@ export class ColumnBuilder<TData extends RowData> {
       minSize: 100,
       // TODO(burdon): Default.
       header: (column) => {
-        return <div className={'truncate'}>{label ?? column.header.id}</div>;
+        return label ?? column.header.id;
       },
       cell: onUpdate
         ? (cell) => {
@@ -217,7 +217,8 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 100,
       minSize: 100,
-      header: (cell) => <div className='w-full truncate text-right'>{label ?? cell.header.id}</div>,
+      meta: { header: { classNames: 'text-end' } },
+      header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
         const [text, setText] = useState<string>();
@@ -278,7 +279,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 220, // TODO(burdon): Depends on format.
       minSize: 100,
-      header: (cell) => <div>{label ?? cell.header.id}</div>,
+      header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
 
@@ -307,7 +308,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 86,
       minSize: 86,
-      header: (cell) => <div>{label ?? cell.header.id}</div>,
+      header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
         if (!value) {
@@ -352,7 +353,7 @@ export class ColumnBuilder<TData extends RowData> {
       id,
       size: 40,
       minSize: 40,
-      header: (column) => <div className='flex grow justify-center'>{label ?? column.header.id}</div>,
+      header: (column) => label ?? column.header.id,
       cell: (cell) => {
         const { row } = cell;
         const checked = row.getCanSelect()
@@ -385,7 +386,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 40,
       minSize: 40,
-      header: (column) => <div className='flex grow justify-center'>{label ?? column.header.id}</div>,
+      header: (column) => label ?? column.header.id,
       cell: (cell) => {
         const value = cell.getValue();
         return (

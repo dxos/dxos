@@ -38,7 +38,7 @@ export type TableProps<TData extends RowData> = {
   columns?: TableColumnDef<TData>[];
   columnVisibility?: VisibilityState;
   onColumnResize?: (state: Record<string, number>) => void;
-  interactivity?: 'static' | 'default' | 'full';
+  role?: 'table' | 'grid' | 'treegrid';
   grouping?: string[];
   header?: boolean;
   footer?: boolean;

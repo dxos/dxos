@@ -29,7 +29,7 @@ export const TableBody = <TData extends RowData>(props: TableBodyProps<TData>) =
             {row.getVisibleCells().map((cell) => {
               // TODO(burdon): Allow class override from column.
               return (
-                <td key={cell.id} className={tdRoot(props, cell.column.columnDef.meta?.slots?.cell?.className)}>
+                <td key={cell.id} className={tdRoot(props, cell.column.columnDef.meta?.cell?.classNames)}>
                   {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
                 </td>
               );

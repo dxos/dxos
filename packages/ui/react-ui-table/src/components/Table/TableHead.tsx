@@ -40,7 +40,7 @@ export const TableHead = <TData extends RowData>(props: TableHeadProps<TData>) =
                     // Don't set width if fullWidth and no extrinsic size.
                     width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
                   }}
-                  className={theadTh(props, header.column.columnDef.meta?.slots?.header?.className)}
+                  className={theadTh(props, header.column.columnDef.meta?.header?.classNames)}
                 >
                   {!header || header.isPlaceholder
                     ? null

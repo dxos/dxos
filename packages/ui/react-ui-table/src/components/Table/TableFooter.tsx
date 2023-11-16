@@ -23,7 +23,7 @@ export const TableFooter = <TData extends RowData>(props: TableFooterProps<TData
 
           {footerGroup.headers.map((footer) => {
             return (
-              <th key={footer.id} className={tfootTh(props, footer.column.columnDef.meta?.slots?.footer?.className)}>
+              <th key={footer.id} className={tfootTh(props, footer.column.columnDef.meta?.footer?.classNames)}>
                 {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
               </th>
             );

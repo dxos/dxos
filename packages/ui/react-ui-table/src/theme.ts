@@ -20,11 +20,10 @@ export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 
 export type TableStyleProps = Partial<TableProps<any>>;
 
-export const tableRoot: ComponentFunction<TableStyleProps> = ({ fullWidth }, ...etc) =>
-  mx(fullWidth && 'table-fixed', ...etc);
+export const tableRoot: ComponentFunction<TableStyleProps> = (_props, ...etc) => mx('table-fixed', ...etc);
 
 export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
-  mx('px-2 font-light text-xs text-left', ...etc);
+  mx('pli-2 text-start font-medium', ...etc);
 
 //
 // thead
@@ -38,7 +37,7 @@ export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header }, ...etc
 export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
 
 export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) =>
-  mx('relative text-start font-medium pli-2 select-none', border && groupBorder, ...etc);
+  mx('relative text-start font-medium pli-2 select-none truncate', border && groupBorder, ...etc);
 
 export const theadResizeRoot: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
   mx(
