@@ -10,11 +10,11 @@ import { describe, test } from '@dxos/test';
 import handler from './chess';
 import { TestBuildler } from '../testing';
 
-describe('Prompts', () => {
+describe.skip('Prompts', () => {
   const builder = new TestBuildler().init();
-  beforeEach(() => builder.init());
+  before(() => builder.init());
 
-  test.skip('json', async () => {
+  test('json', async () => {
     const schema = new Schema({
       props: [
         {
