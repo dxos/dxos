@@ -1322,6 +1322,67 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-inbox:
+    dependencies:
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../../common/display-name
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      date-fns:
+        specifier: ^2.29.3
+        version: 2.29.3
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.2.0
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-ipfs:
     dependencies:
       '@braneframe/types':
@@ -8074,6 +8135,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       cmdk:
         specifier: ^0.2.0
         version: 0.2.0(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -8261,8 +8328,8 @@ importers:
         specifier: ^8.4.21
         version: 8.4.24
       tailwind-merge:
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^1.14.0
+        version: 1.14.0
       tailwindcss:
         specifier: ~3.3.2
         version: 3.3.2(ts-node@10.9.1)
@@ -40243,8 +40310,8 @@ packages:
       tslib: 2.6.0
     dev: false
 
-  /tailwind-merge@1.10.0:
-    resolution: {integrity: sha512-WFnDXSS4kFTZwjKg5/oZSGzBRU/l+qcbv5NVTzLUQvJ9yovDAP05h0F2+ZFW0Lw9EcgRoc2AfURUdZvnEFrXKg==}
+  /tailwind-merge@1.14.0:
+    resolution: {integrity: sha512-3mFKyCo/MBcgyOTlrY8T7odzZFx+w+qKSMAmdFzRvqBfLlSigU6TZnlFHK0lkMwj9Bj8OYU+9yW9lmGuS0QEnQ==}
     dev: false
 
   /tailwindcss-logical@3.0.0(autoprefixer@10.4.13)(postcss@8.4.24)(ts-node@10.9.1):

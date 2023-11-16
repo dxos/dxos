@@ -19,7 +19,7 @@ import { type AgentParams } from '../spec';
  *               `redis-server --port 6378` to start a Redis server on port 6378.
  * TODO(mykola): Mock Redis server.
  */
-describe('AgentEnv with WebSocketConnector', () => {
+describe.skip('AgentEnv with WebSocketConnector', () => {
   test('set value', async () => {
     const server = new WebSocketRedisProxy({
       redisTCPConnection: {

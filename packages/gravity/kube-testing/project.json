@@ -28,7 +28,7 @@
         "{options.outputFile}"
       ]
     },
-    "test": {
+    "e2e": {
       "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
