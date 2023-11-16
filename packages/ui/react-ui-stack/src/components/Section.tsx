@@ -89,7 +89,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
             >
               <DropdownMenu.Item onClick={onRemove}>
                 <X className={mx(getSize(5), 'mr-2')} />
-                <span className='grow'>Remove</span>
+                <span className='grow'>{t('remove section label')}</span>
               </DropdownMenu.Item>
             </Card.Menu>
           </div>
