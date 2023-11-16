@@ -4,13 +4,13 @@
 
 import { type CellContext } from '@tanstack/react-table';
 
-import { chromeSurface, inputSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { chromeSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
 import { type TableProps } from './components';
-import { type TableBodyProps } from './components/TableBody';
-import { type TableFooterProps } from './components/TableFooter';
-import { type TableHeadProps } from './components/TableHead';
+import { type TableBodyProps } from './components/Table/TableBody';
+import { type TableFooterProps } from './components/Table/TableFooter';
+import { type TableHeadProps } from './components/Table/TableHead';
 
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 
@@ -21,7 +21,7 @@ export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 export type TableStyleProps = Partial<TableProps<any>>;
 
 export const tableRoot: ComponentFunction<TableStyleProps> = ({ fullWidth }, ...etc) =>
-  mx(inputSurface, fullWidth && 'table-fixed', ...etc);
+  mx(fullWidth && 'table-fixed', ...etc);
 
 export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
   mx('px-2 font-light text-xs text-left', ...etc);

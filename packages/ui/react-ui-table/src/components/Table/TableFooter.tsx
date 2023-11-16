@@ -6,7 +6,7 @@ import { flexRender, type HeaderGroup, type RowData } from '@tanstack/react-tabl
 import React from 'react';
 
 import { type TableProps } from './Table';
-import { tfootRoot, tfootTr, tfootTh } from '../theme';
+import { tfootRoot, tfootTr, tfootTh } from '../../theme';
 
 export type TableFooterProps<TData extends RowData> = Partial<TableProps<TData>> & {
   footers: HeaderGroup<TData>[];

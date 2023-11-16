@@ -6,7 +6,7 @@ import { flexRender, type Row, type RowData, type RowSelectionState } from '@tan
 import React from 'react';
 
 import { type TableProps } from './Table';
-import { selectedRow, tdRoot, tbodyTr } from '../theme';
+import { selectedRow, tdRoot, tbodyTr } from '../../theme';
 
 export type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
   rows: Row<TData>[];

@@ -10,8 +10,8 @@ import { Popover, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx, staticPlaceholderText } from '@dxos/react-ui-theme';
 
-import { type SearchListQueryModel } from '../helpers';
-import { translationKey } from '../translations';
+import { type SearchListQueryModel } from '../../helpers';
+import { translationKey } from '../../translations';
 
 export type ComboboxCellItems<TData extends RowData> = Record<string, { label: string; data: TData }>;
 

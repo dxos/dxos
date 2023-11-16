@@ -8,7 +8,7 @@ import React from 'react';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type TableProps } from './Table';
-import { theadResizeRoot, theadResizeThumb, theadRoot, theadTh, theadTr } from '../theme';
+import { theadResizeRoot, theadResizeThumb, theadRoot, theadTh, theadTr } from '../../theme';
 
 export type TableHeadProps<TData extends RowData> = Partial<TableProps<TData>> & {
   state: TableState;

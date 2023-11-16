@@ -14,8 +14,8 @@ import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
-import { createColumnBuilder, type SearchListQueryModel, type ValueUpdater } from '../helpers';
-import { type TableColumnDef } from '../types';
+import { createColumnBuilder, type SearchListQueryModel, type ValueUpdater } from '../../helpers';
+import { type TableColumnDef } from '../../types';
 
 // TODO(burdon): Header menu builder.
 // TODO(burdon): Expand width if not all columns have explicit size.

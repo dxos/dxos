@@ -22,8 +22,8 @@ import { debounce } from '@dxos/async';
 import { TableBody } from './TableBody';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
-import { groupTh, tableRoot } from '../theme';
-import { type TableColumnDef, type KeyValue } from '../types';
+import { groupTh, tableRoot } from '../../theme';
+import { type TableColumnDef, type KeyValue } from '../../types';
 
 export type TableRowSelectionState = Partial<{
   rowsSelectable: boolean | 'multi';
@@ -38,6 +38,7 @@ export type TableProps<TData extends RowData> = {
   columns?: TableColumnDef<TData>[];
   columnVisibility?: VisibilityState;
   onColumnResize?: (state: Record<string, number>) => void;
+  interactivity?: 'static' | 'default' | 'full';
   grouping?: string[];
   header?: boolean;
   footer?: boolean;
