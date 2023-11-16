@@ -53,15 +53,15 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       // TODO(burdon): Create set of messages.
       const block = thread.blocks[thread.blocks.length - 1];
       if (block.__meta.keys.length === 0) {
-        const messages = createRequest(client, space, block);
+        const messages = createRequest(space, block);
         log.info('request', { messages });
-        console.log(JSON.stringify(messages, null, 2));
+        console.log('request', { messages });
 
         // TODO(burdon): Error handling (e.g., 401);
         const { content } = (await chat.request(messages)) ?? {};
         log.info('response', { content });
         if (content) {
-          const messages = createResponse(client, content);
+          const messages = createResponse(client, space, content);
           console.log('response', { messages });
 
           thread.blocks.push(
