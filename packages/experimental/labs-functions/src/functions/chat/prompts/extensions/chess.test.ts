@@ -7,13 +7,13 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import handler from './chess';
-import { TestBuildler } from '../testing';
+import { TestBuilder } from '../testing';
 
-describe.skip('Prompts', () => {
-  const builder = new TestBuildler();
+describe('Prompts', () => {
+  const builder = new TestBuilder();
   before(() => builder.init());
 
-  test('chess', async () => {
+  test.skip('chess', async () => {
     const messages = handler({ message: 'Suggest the next move.', context: { pgn: '1. e4 e5' } });
     expect(messages).to.have.length.greaterThan(1);
     const result = await builder.model.predictMessages(messages!);

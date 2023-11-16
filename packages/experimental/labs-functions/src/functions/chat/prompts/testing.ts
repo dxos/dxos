@@ -9,7 +9,7 @@ import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Rethink test suites.
-export class TestBuildler {
+export class TestBuilder {
   model: BaseChatModel = new FakeListChatModel({ responses: ['fake response!'] });
 
   init() {

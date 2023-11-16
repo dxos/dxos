@@ -8,13 +8,13 @@ import { Schema } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import handler from './chess';
-import { TestBuildler } from '../testing';
+import { TestBuilder } from '../testing';
 
-describe.skip('Prompts', () => {
-  const builder = new TestBuildler().init();
+describe('Prompts', () => {
+  const builder = new TestBuilder();
   before(() => builder.init());
 
-  test('json', async () => {
+  test.skip('json', async () => {
     const schema = new Schema({
       props: [
         {
