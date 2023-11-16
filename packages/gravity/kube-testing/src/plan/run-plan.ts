@@ -14,6 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { buildBrowserBundle } from './browser-bundle';
+import { WebSocketRedisProxy } from './env/websocket-redis-proxy';
 import { runNode, runBrowser } from './run-process';
 import { type PlanOptions, type AgentParams, type PlanResults, type TestPlan } from './spec';
 
@@ -102,6 +103,9 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
   const planResults: PlanResults = { agents: {} };
   const promises: Promise<void>[] = [];
 
+  // Start websocket REDIS proxy for browser tests.
+  const server = new WebSocketRedisProxy();
+
   {
     // stop the test when the plan fails (e.g. signal server dies)
     // TODO(nf): add timeout for plan completion
@@ -172,6 +176,8 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
       summary: join(outDir, SUMMARY_FILENAME),
     });
   }
+
+  void server.destroy();
 
   let stats: any;
   try {

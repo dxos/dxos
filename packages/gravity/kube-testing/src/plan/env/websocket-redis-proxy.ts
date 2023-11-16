@@ -11,12 +11,27 @@ import { runInContext } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
+import { REDIS_PORT } from './agent-env';
+
 export type WebSocketRedisProxyParams = {
   /**
    * ioredis uses `family = 4` by default.
    */
-  redisTCPConnection: NetConnectOpts;
-  websocketServer: WebSocket.ServerOptions;
+  redisTCPConnection?: NetConnectOpts;
+  websocketServer?: WebSocket.ServerOptions;
+};
+
+export const DEFAULT_WEBSOCKET: WebSocket.ServerOptions = {
+  host: 'localhost',
+  port: 8080,
+};
+
+export const DEFAULT_WEBSOCKET_ADDRESS = `ws://${DEFAULT_WEBSOCKET.host}:${DEFAULT_WEBSOCKET.port}`;
+
+export const DEFAULT_REDIS_TCP_CONNECTION: NetConnectOpts = {
+  host: 'localhost',
+  port: REDIS_PORT,
+  family: 4,
 };
 
 export class WebSocketRedisProxy {
@@ -32,8 +47,8 @@ export class WebSocketRedisProxy {
    */
   private _ws?: WebSocketDuplex;
 
-  constructor(private readonly _params: WebSocketRedisProxyParams) {
-    this._wsServer = createServer(this._params.websocketServer);
+  constructor(private readonly _params?: WebSocketRedisProxyParams) {
+    this._wsServer = createServer(this._params?.websocketServer ?? DEFAULT_WEBSOCKET);
     this._wsServer.on('stream', (ws) => {
       log.info('New WebSocket connection');
       ws.on('error', (err) => {
@@ -43,7 +58,7 @@ export class WebSocketRedisProxy {
       /**
        * TCP stream to Redis server.
        */
-      const stream = createConnection(this._params.redisTCPConnection);
+      const stream = createConnection(this._params?.redisTCPConnection ?? DEFAULT_REDIS_TCP_CONNECTION);
       this._ctx.onDispose(() => {
         stream.destroy();
       });

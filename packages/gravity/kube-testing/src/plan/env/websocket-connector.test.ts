@@ -61,13 +61,13 @@ describe('AgentEnv with WebSocketConnector', () => {
     const testId = PublicKey.random().toString();
     const envs = agents.map(
       () =>
-        new AgentEnv({
-          agentParams: {
+        new AgentEnv(
+          {
             agents,
             testId,
           } as unknown as AgentParams<any, any>,
-          redisOptions: { Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions,
-        }),
+          { Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions,
+        ),
     );
 
     await Promise.all(envs.map((env) => env.open()));

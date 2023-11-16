@@ -10,10 +10,7 @@ import { type AgentParams } from '../spec';
 
 export const REDIS_PORT = 6379;
 
-export type AgentEnvParams<S, C> = {
-  agentParams: AgentParams<S, C>;
-  redisOptions?: RedisOptions;
-};
+export { type RedisOptions };
 
 export class AgentEnv<S, C> {
   public redis: Redis;
@@ -21,9 +18,9 @@ export class AgentEnv<S, C> {
   // Redis client for subscribing to sync events.
   public redisSub: Redis;
 
-  constructor(public params: AgentEnvParams<S, C>) {
-    this.redis = new Redis(this.params.redisOptions ?? { port: REDIS_PORT });
-    this.redisSub = new Redis(this.params.redisOptions ?? { port: REDIS_PORT });
+  constructor(public params: AgentParams<S, C>, private readonly _redisOptions?: RedisOptions) {
+    this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    this.redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
 
     this.redis.on('error', (err) => console.log('Redis Client Error', err));
     this.redisSub.on('error', (err) => console.log('Redis Client Error', err));
@@ -41,8 +38,8 @@ export class AgentEnv<S, C> {
 
   async syncBarrier(key: string) {
     const done = new Trigger();
-    const agentCount = Object.keys(this.params.agentParams.agents).length;
-    const syncKey = `${this.params.agentParams.testId}:${key}`;
+    const agentCount = Object.keys(this.params.agents).length;
+    const syncKey = `${this.params.testId}:${key}`;
 
     const listener: Callback<unknown> = async (error, result) => {
       const value = await this.redis.get(syncKey);
