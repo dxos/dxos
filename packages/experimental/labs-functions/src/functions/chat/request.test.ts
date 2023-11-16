@@ -4,10 +4,8 @@
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { afterTest, describe, test } from '@dxos/test';
-
-import { RequestBuilder } from './request';
 
 describe.skip('RequestBuilder', () => {
   test('basic', async () => {
@@ -27,8 +25,8 @@ describe.skip('RequestBuilder', () => {
 
       // console.log(client.experimental.types);
 
-      const builder = new RequestBuilder(client);
-      builder.setContext(generator.getSchema(TestSchemaType.project)!);
+      // const builder = new RequestBuilder(client);
+      // builder.setContext(generator.getSchema(TestSchemaType.project)!);
       // console.log(JSON.stringify(builder.build(), null, 2));
     }
   });

@@ -31,15 +31,32 @@ const Story = () => {
       const space = await client.spaces.create();
       const thread = space.db.add(
         new ThreadType({
-          blocks: Array.from({ length: 5 }).map(
+          blocks: Array.from({ length: 8 }).map(
             () =>
               new ThreadType.Block({
                 identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
-                messages: [
-                  {
-                    text: faker.lorem.sentences(3),
-                  },
-                ],
+                messages: faker.helpers.multiple(
+                  () =>
+                    faker.datatype.boolean({ probability: 0.8 })
+                      ? {
+                          text: faker.lorem.sentences(3),
+                        }
+                      : {
+                          data: JSON.stringify(
+                            faker.helpers.multiple(
+                              () => ({
+                                id: PublicKey.random().truncate(),
+                                name: faker.lorem.word(),
+                                content: faker.lorem.sentences(3),
+                              }),
+                              {
+                                count: faker.number.int({ min: 2, max: 5 }),
+                              },
+                            ),
+                          ),
+                        },
+                  { count: faker.number.int({ min: 1, max: 3 }) },
+                ),
               }),
           ),
         }),
