@@ -6,7 +6,8 @@ import { flexRender, type Row, type RowData } from '@tanstack/react-table';
 import React from 'react';
 
 import { useTableContext } from './TableContext';
-import { selectedRow, tdRoot, tbodyTr } from '../../theme';
+import { selectedRow, tbodyTr } from '../../theme';
+import { Cell } from '../Cell/Cell';
 
 type TableBodyProps<TData extends RowData> = {
   rows: Row<TData>[];
@@ -30,9 +31,9 @@ const TableBody = <TData extends RowData>({ rows }: TableBodyProps<TData>) => {
 
             {row.getVisibleCells().map((cell) => {
               return (
-                <td key={cell.id} className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>
+                <Cell key={cell.id} cell={cell}>
                   {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
-                </td>
+                </Cell>
               );
             })}
 

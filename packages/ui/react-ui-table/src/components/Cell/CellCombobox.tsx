@@ -22,7 +22,7 @@ const initialItems = <TData extends RowData>(model: SearchListQueryModel<TData>,
       }
     : {};
 
-export const ComboboxCell = <TData extends RowData>({
+export const CellCombobox = <TData extends RowData>({
   model,
   value,
   onValueChange,

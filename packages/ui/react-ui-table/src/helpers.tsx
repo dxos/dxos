@@ -21,7 +21,7 @@ import { Input, Tooltip } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { ComboboxCell } from './components';
+import { CellCombobox } from './components';
 import { textPadding } from './theme';
 
 // TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?
@@ -126,7 +126,7 @@ export class ColumnBuilder<TData extends RowData> {
       cell:
         model && onUpdate
           ? (cell) => (
-              <ComboboxCell<any>
+              <CellCombobox<any>
                 model={model}
                 value={cell.getValue()}
                 onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
