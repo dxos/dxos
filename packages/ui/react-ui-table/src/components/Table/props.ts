@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type RowData, type RowSelectionState, type VisibilityState } from '@tanstack/react-table';
+import { type RowData, type RowSelectionState, type Table, type VisibilityState } from '@tanstack/react-table';
 
 import { type KeyValue, type TableColumnDef } from '../../types';
 
@@ -30,3 +30,8 @@ export type TableProps<TData extends RowData> = TableFlags &
     defaultRowSelection: RowSelectionState;
     onRowSelectionChange: (rowSelection: RowSelectionState) => void;
   }>;
+
+export type TableContextValue<TData extends RowData> = TableFlags &
+  Pick<TableProps<TData>, 'keyAccessor'> & {
+    table: Table<TData>;
+  };

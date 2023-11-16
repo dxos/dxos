@@ -111,9 +111,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       <table className={tableRoot(props)} style={{ width: fullWidth ? '100%' : table.getTotalSize() }}>
         <TableHead />
 
-        {grouping.length === 0 && (
-          <TableBody {...props} rowSelection={rowSelection} expand={expand} rows={table.getRowModel().rows} />
-        )}
+        {grouping.length === 0 && <TableBody rows={table.getRowModel().rows} />}
 
         {grouping.length !== 0 &&
           table.getGroupedRowModel().rows.map((row, i) => {
@@ -133,12 +131,12 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
                   </tr>
                 </thead>
 
-                <TableBody {...props} rowSelection={rowSelection} expand={expand} rows={row.subRows} />
+                <TableBody rows={row.subRows} />
               </Fragment>
             );
           })}
 
-        {footer && <TableFooter {...props} footers={table.getFooterGroups()} />}
+        {footer && <TableFooter />}
       </table>
 
       {debug && (

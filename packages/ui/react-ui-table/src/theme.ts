@@ -7,9 +7,7 @@ import { type CellContext } from '@tanstack/react-table';
 import { chromeSurface, fixedSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
-import { type TableBodyProps } from './components/Table/TableBody';
-import { type TableFooterProps } from './components/Table/TableFooter';
-import { type TableFlags, type TableProps } from './components/Table/props';
+import { type TableContextValue, type TableFlags } from './components/Table/props';
 
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 export const flushPadding = 'pli-0 plb-0';
@@ -20,7 +18,7 @@ export const headPadding = 'pli-2 plb-1.5';
 // table
 //
 
-export type TableStyleProps = Partial<TableProps<any>>;
+export type TableStyleProps = Partial<TableContextValue<any>>;
 
 export const tableRoot: ComponentFunction<TableStyleProps> = (_props, ...etc) => mx('table-fixed', ...etc);
 
@@ -60,7 +58,7 @@ export const theadResizeThumb: ComponentFunction<TheadStyleProps> = (_props, ...
 // tbody
 //
 
-export type TbodyStyleProps = Partial<TableBodyProps<any>>;
+export type TbodyStyleProps = Partial<TableContextValue<any>>;
 
 export const tbodyRoot: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx(...etc);
 export const tbodyTr: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx('group', ...etc);
@@ -77,7 +75,7 @@ export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...e
 // tfoot
 //
 
-export type TfootStyleProps = Partial<TableFooterProps<any>>;
+export type TfootStyleProps = Partial<TableContextValue<any>>;
 
 export const tfootRoot: ComponentFunction<TfootStyleProps> = (_props, ...etc) =>
   mx('sticky block-end-0 z-10', chromeSurface, ...etc);

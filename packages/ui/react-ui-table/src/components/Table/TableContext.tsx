@@ -3,16 +3,12 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { type RowData, type Table } from '@tanstack/react-table';
+import { type RowData } from '@tanstack/react-table';
 import { type ReactNode } from 'react';
 
-import { type TableFlags } from './props';
+import { type TableContextValue } from './props';
 
 export const TABLE_NAME = 'Table';
-
-export type TableContextValue<TData extends RowData> = TableFlags & {
-  table: Table<TData>;
-};
 
 type CreateContextResult<TData extends RowData> = Readonly<
   [TypedTableProvider<unknown>, (consumerName: string) => TableContextValue<TData>]
