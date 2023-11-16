@@ -23,7 +23,14 @@ import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
 import { type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { type AgentRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import {
+  type AgentRunOptions,
+  type AgentEnv,
+  type PlanResults,
+  type TestParams,
+  type TestPlan,
+  type Platform,
+} from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type EchoTestSpec = {
@@ -38,6 +45,7 @@ export type EchoTestSpec = {
   transport: TransportKind;
   showPNG: boolean;
   withReconnects: boolean;
+  platform: Platform;
 };
 
 export type EchoAgentConfig = {
@@ -84,6 +92,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       transport: TransportKind.SIMPLE_PEER,
       // withReconnects: false,
       withReconnects: true,
+      platform: 'chromium',
     };
   }
 
@@ -102,6 +111,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         creator: agentIdx === 0,
         ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && agentIdx === spec.agents - 1,
       },
+      runtime: { platform: spec.platform },
     }));
   }
 
