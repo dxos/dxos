@@ -12,7 +12,7 @@ import { Game, types } from '@dxos/chess-app/proto';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { subscribe } from '@dxos/echo-schema';
-import { DevServer, type FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
 const HUB_PORT = 8757;
@@ -53,23 +53,22 @@ describe('Chess', () => {
     });
     await openAndClose(functionsPlugin);
 
-    const functionsManifest = load(
-      await readFile(join(__dirname, '../../../functions.yml'), 'utf8'),
-    ) as FunctionsManifest;
+    const manifest = load(await readFile(join(__dirname, '../../../functions.yml'), 'utf8')) as FunctionManifest;
 
     const devServer = new DevServer(client, {
       directory: join(__dirname, '../../functions'),
-      manifest: functionsManifest,
+      manifest,
     });
 
     await devServer.initialize();
     await devServer.start();
     afterTest(() => devServer.stop());
 
-    const triggers = new TriggerManager(client, functionsManifest.triggers, {
+    const triggers = new TriggerManager(client, manifest, {
       runtime: 'dev',
       endpoint: `http://localhost:${HUB_PORT}`,
     });
+
     await triggers.start();
     afterTest(() => triggers.stop());
 

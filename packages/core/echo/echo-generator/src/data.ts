@@ -100,6 +100,10 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         type: Schema.PropType.STRING,
       },
       {
+        id: 'website',
+        type: Schema.PropType.STRING,
+      },
+      {
         id: 'status',
         type: Schema.PropType.STRING,
       },
