@@ -79,11 +79,11 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
 const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onDelete?: () => void }) => {
   const id = useId();
 
-  if (message.ref) {
+  if (message.object) {
     return (
       <div className='flex overflow-hidden px-2 py-1 group'>
         <Mosaic.Container id={id} Component={Pill}>
-          <Mosaic.DraggableTile path={id} item={message.ref} Component={Pill} onRemove={onDelete} />
+          <Mosaic.DraggableTile path={id} item={message.object} Component={Pill} onRemove={onDelete} />
         </Mosaic.Container>
       </div>
     );
@@ -116,10 +116,8 @@ const Pill: MosaicTileComponent<Expando> = forwardRef(
       title = title.text;
     }
 
-    console.log('>>>>>>>>>', JSON.stringify(item));
-
     return (
-      <Card.Root ref={forwardRef} style={draggableStyle} classNames='w-full bg-neutral-50 m-1 ring'>
+      <Card.Root ref={forwardRef} style={draggableStyle} classNames='w-full bg-neutral-50'>
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
           <Card.Title title={title} />

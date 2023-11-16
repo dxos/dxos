@@ -46,7 +46,7 @@ export class ImapProcessor {
   async disconnect() {
     if (this._connection) {
       log.info('disconnecting...');
-      await this._connection.end();
+      this._connection.end();
       this._connection = undefined;
       log.info('disconnected');
     }
@@ -88,17 +88,17 @@ export class ImapProcessor {
         const convertToContact = ({ address: email, name }: EmailAddress): MessageType.Recipient =>
           new MessageType.Recipient({ email, name: name?.length ? name : undefined });
 
-        const message = new MessageType({
-          // TODO(burdon): Meta.
-          // source: {
-          //   resolver: this._id,
-          //   guid: messageId,
-          // },
-          date: date.toISOString(),
-          from: convertToContact(from.value[0]),
-          to: toArray(to).map((to) => convertToContact(to.value[0])),
-          subject,
-        });
+        const message = new MessageType(
+          {
+            date: date.toISOString(),
+            from: convertToContact(from.value[0]),
+            to: toArray(to).map((to) => convertToContact(to.value[0])),
+            subject,
+          },
+          {
+            meta: { keys: [{ source: this._id, id: messageId }] },
+          },
+        );
 
         // Skip bulk mail.
         if (!message.from?.email || blacklist.some((regex) => regex.test(message.from!.email!))) {

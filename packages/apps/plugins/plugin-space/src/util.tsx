@@ -65,6 +65,7 @@ export const objectToGraphNode = ({
   let previousObjects: TypedObject[] = [];
   return effect(() => {
     if (isSpaceFolder && space.state.get() === SpaceState.INACTIVE) {
+      parent.removeNode(object.id);
       return;
     }
 

@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { DevServer, type FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
@@ -39,10 +39,10 @@ export default class Dev extends BaseCommand<typeof Dev> {
     }
 
     await this.execWithClient(async (client) => {
-      const functionsManifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionsManifest;
+      const manifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionManifest;
       const server = new DevServer(client, {
         directory: this.flags.baseDir,
-        manifest: functionsManifest,
+        manifest,
       });
 
       await server.initialize();
@@ -51,12 +51,13 @@ export default class Dev extends BaseCommand<typeof Dev> {
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
       const functionsConfig = config.values.runtime?.agent?.plugins?.find(
-        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Const.
+        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );
 
       invariant(functionsConfig?.config?.port, 'Port not set.');
       const endpoint = `http://localhost:${functionsConfig?.config?.port}`;
-      const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
+      const runtime = 'dev'; // TODO(burdon): Const.
+      const triggers = new TriggerManager(client, manifest, { endpoint, runtime });
       await triggers.start();
 
       this.log(`Function dev-server: ${server.endpoint} (ctrl-c to exit)`);
@@ -68,7 +69,11 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       if (this.flags.verbose) {
         this.log(
-          chalk`{green Function endpoints: ${endpoint}\n${server.functions.map((name) => `- ${name}`).join('\n')}}`,
+          chalk`{green Function endpoints}:\n${server.functions
+            .map(
+              ({ def: { id, endpoint: path } }) => chalk`- {blue ${join(endpoint, runtime, path).padEnd(40)}} => ${id}`,
+            )
+            .join('\n')}`,
         );
       }
 
