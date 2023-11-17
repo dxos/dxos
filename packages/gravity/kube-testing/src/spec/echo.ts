@@ -20,7 +20,7 @@ import { TransportKind } from '@dxos/network-manager';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-import { randomInt, range } from '@dxos/util';
+import { isNode, randomInt, range } from '@dxos/util';
 
 import { type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
 import {
@@ -138,7 +138,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     this.builder.storage = !spec.withReconnects
       ? createStorage({ type: StorageType.RAM })
       : createStorage({
-          type: StorageType.NODE,
+          type: isNode() ? StorageType.NODE : StorageType.WEBFS,
           root: `/tmp/dxos/gravity/${env.params.testId}/${env.params.agentId}`,
         });
     await this._init(env);
