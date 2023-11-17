@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type AbstractEchoObject } from './object';
+import type { AbstractEchoObject } from './object';
 import type { EchoDatabase } from '../database';
-import { type Schema } from '../proto';
+import type { Schema } from '../proto';
 
 // TODO(burdon): Don't export symbols outside of package?
 
@@ -82,6 +82,7 @@ export type ObjectMeta = {
 /**
  * Base properties of all typed echo objects.
  */
+// TODO(dmaretskyi): Merge with `EchoObject` after automerge migration.
 export interface TypedObjectProperties extends EchoObject {
   /**
    * Fully qualified name of the object type for objects created from the schema.

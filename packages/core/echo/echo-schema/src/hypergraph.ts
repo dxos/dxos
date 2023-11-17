@@ -235,7 +235,7 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = Array.from(this._database._objects.values())
+      this._results = [...this._database._objects.values(), ...this._database.automerge._objects.values()]
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,

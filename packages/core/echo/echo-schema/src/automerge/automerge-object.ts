@@ -1,25 +1,31 @@
 import { DocHandle } from "@automerge/automerge-repo";
 import { EchoDatabase } from "../database";
-import { ObjectMeta, TypedObjectOptions, TypedObjectProperties, base, db, debug, subscribe } from "../object";
+import { ObjectMeta, TypedObjectProperties, base, db, debug, subscribe } from "../object/types";
+
 import { AbstractEchoObject } from "../object/object";
 import { dxos } from "../proto/gen/schema";
 import { next as automerge, Doc,  } from "@automerge/automerge";
 import { AutomergeDb } from "./automerge-db";
 import { PublicKey } from "@dxos/keys";
-import { raise } from "@dxos/debug";
+import { StackTrace, raise } from "@dxos/debug";
 import { failedInvariant, invariant } from "@dxos/invariant";
+import { type  TypedObjectOptions } from "../object";
 
 export type BindOptions = {
   db: AutomergeDb;
   docHandle: DocHandle<any>;
   path: string[];
 }
-
 export class AutomergeObject implements TypedObjectProperties {
   private _db?: AutomergeDb;
   private _doc?: Doc<any>;
   private _docHandle?: DocHandle<any>;
   private _path: string[] = [];
+
+  /**
+   * @internal
+   */
+  _id = PublicKey.random().toHex();
 
   constructor (initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
@@ -42,15 +48,16 @@ export class AutomergeObject implements TypedObjectProperties {
   get __deleted(): boolean {
     return this._getDoc().deleted;
   }
+  
   toJSON() {
-    return JSON.stringify(this._getDoc());
+    return this._getDoc();
   }
+
   get id(): string {
-    return this._docHandle?.documentId ?? PublicKey.random().toHex(); // TODO(dmaretskyi): fix random ids.
+    return this._id;
   }
-  get [base](): AbstractEchoObject<any> {
-    return this as any;
-  }
+
+  [base] = this as any;
 
   get [db](): EchoDatabase | undefined {
     return undefined;
@@ -70,7 +77,7 @@ export class AutomergeObject implements TypedObjectProperties {
       // TODO(dmaretskyi): type: ???.
 
       // TODO(dmaretskyi): Initial values for data.
-      data: this._encode(initialProps),
+      data: this._encode(initialProps ?? {}),
       meta: this._encode({
         keys: [],
         ...opts?.meta,
@@ -110,6 +117,10 @@ export class AutomergeObject implements TypedObjectProperties {
       },
 
       get: (_, key) => {
+        if(!isValidKey(key)) {
+          return Reflect.get(this, key);
+        }
+
         return this._get([...path, key as string]);
       },
 
@@ -144,6 +155,9 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   private _encode(value: any) {
+    if(value === undefined) {
+      return null;
+    }
     return value;
   }
 
@@ -155,3 +169,20 @@ export class AutomergeObject implements TypedObjectProperties {
     return this._doc ?? this._docHandle?.docSync() ?? failedInvariant();
   }
 }
+
+
+const isValidKey = (key: string | symbol) => {
+  return !(
+    typeof key === 'symbol' ||
+    key.startsWith('@@__') ||
+    key === 'constructor' ||
+    key === '$$typeof' ||
+    key === 'toString' ||
+    key === 'toJSON' ||
+    key === 'id' ||
+    key === '__meta' ||
+    key === '__schema' ||
+    key === '__typename' ||
+    key === '__deleted'
+  );
+};

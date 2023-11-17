@@ -18,6 +18,7 @@ import { TypedObject } from './object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
 import { AutomergeDb } from './automerge/automerge-db';
+import { AutomergeObject } from './automerge/automerge-object';
 
 /**
  * Database wrapper.
@@ -81,6 +82,10 @@ export class EchoDatabase {
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {
+    if(obj[base] instanceof AutomergeObject) {
+      return this.automerge.add(obj);
+    }
+
     log('add', { id: obj.id, type: (obj as any).__typename });
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);

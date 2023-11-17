@@ -18,6 +18,7 @@ import { ComplexMap } from '@dxos/util';
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { schemaBuiltin } from '../proto';
+import { setGlobalAutomergePreference } from '../object';
 
 /**
  * @deprecated Use TestBuilder.
@@ -88,3 +89,21 @@ export class TestPeer {
     await this.db.flush();
   }
 }
+
+export const testWithAutomerge = (tests: () => void) => {
+  describe('with automerge', () => {
+    before(() => {
+      setGlobalAutomergePreference(true);
+    })
+
+    after(() => {
+      setGlobalAutomergePreference(false);
+    })
+
+    tests();
+  });
+
+  describe('without automerge', () => {
+    tests();
+  });
+} 
