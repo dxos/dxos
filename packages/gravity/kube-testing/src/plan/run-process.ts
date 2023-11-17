@@ -105,7 +105,7 @@ export const runBrowser = <S, C>(
   scheduleMicroTask(ctx, async () => {
     invariant(agentParams.runtime.platform);
 
-    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: true });
+    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: false });
     ctx.onDispose(async () => {
       await page.close();
       await context.close();
@@ -119,6 +119,7 @@ export const runBrowser = <S, C>(
     const apis: EposedApis = {
       dxgravity_done: (code) => {
         doneTrigger.wake(code);
+        void ctx.dispose();
       },
       // Expose log hook for playwright.
       dxgravity_log: (config, entry) => {
@@ -161,6 +162,10 @@ export const runBrowser = <S, C>(
         contentType: 'text/javascript',
         data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8'),
       },
+    });
+
+    ctx.onDispose(() => {
+      server.close();
     });
 
     const port = (server.address() as AddressInfo).port;
