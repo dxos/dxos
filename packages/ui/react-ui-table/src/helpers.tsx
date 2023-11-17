@@ -162,7 +162,7 @@ export class ColumnBuilder<TData extends RowData> {
                   ref={inputRef}
                   variant='subdued'
                   placeholder={placeholder ? 'Add row...' : undefined}
-                  classNames='is-full'
+                  classNames={['is-full', textPadding]}
                   value={(value as string) ?? ''}
                   onBlur={() => handleSave()}
                   onChange={(event) => setValue(event.target.value)}
@@ -280,8 +280,8 @@ export class ColumnBuilder<TData extends RowData> {
    */
   key({ label, tooltip, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
     return defaults(props, {
-      size: 86,
-      minSize: 86,
+      size: 94,
+      minSize: 94,
       meta: { cell: { classNames: ['font-mono', textPadding] } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
