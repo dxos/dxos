@@ -221,7 +221,14 @@ export const Dynamic = {
     }, []);
     return (
       <AnchoredOverflow.Root classNames='max-bs-[80dvh]'>
-        <Table<Item> keyAccessor={(row) => row.publicKey.toHex()} columns={columns()} data={items} fullWidth footer />
+        <Table<Item>
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={columns()}
+          data={items}
+          fullWidth
+          footer
+        />
         <AnchoredOverflow.Anchor />
       </AnchoredOverflow.Root>
     );
@@ -238,6 +245,7 @@ export const Editable = {
     return (
       <Table<Item>
         role='grid'
+        rowsSelectable='multi'
         keyAccessor={(row) => row.publicKey.toHex()}
         columns={columns(onUpdate)}
         data={items}
@@ -261,6 +269,7 @@ export const Resizable = {
 
     return (
       <Table<Item>
+        rowsSelectable='multi'
         keyAccessor={(row) => row.publicKey.toHex()}
         columns={columns(onUpdate)}
         data={items}

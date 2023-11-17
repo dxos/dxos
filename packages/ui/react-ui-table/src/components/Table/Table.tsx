@@ -14,7 +14,7 @@ import {
   type RowSelectionState,
   type OnChangeFn,
 } from '@tanstack/react-table';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 
@@ -43,11 +43,27 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
   // Row selection
-  const [rowSelection = {}, setRowSelection] = useControllableState({
+  const [rowSelection = {}, directlySetRowSelection] = useControllableState({
     prop: props.rowSelection,
     onChange: props.onRowSelectionChange,
     defaultProp: props.defaultRowSelection,
   });
+
+  // TODO(thure): Does @tanstack/react-table really need this intervention? It did seem necessary to enforce single-selection...
+  const handleRowSelectionChange = useCallback<OnChangeFn<RowSelectionState>>(
+    (updaterOrValue) => {
+      const nextRowSelection = typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+      if (rowsSelectable === 'multi') {
+        directlySetRowSelection(nextRowSelection);
+      } else if (rowsSelectable) {
+        const nextRowSelectionKey = Object.keys(nextRowSelection).filter((id) => !rowSelection[id])[0];
+        directlySetRowSelection(nextRowSelectionKey ? { [nextRowSelectionKey]: true } : {});
+      } else {
+        directlySetRowSelection({});
+      }
+    },
+    [rowSelection, directlySetRowSelection],
+  );
 
   // Resizing
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
@@ -94,7 +110,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       : rowsSelectable
       ? { enableRowSelection: true }
       : {}),
-    onRowSelectionChange: setRowSelection as OnChangeFn<RowSelectionState>,
+    onRowSelectionChange: handleRowSelectionChange,
 
     // Resize columns
     columnResizeMode: 'onChange',

@@ -21,6 +21,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { CellCombobox } from './components';
+import { useTableContext } from './components/Table/TableContext';
 import { textPadding } from './theme';
 
 export type ValueUpdater<TData extends RowData, TValue> = (row: TData, id: string, value: TValue) => void;
@@ -327,8 +328,9 @@ export class ColumnBuilder<TData extends RowData> {
       size: 32,
       minSize: 32,
       header: ({ table }) => {
+        const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
-        return (
+        return rowsSelectable === 'multi' ? (
           <Input.Root>
             <Input.Checkbox
               size={4}
@@ -337,7 +339,7 @@ export class ColumnBuilder<TData extends RowData> {
               onCheckedChange={(event) => table.toggleAllRowsSelected()}
             />
           </Input.Root>
-        );
+        ) : null;
       },
       cell: (cell) => {
         const { row } = cell;
