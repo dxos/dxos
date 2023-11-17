@@ -4,6 +4,9 @@
 
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
 package dxos.mesh.teleport.control;
 
 message RegisterExtensionRequest {
@@ -11,9 +14,17 @@ message RegisterExtensionRequest {
   string name = 1;
 }
 
+message ControlHeartbeatRequest {
+  google.protobuf.Timestamp request_timestamp = 1;
+}
+
+message ControlHeartbeatResponse {
+  google.protobuf.Timestamp request_timestamp = 1;
+}
+
+
 /// Controls the lifycycle of the teleport session and its exentsions.
 service ControlService {
   rpc RegisterExtension (RegisterExtensionRequest) returns (google.protobuf.Empty);
-
-  rpc Heartbeat(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc Heartbeat(ControlHeartbeatRequest) returns (ControlHeartbeatResponse);
 }

@@ -18,7 +18,7 @@ import { range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { type SerializedLogEntry, getReader } from '../analysys';
-import { type PlanResults, type TestParams, type TestPlan, type AgentEnv } from '../plan';
+import { type PlanResults, type TestParams, type TestPlan, type AgentEnv, type AgentRunOptions } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
@@ -110,7 +110,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     };
   }
 
-  async init({ spec, outDir }: TestParams<ReplicationTestSpec>): Promise<ReplicationAgentConfig[]> {
+  async init({ spec, outDir }: TestParams<ReplicationTestSpec>): Promise<AgentRunOptions<ReplicationAgentConfig>[]> {
     if (!!spec.feedLoadDuration === !!spec.feedMessageCount) {
       throw new Error('Only one of feedLoadDuration or feedMessageCount must be set.');
     }
@@ -152,11 +152,13 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     return range(spec.agents).map((agentIdx) => {
       return {
-        agentIdx,
-        signalUrl: signal.url(),
-        swarmTopicIds: swarmTopicsIds.map((key) => key.toHex()),
-        feeds: Object.fromEntries(feedsBySwarm.get(agentIdx)!.entries()),
-        feedKeys,
+        config: {
+          agentIdx,
+          signalUrl: signal.url(),
+          swarmTopicIds: swarmTopicsIds.map((key) => key.toHex()),
+          feeds: Object.fromEntries(feedsBySwarm.get(agentIdx)!.entries()),
+          feedKeys,
+        },
       };
     });
   }

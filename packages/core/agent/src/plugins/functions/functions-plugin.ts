@@ -14,7 +14,7 @@ import { Plugin } from '../plugin';
 
 const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   '@type': 'dxos.agent.functions.FunctionsConfig',
-  port: 7000, // TODO(burdon): Change default (clashes with OS/X).
+  port: 7001, // TODO(burdon): Change default (clashes with OS/X).
 };
 
 export class FunctionsPlugin extends Plugin {
@@ -32,16 +32,15 @@ export class FunctionsPlugin extends Plugin {
 
     this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
 
-    this._dispatchers.set('dev', this._devDispatcher);
+    const runtime = 'dev'; // TODO(burdon): Const.
+    this._dispatchers.set(runtime, this._devDispatcher);
     this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
 
     const app = express();
     app.use(express.json());
 
     app.post('/:dispatcher/:functionName', (req, res) => {
-      const dispatcher = req.params.dispatcher;
-      const functionName = req.params.functionName;
-
+      const { dispatcher, functionName } = req.params;
       if (!dispatcher || !functionName || !this._dispatchers.has(dispatcher)) {
         res.statusCode = 404;
         res.end();

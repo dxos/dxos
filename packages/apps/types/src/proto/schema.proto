@@ -183,7 +183,7 @@ message Thread {
     string timestamp = 1;
     string text = 2;
     string data = 3; // JSON.
-    dxos.schema.Expando ref = 4; // TODO(burdon): Change to TypedObject.
+    dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 
   // TODO(burdon): Meta (e.g., source).
@@ -202,6 +202,7 @@ message Thread {
   repeated Block blocks = 2;
 }
 
+// TODO(burdon): Unify with Thread.Message.
 message Message {
   option (object) = true;
 
@@ -219,4 +220,10 @@ message Message {
   string subject = 5;
   string body = 6;
   string ref = 7; // TODO(burdon): Implement as link.
+}
+
+message Inbox {
+  option (object) = true;
+
+  string name = 1;
 }
