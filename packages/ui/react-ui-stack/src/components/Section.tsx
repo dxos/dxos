@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical, X, ArrowSquareOut } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import { DotsSixVertical, X, ArrowSquareOut, DotsThreeVertical } from '@phosphor-icons/react';
+import React, { type PropsWithChildren, forwardRef, useState } from 'react';
 
-import { Card, DensityProvider, DropdownMenu, ListItem, useTranslation } from '@dxos/react-ui';
+import { Button, DensityProvider, DropdownMenu, ListItem, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import {
   fineButtonDimensions,
@@ -15,6 +15,7 @@ import {
   hoverableControls,
   hoverableFocusedControls,
   hoverableFocusedKeyboardControls,
+  hoverableOpenControlItem,
   inputSurface,
   mx,
   staticHoverableControls,
@@ -39,6 +40,7 @@ export type SectionProps = PropsWithChildren<{
 export const Section = forwardRef<HTMLLIElement, SectionProps>(
   ({ id, title, active, draggableProps, draggableStyle, onRemove, onAction, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+    const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
     return (
       <DensityProvider density='fine'>
@@ -77,25 +79,48 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
             <div role='none' className='flex flex-1 min-is-0 overflow-hidden'>
               {children}
             </div>
-
-            <Card.Menu
-              position={undefined}
-              classNames={mx(
-                fineButtonDimensions,
-                'self-stretch justify-center rounded-is flex items-center bs-auto is-auto',
-                hoverableFocusedControls,
-                active === 'destination' && 'invisible',
-              )}
+            <DropdownMenu.Root
+              {...{
+                open: optionsMenuOpen,
+                onOpenChange: (nextOpen: boolean) => {
+                  // if (!nextOpen) {
+                  //   suppressNextTooltip.current = true;
+                  // }
+                  return setOptionsMenuOpen(nextOpen);
+                },
+              }}
             >
-              <DropdownMenu.Item onClick={() => onAction?.({ id, action: 'navigate' })}>
-                <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                <span className='grow'>{t('navigate to section label')}</span>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={onRemove}>
-                <X className={mx(getSize(5), 'mr-2')} />
-                <span className='grow'>{t('remove section label')}</span>
-              </DropdownMenu.Item>
-            </Card.Menu>
+              <DropdownMenu.Trigger asChild>
+                <Button
+                  variant='ghost'
+                  classNames={[
+                    'shrink-0 pli-2 pointer-fine:pli-1 rounded-none',
+                    hoverableControlItem,
+                    hoverableFocusedControls,
+                    hoverableOpenControlItem,
+                    active === 'overlay' && 'invisible',
+                  ]}
+                  // data-testid={testId}
+                >
+                  <DotsThreeVertical className={getSize(4)} />
+                </Button>
+              </DropdownMenu.Trigger>
+
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content classNames='z-[31]'>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onClick={() => onAction?.({ id, action: 'navigate' })}>
+                      <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                      <span className='grow'>{t('navigate to section label')}</span>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onClick={onRemove}>
+                      <X className={mx(getSize(5), 'mr-2')} />
+                      <span className='grow'>{t('remove section label')}</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           </div>
         </ListItem.Root>
       </DensityProvider>
