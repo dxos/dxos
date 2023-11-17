@@ -26,7 +26,7 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
           <tr key={headerGroup.id} className={theadTr(tableContext)}>
             {/* TODO(burdon): Calc. width. */}
             {tableContext.debug && (
-              <th className='font-system-light' style={{ width: 32 }}>
+              <th className='font-mono' style={{ width: 32 }}>
                 #
               </th>
             )}
@@ -37,9 +37,7 @@ const TableHead = <TData extends RowData>(_props: TableHeadProps) => {
                 <th
                   key={header.id}
                   style={{
-                    // Don't set width if fullWidth and no extrinsic size.
-                    width:
-                      tableContext.fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
+                    width: header.getSize(),
                   }}
                   className={theadTh(tableContext, header.column.columnDef.meta?.header?.classNames)}
                 >

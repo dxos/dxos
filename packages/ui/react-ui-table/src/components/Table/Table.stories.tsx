@@ -77,12 +77,18 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor(
     'name',
-    builder.string({ onUpdate, meta: { expand: true }, footer: (props) => props.table.getRowModel().rows.length }),
+    builder.string({
+      label: 'Name',
+      onUpdate,
+      meta: { expand: true },
+      footer: (props) => props.table.getRowModel().rows.length,
+    }),
   ),
-  helper.accessor('started', builder.date({ relative: true, meta: { resizable: true } })),
+  helper.accessor('started', builder.date({ label: 'Started', relative: true, meta: { resizable: true } })),
   helper.accessor(
     'count',
     builder.number({
+      label: 'Count',
       meta: { resizable: true },
       // TODO(burdon): Sorting.
       getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),

@@ -326,7 +326,19 @@ export class ColumnBuilder<TData extends RowData> {
       id,
       size: 32,
       minSize: 32,
-      header: (column) => label ?? column.header.id,
+      header: ({ table }) => {
+        const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
+        return (
+          <Input.Root>
+            <Input.Checkbox
+              size={4}
+              classNames={['mli-auto', className]}
+              checked={checked}
+              onCheckedChange={(event) => table.toggleAllRowsSelected()}
+            />
+          </Input.Root>
+        );
+      },
       cell: (cell) => {
         const { row } = cell;
         const checked = row.getCanSelect()
