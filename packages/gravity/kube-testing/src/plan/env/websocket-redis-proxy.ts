@@ -3,7 +3,7 @@
 //
 
 import type WebSocket from 'isomorphic-ws';
-import { createConnection, type NetConnectOpts } from 'node:net';
+import { createConnection, type NetConnectOpts, type Socket } from 'node:net';
 import { type Duplex } from 'node:stream';
 import { createServer, type Server, type WebSocketDuplex } from 'websocket-stream';
 
@@ -36,6 +36,7 @@ export const DEFAULT_REDIS_TCP_CONNECTION: NetConnectOpts = {
 
 export class WebSocketRedisProxy {
   private readonly _ctx = new Context();
+  private readonly _connections = new Set<{ ws: WebSocketDuplex; tcp: Socket }>();
 
   /**
    * WebSocket server to enable connection from playwright browser.
@@ -50,37 +51,51 @@ export class WebSocketRedisProxy {
   constructor(private readonly _params?: WebSocketRedisProxyParams) {
     this._wsServer = createServer(this._params?.websocketServer ?? DEFAULT_WEBSOCKET);
     this._wsServer.on('stream', (ws) => {
-      log.info('New WebSocket connection');
-      ws.on('error', (err) => {
-        log.error('REDIS proxy WebSocket connection error', { err });
-      });
+      log('New WebSocket connection');
+      const ctx = this._ctx.derive();
 
       /**
        * TCP stream to Redis server.
        */
       const stream = createConnection(this._params?.redisTCPConnection ?? DEFAULT_REDIS_TCP_CONNECTION);
-      this._ctx.onDispose(() => {
-        stream.destroy();
-      });
 
       stream.once('ready', () => {
-        log.info('TCP connection ready');
-        runInContext(this._ctx, () => this._pipeStreams(ws, stream));
+        log('TCP connection ready');
+        runInContext(ctx, () => this._pipeStreams(ctx, ws, stream));
+      });
+
+      const connection = { ws, tcp: stream };
+      this._connections.add(connection);
+
+      ctx.onDispose(() => {
+        ws.removeAllListeners();
+        stream.removeAllListeners();
+        ws.destroy();
+        stream.destroy();
+        this._connections.delete(connection);
+      });
+
+      ws.on('error', (err: Error) => {
+        // Not critical error.
+        log('REDIS proxy WebSocket connection error', { err });
+        void ctx.dispose();
       });
 
       stream.on('error', (err) => {
         log.error('REDIS proxy TCP connection error', { err });
+        void ctx.dispose();
       });
     });
   }
 
   async destroy() {
     this._wsServer.close();
+    await this._ctx.dispose();
   }
 
-  private _pipeStreams(first: Duplex, second: Duplex) {
+  private _pipeStreams(ctx: Context, first: Duplex, second: Duplex) {
     first.pipe(second).pipe(first);
-    this._ctx.onDispose(() => {
+    ctx.onDispose(() => {
       first.unpipe(second).unpipe(first);
     });
   }
