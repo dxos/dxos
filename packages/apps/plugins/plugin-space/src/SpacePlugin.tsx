@@ -198,8 +198,13 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
           spaces.forEach((space) => {
-            introduceRootSpaceFolder(space);
-            combineAndCleanupMultipleRootSpaceFolders(space);
+            spaceSubscriptions.add(
+              effect(() => {
+                introduceRootSpaceFolder(space);
+                combineAndCleanupMultipleRootSpaceFolders(space);
+              }),
+            );
+
             spaceSubscriptions.add(
               space.listen('viewing', (message) => {
                 const { added, removed } = message.payload;
