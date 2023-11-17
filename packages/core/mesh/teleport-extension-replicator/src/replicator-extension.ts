@@ -264,7 +264,8 @@ export class ReplicatorExtension implements TeleportExtension {
         return;
       }
 
-      log.warn('replication stream error', { err, info });
+      // TODO(nf): WARN on first error?
+      log.info('replication stream error', { err, info });
     });
 
     this._streams.set(info.feedKey, {

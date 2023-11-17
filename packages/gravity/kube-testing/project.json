@@ -15,6 +15,28 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/gravity/kube-testing",
+        "outputPath": "tmp/mocha/packages/gravity/kube-testing",
+        "resultsPath": "test-results/packages/gravity/kube-testing",
+        "testPatterns": [
+          "packages/gravity/kube-testing/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gravity/kube-testing/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
