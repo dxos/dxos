@@ -9,9 +9,10 @@ import { join } from 'node:path';
 import type { Browser, BrowserType } from 'playwright';
 import { v4 } from 'uuid';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, scheduleMicroTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { type LogProcessor, log, createFileProcessor, LogLevel } from '@dxos/log';
+import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
 
 import { type AgentResult, type AgentParams, type PlanOptions, type Platform, AGENT_LOG_FILE } from './spec';
 
@@ -29,11 +30,11 @@ type ProcessHandle = {
   kill: () => void;
 };
 
-export const runNode = async <S, C>(
+export const runNode = <S, C>(
   planName: string,
   agentParams: AgentParams<S, C>,
   options: PlanOptions,
-): Promise<ProcessHandle> => {
+): ProcessHandle => {
   const execArgv = process.execArgv;
 
   if (options.profile) {
@@ -93,32 +94,47 @@ export const runNode = async <S, C>(
   };
 };
 
-export const runBrowser = async <S, C>(
+export const runBrowser = <S, C>(
   planName: string,
   agentParams: AgentParams<S, C>,
   options: PlanOptions,
-): Promise<ProcessHandle> => {
-  invariant(agentParams.runtime.platform);
-  const { page } = await getNewBrowserContext(agentParams.runtime.platform, { headless: false });
+): ProcessHandle => {
   const doneTrigger = new Trigger<number>();
+  const ctx = new Context();
 
-  const apis: EposedApis = {
-    dxgravity_done: (code) => {
-      doneTrigger.wake(code);
-    },
-    dxgravity_log: createFileProcessor({
+  scheduleMicroTask(ctx, async () => {
+    invariant(agentParams.runtime.platform);
+
+    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: true });
+    ctx.onDispose(async () => {
+      await page.close();
+      await context.close();
+    });
+
+    const fileProcessor = createFileProcessor({
       path: join(agentParams.outDir, AGENT_LOG_FILE),
       levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
-    }),
-  };
-  for (const [name, fn] of Object.entries(apis)) {
-    await page.exposeFunction(name, fn);
-  }
+    });
 
-  const server = await servePage({
-    '/index.html': {
-      contentType: 'text/html',
-      data: `
+    const apis: EposedApis = {
+      dxgravity_done: (code) => {
+        doneTrigger.wake(code);
+      },
+      // Expose log hook for playwright.
+      dxgravity_log: (config, entry) => {
+        fileProcessor(config, entry);
+        CONSOLE_PROCESSOR(config, entry);
+      },
+    };
+
+    for (const [name, fn] of Object.entries(apis)) {
+      await page.exposeFunction(name, fn);
+    }
+
+    const server = await servePage({
+      '/index.html': {
+        contentType: 'text/html',
+        data: `
         <!DOCTYPE html>
   <html lang="en">
   <head>
@@ -140,28 +156,26 @@ export const runBrowser = async <S, C>(
   </body>
   </html>
   `,
-    },
-    '/index.js': {
-      contentType: 'text/javascript',
-      data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8'),
-    },
+      },
+      '/index.js': {
+        contentType: 'text/javascript',
+        data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8'),
+      },
+    });
+
+    const port = (server.address() as AddressInfo).port;
+    await page.goto(`http://localhost:${port}`);
   });
 
-  const port = (server.address() as AddressInfo).port;
-  await page.goto(`http://localhost:${port}`);
-
-  // await new Promise((resolve) => {
-  //   page.on('close', resolve);
-  // });
-
   return {
-    // TODO(mykola): Result should be a promise that resolves when the agent finishes.
     result: (async () => ({
       result: await doneTrigger.wait(),
       outDir: agentParams.outDir,
       logFile: join(agentParams.outDir, AGENT_LOG_FILE),
     }))(),
-    kill: () => page.close(),
+    kill: () => {
+      void ctx.dispose();
+    },
   };
 };
 
