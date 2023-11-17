@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.8](https://github.com/dxos/dxos/compare/v0.3.7...v0.3.8) (2023-11-17)
+
+
+### Features
+
+* Add browser support in testbench ([#3909](https://github.com/dxos/dxos/issues/3909)) ([56eb422](https://github.com/dxos/dxos/commit/56eb42202dea998ebea88f8b612f4678278fc92b))
+* Clean-up function handlers ([#4693](https://github.com/dxos/dxos/issues/4693)) ([f605520](https://github.com/dxos/dxos/commit/f605520bff2044b5e22511f49cb186bc17449efe))
+
+
+### Bug Fixes
+
+* improve graceful close behavior ([#4728](https://github.com/dxos/dxos/issues/4728)) ([c3b295a](https://github.com/dxos/dxos/commit/c3b295aff05523861f59b576684c1aea88e704ce))
+* log severity ([#4723](https://github.com/dxos/dxos/issues/4723)) ([6e95d31](https://github.com/dxos/dxos/commit/6e95d3198b5f35ce743ba2fe87b8b17532d30534))
+* **react-ui-theme:** Subtler open state style & popover border ([#4718](https://github.com/dxos/dxos/issues/4718)) ([8be0ad4](https://github.com/dxos/dxos/commit/8be0ad45ca4bfa638d0da7144b8e89c480f1b7d8))
+* reduce duplicate space folder cruft ([#4721](https://github.com/dxos/dxos/issues/4721)) ([598e316](https://github.com/dxos/dxos/commit/598e31646910f4d807f3486841bc4dc8ef61a5ea))
+* remove inacessible space node from parent ([#4717](https://github.com/dxos/dxos/issues/4717)) ([a3d042a](https://github.com/dxos/dxos/commit/a3d042a9d9d54847c5a9cbdd7c395c13febd0c93))
+* teleport controlextension timeouts ([#4708](https://github.com/dxos/dxos/issues/4708)) ([c5fa717](https://github.com/dxos/dxos/commit/c5fa7177f1f7c45f55df9212b9a40c495a1a500c))
+
 ## [0.3.7](https://github.com/dxos/dxos/compare/v0.3.6...v0.3.7) (2023-11-14)
 
 
