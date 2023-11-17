@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { flexRender, type Row, type RowData } from '@tanstack/react-table';
 import React from 'react';
 
@@ -17,10 +18,11 @@ const TABLE_BODY_NAME = 'TableBody';
 
 const TableBody = <TData extends RowData>({ rows }: TableBodyProps<TData>) => {
   const tableContext = useTableContext<TData>(TABLE_BODY_NAME);
-  const { table, keyAccessor, debug, expand } = tableContext;
+  const { table, keyAccessor, debug, expand, isGrid } = tableContext;
   const rowSelection = table.getState().rowSelection;
+  const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   return (
-    <tbody>
+    <tbody {...(isGrid && domAttributes)}>
       {rows.map((row) => {
         return (
           <tr
