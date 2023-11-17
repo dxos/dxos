@@ -7,7 +7,8 @@ import { Octokit } from '@octokit/rest';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-describe('Octokit', () => {
+// TODO(mykola): Mock Octokit. Unskip tests.
+describe.skip('Octokit', () => {
   test('Parse human profile', async () => {
     const octokit = new Octokit();
     const username = 'mykola-vrmchk';
