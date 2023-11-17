@@ -55,7 +55,7 @@ const initLogProcessor = <S, C>(params: AgentParams<S, C>) => {
   } else {
     // NOTE: `dxgravity_log` is being exposed by playwright `.exposeFunction()` API. Log chattiness can cause playwright connection overload so we limit it to only trace logs and info and above.
     log.addProcessor((config, entry) => {
-      if (entry.level === LogLevel.TRACE || entry.level > LogLevel.INFO) {
+      if (entry.level === LogLevel.TRACE || entry.level >= LogLevel.INFO) {
         (window as any).dxgravity_log?.(config, entry);
       }
     });

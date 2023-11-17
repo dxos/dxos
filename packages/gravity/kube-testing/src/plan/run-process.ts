@@ -103,6 +103,7 @@ export const runBrowser = <S, C>(
   const ctx = new Context();
 
   scheduleMicroTask(ctx, async () => {
+    const start = Date.now();
     invariant(agentParams.runtime.platform);
 
     const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: true });
@@ -170,6 +171,11 @@ export const runBrowser = <S, C>(
 
     const port = (server.address() as AddressInfo).port;
     await page.goto(`http://localhost:${port}`);
+
+    log.info('browser started and page loaded', {
+      agentIdx: agentParams.agentIdx,
+      time: Date.now() - start,
+    });
   });
 
   return {
