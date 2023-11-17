@@ -34,11 +34,11 @@ export type SectionProps = PropsWithChildren<{
   draggableProps?: MosaicTileProps['draggableProps'];
   draggableStyle?: MosaicTileProps['draggableStyle'];
   onRemove?: MosaicTileProps['onRemove'];
-  onAction?: MosaicTileProps['onAction'];
+  onNavigate?: MosaicTileProps['onNavigate'];
 }>;
 
 export const Section = forwardRef<HTMLLIElement, SectionProps>(
-  ({ id, title, active, draggableProps, draggableStyle, onRemove, onAction, children }, forwardedRef) => {
+  ({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
@@ -109,7 +109,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
               <DropdownMenu.Portal>
                 <DropdownMenu.Content classNames='z-[31]'>
                   <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={() => onAction?.({ id, action: 'navigate' })}>
+                    <DropdownMenu.Item onClick={onNavigate}>
                       <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
                       <span className='grow'>{t('navigate to section label')}</span>
                     </DropdownMenu.Item>

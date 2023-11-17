@@ -38,6 +38,7 @@ export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit
   Component: FC<{ data: TData }>;
   items?: TData[];
   onRemoveSection?: (path: string) => void;
+  onNavigateToSection?: (id: string) => void;
 };
 
 export const Stack = ({
@@ -48,6 +49,7 @@ export const Stack = ({
   onOver,
   onDrop,
   onRemoveSection,
+  onNavigateToSection,
 }: StackProps) => {
   const { ref: containerRef, width = 0 } = useResizeDetector({ refreshRate: 200 });
   const { operation, overItem } = useMosaic();
@@ -65,6 +67,7 @@ export const Stack = ({
             draggableProps={draggableProps}
             draggableStyle={draggableStyle}
             onRemove={() => onRemoveSection?.(path)}
+            onNavigate={() => onNavigateToSection?.(item.id)}
           >
             <SectionContent data={item} />
           </Section>
