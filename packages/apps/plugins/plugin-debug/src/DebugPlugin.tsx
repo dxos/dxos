@@ -195,12 +195,19 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 <DebugSpace
                   space={active.space}
                   onAddObjects={(objects) => {
-                    // TODO(burdon): Check root folder.
-                    const { objects: folders } = (active.space as SpaceProxy).db.query(Folder.filter());
+                    if (!(active.space instanceof SpaceProxy)) {
+                      return;
+                    }
+
+                    const folder = active.space.properties[Folder.schema.typename];
+                    if (!(folder instanceof Folder)) {
+                      return;
+                    }
+
                     void intentPlugin?.provides.intent.dispatch(
                       objects.map((object) => ({
-                        action: SpaceAction.ADD_TO_FOLDER,
-                        data: { folder: folders[0], object },
+                        action: SpaceAction.ADD_OBJECT,
+                        data: { folder, object },
                       })),
                     );
                   }}

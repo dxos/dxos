@@ -21,7 +21,7 @@ import {
   parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { TypedObject, isTypedObject } from '@dxos/echo-schema';
+import { Expando, TypedObject, isTypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, SpaceState } from '@dxos/react-client/echo';
@@ -44,7 +44,7 @@ import {
 import meta, { SPACE_PLUGIN } from './meta';
 import translations from './translations';
 import { SpaceAction, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
-import { SHARED, getActiveSpace, hiddenSpacesToGraphNodes, indexSpaceFolder, isSpace, objectToGraphNode } from './util';
+import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -62,14 +62,12 @@ export type SpacePluginOptions = {
    * @param params.client DXOS Client
    * @param params.defaultSpace Default space
    * @param params.personalSpaceFolder Folder representing the contents of the default space
-   * @param params.sharedSpacesFolder Folder ordering all other space folders, stored in default space where contents is cross-space references
    * @param params.dispatch Function to dispatch intents
    */
   onFirstRun?: (params: {
     client: Client;
     defaultSpace: Space;
     personalSpaceFolder: Folder;
-    sharedSpacesFolder: Folder;
     dispatch: DispatchIntent;
   }) => void;
 };
@@ -105,14 +103,12 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       // Create root folder structure.
       const defaultSpace = client.spaces.default;
       if (clientPlugin.provides.firstRun) {
-        // TODO(wittjosiah): These should be guarunteed to be unique within the space.
         const personalSpaceFolder = defaultSpace.db.add(new Folder({ name: client.spaces.default.key.toHex() }));
-        const sharedSpacesFolder = defaultSpace.db.add(new Folder({ name: SHARED }));
+        defaultSpace.properties[Folder.schema.typename] = personalSpaceFolder;
         onFirstRun?.({
           client,
           defaultSpace,
           personalSpaceFolder,
-          sharedSpacesFolder,
           dispatch,
         });
       }
@@ -134,11 +130,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             history.replaceState({}, document.title, url.href);
           }
 
-          const folder = await indexSpaceFolder({ space, defaultSpace });
-
           await dispatch({
             action: LayoutAction.ACTIVATE,
-            data: { id: folder.id },
+            data: { id: space.key.toHex() },
           });
         });
       }
@@ -175,6 +169,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         }
 
         const [folder] = space.db.query(Folder.filter({ name: space.key.toHex() })).objects;
+        if (!folder) {
+          return;
+        }
+
         space.properties[Folder.schema.typename] = folder;
       };
 
@@ -337,14 +335,15 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           }
 
           // Ensure default space is first.
-          const defaultFolder = client.spaces.default.properties[Folder.schema.typename];
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            objectToGraphNode({ object: defaultFolder, parent, dispatch, resolve }),
+            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
           );
 
-          let spacesOrder: Folder | undefined;
+          // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
+          //  Instead, we store order as an array of space keys.
+          let spacesOrder: Expando | undefined;
           const [groupNode] = parent.addNode(SPACE_PLUGIN, {
             id: SHARED,
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
@@ -388,85 +387,61 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               // TODO(burdon): Factor out palette constants.
               palette: 'pink',
               childrenPersistenceClass: 'folder',
-              onRearrangeChildren: (nextOrder: TypedObject[]) => {
+              onRearrangeChildren: (nextOrder: Space[]) => {
                 if (!spacesOrder) {
-                  const nextObjectOrder = new Folder({
-                    name: SHARED,
-                    objects: nextOrder,
+                  const nextObjectOrder = new Expando({
+                    key: SHARED,
+                    order: nextOrder.map(({ key }) => key.toHex()),
                   });
                   client.spaces.default.db.add(nextObjectOrder);
                   spacesOrder = nextObjectOrder;
                 } else {
                   spacesOrder.objects = nextOrder;
                 }
-                updateSpacesOrder({ objects: [spacesOrder] });
+                updateSpacesOrder(spacesOrder);
               },
             },
           });
 
-          const updateSpacesOrder = ({ objects: spacesOrders }: { objects: Folder[] }) => {
-            spacesOrder = spacesOrders[0];
-            groupNode.childrenMap = inferRecordOrder(
-              groupNode.childrenMap,
-              spacesOrder?.objects.map(({ id }) => id),
-            );
+          const updateSpacesOrder = (spacesOrder?: Expando) => {
+            if (!spacesOrder) {
+              return;
+            }
+
+            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder.order);
           };
-          const spacesOrderQuery = client.spaces.default.db.query(Folder.filter({ name: SHARED }));
-          updateSpacesOrder(spacesOrderQuery);
-          graphSubscriptions.set(SHARED, spacesOrderQuery.subscribe(updateSpacesOrder));
+          const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
+          spacesOrder = spacesOrderQuery.objects[0];
+          updateSpacesOrder(spacesOrderQuery.objects[0]);
+          graphSubscriptions.set(
+            SHARED,
+            spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0])),
+          );
 
-          const foldersToGraphNodes = (folders: Folder[]) => {
-            const spaceFolders = new Set<Folder>(
-              client.spaces.get().map((space) => space.properties[Folder.schema.typename]),
-            );
+          const createSpaceNodes = (spaces: Space[]) => {
+            spaces.forEach((space) => {
+              graphSubscriptions.get(space.key.toHex())?.();
+              graphSubscriptions.set(
+                space.key.toHex(),
+                spaceToGraphNode({
+                  space,
+                  parent: space === client.spaces.default ? parent : groupNode,
+                  hidden: settings.values.showHidden,
+                  dispatch,
+                  resolve,
+                }),
+              );
+            });
 
-            folders
-              .filter((folder) => spaceFolders.has(folder))
-              .forEach((folder) => {
-                graphSubscriptions.get(folder.id)?.();
-                graphSubscriptions.set(
-                  folder.id,
-                  objectToGraphNode({
-                    object: folder,
-                    parent: folder.name === client.spaces.default.key.toHex() ? parent : groupNode,
-                    dispatch,
-                    resolve,
-                  }),
-                );
-              });
-            groupNode.childrenMap = inferRecordOrder(
-              groupNode.childrenMap,
-              spacesOrder?.objects.map(({ id }) => id),
-            );
+            updateSpacesOrder(spacesOrder);
           };
-          const foldersQuery = client.spaces.query(Folder.filter());
-          const unsubscribe = foldersQuery.subscribe(({ objects: folders }) => foldersToGraphNodes(folders));
-          foldersToGraphNodes(foldersQuery.objects);
 
-          const spacesSubscription = client.spaces.subscribe((spaces) => {
-            foldersToGraphNodes(foldersQuery.objects);
-
-            hiddenSpacesToGraphNodes({
-              parent,
-              hidden: settings.values.showHidden,
-              spaces,
-              dispatch,
-            });
-          });
-
-          const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
-            hiddenSpacesToGraphNodes({
-              parent,
-              hidden: settings.values.showHidden,
-              spaces: client.spaces.get(),
-              dispatch,
-            });
-          });
+          const { unsubscribe } = client.spaces.subscribe((spaces) => createSpaceNodes(spaces));
+          const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => createSpaceNodes(client.spaces.get()));
 
           return () => {
             unsubscribe();
             unsubscribeHidden();
-            spacesSubscription.unsubscribe();
             graphSubscriptions.forEach((cb) => cb());
             graphSubscriptions.clear();
           };
@@ -496,11 +471,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               if (!client) {
                 return;
               }
-              const defaultSpace = client.spaces.default;
+
               const { space } = await client.shell.joinSpace();
               if (space) {
-                const folder = await indexSpaceFolder({ space, defaultSpace });
-                return { space, id: folder.id };
+                return { space, id: space.key.toHex() };
               }
               break;
             }
@@ -524,7 +498,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${intent.data.id}`,
+                  anchorId: `dxos.org/ui/navtree/${intent.data.space.key.toHex()}`,
                   component: 'dxos.org/plugin/space/RenameSpacePopover',
                   subject: intent.data.space,
                 },
@@ -570,16 +544,55 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
 
             case SpaceAction.ADD_OBJECT: {
-              const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
-              const space = spaceKey && clientPlugin?.provides.client.spaces.get(spaceKey);
-              if (space && intent.data.object) {
-                return space.db.add(intent.data.object);
+              if (!(intent.data.object instanceof TypedObject)) {
+                return;
+              }
+
+              if (intent.data.target instanceof Folder) {
+                intent.data.target.objects.push(intent.data.object);
+                return intent.data.object;
+              }
+
+              if (intent.data.target instanceof SpaceProxy) {
+                const space = intent.data.target;
+                const folder = space.properties[Folder.schema.typename];
+                if (folder instanceof Folder) {
+                  folder.objects.push(intent.data.object);
+                  return intent.data.object;
+                } else {
+                  return space.db.add(intent.data.object);
+                }
               }
               break;
             }
 
             case SpaceAction.REMOVE_OBJECT: {
+              if (!(intent.data.object instanceof TypedObject)) {
+                return;
+              }
+
+              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
+                await intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.ACTIVATE,
+                  data: { id: undefined },
+                });
+              }
+
+              if (intent.data.folder instanceof Folder) {
+                const index = intent.data.folder.objects.indexOf(intent.data.object);
+                index !== -1 && intent.data.folder.objects.splice(index, 1);
+              }
+
               const space = getSpaceForObject(intent.data.object);
+
+              const folder = space?.properties[Folder.schema.typename];
+              if (folder instanceof Folder) {
+                const index = folder.objects.indexOf(intent.data.object);
+                index !== -1 && folder.objects.splice(index, 1);
+              }
+
               if (space) {
                 space.db.remove(intent.data.object);
                 return true;
@@ -597,36 +610,6 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                   subject: intent.data.object,
                 },
               });
-            }
-
-            case SpaceAction.ADD_TO_FOLDER: {
-              const folder = intent.data.folder;
-              const object = intent.data.object;
-              if (folder instanceof Folder && object instanceof TypedObject) {
-                folder.objects.push(intent.data.object);
-                return { id: object.id };
-              }
-              break;
-            }
-
-            case SpaceAction.REMOVE_FROM_FOLDER: {
-              const folder = intent.data.folder;
-              const object = intent.data.object;
-              if (folder instanceof Folder && object instanceof TypedObject) {
-                const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-                if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
-                  await intentPlugin?.provides.intent.dispatch({
-                    action: LayoutAction.ACTIVATE,
-                    data: { id: undefined },
-                  });
-                }
-
-                const index = folder.objects.indexOf(object);
-                folder.objects.splice(index, 1);
-                return true;
-              }
-              break;
             }
 
             case SpaceAction.TOGGLE_HIDDEN: {
