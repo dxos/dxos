@@ -107,7 +107,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
               </DropdownMenu.Trigger>
 
               <DropdownMenu.Portal>
-                <DropdownMenu.Content classNames='z-[31]'>
+                <DropdownMenu.Content>
                   <DropdownMenu.Viewport>
                     <DropdownMenu.Item onClick={onNavigate}>
                       <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
