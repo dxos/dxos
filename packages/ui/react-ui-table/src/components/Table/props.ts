@@ -34,4 +34,5 @@ export type TableProps<TData extends RowData> = TableFlags &
 export type TableContextValue<TData extends RowData> = TableFlags &
   Pick<TableProps<TData>, 'keyAccessor'> & {
     table: Table<TData>;
+    isGrid: boolean;
   };

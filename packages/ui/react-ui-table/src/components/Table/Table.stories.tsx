@@ -231,6 +231,7 @@ export const Editable = {
 
     return (
       <Table<Item>
+        role='grid'
         keyAccessor={(row) => row.publicKey.toHex()}
         columns={columns(onUpdate)}
         data={items}

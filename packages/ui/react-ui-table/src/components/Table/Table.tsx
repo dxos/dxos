@@ -27,6 +27,7 @@ import { groupTh, tableRoot } from '../../theme';
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
+    role,
     data = [],
     columns = [],
     onColumnResize,
@@ -107,8 +108,14 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
   return (
-    <TableProvider {...props} header={header} expand={expand} table={table}>
-      <table className={tableRoot(props)} style={{ width: fullWidth ? '100%' : table.getTotalSize() }}>
+    <TableProvider
+      {...props}
+      header={header}
+      expand={expand}
+      table={table}
+      isGrid={role === 'grid' || role === 'treegrid'}
+    >
+      <table role={role} className={tableRoot(props)} style={{ width: fullWidth ? '100%' : table.getTotalSize() }}>
         <TableHead />
 
         {grouping.length === 0 && <TableBody rows={table.getRowModel().rows} />}

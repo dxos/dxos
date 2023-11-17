@@ -14,6 +14,8 @@ export const flushPadding = 'pli-0 plb-0';
 export const textPadding = 'pli-2 plb-0.5';
 export const headPadding = 'pli-2 plb-1.5';
 
+export const gridCellFocusRing = 'focus:z-[11] focus:outline outline-2 outline-primary-500 dark:outline-primary-400';
+
 //
 // table
 //
@@ -67,8 +69,8 @@ export const tbodyTr: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => m
 // td, th
 //
 
-export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border }, ...etc) =>
-  mx(flushPadding, border && 'border', border && groupBorder, ...etc);
+export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border, isGrid }, ...etc) =>
+  mx('relative', flushPadding, border && 'border', border && groupBorder, isGrid && gridCellFocusRing, ...etc);
 export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...etc) => mx(...etc);
 
 //

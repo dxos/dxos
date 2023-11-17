@@ -16,7 +16,12 @@ const CELL_NAME = 'Cell';
 
 const Cell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
   const tableContext = useTableContext(CELL_NAME);
-  return <td className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>{children}</td>;
+  const { isGrid } = tableContext;
+  return (
+    <td {...(isGrid && { tabIndex: 0 })} className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>
+      {children}
+    </td>
+  );
 };
 
 Cell.displayName = CELL_NAME;

@@ -12,5 +12,3 @@ export const subduedFocus = 'focus:outline-none focus-visible:outline-none focus
 
 export const staticFocusRing =
   'ring-2 ring-offset-0 ring-primary-350 ring-offset-white dark:ring-primary-450 dark:ring-offset-black';
-
-export const insetStaticFocusRing = 'ring-inset ring-2 ring-primary-350 dark:ring-primary-450';
