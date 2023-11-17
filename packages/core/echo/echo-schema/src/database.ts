@@ -17,6 +17,7 @@ import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
+import { AutomergeDb } from './automerge/automerge-db';
 
 /**
  * Database wrapper.
@@ -38,6 +39,8 @@ export class EchoDatabase {
   readonly _updateEvent = new Event<UpdateEvent>();
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
+
+  public readonly automerge = new AutomergeDb();
 
   constructor(
     /**

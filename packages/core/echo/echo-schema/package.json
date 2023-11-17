@@ -24,6 +24,8 @@
     "prebuild": "pnpm gen-schema && pnpm gen-test"
   },
   "dependencies": {
+    "@automerge/automerge": "^2.1.7",
+    "@automerge/automerge-repo": "^1.0.17",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",

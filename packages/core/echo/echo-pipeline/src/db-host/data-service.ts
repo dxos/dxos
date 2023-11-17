@@ -14,6 +14,8 @@ import {
   type EchoEvent,
   type WriteRequest,
   type FlushRequest,
+  SyncRepoRequest,
+  SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
@@ -52,7 +54,7 @@ export class DataServiceSubscriptions {
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
   constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
-
+  
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     invariant(request.spaceKey);
     const host =
@@ -74,4 +76,12 @@ export class DataServiceImpl implements DataService {
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.flush();
   }
+
+  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
+    throw new Error('Method not implemented.');
+  }
+  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
 }

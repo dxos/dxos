@@ -28,6 +28,7 @@ import {
 } from './types';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
+import { AutomergeObject } from '../automerge/automerge-object';
 
 const isValidKey = (key: string | symbol) => {
   return !(
@@ -72,6 +73,7 @@ export type TypedObjectOptions = {
   type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
+  useAutomergeBackend?: boolean;
 };
 
 /**
@@ -92,6 +94,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
+
+    if(opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+      return new AutomergeObject(initialProps, opts) as any;
+    }
 
     invariant(!(opts?.schema && opts?.type), 'Cannot specify both schema and type.');
 
@@ -631,3 +637,15 @@ const getSchemaProto = (): typeof Schema => {
 
   return schemaProto;
 };
+
+// TODO(dmaretskyi): Remove once migration is complete.
+let globalAutomergePreference: boolean | undefined;
+
+export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
+  globalAutomergePreference = useAutomerge;
+}
+
+export const getGlobalAutomergePreference = () => {
+  return globalAutomergePreference ?? (globalThis as any).DXOS_FORCE_AUTOMERGE ?? (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ?? false;
+}
+

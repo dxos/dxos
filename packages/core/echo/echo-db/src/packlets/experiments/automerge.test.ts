@@ -74,7 +74,7 @@ describe.only('Automerge', () => {
     const repo = new Repo({
       network: [],
       // storage: new IndexedDBStorageAdapter(),
-      sharePolicy: async (peerId, documentId) => true // this is the default
+      sharePolicy: async (peerId: any, documentId: any) => true // this is the default
     })
     const handle = repo.create()
 

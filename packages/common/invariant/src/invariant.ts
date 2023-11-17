@@ -56,3 +56,23 @@ const getRelativeFilename = (filename: string) => {
 
   return filename;
 };
+
+export const failedInvariant = (message1?: unknown, message2?: string, meta?: CallMetadata): never => {
+  let errorMessage = 'invariant violation';
+
+  const message = [message1, message2].filter(str => typeof str === 'string').join(' ');
+
+  if (message) {
+    errorMessage += `: ${message}`;
+  }
+
+  if (meta?.A) {
+    errorMessage += ` [${meta.A[0]}]`;
+  }
+
+  if (meta?.F) {
+    errorMessage += ` at ${getRelativeFilename(meta.F)}:${meta.L}`;
+  }
+
+  throw new InvariantViolation(errorMessage);
+}
