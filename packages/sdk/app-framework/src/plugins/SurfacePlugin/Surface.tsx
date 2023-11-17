@@ -51,6 +51,8 @@ export type SurfaceProps = PropsWithChildren<{
 
   /**
    * If specified, this will render if no plugin can offer renderable content for the surface.
+   *
+   * @deprecated Provide a component with `disposition: 'fallback'` instead.
    */
   contentFallback?: FC<{}>;
 
