@@ -85,7 +85,7 @@ export const SwarmPanel = () => {
   }
 
   const [sessionId, setSessionId] = useState<PublicKey>();
-  const handleSelect = (selected: SwarmConnection[] | undefined) => {
+  const handleDataSelectedChange = (selected: SwarmConnection[] | undefined) => {
     setSessionId(selected?.[0].connection?.sessionId);
   };
 
@@ -122,7 +122,7 @@ export const SwarmPanel = () => {
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
-          onSelectedChange={handleSelect}
+          onDataSelectionChange={handleDataSelectedChange}
         />
       </div>
       <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>

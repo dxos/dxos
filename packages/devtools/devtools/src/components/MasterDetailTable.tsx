@@ -28,13 +28,13 @@ export const MasterDetailTable = <T extends {}>({
   return (
     <div className='flex grow overflow-hidden divide-x'>
       {pinToBottom ? (
-        <AnchoredOverflow.Root classNames={['flex overflow-hidden', widths[0]]}>
-          <Table<T> columns={columns} data={data} selected={selected} onSelectedChange={setSelected} />
+        <AnchoredOverflow.Root classNames={widths[0]}>
+          <Table<T> columns={columns} data={data} rowsSelectable onDataSelectionChange={setSelected} />
           <AnchoredOverflow.Anchor />
         </AnchoredOverflow.Root>
       ) : (
-        <div className={mx('flex overflow-hidden', widths[0])}>
-          <Table<T> columns={columns} data={data} selected={selected} onSelectedChange={setSelected} />
+        <div className={mx(widths[0])}>
+          <Table<T> columns={columns} data={data} rowsSelectable onDataSelectionChange={setSelected} />
         </div>
       )}
       <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected?.[0]} />}</div>

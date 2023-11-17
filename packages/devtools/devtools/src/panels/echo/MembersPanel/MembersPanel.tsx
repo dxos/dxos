@@ -14,6 +14,7 @@ import { useDevtoolsState } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<SpaceMember>();
 const columns: TableColumnDef<SpaceMember, any>[] = [
+  helper.display(builder.selectRow()),
   helper.accessor((member) => member.identity.identityKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor((member) => member.identity.profile?.displayName, { id: 'name' }),
   helper.accessor(

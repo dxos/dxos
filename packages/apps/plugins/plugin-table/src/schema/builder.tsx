@@ -131,16 +131,14 @@ export const createActionColumn = (
     id: '__new',
     size: 40,
     meta: {
-      slots: {
-        header: {
-          className: 'p-0',
-        },
-        footer: {
-          className: 'p-0',
-        },
-        cell: {
-          className: 'p-0',
-        },
+      header: {
+        classNames: 'p-0',
+      },
+      footer: {
+        classNames: 'p-0',
+      },
+      cell: {
+        classNames: 'p-0',
       },
     },
     // TODO(burdon): Translation.

@@ -37,6 +37,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     rowsSelectable,
     fullWidth,
     debug,
+    onDataSelectionChange,
   } = props;
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
@@ -103,6 +104,12 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     // Debug
     debugTable: debug,
   });
+
+  useEffect(() => {
+    if (onDataSelectionChange) {
+      onDataSelectionChange(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
+    }
+  }, [onDataSelectionChange, rowSelection, table]);
 
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;

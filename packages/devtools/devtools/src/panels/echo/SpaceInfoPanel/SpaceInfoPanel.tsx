@@ -92,7 +92,7 @@ export const SpaceInfoPanel: FC = () => {
         <div className='flex flex-col gap-4'>
           <SpaceProperties space={space} metadata={metadata} />
           <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-          <Table<FeedInfo> columns={columns} data={updatedFeeds} onSelectedChange={handleSelect} />
+          <Table<FeedInfo> columns={columns} data={updatedFeeds} onDataSelectionChange={handleSelect} />
         </div>
       )}
     </PanelContainer>

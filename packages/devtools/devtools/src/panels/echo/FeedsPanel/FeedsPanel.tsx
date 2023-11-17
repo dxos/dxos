@@ -18,6 +18,7 @@ import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../..
 
 const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
 const columns: TableColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
+  helper.display(builder.selectRow()),
   helper.accessor('feedKey', builder.key({ header: 'key', tooltip: true })),
   helper.accessor('seq', builder.number()),
 ];

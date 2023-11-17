@@ -119,5 +119,5 @@ export const PipelineTable: FC<{
     navigate('/echo/feeds');
   };
 
-  return <Table<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} />;
+  return <Table<PipelineTableRow> columns={columns} data={data} onDataSelectionChange={handleSelect} />;
 };

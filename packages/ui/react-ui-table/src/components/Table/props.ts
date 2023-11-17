@@ -29,7 +29,11 @@ export type TableProps<TData extends RowData> = TableFlags &
     rowSelection: RowSelectionState;
     defaultRowSelection: RowSelectionState;
     onRowSelectionChange: (rowSelection: RowSelectionState) => void;
+    // Derived from row selection
+    onDataSelectionChange: (dataSelection: TData[]) => void;
   }>;
+
+export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };
 
 export type TableContextValue<TData extends RowData> = TableFlags &
   Pick<TableProps<TData>, 'keyAccessor'> & {

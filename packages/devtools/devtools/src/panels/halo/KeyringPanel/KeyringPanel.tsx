@@ -13,6 +13,7 @@ import { MasterDetailTable } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<KeyRecord>();
 const columns: TableColumnDef<KeyRecord, any>[] = [
+  helper.display(builder.selectRow()),
   helper.accessor((record) => PublicKey.from(record.publicKey), {
     id: 'public',
     ...builder.key({ header: 'public key', tooltip: true }),

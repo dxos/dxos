@@ -37,6 +37,7 @@ const views: View<SignalResponse>[] = [
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
 
     columns: [
+      helper.display(builder.selectRow()),
       helper.accessor('receivedAt', builder.date({ header: 'received' })),
       helper.accessor(
         (response) => {
@@ -72,6 +73,7 @@ const views: View<SignalResponse>[] = [
       return !!response.message;
     },
     columns: [
+      helper.display(builder.selectRow()),
       helper.accessor('receivedAt', builder.date({ header: 'received' })),
       helper.accessor((response) => response.message!.author as unknown as PublicKey, {
         id: 'author',
@@ -95,6 +97,7 @@ const views: View<SignalResponse>[] = [
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
     columns: [
+      helper.display(builder.selectRow()),
       helper.accessor('receivedAt', builder.date({ header: 'received' })),
       helper.accessor((response) => response.message!.author as unknown as PublicKey, {
         id: 'author',

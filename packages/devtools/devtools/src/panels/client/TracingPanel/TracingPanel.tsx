@@ -9,7 +9,6 @@ import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotNullOrUndefined } from '@dxos/util';
 
 import { LogView } from './LogView';
 import { MetricsView } from './MetricsView';
@@ -113,13 +112,8 @@ export const TracingPanel = () => {
         <Table<ResourceState>
           columns={columns}
           data={Array.from(state.current.resources.values())}
-          select='single-toggle'
-          selected={
-            selectedResourceId !== undefined
-              ? [state.current.resources.get(selectedResourceId)].filter(isNotNullOrUndefined)
-              : undefined
-          }
-          onSelectedChange={(resources) => setSelectedResourceId(resources?.[0]?.resource.id)}
+          rowsSelectable
+          onDataSelectionChange={(resources) => setSelectedResourceId(resources?.[0]?.resource.id)}
         />
       </div>
       <div className='flex flex-col h-2/3 overflow-hidden border-t'>
