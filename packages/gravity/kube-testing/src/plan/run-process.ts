@@ -105,7 +105,7 @@ export const runBrowser = <S, C>(
   scheduleMicroTask(ctx, async () => {
     invariant(agentParams.runtime.platform);
 
-    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: false });
+    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: true });
     ctx.onDispose(async () => {
       await page.close();
       await context.close();
