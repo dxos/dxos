@@ -10,6 +10,7 @@ export default [
       [translationKey]: {
         'empty stack message': 'Drag items into the stack.',
         'remove section label': 'Remove section',
+        'navigate to section label': 'Navigate to item',
       },
     },
   },
