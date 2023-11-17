@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { asyncTimeout, scheduleTaskInterval } from '@dxos/async';
+import { asyncTimeout, scheduleTaskInterval, TimeoutError as AsyncTimeoutError } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, RpcClosedError } from '@dxos/protocols';
 import { type ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
@@ -22,7 +22,7 @@ type ControlRpcBundle = {
 type ControlExtensionOpts = {
   heartbeatInterval: number;
   heartbeatTimeout: number;
-  onTimeout: () => void;
+  onTimeout: (err: any) => void;
 };
 
 export class ControlExtension implements TeleportExtension {
@@ -85,33 +85,47 @@ export class ControlExtension implements TeleportExtension {
     scheduleTaskInterval(
       this._ctx,
       async () => {
+        const reqTS = new Date();
         try {
           const resp = await asyncTimeout(
-            this._rpc.rpc.Control.heartbeat({ requestTimestamp: new Date() }),
+            this._rpc.rpc.Control.heartbeat({ requestTimestamp: reqTS }),
             this.opts.heartbeatTimeout,
           );
           const now = Date.now();
           // TODO(nf): properly instrument
-          if (
-            now - resp.requestTimestamp.getTime() >
-            (HEARTBEAT_RTT_WARN_THRESH < this.opts.heartbeatTimeout
-              ? HEARTBEAT_RTT_WARN_THRESH
-              : this.opts.heartbeatTimeout / 2)
-          ) {
-            log.warn(`heartbeat RTT for Teleport > ${HEARTBEAT_RTT_WARN_THRESH / 1000}s`, {
-              rtt: now - resp.requestTimestamp.getTime(),
-              localPeerId: this.localPeerId.truncate(),
-              remotePeerId: this.remotePeerId.truncate(),
-            });
-          } else {
-            log('heartbeat RTT', {
-              rtt: now - resp.requestTimestamp.getTime(),
-              localPeerId: this.localPeerId.truncate(),
-              remotePeerId: this.remotePeerId.truncate(),
-            });
+          if (resp.requestTimestamp instanceof Date) {
+            if (
+              now - resp.requestTimestamp.getTime() >
+              (HEARTBEAT_RTT_WARN_THRESH < this.opts.heartbeatTimeout
+                ? HEARTBEAT_RTT_WARN_THRESH
+                : this.opts.heartbeatTimeout / 2)
+            ) {
+              log.warn(`heartbeat RTT for Teleport > ${HEARTBEAT_RTT_WARN_THRESH / 1000}s`, {
+                rtt: now - resp.requestTimestamp.getTime(),
+                localPeerId: this.localPeerId.truncate(),
+                remotePeerId: this.remotePeerId.truncate(),
+              });
+            } else {
+              log('heartbeat RTT', {
+                rtt: now - resp.requestTimestamp.getTime(),
+                localPeerId: this.localPeerId.truncate(),
+                remotePeerId: this.remotePeerId.truncate(),
+              });
+            }
           }
         } catch (err: any) {
-          this.opts.onTimeout();
+          const now = Date.now();
+          if (err instanceof RpcClosedError) {
+            log('ignoring RpcClosedError in heartbeat');
+            return;
+          }
+          if (err instanceof AsyncTimeoutError) {
+            log('timeout waiting for heartbeat response', { err, delay: now - reqTS.getTime() });
+            this.opts.onTimeout(err);
+          } else {
+            log.info('other error waiting for heartbeat response', { err, delay: now - reqTS.getTime() });
+            this.opts.onTimeout(err);
+          }
         }
       },
       this.opts.heartbeatInterval,
