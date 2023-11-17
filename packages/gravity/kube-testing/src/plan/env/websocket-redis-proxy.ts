@@ -76,7 +76,8 @@ export class WebSocketRedisProxy {
       });
 
       ws.on('error', (err: Error) => {
-        log.error('REDIS proxy WebSocket connection error', { err });
+        // Not critical error.
+        log('REDIS proxy WebSocket connection error', { err });
         void ctx.dispose();
       });
 
