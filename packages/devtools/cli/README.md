@@ -147,7 +147,6 @@ USAGE
 * [`dx device`](#dx-device)
 * [`dx device list`](#dx-device-list)
 * [`dx function dev`](#dx-function-dev)
-* [`dx function dev-server`](#dx-function-dev-server)
 * [`dx function exec NAME`](#dx-function-exec-name)
 * [`dx function list`](#dx-function-list)
 * [`dx function logs NAME`](#dx-function-logs-name)

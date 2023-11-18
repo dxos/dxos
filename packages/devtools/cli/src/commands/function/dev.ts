@@ -62,7 +62,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const triggers = new TriggerManager(client, manifest, { runtime, endpoint });
       await triggers.start();
 
-      this.log(`Function dev-server: ${server.endpoint} (ctrl-c to exit)`);
+      this.log(`Function endpoint: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
         await triggers.stop();
         await server.stop();
@@ -72,7 +72,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       // TODO(burdon): Get from server API.
       if (this.flags.verbose) {
         this.log(
-          chalk`{green Function endpoints}:\n${server.functions
+          chalk`{green Functions}:\n${server.functions
             .map(
               ({ def: { id, endpoint: path } }) => chalk`- {blue ${join(endpoint, runtime, path).padEnd(40)}} => ${id}`,
             )

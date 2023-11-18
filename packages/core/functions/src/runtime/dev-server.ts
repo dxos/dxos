@@ -3,7 +3,7 @@
 //
 
 import express from 'express';
-import getPort, { portNumbers } from 'get-port';
+import { getPort } from 'get-port-please';
 import type http from 'http';
 import { join } from 'node:path';
 
@@ -112,8 +112,7 @@ export class DevServer {
 
     // TODO(burdon): Require option to auto-detect free port.
     const port = this._options.port ?? DEFAULT_PORT;
-    this._port = await getPort({ port: portNumbers(port, port + 100) });
-    console.log('>>>>>>>>>>', port, this._port);
+    this._port = await getPort({ port, portRange: [port, port + 100] });
     this._server = app.listen(this._port);
 
     // TODO(burdon): Check plugin is registered.
