@@ -28,7 +28,6 @@ const DEFAULT_OPTIONS: Required<EpochMonitorConfig> & { '@type': string } = {
  * - Triggers new epochs.
  * - Updates address book.
  */
-// TODO(burdon): Create test.
 export class EpochMonitorPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/epoch-monitor';
   private _ctx?: Context = undefined;

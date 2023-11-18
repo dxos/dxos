@@ -17,6 +17,7 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 
 import { Plugin } from '../plugin';
 
+// TODO(burdon): Rename SearchPlugin?
 export class QueryPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/query';
   private _ctx?: Context;
@@ -38,7 +39,6 @@ export class QueryPlugin extends Plugin {
       invariant(this._pluginCtx, 'Client is undefined.');
 
       const space = this._pluginCtx.client.spaces.default;
-
       const unsubscribe = space.listen(QUERY_CHANNEL, async (message) => {
         log('received message', { message });
         await this._processRequest(message);

@@ -17,7 +17,7 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { QueryPlugin } from './plugin';
 
-describe('QueryPlugin', () => {
+describe('SearchPlugin', () => {
   test('search request/response', async () => {
     //
     // 1. Test topology:
