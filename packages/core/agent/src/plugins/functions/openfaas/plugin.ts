@@ -24,7 +24,7 @@ type MountedTrigger = {
  * @deprecated
  */
 export class FaasPlugin extends Plugin {
-  public readonly id = 'dxos.org/agent/plugin/faas-connector';
+  public readonly id = 'dxos.org/agent/plugin/openfaas';
   private readonly _ctx = new Context();
 
   // TODO(burdon): Factor out triggers.

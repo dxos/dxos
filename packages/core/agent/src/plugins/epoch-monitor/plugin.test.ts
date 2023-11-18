@@ -10,12 +10,12 @@ import { fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { describe, test } from '@dxos/test';
 
-import { EpochMonitor } from './epoch-monitor';
+import { EpochMonitorPlugin } from './plugin';
 
 describe('EpochMonitor', () => {
   let ctx: Context;
   let client: Client;
-  let monitor: EpochMonitor;
+  let monitor: EpochMonitorPlugin;
 
   beforeEach(async () => {
     ctx = new Context();
@@ -25,7 +25,7 @@ describe('EpochMonitor', () => {
     await client.initialize();
     await client.halo.createIdentity();
 
-    monitor = new EpochMonitor();
+    monitor = new EpochMonitorPlugin();
     await monitor.initialize({ client, clientServices: client.services, plugins: [] });
 
     ctx.onDispose(async () => {

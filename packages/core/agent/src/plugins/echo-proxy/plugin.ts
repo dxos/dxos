@@ -19,7 +19,7 @@ const DEFAULT_OPTIONS: Required<EchoProxyConfig> & { '@type': string } = {
 };
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
-export class EchoProxyServer extends Plugin {
+export class EchoProxyPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/echo-proxy';
   private _server?: http.Server = undefined;
 

@@ -17,8 +17,9 @@ const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   port: 7001, // TODO(burdon): Change default (clashes with OS/X).
 };
 
+// TODO(burdon): Decouple from implementation.
 export class FunctionsPlugin extends Plugin {
-  public readonly id = 'dxos.org/agent/plugin/functions';
+  public readonly id = 'dxos.org/agent/plugin/functions'; // TODO(burdon): Dev.
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
   private readonly _devDispatcher = new DevFunctionDispatcher();
 

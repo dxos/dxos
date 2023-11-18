@@ -3,4 +3,4 @@
 //
 
 export * from './dev';
-export * from './faas';
+export * from './openfaas';

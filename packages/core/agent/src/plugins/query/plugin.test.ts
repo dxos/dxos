@@ -15,7 +15,7 @@ import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { QueryPlugin } from './query-plugin';
+import { QueryPlugin } from './plugin';
 
 describe('QueryPlugin', () => {
   test('search request/response', async () => {
