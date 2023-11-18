@@ -59,6 +59,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const runtime = 'dev'; // TODO(burdon): Const.
       const endpoint = server.endpoint!;
 
+      // TODO(burdon): Factor out (keep CLI commands simple).
       const triggers = new TriggerManager(client, manifest, { runtime, endpoint });
       await triggers.start();
 

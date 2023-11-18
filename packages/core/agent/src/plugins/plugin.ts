@@ -56,6 +56,7 @@ export abstract class Plugin {
 
   // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
+    log(`initializing: ${this.id}`);
     this._pluginCtx = pluginCtx;
 
     // TODO(burdon): Require config.

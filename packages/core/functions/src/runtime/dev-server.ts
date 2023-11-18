@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
 import { type FunctionDef, type FunctionManifest } from '../manifest';
 
+// TODO(burdon): Create common agent/plugin abstraction for port management.
 const DEFAULT_PORT = 7001;
 
 export type DevServerOptions = {
@@ -127,6 +128,8 @@ export class DevServer {
       await this.stop();
       throw new Error('FunctionRegistryService not available; check config (agent.plugins.functions).');
     }
+
+    console.log('!!!!!!!!!!!!!!!!!!!!!!', this._port);
   }
 
   async stop() {
