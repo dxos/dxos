@@ -3,9 +3,9 @@
 //
 
 import express from 'express';
+import getPort, { portNumbers } from 'get-port';
 import type http from 'http';
 import { join } from 'node:path';
-import { getPortPromise } from 'portfinder';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -17,6 +17,7 @@ import { type FunctionDef, type FunctionManifest } from '../manifest';
 const DEFAULT_PORT = 7001;
 
 export type DevServerOptions = {
+  port?: number;
   directory: string;
   manifest: FunctionManifest;
 };
@@ -24,6 +25,7 @@ export type DevServerOptions = {
 /**
  * Functions dev server provides a local HTTP server for testing functions.
  */
+// TODO(burdon): Reconcile with agent/functions dev dispatcher.
 export class DevServer {
   private readonly _handlers: Record<string, { def: FunctionDef; handler: FunctionHandler<any> }> = {};
 
@@ -108,7 +110,10 @@ export class DevServer {
       })();
     });
 
-    this._port = await getPortPromise({ startPort: DEFAULT_PORT });
+    // TODO(burdon): Require option to auto-detect free port.
+    const port = this._options.port ?? DEFAULT_PORT;
+    this._port = await getPort({ port: portNumbers(port, port + 100) });
+    console.log('>>>>>>>>>>', port, this._port);
     this._server = app.listen(this._port);
 
     // TODO(burdon): Check plugin is registered.
@@ -141,6 +146,5 @@ export class DevServer {
 
     await trigger.wait();
     this._server = undefined;
-    this._port = undefined;
   }
 }

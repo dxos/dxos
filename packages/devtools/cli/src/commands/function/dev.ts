@@ -21,7 +21,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override examples = [
     {
       description: 'Run with TypeScript support.',
-      command: 'dx function dev-server -r ts-node/register --verbose',
+      command: 'dx function dev -r ts-node/register --verbose',
     },
   ];
 
@@ -39,8 +39,16 @@ export default class Dev extends BaseCommand<typeof Dev> {
     }
 
     await this.execWithClient(async (client) => {
+      // TODO(dmaretskyi): Move into system service?
+      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
+      const functionsConfig = config.values.runtime?.agent?.plugins?.find(
+        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
+      );
+      invariant(functionsConfig?.config?.port, 'Port not set.');
+
       const manifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionManifest;
       const server = new DevServer(client, {
+        port: functionsConfig?.config?.port,
         directory: this.flags.baseDir,
         manifest,
       });
@@ -48,16 +56,10 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await server.initialize();
       await server.start();
 
-      // TODO(dmaretskyi): Move into system service?
-      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
-      const functionsConfig = config.values.runtime?.agent?.plugins?.find(
-        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
-      );
-
-      invariant(functionsConfig?.config?.port, 'Port not set.');
-      const endpoint = `http://localhost:${functionsConfig?.config?.port}`;
       const runtime = 'dev'; // TODO(burdon): Const.
-      const triggers = new TriggerManager(client, manifest, { endpoint, runtime });
+      const endpoint = server.endpoint!;
+
+      const triggers = new TriggerManager(client, manifest, { runtime, endpoint });
       await triggers.start();
 
       this.log(`Function dev-server: ${server.endpoint} (ctrl-c to exit)`);
@@ -67,6 +69,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         process.exit();
       });
 
+      // TODO(burdon): Get from server API.
       if (this.flags.verbose) {
         this.log(
           chalk`{green Function endpoints}:\n${server.functions

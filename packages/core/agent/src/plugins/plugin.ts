@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, Trigger } from '@dxos/async';
-import { type Client } from '@dxos/client';
+import { Event } from '@dxos/async';
+import { type Client, type Config } from '@dxos/client';
 import { type ClientServicesProvider, type LocalClientServices } from '@dxos/client/services';
 import { type ClientServicesHost } from '@dxos/client-services';
 import { Context } from '@dxos/context';
@@ -11,6 +11,10 @@ import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+
+export const getPluginConfig = (config: Config, id: string): Runtime.Agent.Plugin | undefined => {
+  return config.values.runtime?.agent?.plugins?.find((plugin) => plugin.id === id);
+};
 
 // TODO(burdon): Rename?
 export type PluginContext = {
@@ -25,10 +29,10 @@ export abstract class Plugin {
    */
   public abstract readonly id: string;
 
-  public readonly statusUpdate = new Event(); // TODO(burdon): Event type (e.g., open/close).
+  // TODO(burdon): Event type (e.g., open/close).
+  public readonly statusUpdate = new Event();
 
   protected readonly _ctx = new Context();
-  protected readonly _initialized = new Trigger();
 
   protected _config!: Runtime.Agent.Plugin;
   private _pluginCtx?: PluginContext;
@@ -54,18 +58,17 @@ export abstract class Plugin {
   async initialize(pluginCtx: PluginContext): Promise<void> {
     this._pluginCtx = pluginCtx;
 
-    // TODO(mykola): Maybe do not pass config directly to plugin, but rather let plugin to request it through some callback.
-    this.setConfig(
-      this._pluginCtx.client.config.values.runtime?.agent?.plugins?.find((pluginCtx) => pluginCtx.id === this.id) ?? {
-        id: this.id,
-      },
-    );
-
-    this._initialized.wake();
+    // TODO(burdon): Require config.
+    const config = getPluginConfig(this._pluginCtx.client.config, this.id);
+    invariant(config, `Plugin not configured: ${this.id}`);
+    this.setConfig(config);
   }
 
-  // TODO(burdon): Check not closed (or create new ctx?)
   async open() {
+    // Currently not re-entrant.
+    invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
+
+    // TODO(burdon): Normalize; e.g., require config to be set and NOT disabled.
     if (!this._config.enabled) {
       throw new Error(`Plugin not configured: ${this.id}`);
     }
@@ -73,13 +76,16 @@ export abstract class Plugin {
     log(`opening: ${this.id}`);
     await this.onOpen();
     this.statusUpdate.emit();
+    log(`opened: ${this.id}`);
   }
 
   async close() {
+    invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
     log(`closing: ${this.id}`);
     await this.onClose();
     void this._ctx.dispose();
     this.statusUpdate.emit();
+    log(`closed: ${this.id}`);
   }
 
   abstract onOpen(): Promise<void>;

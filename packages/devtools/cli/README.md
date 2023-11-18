@@ -643,16 +643,16 @@ ALIASES
 EXAMPLES
   Run with TypeScript support.
 
-    $ dx function dev-server -r ts-node/register --verbose
+    $ dx function dev -r ts-node/register --verbose
 ```
 
-## `dx function dev-server`
+## `dx function dev`
 
 Development server.
 
 ```
 USAGE
-  $ dx function dev-server [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+  $ dx function dev [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>] [--no-wait] [--require <value>] [--manifest <value>]
 
 FLAGS
@@ -676,7 +676,7 @@ ALIASES
 EXAMPLES
   Run with TypeScript support.
 
-    $ dx function dev-server -r ts-node/register --verbose
+    $ dx function dev -r ts-node/register --verbose
 ```
 
 ## `dx function exec NAME`

@@ -55,14 +55,14 @@ describe('Chess', () => {
 
     const manifest = load(await readFile(join(__dirname, '../../../functions.yml'), 'utf8')) as FunctionManifest;
 
-    const devServer = new DevServer(client, {
+    const server = new DevServer(client, {
       directory: join(__dirname, '../../functions'),
       manifest,
     });
 
-    await devServer.initialize();
-    await devServer.start();
-    afterTest(() => devServer.stop());
+    await server.initialize();
+    await server.start();
+    afterTest(() => server.stop());
 
     const triggers = new TriggerManager(client, manifest, {
       runtime: 'dev',

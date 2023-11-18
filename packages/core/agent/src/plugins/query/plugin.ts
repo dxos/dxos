@@ -48,7 +48,8 @@ export class QueryPlugin extends Plugin {
     }
     invariant(this._ctx, 'Plugin not opened.');
 
-    await this._initialized.wait();
+    // TODO(burdon): Race condition?
+    // await this._initialized.wait();
 
     const request: QueryRequest = message.payload;
 
