@@ -236,6 +236,10 @@ export const spaceToGraphNode = ({
 
     removedObjects.forEach((object) => parent.removeNode(object.id));
     folder.objects.forEach((object) => {
+      if (!object) {
+        return;
+      }
+
       const unsubscribe = objectToGraphNode({ object, parent: node, dispatch, resolve });
       if (unsubscribe) {
         childSubscriptions.add(unsubscribe);
@@ -314,6 +318,10 @@ export const objectToGraphNode = ({
 
     removedObjects.forEach((object) => parent.removeNode(object.id));
     folder.objects.forEach((object) => {
+      if (!object) {
+        return;
+      }
+
       const unsubscribe = objectToGraphNode({ object, parent: node, dispatch, resolve });
       if (unsubscribe) {
         childSubscriptions.add(unsubscribe);

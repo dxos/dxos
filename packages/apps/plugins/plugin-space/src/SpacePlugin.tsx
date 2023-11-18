@@ -176,28 +176,12 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         space.properties[Folder.schema.typename] = folder;
       };
 
-      // TODO(wittjosiah): Remove. The SDK should provide a way to do migrations.
-      const combineAndCleanupMultipleRootSpaceFolders = (space: Space) => {
-        const rootFolder = space.properties[Folder.schema.typename];
-        if (!rootFolder) {
-          return;
-        }
-
-        const spaceFolders = space.db.query(Folder.filter({ name: space.key.toHex() })).objects;
-        if (spaceFolders.length <= 1) {
-          return;
-        }
-
-        rootFolder.objects = spaceFolders.flatMap(({ objects }) => objects);
-      };
-
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
           spaces.forEach((space) => {
             introduceRootSpaceFolder(space);
-            combineAndCleanupMultipleRootSpaceFolders(space);
 
             spaceSubscriptions.add(
               space.listen('viewing', (message) => {
