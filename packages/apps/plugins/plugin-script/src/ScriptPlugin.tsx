@@ -8,7 +8,14 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Script as ScriptType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { type Filter, type EchoObject, type Schema, TextObject, isTypedObject } from '@dxos/client/echo';
+import {
+  type Filter,
+  type EchoObject,
+  type Schema,
+  TextObject,
+  isTypedObject,
+  SpaceProxy,
+} from '@dxos/react-client/echo';
 
 import { ScriptMain, ScriptSection } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
@@ -39,7 +46,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -56,8 +63,8 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                   action: ScriptAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
