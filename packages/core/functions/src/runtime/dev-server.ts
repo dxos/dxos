@@ -110,13 +110,12 @@ export class DevServer {
       })();
     });
 
-    // TODO(burdon): Require option to auto-detect free port.
+    // TODO(burdon): Require option to allow auto-detect free port.
     const port = this._options.port ?? DEFAULT_PORT;
     this._port = await getPort({ port, portRange: [port, port + 100] });
     this._server = app.listen(this._port);
 
-    // TODO(burdon): Check plugin is registered.
-    //  TypeError: Cannot read properties of undefined (reading 'register')
+    // TODO(burdon): Test during initialization.
     try {
       const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
         endpoint: this.endpoint!,

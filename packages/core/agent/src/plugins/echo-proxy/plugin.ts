@@ -14,7 +14,7 @@ import { Plugin } from '../plugin';
 
 const DEFAULT_OPTIONS: Required<EchoProxyConfig> & { '@type': string } = {
   '@type': 'dxos.agent.echoproxy.EchoProxyConfig',
-  port: 7001,
+  port: 7001, // TODO(burdon): Move all ports to constants (collisions).
 };
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
