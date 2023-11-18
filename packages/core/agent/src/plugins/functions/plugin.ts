@@ -5,32 +5,28 @@
 import express from 'express';
 import { type Server } from 'node:http';
 
-import { log } from '@dxos/log';
 import { type FunctionsConfig } from '@dxos/protocols/proto/dxos/agent/functions';
 
-import { DevFunctionDispatcher } from './dispatcher';
-import { Plugin } from '../../plugin';
-import { type FunctionDispatcher } from '../types';
+import { DevFunctionDispatcher } from './dev';
+import { type FunctionDispatcher } from './types';
+import { Plugin } from '../plugin';
 
 const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   '@type': 'dxos.agent.functions.FunctionsConfig',
   port: 7001, // TODO(burdon): Change default (clashes with OS/X).
 };
 
-// TODO(burdon): Decouple from implementation.
 export class FunctionsPlugin extends Plugin {
-  public readonly id = 'dxos.org/agent/plugin/functions'; // TODO(burdon): Dev.
+  public readonly id = 'dxos.org/agent/plugin/functions';
+
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
+
+  // TODO(burdon): Optional configuration. How to register other dispatchers?
   private readonly _devDispatcher = new DevFunctionDispatcher();
 
   private _server?: Server;
 
-  async open() {
-    if (!this._config.enabled) {
-      log.info('Functions disabled.');
-      return;
-    }
-
+  async onOpen() {
     this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
 
     const runtime = 'dev'; // TODO(burdon): Const.
@@ -71,12 +67,10 @@ export class FunctionsPlugin extends Plugin {
     this._server = app.listen(port, () => {
       console.log('functions server listening', { port });
     });
-    this.statusUpdate.emit();
   }
 
-  async close() {
+  async onClose() {
     this.host.serviceRegistry.removeService('FunctionRegistryService');
     this._server?.close();
-    this.statusUpdate.emit();
   }
 }

@@ -11,7 +11,7 @@ import {
   type UnregisterRequest,
 } from '@dxos/protocols/proto/dxos/agent/functions';
 
-import { type FunctionDispatcher, type FunctionInvocation, type FunctionInvocationResult } from '../types';
+import { type FunctionDispatcher, type FunctionInvocation, type FunctionInvocationResult } from './types';
 
 type Registration = {
   id: string;

@@ -9,7 +9,6 @@ import yaml from 'yaml';
 import { scheduleTaskInterval } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -31,28 +30,20 @@ export type DashboardPluginParams = {
 
 export class DashboardPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/dashboard';
-  private readonly _ctx = new Context();
+
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
   constructor(private readonly _params: DashboardPluginParams) {
     super();
   }
 
-  async open(): Promise<void> {
-    log('Opening dashboard plugin...');
-
-    invariant(this._pluginCtx);
-    if (!this._config.enabled) {
-      log.info('Dashboard disabled.');
-      return;
-    }
-
-    const subscription = this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
+  async onOpen(): Promise<void> {
+    const subscription = this.context.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;
       }
-      invariant(this._pluginCtx);
-      await this._pluginCtx.client.spaces.default.waitUntilReady();
+
+      await this.context.client.spaces.default.waitUntilReady();
 
       this._rpc = createProtoRpcPeer({
         exposed: {
@@ -65,24 +56,19 @@ export class DashboardPlugin extends Plugin {
           },
         },
         noHandshake: true,
-        port: getGossipRPCPort({ space: this._pluginCtx.client.spaces.default, channelName: CHANNEL_NAME }),
+        port: getGossipRPCPort({ space: this.context.client.spaces.default, channelName: CHANNEL_NAME }),
       });
       await this._rpc.open();
       this._ctx.onDispose(() => this._rpc!.close());
     });
 
     this._ctx.onDispose(() => subscription.unsubscribe());
-    this.statusUpdate.emit();
   }
 
-  async close(): Promise<void> {
-    void this._ctx.dispose();
-    this.statusUpdate.emit();
-  }
+  async onClose(): Promise<void> {}
 
   private _handleStatus(): Stream<AgentStatus> {
     log.info('Dashboard status request received.');
-    invariant(this._pluginCtx, 'Client is undefined.');
 
     return new Stream<AgentStatus>(({ ctx, next, close, ready }) => {
       const update = () => {
@@ -94,7 +80,7 @@ export class DashboardPlugin extends Plugin {
             ramUsage: String(process.memoryUsage().heapUsed),
           },
 
-          plugins: this._pluginCtx!.plugins.map((plugin) => ({
+          plugins: this.context.plugins.map((plugin) => ({
             id: plugin.id,
             config: plugin.config,
           })),
@@ -102,7 +88,7 @@ export class DashboardPlugin extends Plugin {
       };
       ready();
 
-      this._pluginCtx!.plugins.forEach((plugin) => {
+      this.context.plugins.forEach((plugin) => {
         plugin.statusUpdate.on(ctx, () => update());
       });
 
@@ -136,7 +122,7 @@ export class DashboardPlugin extends Plugin {
 
     // Restart plugin for which config was changed.
     {
-      const plugin = this._pluginCtx!.plugins.find((plugin) => plugin.id === request.id);
+      const plugin = this.context.plugins.find((plugin) => plugin.id === request.id);
       invariant(plugin, `Plugin ${request.id} not found.`);
       await plugin.close();
       plugin.setConfig(request.config);

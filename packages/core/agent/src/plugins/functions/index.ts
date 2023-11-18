@@ -3,4 +3,4 @@
 //
 
 export * from './dev';
-export * from './openfaas';
+export * from './plugin';

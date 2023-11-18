@@ -7,7 +7,6 @@ import type http from 'http';
 
 import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type EchoProxyConfig } from '@dxos/protocols/proto/dxos/agent/echoproxy';
 
@@ -21,25 +20,20 @@ const DEFAULT_OPTIONS: Required<EchoProxyConfig> & { '@type': string } = {
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
 export class EchoProxyPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/echo-proxy';
+
   private _server?: http.Server = undefined;
 
-  async open() {
-    invariant(this._pluginCtx);
-    if (!this._config.enabled) {
-      log.info('EchoProxyServer disabled from config');
-      return;
-    }
+  async onOpen() {
     this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
-
     log('starting proxy...', { ports: this._config.config.port });
-    await this._pluginCtx.client.initialize();
+    await this.context.client.initialize();
 
     const app = express();
     app.use(express.json());
 
     app.get('/spaces', async (req, res) => {
       log('/spaces');
-      const spaces = this._pluginCtx!.client.spaces.get();
+      const spaces = this.context.client.spaces.get();
       const result = {
         spaces: spaces.map((space) => ({ key: space.key.toHex() })),
       };
@@ -55,7 +49,7 @@ export class EchoProxyPlugin extends Plugin {
       };
 
       if (spaceKey) {
-        const space = this._pluginCtx!.client.spaces.get(PublicKey.from(spaceKey));
+        const space = this.context.client.spaces.get(PublicKey.from(spaceKey));
         if (space) {
           const { objects } = space.db.query();
           Object.assign(result, {
@@ -76,7 +70,7 @@ export class EchoProxyPlugin extends Plugin {
       };
 
       if (spaceKey) {
-        const space = this._pluginCtx!.client.spaces.get(PublicKey.from(spaceKey));
+        const space = this.context.client.spaces.get(PublicKey.from(spaceKey));
         if (space) {
           const objects = req.body;
           Object.assign(result, {
@@ -97,12 +91,11 @@ export class EchoProxyPlugin extends Plugin {
     this._server = app.listen(port, () => {
       console.log('proxy listening', { port });
     });
-    this.statusUpdate.emit();
   }
 
-  async close() {
+  async onClose() {
+    // TODO(burdon): Move to this._ctx.onDispose
     this._server?.close();
     this._server = undefined;
-    this.statusUpdate.emit();
   }
 }

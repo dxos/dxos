@@ -6,9 +6,13 @@ import { Event, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type ClientServicesProvider, type LocalClientServices } from '@dxos/client/services';
 import { type ClientServicesHost } from '@dxos/client-services';
+import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
+// TODO(burdon): Rename?
 export type PluginContext = {
   client: Client;
   clientServices: ClientServicesProvider;
@@ -21,17 +25,29 @@ export abstract class Plugin {
    */
   public abstract readonly id: string;
 
-  public readonly statusUpdate = new Event();
-  protected _config!: Runtime.Agent.Plugin;
-  protected _pluginCtx?: PluginContext;
-  protected _initialized = new Trigger();
+  public readonly statusUpdate = new Event(); // TODO(burdon): Event type (e.g., open/close).
 
-  get host(): ClientServicesHost {
-    return (this._pluginCtx!.clientServices as LocalClientServices).host ?? failUndefined();
-  }
+  protected readonly _ctx = new Context();
+  protected readonly _initialized = new Trigger();
+
+  protected _config!: Runtime.Agent.Plugin;
+  private _pluginCtx?: PluginContext;
 
   get config(): Runtime.Agent.Plugin {
     return this._config;
+  }
+
+  get context(): PluginContext {
+    invariant(this._pluginCtx, `Plugin not initialized: ${this.id}`);
+    return this._pluginCtx;
+  }
+
+  get host(): ClientServicesHost {
+    return (this.context.clientServices as LocalClientServices).host ?? failUndefined();
+  }
+
+  setConfig(config: Runtime.Agent.Plugin) {
+    this._config = config;
   }
 
   // TODO(burdon): Remove Client dependency (client services only).
@@ -48,10 +64,24 @@ export abstract class Plugin {
     this._initialized.wake();
   }
 
-  setConfig(config: Runtime.Agent.Plugin) {
-    this._config = config;
+  // TODO(burdon): Check not closed (or create new ctx?)
+  async open() {
+    if (!this._config.enabled) {
+      throw new Error(`Plugin not configured: ${this.id}`);
+    }
+
+    log(`opening: ${this.id}`);
+    await this.onOpen();
+    this.statusUpdate.emit();
   }
 
-  abstract open(): Promise<void>;
-  abstract close(): Promise<void>;
+  async close() {
+    log(`closing: ${this.id}`);
+    await this.onClose();
+    void this._ctx.dispose();
+    this.statusUpdate.emit();
+  }
+
+  abstract onOpen(): Promise<void>;
+  abstract onClose(): Promise<void>;
 }

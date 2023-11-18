@@ -4,14 +4,14 @@
 
 import { DeferredTask } from '@dxos/async';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { createSubscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { FaasClient, type InvocationContext, type Trigger } from './client';
-import { Plugin } from '../../plugin';
+import { Plugin } from '../plugin';
 
 type MountedTrigger = {
   trigger: Trigger;
@@ -21,11 +21,9 @@ type MountedTrigger = {
 /**
  * Connects to the OpenFaaS service and mounts triggers.
  * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
- * @deprecated
  */
 export class FaasPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/openfaas';
-  private readonly _ctx = new Context();
 
   // TODO(burdon): Factor out triggers.
   private readonly _mountedTriggers: MountedTrigger[] = [];
@@ -38,26 +36,25 @@ export class FaasPlugin extends Plugin {
 
   constructor(faasConfig: Runtime.Services.Faasd, context: InvocationContext) {
     super();
+
     this._faasClient = new FaasClient(faasConfig, context);
   }
 
-  async open() {
+  async onOpen() {
     await this._watchTriggers();
     this._remountTask.schedule();
-    this.statusUpdate.emit();
   }
 
-  async close() {
-    await this._ctx.dispose();
+  async onClose() {
+    // TODO(burdon): Hook this._ctx.onDispose.
     await this._unmountTriggers();
-    this.statusUpdate.emit();
   }
 
   private async _watchTriggers() {
     const observedSpaces = new Map<Space, Context>();
 
     const update = () => {
-      const spaces = this._pluginCtx!.client.spaces.get();
+      const spaces = this.context.client.spaces.get();
       for (const space of spaces) {
         if (observedSpaces.has(space)) {
           continue;
@@ -90,7 +87,7 @@ export class FaasPlugin extends Plugin {
       }
     };
 
-    const sub = this._pluginCtx!.client.spaces.subscribe(() => {
+    const sub = this.context.client.spaces.subscribe(() => {
       update();
     });
     this._ctx.onDispose(() => sub.unsubscribe());
@@ -99,7 +96,7 @@ export class FaasPlugin extends Plugin {
   private async _getTriggers(): Promise<Trigger[]> {
     const triggers: Trigger[] = [];
 
-    for (const space of this._pluginCtx!.client.spaces.get()) {
+    for (const space of this.context.client.spaces.get()) {
       if (space.state.get() !== SpaceState.READY) {
         continue;
       }
@@ -145,7 +142,7 @@ export class FaasPlugin extends Plugin {
       },
     });
 
-    const space = this._pluginCtx!.client.spaces.get().find((space) => space.key.equals(trigger.spaceKey!));
+    const space = this.context.client.spaces.get().find((space) => space.key.equals(trigger.spaceKey!));
     if (!space) {
       log.warn('space not found', { space: trigger.spaceKey });
       return;

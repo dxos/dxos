@@ -30,29 +30,20 @@ const DEFAULT_OPTIONS: Required<EpochMonitorConfig> & { '@type': string } = {
  */
 export class EpochMonitorPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/epoch-monitor';
-  private _ctx?: Context = undefined;
-  private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
+
+  private readonly _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
 
   /**
    * Monitor spaces for which the agent is the leader.
    */
-  async open() {
-    invariant(this._pluginCtx);
-
-    if (!this._config.enabled) {
-      log.info('epoch monitor disabled from config');
-      return;
-    }
-    this._ctx = new Context();
+  async onOpen() {
     this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
-
-    log.info('epoch monitor open', { config: this._config });
 
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!this._monitors.has(space.key)) {
           invariant(this._config.config);
-          const monitor = new SpaceMonitor(this._pluginCtx!.client, space, this._config.config);
+          const monitor = new SpaceMonitor(this.context.client, space, this._config.config);
           this._monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
@@ -68,20 +59,15 @@ export class EpochMonitorPlugin extends Plugin {
       });
     };
 
-    const sub = this._pluginCtx.client.spaces.subscribe(process);
-    process(this._pluginCtx.client.spaces.get());
+    const sub = this.context.client.spaces.subscribe(process);
+    process(this.context.client.spaces.get());
     this._ctx.onDispose(() => sub.unsubscribe());
-    this.statusUpdate.emit();
   }
 
-  async close() {
-    await this._ctx?.dispose();
-    this._ctx = undefined;
-    this._monitors.forEach((monitor) => {
-      void monitor.close();
-    });
+  async onClose() {
+    // TODO(burdon): Hook this._ctx.onDispose.
+    this._monitors.forEach((monitor) => monitor.close());
     this._monitors.clear();
-    this.statusUpdate.emit();
   }
 }
 

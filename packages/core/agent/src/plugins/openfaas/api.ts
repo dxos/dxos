@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Generated?
+// TODO(burdon): Can we generate this?
 
 /**
  * @export
