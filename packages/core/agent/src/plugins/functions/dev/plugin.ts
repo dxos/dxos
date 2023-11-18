@@ -8,9 +8,9 @@ import { type Server } from 'node:http';
 import { log } from '@dxos/log';
 import { type FunctionsConfig } from '@dxos/protocols/proto/dxos/agent/functions';
 
-import { DevFunctionDispatcher } from './dev-dispatcher';
-import { type FunctionDispatcher } from './dispatcher';
-import { Plugin } from '../plugin';
+import { DevFunctionDispatcher } from './dispatcher';
+import { Plugin } from '../../plugin';
+import { type FunctionDispatcher } from '../types';
 
 const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   '@type': 'dxos.agent.functions.FunctionsConfig',

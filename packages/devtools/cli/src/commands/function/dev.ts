@@ -17,7 +17,7 @@ import { BaseCommand } from '../../base-command';
 export default class Dev extends BaseCommand<typeof Dev> {
   static override enableJsonFlag = true;
   static override description = 'Development server.';
-  static override aliases = ['function:dev'];
+  static override aliases = ['function:dev-server'];
   static override examples = [
     {
       description: 'Run with TypeScript support.',
