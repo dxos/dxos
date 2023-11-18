@@ -8,7 +8,7 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { Expando } from '@dxos/react-client/echo';
+import { Expando, SpaceProxy } from '@dxos/react-client/echo';
 
 import { MapMain } from './components';
 import meta, { MAP_PLUGIN } from './meta';
@@ -36,7 +36,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -53,8 +53,8 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                   action: MapAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
