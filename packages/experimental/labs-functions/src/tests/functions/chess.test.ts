@@ -65,8 +65,8 @@ describe('Chess', () => {
     afterTest(() => server.stop());
 
     const triggers = new TriggerManager(client, manifest, {
-      runtime: 'dev',
       endpoint: `http://localhost:${HUB_PORT}`,
+      runtime: 'dev',
     });
 
     await triggers.start();

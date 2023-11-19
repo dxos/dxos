@@ -46,7 +46,12 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       const manifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionManifest;
 
-      // TODO(burdon): Reconcile with FunctionsPlugin.
+      // TODO(burdon): Reconcile with FunctionsPlugin: dev command vs. agent.
+      //  - FunctionsPlugin
+      //  - OpenFaasPlugin
+      //  - DevServer
+      //  - TriggerManager
+
       const server = new DevServer(client, {
         port: functionsConfig?.config?.port,
         directory: this.flags.baseDir,

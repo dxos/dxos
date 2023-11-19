@@ -22,7 +22,7 @@ type MountedTrigger = {
  * Connects to the OpenFaaS service and mounts triggers.
  * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
  */
-export class FaasPlugin extends Plugin {
+export class OpenFaasPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/openfaas';
 
   // TODO(burdon): Factor out triggers.
