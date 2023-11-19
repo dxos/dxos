@@ -9,6 +9,7 @@ import { join } from 'node:path';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
@@ -45,7 +46,8 @@ export class DevServer {
   }
 
   get endpoint() {
-    return this._port ? `http://localhost:${this._port}` : undefined;
+    invariant(this._port);
+    return `http://localhost:${this._port}`;
   }
 
   get functions() {
@@ -54,20 +56,20 @@ export class DevServer {
 
   async initialize() {
     for (const def of this._options.manifest.functions) {
-      const { id, endpoint, handler: path } = def;
+      const { id, path, handler: dir } = def;
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const module = require(join(this._options.directory, path));
+        const module = require(join(this._options.directory, dir));
         const handler = module.default;
         if (typeof handler !== 'function') {
           throw new Error(`Handler must export default function: ${id}`);
         }
 
-        if (this._handlers[endpoint]) {
+        if (this._handlers[path]) {
           log.warn(`Function already registered: ${id}`);
         }
 
-        this._handlers[endpoint] = { def, handler };
+        this._handlers[path] = { def, handler };
       } catch (err) {
         log.error('parsing function (check manifest)', err);
       }
@@ -78,8 +80,8 @@ export class DevServer {
     const app = express();
     app.use(express.json());
 
-    app.post('/:endpoint', async (req, res) => {
-      const { endpoint } = req.params;
+    app.post('/:name', async (req, res) => {
+      const { name } = req.params;
 
       const response: Response = {
         status: (code: number) => {
@@ -100,8 +102,8 @@ export class DevServer {
 
       void (async () => {
         try {
-          log('invoking', { endpoint });
-          const { handler } = this._handlers[endpoint];
+          log(`invoking: ${name}`);
+          const { handler } = this._handlers[name];
           const response = await handler({ context, event: req.body });
           log('done', { response });
         } catch (err: any) {
@@ -119,8 +121,8 @@ export class DevServer {
     // TODO(burdon): Test during initialization.
     try {
       const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
-        endpoint: this.endpoint!,
-        functions: this.functions.map(({ def: { endpoint } }) => ({ name: endpoint })), // TODO(burdon): Change proto name => id.
+        endpoint: this.endpoint,
+        functions: this.functions.map(({ def: { path } }) => ({ name: path })),
       });
 
       this._registrationId = registrationId;
@@ -128,8 +130,6 @@ export class DevServer {
       await this.stop();
       throw new Error('FunctionRegistryService not available; check config (agent.plugins.functions).');
     }
-
-    console.log('!!!!!!!!!!!!!!!!!!!!!!', this._port);
   }
 
   async stop() {
@@ -146,6 +146,7 @@ export class DevServer {
     });
 
     await trigger.wait();
+    this._port = undefined;
     this._server = undefined;
   }
 }

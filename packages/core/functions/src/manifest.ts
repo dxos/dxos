@@ -5,8 +5,8 @@
 export type FunctionDef = {
   // FQ function name.
   id: string;
-  // HTTP endpoint.
-  endpoint: string;
+  // URL path.
+  path: string;
   // Path of handler.
   handler: string;
   description?: string;

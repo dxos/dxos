@@ -10,7 +10,6 @@ import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
 import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
 
@@ -44,9 +43,10 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const functionsConfig = config.values.runtime?.agent?.plugins?.find(
         (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );
-      invariant(functionsConfig?.config?.port, 'Port not set.');
 
       const manifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionManifest;
+
+      // TODO(burdon): Reconcile with FunctionsPlugin.
       const server = new DevServer(client, {
         port: functionsConfig?.config?.port,
         directory: this.flags.baseDir,
@@ -57,10 +57,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await server.start();
 
       const runtime = 'dev'; // TODO(burdon): Const.
-      const endpoint = server.endpoint!;
 
       // TODO(burdon): Factor out (keep CLI commands simple).
-      const triggers = new TriggerManager(client, manifest, { runtime, endpoint });
+      const triggers = new TriggerManager(client, manifest, { endpoint: server.endpoint, runtime });
       await triggers.start();
 
       this.log(`Function endpoint: ${server.endpoint} (ctrl-c to exit)`);
@@ -74,9 +73,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       if (this.flags.verbose) {
         this.log(
           chalk`{green Functions}:\n${server.functions
-            .map(
-              ({ def: { id, endpoint: path } }) => chalk`- {blue ${join(endpoint, runtime, path).padEnd(40)}} => ${id}`,
-            )
+            .map(({ def: { id, path } }) => chalk`- {blue ${join(server.endpoint, path).padEnd(40)}} => ${id}`)
             .join('\n')}`,
         );
       }

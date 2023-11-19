@@ -67,7 +67,7 @@ export class TriggerManager {
       // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
       const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
-        await this.execFunction(this._invokeOptions, config.endpoint, {
+        await this.execFunction(this._invokeOptions, config.path, {
           space: space.key,
           objects: Array.from(objectIds),
         });

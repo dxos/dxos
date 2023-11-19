@@ -13,12 +13,13 @@ import { Plugin } from '../plugin';
 
 const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   '@type': 'dxos.agent.functions.FunctionsConfig',
-  port: 7001, // TODO(burdon): Change default (clashes with OS/X).
+  port: 7001,
 };
 
 export class FunctionsPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/functions';
 
+  // TODO(burdon): Runtime.
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
 
   // TODO(burdon): Optional configuration. How to register other dispatchers?
