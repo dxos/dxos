@@ -21,7 +21,7 @@ import { Plugin } from '../plugin';
 export class QueryPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/query';
 
-  async onOpen(): Promise<void> {
+  override async onOpen() {
     const subscription = this.context.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;
@@ -38,8 +38,6 @@ export class QueryPlugin extends Plugin {
 
     this._ctx.onDispose(() => subscription.unsubscribe());
   }
-
-  async onClose(): Promise<void> {}
 
   private async _processRequest(message: GossipMessage) {
     if (message.payload['@type'] !== 'dxos.agent.query.QueryRequest') {

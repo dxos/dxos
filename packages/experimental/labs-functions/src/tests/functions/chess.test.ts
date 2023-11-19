@@ -15,7 +15,7 @@ import { subscribe } from '@dxos/echo-schema';
 import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
-const HUB_PORT = 8757;
+const FUNCTIONS_PORT = 8757;
 
 describe('Chess', () => {
   test.skip('chess function', async () => {
@@ -29,9 +29,8 @@ describe('Chess', () => {
           plugins: [
             {
               id: 'dxos.org/agent/plugin/functions',
-              enabled: true,
               config: {
-                port: HUB_PORT,
+                port: FUNCTIONS_PORT,
               },
             },
           ],
@@ -65,8 +64,7 @@ describe('Chess', () => {
     afterTest(() => server.stop());
 
     const triggers = new TriggerManager(client, manifest, {
-      endpoint: `http://localhost:${HUB_PORT}`,
-      runtime: 'dev',
+      endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
     });
 
     await triggers.start();

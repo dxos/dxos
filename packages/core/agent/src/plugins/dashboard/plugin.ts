@@ -37,7 +37,7 @@ export class DashboardPlugin extends Plugin {
     super();
   }
 
-  async onOpen(): Promise<void> {
+  override async onOpen() {
     const subscription = this.context.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;
@@ -64,8 +64,6 @@ export class DashboardPlugin extends Plugin {
 
     this._ctx.onDispose(() => subscription.unsubscribe());
   }
-
-  async onClose(): Promise<void> {}
 
   private _handleStatus(): Stream<AgentStatus> {
     log.info('Dashboard status request received.');

@@ -15,9 +15,6 @@ import { log } from '@dxos/log';
 import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
 import { type FunctionDef, type FunctionManifest } from '../manifest';
 
-// TODO(burdon): Create common agent/plugin abstraction for port management.
-const DEFAULT_PORT = 7001;
-
 export type DevServerOptions = {
   port?: number;
   directory: string;
@@ -34,6 +31,7 @@ export class DevServer {
   private _server?: http.Server;
   private _port?: number;
   private _registrationId?: string;
+  private _proxy?: string;
 
   // prettier-ignore
   constructor(
@@ -41,13 +39,13 @@ export class DevServer {
     private readonly _options: DevServerOptions,
   ) {}
 
-  get port() {
-    return this._port;
-  }
-
   get endpoint() {
     invariant(this._port);
     return `http://localhost:${this._port}`;
+  }
+
+  get proxy() {
+    return this._proxy;
   }
 
   get functions() {
@@ -113,22 +111,24 @@ export class DevServer {
       })();
     });
 
-    // TODO(burdon): Require option to allow auto-detect free port.
-    const port = this._options.port ?? DEFAULT_PORT;
-    this._port = await getPort({ port, portRange: [port, port + 100] });
+    // TODO(burdon): Push down port management to agent.
+    this._port = await getPort({ port: 7200, portRange: [7200, 7299] });
     this._server = app.listen(this._port);
 
     // TODO(burdon): Test during initialization.
     try {
-      const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
+      // Register functions.
+      const { registrationId, endpoint } = await this._client.services.services.FunctionRegistryService!.register({
         endpoint: this.endpoint,
         functions: this.functions.map(({ def: { path } }) => ({ name: path })),
       });
 
+      log.info('registered', { registrationId, endpoint });
       this._registrationId = registrationId;
+      this._proxy = endpoint;
     } catch (err: any) {
       await this.stop();
-      throw new Error('FunctionRegistryService not available; check config (agent.plugins.functions).');
+      throw new Error('FunctionRegistryService not available (check plugin is configured).');
     }
   }
 
@@ -139,7 +139,10 @@ export class DevServer {
         await this._client.services.services.FunctionRegistryService!.unregister({
           registrationId: this._registrationId,
         });
+
+        log.info('unregistered', { registrationId });
         this._registrationId = undefined;
+        this._proxy = undefined;
       }
 
       trigger.wake();

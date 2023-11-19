@@ -3,75 +3,84 @@
 //
 
 import express from 'express';
-import { type Server } from 'node:http';
 
+import { log } from '@dxos/log';
 import { type FunctionsConfig } from '@dxos/protocols/proto/dxos/agent/functions';
 
 import { DevFunctionDispatcher } from './dev';
 import { type FunctionDispatcher } from './types';
 import { Plugin } from '../plugin';
 
-const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
-  '@type': 'dxos.agent.functions.FunctionsConfig',
-  port: 7001,
+const DEFAULT_CONFIG: Partial<FunctionsConfig> = {
+  port: 7100, // TODO(burdon): Extract const.
 };
 
+/**
+ * Functions plugin:
+ * - Gateway for inbound HTTP function triggers.
+ * - Configures triggers and other function event generators.
+ * - ClientServices endpoint for peers.
+ * - TODO(burdon): Basic token based security.
+ */
 export class FunctionsPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/functions';
 
-  // TODO(burdon): Runtime.
+  // Map of dispatchers by runtime name.
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
 
-  // TODO(burdon): Optional configuration. How to register other dispatchers?
-  private readonly _devDispatcher = new DevFunctionDispatcher();
-
-  private _server?: Server;
-
-  async onOpen() {
-    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
-
-    const runtime = 'dev'; // TODO(burdon): Const.
-    this._dispatchers.set(runtime, this._devDispatcher);
-    this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
-
+  override async onOpen() {
     const app = express();
     app.use(express.json());
 
-    app.post('/:dispatcher/:functionName', (req, res) => {
-      const { dispatcher, functionName } = req.params;
-      if (!dispatcher || !functionName || !this._dispatchers.has(dispatcher)) {
+    app.post('/:runtime/:name', async (req, res) => {
+      const { runtime, name } = req.params;
+      const dispatcher = this._dispatchers.get(runtime);
+      if (!runtime || !name || !dispatcher) {
         res.statusCode = 404;
         res.end();
         return;
       }
 
-      this._dispatchers
-        .get(dispatcher)!
-        .invoke({
-          function: functionName,
+      try {
+        const result = await dispatcher.invoke({
+          function: name,
           event: req.body,
-          runtime: dispatcher,
-        })
-        .then(
-          (result) => {
-            res.statusCode = result.status;
-            res.end(result.response);
-          },
-          (error) => {
-            res.statusCode = 500;
-            res.end(error.message);
-          },
-        );
+          runtime,
+        });
+
+        res.statusCode = result.status;
+        res.end(result.response);
+      } catch (err: any) {
+        log.error(err);
+        res.statusCode = 500;
+        res.end();
+      }
     });
 
+    this._config.config = { ...DEFAULT_CONFIG, ...this._config.config };
     const port = this._config.config!.port;
-    this._server = app.listen(port, () => {
-      console.log('functions server listening', { port });
+    const server = app.listen(port, () => {
+      log.info('Functions plugin', { port });
     });
-  }
 
-  async onClose() {
-    this.host.serviceRegistry.removeService('FunctionRegistryService');
-    this._server?.close();
+    /**
+     * If configured the CLI can connect to the DevFunctionDispatcher to register function endpoints
+     * that are running in the functions DevServer started by the CLI.
+     */
+    // TODO(burdon): Configure.
+    const runtime = 'dev';
+    const dispatcher = new DevFunctionDispatcher({ endpoint: `http://localhost:${port}/${runtime}` });
+    if (dispatcher) {
+      this.host.serviceRegistry.addService('FunctionRegistryService', dispatcher);
+      this._dispatchers.set(runtime, dispatcher);
+    }
+
+    this._ctx.onDispose(() => {
+      if (dispatcher) {
+        this.host.serviceRegistry.removeService('FunctionRegistryService');
+      }
+
+      server?.close();
+    });
   }
 }

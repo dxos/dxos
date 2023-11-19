@@ -31,20 +31,19 @@ const DEFAULT_OPTIONS: Required<EpochMonitorConfig> & { '@type': string } = {
 export class EpochMonitorPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/epoch-monitor';
 
-  private readonly _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
-
   /**
    * Monitor spaces for which the agent is the leader.
    */
-  async onOpen() {
+  override async onOpen() {
     this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
 
+    const monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
-        if (!this._monitors.has(space.key)) {
+        if (!monitors.has(space.key)) {
           invariant(this._config.config);
           const monitor = new SpaceMonitor(this.context.client, space, this._config.config);
-          this._monitors.set(space.key, monitor);
+          monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
 
@@ -61,13 +60,11 @@ export class EpochMonitorPlugin extends Plugin {
 
     const sub = this.context.client.spaces.subscribe(process);
     process(this.context.client.spaces.get());
-    this._ctx.onDispose(() => sub.unsubscribe());
-  }
 
-  async onClose() {
-    // TODO(burdon): Hook this._ctx.onDispose.
-    this._monitors.forEach((monitor) => monitor.close());
-    this._monitors.clear();
+    this._ctx.onDispose(() => {
+      sub.unsubscribe();
+      monitors.forEach((monitor) => monitor.close());
+    });
   }
 }
 

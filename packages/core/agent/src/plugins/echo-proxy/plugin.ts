@@ -3,7 +3,6 @@
 //
 
 import express from 'express';
-import type http from 'http';
 
 import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
@@ -21,9 +20,7 @@ const DEFAULT_OPTIONS: Required<EchoProxyConfig> & { '@type': string } = {
 export class EchoProxyPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/echo-proxy';
 
-  private _server?: http.Server = undefined;
-
-  async onOpen() {
+  override async onOpen() {
     this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
     log('starting proxy...', { ports: this._config.config.port });
     await this.context.client.initialize();
@@ -88,14 +85,12 @@ export class EchoProxyPlugin extends Plugin {
     });
 
     const { port } = this._config.config!;
-    this._server = app.listen(port, () => {
+    const server = app.listen(port, () => {
       console.log('proxy listening', { port });
     });
-  }
 
-  async onClose() {
-    // TODO(burdon): Move to this._ctx.onDispose
-    this._server?.close();
-    this._server = undefined;
+    this._ctx.onDispose(() => {
+      server?.close();
+    });
   }
 }

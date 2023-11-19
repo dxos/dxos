@@ -40,14 +40,10 @@ export class OpenFaasPlugin extends Plugin {
     this._faasClient = new FaasClient(faasConfig, context);
   }
 
-  async onOpen() {
+  override async onOpen() {
     await this._watchTriggers();
     this._remountTask.schedule();
-  }
-
-  async onClose() {
-    // TODO(burdon): Hook this._ctx.onDispose.
-    await this._unmountTriggers();
+    this._ctx.onDispose(() => this._unmountTriggers());
   }
 
   private async _watchTriggers() {

@@ -69,8 +69,8 @@ export abstract class Plugin {
     // Currently not re-entrant.
     invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
 
-    // TODO(burdon): Normalize; e.g., require config to be set and NOT disabled.
-    if (!this._config.enabled) {
+    // Check not disabled.
+    if (!(this._config.enabled ?? true)) {
       throw new Error(`Plugin not configured: ${this.id}`);
     }
 
@@ -89,6 +89,6 @@ export abstract class Plugin {
     log(`closed: ${this.id}`);
   }
 
-  abstract onOpen(): Promise<void>;
-  abstract onClose(): Promise<void>;
+  protected async onOpen(): Promise<void> {}
+  protected async onClose(): Promise<void> {}
 }

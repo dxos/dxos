@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { load } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { Config } from '@dxos/config';
 import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
@@ -44,42 +44,37 @@ export default class Dev extends BaseCommand<typeof Dev> {
         (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );
 
-      const manifest = load(await readFile(this.flags.manifest, 'utf8')) as FunctionManifest;
+      const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
+      const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
 
-      // TODO(burdon): Reconcile with FunctionsPlugin: dev command vs. agent.
-      //  - FunctionsPlugin
-      //  - OpenFaasPlugin
-      //  - DevServer
-      //  - TriggerManager
-
+      const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
       const server = new DevServer(client, {
-        port: functionsConfig?.config?.port,
-        directory: this.flags.baseDir,
+        directory,
         manifest,
       });
 
       await server.initialize();
       await server.start();
 
-      const runtime = 'dev'; // TODO(burdon): Const.
-
-      // TODO(burdon): Factor out (keep CLI commands simple).
-      const triggers = new TriggerManager(client, manifest, { endpoint: server.endpoint, runtime });
+      // TODO(burdon): Move to plugin (make independent of runtime).
+      const triggers = new TriggerManager(client, manifest, { endpoint: server.proxy! });
       await triggers.start();
 
-      this.log(`Function endpoint: ${server.endpoint} (ctrl-c to exit)`);
+      this.log(`DevServer: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
         await triggers.stop();
         await server.stop();
         process.exit();
       });
 
-      // TODO(burdon): Get from server API.
+      // TODO(burdon): Get from server API. Table.
       if (this.flags.verbose) {
+        this.log(`Proxy: ${chalk.blue(server.proxy)}`);
         this.log(
-          chalk`{green Functions}:\n${server.functions
-            .map(({ def: { id, path } }) => chalk`- {blue ${join(server.endpoint, path).padEnd(40)}} => ${id}`)
-            .join('\n')}`,
+          'Functions:\n' +
+            server.functions
+              .map(({ def: { id, path } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, path)}}`)
+              .join('\n'),
         );
       }
 
