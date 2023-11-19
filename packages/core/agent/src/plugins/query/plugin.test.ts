@@ -41,7 +41,7 @@ describe('SearchPlugin', () => {
     const client1 = new Client({
       services: services1,
       config: new Config({
-        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query', enabled: true }] } },
+        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] } },
       }),
     });
     await client1.initialize();
@@ -128,7 +128,7 @@ describe('SearchPlugin', () => {
         agent = new Client({
           services,
           config: new Config({
-            runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query', enabled: true }] } },
+            runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] } },
           }),
         });
         await agent.initialize();
