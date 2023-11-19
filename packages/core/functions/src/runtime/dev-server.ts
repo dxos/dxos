@@ -140,7 +140,7 @@ export class DevServer {
           registrationId: this._registrationId,
         });
 
-        log.info('unregistered', { registrationId });
+        log.info('unregistered', { registrationId: this._registrationId });
         this._registrationId = undefined;
         this._proxy = undefined;
       }
