@@ -27,8 +27,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override flags = {
     ...BaseCommand.flags,
     require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
-    baseDir: Flags.string({ default: join(process.cwd(), 'src/functions') }),
-    manifest: Flags.string({ default: join(process.cwd(), 'functions.yml') }),
+    baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
+    manifest: Flags.string({ description: 'Functions manifest file.' }),
   };
 
   async run(): Promise<any> {
@@ -60,16 +60,17 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const triggers = new TriggerManager(client, manifest, { endpoint: server.proxy! });
       await triggers.start();
 
-      this.log(`DevServer: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
+      this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
         await triggers.stop();
         await server.stop();
         process.exit();
       });
 
-      // TODO(burdon): Get from server API. Table.
+      // TODO(burdon): Command to print table.
+      // TODO(burdon): Get from server API.
       if (this.flags.verbose) {
-        this.log(`Proxy: ${chalk.blue(server.proxy)}`);
+        this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
         this.log(
           'Functions:\n' +
             server.functions
