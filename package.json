@@ -97,7 +97,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-dom": "^1.11.0",
     "chalk": "^4.1.0",
-    "esbuild": "^0.19.2",
+    "esbuild": "^0.19.6",
     "esbuild-plugin-raw": "^0.1.7",
     "esbuild-plugin-yaml": "^0.0.1",
     "eslint": "^8.49.0",
