@@ -26,7 +26,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -41,17 +41,13 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/sdk/app-graph/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/app-graph/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

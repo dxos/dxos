@@ -19,12 +19,9 @@
       ],
       "executor": "@dxos/test:run",
       "options": {
-        
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
         "headless": false,
-        
         "playwrightConfigPath": "packages/devtools/devtools-extension/src/playwright/playwright.config.ts",
-        
         "testPatterns": [
           "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
         ],
@@ -39,6 +36,6 @@
         "{options.resultsPath}"
       ]
     },
-    "lint": { }
+    "lint": {}
   }
 }

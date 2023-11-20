@@ -24,6 +24,6 @@
         "script": "dev"
       }
     },
-    "lint": { }
+    "lint": {}
   }
 }

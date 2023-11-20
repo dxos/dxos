@@ -16,7 +16,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "storage": {
       "dependsOn": [
         "build"
@@ -29,20 +29,16 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
         "environments": [
           "nodejs"
         ],
-        
-        
         "testPatterns": [
           "packages/gravity/proto-guard/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/gravity/proto-guard/src/**/*"
         ]
-      },
-      
+      }
     }
   }
 }

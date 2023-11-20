@@ -26,25 +26,21 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
         "environments": [
           "nodejs"
         ],
         "forceExit": true,
-        
-        
         "testPatterns": [
           "packages/core/functions/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/functions/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

@@ -29,24 +29,20 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "ciEnvironments": [
         "nodejs"
       ],
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/common/phoenix/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/phoenix/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

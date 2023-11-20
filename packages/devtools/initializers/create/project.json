@@ -2,6 +2,6 @@
   "sourceRoot": "packages/devtools/initializers/create/src",
   "projectType": "library",
   "targets": {
-    "lint": { }
+    "lint": {}
   }
 }

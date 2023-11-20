@@ -29,7 +29,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -44,10 +44,7 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
         "forceExit": true,
-        
-        
         "testPatterns": [
           "packages/apps/plugins/plugin-registry/src/**/*.test.{ts,js}"
         ],

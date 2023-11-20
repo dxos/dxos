@@ -21,18 +21,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        
-        
-        
         "testPatterns": [
           "packages/gravity/kube-testing/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/gravity/kube-testing/src/**/*"
         ]
-      },
-      
+      }
     },
-    "lint": { }
+    "lint": {}
   }
 }

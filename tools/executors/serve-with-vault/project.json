@@ -15,7 +15,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { }
+    "lint": {}
   },
   "implicitDependencies": [
     "log-hook"

@@ -28,7 +28,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -58,17 +58,13 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/ui/react-ui-mosaic/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/ui/react-ui-mosaic/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

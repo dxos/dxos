@@ -28,7 +28,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -47,17 +47,13 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        
-        
-        
         "testPatterns": [
           "packages/experimental/kodama/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/experimental/kodama/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

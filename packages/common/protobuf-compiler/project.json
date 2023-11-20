@@ -16,7 +16,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "prebuild": {
       "dependsOn": [
         "^build",

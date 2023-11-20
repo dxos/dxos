@@ -25,22 +25,18 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
-        
-        
-        
         "testPatterns": [
           "packages/common/sentry/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/sentry/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

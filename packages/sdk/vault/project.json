@@ -90,10 +90,7 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
         "playwrightConfigPath": "packages/sdk/vault/src/playwright/playwright.config.ts",
-        
         "serve": "vault:serve-test",
         "testPatterns": [
           "packages/sdk/vault/src/playwright/**/*.spec.{ts,js}"
@@ -101,10 +98,9 @@
         "watchPatterns": [
           "packages/sdk/vault/src/**/*"
         ]
-      },
-      
+      }
     },
-    "lint": { },
+    "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {

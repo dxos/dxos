@@ -2,6 +2,6 @@
   "sourceRoot": "tools/eslint-rules",
   "projectType": "library",
   "targets": {
-    "lint": { }
+    "lint": {}
   }
 }

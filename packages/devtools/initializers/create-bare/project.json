@@ -2,6 +2,6 @@
   "sourceRoot": "packages/devtools/initializers/create-bare/src",
   "projectType": "library",
   "targets": {
-    "lint": { }
+    "lint": {}
   }
 }

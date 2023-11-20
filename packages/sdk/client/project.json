@@ -32,17 +32,14 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
         "envVariables": {
           "SIGNAL_PORT": 12003
         },
         "forceExit": true,
-        
-        
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12003
@@ -53,8 +50,7 @@
         "watchPatterns": [
           "packages/sdk/client/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

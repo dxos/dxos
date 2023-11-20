@@ -32,10 +32,7 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
         "playwrightConfigPath": "packages/sdk/react-shell/src/playwright/playwright.config.ts",
-        
         "serve": "react-shell:storybook",
         "testPatterns": [
           "packages/sdk/react-shell/src/playwright/**/*.spec.{ts,js}"
@@ -43,10 +40,9 @@
         "watchPatterns": [
           "packages/sdk/react-shell/src/**/*"
         ]
-      },
-      
+      }
     },
-    "lint": { },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {

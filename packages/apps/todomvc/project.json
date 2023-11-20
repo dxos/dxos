@@ -28,10 +28,7 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
-        
         "serve": "todomvc:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
@@ -42,10 +39,9 @@
         "watchPatterns": [
           "packages/apps/todomvc/src/**/*"
         ]
-      },
-      
+      }
     },
-    "lint": { },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {

@@ -29,7 +29,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -44,17 +44,13 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/apps/plugins/plugin-inbox/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/apps/plugins/plugin-inbox/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

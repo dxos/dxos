@@ -26,24 +26,20 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
         ],
-        
-        
-        
         "testPatterns": [
           "packages/core/mesh/teleport-extension-object-sync/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/teleport-extension-object-sync/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

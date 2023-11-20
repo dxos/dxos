@@ -28,7 +28,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {

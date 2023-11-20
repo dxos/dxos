@@ -29,24 +29,20 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
         ],
-        
-        
-        
         "testPatterns": [
           "packages/common/lock-file/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/lock-file/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

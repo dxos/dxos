@@ -26,21 +26,17 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/core/halo/keyring/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/halo/keyring/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

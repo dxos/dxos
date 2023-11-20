@@ -34,10 +34,7 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
         "playwrightConfigPath": "packages/sdk/react-client/src/playwright/playwright.config.ts",
-        
         "serve": "react-client:storybook",
         "testPatterns": [
           "packages/sdk/react-client/src/playwright/**/*.spec.{ts,js}"
@@ -46,10 +43,9 @@
         "watchPatterns": [
           "packages/sdk/react-client/src/**/*"
         ]
-      },
-      
+      }
     },
-    "lint": { },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -67,19 +63,15 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        
         "domRequired": true,
         "forceExit": true,
-        
-        
         "testPatterns": [
           "packages/sdk/react-client/src/**/*.test.{ts,tsx,js,jsx}"
         ],
         "watchPatterns": [
           "packages/sdk/react-client/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

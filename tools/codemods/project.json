@@ -2,6 +2,6 @@
   "sourceRoot": "tools/codemods/src",
   "projectType": "library",
   "targets": {
-    "lint": { }
+    "lint": {}
   }
 }

@@ -56,7 +56,7 @@
         "packages/apps/composer-extension/out/composer-extension"
       ]
     },
-    "lint": { },
+    "lint": {},
     "serve": {
       "dependsOn": [
         "^build"

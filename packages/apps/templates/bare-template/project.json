@@ -22,7 +22,7 @@
         "packages/apps/templates/bare-template/test/variants"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
@@ -30,18 +30,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        
         "forceExit": true,
-        
-        
         "testPatterns": [
           "packages/apps/templates/bare-template/test/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/apps/templates/bare-template/test/**/*"
         ]
-      },
-      
+      }
     }
   }
 }

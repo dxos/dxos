@@ -25,21 +25,17 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/common/log/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/log/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

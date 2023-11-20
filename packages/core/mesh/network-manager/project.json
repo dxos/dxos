@@ -27,7 +27,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
@@ -36,13 +36,10 @@
           "firefox",
           "nodejs"
         ],
-        
         "envVariables": {
           "SIGNAL_PORT": 12005
         },
         "forceExit": true,
-        
-        
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12005
@@ -53,8 +50,7 @@
         "watchPatterns": [
           "packages/core/mesh/network-manager/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

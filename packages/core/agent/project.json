@@ -29,7 +29,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
@@ -37,17 +37,13 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        
-        
-        
         "testPatterns": [
           "packages/core/agent/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/agent/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

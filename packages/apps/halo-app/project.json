@@ -35,10 +35,7 @@
           "ios",
           "webkit"
         ],
-        
-        
         "playwrightConfigPath": "packages/apps/halo-app/src/playwright/playwright.config.ts",
-        
         "serve": "halo-app:preview",
         "testPatterns": [
           "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
@@ -46,10 +43,9 @@
         "watchPatterns": [
           "packages/apps/halo-app/src/**/*"
         ]
-      },
-      
+      }
     },
-    "lint": { },
+    "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {

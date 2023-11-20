@@ -26,21 +26,17 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/core/echo/model-factory/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/echo/model-factory/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

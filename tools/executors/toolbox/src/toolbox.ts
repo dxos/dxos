@@ -205,11 +205,6 @@ class Toolbox {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
       if (projectJson?.targets) {
-        if (projectJson.targets.lint) {
-          projectJson.targets.lint.options.format = 'unix';
-          projectJson.targets.lint.options.quiet = true;
-        }
-
         const updated = sortJson(projectJson, {
           depth: -1,
           map: {

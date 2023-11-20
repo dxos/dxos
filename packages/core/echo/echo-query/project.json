@@ -26,22 +26,18 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
         "forceExit": true,
-        
-        
         "testPatterns": [
           "packages/core/echo/echo-query/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/echo/echo-query/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

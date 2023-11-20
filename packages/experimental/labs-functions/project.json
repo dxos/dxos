@@ -25,24 +25,20 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
         ],
-        
-        
-        
         "testPatterns": [
           "packages/experimental/labs-functions/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/experimental/labs-functions/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

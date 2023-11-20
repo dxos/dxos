@@ -26,21 +26,17 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/common/random-access-storage/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/random-access-storage/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

@@ -25,7 +25,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {
@@ -38,17 +38,13 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/sdk/client-protocol/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/client-protocol/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [

@@ -13,7 +13,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
@@ -21,18 +21,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        
         "forceExit": true,
-        
-        
         "testPatterns": [
           "packages/apps/templates/hello-template/test/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/apps/templates/hello-template/test/**/*"
         ]
-      },
-      
+      }
     }
   }
 }

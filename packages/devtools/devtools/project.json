@@ -50,7 +50,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "serve": {
       "executor": "@nx/vite:dev-server",
       "options": {

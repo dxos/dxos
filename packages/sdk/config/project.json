@@ -60,21 +60,17 @@
         "{options.outputPath}"
       ]
     },
-    "lint": { },
+    "lint": {},
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        
-        
-        
         "testPatterns": [
           "packages/sdk/config/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/config/src/**/*"
         ]
-      },
-      
+      }
     }
   },
   "implicitDependencies": [
