@@ -9,10 +9,8 @@ import { describe, test } from '@dxos/test';
 import { ImapProcessor } from './imap-processor';
 import { getConfig, getKey } from '../../util';
 
-// TODO(burdon): Set-up in-memory test for CI.
-
 // eslint-disable-next-line mocha/no-skipped-tests
-describe('IMAP processor', () => {
+describe.skip('IMAP processor', () => {
   let processor: ImapProcessor | undefined;
 
   before(async () => {
