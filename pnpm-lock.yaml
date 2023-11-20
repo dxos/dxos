@@ -5932,6 +5932,12 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/document-model':
+        specifier: workspace:*
+        version: link:../../core/echo/document-model
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-generator
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -6021,9 +6027,6 @@ importers:
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
-      '@dxos/echo-generator':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-generator
       '@mediapipe/tasks-text':
         specifier: ^0.10.7
         version: 0.10.7
