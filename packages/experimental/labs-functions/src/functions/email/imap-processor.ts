@@ -18,8 +18,8 @@ const toArray = (value: any) => (Array.isArray(value) ? value : [value]);
 // https://proton.me/blog/bridge-security-model
 // NOTE: Configure bridge settings: SSL; download the cert.
 
-// TODO(burdon): Object with spam and blacklist arrays.
-const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
+// TODO(burdon): Object with spam and block list arrays.
+const ignoreMatchingEmail = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
 
 export class ImapProcessor {
   private _connection?: ImapSimple;
@@ -57,7 +57,7 @@ export class ImapProcessor {
    */
   // TODO(burdon): Request since timestamp.
   async requestMessages({ days }: { days: number } = { days: 28 }): Promise<MessageType[]> {
-    log.info('requesting...');
+    log.info('requesting...', { days });
 
     // https://github.com/mscdex/node-imap
     const messages = await this._connection!.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
@@ -103,7 +103,7 @@ export class ImapProcessor {
         );
 
         // Skip bulk mail.
-        if (!message.from?.email || blacklist.some((regex) => regex.test(message.from!.email!))) {
+        if (!message.from?.email || ignoreMatchingEmail.some((regex) => regex.test(message.from!.email!))) {
           return;
         }
 

@@ -2,17 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Circle } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
-import { mx } from '@dxos/react-ui-theme';
+import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { formatDate } from './util';
 
 // TODO(burdon): Factor out.
 const styles = {
   hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
-  selected: '!bg-teal-100 !dark:bg-teal-900',
+  selected: '!bg-cyan-100 !dark:bg-cyan-900',
 };
 
 export type MessageListProps = {
@@ -25,7 +26,7 @@ export type MessageListProps = {
 
 export const MessageList = ({ messages = [], selected, onSelect }: MessageListProps) => {
   return (
-    <div className='flex flex-col grow max-w-[400px] overflow-hidden'>
+    <div className={mx('flex flex-col grow max-w-[400px] overflow-hidden', inputSurface)}>
       <div className='flex flex-col overflow-y-auto divide-y'>
         {messages?.map((message) => (
           <MessageItem key={message.id} message={message} selected={message.id === selected} onSelect={onSelect} />
@@ -45,14 +46,19 @@ export const MessageItem: FC<{ message: MessageType; selected?: boolean; onSelec
   const subject = message.subject ?? message.blocks[0].text;
   return (
     <div
-      className={mx('flex flex-col p-3 cursor-pointer', styles.hover, selected && styles.selected)}
+      className={mx('flex p-2 cursor-pointer', styles.hover, selected && styles.selected)}
       onClick={() => onSelect?.(message)}
     >
-      <div className='flex text-sm justify-between text-neutral-500 pb-1'>
-        <div>{from}</div>
-        <div>{formatDate(new Date(), new Date(date))}</div>
+      <div className='flex pr-2 pt-[2px]'>
+        <Circle className={getSize(4)} weight={selected ? 'duotone' : 'regular'} />
       </div>
-      <div>{subject}</div>
+      <div className='flex flex-col w-full'>
+        <div className={mx('flex text-sm justify-between text-neutral-500 pb-1', !selected && 'font-thin')}>
+          <div>{from}</div>
+          <div>{formatDate(new Date(), new Date(date))}</div>
+        </div>
+        <div>{subject}</div>
+      </div>
     </div>
   );
 };

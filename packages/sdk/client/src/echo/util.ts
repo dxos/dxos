@@ -18,18 +18,11 @@ export const createDefaultModelFactory = () => {
 /**
  * @deprecated
  */
-// TODO(burdon): Review API.
 export const getSpaceForObject = (object: EchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?._backend.spaceKey;
   if (key) {
     const owner = db.graph._getOwningObject(key);
-    // TODO(burdon): Not recognized as a space.
-    console.log('!!!', key, owner instanceof SpaceProxy);
-    if (owner) {
-      return owner as Space;
-    }
-
     if (owner instanceof SpaceProxy) {
       return owner;
     }
