@@ -9,7 +9,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Sketch as SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { Main, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Vite config: https://github.com/tldraw/examples/tree/main/tldraw-vite-example
 // TODO(burdon): Self-hosted: https://docs.tldraw.dev/usage#Self-hosting-static-assets
@@ -111,7 +111,7 @@ export const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, ma
 
 export const SketchMain: FC<SketchComponentProps> = (props) => {
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <SketchComponent {...props} />{' '}
     </Main.Content>
   );
