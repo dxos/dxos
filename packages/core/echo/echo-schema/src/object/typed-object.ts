@@ -296,6 +296,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   private _convert(visitors: ConvertVisitors = {}) {
     return {
       '@id': this.id,
+      // TODO(mykola): Secondary path is non reachable.
       '@type': this.__typename ?? (this.__schema ? { '@id': this.__schema!.id } : undefined),
       // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
