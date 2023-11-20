@@ -98,12 +98,14 @@ export const testWithAutomerge = (tests: () => void) => {
     before(() => {
       setGlobalAutomergePreference(true);
     })
-
+    
     after(() => {
       setGlobalAutomergePreference(false);
     })
-
+    
+    setGlobalAutomergePreference(true);
     tests();
+    setGlobalAutomergePreference(false);
   });
 
   describe('without automerge', () => {

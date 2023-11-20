@@ -111,6 +111,14 @@ export class AutomergeObject implements TypedObjectProperties {
     this._docHandle = options.docHandle;
     this._path = options.path;
 
+    if (this._linkCache) {
+      for (const obj of this._linkCache.values()) {
+        this._database!.add(obj);
+      }
+
+      this._linkCache = undefined;
+    }
+
     if (this._doc) {
       this._set([], this._doc);
       this._doc = undefined;
@@ -196,9 +204,9 @@ export class AutomergeObject implements TypedObjectProperties {
       const reference = this._linkObject(value);
       return {
         '@type': REFERENCE_TYPE_TAG,
-        itemId: reference.itemId,
-        protocol: reference.protocol,
-        host: reference.host,
+        itemId: reference.itemId ?? null,
+        protocol: reference.protocol ?? null,
+        host: reference.host ?? null,
       }
     }
     return value;
