@@ -42,12 +42,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/sdk/app-framework/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/app-framework/src/**/*"
         ]
       }
     }

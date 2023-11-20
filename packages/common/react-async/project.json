@@ -30,13 +30,7 @@
       "executor": "@dxos/test:run",
       "options": {
         "domRequired": true,
-        "forceExit": true,
-        "testPatterns": [
-          "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
-        ],
-        "watchPatterns": [
-          "packages/common/react-async/src/**/*"
-        ]
+        "forceExit": true
       }
     }
   },

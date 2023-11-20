@@ -59,12 +59,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/experimental/chess-app/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/chess-app/src/**/*"
         ]
       }
     }

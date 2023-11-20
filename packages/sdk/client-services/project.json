@@ -44,13 +44,7 @@
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12004
-        },
-        "testPatterns": [
-          "packages/sdk/client-services/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/client-services/src/**/*"
-        ]
+        }
       }
     }
   },

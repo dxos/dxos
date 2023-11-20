@@ -28,14 +28,7 @@
     "lint": {},
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/core/echo/messenger-model/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/echo/messenger-model/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

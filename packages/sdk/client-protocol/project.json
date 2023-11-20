@@ -37,14 +37,7 @@
     },
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/sdk/client-protocol/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/client-protocol/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

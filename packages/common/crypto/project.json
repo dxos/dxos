@@ -29,14 +29,7 @@
     "lint": {},
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/common/crypto/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/crypto/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

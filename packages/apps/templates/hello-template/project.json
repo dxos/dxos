@@ -21,13 +21,7 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "forceExit": true,
-        "testPatterns": [
-          "packages/apps/templates/hello-template/test/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/templates/hello-template/test/**/*"
-        ]
+        "forceExit": true
       }
     }
   }

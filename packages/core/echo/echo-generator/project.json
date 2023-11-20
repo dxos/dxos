@@ -36,13 +36,7 @@
         "forceExit": true,
         "setupOptions": {
           "port": 12000
-        },
-        "testPatterns": [
-          "packages/core/echo/echo-generator/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/echo/echo-generator/src/**/*"
-        ]
+        }
       }
     }
   },

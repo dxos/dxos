@@ -66,14 +66,7 @@
         "prebuild"
       ],
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/core/protocols/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/protocols/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

@@ -44,13 +44,7 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "forceExit": true,
-        "testPatterns": [
-          "packages/apps/plugins/plugin-search/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-search/src/**/*"
-        ]
+        "forceExit": true
       }
     }
   },

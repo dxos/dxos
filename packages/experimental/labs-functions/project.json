@@ -31,12 +31,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/experimental/labs-functions/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/labs-functions/src/**/*"
         ]
       }
     }

@@ -44,13 +44,7 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "forceExit": true,
-        "testPatterns": [
-          "packages/core/echo/echo-schema/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/echo/echo-schema/src/**/*"
-        ]
+        "forceExit": true
       }
     }
   },

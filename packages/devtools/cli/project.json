@@ -60,12 +60,6 @@
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/devtools/cli/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/devtools/cli/src/**/*"
         ]
       }
     }

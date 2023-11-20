@@ -30,14 +30,7 @@
     "lint": {},
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/common/feed-store/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/feed-store/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

@@ -46,13 +46,7 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "forceExit": true,
-        "testPatterns": [
-          "packages/common/plate/test/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/plate/test/**/*"
-        ]
+        "forceExit": true
       }
     }
   },

@@ -85,14 +85,7 @@
     "lint": {},
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/common/hypercore/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/hypercore/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

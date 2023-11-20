@@ -61,14 +61,7 @@
     "lint": {},
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/experimental/metagraph/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/metagraph/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

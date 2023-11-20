@@ -38,13 +38,7 @@
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12001
-        },
-        "testPatterns": [
-          "packages/core/echo/echo-pipeline/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/echo/echo-pipeline/src/**/*"
-        ]
+        }
       }
     }
   },

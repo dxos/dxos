@@ -33,13 +33,7 @@
         "environments": [
           "nodejs"
         ],
-        "forceExit": true,
-        "testPatterns": [
-          "packages/core/functions/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/functions/src/**/*"
-        ]
+        "forceExit": true
       }
     }
   },

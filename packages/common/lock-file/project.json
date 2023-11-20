@@ -35,12 +35,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/common/lock-file/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/lock-file/src/**/*"
         ]
       }
     }

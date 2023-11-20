@@ -35,12 +35,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/core/mesh/teleport-extension-gossip/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/mesh/teleport-extension-gossip/src/**/*"
         ]
       }
     }

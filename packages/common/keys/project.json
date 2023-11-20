@@ -29,14 +29,7 @@
     "lint": {},
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/common/keys/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/keys/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

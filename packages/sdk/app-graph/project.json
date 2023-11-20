@@ -40,14 +40,7 @@
     },
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/sdk/app-graph/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/app-graph/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

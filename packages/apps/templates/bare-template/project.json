@@ -30,13 +30,7 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "forceExit": true,
-        "testPatterns": [
-          "packages/apps/templates/bare-template/test/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/templates/bare-template/test/**/*"
-        ]
+        "forceExit": true
       }
     }
   }

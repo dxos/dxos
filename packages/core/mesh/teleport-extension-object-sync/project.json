@@ -32,12 +32,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/core/mesh/teleport-extension-object-sync/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/mesh/teleport-extension-object-sync/src/**/*"
         ]
       }
     }

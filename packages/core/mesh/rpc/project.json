@@ -32,12 +32,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/core/mesh/rpc/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/mesh/rpc/src/**/*"
         ]
       }
     }

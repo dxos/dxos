@@ -43,14 +43,7 @@
     },
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "packages/apps/plugins/plugin-inbox/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-inbox/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "implicitDependencies": [

@@ -22,12 +22,6 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "tools/beast/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "tools/beast/src/**/*"
         ]
       }
     }

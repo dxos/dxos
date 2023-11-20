@@ -31,12 +31,6 @@
       "options": {
         "environments": [
           "nodejs"
-        ],
-        "testPatterns": [
-          "packages/gravity/proto-guard/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/gravity/proto-guard/src/**/*"
         ]
       }
     }

@@ -43,13 +43,7 @@
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12005
-        },
-        "testPatterns": [
-          "packages/core/mesh/network-manager/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/mesh/network-manager/src/**/*"
-        ]
+        }
       }
     }
   },

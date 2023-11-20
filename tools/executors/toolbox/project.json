@@ -19,14 +19,7 @@
     "lint": {},
     "test": {
       "executor": "@dxos/test:run",
-      "options": {
-        "testPatterns": [
-          "tools/executors/toolbox/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "tools/executors/toolbox/src/**/*"
-        ]
-      }
+      "options": {}
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
