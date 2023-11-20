@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ChatCompletionRequestMessage } from 'openai';
+import { type ChatMessage } from 'langchain/schema';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { Schema, type TypedObject } from '@dxos/echo-schema';
 
-import { addPrompt } from './prompts';
+import { createPrompt } from './prompts';
 
-export const createRequest = (space: Space, message: MessageType): ChatCompletionRequestMessage[] => {
+export const createRequest = (space: Space, message: MessageType): ChatMessage[] => {
   const text = message.blocks
     .map((message) => message.text)
     .filter(Boolean)
@@ -51,8 +51,5 @@ export const createRequest = (space: Space, message: MessageType): ChatCompletio
     });
   }
 
-  const messages = addPrompt({ message: text, context, schema })!;
-
-  // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
-  return messages.map(({ role, content }) => ({ role, content } as ChatCompletionRequestMessage));
+  return createPrompt({ message: text, context, schema })!;
 };

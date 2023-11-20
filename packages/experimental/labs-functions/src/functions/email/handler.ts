@@ -7,7 +7,7 @@ import type { Config as ImapConfig } from 'imap';
 import { Message as MessageType, Mailbox as MailboxType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client/echo';
-import { debug, matchKeys } from '@dxos/echo-schema';
+import { matchKeys } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -55,7 +55,7 @@ export const handler: FunctionHandler<any> = async ({
         const space = getSpaceForObject(mailbox);
         invariant(space);
         // TODO(burdon): Debounce requests (i.e., store seq).
-        console.log('Requesting messages...');
+        log.info('Requesting messages...');
         const messages = await processor.requestMessages();
         await processMailbox(space, mailbox, messages);
       }
@@ -75,11 +75,14 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
   const { objects: current = [] } = space.db.query(MessageType.filter()) ?? {};
 
   // Merge messages.
-  console.log(messages.map((message) => message[debug]));
+  // console.log(messages.map((message) => message[debug]));
+  let added = 0;
   for (const message of messages) {
     if (!current.find((m) => matchKeys(m.__meta.keys, message.__meta.keys))) {
       mailbox.messages.push(message);
-      console.log('Adding', message[debug]);
+      added++;
     }
   }
+
+  log.info('processed', { messages: messages.length, added });
 };

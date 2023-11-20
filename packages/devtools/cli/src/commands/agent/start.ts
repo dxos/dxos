@@ -13,6 +13,7 @@ import {
   EpochMonitorPlugin,
   FunctionsPlugin,
   QueryPlugin,
+  VectorPlugin,
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
@@ -88,6 +89,7 @@ export default class Start extends BaseCommand<typeof Start> {
         new EpochMonitorPlugin(),
         new FunctionsPlugin(),
         new QueryPlugin(),
+        new VectorPlugin(),
       ],
     });
 

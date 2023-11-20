@@ -9,7 +9,7 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../../util';
+import { getConfig, getKey } from './util';
 
 const docs: Document[] = [
   {
@@ -30,13 +30,15 @@ const docs: Document[] = [
   },
 ];
 
-describe('langchain', () => {
+// TODO(burdon): Demo chat augmented with document (RAG).
+
+describe('LangChain', () => {
   test('vector', async () => {
     const config = getConfig()!;
 
     // TODO(burdon): CloudflareWorkersAIEmbeddings, FakeEmbeddings for tests.
     const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: getKey(config, 'openai.com/api_key'),
+      openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key'),
     });
 
     const vectorStore = new MemoryVectorStore(embeddings);

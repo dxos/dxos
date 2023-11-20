@@ -8,5 +8,6 @@ export * from './epoch-monitor';
 export * from './functions';
 export * from './openfaas';
 export * from './query';
+export * from './vector';
 
 export * from './plugin';
