@@ -8,6 +8,9 @@
     ],
     "outDir": "dist/types"
   },
+  "exclude": [
+    "src/testing"
+  ],
   "include": [
     "src"
   ],

@@ -8,7 +8,7 @@ import urlJoin from 'url-join';
 import { type TypedObject } from '@dxos/client/echo';
 import { type Config, useConfig } from '@dxos/react-client';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { FilePreview } from './FilePreview';
 
@@ -27,7 +27,7 @@ export const FileMain: FC<{ file: TypedObject }> = ({ file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <FilePreview type={file.type} url={url} />
     </Main.Content>
   );

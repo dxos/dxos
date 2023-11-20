@@ -3,20 +3,20 @@
 //
 
 import express from 'express';
+import { getPort } from 'get-port-please';
 import type http from 'http';
 import { join } from 'node:path';
-import { getPortPromise } from 'portfinder';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
 import { type FunctionDef, type FunctionManifest } from '../manifest';
 
-const DEFAULT_PORT = 7001;
-
 export type DevServerOptions = {
+  port?: number;
   directory: string;
   manifest: FunctionManifest;
 };
@@ -24,12 +24,14 @@ export type DevServerOptions = {
 /**
  * Functions dev server provides a local HTTP server for testing functions.
  */
+// TODO(burdon): Reconcile with agent/functions dev dispatcher.
 export class DevServer {
   private readonly _handlers: Record<string, { def: FunctionDef; handler: FunctionHandler<any> }> = {};
 
   private _server?: http.Server;
   private _port?: number;
   private _registrationId?: string;
+  private _proxy?: string;
 
   // prettier-ignore
   constructor(
@@ -37,12 +39,13 @@ export class DevServer {
     private readonly _options: DevServerOptions,
   ) {}
 
-  get port() {
-    return this._port;
+  get endpoint() {
+    invariant(this._port);
+    return `http://localhost:${this._port}`;
   }
 
-  get endpoint() {
-    return this._port ? `http://localhost:${this._port}` : undefined;
+  get proxy() {
+    return this._proxy;
   }
 
   get functions() {
@@ -51,20 +54,20 @@ export class DevServer {
 
   async initialize() {
     for (const def of this._options.manifest.functions) {
-      const { id, endpoint, handler: path } = def;
+      const { id, path, handler: dir } = def;
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const module = require(join(this._options.directory, path));
+        const module = require(join(this._options.directory, dir));
         const handler = module.default;
         if (typeof handler !== 'function') {
           throw new Error(`Handler must export default function: ${id}`);
         }
 
-        if (this._handlers[endpoint]) {
+        if (this._handlers[path]) {
           log.warn(`Function already registered: ${id}`);
         }
 
-        this._handlers[endpoint] = { def, handler };
+        this._handlers[path] = { def, handler };
       } catch (err) {
         log.error('parsing function (check manifest)', err);
       }
@@ -75,8 +78,8 @@ export class DevServer {
     const app = express();
     app.use(express.json());
 
-    app.post('/:endpoint', async (req, res) => {
-      const { endpoint } = req.params;
+    app.post('/:name', async (req, res) => {
+      const { name } = req.params;
 
       const response: Response = {
         status: (code: number) => {
@@ -97,8 +100,8 @@ export class DevServer {
 
       void (async () => {
         try {
-          log('invoking', { endpoint });
-          const { handler } = this._handlers[endpoint];
+          log(`invoking: ${name}`);
+          const { handler } = this._handlers[name];
           const response = await handler({ context, event: req.body });
           log('done', { response });
         } catch (err: any) {
@@ -108,21 +111,24 @@ export class DevServer {
       })();
     });
 
-    this._port = await getPortPromise({ startPort: DEFAULT_PORT });
+    // TODO(burdon): Push down port management to agent.
+    this._port = await getPort({ port: 7200, portRange: [7200, 7299] });
     this._server = app.listen(this._port);
 
-    // TODO(burdon): Check plugin is registered.
-    //  TypeError: Cannot read properties of undefined (reading 'register')
+    // TODO(burdon): Test during initialization.
     try {
-      const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
-        endpoint: this.endpoint!,
-        functions: this.functions.map(({ def: { endpoint } }) => ({ name: endpoint })), // TODO(burdon): Change proto name => id.
+      // Register functions.
+      const { registrationId, endpoint } = await this._client.services.services.FunctionRegistryService!.register({
+        endpoint: this.endpoint,
+        functions: this.functions.map(({ def: { path } }) => ({ name: path })),
       });
 
+      log.info('registered', { registrationId, endpoint });
       this._registrationId = registrationId;
+      this._proxy = endpoint;
     } catch (err: any) {
       await this.stop();
-      throw new Error('FunctionRegistryService not available; check config (agent.plugins.functions).');
+      throw new Error('FunctionRegistryService not available (check plugin is configured).');
     }
   }
 
@@ -133,14 +139,17 @@ export class DevServer {
         await this._client.services.services.FunctionRegistryService!.unregister({
           registrationId: this._registrationId,
         });
+
+        log.info('unregistered', { registrationId: this._registrationId });
         this._registrationId = undefined;
+        this._proxy = undefined;
       }
 
       trigger.wake();
     });
 
     await trigger.wait();
-    this._server = undefined;
     this._port = undefined;
+    this._server = undefined;
   }
 }

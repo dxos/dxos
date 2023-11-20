@@ -5,22 +5,27 @@
 
 functions:
   - id: 'dxos.org/function/chat'
-    endpoint: 'chat'
+    path: 'chat'
     handler: 'chat'
     description: 'AI Chat'
 
   - id: 'dxos.org/function/chess'
-    endpoint: 'chess'
+    path: 'chess'
     handler: 'chess'
     description: 'Chess'
 
   - id: 'dxos.org/function/hello'
-    endpoint: 'hello'
+    path: 'hello'
     handler: 'hello'
     description: 'Test'
 
+  - id: 'dxos.org/function/github'
+    path: 'github'
+    handler: 'github'
+    description: 'Github'
+
   - id: 'dxos.org/function/email'
-    endpoint: 'email'
+    path: 'email'
     handler: 'email'
     description: 'Protonmail Sync'
 
@@ -32,3 +37,7 @@ triggers:
   - function: 'dxos.org/function/chess'
     subscription:
       type: 'dxos.experimental.chess.Game'
+    
+  - function: 'dxos.org/function/github'
+    subscription:
+      type: 'example.com/schema/project'

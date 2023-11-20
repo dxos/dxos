@@ -15,9 +15,9 @@ import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { QueryPlugin } from './query-plugin';
+import { QueryPlugin } from './plugin';
 
-describe('QueryPlugin', () => {
+describe('SearchPlugin', () => {
   test('search request/response', async () => {
     //
     // 1. Test topology:
@@ -41,7 +41,7 @@ describe('QueryPlugin', () => {
     const client1 = new Client({
       services: services1,
       config: new Config({
-        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query', enabled: true }] } },
+        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] } },
       }),
     });
     await client1.initialize();
@@ -128,7 +128,7 @@ describe('QueryPlugin', () => {
         agent = new Client({
           services,
           config: new Config({
-            runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query', enabled: true }] } },
+            runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] } },
           }),
         });
         await agent.initialize();

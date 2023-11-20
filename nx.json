@@ -50,7 +50,16 @@
   },
   "targetDefaults": {
     "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist/types",
+        "tsConfig": "{projectRoot}/tsconfig.json"
+      },
       "inputs": ["production", "^production"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "dependsOn": [
         "^build",
         "prebuild",
@@ -109,7 +118,14 @@
       ]
     },
     "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "outputPath": "{projectRoot}/dist/lib"
+      },
       "inputs": ["production", "^production"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "dependsOn": [
         "^compile",
         "prebuild"
@@ -135,7 +151,15 @@
       ]
     },
     "lint": {
-      "inputs": ["default"]
+      "executor": "@nx/linter:eslint",
+      "inputs": ["default"],
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}"
+        ],
+        "quiet": true
+      }
     },
     "prebuild": {
       "inputs": ["production", "^production"],
@@ -181,6 +205,18 @@
       ]
     },
     "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/{projectRoot}",
+        "outputPath": "tmp/mocha/{projectRoot}",
+        "resultsPath": "test-results/{projectRoot}",
+        "testPatterns": [
+          "{projectRoot}/{src,test}/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "watchPatterns": [
+          "{projectRoot}/{src,test}/**/*"
+        ]
+      },
       "inputs": [
         "default",
         "^production",
@@ -193,6 +229,11 @@
         {
           "env": "LOG_PROCESSOR"
         }
+      ],
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ],
       "dependsOn": [
         "prebuild",

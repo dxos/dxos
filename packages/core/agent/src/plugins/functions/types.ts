@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Request/Response.
 export type FunctionInvocation = {
   function: string;
 

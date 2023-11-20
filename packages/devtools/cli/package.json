@@ -105,7 +105,7 @@
     "topicSeparator": " ",
     "topics": {
       "agent": {
-        "description": "DXOS Daemon with client services, which is constantly backuping your data. Agent can be extended with plugins (e.g. search plugin, epoch monitor). Also agent has an ability to run functions."
+        "description": "Long-running agent extended with plugins (e.g., functions, search, epoch management)."
       },
       "app": {
         "description": "Control apps that are published to KUBE specified in DXOS config."

@@ -90,13 +90,6 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
           avgWriteTime: writes.reduce((a, b) => a + b, 0) / writes.length,
         },
       });
-
-      // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
-      // console.log(JSON.stringify({
-      //   reads,
-      //   writes
-      // }))
-      // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
     });
   });
 };
