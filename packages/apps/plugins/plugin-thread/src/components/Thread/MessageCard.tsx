@@ -6,7 +6,7 @@ import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
 import React, { forwardRef, useId } from 'react';
 
-import { type Thread as ThreadType } from '@braneframe/types';
+import { type Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, TextObject } from '@dxos/react-client/echo';
 import { Card, DensityProvider } from '@dxos/react-ui';
@@ -21,7 +21,7 @@ export type BlockProperties = {
 };
 
 export type ThreadMessageProps = {
-  message: ThreadType.Message;
+  message: MessageType;
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey) => BlockProperties;
   onDelete?: (blockId: string, idx: number) => void;
@@ -76,7 +76,7 @@ export const MessageCard = ({ message, propertiesProvider, onDelete }: ThreadMes
   );
 };
 
-const ThreadBlock = ({ block, onDelete }: { block: ThreadType.Block; onDelete?: () => void }) => {
+const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?: () => void }) => {
   const id = useId();
 
   if (block.object) {

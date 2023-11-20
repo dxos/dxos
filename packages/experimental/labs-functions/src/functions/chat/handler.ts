@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Thread } from '@braneframe/types';
+import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
@@ -34,7 +34,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
-  const { objects: threads } = space.db.query(Thread.filter());
+  const { objects: threads } = space.db.query(ThreadType.filter());
   const activeThreads = messageIds.reduce((activeThreads, blockId) => {
     const thread = threads.find((thread) => thread.messages.some((message) => message.id === blockId));
     if (thread) {
@@ -42,7 +42,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     }
 
     return activeThreads;
-  }, new Set<Thread>());
+  }, new Set<ThreadType>());
 
   // Process threads.
   await Promise.all(
@@ -64,7 +64,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
           console.log('response', { messages });
 
           thread.messages.push(
-            new Thread.Message(
+            new MessageType(
               {
                 identityKey,
                 blocks,

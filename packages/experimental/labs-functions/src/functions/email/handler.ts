@@ -14,7 +14,7 @@ import { getKey } from '../../util';
 export const handler: FunctionHandler<any> = async ({ event, context: { client, status } }) => {
   const config = client.config;
 
-  // TODO(burdon): Generalize getting properies (e.g., from env/config).
+  // TODO(burdon): Generalize getting properties (e.g., from env/config).
   const imapConfig: ImapConfig = {
     user: process.env.COM_PROTONMAIL_USERNAME ?? getKey(config, 'protonmail.com/username')!,
     password: process.env.COM_PROTONMAIL_PASSWORD ?? getKey(config, 'protonmail.com/password')!,

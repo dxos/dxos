@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { Thread as ThreadType } from '@braneframe/types';
+import { Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
 
 import { type BlockProperties, MessageCard } from './MessageCard';
@@ -20,7 +20,7 @@ const getBlockProperties = (identityKey: PublicKey): BlockProperties => ({
 const Story = () => {
   const [identityKey] = useState(PublicKey.random());
   const [message] = useState(
-    new ThreadType.Message({
+    new MessageType({
       identityKey: identityKey.toHex(),
       blocks: [
         {

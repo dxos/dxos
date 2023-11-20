@@ -85,14 +85,16 @@ export class ImapProcessor {
           return;
         }
 
-        const convertToContact = ({ address: email, name }: EmailAddress): MessageType.Recipient =>
-          new MessageType.Recipient({ email, name: name?.length ? name : undefined });
+        const toRecipient = ({ address: email, name }: EmailAddress): MessageType.Recipient => ({
+          email,
+          name: name?.length ? name : undefined,
+        });
 
         const message = new MessageType(
           {
             date: date.toISOString(),
-            from: convertToContact(from.value[0]),
-            to: toArray(to).map((to) => convertToContact(to.value[0])),
+            from: toRecipient(from.value[0]),
+            to: toArray(to).map((to) => toRecipient(to.value[0])),
             subject,
           },
           {
@@ -141,7 +143,7 @@ export class ImapProcessor {
           body = str;
         }
 
-        message.body = body;
+        message.blocks = [{ text: body }];
         return message;
       }),
     );

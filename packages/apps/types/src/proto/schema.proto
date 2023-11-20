@@ -169,8 +169,17 @@ message Sketch {
 /**
  *
  */
-// TODO(burdon): Channel > Thread > Block > Message.
 message Thread {
+  option (object) = true;
+
+  string title = 1;
+  repeated Message messages = 2;
+}
+
+/**
+ * Universal message type.
+ */
+message Message {
   option (object) = true;
 
   message Context {
@@ -186,45 +195,22 @@ message Thread {
     dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 
-  // TODO(burdon): Unify with Email message.
-  message Message {
-    option (object) = true;
-
-    // TODO(burdon): Can the be inferred from the mutation/pipeline?
-    // TODO(burdon): Import key.
-    // dxos.keys.PublicKey identity_key = 2;
-    string identity_key = 1;
-    Context context = 2;
-    repeated Block blocks = 3;
-    string subject = 5;
-  }
-
-  string title = 1;
-  repeated Message messages = 2;
-}
-
-// TODO(burdon): Unify with Thread.Message.
-message Message {
-  option (object) = true;
-
+  // TODO(burdon): Add reference to Contact object?
   message Recipient {
-    option (object) = true; // TODO(burdon): REMOVE.
-    string email = 1;
-    string name = 2;
+    string identity_key = 1;
+    string email = 2;
+    string name = 3;
   }
 
-  // TODO(burdon): Type.
-  // TODO(burdon): Timestamp (across all objects).
-  string date = 2;
-  Recipient from = 3;
-  repeated Recipient to = 4;
-  string subject = 5;
-  string body = 6;
-  string ref = 7; // TODO(burdon): Implement as link.
-}
+  // TODO(burdon): Import key.
+  // dxos.keys.PublicKey identity_key = 2;
+  string identity_key = 1; // TODO(burdon): Replace with from.
+  Context context = 2;
+  string date = 3;
 
-message Inbox {
-  option (object) = true;
+  Recipient from = 10;
+  repeated Recipient to = 11;
 
-  string name = 1;
+  string subject = 20;
+  repeated Block blocks = 21;
 }

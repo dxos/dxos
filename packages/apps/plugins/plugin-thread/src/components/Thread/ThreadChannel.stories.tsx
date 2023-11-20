@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
-import { Thread as ThreadType, types } from '@braneframe/types';
+import { Thread as ThreadType, Message as MessageType, types } from '@braneframe/types';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -33,7 +33,7 @@ const Story = () => {
         new ThreadType({
           messages: Array.from({ length: 8 }).map(
             () =>
-              new ThreadType.Message({
+              new MessageType({
                 identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
                 blocks: faker.helpers.multiple(
                   () =>
@@ -83,7 +83,7 @@ const Story = () => {
 
   const handleSubmit = (text: string) => {
     thread.messages.push(
-      new ThreadType.Message({
+      new MessageType({
         identityKey: identity.identityKey.toHex(),
         blocks: [
           {

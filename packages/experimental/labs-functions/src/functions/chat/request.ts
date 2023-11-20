@@ -4,13 +4,13 @@
 
 import { type ChatCompletionRequestMessage } from 'openai';
 
-import { type Thread } from '@braneframe/types';
+import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { Schema, type TypedObject } from '@dxos/echo-schema';
 
 import { addPrompt } from './prompts';
 
-export const createRequest = (space: Space, message: Thread.Message): ChatCompletionRequestMessage[] => {
+export const createRequest = (space: Space, message: MessageType): ChatCompletionRequestMessage[] => {
   const text = message.blocks
     .map((message) => message.text)
     .filter(Boolean)

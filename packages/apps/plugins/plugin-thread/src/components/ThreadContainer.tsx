@@ -5,7 +5,7 @@
 import differenceInSeconds from 'date-fns/differenceInSeconds';
 import React from 'react';
 
-import { Thread as ThreadType } from '@braneframe/types';
+import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember, type Space, useMembers } from '@dxos/react-client/echo';
@@ -79,7 +79,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
     }
 
     thread.messages.push(
-      new ThreadType.Message({
+      new MessageType({
         identityKey: identity.identityKey.toHex(),
         context: { object: activeObjectId },
         blocks: [block],

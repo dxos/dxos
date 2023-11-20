@@ -4,14 +4,15 @@
 
 import React, { type FC } from 'react';
 
-import { type Thread as ThreadType } from '@braneframe/types';
+import { type Message as MessageType } from '@braneframe/types';
 
 export type MessageListProps = {
-  messages?: ThreadType.Message[];
+  messages?: MessageType[];
 };
 
 // TODO(burdon): Use List (see composer settings/kai).
 // TODO(burdon): Master/detail, message body.
+// TODO(burdon): Display chat/inbox style depending on type?
 
 export const MessageList = ({ messages = [] }: MessageListProps) => {
   return (
@@ -25,6 +26,6 @@ export const MessageList = ({ messages = [] }: MessageListProps) => {
   );
 };
 
-export const MessageItem: FC<{ message: ThreadType.Message }> = ({ message }) => {
+export const MessageItem: FC<{ message: MessageType }> = ({ message }) => {
   return <div className='flex items-center p-1'>{message.subject}</div>;
 };
