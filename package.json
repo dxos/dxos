@@ -111,7 +111,7 @@
     "json-stringify-safe": "^5.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "mocha": "^8.4.0",
+    "mocha": "^10.2.0",
     "mocha-junit-reporter": "^2.1.0",
     "mocha-multi-reporters": "^1.5.1",
     "node-fetch": "^2.6.0",
