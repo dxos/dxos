@@ -9,6 +9,7 @@ export default [
     'en-US': {
       [INBOX_PLUGIN]: {
         'plugin name': 'Inbox',
+        'create inbox label': 'Create mailbox',
       },
     },
   },

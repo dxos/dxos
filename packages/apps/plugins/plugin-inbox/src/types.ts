@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Inbox as InboxType } from '@braneframe/types';
+import { Mailbox as MailboxType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -25,6 +25,6 @@ export type InboxPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides;
 
-export const isInbox = (data: unknown): data is InboxType => {
-  return isTypedObject(data) && InboxType.schema.typename === data.__typename;
+export const isInbox = (data: unknown): data is MailboxType => {
+  return isTypedObject(data) && MailboxType.schema.typename === data.__typename;
 };

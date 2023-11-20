@@ -40,7 +40,6 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          // TODO(burdon): Util.
           parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${EXPLORER_PLUGIN}/create`,
             label: ['create object label', { ns: EXPLORER_PLUGIN }],

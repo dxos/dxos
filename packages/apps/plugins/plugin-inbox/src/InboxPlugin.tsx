@@ -6,7 +6,7 @@ import { Envelope, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Inbox as InboxType } from '@braneframe/types';
+import { Folder, Mailbox as MailboxType } from '@braneframe/types';
 import {
   LayoutAction,
   // type GraphPluginProvides,
@@ -18,6 +18,7 @@ import {
   // parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
@@ -25,7 +26,7 @@ import { InboxAction, type InboxPluginProvides, isInbox } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[InboxType.name] = InboxType;
+(globalThis as any)[MailboxType.name] = MailboxType;
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
   // let graphPlugin: Plugin<GraphPluginProvides> | undefined;
@@ -40,7 +41,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [InboxType.schema.typename]: {
+          [MailboxType.schema.typename]: {
             placeholder: ['inbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Envelope {...props} />,
           },
@@ -49,7 +50,8 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          // TODO(burdon): Remove refs to SpaceProxy.
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -66,7 +68,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   action: InboxAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
+                  action: SpaceAction.ADD_OBJECT,
                   data: { folder: parent.data },
                 },
                 {
@@ -74,7 +76,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                 },
               ]),
             properties: {
-              testId: 'threadPlugin.createObject',
+              testId: 'inboxPlugin.createObject',
             },
           });
         },
@@ -95,7 +97,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case InboxAction.CREATE: {
-              return { object: new InboxType() };
+              return { object: new MailboxType() };
             }
           }
         },
