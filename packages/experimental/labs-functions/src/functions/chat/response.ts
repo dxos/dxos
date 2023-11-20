@@ -10,9 +10,9 @@ import { Schema, TextObject } from '@dxos/echo-schema';
 import { parseMessage } from './parser';
 
 export const createResponse = (client: Client, space: Space, content: string): Thread.Block[] => {
-  const messages: Thread.Block[] = [];
   const timestamp = new Date().toISOString();
 
+  const messages: Thread.Block[] = [];
   const result = parseMessage(content, 'json');
   if (result) {
     const { pre, data, post } = result;
