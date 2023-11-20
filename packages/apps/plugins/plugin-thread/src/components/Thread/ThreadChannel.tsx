@@ -9,8 +9,8 @@ import { type PublicKey } from '@dxos/client';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { type BlockProperties, ThreadBlock } from './ThreadBlock';
-import { ThreadInput } from './ThreadInput';
+import { ChatInput } from './ChatInput';
+import { type BlockProperties, MessageCard } from './MessageCard';
 import { THREAD_PLUGIN } from '../../meta';
 
 // TODO(burdon): Create storybook.
@@ -36,7 +36,7 @@ import { THREAD_PLUGIN } from '../../meta';
 export type ThreadChannelProps = {
   thread: ThreadType;
   identityKey: PublicKey;
-  getBlockProperties: (identityKey: PublicKey) => BlockProperties;
+  propertiesProvider: (identityKey: PublicKey) => BlockProperties;
   fullWidth?: boolean;
   onSubmit?: (text: string) => boolean | void;
   onDelete?: (blockId: string, idx: number) => void;
@@ -45,7 +45,7 @@ export type ThreadChannelProps = {
 export const ThreadChannel = ({
   thread,
   identityKey,
-  getBlockProperties,
+  propertiesProvider,
   fullWidth = true,
   onSubmit,
   onDelete,
@@ -83,17 +83,17 @@ export const ThreadChannel = ({
         {/* TODO(burdon): Break into days. */}
         <div className='flex flex-col-reverse grow overflow-auto px-2 pt-4'>
           <div ref={bottomRef} />
-          {(thread.blocks ?? [])
-            .map((block) => (
+          {(thread.messages ?? [])
+            .map((message) => (
               <div
-                key={block.id}
-                className={mx('flex my-1', !fullWidth && identityKey.toHex() === block.identityKey && 'justify-end')}
+                key={message.id}
+                className={mx('flex my-1', !fullWidth && identityKey.toHex() === message.identityKey && 'justify-end')}
               >
                 <div className={mx('flex flex-col', fullWidth ? 'w-full' : 'md:min-w-[400px] max-w-[600px]')}>
-                  <ThreadBlock
-                    block={block}
+                  <MessageCard
+                    message={message}
                     identityKey={identityKey}
-                    getBlockProperties={getBlockProperties}
+                    propertiesProvider={propertiesProvider}
                     onDelete={onDelete}
                   />
                 </div>
@@ -105,7 +105,7 @@ export const ThreadChannel = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <ThreadInput onMessage={handleSubmit} />
+          <ChatInput onMessage={handleSubmit} />
         </div>
       )}
     </div>

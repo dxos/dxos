@@ -10,7 +10,7 @@ import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_PLUGIN } from '../../meta';
 
-export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({ onMessage }) => {
+export const ChatInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({ onMessage }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const [text, setText] = useState('');
 

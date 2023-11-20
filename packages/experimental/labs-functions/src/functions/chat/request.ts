@@ -10,15 +10,15 @@ import { Schema, type TypedObject } from '@dxos/echo-schema';
 
 import { addPrompt } from './prompts';
 
-export const createRequest = (space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
-  const message = block.messages
+export const createRequest = (space: Space, message: Thread.Message): ChatCompletionRequestMessage[] => {
+  const text = message.blocks
     .map((message) => message.text)
     .filter(Boolean)
     .join('\n');
 
   let context: TypedObject | undefined;
-  if (block?.context.object) {
-    const { objects } = space.db.query({ id: block.context.object });
+  if (message?.context.object) {
+    const { objects } = space.db.query({ id: message.context.object });
     context = objects[0];
   }
 
@@ -51,7 +51,7 @@ export const createRequest = (space: Space, block: Thread.Block): ChatCompletion
     });
   }
 
-  const messages = addPrompt({ message, context, schema })!;
+  const messages = addPrompt({ message: text, context, schema })!;
 
   // TODO(burdon): Temp convert longchain messages to ChatCompletionRequestMessage.
   return messages.map(({ role, content }) => ({ role, content } as ChatCompletionRequestMessage));

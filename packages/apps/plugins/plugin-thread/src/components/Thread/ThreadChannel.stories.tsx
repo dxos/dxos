@@ -14,7 +14,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { ThreadChannel } from './ThreadChannel';
-import { blockPropertiesProvider } from '../ThreadContainer';
+import { messagePropertiesProvider } from '../ThreadContainer';
 
 faker.seed(1);
 
@@ -31,11 +31,11 @@ const Story = () => {
       const space = await client.spaces.create();
       const thread = space.db.add(
         new ThreadType({
-          blocks: Array.from({ length: 8 }).map(
+          messages: Array.from({ length: 8 }).map(
             () =>
-              new ThreadType.Block({
+              new ThreadType.Message({
                 identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
-                messages: faker.helpers.multiple(
+                blocks: faker.helpers.multiple(
                   () =>
                     faker.datatype.boolean({ probability: 0.8 })
                       ? {
@@ -71,21 +71,21 @@ const Story = () => {
   }
 
   const handleDelete = (id: string, index: number) => {
-    const blockIndex = thread.blocks.findIndex((block) => block.id === id);
-    if (blockIndex !== -1) {
-      const block = thread.blocks[blockIndex];
-      block.messages.splice(index, 1);
-      if (block.messages.length === 0) {
-        thread.blocks.splice(blockIndex, 1);
+    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    if (messageIndex !== -1) {
+      const message = thread.messages[messageIndex];
+      message.blocks.splice(index, 1);
+      if (message.blocks.length === 0) {
+        thread.messages.splice(messageIndex, 1);
       }
     }
   };
 
   const handleSubmit = (text: string) => {
-    thread.blocks.push(
-      new ThreadType.Block({
+    thread.messages.push(
+      new ThreadType.Message({
         identityKey: identity.identityKey.toHex(),
-        messages: [
+        blocks: [
           {
             timestamp: new Date().toISOString(),
             text,
@@ -102,7 +102,7 @@ const Story = () => {
     <ThreadChannel
       thread={thread}
       identityKey={identity.identityKey}
-      getBlockProperties={blockPropertiesProvider(identity, members)}
+      propertiesProvider={messagePropertiesProvider(identity, members)}
       onSubmit={handleSubmit}
       onDelete={handleDelete}
     />

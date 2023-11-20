@@ -18,7 +18,7 @@ import { getKey } from '../../util';
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
-  event: { space: spaceKey, objects: blockIds },
+  event: { space: spaceKey, objects: messageIds },
   context: { client, status },
 }) => {
   const config = client.config;
@@ -35,8 +35,8 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = space.db.query(Thread.filter());
-  const activeThreads = blockIds.reduce((activeThreads, blockId) => {
-    const thread = threads.find((thread) => thread.blocks.some((block) => block.id === blockId));
+  const activeThreads = messageIds.reduce((activeThreads, blockId) => {
+    const thread = threads.find((thread) => thread.messages.some((message) => message.id === blockId));
     if (thread) {
       activeThreads.add(thread);
     }
@@ -51,23 +51,23 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       await sleep(500);
 
       // TODO(burdon): Create set of messages.
-      const block = thread.blocks[thread.blocks.length - 1];
-      if (block.__meta.keys.length === 0) {
-        const messages = createRequest(space, block);
+      const m = thread.messages[thread.messages.length - 1];
+      if (m.__meta.keys.length === 0) {
+        const messages = createRequest(space, m);
         log('request', { messages });
 
         // TODO(burdon): Error handling (e.g., 401);
         const { content } = (await chat.request(messages)) ?? {};
         log('response', { content });
         if (content) {
-          const messages = createResponse(client, space, content);
+          const blocks = createResponse(client, space, content);
           console.log('response', { messages });
 
-          thread.blocks.push(
-            new Thread.Block(
+          thread.messages.push(
+            new Thread.Message(
               {
                 identityKey,
-                messages,
+                blocks,
               },
               {
                 meta: {

@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Thread as ThreadType } from '@braneframe/types';
+import { type Thread, type Thread as ThreadType } from '@braneframe/types';
 import { type Client } from '@dxos/client';
 import { Expando, type Space } from '@dxos/client/echo';
 import { Schema, TextObject } from '@dxos/echo-schema';
 
 import { parseMessage } from './parser';
 
-export const createResponse = (client: Client, space: Space, content: string) => {
-  const messages = [];
+export const createResponse = (client: Client, space: Space, content: string): Thread.Block[] => {
+  const messages: Thread.Block[] = [];
   const timestamp = new Date().toISOString();
 
   const result = parseMessage(content, 'json');
@@ -24,7 +24,7 @@ export const createResponse = (client: Client, space: Space, content: string) =>
     // console.log('response', { dataArray });
 
     messages.push(
-      ...dataArray.map((data): ThreadType.Message => {
+      ...dataArray.map((data): ThreadType.Block => {
         // TODO(burdon): Hack in the schema.
         data['@type'] = 'example.com/schema/project';
         const { objects: schemas } = space.db.query(Schema.filter());

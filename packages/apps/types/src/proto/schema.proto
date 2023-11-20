@@ -179,15 +179,15 @@ message Thread {
     string object = 3;
   }
 
-  message Message {
+  message Block {
     string timestamp = 1;
     string text = 2;
     string data = 3; // JSON.
     dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 
-  // TODO(burdon): Meta (e.g., source).
-  message Block {
+  // TODO(burdon): Unify with Email message.
+  message Message {
     option (object) = true;
 
     // TODO(burdon): Can the be inferred from the mutation/pipeline?
@@ -195,11 +195,12 @@ message Thread {
     // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
     Context context = 2;
-    repeated Message messages = 3;
+    repeated Block blocks = 3;
+    string subject = 5;
   }
 
   string title = 1;
-  repeated Block blocks = 2;
+  repeated Message messages = 2;
 }
 
 // TODO(burdon): Unify with Thread.Message.

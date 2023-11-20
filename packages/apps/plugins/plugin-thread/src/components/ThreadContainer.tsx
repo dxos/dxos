@@ -36,7 +36,7 @@ const colorHash = (key: PublicKey) => {
   return colors[num % colors.length];
 };
 
-export const blockPropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
+export const messagePropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
   return (identityKey: PublicKey) => {
     const author = PublicKey.equals(identityKey, identity.identityKey)
       ? identity
@@ -62,30 +62,27 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
 
   // TODO(burdon): Change to model.
   const handleSubmit = (text: string) => {
-    const message = {
+    const block = {
       timestamp: new Date().toISOString(),
       text,
     };
 
     // Update current block if same user and time > 3m.
     const period = 3 * 60; // TODO(burdon): Config.
-    const block = thread.blocks[thread.blocks.length - 1];
-    if (block?.identityKey && PublicKey.equals(block.identityKey, identity.identityKey)) {
-      const previous = block.messages[block.messages.length - 1];
-      if (
-        previous.timestamp &&
-        differenceInSeconds(new Date(message.timestamp), new Date(previous.timestamp)) < period
-      ) {
-        block.messages.push(message);
+    const m = thread.messages[thread.messages.length - 1];
+    if (m?.identityKey && PublicKey.equals(m.identityKey, identity.identityKey)) {
+      const previous = m.blocks[m.blocks.length - 1];
+      if (previous.timestamp && differenceInSeconds(new Date(block.timestamp), new Date(previous.timestamp)) < period) {
+        m.blocks.push(block);
         return true;
       }
     }
 
-    thread.blocks.push(
-      new ThreadType.Block({
+    thread.messages.push(
+      new ThreadType.Message({
         identityKey: identity.identityKey.toHex(),
         context: { object: activeObjectId },
-        messages: [message],
+        blocks: [block],
       }),
     );
 
@@ -94,12 +91,12 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
   };
 
   const handleDelete = (id: string, index: number) => {
-    const blockIndex = thread.blocks.findIndex((block) => block.id === id);
-    if (blockIndex !== -1) {
-      const block = thread.blocks[blockIndex];
-      block.messages.splice(index, 1);
-      if (block.messages.length === 0) {
-        thread.blocks.splice(blockIndex, 1);
+    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    if (messageIndex !== -1) {
+      const message = thread.messages[messageIndex];
+      message.blocks.splice(index, 1);
+      if (message.blocks.length === 0) {
+        message.blocks.splice(messageIndex, 1);
       }
     }
   };
@@ -108,7 +105,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
     <ThreadChannel
       identityKey={identity.identityKey}
       thread={thread}
-      getBlockProperties={blockPropertiesProvider(identity, members)}
+      propertiesProvider={messagePropertiesProvider(identity, members)}
       fullWidth={fullWidth}
       onSubmit={handleSubmit}
       onDelete={handleDelete}

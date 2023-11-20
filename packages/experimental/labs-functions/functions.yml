@@ -25,9 +25,13 @@ functions:
     description: 'Protonmail Sync'
 
 triggers:
+  - function: 'dxos.org/function/email'
+    subscription:
+      type: 'braneframe.Thread'
+
   - function: 'dxos.org/function/chat'
     subscription:
-      type: 'braneframe.Thread.Block'
+      type: 'braneframe.Thread.Message'
 
   - function: 'dxos.org/function/chess'
     subscription:
