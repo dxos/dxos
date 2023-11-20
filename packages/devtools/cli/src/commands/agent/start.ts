@@ -13,7 +13,6 @@ import {
   EpochMonitorPlugin,
   FunctionsPlugin,
   QueryPlugin,
-  VectorPlugin,
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
@@ -73,8 +72,6 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    // TODO(burdon): Option to start metrics recording (via config).
-
     const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
@@ -83,13 +80,14 @@ export default class Start extends BaseCommand<typeof Start> {
         socket,
         webSocket: this.flags.ws,
       },
+      // TODO(burdon): Pass config to plugins.
       plugins: [
+        // new ChainPlugin(),
         new DashboardPlugin({ configPath: this.flags.config }),
         new EchoProxyPlugin(),
         new EpochMonitorPlugin(),
         new FunctionsPlugin(),
         new QueryPlugin(),
-        new VectorPlugin(),
       ],
     });
 

@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import fs from 'fs';
 import { AgentExecutor } from 'langchain/agents';
 import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
 import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
@@ -15,39 +16,25 @@ import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-  type PromptTemplate,
+  PromptTemplate,
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
 import { type AgentStep, type BaseMessage } from 'langchain/schema';
-import { RunnableSequence } from 'langchain/schema/runnable';
+import { StringOutputParser } from 'langchain/schema/output_parser';
+import { RunnableSequence, RunnablePassthrough } from 'langchain/schema/runnable';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Calculator } from 'langchain/tools/calculator';
 import { renderTextDescription } from 'langchain/tools/render';
+import { formatDocumentsAsString } from 'langchain/util/document';
+import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+import path from 'node:path';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from './util';
-
-const docs: Document[] = [
-  {
-    metadata: { id: 1 },
-    pageContent: 'it was the best of times',
-  },
-  {
-    metadata: { id: 2 },
-    pageContent: 'it was the worst of times',
-  },
-  {
-    metadata: { id: 3 },
-    pageContent: 'it was the age of wisdom',
-  },
-  {
-    metadata: { id: 4 },
-    pageContent: 'it was the age of foolishness',
-  },
-];
 
 describe('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
@@ -58,15 +45,37 @@ describe('LangChain', () => {
     });
   };
 
-  //
-  // Vector stores.
-  // TODO(burdon): CloudflareWorkersAIEmbeddings, FakeEmbeddings for tests.
-  //
-  test('vector', async () => {
+  const createEmbeddings = () => {
     const config = getConfig()!;
-    const embeddings = new OpenAIEmbeddings({
+    return new OpenAIEmbeddings({
       openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key'),
     });
+  };
+
+  //
+  // Vector stores.
+  //
+  test('vector', async () => {
+    const embeddings = createEmbeddings();
+
+    const docs: Document[] = [
+      {
+        metadata: { id: 1 },
+        pageContent: 'it was the best of times',
+      },
+      {
+        metadata: { id: 2 },
+        pageContent: 'it was the worst of times',
+      },
+      {
+        metadata: { id: 3 },
+        pageContent: 'it was the age of wisdom',
+      },
+      {
+        metadata: { id: 4 },
+        pageContent: 'it was the age of foolishness',
+      },
+    ];
 
     const vectorStore = new MemoryVectorStore(embeddings);
     await vectorStore.addDocuments(docs);
@@ -76,15 +85,115 @@ describe('LangChain', () => {
     expect(results.map(([document]) => document.metadata.id)).to.deep.eq([3, 4]);
   });
 
-  // TODO(burdon): Demo chat augmented with document (RAG).
-  // TODO(burdon): Chains: http://localhost:3000/docs/modules/chains/document
+  // TODO(burdon): Scripts/notebook with agent plugin/functions
+  // TODO(burdon): Graph database: https://js.langchain.com/docs/modules/data_connection/experimental/graph_databases/neo4j
+  // TODO(burdon): Document chains: http://localhost:3000/docs/modules/chains/document
+  // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
+  // TODO(burdon): CloudflareWorkersAIEmbeddings
+  // TODO(burdon): FakeEmbeddings for tests
+
+  //
+  // Retriever Augmented Generation (RAG).
+  // https://js.langchain.com/docs/expression_language/cookbook/retrieval
+  //
+  test.only('rag', async () => {
+    const model = createModel();
+    const embeddings = createEmbeddings();
+
+    const docs: Document[] = [
+      {
+        metadata: { id: 1 },
+        pageContent: 'mitochondria is the powerhouse of the cell',
+      },
+    ];
+
+    const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
+    // https://js.langchain.com/docs/modules/data_connection/retrievers/how_to/vectorstore
+    // https://api.js.langchain.com/classes/vectorstores_hnswlib.HNSWLib.html
+    // https://github.com/langchain-ai/langchainjs/discussions/2842
+    const retriever = vectorStore.asRetriever(1); // Sets max docs to retrieve.
+
+    const prompt = PromptTemplate.fromTemplate(`Answer the question based only on the following context:
+    {context}
+    ----------------
+    Question: {question}`);
+
+    const chain = RunnableSequence.from([
+      {
+        context: retriever.pipe(formatDocumentsAsString),
+        question: new RunnablePassthrough(),
+      },
+      prompt,
+      model,
+      new StringOutputParser(),
+    ]);
+
+    const call = async (inputText: string) => {
+      console.log(`\n> ${inputText}`);
+      const response = await chain.invoke(inputText);
+      console.log(response);
+    };
+
+    await call('What is the powerhouse of the cell?');
+  });
+
+  //
+  // Retriever Augmented Generation (RAG).
+  // https://js.langchain.com/docs/modules/chains/popular/vector_db_qa
+  //
+  test.only('retrieval', async () => {
+    const model = createModel();
+    const embeddings = createEmbeddings();
+
+    // Get data.
+    const text = fs.readFileSync(
+      path.join(process.cwd(), 'packages/core/agent/src/plugins/chain/testing/text.txt'),
+      'utf8',
+    );
+    const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+    const docs = await textSplitter.createDocuments([text]);
+
+    // Hierarchical Navigable Small World (HNSW) graph.
+    // TODO(burdon): Reconcile with vector store above (requires hnswlib-node).
+    const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
+    const retriever = vectorStore.asRetriever(1);
+
+    // Create a system & human prompt for the chat model
+    const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
+    If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    ----------------
+    {context}`;
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
+      HumanMessagePromptTemplate.fromTemplate('{question}'),
+    ]);
+
+    const chain = RunnableSequence.from([
+      {
+        context: retriever.pipe(formatDocumentsAsString),
+        question: new RunnablePassthrough(),
+      },
+      prompt,
+      model,
+      new StringOutputParser(),
+    ]);
+
+    const call = async (inputText: string) => {
+      console.log(`\n> ${inputText}`);
+      const response = await chain.invoke(inputText);
+      console.log(response);
+    };
+
+    await call('What did Satya Nadella say about Sam Altman?');
+  });
 
   //
   // Structured output
   // http://localhost:3000/docs/modules/chains/popular/structured_output
   // TODO(burdon): How to make prompt satisfy all fields?
   //
-  test.only('functions', async () => {
+  test('functions', async () => {
     const schema = z.object({
       company: z
         .array(
@@ -130,7 +239,7 @@ describe('LangChain', () => {
 
       const chain = prompt.pipe(model).pipe(outputParser);
       const call = async (inputText: string) => {
-        console.log(`> ${inputText}`);
+        console.log(`\n> ${inputText}`);
         const response = await chain.invoke({ inputText });
         console.log(JSON.stringify(response, null, 2));
       };
@@ -200,7 +309,7 @@ describe('LangChain', () => {
 
     const chat = async (input: string) => {
       const result = await executor.invoke({ input });
-      console.log(`> ${input}`);
+      console.log(`\n> ${input}`);
       console.log(result.output);
     };
 

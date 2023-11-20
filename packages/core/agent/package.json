@@ -46,6 +46,7 @@
     "@dxos/websocket-rpc": "workspace:*",
     "date-fns": "^2.29.3",
     "express": "^4.17.1",
+    "hnswlib-node": "^1.4.2",
     "isomorphic-ws": "^4.0.1",
     "js-yaml": "^4.1.0",
     "langchain": "^0.0.180",
