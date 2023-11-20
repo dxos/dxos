@@ -22,7 +22,7 @@ export const getKey = (config: Config, name: string) => {
 };
 
 export const getConfig = (
-  filename = path.join(process.cwd(), process.env.TEST_CONFIG ?? 'config.yml'),
+  filename = process.env.TEST_CONFIG ?? path.join(process.env.HOME!, '.config/dx/profile/default.yml'),
 ): Config | undefined => {
   if (fs.existsSync(filename)) {
     return new Config(yaml.load(String(fs.readFileSync(filename))) as any);
