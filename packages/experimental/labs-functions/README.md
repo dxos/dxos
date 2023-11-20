@@ -1,4 +1,18 @@
-# Labs Remote Functions
+# Remote Functions
+
+## Testing
+
+Call the plugin proxy.
+
+```bash
+curl -i -X POST -H "Content-Type: application/json" http://localhost:7100/dev/hello
+```
+
+Call and parse function.
+
+```bash
+curl -s -X POST -H "Content-Type: application/json" http://localhost:7100/dev/email | jq
+```
 
 ## TODO(burdon):
 - stack.yml files

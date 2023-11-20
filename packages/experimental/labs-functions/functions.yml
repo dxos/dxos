@@ -25,9 +25,9 @@ functions:
     description: 'Protonmail Sync'
 
 triggers:
-  - function: 'dxos.org/function/email'
-    subscription:
-      type: 'braneframe.Mailbox'
+#  - function: 'dxos.org/function/email'
+#    subscription:
+#      type: 'braneframe.Mailbox'
 
   - function: 'dxos.org/function/chat'
     subscription:

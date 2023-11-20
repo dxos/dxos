@@ -29,7 +29,11 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   });
 
   // TODO(burdon): Logging (filename missing).
-  const space = client.spaces.get(PublicKey.from(spaceKey))!;
+  const space = client.spaces.get(PublicKey.from(spaceKey));
+  if (!space) {
+    return status(400).succeed();
+  }
+
   log('chatgpt', { space: space.key });
 
   // Get active threads.

@@ -105,8 +105,9 @@ export class DevServer {
           const response = await handler({ context, event: req.body });
           log('done', { response });
         } catch (err: any) {
+          log.error(err);
           res.statusCode = 500;
-          res.end(err.message);
+          res.end();
         }
       })();
     });

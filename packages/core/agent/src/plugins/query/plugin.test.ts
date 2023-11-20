@@ -200,7 +200,7 @@ describe('SearchPlugin', () => {
 
     // TODO(mykola): Will not work because @dxos/echo-generator fo not register types
     test.skip('Schema query', async () => {
-      const orgSchema = client.experimental.types.getSchema(testSchemas()[TestSchemaType.organization].typename)!;
+      const orgSchema = client.experimental.graph.types.getSchema(testSchemas()[TestSchemaType.organization].typename)!;
       const query = client.spaces.query(Filter.schema(orgSchema), {
         dataLocation: QueryOptions.DataLocation.REMOTE,
       });

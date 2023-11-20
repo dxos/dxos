@@ -15,7 +15,7 @@ import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/servi
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
-import { type SpaceProxy } from '../echo/space-proxy';
+import { type SpaceProxy } from '../echo';
 import { syncItems, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.

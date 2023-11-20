@@ -52,6 +52,7 @@ export class Hypergraph {
    * Register a database in hyper-graph.
    * @param owningObject Database owner, usually a space.
    */
+  // TODO(burdon): When is the owner not a space?
   _register(spaceKey: PublicKey, database: EchoDatabase, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
@@ -75,8 +76,8 @@ export class Hypergraph {
   }
 
   _unregister(spaceKey: PublicKey) {
-    this._databases.delete(spaceKey);
     // TODO(dmaretskyi): Remove db from query contexts.
+    this._databases.delete(spaceKey);
   }
 
   _getOwningObject(spaceKey: PublicKey): unknown | undefined {
