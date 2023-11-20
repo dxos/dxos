@@ -10,27 +10,30 @@ import { fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { describe, test } from '@dxos/test';
 
-import { EpochMonitor } from './epoch-monitor';
+import { EpochMonitorPlugin } from './plugin';
 
 describe('EpochMonitor', () => {
   let ctx: Context;
   let client: Client;
-  let monitor: EpochMonitor;
+  let plugin: EpochMonitorPlugin;
 
   beforeEach(async () => {
     ctx = new Context();
 
-    const config = new Config();
-    client = new Client({ services: await fromHost(config) });
+    const config = new Config({
+      runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/epoch-monitor' }] } },
+    });
+
+    const client = new Client({ config, services: await fromHost(config) });
     await client.initialize();
     await client.halo.createIdentity();
 
-    monitor = new EpochMonitor();
-    await monitor.initialize({ client, clientServices: client.services, plugins: [] });
+    plugin = new EpochMonitorPlugin();
+    await plugin.initialize({ client, clientServices: client.services, plugins: [] });
 
     ctx.onDispose(async () => {
       await client.destroy();
-      await monitor.close();
+      await plugin.close();
     });
   });
 
@@ -39,7 +42,7 @@ describe('EpochMonitor', () => {
   });
 
   test('open and close', async () => {
-    await monitor.open();
+    await plugin.open();
 
     {
       // TODO(burdon): Create mutations and wait for epoch to be triggered.
@@ -50,10 +53,10 @@ describe('EpochMonitor', () => {
       await sleep(100);
     }
 
-    await monitor.close();
+    await plugin.close();
   }).tag('flaky');
 
   test('id', async () => {
-    expect(monitor.id).to.equal('dxos.org/agent/plugin/epoch-monitor');
+    expect(plugin.id).to.equal('dxos.org/agent/plugin/epoch-monitor');
   });
 });

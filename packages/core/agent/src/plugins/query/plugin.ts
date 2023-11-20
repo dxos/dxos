@@ -4,7 +4,7 @@
 
 import { QueryOptions } from '@dxos/client/echo';
 import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
-import { Context, cancelWithContext } from '@dxos/context';
+import { cancelWithContext } from '@dxos/context';
 import { getStateMachineFromItem } from '@dxos/echo-db';
 import { getEchoObjectItem } from '@dxos/echo-schema';
 import { type EchoObject, Filter, base } from '@dxos/echo-schema';
@@ -17,28 +17,17 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 
 import { Plugin } from '../plugin';
 
+// TODO(burdon): Rename SearchPlugin?
 export class QueryPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/query';
-  private _ctx?: Context;
 
-  async open(): Promise<void> {
-    log.info('Opening indexing plugin...');
-
-    if (!this._config.enabled) {
-      log.info('Search disabled.');
-      return;
-    }
-    this._ctx = new Context();
-
-    invariant(this._pluginCtx);
-    const subscription = this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
+  override async onOpen() {
+    const subscription = this.context.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;
       }
-      invariant(this._pluginCtx, 'Client is undefined.');
 
-      const space = this._pluginCtx.client.spaces.default;
-
+      const space = this.context.client.spaces.default;
       const unsubscribe = space.listen(QUERY_CHANNEL, async (message) => {
         log('received message', { message });
         await this._processRequest(message);
@@ -46,15 +35,8 @@ export class QueryPlugin extends Plugin {
 
       this._ctx?.onDispose(unsubscribe);
     });
+
     this._ctx.onDispose(() => subscription.unsubscribe());
-
-    this.statusUpdate.emit();
-  }
-
-  async close(): Promise<void> {
-    void this._ctx?.dispose();
-    this._ctx = undefined;
-    this.statusUpdate.emit();
   }
 
   private async _processRequest(message: GossipMessage) {
@@ -64,13 +46,14 @@ export class QueryPlugin extends Plugin {
     }
     invariant(this._ctx, 'Plugin not opened.');
 
-    await this._initialized.wait();
+    // TODO(burdon): Race condition?
+    // await this._initialized.wait();
 
     const request: QueryRequest = message.payload;
 
     request.filter.options = { ...request.filter.options, dataLocation: QueryOptions.DataLocation.LOCAL };
     const filter = Filter.fromProto(request.filter);
-    const { results: queryResults } = this._pluginCtx!.client.spaces.query(filter, filter.options);
+    const { results: queryResults } = this.context.client.spaces.query(filter, filter.options);
 
     const response: QueryResponse = {
       queryId: request.queryId,
@@ -87,7 +70,7 @@ export class QueryPlugin extends Plugin {
 
     await cancelWithContext(
       this._ctx,
-      this._pluginCtx!.client!.spaces.default.postMessage(QUERY_CHANNEL, {
+      this.context.client!.spaces.default.postMessage(QUERY_CHANNEL, {
         '@type': 'dxos.agent.query.QueryResponse',
         ...response,
       }),

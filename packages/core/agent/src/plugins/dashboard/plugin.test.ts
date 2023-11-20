@@ -13,7 +13,7 @@ import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { CHANNEL_NAME, DashboardPlugin, getGossipRPCPort } from './dashboard-plugin';
+import { CHANNEL_NAME, DashboardPlugin, getGossipRPCPort } from './plugin';
 
 describe('DashboardPlugin', () => {
   test('Query status', async () => {

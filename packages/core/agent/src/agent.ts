@@ -20,7 +20,7 @@ import {
 import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { type Plugin } from './plugins';
+import { getPluginConfig, type Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
 interface Service {
@@ -115,9 +115,17 @@ export class Agent {
 
     // Open plugins.
     for (const plugin of this._plugins) {
-      await plugin.initialize({ client: this._client!, clientServices: this._clientServices!, plugins: this._plugins });
-      await plugin.open();
-      log('open', { plugin });
+      const config = getPluginConfig(this._client.config, plugin.id);
+      if (config) {
+        await plugin.initialize({
+          client: this._client!,
+          clientServices: this._clientServices!,
+          plugins: this._plugins,
+        });
+
+        await plugin.open();
+        log('open', { plugin });
+      }
     }
 
     log('started');
