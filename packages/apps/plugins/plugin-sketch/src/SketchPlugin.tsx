@@ -8,6 +8,7 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Sketch as SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -33,7 +34,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -50,8 +51,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   action: SketchAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,

@@ -4,6 +4,7 @@
 
 import { randomUUID } from 'node:crypto';
 
+import { log } from '@dxos/log';
 import {
   type FunctionRegistryService,
   type RegisterRequest,
@@ -11,7 +12,7 @@ import {
   type UnregisterRequest,
 } from '@dxos/protocols/proto/dxos/agent/functions';
 
-import { type FunctionDispatcher, type FunctionInvocation, type FunctionInvocationResult } from './dispatcher';
+import { type FunctionDispatcher, type FunctionInvocation, type FunctionInvocationResult } from './types';
 
 type Registration = {
   id: string;
@@ -21,6 +22,8 @@ type Registration = {
 export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegistryService {
   private _registrations: Registration[] = [];
 
+  constructor(private readonly _options: { endpoint: string }) {}
+
   async register(request: RegisterRequest): Promise<RegisterResponse> {
     const registrationId = randomUUID();
     this._registrations.push({
@@ -28,22 +31,25 @@ export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegist
       request,
     });
 
-    return { registrationId };
+    log.info('registered', { registrationId });
+    return { registrationId, endpoint: this._options.endpoint };
   }
 
-  async unregister(request: UnregisterRequest): Promise<void> {
-    const index = this._registrations.findIndex((registration) => registration.id === request.registrationId);
+  async unregister({ registrationId }: UnregisterRequest): Promise<void> {
+    const index = this._registrations.findIndex((registration) => registration.id === registrationId);
     if (index >= 0) {
       this._registrations.splice(index, 1);
     }
+
+    log.info('unregistered', { registrationId });
   }
 
   async invoke(invocation: FunctionInvocation): Promise<FunctionInvocationResult> {
     const registration = this._registrations.findLast((registration) =>
-      registration.request.functions?.some((func) => func.name === invocation.function),
+      registration.request.functions?.some(({ name }) => invocation.function === name),
     );
     if (!registration) {
-      throw new Error(`Function ${invocation.function} not found`);
+      throw new Error(`Function not found: ${invocation.function} `);
     }
 
     const result = await fetch(`${registration.request.endpoint}/${invocation.function}`, {

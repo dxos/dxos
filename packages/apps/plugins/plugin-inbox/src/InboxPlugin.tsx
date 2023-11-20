@@ -18,6 +18,7 @@ import {
   // parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
@@ -49,7 +50,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -66,8 +67,8 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   action: InboxAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
