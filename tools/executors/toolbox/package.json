@@ -22,6 +22,7 @@
     "sort-package-json": "^1.57.0"
   },
   "devDependencies": {
+    "@types/deep-equal": "^1.0.4",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pick": "^4.4.7",
     "@types/lodash.sortby": "^4.7.7",
