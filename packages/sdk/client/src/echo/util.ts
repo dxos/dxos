@@ -14,6 +14,10 @@ export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Review API.
 export const getSpaceForObject = (object: EchoObject): SpaceProxy | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?._backend.spaceKey;

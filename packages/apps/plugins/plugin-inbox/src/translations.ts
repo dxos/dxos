@@ -10,6 +10,7 @@ export default [
       [INBOX_PLUGIN]: {
         'plugin name': 'Inbox',
         'create inbox label': 'Create mailbox',
+        'inbox title placeholder': 'New mailbox',
       },
     },
   },

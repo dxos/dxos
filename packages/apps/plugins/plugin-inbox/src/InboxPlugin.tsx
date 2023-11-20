@@ -20,6 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
+import { Mailbox } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
 import { InboxAction, type InboxPluginProvides, isInbox } from './types';
@@ -69,7 +70,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                 },
                 {
                   action: SpaceAction.ADD_OBJECT,
-                  data: { folder: parent.data },
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -84,10 +85,8 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main': {
-              return isInbox(data.active) ? <div>Inbox</div> : null;
-            }
-
+            case 'main':
+              return isInbox(data.active) ? <Mailbox mailbox={data.active} /> : null;
             default:
               return null;
           }

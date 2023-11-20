@@ -27,5 +27,6 @@ export const MessageList = ({ messages = [] }: MessageListProps) => {
 };
 
 export const MessageItem: FC<{ message: MessageType }> = ({ message }) => {
-  return <div className='flex items-center p-1'>{message.subject}</div>;
+  const subject = message.subject ?? message.blocks[0].text;
+  return <div className='flex items-center p-1'>{subject}</div>;
 };
