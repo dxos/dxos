@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import { execSync } from 'child_process';
 import { Table } from 'console-table-printer';
+import deepEqual from 'deep-equal';
 import fs from 'fs';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
@@ -12,7 +13,6 @@ import { join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
-import deepEqual from 'deep-equal';
 
 const raise = (err: Error) => {
   throw err;
@@ -62,7 +62,7 @@ type NxJson = {
       dependsOn?: string[];
     };
   };
-}
+};
 
 type PackageJson = {
   name: string;
@@ -222,19 +222,27 @@ class Toolbox {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
       if (projectJson?.targets) {
-
         for (const target of Object.keys(projectJson.targets)) {
-          if(projectJson.targets[target].executor === nxJson.targetDefaults[target]?.executor) {
+          if (projectJson.targets[target].executor === nxJson.targetDefaults[target]?.executor) {
             delete projectJson.targets[target].executor;
           }
 
-          if(projectJson.targets[target].outputs && deepEqual(projectJson.targets[target].outputs, nxJson.targetDefaults[target]?.outputs)) {
+          if (
+            projectJson.targets[target].outputs &&
+            deepEqual(projectJson.targets[target].outputs, nxJson.targetDefaults[target]?.outputs)
+          ) {
             delete projectJson.targets[target].outputs;
           }
-          if(projectJson.targets[target].inputs && deepEqual(projectJson.targets[target].inputs, nxJson.targetDefaults[target]?.inputs)) {
+          if (
+            projectJson.targets[target].inputs &&
+            deepEqual(projectJson.targets[target].inputs, nxJson.targetDefaults[target]?.inputs)
+          ) {
             delete projectJson.targets[target].outputs;
           }
-          if(projectJson.targets[target].dependsOn && deepEqual(projectJson.targets[target].dependsOn, nxJson.targetDefaults[target]?.dependsOn)) {
+          if (
+            projectJson.targets[target].dependsOn &&
+            deepEqual(projectJson.targets[target].dependsOn, nxJson.targetDefaults[target]?.dependsOn)
+          ) {
             delete projectJson.targets[target].outputs;
           }
 
