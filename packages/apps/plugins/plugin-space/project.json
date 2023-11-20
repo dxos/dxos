@@ -14,7 +14,13 @@
         ]
       }
     },
-    "lint": {},
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-space/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
     "storybook": {
       "configurations": {
         "ci": {

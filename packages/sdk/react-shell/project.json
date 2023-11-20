@@ -27,7 +27,13 @@
         ]
       }
     },
-    "lint": {},
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/react-shell/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
     "storybook": {
       "configurations": {
         "ci": {

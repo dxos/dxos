@@ -13,7 +13,13 @@
         ]
       }
     },
-    "lint": {},
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "packages/ui/react-ui/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
     "storybook": {
       "configurations": {
         "ci": {

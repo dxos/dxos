@@ -53,7 +53,13 @@
         "{options.outputPath}"
       ]
     },
-    "lint": {}
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "packages/ui/react-ui-theme/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
   },
   "implicitDependencies": [
     "esbuild"
