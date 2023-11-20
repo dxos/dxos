@@ -20,7 +20,7 @@ functions:
     description: 'Test'
 
   - id: 'dxos.org/function/github'
-    endpoint: 'github'
+    path: 'github'
     handler: 'github'
     description: 'Github'
 
