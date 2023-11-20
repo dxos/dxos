@@ -521,6 +521,9 @@ importers:
       '@braneframe/plugin-grid':
         specifier: workspace:*
         version: link:../plugins/plugin-grid
+      '@braneframe/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugins/plugin-inbox
       '@braneframe/plugin-ipfs':
         specifier: workspace:*
         version: link:../plugins/plugin-ipfs
