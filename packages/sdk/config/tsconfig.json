@@ -11,6 +11,9 @@
   "include": [
     "src"
   ],
+  "exclude": [
+    "src/testing"
+  ],
   "references": [
     {
       "path": "../../common/log"
