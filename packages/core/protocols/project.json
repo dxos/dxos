@@ -60,13 +60,7 @@
         "{options.basePath}/gen"
       ]
     },
-    "test": {
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ],
-      "executor": "@dxos/test:run"
-    }
+    "test": { }
   },
   "implicitDependencies": [
     "nx-protobuf-compiler",
