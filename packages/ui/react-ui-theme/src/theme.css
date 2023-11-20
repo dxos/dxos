@@ -69,6 +69,7 @@
   --surface-bg: theme(colors.neutral.12);
   --surface-text: theme(colors.neutral.900);
   --description-text: theme(colors.neutral.650);
+  --topbar-size: 3rem;
 }
 
 .dark {

@@ -14,7 +14,7 @@ import {
   type MosaicTileAction,
   type Position,
 } from '@dxos/react-ui-mosaic';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { colors, getObject, GridCard } from './GridCard';
 
@@ -73,7 +73,7 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
 
   // TODO(burdon): Accessor to get card values.
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <Grid
         id='grid' // TODO(burdon): Namespace.
         items={grid.items}
