@@ -54,7 +54,7 @@
 ### Functions
 
 - CLI
-  - `dx function dev-server -r ts-node/register --verbose`
+  - `dx function dev -r ts-node/register --verbose`
   - `curl -X POST http://localhost:7001/dev/hello -H 'Content-Type: application/json' -w '\n' -d '{ "message": "Hello World!" }'`
 - Browser
   - Create thread.

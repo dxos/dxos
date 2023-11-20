@@ -16,7 +16,6 @@ import { type FunctionManifest, type FunctionTrigger } from '../manifest';
 // TODO(burdon): Rename.
 export type InvokeOptions = {
   endpoint: string;
-  runtime: string;
 };
 
 export class TriggerManager {
@@ -67,7 +66,7 @@ export class TriggerManager {
       // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
       const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
-        await this.execFunction(this._invokeOptions, config.endpoint, {
+        await this.execFunction(this._invokeOptions, config.path, {
           space: space.key,
           objects: Array.from(objectIds),
         });
@@ -117,13 +116,12 @@ export class TriggerManager {
   }
 
   private async execFunction(options: InvokeOptions, functionName: string, data: any) {
-    const { endpoint, runtime } = options;
+    const { endpoint } = options;
     invariant(endpoint, 'Missing endpoint');
-    invariant(runtime, 'Missing runtime');
 
     try {
       log('invoke', { function: functionName });
-      const url = `${endpoint}/${runtime}/${functionName}`;
+      const url = `${endpoint}/${functionName}`;
       const res = await fetch(url, {
         method: 'POST',
         body: JSON.stringify(data),
