@@ -17,7 +17,7 @@ describe('IMAP processor', () => {
 
   before(async () => {
     const config = getConfig()!;
-    processor = new ImapProcessor('dxos.org/plugin/imap', {
+    processor = new ImapProcessor('protonmail.com', {
       user: process.env.COM_PROTONMAIL_USERNAME ?? getKey(config, 'protonmail.com/username')!,
       password: process.env.COM_PROTONMAIL_PASSWORD ?? getKey(config, 'protonmail.com/password')!,
       host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',
@@ -50,7 +50,7 @@ describe('IMAP processor', () => {
       }))
       .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
 
-    // console.log('messages', JSON.stringify(mapped, undefined, 2));
+    console.log('messages', JSON.stringify(mapped, undefined, 2));
     expect(mapped).to.have.length.greaterThan(0);
   });
 });

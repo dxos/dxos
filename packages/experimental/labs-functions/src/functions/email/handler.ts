@@ -32,8 +32,8 @@ export const handler: FunctionHandler<any> = async ({ event, context: { client, 
   try {
     await processor.connect();
 
+    // TODO(burdon): Merge to thread.
     // TODO(burdon): Set meta keys.
-    // TODO(burdon): Save last execution context.
     const messages = await processor.requestMessages();
     console.log(messages.map((message) => message[debug]));
   } catch (err: any) {
@@ -43,6 +43,5 @@ export const handler: FunctionHandler<any> = async ({ event, context: { client, 
     await processor.disconnect();
   }
 
-  // TODO(burdon): Hangs if not called then cannot be stopped by CTRL-C.
   return status(code).succeed();
 };
