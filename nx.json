@@ -135,7 +135,15 @@
       ]
     },
     "lint": {
-      "inputs": ["default"]
+      "executor": "@nx/linter:eslint",
+      "inputs": ["default"],
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}"
+        ],
+        "quiet": true
+      }
     },
     "prebuild": {
       "inputs": ["production", "^production"],
