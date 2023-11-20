@@ -177,6 +177,17 @@ message Thread {
 }
 
 /**
+ *
+ */
+// TODO(burdon): Reconcile with Thread?
+message Mailbox {
+  option (object) = true;
+
+  string title = 1;
+  repeated Message messages = 2;
+}
+
+/**
  * Universal message type.
  */
 message Message {

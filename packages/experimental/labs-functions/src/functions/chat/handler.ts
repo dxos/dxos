@@ -47,13 +47,13 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   // Process threads.
   await Promise.all(
     Array.from(activeThreads).map(async (thread) => {
-      // TODO(burdon): Wait for block to be added.
-      await sleep(500);
+      // TODO(burdon): Wait for block to be added???
+      await sleep(100);
 
       // TODO(burdon): Create set of messages.
-      const m = thread.messages[thread.messages.length - 1];
-      if (m.__meta.keys.length === 0) {
-        const messages = createRequest(space, m);
+      const message = thread.messages[thread.messages.length - 1];
+      if (message.__meta.keys.length === 0) {
+        const messages = createRequest(space, message);
         log('request', { messages });
 
         // TODO(burdon): Error handling (e.g., 401);

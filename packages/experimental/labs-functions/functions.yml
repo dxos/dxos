@@ -27,11 +27,11 @@ functions:
 triggers:
   - function: 'dxos.org/function/email'
     subscription:
-      type: 'braneframe.Thread'
+      type: 'braneframe.Mailbox'
 
   - function: 'dxos.org/function/chat'
     subscription:
-      type: 'braneframe.Thread.Message'
+      type: 'braneframe.Message'
 
   - function: 'dxos.org/function/chess'
     subscription:
