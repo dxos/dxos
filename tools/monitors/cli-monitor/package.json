@@ -16,7 +16,7 @@
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.2",
     "chai": "^4.3.4",
-    "mocha": "^8.4.0",
+    "mocha": "^10.2.0",
     "mocha-junit-reporter": "^2.1.0",
     "mocha-multi-reporters": "^1.5.1",
     "ts-node": "10.9.1",
