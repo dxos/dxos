@@ -206,17 +206,6 @@ class Toolbox {
       const projectJson = await loadJson<ProjectJson>(projectPath);
       if (projectJson?.targets) {
 
-        if (projectJson.targets.build?.executor === "@nx/js:tsc" && projectJson.targets.build?.options?.main?.endsWith('/src/index.ts') && projectJson.targets.build?.options?.outputPath?.endsWith('/dist/types')) {
-          delete projectJson.targets.build.executor;
-          delete projectJson.targets.build.options.main;
-          delete projectJson.targets.build.options.outputPath;
-          delete projectJson.targets.build.options.tsConfig;
-        }
-
-        if(projectJson.targets.build?.outputs?.length === 1 && projectJson.targets.build?.outputs[0] === '{options.outputPath}') {
-          delete projectJson.targets.build.outputs;
-        }
-
         for (const target of Object.keys(projectJson.targets)) {
           if (projectJson.targets[target].options && Object.keys(projectJson.targets[target].options).length === 0) {
             delete projectJson.targets[target].options;
