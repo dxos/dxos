@@ -92,7 +92,7 @@ export class TriggerManager {
         count++;
       });
       // TODO(burdon): DSL for query (replace props).
-      const query = space.db.query(Filter._typename(trigger.subscription.type));
+      const query = space.db.query(Filter.typename(trigger.subscription.type));
       this._queries.add(query);
       const unsubscribe = query.subscribe(({ objects }) => {
         subscription.update(objects);
