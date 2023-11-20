@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
-import { baseSurface, coarseBlockSize, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
+import { baseSurface, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentFallback } from './ContentFallback';
 import { Fallback } from './Fallback';
@@ -71,7 +71,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         {/* Top (header) bar. */}
         <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[1]', baseSurface]} asChild>
           <div aria-label={t('main header label')} role='none'>
-            <div role='none' className={mx('flex gap-1 p-1', coarseBlockSize)}>
+            <div role='none' className={'flex gap-1 p-1 bs-[--topbar-size]'}>
               <DensityProvider density='coarse'>
                 <Button
                   onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
