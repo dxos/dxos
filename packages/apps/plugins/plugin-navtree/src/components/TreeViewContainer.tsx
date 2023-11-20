@@ -180,7 +180,7 @@ export const TreeViewContainer = ({
         <DensityProvider density='coarse'>
           {identity && (
             <>
-              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1'>
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
                 <HaloButton
                   size={6}
                   identityKey={identity?.identityKey.toHex()}
