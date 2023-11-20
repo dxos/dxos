@@ -36,6 +36,20 @@ import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from './util';
 
+// TODO(burdon): Demo:
+//  - Email pipeline (summarize daily set of messages from contacts in CRM).
+//  - Document processing queue (not on each mutation).
+//  - Chat RAG.
+//  - Drag results into Grid/Stack.
+//  - Suggest cards in Email view.
+
+// TODO(burdon): Scripts/notebook with agent plugin/functions
+// TODO(burdon): Graph database: https://js.langchain.com/docs/modules/data_connection/experimental/graph_databases/neo4j
+// TODO(burdon): Document chains: http://localhost:3000/docs/modules/chains/document
+// TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
+// TODO(burdon): CloudflareWorkersAIEmbeddings
+// TODO(burdon): FakeEmbeddings for tests
+
 describe('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
@@ -85,38 +99,44 @@ describe('LangChain', () => {
     expect(results.map(([document]) => document.metadata.id)).to.deep.eq([3, 4]);
   });
 
-  // TODO(burdon): Scripts/notebook with agent plugin/functions
-  // TODO(burdon): Graph database: https://js.langchain.com/docs/modules/data_connection/experimental/graph_databases/neo4j
-  // TODO(burdon): Document chains: http://localhost:3000/docs/modules/chains/document
-  // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
-  // TODO(burdon): CloudflareWorkersAIEmbeddings
-  // TODO(burdon): FakeEmbeddings for tests
-
   //
   // Retriever Augmented Generation (RAG).
   // https://js.langchain.com/docs/expression_language/cookbook/retrieval
   //
-  test.only('rag', async () => {
+  test('rag', async () => {
     const model = createModel();
     const embeddings = createEmbeddings();
 
     const docs: Document[] = [
       {
         metadata: { id: 1 },
-        pageContent: 'mitochondria is the powerhouse of the cell',
+        pageContent: 'DXOS consists of HALO, ECHO and MESH.',
+      },
+      {
+        metadata: { id: 2 },
+        pageContent: 'HALO is a mechanism for self-sovereign identity.',
+      },
+      {
+        metadata: { id: 3 },
+        pageContent: 'ECHO is a decentralized graph database.',
+      },
+      {
+        metadata: { id: 4 },
+        pageContent: 'MESH provides infrastructure for resilient peer-to-peer networks.',
       },
     ];
 
-    const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
-    // https://js.langchain.com/docs/modules/data_connection/retrievers/how_to/vectorstore
+    // Hierarchical Navigable Small World (HNSW) graph.
     // https://api.js.langchain.com/classes/vectorstores_hnswlib.HNSWLib.html
+    // https://js.langchain.com/docs/modules/data_connection/retrievers/how_to/vectorstore
     // https://github.com/langchain-ai/langchainjs/discussions/2842
-    const retriever = vectorStore.asRetriever(1); // Sets max docs to retrieve.
+    const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
+    const retriever = vectorStore.asRetriever();
 
-    const prompt = PromptTemplate.fromTemplate(`Answer the question based only on the following context:
+    const prompt = PromptTemplate.fromTemplate(`answer the question based only on the following context:
     {context}
     ----------------
-    Question: {question}`);
+    question: {question}`);
 
     const chain = RunnableSequence.from([
       {
@@ -134,14 +154,14 @@ describe('LangChain', () => {
       console.log(response);
     };
 
-    await call('What is the powerhouse of the cell?');
+    await call('what kind of database does DXOS use?');
   });
 
   //
   // Retriever Augmented Generation (RAG).
   // https://js.langchain.com/docs/modules/chains/popular/vector_db_qa
   //
-  test.only('retrieval', async () => {
+  test('retrieval', async () => {
     const model = createModel();
     const embeddings = createEmbeddings();
 
@@ -153,10 +173,8 @@ describe('LangChain', () => {
     const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
     const docs = await textSplitter.createDocuments([text]);
 
-    // Hierarchical Navigable Small World (HNSW) graph.
-    // TODO(burdon): Reconcile with vector store above (requires hnswlib-node).
     const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
-    const retriever = vectorStore.asRetriever(1);
+    const retriever = vectorStore.asRetriever(1); // Sets max docs to retrieve.
 
     // Create a system & human prompt for the chat model
     const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
@@ -249,9 +267,8 @@ describe('LangChain', () => {
   });
 
   //
-  // Agents
+  // Agents, ReAct prompts, and Tools.
   // http://localhost:3000/docs/modules/agents/agent_types/chat_conversation_agent
-  //
   // TODO(burdon): http://localhost:3000/docs/modules/agents/agent_types/openai_assistant
   // TODO(burdon): http://localhost:3000/docs/modules/agents/agent_types/plan_and_execute
   //
@@ -313,7 +330,6 @@ describe('LangChain', () => {
       console.log(result.output);
     };
 
-    console.log();
     await chat('hello, i am DXOS');
     await chat('what is my name?');
     await chat('what is 6 times 7?');
