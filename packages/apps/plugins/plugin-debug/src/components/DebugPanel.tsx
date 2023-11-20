@@ -7,12 +7,12 @@ import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
 
 import { useConfig } from '@dxos/react-client';
 import { DensityProvider, Main } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, children }) => {
   const config = useConfig();
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>{menu}</DensityProvider>
       </div>
