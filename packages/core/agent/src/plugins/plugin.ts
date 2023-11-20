@@ -2,13 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, Trigger } from '@dxos/async';
-import { type Client } from '@dxos/client';
+import { Event } from '@dxos/async';
+import { type Client, type Config } from '@dxos/client';
 import { type ClientServicesProvider, type LocalClientServices } from '@dxos/client/services';
 import { type ClientServicesHost } from '@dxos/client-services';
+import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
+export const getPluginConfig = (config: Config, id: string): Runtime.Agent.Plugin | undefined => {
+  return config.values.runtime?.agent?.plugins?.find((plugin) => plugin.id === id);
+};
+
+// TODO(burdon): Rename?
 export type PluginContext = {
   client: Client;
   clientServices: ClientServicesProvider;
@@ -21,37 +29,66 @@ export abstract class Plugin {
    */
   public abstract readonly id: string;
 
+  // TODO(burdon): Event type (e.g., open/close).
   public readonly statusUpdate = new Event();
-  protected _config!: Runtime.Agent.Plugin;
-  protected _pluginCtx?: PluginContext;
-  protected _initialized = new Trigger();
 
-  get host(): ClientServicesHost {
-    return (this._pluginCtx!.clientServices as LocalClientServices).host ?? failUndefined();
-  }
+  protected readonly _ctx = new Context();
+
+  protected _config!: Runtime.Agent.Plugin;
+  private _pluginCtx?: PluginContext;
 
   get config(): Runtime.Agent.Plugin {
     return this._config;
   }
 
-  // TODO(burdon): Remove Client dependency (client services only).
-  async initialize(pluginCtx: PluginContext): Promise<void> {
-    this._pluginCtx = pluginCtx;
+  get context(): PluginContext {
+    invariant(this._pluginCtx, `Plugin not initialized: ${this.id}`);
+    return this._pluginCtx;
+  }
 
-    // TODO(mykola): Maybe do not pass config directly to plugin, but rather let plugin to request it through some callback.
-    this.setConfig(
-      this._pluginCtx.client.config.values.runtime?.agent?.plugins?.find((pluginCtx) => pluginCtx.id === this.id) ?? {
-        id: this.id,
-      },
-    );
-
-    this._initialized.wake();
+  get host(): ClientServicesHost {
+    return (this.context.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
   setConfig(config: Runtime.Agent.Plugin) {
     this._config = config;
   }
 
-  abstract open(): Promise<void>;
-  abstract close(): Promise<void>;
+  // TODO(burdon): Remove Client dependency (client services only).
+  async initialize(pluginCtx: PluginContext): Promise<void> {
+    log(`initializing: ${this.id}`);
+    this._pluginCtx = pluginCtx;
+
+    // TODO(burdon): Require config.
+    const config = getPluginConfig(this._pluginCtx.client.config, this.id);
+    invariant(config, `Plugin not configured: ${this.id}`);
+    this.setConfig(config);
+  }
+
+  async open() {
+    // Currently not re-entrant.
+    invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
+
+    // Check not disabled.
+    if (!(this._config.enabled ?? true)) {
+      throw new Error(`Plugin not configured: ${this.id}`);
+    }
+
+    log(`opening: ${this.id}`);
+    await this.onOpen();
+    this.statusUpdate.emit();
+    log(`opened: ${this.id}`);
+  }
+
+  async close() {
+    invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
+    log(`closing: ${this.id}`);
+    await this.onClose();
+    void this._ctx.dispose();
+    this.statusUpdate.emit();
+    log(`closed: ${this.id}`);
+  }
+
+  protected async onOpen(): Promise<void> {}
+  protected async onClose(): Promise<void> {}
 }

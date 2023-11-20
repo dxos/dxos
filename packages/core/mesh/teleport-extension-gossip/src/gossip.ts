@@ -88,11 +88,15 @@ export class Gossip {
         this._receivedMessages.add(message.messageId);
         this._callListeners(message);
         if (message.channelId.startsWith(YJS_CHANNEL_PREFIX) && this._oldestYjsTimeoutInWindow()) {
-          log('skipping propagating YJS gossip message due to timeouts');
+          log(
+            `skipping propagating YJS gossip message due to timeouts (>${YJS_TIMEOUT_THRESHOLD} received in ${
+              YJS_TIMEOUT_WINDOW / 1000
+            })`,
+          );
           return;
         }
         if (this._ctx.disposeCallbacksLength > MAX_CTX_TASKS) {
-          log('skipping propagating YJS gossip message due to exessive tasks');
+          log(`skipping propagating YJS gossip message due to exessive tasks (${MAX_CTX_TASKS})`);
           return;
         }
         scheduleTask(this._ctx, async () => {
@@ -116,7 +120,11 @@ export class Gossip {
 
   postMessage(channel: string, payload: any) {
     if (channel.startsWith(YJS_CHANNEL_PREFIX) && this._oldestYjsTimeoutInWindow()) {
-      log('skipping YJS gossip message due to timeouts');
+      log(
+        `skipping YJS gossip message due to timeouts (>${YJS_TIMEOUT_THRESHOLD} received in ${
+          YJS_TIMEOUT_WINDOW / 1000
+        }s )`,
+      );
       return;
     }
     for (const extension of this._connections.values()) {
@@ -197,7 +205,7 @@ export class Gossip {
   }
 
   private _oldestYjsTimeoutInWindow(): boolean {
-    const lastTS = this._yjs_timeout[(this._yjs_timeout_index + YJS_TIMEOUT_THRESHOLD - 1) % YJS_TIMEOUT_THRESHOLD];
+    const lastTS = this._yjs_timeout[(this._yjs_timeout_index + 1) % YJS_TIMEOUT_THRESHOLD];
     if (!lastTS) {
       return false;
     }

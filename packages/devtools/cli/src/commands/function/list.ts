@@ -39,7 +39,7 @@ export const printFunctions = (functions: any[], flags = {}) => {
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List functions.';
-  static override state = 'deprecated';
+  // static override state = 'deprecated';
 
   async run(): Promise<any> {
     const client = new FaasClient(this.clientConfig.values.runtime?.services?.faasd ?? {});

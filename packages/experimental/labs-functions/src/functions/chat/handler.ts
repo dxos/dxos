@@ -30,7 +30,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 
   // TODO(burdon): Logging (filename missing).
   const space = client.spaces.get(PublicKey.from(spaceKey))!;
-  log.info('chatgpt', { space: space.key });
+  log('chatgpt', { space: space.key });
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
@@ -53,15 +53,14 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       // TODO(burdon): Create set of messages.
       const block = thread.blocks[thread.blocks.length - 1];
       if (block.__meta.keys.length === 0) {
-        const messages = createRequest(client, space, block);
-        log.info('request', { messages });
-        console.log(JSON.stringify(messages, null, 2));
+        const messages = createRequest(space, block);
+        log('request', { messages });
 
         // TODO(burdon): Error handling (e.g., 401);
         const { content } = (await chat.request(messages)) ?? {};
-        log.info('response', { content });
+        log('response', { content });
         if (content) {
-          const messages = createResponse(client, content);
+          const messages = createResponse(client, space, content);
           console.log('response', { messages });
 
           thread.blocks.push(

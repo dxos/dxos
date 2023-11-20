@@ -79,6 +79,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-ipfs/package.json",
           "jsonpath": "$.version"
         },
@@ -675,6 +680,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-searchlist/package.json",
           "jsonpath": "$.version"
         },
         {

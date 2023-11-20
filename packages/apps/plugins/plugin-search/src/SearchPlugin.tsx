@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Folder } from '@braneframe/types';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
@@ -22,7 +23,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          if (parent.id === 'root' || parent.data instanceof Folder) {
+          if (parent.id === 'root' || parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             parent.addAction({
               id: SearchAction.SEARCH,
               label: ['search action label', { ns: SEARCH_PLUGIN }],

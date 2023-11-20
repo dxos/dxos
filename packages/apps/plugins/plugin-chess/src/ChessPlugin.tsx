@@ -9,6 +9,7 @@ import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Game } from '@dxos/chess-app';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
@@ -33,7 +34,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       },
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -50,8 +51,8 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   action: ChessAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,

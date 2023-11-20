@@ -18,6 +18,7 @@ import {
   parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import meta, { THREAD_PLUGIN } from './meta';
@@ -50,7 +51,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -67,8 +68,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   action: ThreadAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,

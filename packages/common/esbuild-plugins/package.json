@@ -1,6 +1,6 @@
 {
   "name": "@dxos/esbuild-plugins",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -10,6 +10,7 @@
   "dependencies": {
     "assert": "^2.0.0",
     "crypto-browserify": "^3.12.0",
+    "debug": "^4.3.4",
     "domain-browser": "^4.22.0",
     "esbuild": "^0.19.2",
     "events": "^3.3.0",

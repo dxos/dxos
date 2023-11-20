@@ -12,10 +12,10 @@ import { Game, types } from '@dxos/chess-app/proto';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { subscribe } from '@dxos/echo-schema';
-import { DevServer, type FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
-const HUB_PORT = 8757;
+const FUNCTIONS_PORT = 8757;
 
 describe('Chess', () => {
   test.skip('chess function', async () => {
@@ -29,9 +29,8 @@ describe('Chess', () => {
           plugins: [
             {
               id: 'dxos.org/agent/plugin/functions',
-              enabled: true,
               config: {
-                port: HUB_PORT,
+                port: FUNCTIONS_PORT,
               },
             },
           ],
@@ -53,23 +52,21 @@ describe('Chess', () => {
     });
     await openAndClose(functionsPlugin);
 
-    const functionsManifest = load(
-      await readFile(join(__dirname, '../../../functions.yml'), 'utf8'),
-    ) as FunctionsManifest;
+    const manifest = load(await readFile(join(__dirname, '../../../functions.yml'), 'utf8')) as FunctionManifest;
 
-    const devServer = new DevServer(client, {
+    const server = new DevServer(client, {
       directory: join(__dirname, '../../functions'),
-      manifest: functionsManifest,
+      manifest,
     });
 
-    await devServer.initialize();
-    await devServer.start();
-    afterTest(() => devServer.stop());
+    await server.initialize();
+    await server.start();
+    afterTest(() => server.stop());
 
-    const triggers = new TriggerManager(client, functionsManifest.triggers, {
-      runtime: 'dev',
-      endpoint: `http://localhost:${HUB_PORT}`,
+    const triggers = new TriggerManager(client, manifest, {
+      endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
     });
+
     await triggers.start();
     afterTest(() => triggers.stop());
 

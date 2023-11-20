@@ -9,8 +9,8 @@ import { rmSync } from 'node:fs';
 import {
   Agent,
   DashboardPlugin,
-  EchoProxyServer,
-  EpochMonitor,
+  EchoProxyPlugin,
+  EpochMonitorPlugin,
   FunctionsPlugin,
   QueryPlugin,
   parseAddress,
@@ -83,20 +83,11 @@ export default class Start extends BaseCommand<typeof Start> {
         webSocket: this.flags.ws,
       },
       plugins: [
-        // Epoch monitoring.
-        new EpochMonitor(),
-
-        // Query plugin.
-        new QueryPlugin(),
-
-        // Dashboard.
         new DashboardPlugin({ configPath: this.flags.config }),
-
-        // ECHO API.
-        new EchoProxyServer(),
-
-        // Functions.
+        new EchoProxyPlugin(),
+        new EpochMonitorPlugin(),
         new FunctionsPlugin(),
+        new QueryPlugin(),
       ],
     });
 

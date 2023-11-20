@@ -12,7 +12,7 @@ import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   type EditorModel,
@@ -167,7 +167,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       graph: {
         builder: ({ parent, plugins }) => {
-          if (parent.data instanceof Folder) {
+          if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
@@ -181,8 +181,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     action: MarkdownAction.CREATE,
                   },
                   {
-                    action: SpaceAction.ADD_TO_FOLDER,
-                    data: { folder: parent.data },
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target: parent.data },
                   },
                   {
                     action: LayoutAction.ACTIVATE,
