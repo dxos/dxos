@@ -31,10 +31,8 @@ const Editor = ({ handle, path }: EditorProps) => {
         view.update([transaction]);
         reconcile(handle, view);
       },
-      parent: containerRef.current,
+      parent: containerRef.current as any,
     }));
-    window.view = view;
-    window.am = automerge;
 
     const handleChange = () => {
       reconcile(handle, view);

@@ -13,7 +13,6 @@ import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
 import { AbstractEchoObject } from './object';
-import { TextObject } from './text-object';
 import {
   base,
   data,
@@ -128,6 +127,8 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
         if (field.repeated) {
           this._set(field.id!, new EchoArray());
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { TextObject } = require('./text-object');
           this._set(field.id!, new TextObject());
         }
       }
