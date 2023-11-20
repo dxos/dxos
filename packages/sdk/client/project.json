@@ -2,19 +2,8 @@
   "sourceRoot": "packages/sdk/client/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/client/src/index.ts",
-        "outputPath": "packages/sdk/client/dist/types",
-        "tsConfig": "packages/sdk/client/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/client/src/devtools/index.ts",
@@ -25,52 +14,21 @@
           "packages/sdk/client/src/mesh/index.ts",
           "packages/sdk/client/src/services/index.ts",
           "packages/sdk/client/src/testing/index.ts"
-        ],
-        "outputPath": "packages/sdk/client/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/client",
         "envVariables": {
           "SIGNAL_PORT": 12003
         },
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/sdk/client",
-        "resultsPath": "test-results/packages/sdk/client",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12003
-        },
-        "testPatterns": [
-          "packages/sdk/client/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/client/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+        }
+      }
     }
   },
   "implicitDependencies": [

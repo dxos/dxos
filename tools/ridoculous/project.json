@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/ridoculous/src/index.ts",
         "outputPath": "tools/ridoculous/dist",
@@ -11,23 +10,8 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/ridoculous/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "tools/ridoculous/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   }
 }

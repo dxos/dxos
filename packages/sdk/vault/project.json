@@ -2,17 +2,7 @@
   "sourceRoot": "packages/sdk/vault/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/vault/src/index.ts",
-        "outputPath": "packages/sdk/vault/dist/types",
-        "tsConfig": "packages/sdk/vault/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
@@ -90,10 +80,7 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/vault",
-        "outputPath": "tmp/playwright/packages/sdk/vault",
         "playwrightConfigPath": "packages/sdk/vault/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/sdk/vault",
         "serve": "vault:serve-test",
         "testPatterns": [
           "packages/sdk/vault/src/playwright/**/*.spec.{ts,js}"
@@ -101,26 +88,9 @@
         "watchPatterns": [
           "packages/sdk/vault/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/sdk/vault/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
