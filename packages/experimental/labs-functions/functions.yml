@@ -19,6 +19,11 @@ functions:
     handler: 'hello'
     description: 'Test'
 
+  - id: 'dxos.org/function/github'
+    path: 'github'
+    handler: 'github'
+    description: 'Github'
+
   - id: 'dxos.org/function/email'
     path: 'email'
     handler: 'email'
@@ -32,3 +37,7 @@ triggers:
   - function: 'dxos.org/function/chess'
     subscription:
       type: 'dxos.experimental.chess.Game'
+    
+  - function: 'dxos.org/function/github'
+    subscription:
+      type: 'example.com/schema/project'
