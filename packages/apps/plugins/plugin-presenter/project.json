@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-presenter/src/index.ts",
           "packages/apps/plugins/plugin-presenter/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-presenter/dist/lib",
         "platforms": [
           "browser"
         ]

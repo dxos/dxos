@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/core/functions/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/functions/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

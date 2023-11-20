@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/core/echo/text-model/src/index.ts"
-        ],
-        "outputPath": "packages/core/echo/text-model/dist/lib"
+        ]
       }
     },
     "lint": {},

@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/core/echo/messenger-model/src/index.ts"
-        ],
-        "outputPath": "packages/core/echo/messenger-model/dist/lib"
+        ]
       }
     },
     "lint": {},

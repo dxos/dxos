@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-ipfs/src/index.ts",
           "packages/apps/plugins/plugin-ipfs/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-ipfs/dist/lib",
         "platforms": [
           "browser"
         ]

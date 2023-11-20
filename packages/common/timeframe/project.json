@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/common/timeframe/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/common/timeframe/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

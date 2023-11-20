@@ -8,7 +8,6 @@
         "entryPoints": [
           "packages/ui/react-ui-searchlist/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-searchlist/dist/lib",
         "platforms": [
           "browser"
         ]

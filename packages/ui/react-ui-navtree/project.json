@@ -8,7 +8,6 @@
         "entryPoints": [
           "packages/ui/react-ui-navtree/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-navtree/dist/lib",
         "platforms": [
           "browser"
         ]

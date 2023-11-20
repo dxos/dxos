@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/ui/react-ui-types/src/index.ts"
-        ],
-        "outputPath": "packages/ui/react-ui-types/dist/lib"
+        ]
       }
     },
     "lint": {}

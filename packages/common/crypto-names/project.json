@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/common/crypto-names/src/names.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/common/crypto-names/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

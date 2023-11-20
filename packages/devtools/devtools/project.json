@@ -32,8 +32,7 @@
       "options": {
         "entryPoints": [
           "packages/devtools/devtools/src/index.ts"
-        ],
-        "outputPath": "packages/devtools/devtools/dist/lib"
+        ]
       }
     },
     "lint": {},

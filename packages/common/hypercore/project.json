@@ -64,8 +64,7 @@
         "entryPoints": [
           "packages/common/hypercore/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/common/hypercore/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

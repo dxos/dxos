@@ -9,7 +9,6 @@
           "packages/ui/react-appkit/src/index.ts",
           "packages/ui/react-appkit/src/telemetry/index.ts"
         ],
-        "outputPath": "packages/ui/react-appkit/dist/lib",
         "platforms": [
           "browser"
         ]

@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/experimental/mosaic/src/index.ts"
-        ],
-        "outputPath": "packages/experimental/mosaic/dist/lib"
+        ]
       }
     },
     "lint": {},

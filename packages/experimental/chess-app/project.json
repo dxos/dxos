@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/experimental/chess-app/src/index.ts",
           "packages/experimental/chess-app/src/proto/index.ts"
-        ],
-        "outputPath": "packages/experimental/chess-app/dist/lib"
+        ]
       }
     },
     "lint": {},

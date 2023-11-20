@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/ui/primitives/react-hooks/src/index.ts"
-        ],
-        "outputPath": "packages/ui/primitives/react-hooks/dist/lib"
+        ]
       }
     },
     "lint": {}

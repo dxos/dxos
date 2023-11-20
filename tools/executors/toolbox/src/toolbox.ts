@@ -237,8 +237,6 @@ class Toolbox {
           if(projectJson.targets[target].dependsOn && deepEqual(projectJson.targets[target].dependsOn, nxJson.targetDefaults[target]?.dependsOn)) {
             delete projectJson.targets[target].outputs;
           }
-            
-
 
           if (projectJson.targets[target].options && Object.keys(projectJson.targets[target].options).length === 0) {
             delete projectJson.targets[target].options;

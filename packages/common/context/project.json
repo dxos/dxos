@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/common/context/src/index.ts"
-        ],
-        "outputPath": "packages/common/context/dist/lib"
+        ]
       }
     },
     "lint": {},

@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/sdk/client-protocol/src/index.ts"
-        ],
-        "outputPath": "packages/sdk/client-protocol/dist/lib"
+        ]
       }
     },
     "lint": {},

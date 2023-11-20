@@ -8,7 +8,6 @@
         "entryPoints": [
           "packages/ui/react-icons/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-icons/dist/lib",
         "platforms": [
           "browser"
         ]

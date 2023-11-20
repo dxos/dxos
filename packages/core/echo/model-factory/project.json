@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/core/echo/model-factory/src/index.ts",
           "packages/core/echo/model-factory/src/testing/index.ts"
-        ],
-        "outputPath": "packages/core/echo/model-factory/dist/lib"
+        ]
       }
     },
     "lint": {},

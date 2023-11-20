@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-table/src/index.ts",
           "packages/apps/plugins/plugin-table/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-table/dist/lib",
         "platforms": [
           "browser"
         ]

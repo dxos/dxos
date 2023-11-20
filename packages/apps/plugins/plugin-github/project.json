@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-github/src/index.ts",
           "packages/apps/plugins/plugin-github/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-github/dist/lib",
         "platforms": [
           "browser"
         ]

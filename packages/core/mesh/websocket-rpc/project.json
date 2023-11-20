@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/core/mesh/websocket-rpc/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/mesh/websocket-rpc/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

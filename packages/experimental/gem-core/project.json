@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/experimental/gem-core/src/index.ts"
-        ],
-        "outputPath": "packages/experimental/gem-core/dist/lib"
+        ]
       }
     },
     "lint": {},

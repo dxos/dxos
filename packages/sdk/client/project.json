@@ -14,8 +14,7 @@
           "packages/sdk/client/src/mesh/index.ts",
           "packages/sdk/client/src/services/index.ts",
           "packages/sdk/client/src/testing/index.ts"
-        ],
-        "outputPath": "packages/sdk/client/dist/lib"
+        ]
       }
     },
     "lint": {},

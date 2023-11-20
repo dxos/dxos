@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-space/src/index.ts",
           "packages/apps/plugins/plugin-space/src/meta.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-space/dist/lib",
         "platforms": [
           "browser"
         ]

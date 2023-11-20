@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-sketch/src/index.ts",
           "packages/apps/plugins/plugin-sketch/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-sketch/dist/lib",
         "platforms": [
           "browser"
         ]

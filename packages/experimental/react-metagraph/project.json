@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/experimental/react-metagraph/src/index.ts"
-        ],
-        "outputPath": "packages/experimental/react-metagraph/dist/lib"
+        ]
       }
     },
     "lint": {}

@@ -9,7 +9,6 @@
           "packages/sdk/react-shell/src/index.ts",
           "packages/sdk/react-shell/src/testing/index.ts"
         ],
-        "outputPath": "packages/sdk/react-shell/dist/lib",
         "platforms": [
           "browser"
         ]

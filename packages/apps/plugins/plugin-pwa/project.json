@@ -12,7 +12,6 @@
         "ignorePackages": [
           "virtual:pwa-register"
         ],
-        "outputPath": "packages/apps/plugins/plugin-pwa/dist/lib",
         "platforms": [
           "browser"
         ]

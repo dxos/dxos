@@ -8,7 +8,6 @@
         "entryPoints": [
           "packages/ui/react-ui-table/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-table/dist/lib",
         "platforms": [
           "browser"
         ]

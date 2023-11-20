@@ -7,8 +7,7 @@
         "entryPoints": [
           "packages/gravity/kube-testing/src/index.ts",
           "packages/gravity/kube-testing/src/main.ts"
-        ],
-        "outputPath": "packages/gravity/kube-testing/dist/lib"
+        ]
       }
     },
     "e2e": {

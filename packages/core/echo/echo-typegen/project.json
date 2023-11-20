@@ -15,7 +15,6 @@
           "packages/core/echo/echo-typegen/src/main.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/core/echo/echo-typegen/dist/lib",
         "platforms": [
           "node"
         ]

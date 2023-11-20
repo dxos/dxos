@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/common/react-async/src/index.ts"
-        ],
-        "outputPath": "packages/common/react-async/dist/lib"
+        ]
       }
     },
     "lint": {},

@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/apps/plugins/plugin-metadata/src/index.ts",
           "packages/apps/plugins/plugin-metadata/src/meta.ts"
-        ],
-        "outputPath": "packages/apps/plugins/plugin-metadata/dist/lib"
+        ]
       }
     },
     "lint": {},

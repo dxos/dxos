@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/core/echo/echo-generator/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/echo/echo-generator/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

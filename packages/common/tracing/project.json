@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/common/tracing/src/index.ts"
-        ],
-        "outputPath": "packages/common/tracing/dist/lib"
+        ]
       }
     },
     "lint": {},

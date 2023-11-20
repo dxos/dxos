@@ -9,8 +9,7 @@
           "packages/core/echo/echo-signals/src/core.ts",
           "packages/core/echo/echo-signals/src/index.ts",
           "packages/core/echo/echo-signals/src/react.ts"
-        ],
-        "outputPath": "packages/core/echo/echo-signals/dist/lib"
+        ]
       }
     },
     "lint": {}

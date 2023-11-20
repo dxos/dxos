@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-kanban/src/index.ts",
           "packages/apps/plugins/plugin-kanban/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-kanban/dist/lib",
         "platforms": [
           "browser"
         ]

@@ -9,7 +9,6 @@
           "packages/common/plate/src/index.ts",
           "packages/common/plate/src/main.ts"
         ],
-        "outputPath": "packages/common/plate/dist/lib",
         "platforms": [
           "node"
         ]

@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/core/mesh/teleport-extension-object-sync/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/mesh/teleport-extension-object-sync/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

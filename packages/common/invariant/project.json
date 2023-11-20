@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/common/invariant/src/index.ts"
-        ],
-        "outputPath": "packages/common/invariant/dist/lib"
+        ]
       }
     },
     "lint": {}

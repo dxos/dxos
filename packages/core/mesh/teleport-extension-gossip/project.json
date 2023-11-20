@@ -8,7 +8,6 @@
         "entryPoints": [
           "packages/core/mesh/teleport-extension-gossip/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/teleport-extension-gossip/dist/lib",
         "platforms": [
           "browser",
           "node"

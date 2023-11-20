@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/experimental/kai-sandbox/src/index.ts"
-        ],
-        "outputPath": "packages/experimental/kai-sandbox/dist/lib"
+        ]
       }
     },
     "lint": {},

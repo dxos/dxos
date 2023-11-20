@@ -9,7 +9,6 @@
           "packages/common/phoenix/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/common/phoenix/dist/lib",
         "platforms": [
           "node"
         ]

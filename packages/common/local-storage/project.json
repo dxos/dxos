@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/common/local-storage/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/common/local-storage/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {}

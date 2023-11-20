@@ -13,8 +13,7 @@
           "packages/sdk/react-client/src/invitations/index.ts",
           "packages/sdk/react-client/src/mesh/index.ts",
           "packages/sdk/react-client/src/testing/index.ts"
-        ],
-        "outputPath": "packages/sdk/react-client/dist/lib"
+        ]
       }
     },
     "e2e": {

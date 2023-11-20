@@ -46,7 +46,6 @@
           "packages/common/node-std/src/stream.js",
           "packages/common/node-std/src/util.js"
         ],
-        "outputPath": "packages/common/node-std/dist/lib",
         "platforms": [
           "browser"
         ]

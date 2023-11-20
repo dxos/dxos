@@ -9,7 +9,6 @@
           "packages/apps/plugins/plugin-inbox/src/index.ts",
           "packages/apps/plugins/plugin-inbox/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-inbox/dist/lib",
         "platforms": [
           "browser"
         ]

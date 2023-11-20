@@ -9,8 +9,7 @@
           "packages/core/echo/echo-schema/src/index.ts",
           "packages/core/echo/echo-schema/src/testing/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/echo/echo-schema/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

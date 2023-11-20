@@ -9,8 +9,7 @@
           "packages/core/echo/echo-pipeline/src/index.ts",
           "packages/core/echo/echo-pipeline/src/testing/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/echo/echo-pipeline/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

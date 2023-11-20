@@ -8,8 +8,7 @@
         "entryPoints": [
           "packages/core/mesh/teleport-extension-replicator/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/mesh/teleport-extension-replicator/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

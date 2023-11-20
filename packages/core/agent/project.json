@@ -14,8 +14,7 @@
         "entryPoints": [
           "packages/core/agent/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/agent/dist/lib"
+        "injectGlobals": true
       }
     },
     "lint": {},

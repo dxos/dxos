@@ -8,7 +8,6 @@
         "entryPoints": [
           "packages/ui/react-ui/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui/dist/lib",
         "platforms": [
           "browser"
         ]

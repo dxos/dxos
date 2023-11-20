@@ -7,8 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/sdk/app-framework/src/index.ts"
-        ],
-        "outputPath": "packages/sdk/app-framework/dist/lib"
+        ]
       }
     },
     "lint": {},

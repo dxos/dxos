@@ -10,7 +10,6 @@
           "packages/apps/plugins/plugin-telemetry/src/meta.ts",
           "packages/apps/plugins/plugin-telemetry/src/telemetry/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-telemetry/dist/lib",
         "platforms": [
           "browser"
         ]
