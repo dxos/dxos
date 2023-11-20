@@ -115,6 +115,11 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         id: 'active',
         type: Schema.PropType.BOOLEAN,
       },
+      {
+        id: 'org',
+        type: Schema.PropType.REF,
+        ref: organization,
+      },
     ],
   });
 
