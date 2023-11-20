@@ -26,7 +26,6 @@ export const getSpaceForObject = (object: EchoObject): Space | undefined => {
     const owner = db.graph._getOwningObject(key);
     // TODO(burdon): Not recognized as a space.
     console.log(':::::', key, owner instanceof SpaceProxy);
-    console.log('>>>>>', owner);
     if (owner instanceof SpaceProxy) {
       return owner;
     }
