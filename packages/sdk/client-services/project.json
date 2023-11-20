@@ -4,7 +4,6 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/client-services/src/index.ts",
@@ -12,14 +11,10 @@
         ],
         "injectGlobals": true,
         "outputPath": "packages/sdk/client-services/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [

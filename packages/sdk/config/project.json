@@ -51,9 +51,7 @@
       ]
     },
     "lint": {},
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

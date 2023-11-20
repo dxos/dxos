@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/templates/tasks-template/src/index.ts",
         "outputPath": "packages/apps/templates/tasks-template/dist",
@@ -12,7 +11,6 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [

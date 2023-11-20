@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/mesh/rpc-tunnel/src/index.ts"
         ],
         "outputPath": "packages/core/mesh/rpc-tunnel/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   },

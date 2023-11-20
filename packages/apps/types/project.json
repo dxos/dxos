@@ -4,17 +4,13 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/types/src/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/apps/types/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "prebuild": {

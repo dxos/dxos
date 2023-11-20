@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/ui/primitives/react-hooks/src/index.ts"
         ],
         "outputPath": "packages/ui/primitives/react-hooks/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   },

@@ -11,15 +11,10 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/executors/toolbox/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [

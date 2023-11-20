@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/core/echo/echo-typegen/src/main.ts",
         "outputPath": "packages/core/echo/echo-typegen/dist/types",
@@ -11,7 +10,6 @@
       }
     },
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/echo/echo-typegen/src/main.ts"
@@ -21,14 +19,9 @@
         "platforms": [
           "node"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   }
 }

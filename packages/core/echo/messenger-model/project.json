@@ -4,21 +4,15 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/echo/messenger-model/src/index.ts"
         ],
         "outputPath": "packages/core/echo/messenger-model/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

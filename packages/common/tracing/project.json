@@ -4,21 +4,15 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/tracing/src/index.ts"
         ],
         "outputPath": "packages/common/tracing/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

@@ -4,7 +4,6 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/client/src/devtools/index.ts",
@@ -17,14 +16,10 @@
           "packages/sdk/client/src/testing/index.ts"
         ],
         "outputPath": "packages/sdk/client/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "envVariables": {
           "SIGNAL_PORT": 12003

@@ -4,22 +4,16 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/util/src/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/common/util/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

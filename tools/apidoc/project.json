@@ -2,7 +2,6 @@
   "sourceRoot": "tools/apidoc/src",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/apidoc/src/index.ts",
         "outputPath": "tools/apidoc/dist",

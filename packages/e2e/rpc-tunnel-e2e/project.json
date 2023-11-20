@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/e2e/rpc-tunnel-e2e/src/index.ts",
         "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",

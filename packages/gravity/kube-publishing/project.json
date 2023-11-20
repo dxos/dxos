@@ -3,17 +3,13 @@
   "projectType": "library",
   "targets": {
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/gravity/kube-publishing/src/index.ts",
           "packages/gravity/kube-publishing/src/main.ts"
         ],
         "outputPath": "packages/gravity/kube-publishing/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   }

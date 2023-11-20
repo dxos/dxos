@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/presenter/src/index.ts",
         "outputPath": "tools/presenter/dist",

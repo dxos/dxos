@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/react-metagraph/src/index.ts"
         ],
         "outputPath": "packages/experimental/react-metagraph/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   },

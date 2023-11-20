@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/ui/react-ui-types/src/index.ts"
         ],
         "outputPath": "packages/ui/react-ui-types/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   },

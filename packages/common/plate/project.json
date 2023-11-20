@@ -4,7 +4,6 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/plate/src/index.ts",
@@ -14,10 +13,7 @@
         "platforms": [
           "node"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "dev": {
       "dependsOn": [
@@ -30,7 +26,6 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [

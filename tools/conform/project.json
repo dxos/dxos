@@ -2,7 +2,6 @@
   "sourceRoot": "tools/conform/src",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/conform/src/index.ts",
         "outputPath": "tools/conform/dist",

@@ -15,6 +15,7 @@
     "chalk": "^4.1.0",
     "comment-json": "^4.2.3",
     "console-table-printer": "^2.11.0",
+    "deep-equal": "^2.2.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
     "lodash.sortby": "^4.7.0",

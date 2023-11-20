@@ -4,7 +4,6 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/phoenix/src/index.ts"
@@ -14,17 +13,13 @@
         "platforms": [
           "node"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
       "ciEnvironments": [
         "nodejs"
-      ],
-      "executor": "@dxos/test:run"
+      ]
     }
   },
   "implicitDependencies": [

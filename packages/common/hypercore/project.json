@@ -4,7 +4,6 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "alias": {
           "events": "node:events",
@@ -67,15 +66,10 @@
         ],
         "injectGlobals": true,
         "outputPath": "packages/common/hypercore/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/kai-sandbox/src/index.ts"
         ],
         "outputPath": "packages/experimental/kai-sandbox/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "prebuild": {

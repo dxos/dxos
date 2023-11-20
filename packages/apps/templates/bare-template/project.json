@@ -21,7 +21,6 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [

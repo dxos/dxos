@@ -4,17 +4,13 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/chess-app/src/index.ts",
           "packages/experimental/chess-app/src/proto/index.ts"
         ],
         "outputPath": "packages/experimental/chess-app/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "prebuild": {
@@ -45,7 +41,6 @@
       }
     },
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"

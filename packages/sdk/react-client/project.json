@@ -4,7 +4,6 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/react-client/src/devtools/index.ts",
@@ -16,10 +15,7 @@
           "packages/sdk/react-client/src/testing/index.ts"
         ],
         "outputPath": "packages/sdk/react-client/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "e2e": {
       "executor": "@dxos/test:run",
@@ -48,7 +44,6 @@
       }
     },
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"

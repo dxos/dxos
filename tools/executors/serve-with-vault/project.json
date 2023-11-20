@@ -10,10 +10,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/executors/serve-with-vault/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   },

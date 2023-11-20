@@ -118,7 +118,14 @@
       ]
     },
     "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "outputPath": "{projectRoot}/dist/lib"
+      },
       "inputs": ["production", "^production"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "dependsOn": [
         "^compile",
         "prebuild"

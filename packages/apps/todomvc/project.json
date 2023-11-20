@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/todomvc/src/index.ts",
         "outputPath": "packages/apps/todomvc/dist",

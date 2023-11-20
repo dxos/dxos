@@ -11,10 +11,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/executors/test/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   },

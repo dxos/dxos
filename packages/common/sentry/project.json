@@ -4,20 +4,15 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/sentry/src/index.ts"
         ],
         "outputPath": "packages/common/sentry/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false
       }

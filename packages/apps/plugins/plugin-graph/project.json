@@ -4,17 +4,13 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/plugins/plugin-graph/src/index.ts",
           "packages/apps/plugins/plugin-graph/src/meta.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-graph/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "storybook": {

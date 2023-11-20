@@ -60,7 +60,7 @@
         "{options.basePath}/gen"
       ]
     },
-    "test": { }
+    "test": {}
   },
   "implicitDependencies": [
     "nx-protobuf-compiler",

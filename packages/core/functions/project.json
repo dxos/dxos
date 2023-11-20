@@ -4,21 +4,16 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/functions/src/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/core/functions/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "environments": [
           "nodejs"

@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/client-protocol/src/index.ts"
         ],
         "outputPath": "packages/sdk/client-protocol/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "prebuild": {
@@ -25,9 +21,7 @@
         "packages/sdk/client-protocol/src/proto/gen"
       ]
     },
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

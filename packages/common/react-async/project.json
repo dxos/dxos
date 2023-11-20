@@ -4,20 +4,15 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/react-async/src/index.ts"
         ],
         "outputPath": "packages/common/react-async/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "domRequired": true,
         "forceExit": true

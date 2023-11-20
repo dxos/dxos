@@ -10,10 +10,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/executors/esbuild/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   },

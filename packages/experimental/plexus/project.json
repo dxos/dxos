@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/plexus/src/index.ts"
         ],
         "outputPath": "packages/experimental/plexus/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "storybook": {
@@ -29,7 +25,6 @@
       }
     },
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"

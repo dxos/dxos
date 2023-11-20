@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/gravity/proto-guard/src/index.ts",
         "outputPath": "packages/gravity/proto-guard/dist",
@@ -24,7 +23,6 @@
       }
     },
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "environments": [
           "nodejs"

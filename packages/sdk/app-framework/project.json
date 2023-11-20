@@ -4,16 +4,12 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/app-framework/src/index.ts"
         ],
         "outputPath": "packages/sdk/app-framework/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "storybook": {
@@ -28,7 +24,6 @@
       }
     },
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"

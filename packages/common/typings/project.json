@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/common/typings/src/index.d.ts",
         "outputPath": "packages/common/typings/dist/types",

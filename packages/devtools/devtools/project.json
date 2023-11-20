@@ -29,16 +29,12 @@
       ]
     },
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/devtools/devtools/src/index.ts"
         ],
         "outputPath": "packages/devtools/devtools/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "serve": {

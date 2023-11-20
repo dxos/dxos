@@ -4,17 +4,13 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/app-graph/src/index.ts",
           "packages/sdk/app-graph/src/testing.ts"
         ],
         "outputPath": "packages/sdk/app-graph/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "storybook": {
@@ -28,9 +24,7 @@
         "configDir": "packages/sdk/app-graph/.storybook"
       }
     },
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

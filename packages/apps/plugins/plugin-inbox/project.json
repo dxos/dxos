@@ -4,7 +4,6 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/plugins/plugin-inbox/src/index.ts",
@@ -14,10 +13,7 @@
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "storybook": {
@@ -31,9 +27,7 @@
         "configDir": "packages/apps/plugins/plugin-inbox/.storybook"
       }
     },
-    "test": {
-      "executor": "@dxos/test:run"
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

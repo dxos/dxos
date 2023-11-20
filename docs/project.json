@@ -15,7 +15,6 @@
       ]
     },
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "docs/src/index.ts",
         "outputPath": "docs/dist",
@@ -38,7 +37,6 @@
       ]
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

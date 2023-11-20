@@ -4,20 +4,15 @@
   "targets": {
     "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/labs-functions/src/index.ts"
         ],
         "outputPath": "packages/experimental/labs-functions/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"

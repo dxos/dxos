@@ -12,6 +12,7 @@ import { join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
+import deepEqual from 'deep-equal';
 
 const raise = (err: Error) => {
   throw err;
@@ -45,9 +46,23 @@ type ProjectJson = {
       executor?: string;
       options?: any;
       outputs?: string[];
+      inputs?: string[];
+      dependsOn?: string[];
     };
   };
 };
+
+type NxJson = {
+  targetDefaults: {
+    [target: string]: {
+      executor?: string;
+      options?: any;
+      outputs?: string[];
+      inputs?: string[];
+      dependsOn?: string[];
+    };
+  };
+}
 
 type PackageJson = {
   name: string;
@@ -200,6 +215,8 @@ class Toolbox {
    * - Sort keys.
    */
   async updateProjects() {
+    const nxJson = await loadJson<NxJson>(join(this.rootDir, 'nx.json'));
+
     console.log('Updating all project.json');
     for (const project of this.projects) {
       const projectPath = join(project.path, 'project.json');
@@ -207,6 +224,22 @@ class Toolbox {
       if (projectJson?.targets) {
 
         for (const target of Object.keys(projectJson.targets)) {
+          if(projectJson.targets[target].executor === nxJson.targetDefaults[target]?.executor) {
+            delete projectJson.targets[target].executor;
+          }
+
+          if(projectJson.targets[target].outputs && deepEqual(projectJson.targets[target].outputs, nxJson.targetDefaults[target]?.outputs)) {
+            delete projectJson.targets[target].outputs;
+          }
+          if(projectJson.targets[target].inputs && deepEqual(projectJson.targets[target].inputs, nxJson.targetDefaults[target]?.inputs)) {
+            delete projectJson.targets[target].outputs;
+          }
+          if(projectJson.targets[target].dependsOn && deepEqual(projectJson.targets[target].dependsOn, nxJson.targetDefaults[target]?.dependsOn)) {
+            delete projectJson.targets[target].outputs;
+          }
+            
+
+
           if (projectJson.targets[target].options && Object.keys(projectJson.targets[target].options).length === 0) {
             delete projectJson.targets[target].options;
           }

@@ -3,7 +3,6 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/gravity/gravity-dashboard/src/index.ts",
         "outputPath": "packages/gravity/gravity-dashboard/dist",

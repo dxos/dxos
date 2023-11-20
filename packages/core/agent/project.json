@@ -10,21 +10,16 @@
       }
     },
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/agent/src/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/core/agent/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
