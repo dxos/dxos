@@ -58,7 +58,8 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       const message = thread.messages[thread.messages.length - 1];
       if (message.__meta.keys.length === 0) {
         const messages = createRequest(space, message);
-        log('request', { messages });
+        log.info('request', { messages });
+        console.log('request', { messages });
 
         // TODO(burdon): Error handling (e.g., 401);
         const { content } = (await chat.request(messages)) ?? {};

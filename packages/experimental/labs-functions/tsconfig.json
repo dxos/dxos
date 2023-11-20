@@ -43,6 +43,12 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../core/echo/document-model"
+    },
+    {
+      "path": "../../core/echo/echo-generator"
+    },
+    {
       "path": "../../core/echo/echo-generator"
     },
     {
