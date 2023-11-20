@@ -13,6 +13,7 @@
     "DXOS",
     "Expando",
     "Faas",
+    "Hypergraph",
     "protobuf",
     "testutils"
   ],

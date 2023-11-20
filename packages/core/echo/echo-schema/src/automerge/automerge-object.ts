@@ -1,6 +1,6 @@
 import { DocHandle } from "@automerge/automerge-repo";
 import { EchoDatabase } from "../database";
-import { ObjectMeta, TypedObjectProperties, base, db, debug, subscribe } from "../object/types";
+import { EchoObject, ObjectMeta, TypedObjectProperties, base, db, debug, subscribe } from "../object/types";
 
 import { AbstractEchoObject } from "../object/object";
 import { dxos } from "../proto/gen/schema";
@@ -10,6 +10,9 @@ import { PublicKey } from "@dxos/keys";
 import { StackTrace, raise } from "@dxos/debug";
 import { failedInvariant, invariant } from "@dxos/invariant";
 import { type  TypedObjectOptions } from "../object";
+import { Reference } from "@dxos/document-model";
+import { compositeRuntime } from "../util";
+import { Event } from "@dxos/async";
 
 export type BindOptions = {
   db: AutomergeDb;
@@ -17,15 +20,25 @@ export type BindOptions = {
   path: string[];
 }
 export class AutomergeObject implements TypedObjectProperties {
-  private _db?: AutomergeDb;
+  private _database?: AutomergeDb;
   private _doc?: Doc<any>;
   private _docHandle?: DocHandle<any>;
   private _path: string[] = [];
+  protected readonly _signal = compositeRuntime.createSignal();
+
+  private _updates = new Event();
+
+  /**
+   * Until object is persisted in the database, the linked object references are stored in this cache.
+   * @internal
+   */
+  _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
   /**
    * @internal
    */
   _id = PublicKey.random().toHex();
+
 
   constructor (initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
@@ -69,7 +82,11 @@ export class AutomergeObject implements TypedObjectProperties {
 
   [subscribe](callback: (value: any) => void): () => void {
     this._docHandle?.on('change', callback);
-    return () => this._docHandle?.off('change', callback);
+    this._updates.on(callback);
+    return () => {
+      this._docHandle?.off('change', callback);
+      this._updates.off(callback);
+    };
   }
 
   private _initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
@@ -89,7 +106,7 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _bind(options: BindOptions) {
-    this._db = options.db;
+    this._database = options.db;
     this._docHandle = options.docHandle;
     this._path = options.path;
 
@@ -158,16 +175,74 @@ export class AutomergeObject implements TypedObjectProperties {
     if(value === undefined) {
       return null;
     }
+    if(value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+      const reference = this._linkObject(value);
+      return {
+        '@type': REFERENCE_TYPE_TAG,
+        itemId: reference.itemId,
+        protocol: reference.protocol,
+        host: reference.host,
+      }
+    }
     return value;
   }
 
   private _decode(value: any) {
+    if(typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
+      const reference = new Reference(value.itemId, value.protocol, value.host);
+      return this._lookupLink(reference);
+    }
+
     return value;
   }
 
   private _getDoc(): Doc<any> {
     return this._doc ?? this._docHandle?.docSync() ?? failedInvariant();
   }
+
+
+  /**
+   * Store referenced object.
+   * @internal
+   */
+  _linkObject(obj: EchoObject): Reference {
+    if (this._database) {
+      if (!obj[base]._database) {
+        this._database.add(obj);
+        return new Reference(obj.id);
+      } else {
+        if (obj[base]._database !== this._database) {
+          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+        } else {
+          return new Reference(obj.id);
+        }
+      }
+    } else {
+      invariant(this._linkCache);
+      this._linkCache.set(obj.id, obj);
+      return new Reference(obj.id);
+    }
+  }
+
+  /**
+   * Lookup referenced object.
+   * @internal
+   */
+  _lookupLink(ref: Reference): EchoObject | undefined {
+    if (this._database) {
+      // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
+      return this._database.graph._lookupLink(ref, this._database, this._onLinkResolved);
+    } else {
+      invariant(this._linkCache);
+      return this._linkCache.get(ref.itemId);
+    }
+  }
+
+  private _onLinkResolved = () => {
+    this._signal.notifyWrite();
+    this._updates.emit();
+  };
+
 }
 
 
@@ -186,3 +261,5 @@ const isValidKey = (key: string | symbol) => {
     key === '__deleted'
   );
 };
+
+const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';

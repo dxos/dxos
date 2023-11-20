@@ -367,7 +367,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
-      if (value instanceof AbstractEchoObject) {
+      if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
         const ref = this._linkObject(value);
         this._mutate(this._model.builder().set(key, ref).build(meta));
       } else if (value instanceof EchoArray) {
@@ -536,7 +536,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * Store referenced object.
    * @internal
    */
-  _linkObject(obj: AbstractEchoObject): Reference {
+  _linkObject(obj: EchoObject): Reference {
     if (this._database) {
       if (!obj[base]._database) {
         this._database.add(obj as TypedObject);

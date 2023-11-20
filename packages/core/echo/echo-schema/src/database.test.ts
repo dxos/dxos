@@ -215,7 +215,6 @@ describe('Database', () => {
       await db.flush();
 
       expect(task.title).toEqual('Fix bugs');
-      expect(task.assignee instanceof TypedObject).toBeTruthy();
       expect(task.assignee).toStrictEqual(john);
       expect(task.assignee.name).toEqual('John Doe');
     });

@@ -11,5 +11,6 @@ describe('AutomergeObject', () => {
     const obj = new Expando({})
     console.log(obj[base])
     expect(obj[base] instanceof AutomergeObject).to.eq(true)
+    expect(obj instanceof AutomergeObject).to.eq(true)
   })
 })
