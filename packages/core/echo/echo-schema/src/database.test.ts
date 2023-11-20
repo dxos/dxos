@@ -17,7 +17,6 @@ import { TestBuilder, createDatabase, testWithAutomerge } from './testing';
 
 describe('Database', () => {
   testWithAutomerge(() => {
-
     test('flush with test builder', async () => {
       const testBuilder = new TestBuilder();
       const peer = await testBuilder.createPeer();

@@ -2,16 +2,20 @@ import { invariant } from "@dxos/invariant";
 import { EchoObject, base } from "../object";
 import { AutomergeObject } from "./automerge-object";
 import { Hypergraph } from "../hypergraph";
-import { Repo as AutomergeRepo, DocHandle } from '@automerge/automerge-repo'
+import type { Repo as AutomergeRepo, DocHandle } from '@automerge/automerge-repo'
 
 export class AutomergeDb {
 
-  private readonly _repo: AutomergeRepo;
-  private readonly _docHandle: DocHandle<any>;
+  private _repo!: AutomergeRepo;
+  private _docHandle!: DocHandle<any>;
 
   constructor(
     public readonly graph: Hypergraph
   ) {
+  }
+
+  async open() {
+    const { Repo: AutomergeRepo } = await eval(`import('@automerge/automerge-repo')`);
     this._repo = new AutomergeRepo({
       network: [],
     })

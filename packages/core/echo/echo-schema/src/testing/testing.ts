@@ -36,6 +36,7 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph);
+  await db.automerge.open();
   graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
   return { db, host };
 };
@@ -51,6 +52,7 @@ export class TestBuilder {
     const base = await this.base.createPeer(spaceKey);
     const peer = new TestPeer(this, base, spaceKey);
     this.peers.set(peer.base.key, peer);
+    await peer.db.automerge.open();
     this.graph._register(spaceKey, peer.db);
     return peer;
   }
@@ -74,6 +76,7 @@ export class TestPeer {
   async reload() {
     await this.base.reload();
     this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
+    await this.db.automerge.open();
     this.builder.graph._register(this.spaceKey, this.db);
   }
 

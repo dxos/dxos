@@ -4,12 +4,12 @@ import { EchoObject, ObjectMeta, TypedObjectProperties, base, db, debug, subscri
 
 import { AbstractEchoObject } from "../object/object";
 import { dxos } from "../proto/gen/schema";
-import { next as automerge, Doc,  } from "@automerge/automerge";
+import { next as automerge, Doc, } from "@automerge/automerge";
 import { AutomergeDb } from "./automerge-db";
 import { PublicKey } from "@dxos/keys";
 import { StackTrace, raise } from "@dxos/debug";
 import { failedInvariant, invariant } from "@dxos/invariant";
-import { type  TypedObjectOptions } from "../object";
+import { type TypedObjectOptions } from "../object";
 import { Reference } from "@dxos/document-model";
 import { compositeRuntime } from "../util";
 import { Event } from "@dxos/async";
@@ -40,9 +40,9 @@ export class AutomergeObject implements TypedObjectProperties {
   _id = PublicKey.random().toHex();
 
 
-  constructor (initialProps?: unknown, opts?: TypedObjectOptions) {
+  constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
-   
+
     return this._createProxy([]);
   }
 
@@ -61,7 +61,7 @@ export class AutomergeObject implements TypedObjectProperties {
   get __deleted(): boolean {
     return this._getDoc().deleted;
   }
-  
+
   toJSON() {
     return this._getDoc();
   }
@@ -110,7 +110,7 @@ export class AutomergeObject implements TypedObjectProperties {
     this._docHandle = options.docHandle;
     this._path = options.path;
 
-    if(this._doc) {
+    if (this._doc) {
       this._set([], this._doc);
       this._doc = undefined;
     }
@@ -119,9 +119,10 @@ export class AutomergeObject implements TypedObjectProperties {
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
       ownKeys: () => {
-        return Object.keys(this._get(path));
+        return [];
+        // return Object.keys(this._get(path));
       },
-      
+
       has: (_, key) => {
         return key in this._get(path);
       },
@@ -134,11 +135,18 @@ export class AutomergeObject implements TypedObjectProperties {
       },
 
       get: (_, key) => {
-        if(!isValidKey(key)) {
+        if (!isValidKey(key)) {
           return Reflect.get(this, key);
         }
 
-        return this._get([...path, key as string]);
+        const value = this._get([...path, key as string]);
+
+
+        if (typeof value === 'object' && value !== null) { // TODO(dmaretskyi): Check for Reference types.
+          return this._createProxy(path);
+        }
+
+        return value;
       },
 
       set: (_, key, value) => {
@@ -151,12 +159,8 @@ export class AutomergeObject implements TypedObjectProperties {
   private _get(path: string[]) {
     const fullPath = [...this._path, ...path];
     let value = this._doc as any;
-    for(const key of fullPath) {
+    for (const key of fullPath) {
       value = value[key];
-    }
-
-    if(typeof value === 'object' && value !== null) { // TODO(dmaretskyi): Check for Reference types.
-      return this._createProxy(path);
     }
 
     return this._decode(value);
@@ -165,17 +169,17 @@ export class AutomergeObject implements TypedObjectProperties {
   private _set(path: string[], value: any) {
     const fullPath = [...this._path, ...path];
     let parent = this._doc as any;
-    for(const key of fullPath.slice(0, -1)) {
+    for (const key of fullPath.slice(0, -1)) {
       parent = parent[key];
     }
     parent[fullPath.at(-1)!] = this._encode(value);
   }
 
   private _encode(value: any) {
-    if(value === undefined) {
+    if (value === undefined) {
       return null;
     }
-    if(value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+    if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
       const reference = this._linkObject(value);
       return {
         '@type': REFERENCE_TYPE_TAG,
@@ -188,7 +192,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   private _decode(value: any) {
-    if(typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
+    if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
       const reference = new Reference(value.itemId, value.protocol, value.host);
       return this._lookupLink(reference);
     }
