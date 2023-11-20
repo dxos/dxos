@@ -2,17 +2,7 @@
   "sourceRoot": "packages/apps/plugins/plugin-graph/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-graph/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-graph/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-graph/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

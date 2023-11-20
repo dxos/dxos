@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/chess-app/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/chess-app/src/index.ts",
-        "outputPath": "packages/experimental/chess-app/dist/types",
-        "tsConfig": "packages/experimental/chess-app/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

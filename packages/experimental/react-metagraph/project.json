@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/react-metagraph/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/react-metagraph/src/index.ts",
-        "outputPath": "packages/experimental/react-metagraph/dist/types",
-        "tsConfig": "packages/experimental/react-metagraph/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

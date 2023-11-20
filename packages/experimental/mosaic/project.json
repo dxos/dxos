@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/mosaic/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/mosaic/src/index.ts",
-        "outputPath": "packages/experimental/mosaic/dist/types",
-        "tsConfig": "packages/experimental/mosaic/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

@@ -2,17 +2,7 @@
   "sourceRoot": "packages/sdk/vault/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/vault/src/index.ts",
-        "outputPath": "packages/sdk/vault/dist/types",
-        "tsConfig": "packages/sdk/vault/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {

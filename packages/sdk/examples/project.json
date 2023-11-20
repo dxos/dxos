@@ -1,17 +1,7 @@
 {
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/examples/src/index.ts",
-        "outputPath": "packages/sdk/examples/dist/types",
-        "tsConfig": "packages/sdk/examples/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {

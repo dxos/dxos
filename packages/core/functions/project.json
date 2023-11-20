@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/functions/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/functions/src/index.ts",
-        "outputPath": "packages/core/functions/dist/types",
-        "tsConfig": "packages/core/functions/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

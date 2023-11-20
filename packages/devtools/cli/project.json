@@ -20,10 +20,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "packages/devtools/cli/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "prebuild": {

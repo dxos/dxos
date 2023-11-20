@@ -2,17 +2,7 @@
   "sourceRoot": "packages/ui/primitives/react-input/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/primitives/react-input/src/index.ts",
-        "outputPath": "packages/ui/primitives/react-input/dist/types",
-        "tsConfig": "packages/ui/primitives/react-input/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "dependsOn": [
         "compile-lib"

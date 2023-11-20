@@ -18,8 +18,7 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",

@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/mesh/signal/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/signal/src/index.ts",
-        "outputPath": "packages/core/mesh/signal/dist/types",
-        "tsConfig": "packages/core/mesh/signal/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

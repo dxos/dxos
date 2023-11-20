@@ -11,10 +11,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "packages/gravity/proto-guard/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "storage": {

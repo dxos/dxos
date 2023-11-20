@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/mesh/teleport/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/teleport/src/index.ts",
-        "outputPath": "packages/core/mesh/teleport/dist/types",
-        "tsConfig": "packages/core/mesh/teleport/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

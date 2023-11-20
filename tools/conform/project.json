@@ -10,10 +10,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/conform/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "dev": {
       "dependsOn": [

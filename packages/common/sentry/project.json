@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/sentry/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/sentry/src/index.ts",
-        "outputPath": "packages/common/sentry/dist/types",
-        "tsConfig": "packages/common/sentry/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

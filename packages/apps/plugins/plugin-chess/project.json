@@ -2,17 +2,7 @@
   "sourceRoot": "packages/apps/plugins/plugin-chess/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-chess/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-chess/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-chess/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

@@ -2,17 +2,7 @@
   "sourceRoot": "packages/sdk/client-protocol/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/client-protocol/src/index.ts",
-        "outputPath": "packages/sdk/client-protocol/dist/types",
-        "tsConfig": "packages/sdk/client-protocol/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -36,8 +26,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [

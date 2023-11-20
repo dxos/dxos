@@ -50,7 +50,16 @@
   },
   "targetDefaults": {
     "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist/types",
+        "tsConfig": "{projectRoot}/tsconfig.json"
+      },
       "inputs": ["production", "^production"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "dependsOn": [
         "^build",
         "prebuild",

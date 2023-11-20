@@ -3,18 +3,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/core/agent/src/index.ts",
-        "outputPath": "packages/core/agent/dist/types",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/agent/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
     "compile": {
       "executor": "@dxos/esbuild:build",

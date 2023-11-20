@@ -11,10 +11,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "packages/apps/todomvc/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "bundle": {
       "executor": "@nx/vite:build",

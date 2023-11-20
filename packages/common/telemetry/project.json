@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/telemetry/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/telemetry/src/index.ts",
-        "outputPath": "packages/common/telemetry/dist/types",
-        "tsConfig": "packages/common/telemetry/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

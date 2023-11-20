@@ -2,17 +2,7 @@
   "sourceRoot": "packages/sdk/app-framework/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/app-framework/src/index.ts",
-        "outputPath": "packages/sdk/app-framework/dist/types",
-        "tsConfig": "packages/sdk/app-framework/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

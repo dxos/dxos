@@ -11,10 +11,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/presenter/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     }
   }
 }

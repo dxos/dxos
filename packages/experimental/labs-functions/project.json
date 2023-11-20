@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/labs-functions/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/labs-functions/src/index.ts",
-        "outputPath": "packages/experimental/labs-functions/dist/types",
-        "tsConfig": "packages/experimental/labs-functions/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

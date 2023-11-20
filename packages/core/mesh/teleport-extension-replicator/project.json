@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/mesh/teleport-extension-replicator/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/teleport-extension-replicator/src/index.ts",
-        "outputPath": "packages/core/mesh/teleport-extension-replicator/dist/types",
-        "tsConfig": "packages/core/mesh/teleport-extension-replicator/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

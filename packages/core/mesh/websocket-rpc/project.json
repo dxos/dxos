@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/mesh/websocket-rpc/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/websocket-rpc/src/index.ts",
-        "outputPath": "packages/core/mesh/websocket-rpc/dist/types",
-        "tsConfig": "packages/core/mesh/websocket-rpc/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

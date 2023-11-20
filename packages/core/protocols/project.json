@@ -65,8 +65,7 @@
         "^compile",
         "prebuild"
       ],
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [

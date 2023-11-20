@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/plate/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/plate/src/index.ts",
-        "outputPath": "packages/common/plate/dist/types",
-        "tsConfig": "packages/common/plate/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

@@ -2,17 +2,7 @@
   "sourceRoot": "packages/ui/primitives/react-list/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/primitives/react-list/src/index.ts",
-        "outputPath": "packages/ui/primitives/react-list/dist/types",
-        "tsConfig": "packages/ui/primitives/react-list/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

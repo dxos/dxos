@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/lock-file/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/lock-file/src/index.ts",
-        "outputPath": "packages/common/lock-file/dist/types",
-        "tsConfig": "packages/common/lock-file/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

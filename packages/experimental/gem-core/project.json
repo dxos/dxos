@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/gem-core/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/gem-core/src/index.ts",
-        "outputPath": "packages/experimental/gem-core/dist/types",
-        "tsConfig": "packages/experimental/gem-core/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

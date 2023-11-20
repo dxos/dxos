@@ -2,17 +2,7 @@
   "sourceRoot": "packages/ui/react-ui-editor/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/react-ui-editor/src/index.ts",
-        "outputPath": "packages/ui/react-ui-editor/dist/types",
-        "tsConfig": "packages/ui/react-ui-editor/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

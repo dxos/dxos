@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/random-access-storage/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/random-access-storage/src/index.ts",
-        "outputPath": "packages/common/random-access-storage/dist/types",
-        "tsConfig": "packages/common/random-access-storage/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -28,8 +18,7 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [

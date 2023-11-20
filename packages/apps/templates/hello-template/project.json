@@ -8,10 +8,7 @@
         "main": "packages/apps/templates/hello-template/src/index.ts",
         "outputPath": "packages/apps/templates/hello-template/dist",
         "tsConfig": "packages/apps/templates/hello-template/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {

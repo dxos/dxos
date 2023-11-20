@@ -8,10 +8,7 @@
         "main": "packages/core/echo/echo-typegen/src/main.ts",
         "outputPath": "packages/core/echo/echo-typegen/dist/types",
         "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "compile": {
       "executor": "@dxos/esbuild:build",
@@ -31,8 +28,7 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   }
 }

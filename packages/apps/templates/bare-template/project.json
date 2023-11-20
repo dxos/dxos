@@ -8,10 +8,7 @@
         "main": "packages/apps/templates/bare-template/src/config.t.ts",
         "outputPath": "packages/apps/templates/bare-template/dist",
         "tsConfig": "packages/apps/templates/bare-template/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "gen": {
       "executor": "nx:run-script",

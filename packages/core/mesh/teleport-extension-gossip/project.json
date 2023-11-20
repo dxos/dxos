@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/mesh/teleport-extension-gossip/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/teleport-extension-gossip/src/index.ts",
-        "outputPath": "packages/core/mesh/teleport-extension-gossip/dist/types",
-        "tsConfig": "packages/core/mesh/teleport-extension-gossip/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

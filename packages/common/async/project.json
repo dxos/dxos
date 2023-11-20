@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/async/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/async/src/index.ts",
-        "outputPath": "packages/common/async/dist/types",
-        "tsConfig": "packages/common/async/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -27,8 +17,7 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [

@@ -3,18 +3,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/halo-app/src/index.ts",
-        "outputPath": "packages/apps/halo-app/dist/types",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/apps/halo-app/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
     "bundle": {
       "executor": "@nx/vite:build",

@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/local-storage/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/local-storage/src/index.ts",
-        "outputPath": "packages/common/local-storage/dist/types",
-        "tsConfig": "packages/common/local-storage/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

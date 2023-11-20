@@ -2,17 +2,7 @@
   "sourceRoot": "packages/apps/plugins/plugin-kanban/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-kanban/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-kanban/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-kanban/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -42,8 +32,7 @@
       }
     },
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [

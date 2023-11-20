@@ -2,17 +2,7 @@
   "sourceRoot": "packages/apps/plugins/plugin-explorer/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-explorer/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-explorer/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-explorer/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

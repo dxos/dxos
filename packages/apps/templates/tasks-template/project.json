@@ -8,10 +8,7 @@
         "main": "packages/apps/templates/tasks-template/src/index.ts",
         "outputPath": "packages/apps/templates/tasks-template/dist",
         "tsConfig": "packages/apps/templates/tasks-template/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {},
     "test": {

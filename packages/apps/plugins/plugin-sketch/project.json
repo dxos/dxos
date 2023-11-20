@@ -2,17 +2,7 @@
   "sourceRoot": "packages/apps/plugins/plugin-sketch/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-sketch/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-sketch/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-sketch/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

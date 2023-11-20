@@ -8,10 +8,7 @@
         "main": "packages/gravity/gravity-dashboard/src/index.ts",
         "outputPath": "packages/gravity/gravity-dashboard/dist",
         "tsConfig": "packages/gravity/gravity-dashboard/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {}
   }

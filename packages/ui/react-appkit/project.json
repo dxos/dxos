@@ -2,17 +2,7 @@
   "sourceRoot": "packages/ui/react-appkit/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/react-appkit/src/index.ts",
-        "outputPath": "packages/ui/react-appkit/dist/types",
-        "tsConfig": "packages/ui/react-appkit/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

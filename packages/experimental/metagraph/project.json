@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/metagraph/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/metagraph/src/index.ts",
-        "outputPath": "packages/experimental/metagraph/dist/types",
-        "tsConfig": "packages/experimental/metagraph/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "dependsOn": [
         "compile-lib",
@@ -60,8 +50,7 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [

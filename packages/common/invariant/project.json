@@ -2,17 +2,7 @@
   "sourceRoot": "packages/common/invariant/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/invariant/src/index.ts",
-        "outputPath": "packages/common/invariant/dist/types",
-        "tsConfig": "packages/common/invariant/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

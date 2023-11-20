@@ -11,10 +11,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "bundle": {
       "executor": "@nx/vite:build",

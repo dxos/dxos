@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/mesh/messaging/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/messaging/src/index.ts",
-        "outputPath": "packages/core/mesh/messaging/dist/types",
-        "tsConfig": "packages/core/mesh/messaging/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

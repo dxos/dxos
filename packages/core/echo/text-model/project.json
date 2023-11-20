@@ -2,17 +2,7 @@
   "sourceRoot": "packages/core/echo/text-model/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/echo/text-model/src/index.ts",
-        "outputPath": "packages/core/echo/text-model/dist/types",
-        "tsConfig": "packages/core/echo/text-model/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -27,8 +17,7 @@
     },
     "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [

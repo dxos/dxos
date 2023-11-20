@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/kodama/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/kodama/src/index.ts",
-        "outputPath": "packages/experimental/kodama/dist/types",
-        "tsConfig": "packages/experimental/kodama/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {

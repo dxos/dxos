@@ -2,17 +2,7 @@
   "sourceRoot": "packages/apps/plugins/plugin-thread/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-thread/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-thread/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-thread/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -42,8 +32,7 @@
       }
     },
     "test": {
-      "executor": "@dxos/test:run",
-      "options": {}
+      "executor": "@dxos/test:run"
     }
   },
   "implicitDependencies": [
