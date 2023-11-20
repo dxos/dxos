@@ -3366,8 +3366,8 @@ importers:
         specifier: ~16.2.0
         version: 16.2.0
       zod:
-        specifier: ^3.19.1
-        version: 3.20.2
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@types/callsite':
         specifier: ^1.0.31
@@ -3778,13 +3778,13 @@ importers:
         version: 4.18.2
       isomorphic-ws:
         specifier: ^4.0.1
-        version: 4.0.1(ws@7.5.9)
+        version: 4.0.1(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
       langchain:
         specifier: ^0.0.180
-        version: 0.0.180(fast-xml-parser@4.3.2)(jsdom@20.0.1)(ws@7.5.9)
+        version: 0.0.180(fast-xml-parser@4.3.2)(jsdom@20.0.1)(ws@8.14.2)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -3792,11 +3792,17 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       ws:
-        specifier: ^7.4.4
-        version: 7.5.9
+        specifier: ^8.14.2
+        version: 8.14.2
       yaml:
         specifier: ^2.1.3
         version: 2.2.2
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+      zod-to-json-schema:
+        specifier: ^3.22.0
+        version: 3.22.0(zod@3.22.4)
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -4522,10 +4528,10 @@ importers:
         version: link:../../../common/util
       isomorphic-ws:
         specifier: ^4.0.1
-        version: 4.0.1(ws@7.5.9)
+        version: 4.0.1(ws@8.14.2)
       ws:
-        specifier: ^7.4.4
-        version: 7.5.9
+        specifier: ^8.14.2
+        version: 8.14.2
     devDependencies:
       '@dxos/signal':
         specifier: workspace:*
@@ -4595,7 +4601,7 @@ importers:
         version: 0.5.3
       isomorphic-ws:
         specifier: ^4.0.1
-        version: 4.0.1(ws@7.5.9)
+        version: 4.0.1(ws@8.14.2)
       nanomessage-rpc:
         specifier: ^3.0.0
         version: 3.2.0
@@ -4615,8 +4621,8 @@ importers:
         specifier: ^1.3.1
         version: 1.3.1
       ws:
-        specifier: ^7.4.4
-        version: 7.5.9
+        specifier: ^8.14.2
+        version: 8.14.2
       xor-distance:
         specifier: ^2.0.0
         version: 2.0.0
@@ -4948,10 +4954,10 @@ importers:
         version: link:../../../common/util
       isomorphic-ws:
         specifier: ^4.0.1
-        version: 4.0.1(ws@7.5.9)
+        version: 4.0.1(ws@8.14.2)
       ws:
-        specifier: ^7.4.4
-        version: 7.5.9
+        specifier: ^8.14.2
+        version: 8.14.2
     devDependencies:
       '@types/node':
         specifier: ^18.11.9
@@ -5085,7 +5091,7 @@ importers:
         version: 56.0.3(node-fetch@2.6.7)
       isomorphic-ws:
         specifier: ^4.0.1
-        version: 4.0.1(ws@7.5.9)
+        version: 4.0.1(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -5105,8 +5111,8 @@ importers:
         specifier: ^8.3.2
         version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
       ws:
-        specifier: ^7.4.4
-        version: 7.5.9
+        specifier: ^8.14.2
+        version: 8.14.2
     devDependencies:
       '@oclif/test':
         specifier: ^2.3.31
@@ -5235,7 +5241,7 @@ importers:
         version: 2.3.1
       isomorphic-ws:
         specifier: ^4.0.1
-        version: 4.0.1(ws@7.5.9)
+        version: 4.0.1(ws@8.14.2)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -5270,8 +5276,8 @@ importers:
         specifier: ^9.0.0
         version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
       ws:
-        specifier: ^7.4.4
-        version: 7.5.9
+        specifier: ^8.14.2
+        version: 8.14.2
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -6593,7 +6599,7 @@ importers:
         version: 5.3.2
       isomorphic-ws:
         specifier: ^4.0.1
-        version: 4.0.1(ws@7.5.9)
+        version: 4.0.1(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -6616,8 +6622,8 @@ importers:
         specifier: ^5.5.2
         version: 5.5.2
       ws:
-        specifier: ^7.4.4
-        version: 7.5.9
+        specifier: ^8.14.2
+        version: 8.14.2
       yargs:
         specifier: ~16.2.0
         version: 16.2.0
@@ -6714,8 +6720,8 @@ importers:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
       zod:
-        specifier: ^3.19.1
-        version: 3.20.2
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@types/react':
         specifier: ^18.0.21
@@ -18443,7 +18449,7 @@ packages:
       ts-dedent: 2.2.0
       util-deprecate: 1.0.2
       watchpack: 2.4.0
-      ws: 8.13.0
+      ws: 8.14.2
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -30767,12 +30773,12 @@ packages:
       - encoding
     dev: true
 
-  /isomorphic-ws@4.0.1(ws@7.5.9):
+  /isomorphic-ws@4.0.1(ws@8.14.2):
     resolution: {integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==}
     peerDependencies:
       ws: '*'
     dependencies:
-      ws: 7.5.9
+      ws: 8.14.2
     dev: false
 
   /isomorphic.js@0.2.5:
@@ -32065,7 +32071,7 @@ packages:
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
       whatwg-url: 11.0.0
-      ws: 8.13.0
+      ws: 8.14.2
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -32607,13 +32613,13 @@ packages:
       uuid: 9.0.0
       yaml: 2.2.2
       zod: 3.22.4
-      zod-to-json-schema: 3.21.4(zod@3.22.4)
+      zod-to-json-schema: 3.22.0(zod@3.22.4)
     transitivePeerDependencies:
       - encoding
       - supports-color
     dev: false
 
-  /langchain@0.0.180(fast-xml-parser@4.3.2)(jsdom@20.0.1)(ws@7.5.9):
+  /langchain@0.0.180(fast-xml-parser@4.3.2)(jsdom@20.0.1)(ws@8.14.2):
     resolution: {integrity: sha512-/70mZsBAUcGZHiHTEs0pO1+xyVwj4X1FMl2LmTuBv83/+yNYkAJJg5+rLI9u6Obj7ZcsoNmqIPpsOL5rx2yJww==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -32931,10 +32937,10 @@ packages:
       p-queue: 6.6.2
       p-retry: 4.6.2
       uuid: 9.0.0
-      ws: 7.5.9
+      ws: 8.14.2
       yaml: 2.2.2
       zod: 3.22.4
-      zod-to-json-schema: 3.21.4(zod@3.22.4)
+      zod-to-json-schema: 3.22.0(zod@3.22.4)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -43906,6 +43912,19 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+    dev: true
+
+  /ws@8.14.2:
+    resolution: {integrity: sha512-wEBG1ftX4jcglPxgFCMJmZ2PLtSbJ2Peg6TmpJFTbe9GZYOQCDPdMYu/Tm0/bGZkw8paZnJY45J4K2PZrLYq8g==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   /wtfnode@0.9.1:
     resolution: {integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==}
@@ -44348,16 +44367,12 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /zod-to-json-schema@3.21.4(zod@3.22.4):
-    resolution: {integrity: sha512-fjUZh4nQ1s6HMccgIeE0VP4QG/YRGPmyjO9sAh890aQKPEk3nqbfUXhMFaC+Dr5KvYBm8BCyvfpZf2jY9aGSsw==}
+  /zod-to-json-schema@3.22.0(zod@3.22.4):
+    resolution: {integrity: sha512-XQr8EwxPMzJGhoR+d/nRFWdi15VaZ+R5Uhssm+Xx5yS30xCpuutfKRm4rerE0SK9j2dWB5Z3FvDD0w8WMVGzkA==}
     peerDependencies:
-      zod: ^3.21.4
+      zod: ^3.22.4
     dependencies:
       zod: 3.22.4
-    dev: false
-
-  /zod@3.20.2:
-    resolution: {integrity: sha512-1MzNQdAvO+54H+EaK5YpyEy0T+Ejo/7YLHS93G3RnYWh5gaotGHwGeN/ZO687qEDU2y4CdStQYXVHIgrUl5UVQ==}
     dev: false
 
   /zod@3.22.4:
