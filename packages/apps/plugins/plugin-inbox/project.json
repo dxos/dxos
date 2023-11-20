@@ -2,46 +2,19 @@
   "sourceRoot": "packages/apps/plugins/plugin-inbox/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-inbox/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-inbox/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-inbox/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/plugins/plugin-inbox/src/index.ts",
           "packages/apps/plugins/plugin-inbox/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-inbox/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-inbox/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -53,25 +26,7 @@
         "configDir": "packages/apps/plugins/plugin-inbox/.storybook"
       }
     },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-inbox",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-inbox",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-inbox",
-        "testPatterns": [
-          "packages/apps/plugins/plugin-inbox/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-inbox/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

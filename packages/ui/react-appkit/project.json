@@ -2,46 +2,19 @@
   "sourceRoot": "packages/ui/react-appkit/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/react-appkit/src/index.ts",
-        "outputPath": "packages/ui/react-appkit/dist/types",
-        "tsConfig": "packages/ui/react-appkit/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/ui/react-appkit/src/index.ts",
           "packages/ui/react-appkit/src/telemetry/index.ts"
         ],
-        "outputPath": "packages/ui/react-appkit/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/ui/react-appkit/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {

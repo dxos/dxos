@@ -1,3 +1,5 @@
+/* eslint-disable */ 
+
 //
 // Copyright 2021 DXOS.org
 //
