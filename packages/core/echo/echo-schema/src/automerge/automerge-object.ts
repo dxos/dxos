@@ -4,7 +4,7 @@ import { EchoObject, ObjectMeta, TypedObjectProperties, base, db, debug, subscri
 
 import { AbstractEchoObject } from "../object/object";
 import { dxos } from "../proto/gen/schema";
-import { next as automerge, Doc, } from "@automerge/automerge";
+import { next as automerge, ChangeFn, Doc, } from "@automerge/automerge";
 import { AutomergeDb } from "./automerge-db";
 import { PublicKey } from "@dxos/keys";
 import { StackTrace, raise } from "@dxos/debug";
@@ -13,6 +13,7 @@ import { type TypedObjectOptions } from "../object";
 import { Reference } from "@dxos/document-model";
 import { compositeRuntime } from "../util";
 import { Event } from "@dxos/async";
+import { log } from "@dxos/log";
 
 export type BindOptions = {
   db: AutomergeDb;
@@ -43,7 +44,7 @@ export class AutomergeObject implements TypedObjectProperties {
   constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
 
-    return this._createProxy([]);
+    return this._createProxy(['data']);
   }
 
   get __typename(): string | undefined {
@@ -153,14 +154,14 @@ export class AutomergeObject implements TypedObjectProperties {
         this._set([...path, key as string], value);
         return true;
       },
-    });
+  });
   }
 
   private _get(path: string[]) {
     const fullPath = [...this._path, ...path];
-    let value = this._doc as any;
+    let value = this._getDoc();
     for (const key of fullPath) {
-      value = value[key];
+      value = value?.[key];
     }
 
     return this._decode(value);
@@ -168,11 +169,23 @@ export class AutomergeObject implements TypedObjectProperties {
 
   private _set(path: string[], value: any) {
     const fullPath = [...this._path, ...path];
-    let parent = this._doc as any;
-    for (const key of fullPath.slice(0, -1)) {
-      parent = parent[key];
+
+    const changeFn: ChangeFn<any> = doc => {
+      let parent = doc;
+      for (const key of fullPath.slice(0, -1)) {
+        parent[key] ??= {};
+        parent = parent[key];
+      }
+      parent[fullPath.at(-1)!] = this._encode(value);
     }
-    parent[fullPath.at(-1)!] = this._encode(value);
+
+    if(this._docHandle) {
+      this._docHandle.change(changeFn)
+    } else if(this._doc) {
+      this._doc = automerge.change(this._doc, changeFn);
+    } else {
+      failedInvariant();
+    }
   }
 
   private _encode(value: any) {
@@ -215,7 +228,7 @@ export class AutomergeObject implements TypedObjectProperties {
         this._database.add(obj);
         return new Reference(obj.id);
       } else {
-        if (obj[base]._database !== this._database) {
+        if (obj[base]._database as any !== this._database) {
           return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
         } else {
           return new Reference(obj.id);

@@ -16,6 +16,7 @@ export const createMethodLogDecorator = (log: LogMethods) => (arg0?: never, arg1
       try {
         const result = method.apply(this, args);
         log.info(`${propertyKey as string}(${formattedArgs}) => ${inspect(result, false, 1, true)}`, {}, combinedMeta);
+        return result;
       } catch (err) {
         log.error(`${propertyKey as string}(${formattedArgs}) 🔥 ${err}`, {}, combinedMeta);
         throw err;

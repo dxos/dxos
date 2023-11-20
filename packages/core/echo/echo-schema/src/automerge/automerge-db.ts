@@ -37,8 +37,13 @@ export class AutomergeDb {
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
       db: this,
-      docHandle: this._getDocHandle(),
+      docHandle: this._docHandle,
+      path: ['objects', obj.id]
     })  
     return obj
+  }
+
+  remove<T extends EchoObject>(obj: T) {
+    throw new Error('Not implemented');
   }
 }

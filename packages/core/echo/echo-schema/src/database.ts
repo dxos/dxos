@@ -41,7 +41,7 @@ export class EchoDatabase {
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
-  public readonly automerge = new AutomergeDb();
+  public readonly automerge = new AutomergeDb(this._graph);
 
   constructor(
     /**
@@ -154,6 +154,10 @@ export class EchoDatabase {
    * Remove object.
    */
   remove<T extends EchoObject>(obj: T) {
+    if(obj[base] instanceof AutomergeObject) {
+      return this.automerge.remove(obj);
+    }
+
     log('remove', { id: obj.id, type: (obj as any).__typename });
 
     this._backend.mutate({

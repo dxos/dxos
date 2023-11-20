@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
-import { data, Expando, TypedObject } from './object';
+import { data, Expando, getGlobalAutomergePreference, TypedObject } from './object';
 import { Schema } from './proto';
 import { TestBuilder, createDatabase, testWithAutomerge } from './testing';
 
@@ -24,20 +24,21 @@ describe('Database', () => {
       await testBuilder.flushAll();
     });
 
-    test('inspect', async () => {
-      const { db } = await createDatabase();
+    if (!getGlobalAutomergePreference())
+      test('inspect', async () => {
+        const { db } = await createDatabase();
 
-      const task = new TypedObject({
-        title: 'Main task',
-        tags: ['red', 'green'],
-        assignee: new TypedObject({ name: 'Bob' }),
+        const task = new TypedObject({
+          title: 'Main task',
+          tags: ['red', 'green'],
+          assignee: new TypedObject({ name: 'Bob' }),
+        });
+        db.add(task);
+        await db.flush();
+
+        inspect(task);
+        // console.log(task);
       });
-      db.add(task);
-      await db.flush();
-
-      inspect(task);
-      // console.log(task);
-    });
 
     test('adding and querying objects', async () => {
       const { db } = await createDatabase();
@@ -53,29 +54,30 @@ describe('Database', () => {
       expect(objects).toHaveLength(n);
     });
 
-    test('removing objects', async () => {
-      const { db } = await createDatabase();
+    if (!getGlobalAutomergePreference())
+      test('removing objects', async () => {
+        const { db } = await createDatabase();
 
-      const n = 10;
-      for (const _ of Array.from({ length: n })) {
-        const obj = new TypedObject();
-        db.add(obj);
-      }
-      await db.flush();
+        const n = 10;
+        for (const _ of Array.from({ length: n })) {
+          const obj = new TypedObject();
+          db.add(obj);
+        }
+        await db.flush();
 
-      {
-        const { objects } = db.query();
-        expect(objects).toHaveLength(n);
-      }
+        {
+          const { objects } = db.query();
+          expect(objects).toHaveLength(n);
+        }
 
-      db.remove(db.query().objects[0]);
-      await db.flush();
+        db.remove(db.query().objects[0]);
+        await db.flush();
 
-      {
-        const { objects } = db.query();
-        expect(objects).toHaveLength(n - 1);
-      }
-    });
+        {
+          const { objects } = db.query();
+          expect(objects).toHaveLength(n - 1);
+        }
+      });
 
     // TODO(burdon): 100 times (not batched).
     test.skip('flush callback', async () => {
