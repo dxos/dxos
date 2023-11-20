@@ -26,9 +26,9 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
+import { AutomergeObject } from '../automerge/automerge-object';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
-import { AutomergeObject } from '../automerge/automerge-object';
 
 const isValidKey = (key: string | symbol) => {
   return !(
@@ -95,7 +95,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
-    if(opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
       return new AutomergeObject(initialProps, opts) as any;
     }
 
@@ -643,9 +643,13 @@ let globalAutomergePreference: boolean | undefined;
 
 export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
   globalAutomergePreference = useAutomerge;
-}
+};
 
 export const getGlobalAutomergePreference = () => {
-  return globalAutomergePreference ?? (globalThis as any).DXOS_FORCE_AUTOMERGE ?? (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ?? false;
-}
-
+  return (
+    globalAutomergePreference ??
+    (globalThis as any).DXOS_FORCE_AUTOMERGE ??
+    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
+    false
+  );
+};

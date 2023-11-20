@@ -17,8 +17,8 @@ import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { schemaBuiltin } from '../proto';
 import { setGlobalAutomergePreference } from '../object';
+import { schemaBuiltin } from '../proto';
 
 /**
  * @deprecated Use TestBuilder.
@@ -97,12 +97,12 @@ export const testWithAutomerge = (tests: () => void) => {
   describe('with automerge', () => {
     before(() => {
       setGlobalAutomergePreference(true);
-    })
-    
+    });
+
     after(() => {
       setGlobalAutomergePreference(false);
-    })
-    
+    });
+
     setGlobalAutomergePreference(true);
     tests();
     setGlobalAutomergePreference(false);
@@ -111,4 +111,4 @@ export const testWithAutomerge = (tests: () => void) => {
   describe('without automerge', () => {
     tests();
   });
-} 
+};

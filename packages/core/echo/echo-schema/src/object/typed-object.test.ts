@@ -9,7 +9,6 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { Expando, TypedObject, getGlobalAutomergePreference } from './typed-object';
-import { testWithAutomerge } from '../testing';
 
 describe('TypedObject', () => {
   test('instance of TypedObject', async () => {

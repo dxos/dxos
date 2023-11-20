@@ -320,5 +320,5 @@ describe('Database', () => {
         expect(obj.__schema).toEqual(schema);
       });
     }
-  })
+  });
 });

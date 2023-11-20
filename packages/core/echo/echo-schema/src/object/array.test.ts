@@ -8,7 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
 import { Expando, TypedObject } from './typed-object';
-import { createDatabase, testWithAutomerge } from '../testing';
+import { createDatabase } from '../testing';
 
 describe('Arrays', () => {
   test('array of tags', async () => {
