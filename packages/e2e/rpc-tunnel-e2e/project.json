@@ -46,19 +46,7 @@
         "{options.resultsPath}"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/e2e/rpc-tunnel-e2e/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": { },
     "serve": {
       "executor": "@nx/vite:dev-server",
       "options": {

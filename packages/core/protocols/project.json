@@ -45,19 +45,7 @@
         "packages/core/protocols/dist/cjs"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/protocols/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": { },
     "prebuild": {
       "dependsOn": [
         "^build",

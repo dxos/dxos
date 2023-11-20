@@ -22,19 +22,7 @@
         "packages/apps/templates/bare-template/test/variants"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/templates/bare-template/{src,test}/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": { },
     "test": {
       "executor": "@dxos/test:run",
       "options": {
