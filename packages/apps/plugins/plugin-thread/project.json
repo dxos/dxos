@@ -44,9 +44,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-thread",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-thread",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-thread",
+        
+        
+        
         "testPatterns": [
           "packages/apps/plugins/plugin-thread/src/**/*.test.{ts,js}"
         ],
@@ -54,11 +54,7 @@
           "packages/apps/plugins/plugin-thread/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

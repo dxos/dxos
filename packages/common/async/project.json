@@ -29,9 +29,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/async",
-        "outputPath": "tmp/mocha/packages/common/async",
-        "resultsPath": "test-results/packages/common/async",
+        
+        
+        
         "testPatterns": [
           "packages/common/async/src/**/*.test.{ts,js}"
         ],
@@ -39,11 +39,7 @@
           "packages/common/async/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

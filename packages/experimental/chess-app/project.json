@@ -60,9 +60,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/chess-app",
-        "outputPath": "tmp/mocha/packages/experimental/chess-app",
-        "resultsPath": "test-results/packages/experimental/chess-app",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/chess-app/src/**/*.test.{ts,js}"
         ],
@@ -70,11 +70,7 @@
           "packages/experimental/chess-app/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

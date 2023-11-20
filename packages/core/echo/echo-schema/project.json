@@ -44,10 +44,10 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/echo-schema",
+        
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/echo/echo-schema",
-        "resultsPath": "test-results/packages/core/echo/echo-schema",
+        
+        
         "testPatterns": [
           "packages/core/echo/echo-schema/src/**/*.test.{ts,js}"
         ],
@@ -55,11 +55,7 @@
           "packages/core/echo/echo-schema/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

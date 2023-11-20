@@ -32,9 +32,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kai-functions",
-        "outputPath": "tmp/mocha/packages/experimental/kai-functions",
-        "resultsPath": "test-results/packages/experimental/kai-functions",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/kai-functions/src/**/*.test.{ts,js}"
         ],
@@ -42,11 +42,7 @@
           "packages/experimental/kai-functions/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

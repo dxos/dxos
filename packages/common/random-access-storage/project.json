@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/random-access-storage",
-        "outputPath": "tmp/mocha/packages/common/random-access-storage",
-        "resultsPath": "test-results/packages/common/random-access-storage",
+        
+        
+        
         "testPatterns": [
           "packages/common/random-access-storage/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/common/random-access-storage/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

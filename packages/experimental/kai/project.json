@@ -56,10 +56,10 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/experimental/kai",
-        "outputPath": "tmp/playwright/packages/experimental/kai",
+        
+        
         "playwrightConfigPath": "packages/experimental/kai/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/experimental/kai",
+        
         "serve": "kai:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
@@ -71,11 +71,7 @@
           "packages/experimental/kai/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     },
     "lint": { },
     "preview": {
@@ -112,9 +108,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kai",
-        "outputPath": "tmp/mocha/packages/experimental/kai",
-        "resultsPath": "test-results/packages/experimental/kai",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/kai/src/**/*.test.{ts,js}"
         ],
@@ -122,11 +118,7 @@
           "packages/experimental/kai/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

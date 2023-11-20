@@ -36,13 +36,13 @@
           "firefox",
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/mesh/network-manager",
+        
         "envVariables": {
           "SIGNAL_PORT": 12005
         },
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/mesh/network-manager",
-        "resultsPath": "test-results/packages/core/mesh/network-manager",
+        
+        
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12005
@@ -54,11 +54,7 @@
           "packages/core/mesh/network-manager/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

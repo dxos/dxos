@@ -41,9 +41,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/app-graph",
-        "outputPath": "tmp/mocha/packages/sdk/app-graph",
-        "resultsPath": "test-results/packages/sdk/app-graph",
+        
+        
+        
         "testPatterns": [
           "packages/sdk/app-graph/src/**/*.test.{ts,js}"
         ],
@@ -51,11 +51,7 @@
           "packages/sdk/app-graph/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

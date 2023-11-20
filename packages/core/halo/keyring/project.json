@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/halo/keyring",
-        "outputPath": "tmp/mocha/packages/core/halo/keyring",
-        "resultsPath": "test-results/packages/core/halo/keyring",
+        
+        
+        
         "testPatterns": [
           "packages/core/halo/keyring/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/core/halo/keyring/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

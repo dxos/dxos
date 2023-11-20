@@ -36,9 +36,9 @@
       ],
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/phoenix",
-        "outputPath": "tmp/mocha/packages/common/phoenix",
-        "resultsPath": "test-results/packages/common/phoenix",
+        
+        
+        
         "testPatterns": [
           "packages/common/phoenix/src/**/*.test.{ts,js}"
         ],
@@ -46,11 +46,7 @@
           "packages/common/phoenix/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

@@ -30,10 +30,10 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/apps/templates/bare-template",
+        
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/apps/templates/bare-template",
-        "resultsPath": "test-results/packages/apps/templates/bare-template",
+        
+        
         "testPatterns": [
           "packages/apps/templates/bare-template/test/**/*.test.{ts,js}"
         ],
@@ -41,11 +41,7 @@
           "packages/apps/templates/bare-template/test/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   }
 }

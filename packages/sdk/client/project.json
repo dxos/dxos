@@ -36,13 +36,13 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/client",
+        
         "envVariables": {
           "SIGNAL_PORT": 12003
         },
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/sdk/client",
-        "resultsPath": "test-results/packages/sdk/client",
+        
+        
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12003
@@ -54,11 +54,7 @@
           "packages/sdk/client/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

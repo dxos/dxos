@@ -32,9 +32,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/labs-functions",
-        "outputPath": "tmp/mocha/packages/experimental/labs-functions",
-        "resultsPath": "test-results/packages/experimental/labs-functions",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/labs-functions/src/**/*.test.{ts,js}"
         ],
@@ -42,11 +42,7 @@
           "packages/experimental/labs-functions/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

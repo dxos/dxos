@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/experimental/kai-bots",
-        "outputPath": "tmp/mocha/packages/experimental/kai-bots",
-        "resultsPath": "test-results/packages/experimental/kai-bots",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/kai-bots/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/experimental/kai-bots/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

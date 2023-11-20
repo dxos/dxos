@@ -86,9 +86,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/hypercore",
-        "outputPath": "tmp/mocha/packages/common/hypercore",
-        "resultsPath": "test-results/packages/common/hypercore",
+        
+        
+        
         "testPatterns": [
           "packages/common/hypercore/src/**/*.test.{ts,js}"
         ],
@@ -96,11 +96,7 @@
           "packages/common/hypercore/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

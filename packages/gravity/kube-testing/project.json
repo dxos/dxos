@@ -21,9 +21,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/gravity/kube-testing",
-        "outputPath": "tmp/mocha/packages/gravity/kube-testing",
-        "resultsPath": "test-results/packages/gravity/kube-testing",
+        
+        
+        
         "testPatterns": [
           "packages/gravity/kube-testing/src/**/*.test.{ts,js}"
         ],
@@ -31,11 +31,7 @@
           "packages/gravity/kube-testing/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     },
     "lint": { }
   }

@@ -67,9 +67,9 @@
       ],
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/protocols",
-        "outputPath": "tmp/mocha/packages/core/protocols",
-        "resultsPath": "test-results/packages/core/protocols",
+        
+        
+        
         "testPatterns": [
           "packages/core/protocols/src/**/*.test.{ts,js}"
         ],
@@ -77,11 +77,7 @@
           "packages/core/protocols/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

@@ -90,10 +90,10 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/vault",
-        "outputPath": "tmp/playwright/packages/sdk/vault",
+        
+        
         "playwrightConfigPath": "packages/sdk/vault/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/sdk/vault",
+        
         "serve": "vault:serve-test",
         "testPatterns": [
           "packages/sdk/vault/src/playwright/**/*.spec.{ts,js}"
@@ -102,11 +102,7 @@
           "packages/sdk/vault/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     },
     "lint": { },
     "preview": {

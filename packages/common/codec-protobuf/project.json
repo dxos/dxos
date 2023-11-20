@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/codec-protobuf",
-        "outputPath": "tmp/mocha/packages/common/codec-protobuf",
-        "resultsPath": "test-results/packages/common/codec-protobuf",
+        
+        
+        
         "testPatterns": [
           "packages/common/codec-protobuf/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/common/codec-protobuf/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

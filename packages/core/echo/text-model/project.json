@@ -29,9 +29,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/text-model",
-        "outputPath": "tmp/mocha/packages/core/echo/text-model",
-        "resultsPath": "test-results/packages/core/echo/text-model",
+        
+        
+        
         "testPatterns": [
           "packages/core/echo/text-model/src/**/*.test.{ts,js}"
         ],
@@ -39,11 +39,7 @@
           "packages/core/echo/text-model/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

@@ -33,9 +33,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/mesh/messaging",
-        "outputPath": "tmp/mocha/packages/core/mesh/messaging",
-        "resultsPath": "test-results/packages/core/mesh/messaging",
+        
+        
+        
         "testPatterns": [
           "packages/core/mesh/messaging/src/**/*.test.{ts,js}"
         ],
@@ -43,11 +43,7 @@
           "packages/core/mesh/messaging/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

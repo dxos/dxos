@@ -29,11 +29,11 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/react-async",
+        
         "domRequired": true,
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/common/react-async",
-        "resultsPath": "test-results/packages/common/react-async",
+        
+        
         "testPatterns": [
           "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
         ],
@@ -41,11 +41,7 @@
           "packages/common/react-async/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

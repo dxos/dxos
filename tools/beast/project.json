@@ -23,9 +23,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/tools/beast",
-        "outputPath": "tmp/mocha/tools/beast",
-        "resultsPath": "test-results/tools/beast",
+        
+        
+        
         "testPatterns": [
           "tools/beast/src/**/*.test.{ts,js}"
         ],
@@ -33,11 +33,7 @@
           "tools/beast/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   }
 }

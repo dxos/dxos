@@ -28,10 +28,10 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/todomvc",
-        "outputPath": "tmp/playwright/packages/apps/todomvc",
+        
+        
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/apps/todomvc",
+        
         "serve": "todomvc:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
@@ -43,11 +43,7 @@
           "packages/apps/todomvc/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     },
     "lint": { },
     "prebuild": {

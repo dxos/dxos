@@ -38,9 +38,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/client-protocol",
-        "outputPath": "tmp/mocha/packages/sdk/client-protocol",
-        "resultsPath": "test-results/packages/sdk/client-protocol",
+        
+        
+        
         "testPatterns": [
           "packages/sdk/client-protocol/src/**/*.test.{ts,js}"
         ],
@@ -48,11 +48,7 @@
           "packages/sdk/client-protocol/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

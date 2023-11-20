@@ -29,9 +29,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/messenger-model",
-        "outputPath": "tmp/mocha/packages/core/echo/messenger-model",
-        "resultsPath": "test-results/packages/core/echo/messenger-model",
+        
+        
+        
         "testPatterns": [
           "packages/core/echo/messenger-model/src/**/*.test.{ts,js}"
         ],
@@ -39,11 +39,7 @@
           "packages/core/echo/messenger-model/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

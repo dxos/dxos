@@ -33,9 +33,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/mesh/websocket-rpc",
-        "outputPath": "tmp/mocha/packages/core/mesh/websocket-rpc",
-        "resultsPath": "test-results/packages/core/mesh/websocket-rpc",
+        
+        
+        
         "testPatterns": [
           "packages/core/mesh/websocket-rpc/src/**/*.test.{ts,js}"
         ],
@@ -43,11 +43,7 @@
           "packages/core/mesh/websocket-rpc/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

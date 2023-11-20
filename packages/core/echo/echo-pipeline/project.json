@@ -31,13 +31,13 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/echo-pipeline",
+        
         "envVariables": {
           "SIGNAL_PORT": 12001
         },
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/echo/echo-pipeline",
-        "resultsPath": "test-results/packages/core/echo/echo-pipeline",
+        
+        
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12001
@@ -49,11 +49,7 @@
           "packages/core/echo/echo-pipeline/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

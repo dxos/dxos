@@ -29,9 +29,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/display-name",
-        "outputPath": "tmp/mocha/packages/common/display-name",
-        "resultsPath": "test-results/packages/common/display-name",
+        
+        
+        
         "testPatterns": [
           "packages/common/display-name/src/**/*.test.{ts,js}"
         ],
@@ -39,11 +39,7 @@
           "packages/common/display-name/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

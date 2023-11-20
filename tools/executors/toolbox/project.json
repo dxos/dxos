@@ -20,9 +20,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/tools/executors/toolbox",
-        "outputPath": "tmp/mocha/tools/executors/toolbox",
-        "resultsPath": "test-results/tools/executors/toolbox",
+        
+        
+        
         "testPatterns": [
           "tools/executors/toolbox/src/**/*.test.{ts,js}"
         ],
@@ -30,11 +30,7 @@
           "tools/executors/toolbox/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",

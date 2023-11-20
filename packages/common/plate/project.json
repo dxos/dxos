@@ -46,10 +46,10 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/common/plate",
+        
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/common/plate",
-        "resultsPath": "test-results/packages/common/plate",
+        
+        
         "testPatterns": [
           "packages/common/plate/test/**/*.test.{ts,js}"
         ],
@@ -57,11 +57,7 @@
           "packages/common/plate/test/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

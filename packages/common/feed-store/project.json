@@ -31,9 +31,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/feed-store",
-        "outputPath": "tmp/mocha/packages/common/feed-store",
-        "resultsPath": "test-results/packages/common/feed-store",
+        
+        
+        
         "testPatterns": [
           "packages/common/feed-store/src/**/*.test.{ts,js}"
         ],
@@ -41,11 +41,7 @@
           "packages/common/feed-store/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

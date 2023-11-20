@@ -44,9 +44,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-kanban",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-kanban",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-kanban",
+        
+        
+        
         "testPatterns": [
           "packages/apps/plugins/plugin-kanban/src/**/*.test.{ts,js}"
         ],
@@ -54,11 +54,7 @@
           "packages/apps/plugins/plugin-kanban/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

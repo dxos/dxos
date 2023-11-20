@@ -64,9 +64,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/config",
-        "outputPath": "tmp/mocha/packages/sdk/config",
-        "resultsPath": "test-results/packages/sdk/config",
+        
+        
+        
         "testPatterns": [
           "packages/sdk/config/src/**/*.test.{ts,js}"
         ],
@@ -74,11 +74,7 @@
           "packages/sdk/config/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

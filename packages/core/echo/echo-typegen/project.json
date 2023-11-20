@@ -33,9 +33,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/echo-typegen",
-        "outputPath": "tmp/mocha/packages/core/echo/echo-typegen",
-        "resultsPath": "test-results/packages/core/echo/echo-typegen",
+        
+        
+        
         "testPatterns": [
           "packages/core/echo/echo-typegen/**/*.test.{ts,js}"
         ],
@@ -43,11 +43,7 @@
           "packages/core/echo/echo-typegen/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   }
 }

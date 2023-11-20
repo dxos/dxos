@@ -21,10 +21,10 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/apps/templates/hello-template",
+        
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/apps/templates/hello-template",
-        "resultsPath": "test-results/packages/apps/templates/hello-template",
+        
+        
         "testPatterns": [
           "packages/apps/templates/hello-template/test/**/*.test.{ts,js}"
         ],
@@ -32,11 +32,7 @@
           "packages/apps/templates/hello-template/test/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   }
 }

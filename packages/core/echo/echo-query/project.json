@@ -30,10 +30,10 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/echo-query",
+        
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/echo/echo-query",
-        "resultsPath": "test-results/packages/core/echo/echo-query",
+        
+        
         "testPatterns": [
           "packages/core/echo/echo-query/src/**/*.test.{ts,js}"
         ],
@@ -41,11 +41,7 @@
           "packages/core/echo/echo-query/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

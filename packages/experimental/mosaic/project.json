@@ -44,9 +44,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/mosaic",
-        "outputPath": "tmp/mocha/packages/experimental/mosaic",
-        "resultsPath": "test-results/packages/experimental/mosaic",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/mosaic/src/**/*.test.{ts,js}"
         ],
@@ -54,11 +54,7 @@
           "packages/experimental/mosaic/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

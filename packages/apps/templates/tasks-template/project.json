@@ -21,10 +21,10 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/apps/templates/tasks-template",
+        
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/apps/templates/tasks-template",
-        "resultsPath": "test-results/packages/apps/templates/tasks-template",
+        
+        
         "testPatterns": [
           "packages/apps/templates/tasks-template/test/**/*.test.{ts,js}"
         ],
@@ -32,11 +32,7 @@
           "packages/apps/templates/tasks-template/test/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   }
 }

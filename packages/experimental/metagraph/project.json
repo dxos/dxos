@@ -62,9 +62,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/experimental/metagraph",
-        "outputPath": "tmp/mocha/packages/experimental/metagraph",
-        "resultsPath": "test-results/packages/experimental/metagraph",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/metagraph/src/**/*.test.{ts,js}"
         ],
@@ -72,11 +72,7 @@
           "packages/experimental/metagraph/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

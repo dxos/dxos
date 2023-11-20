@@ -36,9 +36,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/common/lock-file",
-        "outputPath": "tmp/mocha/packages/common/lock-file",
-        "resultsPath": "test-results/packages/common/lock-file",
+        
+        
+        
         "testPatterns": [
           "packages/common/lock-file/src/**/*.test.{ts,js}"
         ],
@@ -46,11 +46,7 @@
           "packages/common/lock-file/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

@@ -34,9 +34,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/mesh/teleport",
-        "outputPath": "tmp/mocha/packages/core/mesh/teleport",
-        "resultsPath": "test-results/packages/core/mesh/teleport",
+        
+        
+        
         "testPatterns": [
           "packages/core/mesh/teleport/src/**/*.test.{ts,js}"
         ],
@@ -44,11 +44,7 @@
           "packages/core/mesh/teleport/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

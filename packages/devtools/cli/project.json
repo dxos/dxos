@@ -61,9 +61,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/devtools/cli",
-        "outputPath": "tmp/mocha/packages/devtools/cli",
-        "resultsPath": "test-results/packages/devtools/cli",
+        
+        
+        
         "testPatterns": [
           "packages/devtools/cli/src/**/*.test.{ts,js}"
         ],
@@ -71,11 +71,7 @@
           "packages/devtools/cli/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/model-factory",
-        "outputPath": "tmp/mocha/packages/core/echo/model-factory",
-        "resultsPath": "test-results/packages/core/echo/model-factory",
+        
+        
+        
         "testPatterns": [
           "packages/core/echo/model-factory/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/core/echo/model-factory/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

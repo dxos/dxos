@@ -30,13 +30,13 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/echo-generator",
+        
         "envVariables": {
           "SIGNAL_PORT": 12000
         },
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/echo/echo-generator",
-        "resultsPath": "test-results/packages/core/echo/echo-generator",
+        
+        
         "setupOptions": {
           "port": 12000
         },
@@ -47,11 +47,7 @@
           "packages/core/echo/echo-generator/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

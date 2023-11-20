@@ -58,9 +58,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/ui/react-ui-mosaic",
-        "outputPath": "tmp/mocha/packages/ui/react-ui-mosaic",
-        "resultsPath": "test-results/packages/ui/react-ui-mosaic",
+        
+        
+        
         "testPatterns": [
           "packages/ui/react-ui-mosaic/src/**/*.test.{ts,js}"
         ],
@@ -68,11 +68,7 @@
           "packages/ui/react-ui-mosaic/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

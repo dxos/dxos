@@ -32,10 +32,10 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/sdk/react-shell",
-        "outputPath": "tmp/playwright/packages/sdk/react-shell",
+        
+        
         "playwrightConfigPath": "packages/sdk/react-shell/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/sdk/react-shell",
+        
         "serve": "react-shell:storybook",
         "testPatterns": [
           "packages/sdk/react-shell/src/playwright/**/*.spec.{ts,js}"
@@ -44,11 +44,7 @@
           "packages/sdk/react-shell/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     },
     "lint": { },
     "storybook": {

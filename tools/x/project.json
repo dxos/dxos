@@ -23,9 +23,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/tools/x",
-        "outputPath": "tmp/mocha/tools/x",
-        "resultsPath": "test-results/tools/x",
+        
+        
+        
         "testPatterns": [
           "tools/x/src/**/*.test.{ts,js}"
         ],
@@ -33,11 +33,7 @@
           "tools/x/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   }
 }

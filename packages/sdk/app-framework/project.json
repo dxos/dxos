@@ -43,9 +43,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/sdk/app-framework",
-        "outputPath": "tmp/mocha/packages/sdk/app-framework",
-        "resultsPath": "test-results/packages/sdk/app-framework",
+        
+        
+        
         "testPatterns": [
           "packages/sdk/app-framework/src/**/*.test.{ts,js}"
         ],
@@ -53,11 +53,7 @@
           "packages/sdk/app-framework/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

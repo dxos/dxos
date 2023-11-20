@@ -44,9 +44,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-inbox",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-inbox",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-inbox",
+        
+        
+        
         "testPatterns": [
           "packages/apps/plugins/plugin-inbox/src/**/*.test.{ts,js}"
         ],
@@ -54,11 +54,7 @@
           "packages/apps/plugins/plugin-inbox/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

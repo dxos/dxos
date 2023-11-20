@@ -29,12 +29,12 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/gravity/proto-guard",
+        
         "environments": [
           "nodejs"
         ],
-        "outputPath": "tmp/mocha/packages/gravity/proto-guard",
-        "resultsPath": "test-results/packages/gravity/proto-guard",
+        
+        
         "testPatterns": [
           "packages/gravity/proto-guard/src/**/*.test.{ts,js}"
         ],
@@ -42,11 +42,7 @@
           "packages/gravity/proto-guard/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   }
 }

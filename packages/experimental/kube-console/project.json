@@ -85,9 +85,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kube-console",
-        "outputPath": "tmp/mocha/packages/experimental/kube-console",
-        "resultsPath": "test-results/packages/experimental/kube-console",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/kube-console/src/**/*.test.{ts,js}"
         ],
@@ -95,11 +95,7 @@
           "packages/experimental/kube-console/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

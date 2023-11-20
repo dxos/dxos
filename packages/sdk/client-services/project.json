@@ -37,13 +37,13 @@
           "firefox",
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/sdk/client-services",
+        
         "envVariables": {
           "SIGNAL_PORT": 12004
         },
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/sdk/client-services",
-        "resultsPath": "test-results/packages/sdk/client-services",
+        
+        
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12004
@@ -55,11 +55,7 @@
           "packages/sdk/client-services/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

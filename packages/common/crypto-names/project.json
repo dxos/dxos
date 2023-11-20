@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/crypto-names",
-        "outputPath": "tmp/mocha/packages/common/crypto-names",
-        "resultsPath": "test-results/packages/common/crypto-names",
+        
+        
+        
         "testPatterns": [
           "packages/common/crypto-names/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/common/crypto-names/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

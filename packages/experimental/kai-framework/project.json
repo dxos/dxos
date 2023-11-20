@@ -88,9 +88,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kai-framework",
-        "outputPath": "tmp/mocha/packages/experimental/kai-framework",
-        "resultsPath": "test-results/packages/experimental/kai-framework",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/kai-framework/src/**/*.test.{ts,js}"
         ],
@@ -98,11 +98,7 @@
           "packages/experimental/kai-framework/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

@@ -29,9 +29,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/tracing",
-        "outputPath": "tmp/mocha/packages/common/tracing",
-        "resultsPath": "test-results/packages/common/tracing",
+        
+        
+        
         "testPatterns": [
           "packages/common/tracing/src/**/*.test.{ts,js}"
         ],
@@ -39,11 +39,7 @@
           "packages/common/tracing/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

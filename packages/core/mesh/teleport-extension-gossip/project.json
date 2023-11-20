@@ -36,9 +36,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/mesh/teleport-extension-gossip",
-        "outputPath": "tmp/mocha/packages/core/mesh/teleport-extension-gossip",
-        "resultsPath": "test-results/packages/core/mesh/teleport-extension-gossip",
+        
+        
+        
         "testPatterns": [
           "packages/core/mesh/teleport-extension-gossip/src/**/*.test.{ts,js}"
         ],
@@ -46,11 +46,7 @@
           "packages/core/mesh/teleport-extension-gossip/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

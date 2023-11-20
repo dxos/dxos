@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/timeframe",
-        "outputPath": "tmp/mocha/packages/common/timeframe",
-        "resultsPath": "test-results/packages/common/timeframe",
+        
+        
+        
         "testPatterns": [
           "packages/common/timeframe/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/common/timeframe/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

@@ -30,9 +30,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/crypto",
-        "outputPath": "tmp/mocha/packages/common/crypto",
-        "resultsPath": "test-results/packages/common/crypto",
+        
+        
+        
         "testPatterns": [
           "packages/common/crypto/src/**/*.test.{ts,js}"
         ],
@@ -40,11 +40,7 @@
           "packages/common/crypto/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

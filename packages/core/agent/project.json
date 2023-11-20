@@ -37,9 +37,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/agent",
-        "outputPath": "tmp/mocha/packages/core/agent",
-        "resultsPath": "test-results/packages/core/agent",
+        
+        
+        
         "testPatterns": [
           "packages/core/agent/src/**/*.test.{ts,js}"
         ],
@@ -47,11 +47,7 @@
           "packages/core/agent/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

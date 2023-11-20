@@ -44,9 +44,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/plexus",
-        "outputPath": "tmp/mocha/packages/experimental/plexus",
-        "resultsPath": "test-results/packages/experimental/plexus",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/plexus/src/**/*.test.{ts,js}"
         ],
@@ -54,11 +54,7 @@
           "packages/experimental/plexus/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

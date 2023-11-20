@@ -33,9 +33,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/mesh/teleport-extension-object-sync",
-        "outputPath": "tmp/mocha/packages/core/mesh/teleport-extension-object-sync",
-        "resultsPath": "test-results/packages/core/mesh/teleport-extension-object-sync",
+        
+        
+        
         "testPatterns": [
           "packages/core/mesh/teleport-extension-object-sync/src/**/*.test.{ts,js}"
         ],
@@ -43,11 +43,7 @@
           "packages/core/mesh/teleport-extension-object-sync/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

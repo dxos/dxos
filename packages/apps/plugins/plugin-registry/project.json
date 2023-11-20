@@ -44,10 +44,10 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-registry",
+        
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-registry",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-registry",
+        
+        
         "testPatterns": [
           "packages/apps/plugins/plugin-registry/src/**/*.test.{ts,js}"
         ],
