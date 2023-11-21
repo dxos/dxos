@@ -30,11 +30,6 @@ functions:
     description: 'Github Sync'
 
 triggers:
-  - function: 'dxos.org/function/email'
-    schedule: '* * * * *'
-    subscription:
-      type: 'braneframe.Mailbox'
-
   - function: 'dxos.org/function/chat'
     subscription:
       type: 'braneframe.Message'
@@ -42,6 +37,11 @@ triggers:
   - function: 'dxos.org/function/chess'
     subscription:
       type: 'dxos.experimental.chess.Game'
+
+  - function: 'dxos.org/function/email'
+    schedule: '*/2 * * * *'
+    subscription:
+      type: 'braneframe.Mailbox'
 
   - function: 'dxos.org/function/github'
     subscription:
