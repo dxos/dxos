@@ -72,7 +72,7 @@ export const SpaceListPanel: FC = () => {
 
   return (
     <PanelContainer className='overflow-auto'>
-      <Table<Space> columns={columns} data={spaces} onDataSelectionChange={handleSelect} />
+      <Table<Space> columns={columns} data={spaces} onDataSelectionChange={handleSelect} fullWidth />
     </PanelContainer>
   );
 };

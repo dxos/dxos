@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
+import { AnchoredOverflow } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
 
@@ -21,6 +22,7 @@ type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 // TODO(burdon): Add peers/connect/disconnect/error info.
 const { helper, builder } = createColumnBuilder<SwarmConnection>();
 const columns: TableColumnDef<SwarmConnection, any>[] = [
+  helper.display(builder.selectRow()),
   helper.accessor('id', builder.key({ header: 'swarm', tooltip: true })),
   helper.accessor(
     'topic',
@@ -116,15 +118,17 @@ export const SwarmPanel = () => {
 
   return (
     <PanelContainer>
-      <div className='h-1/2 overflow-hidden'>
+      <AnchoredOverflow.Root classNames='h-1/2 overflow-auto'>
         <Table<SwarmConnection>
           columns={columns}
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
           onDataSelectionChange={handleDataSelectedChange}
+          fullWidth
         />
-      </div>
+        <AnchoredOverflow.Anchor />
+      </AnchoredOverflow.Root>
       <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
     </PanelContainer>
   );

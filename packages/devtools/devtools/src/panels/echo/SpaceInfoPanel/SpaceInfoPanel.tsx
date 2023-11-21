@@ -29,6 +29,7 @@ type FeedInfo = {
 
 const { helper, builder } = createColumnBuilder<FeedInfo>();
 const columns: TableColumnDef<FeedInfo, any>[] = [
+  helper.display(builder.selectRow()),
   helper.accessor('feedKey', builder.key({ tooltip: true })),
   helper.accessor('downloaded', {
     cell: (cell) => (
@@ -92,7 +93,7 @@ export const SpaceInfoPanel: FC = () => {
         <div className='flex flex-col gap-4'>
           <SpaceProperties space={space} metadata={metadata} />
           <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-          <Table<FeedInfo> columns={columns} data={updatedFeeds} onDataSelectionChange={handleSelect} />
+          <Table<FeedInfo> columns={columns} data={updatedFeeds} onDataSelectionChange={handleSelect} fullWidth />
         </div>
       )}
     </PanelContainer>

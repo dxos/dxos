@@ -22,7 +22,8 @@ export const gridCellFocusRing = 'focus:z-[11] focus:outline outline-2 outline-p
 
 export type TableStyleProps = Partial<TableContextValue<any>>;
 
-export const tableRoot: ComponentFunction<TableStyleProps> = (_props, ...etc) => mx('table-fixed', ...etc);
+export const tableRoot: ComponentFunction<TableStyleProps> = ({ fullWidth }, ...etc) =>
+  mx('table-fixed', fullWidth && 'is-full', ...etc);
 
 export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
   mx('text-start font-medium', flushPadding, ...etc);

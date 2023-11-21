@@ -104,9 +104,5 @@ export const SignalStatusTable = () => {
     helper.accessor('error', {}),
   ];
 
-  return (
-    <div>
-      <Table<SignalStatus> columns={columns} data={status} />
-    </div>
-  );
+  return <Table<SignalStatus> columns={columns} data={status} />;
 };

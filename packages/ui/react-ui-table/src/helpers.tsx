@@ -327,6 +327,7 @@ export class ColumnBuilder<TData extends RowData> {
       id,
       size: 32,
       minSize: 32,
+      maxSize: 32,
       header: ({ table }) => {
         const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
