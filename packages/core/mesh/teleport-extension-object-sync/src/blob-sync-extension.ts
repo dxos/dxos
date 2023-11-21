@@ -19,6 +19,7 @@ export type BlobSyncExtensionParams = {
   blobStore: BlobStore;
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
+  onAbort: () => Promise<void>;
   onPush: (data: BlobChunk) => Promise<void>;
 };
 
@@ -113,6 +114,13 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     await this._ctx.dispose();
     await this._params.onClose();
     await super.onClose(err);
+  }
+
+  override async onAbort(err?: Error | undefined): Promise<void> {
+    log('abort');
+    await this._ctx.dispose();
+    await this._params.onAbort();
+    await super.onAbort(err);
   }
 
   protected async getHandlers(): Promise<ServiceBundle> {
