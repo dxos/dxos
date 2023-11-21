@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+// Lambda-like function definitions.
+// See: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
+
 export type FunctionDef = {
   // FQ function name.
   id: string;
   // URL path.
-  path: string;
-  // Path of handler.
+  name: string;
+  // File path of handler.
   handler: string;
   description?: string;
 };

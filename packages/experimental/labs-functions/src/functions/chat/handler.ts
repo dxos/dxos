@@ -14,13 +14,12 @@ import { createRequest } from './request';
 import { createResponse } from './response';
 import { getKey } from '../../util';
 
-// TODO(burdon): https://platform.openai.com/docs/plugins/examples
-
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   event: { space: spaceKey, objects: messageIds },
-  context: { client, status },
+  context: { client },
+  response,
 }) => {
   const config = client.config;
   const chat = new ChatOpenAI({
@@ -30,7 +29,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   // TODO(burdon): Logging (filename missing).
   const space = client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
-    return status(400).succeed();
+    return response.status(400);
   }
 
   // Get active threads.
@@ -54,10 +53,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       const message = thread.messages[thread.messages.length - 1];
       if (message.__meta.keys.length === 0) {
         const messages = createRequest(space, message);
-        log.info('request', { messages });
+        log('request', { messages });
 
-        // TODO(burdon): Error handling (e.g., 401);
         // TODO(burdon): Streaming API.
+        // TODO(burdon): Error handling (e.g., 401);
         const { content } = await chat.call(messages);
         log('response', { content });
         if (content) {
@@ -79,6 +78,4 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       }
     }),
   );
-
-  return status(200).succeed();
 };

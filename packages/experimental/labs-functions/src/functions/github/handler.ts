@@ -65,7 +65,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
     //
     const response = await octokit.repos.listContributors({ owner, repo });
     const contributors: GithubContributors = response.data;
-    log.info('contributors', { repo: project.repo, amount: contributors.length });
+    log('contributors', { repo: project.repo, amount: contributors.length });
 
     await Promise.all(
       contributors.map(async (contributor) => {
@@ -107,7 +107,8 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
     );
 
     project.__meta.keys.push({ source: 'github.com' });
+
+    // TODO(burdon): Make automatic.
     await space.db.flush();
   }
-  context.status(200).succeed({});
 };

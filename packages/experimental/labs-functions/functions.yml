@@ -5,27 +5,27 @@
 
 functions:
   - id: 'dxos.org/function/chat'
-    path: 'chat'
+    name: 'chat'
     handler: 'chat'
     description: 'AI Chat'
 
   - id: 'dxos.org/function/chess'
-    path: 'chess'
+    name: 'chess'
     handler: 'chess'
     description: 'Chess'
 
   - id: 'dxos.org/function/email'
-    path: 'email'
+    name: 'email'
     handler: 'email'
     description: 'Email Sync'
 
   - id: 'dxos.org/function/hello'
-    path: 'hello'
+    name: 'hello'
     handler: 'hello'
     description: 'Hello world'
 
   - id: 'dxos.org/function/github'
-    path: 'github'
+    name: 'github'
     handler: 'github'
     description: 'Github Sync'
 

@@ -18,7 +18,8 @@ import { getKey } from '../../util';
 
 export const handler: FunctionHandler<any> = async ({
   event: { space: spaceKey, objects: mailboxIds },
-  context: { client, status },
+  context: { client },
+  response,
 }) => {
   // TODO(burdon): Generalize util for getting properties from config/env.
   const config = client.config;
@@ -55,8 +56,8 @@ export const handler: FunctionHandler<any> = async ({
         const space = getSpaceForObject(mailbox);
         invariant(space);
         // TODO(burdon): Debounce requests (i.e., store seq).
-        log.info('Requesting messages...');
-        const messages = await processor.requestMessages();
+        log('requesting messages...');
+        const messages = await processor.requestMessages({ days: 60 });
         await processMailbox(space, mailbox, messages);
       }
     }
@@ -67,7 +68,7 @@ export const handler: FunctionHandler<any> = async ({
     await processor.disconnect();
   }
 
-  return status(code).succeed();
+  return response.status(code);
 };
 
 // TODO(burdon): Util.
@@ -84,5 +85,5 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
     }
   }
 
-  log.info('processed', { messages: messages.length, added });
+  log('processed', { messages: messages.length, added });
 };

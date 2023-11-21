@@ -49,6 +49,7 @@ import { getConfig, getKey } from './util';
 // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
 // TODO(burdon): CloudflareWorkersAIEmbeddings
 // TODO(burdon): FakeEmbeddings for tests
+// TODO(burdon): https://platform.openai.com/docs/plugins/examples
 
 describe.skip('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {

@@ -23,11 +23,11 @@ export const Mailbox: FC<{ mailbox: MailboxType }> = ({ mailbox }) => {
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <div className='flex grow overflow-hidden'>
-        <div className={mx('flex shrink-0 w-[400px] border-r', fixedBorder)}>
+      <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
+        <div className='flex shrink-0 w-[400px] border-r'>
           <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} />
         </div>
-        <div className={mx('flex w-full overflow-auto px-8', inputSurface)}>
+        <div className={mx('flex w-full overflow-auto p-4', inputSurface)}>
           {selected && <pre className='text-sm'>{selected.blocks[0].text}</pre>}
         </div>
       </div>

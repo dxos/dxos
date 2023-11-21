@@ -128,7 +128,7 @@ export class Scheduler {
   private async execFunction(def: FunctionDef, data: any) {
     try {
       log('request', { function: def.id });
-      const response = await fetch(`${this._options.endpoint}/${def.path}`, {
+      const response = await fetch(`${this._options.endpoint}/${def.name}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

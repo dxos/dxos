@@ -29,6 +29,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
     require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
     baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     manifest: Flags.string({ description: 'Functions manifest file.' }),
+    reload: Flags.boolean({ description: 'Reload functions on change.' }),
   };
 
   async run(): Promise<any> {
@@ -51,6 +52,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const server = new DevServer(client, {
         directory,
         manifest,
+        reload: this.flags.reload,
       });
 
       await server.initialize();
@@ -74,7 +76,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         this.log(
           'Functions:\n' +
             server.functions
-              .map(({ def: { id, path } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, path)}}`)
+              .map(({ def: { id, name } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, name)}}`)
               .join('\n'),
         );
       }
