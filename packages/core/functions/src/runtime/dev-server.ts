@@ -25,7 +25,6 @@ export type DevServerOptions = {
 /**
  * Functions dev server provides a local HTTP server for testing functions.
  */
-// TODO(burdon): Reconcile with agent/functions dev dispatcher.
 export class DevServer {
   // Function handlers indexed by name (URL path).
   private readonly _handlers: Record<string, { def: FunctionDef; handler: FunctionHandler<any> }> = {};
@@ -34,7 +33,7 @@ export class DevServer {
   private _port?: number;
   private _registrationId?: string;
   private _proxy?: string;
-  private _request = 0;
+  private _seq = 0;
 
   // prettier-ignore
   constructor(
@@ -65,51 +64,6 @@ export class DevServer {
     }
   }
 
-  private async _load(def: FunctionDef) {
-    const { id, name, handler } = def;
-    log.info('loading', { id });
-
-    // Remove from cache.
-    const path = join(this._options.directory, handler);
-    Object.keys(require.cache)
-      .filter((key) => key.startsWith(path))
-      .forEach((key) => delete require.cache[key]);
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const module = require(path);
-    if (typeof module.default !== 'function') {
-      throw new Error(`Handler must export default function: ${id}`);
-    }
-
-    this._handlers[name] = { def, handler: module.default };
-  }
-
-  // TODO(burdon): Option to reload.
-  private async invoke(name: string, event: any) {
-    const id = ++this._request;
-    const now = Date.now();
-
-    log.info('req', { id, name });
-    const { handler } = this._handlers[name];
-
-    const context: FunctionContext = {
-      client: this._client,
-    };
-
-    let statusCode = 200;
-    const response: Response = {
-      status: (code: number) => {
-        statusCode = code;
-        return response;
-      },
-    };
-
-    await handler({ context, event, response });
-    log.info('res', { id, name, statusCode, duration: Date.now() - now });
-
-    return statusCode;
-  }
-
   async start() {
     const app = express();
     app.use(express.json());
@@ -119,10 +73,10 @@ export class DevServer {
       try {
         if (this._options.reload) {
           const { def } = this._handlers[name];
-          await this._load(def);
+          await this._load(def, true);
         }
 
-        res.statusCode = await this.invoke(name, req.body);
+        res.statusCode = await this._invoke(name, req.body);
         res.end();
       } catch (err: any) {
         log.error(err);
@@ -131,11 +85,9 @@ export class DevServer {
       }
     });
 
-    // TODO(burdon): Push down port management to agent.
     this._port = await getPort({ port: 7200, portRange: [7200, 7299] });
     this._server = app.listen(this._port);
 
-    // TODO(burdon): Test during initialization.
     try {
       // Register functions.
       const { registrationId, endpoint } = await this._client.services.services.FunctionRegistryService!.register({
@@ -171,5 +123,57 @@ export class DevServer {
     await trigger.wait();
     this._port = undefined;
     this._server = undefined;
+  }
+
+  /**
+   * Load function.
+   */
+  private async _load(def: FunctionDef, flush = false) {
+    const { id, name, handler } = def;
+    const path = join(this._options.directory, handler);
+    log.info('loading', { id });
+
+    // Remove from cache.
+    if (flush) {
+      Object.keys(require.cache)
+        .filter((key) => key.startsWith(path))
+        .forEach((key) => delete require.cache[key]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const module = require(path);
+    if (typeof module.default !== 'function') {
+      throw new Error(`Handler must export default function: ${id}`);
+    }
+
+    this._handlers[name] = { def, handler: module.default };
+  }
+
+  /**
+   * Invoke function handler.
+   */
+  private async _invoke(name: string, event: any) {
+    const seq = ++this._seq;
+    const now = Date.now();
+
+    log.info('req', { seq, name });
+    const { handler } = this._handlers[name];
+
+    const context: FunctionContext = {
+      client: this._client,
+    };
+
+    let statusCode = 200;
+    const response: Response = {
+      status: (code: number) => {
+        statusCode = code;
+        return response;
+      },
+    };
+
+    await handler({ context, event, response });
+    log.info('res', { seq, name, statusCode, duration: Date.now() - now });
+
+    return statusCode;
   }
 }
