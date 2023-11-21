@@ -50,7 +50,7 @@ import { getConfig, getKey } from './util';
 // TODO(burdon): CloudflareWorkersAIEmbeddings
 // TODO(burdon): FakeEmbeddings for tests
 
-describe.skip('LangChain', () => {
+describe('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
     return new ChatOpenAI({
@@ -97,6 +97,7 @@ describe.skip('LangChain', () => {
 
     const results = await vectorStore.similaritySearchWithScore('the ages', 2);
     expect(results.map(([document]) => document.metadata.id)).to.deep.eq([3, 4]);
+    console.log(results);
   });
 
   //

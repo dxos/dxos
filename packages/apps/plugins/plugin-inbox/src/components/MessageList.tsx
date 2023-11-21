@@ -7,16 +7,14 @@ import React, { type FC } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { useTranslation } from '@dxos/react-ui';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedBorder, getSize, ghostHover, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { formatDate } from './util';
 import { INBOX_PLUGIN } from '../meta';
 
 // TODO(burdon): Factor out.
 export const styles = {
-  border: 'border-neutral-400 dark:border-neutral-800',
-  hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
-  selected: '!bg-cyan-100 !dark:bg-cyan-900',
+  selected: '!bg-primary-100 dark:!bg-primary-700',
 };
 
 export type MessageListProps = {
@@ -51,7 +49,7 @@ export const MessageItem: FC<{ message: MessageType; selected?: boolean; onSelec
   const subject = message.subject ?? message.blocks[0].text;
   return (
     <div
-      className={mx('flex p-2 cursor-pointer border-b', styles.border, styles.hover, selected && styles.selected)}
+      className={mx('flex p-2 cursor-pointer border-b', fixedBorder, ghostHover, selected && styles.selected)}
       onClick={() => onSelect?.(message)}
     >
       <div className='flex pr-2 pt-[2px]'>
