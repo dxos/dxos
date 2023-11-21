@@ -37,6 +37,11 @@ const TableBody = <TData extends RowData>({ rows }: TableBodyProps<TData>) => {
               onClick: () => {
                 onDatumClick(row.original);
               },
+              onKeyUp: ({ key }) => {
+                if (key === 'Enter' || key === ' ') {
+                  onDatumClick(row.original);
+                }
+              },
             })}
           >
             {debug && <td>{row.id}</td>}
