@@ -78,7 +78,6 @@
       ]
     },
     "e2e": {
-      "executor": "@dxos/test:run",
       "options": {
         "playwrightConfigPath": "packages/sdk/vault/src/playwright/playwright.config.ts",
         "serve": "vault:serve-test",
