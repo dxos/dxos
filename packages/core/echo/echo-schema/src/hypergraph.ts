@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
+import { type AutomergeDb } from './automerge/automerge-db';
 import { type EchoDatabase } from './database';
 import { type EchoObject, type TypedObject } from './object';
 import {
@@ -97,7 +98,11 @@ export class Hypergraph {
    * @internal
    * @param onResolve will be weakly referenced.
    */
-  _lookupLink(ref: Reference, from: EchoDatabase, onResolve: (obj: EchoObject) => void): EchoObject | undefined {
+  _lookupLink(
+    ref: Reference,
+    from: EchoDatabase | AutomergeDb,
+    onResolve: (obj: EchoObject) => void,
+  ): EchoObject | undefined {
     if (ref.host === undefined) {
       const local = from.getObjectById(ref.itemId);
       if (local) {
@@ -236,7 +241,7 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = Array.from(this._database._objects.values())
+      this._results = [...this._database._objects.values(), ...this._database.automerge._objects.values()]
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,

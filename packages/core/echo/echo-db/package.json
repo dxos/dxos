@@ -50,9 +50,12 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@automerge/automerge": "^2.1.7",
+    "@automerge/automerge-repo": "^1.0.17",
     "@dxos/feed-store": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "@dxos/typings": "workspace:*"
+    "@dxos/typings": "workspace:*",
+    "yjs": "^13.6.8"
   },
   "publishConfig": {
     "access": "public"

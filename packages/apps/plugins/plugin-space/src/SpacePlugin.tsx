@@ -380,7 +380,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                   client.spaces.default.db.add(nextObjectOrder);
                   spacesOrder = nextObjectOrder;
                 } else {
-                  spacesOrder.objects = nextOrder;
+                  spacesOrder.order = nextOrder.map(({ key }) => key.toHex());
                 }
                 updateSpacesOrder(spacesOrder);
               },

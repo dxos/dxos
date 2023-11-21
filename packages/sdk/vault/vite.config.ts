@@ -6,6 +6,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import wasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -40,6 +41,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    wasmPlugin(),
     ConfigPlugin({
       // TODO(wittjosiah): This generates config not found errors when not served by `startVault`.
       //   This is currently the case inside this monorepo in an attempt to avoid having the vault

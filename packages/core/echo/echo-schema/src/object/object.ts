@@ -17,7 +17,7 @@ import {
 
 import { type EchoObject, base, debug, db, subscribe } from './types';
 import { type EchoDatabase } from '../database';
-import { compositeRuntime } from '../util';
+import { compositeRuntime } from '../util/signal';
 
 /**
  * Base class for all echo objects.

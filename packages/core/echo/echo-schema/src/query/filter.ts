@@ -7,6 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
+import { AutomergeObject } from '../automerge/automerge-object';
 import {
   base,
   getDatabaseFromObject,
@@ -202,7 +203,7 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   if (!(filter.options.models && filter.options.models.includes('*'))) {
     // TODO(burdon): Expose default options that are merged if not null.
     const models = filter.options.models ?? [DocumentModel.meta.type];
-    if (!models.includes(object[base]._modelConstructor.meta.type)) {
+    if (!(object[base] instanceof AutomergeObject) && !models.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }
   }
