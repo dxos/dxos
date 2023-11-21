@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
 import { Main, Button, DensityProvider, ToggleGroup, ToggleGroupItem, Toolbar, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
 import { FrameContainer } from './FrameContainer';
@@ -30,7 +30,7 @@ export type ScriptMainProps = {
 
 export const ScriptMain = (props: ScriptMainProps) => {
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <ScriptSection {...props} />
     </Main.Content>
   );

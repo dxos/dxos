@@ -2,19 +2,8 @@
   "sourceRoot": "packages/apps/plugins/plugin-pwa/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-pwa/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-pwa/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-pwa/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/plugins/plugin-pwa/src/index.ts",
@@ -23,28 +12,12 @@
         "ignorePackages": [
           "virtual:pwa-register"
         ],
-        "outputPath": "packages/apps/plugins/plugin-pwa/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-pwa/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   },
   "implicitDependencies": [
     "esbuild"

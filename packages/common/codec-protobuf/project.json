@@ -2,62 +2,17 @@
   "sourceRoot": "packages/common/codec-protobuf/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/codec-protobuf/src/index.ts",
-        "outputPath": "packages/common/codec-protobuf/dist/types",
-        "tsConfig": "packages/common/codec-protobuf/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/codec-protobuf/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/common/codec-protobuf/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        "injectGlobals": true
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/common/codec-protobuf/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/common/codec-protobuf",
-        "outputPath": "tmp/mocha/packages/common/codec-protobuf",
-        "resultsPath": "test-results/packages/common/codec-protobuf",
-        "testPatterns": [
-          "packages/common/codec-protobuf/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/codec-protobuf/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
