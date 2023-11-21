@@ -189,6 +189,48 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   );
 };
 
+const RowSelectorBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, unknown>) => {
+  const { cell } = cellContext.column.columnDef.meta as ColumnMeta<TData, unknown>;
+  const { row } = cellContext;
+
+  const checked = row.getCanSelect()
+    ? row.getIsSelected()
+    : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
+  return (
+    <Input.Root>
+      <Input.Checkbox
+        size={4}
+        classNames={['mli-auto', cell?.classNames]}
+        checked={checked}
+        onCheckedChange={(event) => {
+          if (row.getCanSelect()) {
+            row.getToggleSelectedHandler()(event);
+          }
+        }}
+        disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
+      />
+    </Input.Root>
+  );
+};
+
+const SwitchBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, boolean>) => {
+  const { onUpdate } = cellContext.column.columnDef.meta as ColumnMeta<TData, boolean>;
+  const value = cellContext.getValue();
+  return (
+    <Input.Root>
+      <Input.Switch
+        classNames='block mli-auto'
+        onClick={(event) => event.stopPropagation()}
+        disabled={!onUpdate}
+        checked={!!value}
+        onCheckedChange={(value) => {
+          onUpdate?.(cellContext.row.original, cellContext.column.id, !!value);
+        }}
+      />
+    </Input.Root>
+  );
+};
+
 /**
  * Util to create column definitions.
  */
@@ -349,7 +391,7 @@ export class ColumnBuilder<TData extends RowData> {
       size: 32,
       minSize: 32,
       maxSize: 32,
-      meta: { cell: { classNames } },
+      meta: { onUpdate, cell: { classNames } },
       header: ({ table }) => {
         const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
@@ -364,27 +406,7 @@ export class ColumnBuilder<TData extends RowData> {
           </Input.Root>
         ) : null;
       },
-      cell: (cell) => {
-        const { row } = cell;
-        const checked = row.getCanSelect()
-          ? row.getIsSelected()
-          : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
-        return (
-          <Input.Root>
-            <Input.Checkbox
-              size={4}
-              classNames={['mli-auto', classNames]}
-              checked={checked}
-              onCheckedChange={(event) => {
-                if (row.getCanSelect()) {
-                  row.getToggleSelectedHandler()(event);
-                }
-              }}
-              disabled={!(row.getCanSelect() || row.getCanSelectSubRows())}
-            />
-          </Input.Root>
-        );
-      },
+      cell: RowSelectorBuilderCell,
     };
   }
 
@@ -397,24 +419,9 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 50,
       minSize: 50,
-      meta: { cell: { classNames: [textPadding, classNames] } },
+      meta: { onUpdate, cell: { classNames: [textPadding, classNames] } },
       header: (column) => label ?? column.header.id,
-      cell: (cell) => {
-        const value = cell.getValue();
-        return (
-          <Input.Root>
-            <Input.Switch
-              classNames={['block mli-auto', classNames]}
-              onClick={(event) => event.stopPropagation()}
-              disabled={!onUpdate}
-              checked={!!value}
-              onCheckedChange={(value) => {
-                onUpdate?.(cell.row.original, cell.column.id, !!value);
-              }}
-            />
-          </Input.Root>
-        );
-      },
+      cell: SwitchBuilderCell,
     });
   }
 
