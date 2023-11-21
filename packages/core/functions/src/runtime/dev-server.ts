@@ -98,7 +98,7 @@ export class DevServer {
         status: response.status.bind(response),
       };
 
-      void (async () => {
+      const exec = async () => {
         try {
           log(`invoking: ${name}`);
           const { handler } = this._handlers[name];
@@ -109,7 +109,9 @@ export class DevServer {
           res.statusCode = 500;
           res.end();
         }
-      })();
+      };
+
+      void exec();
     });
 
     // TODO(burdon): Push down port management to agent.

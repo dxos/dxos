@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type FunctionManifest, type FunctionTrigger } from '../manifest';
+import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../manifest';
 
 type SchedulerOptions = {
   endpoint: string;
@@ -57,8 +57,9 @@ export class Scheduler {
 
   private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
     const key = { id: trigger.function, spaceKey: space.key };
-    const config = this._manifest.functions.find((config) => config.id === trigger.function);
-    invariant(config, `Function not found: ${trigger.function}`);
+    const def = this._manifest.functions.find((config) => config.id === trigger.function);
+    invariant(def, `Function not found: ${trigger.function}`);
+
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
@@ -67,19 +68,25 @@ export class Scheduler {
         return;
       }
 
+      // Cron schedule.
       if (trigger.schedule) {
-        const job = new CronJob(trigger.schedule, () => {
-          console.log('RUN');
+        const task = new DeferredTask(ctx, async () => {
+          await this.execFunction(def, {
+            space: space.key,
+          });
         });
+
+        const job = new CronJob(trigger.schedule, () => task.schedule());
 
         job.start();
         ctx.onDispose(() => job.stop());
       }
 
+      // ECHO subscription.
       if (trigger.subscription) {
         const objectIds = new Set<string>();
         const task = new DeferredTask(ctx, async () => {
-          await this.execFunction(config.path, {
+          await this.execFunction(def, {
             space: space.key,
             objects: Array.from(objectIds),
           });
@@ -131,13 +138,13 @@ export class Scheduler {
     }
   }
 
-  private async execFunction(functionName: string, data: any) {
+  private async execFunction(def: FunctionDef, data: any) {
     const { endpoint } = this._options;
     invariant(endpoint, 'Missing endpoint');
 
     try {
-      log('invoke', { function: functionName });
-      const url = `${endpoint}/${functionName}`;
+      log('invoke', { function: def.id });
+      const url = `${endpoint}/${def.path}`;
       const res = await fetch(url, {
         method: 'POST',
         body: JSON.stringify(data),
@@ -146,9 +153,10 @@ export class Scheduler {
         },
       });
 
-      log('result', { function: functionName, result: await res.json() });
+      const result = await res.json();
+      log('result', { function: def.id, result });
     } catch (err: any) {
-      log.error('error', { function: functionName, error: err.message });
+      log.error('error', { function: def.id, error: err.message });
     }
   }
 }

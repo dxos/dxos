@@ -25,7 +25,7 @@ export type TriggerSubscription = {
 export type FunctionTrigger = {
   function: string;
   schedule?: string;
-  subscription: TriggerSubscription;
+  subscription?: TriggerSubscription;
 };
 
 /**

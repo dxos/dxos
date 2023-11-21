@@ -14,24 +14,24 @@ functions:
     handler: 'chess'
     description: 'Chess'
 
+  - id: 'dxos.org/function/email'
+    path: 'email'
+    handler: 'email'
+    description: 'Email Sync'
+
   - id: 'dxos.org/function/hello'
     path: 'hello'
     handler: 'hello'
-    description: 'Test'
+    description: 'Hello world'
 
   - id: 'dxos.org/function/github'
     path: 'github'
     handler: 'github'
-    description: 'Github'
-
-  - id: 'dxos.org/function/email'
-    path: 'email'
-    handler: 'email'
-    description: 'Protonmail Sync'
+    description: 'Github Sync'
 
 triggers:
   - function: 'dxos.org/function/email'
-    schedule: '*/10 * * * * *'
+    schedule: '* * * * *'
     subscription:
       type: 'braneframe.Mailbox'
 
