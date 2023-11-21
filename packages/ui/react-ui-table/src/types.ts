@@ -6,6 +6,8 @@ import { type ColumnDef, type RowData } from '@tanstack/react-table';
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
+import { type SearchListQueryModel, type ValueUpdater } from './helpers';
+
 // Define custom meta definitions.
 declare module '@tanstack/react-table' {
   // Access via table.options.meta.
@@ -16,6 +18,8 @@ declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     expand?: boolean;
     resizable?: boolean;
+    model?: SearchListQueryModel<TData>;
+    onUpdate?: ValueUpdater<TData, any>;
     header?: {
       classNames?: ClassNameValue;
     };

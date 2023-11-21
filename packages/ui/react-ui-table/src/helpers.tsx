@@ -9,6 +9,7 @@ import {
   type ColumnMeta,
   type RowData,
   type ColumnHelper,
+  type CellContext,
 } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
@@ -16,7 +17,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
-import { Input, Tooltip } from '@dxos/react-ui';
+import { type ClassNameValue, Input, Tooltip } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -37,7 +38,7 @@ export const createColumnBuilder = <TData extends RowData>() => ({
 export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>> & {
   meta?: ColumnMeta<TData, TValue>;
   label?: string;
-  className?: string;
+  classNames?: ClassNameValue;
   onUpdate?: ValueUpdater<TData, TValue | undefined>;
 };
 
@@ -88,6 +89,20 @@ const defaults = <TData extends RowData, TValue>(
   return stripUndefinedValues(defaultsDeep({}, options, ...sources));
 };
 
+const ComboboxBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, TData>) => {
+  const cellValue = cellContext.getValue();
+  const { model, onUpdate, cell } = cellContext.column.columnDef.meta as ColumnMeta<TData, TData>;
+  return model && onUpdate ? (
+    <CellCombobox<any>
+      model={model}
+      value={cellValue}
+      onValueChange={(value) => onUpdate?.(cellContext.row.original, cellContext.column.id, value)}
+    />
+  ) : (
+    <div className={mx('truncate', cell?.classNames)}>{cellValue ? model?.getText(cellValue) : ''}</div>
+  );
+};
+
 /**
  * Util to create column definitions.
  */
@@ -97,38 +112,34 @@ export class ColumnBuilder<TData extends RowData> {
    */
   combobox({
     label,
-    className,
+    classNames,
     model,
     onUpdate,
     ...props
   }: ComboboxColumnOptions<TData>): Partial<ColumnDef<TData, any>> {
     return defaults(props, {
       minSize: 100,
+      meta: {
+        model,
+        onUpdate,
+        cell: { classNames },
+      },
       header: (column) => {
         return label ?? column.header.id;
       },
-      cell:
-        model && onUpdate
-          ? (cell) => (
-              <CellCombobox<any>
-                model={model}
-                value={cell.getValue()}
-                onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
-              />
-            )
-          : (cell) => {
-              const value = cell.getValue();
-              return <div className={mx('truncate', className)}>{value ? model.getText(value) : ''}</div>;
-            },
+      cell: ComboboxBuilderCell,
     });
   }
 
   /**
    * String formats.
    */
-  string({ label, className, onUpdate, ...props }: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
+  string({ label, classNames, onUpdate, ...props }: StringColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, string>
+  > {
     return defaults(props, {
       minSize: 100,
+      meta: { cell: { classNames } },
       // TODO(burdon): Default.
       header: (column) => {
         return label ?? column.header.id;
@@ -176,7 +187,7 @@ export class ColumnBuilder<TData extends RowData> {
           }
         : (cell) => {
             const value = cell.getValue();
-            return <div className={mx('truncate', textPadding, className)}>{value}</div>;
+            return <div className={mx('truncate', textPadding, classNames)}>{value}</div>;
           },
     });
   }
@@ -184,13 +195,13 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Number formats.
    */
-  number({ label, minSize, className, digits, onUpdate, ...props }: NumberColumnOptions<TData> = {}): Partial<
+  number({ label, minSize, classNames, digits, onUpdate, ...props }: NumberColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, number>
   > {
     return defaults(props, {
       size: 100,
       minSize: 100,
-      meta: { header: { classNames: 'text-end' } },
+      meta: { header: { classNames: 'text-end' }, cell: { classNames } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
@@ -231,7 +242,7 @@ export class ColumnBuilder<TData extends RowData> {
 
         return (
           <div
-            className={mx('is-full text-end font-mono empty:after:content-[" "]', textPadding, className)}
+            className={mx('is-full text-end font-mono empty:after:content-[" "]', textPadding, classNames)}
             onClick={handleEdit}
           >
             {value?.toLocaleString(undefined, {
@@ -248,12 +259,13 @@ export class ColumnBuilder<TData extends RowData> {
    * Date formats.
    */
   // TODO(burdon): Date picker (pluggable renderers?)
-  date({ label, format: formatSpec, relative, className, ...props }: DateColumnOptions<TData> = {}): Partial<
+  date({ label, format: formatSpec, relative, classNames, ...props }: DateColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, Date>
   > {
     return defaults(props, {
       size: 220, // TODO(burdon): Depends on format.
       minSize: 100,
+      meta: { cell: { classNames } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
@@ -267,7 +279,7 @@ export class ColumnBuilder<TData extends RowData> {
               : value.toISOString()
             : undefined;
 
-          return <div className={mx(textPadding, className)}>{str}</div>;
+          return <div className={mx(textPadding, classNames)}>{str}</div>;
         } catch (err) {
           console.log(value);
           return null;
@@ -320,14 +332,19 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Row selector
    */
-  selectRow({ label, className, onUpdate, id = 'selectRow', ...props }: SelectRowColumnOptions<TData> = {}): Parameters<
-    ColumnHelper<TData>['display']
-  >[0] {
+  selectRow({
+    label,
+    classNames,
+    onUpdate,
+    id = 'selectRow',
+    ...props
+  }: SelectRowColumnOptions<TData> = {}): Parameters<ColumnHelper<TData>['display']>[0] {
     return {
       id,
       size: 32,
       minSize: 32,
       maxSize: 32,
+      meta: { cell: { classNames } },
       header: ({ table }) => {
         const { rowsSelectable } = useTableContext('HELPER_SELECT_ROW_HEADER_CELL');
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
@@ -335,7 +352,7 @@ export class ColumnBuilder<TData extends RowData> {
           <Input.Root>
             <Input.Checkbox
               size={4}
-              classNames={['mli-auto', className]}
+              classNames={['mli-auto', classNames]}
               checked={checked}
               onCheckedChange={(event) => table.toggleAllRowsSelected()}
             />
@@ -351,7 +368,7 @@ export class ColumnBuilder<TData extends RowData> {
           <Input.Root>
             <Input.Checkbox
               size={4}
-              classNames={['mli-auto', className]}
+              classNames={['mli-auto', classNames]}
               checked={checked}
               onCheckedChange={(event) => {
                 if (row.getCanSelect()) {
@@ -369,20 +386,20 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Switch
    */
-  switch({ label, className, onUpdate, ...props }: SwitchColumnOptions<TData> = {}): Partial<
+  switch({ label, classNames, onUpdate, ...props }: SwitchColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, boolean>
   > {
     return defaults(props, {
       size: 50,
       minSize: 50,
-      meta: { cell: { classNames: textPadding } },
+      meta: { cell: { classNames: [textPadding, classNames] } },
       header: (column) => label ?? column.header.id,
       cell: (cell) => {
         const value = cell.getValue();
         return (
           <Input.Root>
             <Input.Switch
-              classNames={['block mli-auto', className]}
+              classNames={['block mli-auto', classNames]}
               onClick={(event) => event.stopPropagation()}
               disabled={!onUpdate}
               checked={!!value}
