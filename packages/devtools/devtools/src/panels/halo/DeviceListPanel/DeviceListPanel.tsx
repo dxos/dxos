@@ -12,7 +12,6 @@ import { MasterDetailTable, PanelContainer } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<Device>();
 const columns: TableColumnDef<Device, any>[] = [
-  helper.display(builder.selectRow()),
   helper.accessor((device) => device.deviceKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor('kind', builder.number()),
 ];

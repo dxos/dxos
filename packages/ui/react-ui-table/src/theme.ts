@@ -4,11 +4,12 @@
 
 import { type CellContext } from '@tanstack/react-table';
 
-import { chromeSurface, fixedSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { chromeSurface, fixedSurface, focusRing, groupBorder, hoverColors, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
-import { type TableContextValue, type TableFlags } from './components/Table/props';
+import { type TableContextValue, type TableFlags } from './components';
 
+export const currentRow = '!bg-neutral-75 !dark:bg-neutral-850';
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 export const flushPadding = 'pli-0 plb-0';
 export const textPadding = 'pli-2 plb-0.5';
@@ -62,9 +63,18 @@ export const theadResizeThumb: ComponentFunction<TheadStyleProps> = (_props, ...
 //
 
 export type TbodyStyleProps = Partial<TableContextValue<any>>;
-
 export const tbodyRoot: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx(...etc);
-export const tbodyTr: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx('group', ...etc);
+
+export type TbodyTrStyleProps = Partial<{ isSelected?: boolean; isCurrent?: boolean; canBeCurrent?: boolean }>;
+export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ isSelected, isCurrent, canBeCurrent }, ...etc) =>
+  mx(
+    'group',
+    isSelected ? selectedRow : isCurrent && currentRow,
+    canBeCurrent && focusRing,
+    canBeCurrent && hoverColors,
+    canBeCurrent && 'cursor-pointer rounded',
+    ...etc,
+  );
 
 //
 // td, th

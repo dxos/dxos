@@ -14,7 +14,6 @@ import { useDevtoolsState, useCredentials } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<Credential>();
 const columns: TableColumnDef<Credential, any>[] = [
-  helper.display(builder.selectRow()),
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   helper.accessor('id', builder.key({ tooltip: true })),

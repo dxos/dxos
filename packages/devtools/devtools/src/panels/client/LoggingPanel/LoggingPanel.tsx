@@ -31,7 +31,6 @@ const colors: { [index: number]: string } = {
 
 const { helper, builder } = createColumnBuilder<LogEntry>();
 const columns: TableColumnDef<LogEntry, any>[] = [
-  helper.display(builder.selectRow()),
   helper.accessor('timestamp', builder.date()),
   helper.accessor(
     (entry) =>

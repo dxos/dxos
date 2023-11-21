@@ -27,7 +27,6 @@ export type PipelineTableRow = {
 
 const { helper, builder } = createColumnBuilder<PipelineTableRow>();
 const columns: TableColumnDef<PipelineTableRow, any>[] = [
-  helper.display(builder.selectRow()),
   helper.accessor('feedKey', builder.key({ tooltip: true })),
   helper.accessor('type', { size: 60 }),
   helper.accessor('own', builder.icon()),
@@ -115,10 +114,10 @@ export const PipelineTable: FC<{
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: PipelineTableRow[] | undefined) => {
-    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
+  const handleSelect = (selected: PipelineTableRow | undefined) => {
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
     navigate('/echo/feeds');
   };
 
-  return <Table<PipelineTableRow> columns={columns} data={data} onDataSelectionChange={handleSelect} fullWidth />;
+  return <Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />;
 };

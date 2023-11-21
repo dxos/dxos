@@ -29,7 +29,6 @@ type FeedInfo = {
 
 const { helper, builder } = createColumnBuilder<FeedInfo>();
 const columns: TableColumnDef<FeedInfo, any>[] = [
-  helper.display(builder.selectRow()),
   helper.accessor('feedKey', builder.key({ tooltip: true })),
   helper.accessor('downloaded', {
     cell: (cell) => (
@@ -60,8 +59,8 @@ export const SpaceInfoPanel: FC = () => {
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: FeedInfo[] | undefined) => {
-    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
+  const handleSelect = (selected: FeedInfo | undefined) => {
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
     navigate('/echo/feeds');
   };
 
@@ -93,7 +92,7 @@ export const SpaceInfoPanel: FC = () => {
         <div className='flex flex-col gap-4'>
           <SpaceProperties space={space} metadata={metadata} />
           <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-          <Table<FeedInfo> columns={columns} data={updatedFeeds} onDataSelectionChange={handleSelect} fullWidth />
+          <Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
         </div>
       )}
     </PanelContainer>

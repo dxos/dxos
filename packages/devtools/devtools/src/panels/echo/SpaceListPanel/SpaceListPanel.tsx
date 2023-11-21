@@ -17,8 +17,8 @@ export const SpaceListPanel: FC = () => {
   const navigate = useNavigate();
   const setState = useDevtoolsDispatch();
 
-  const handleSelect = (selection: Space[] | undefined) => {
-    setState((state) => ({ ...state, space: selection?.[0] }));
+  const handleSelect = (selection: Space | undefined) => {
+    setState((state) => ({ ...state, space: selection }));
     navigate('/echo/space');
   };
 
@@ -72,7 +72,7 @@ export const SpaceListPanel: FC = () => {
 
   return (
     <PanelContainer className='overflow-auto'>
-      <Table<Space> columns={columns} data={spaces} onDataSelectionChange={handleSelect} fullWidth />
+      <Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
     </PanelContainer>
   );
 };

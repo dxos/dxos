@@ -20,7 +20,6 @@ import { PanelContainer } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<ResourceState>();
 const columns: TableColumnDef<ResourceState, any>[] = [
-  helper.display(builder.selectRow()),
   helper.accessor('resource', {
     id: 'name',
     size: 200,
@@ -114,8 +113,8 @@ export const TracingPanel = () => {
         <Table<ResourceState>
           columns={columns}
           data={Array.from(state.current.resources.values())}
-          rowsSelectable
-          onDataSelectionChange={(resources) => setSelectedResourceId(resources?.[0]?.resource.id)}
+          currentDatum={selectedResource}
+          onDatumClick={(resourceState) => setSelectedResourceId(resourceState.resource.id)}
           fullWidth
         />
         <AnchoredOverflow.Anchor />

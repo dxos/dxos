@@ -22,7 +22,6 @@ type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 // TODO(burdon): Add peers/connect/disconnect/error info.
 const { helper, builder } = createColumnBuilder<SwarmConnection>();
 const columns: TableColumnDef<SwarmConnection, any>[] = [
-  helper.display(builder.selectRow()),
   helper.accessor('id', builder.key({ header: 'swarm', tooltip: true })),
   helper.accessor(
     'topic',
@@ -86,13 +85,10 @@ export const SwarmPanel = () => {
     }
   }
 
-  const [sessionId, setSessionId] = useState<PublicKey>();
-  const handleDataSelectedChange = (selected: SwarmConnection[] | undefined) => {
-    setSessionId(selected?.[0].connection?.sessionId);
-  };
+  const [session, setSession] = useState<SwarmConnection>();
 
   const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
-  const connection = sessionId ? connectionMap.get(sessionId) : undefined;
+  const connection = session?.id ? connectionMap.get(session.id) : undefined;
   const items = swarms.reduce<SwarmConnection[]>((connections, swarm) => {
     if (!swarm.connections?.length) {
       connections.push(swarm);
@@ -124,7 +120,8 @@ export const SwarmPanel = () => {
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
-          onDataSelectionChange={handleDataSelectedChange}
+          currentDatum={session}
+          onDatumClick={setSession}
           fullWidth
         />
         <AnchoredOverflow.Anchor />

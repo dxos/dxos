@@ -18,7 +18,14 @@ export type TableFlags = Partial<{
   rowsSelectable: boolean | 'multi';
 }>;
 
+export type TableCurrent<TData extends RowData> = Partial<{
+  // App state
+  currentDatum: TData;
+  onDatumClick: (datum: TData) => void;
+}>;
+
 export type TableProps<TData extends RowData> = TableFlags &
+  TableCurrent<TData> &
   Partial<{
     keyAccessor: KeyValue<TData>;
     data: TData[];
@@ -36,6 +43,7 @@ export type TableProps<TData extends RowData> = TableFlags &
 export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };
 
 export type TableContextValue<TData extends RowData> = TableFlags &
+  TableCurrent<TData> &
   Pick<TableProps<TData>, 'keyAccessor'> & {
     table: Table<TData>;
     isGrid: boolean;
