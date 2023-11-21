@@ -6,7 +6,7 @@ import { CronJob } from 'cron';
 
 import { DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
-import type { Query, Space } from '@dxos/client/echo';
+import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, createSubscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +20,7 @@ type SchedulerOptions = {
 };
 
 /**
- * Function scheduler.
+ * Functions scheduler.
  */
 // TODO(burdon): Create tests.
 export class Scheduler {
@@ -29,8 +29,6 @@ export class Scheduler {
     { id: string; spaceKey: PublicKey },
     { ctx: Context; trigger: FunctionTrigger }
   >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
-
-  private readonly _queries = new Set<Query>();
 
   constructor(
     private readonly _client: Client,
@@ -106,8 +104,6 @@ export class Scheduler {
 
         const { type, props } = trigger.subscription;
         const query = space.db.query(Filter.typename(type, props));
-        this._queries.add(query);
-
         const unsubscribe = query.subscribe(({ objects }) => {
           subscription.update(objects);
         }, true);
@@ -115,7 +111,6 @@ export class Scheduler {
         ctx.onDispose(() => {
           subscription.unsubscribe();
           unsubscribe();
-          this._queries.delete(query);
         });
       }
     }
@@ -132,7 +127,7 @@ export class Scheduler {
 
   private async execFunction(def: FunctionDef, data: any) {
     try {
-      log('calling', { function: def.id });
+      log('request', { function: def.id });
       const response = await fetch(`${this._options.endpoint}/${def.path}`, {
         method: 'POST',
         headers: {
@@ -141,8 +136,8 @@ export class Scheduler {
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
-      log('result', { function: def.id, result });
+      // const result = await response.json();
+      log('result', { function: def.id, result: response.status });
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
     }
