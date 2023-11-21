@@ -1,6 +1,6 @@
 ##
 ## Test:
-## curl -s -X POST -H "Content-Type: application/json" http://localhost:7001/dev/hello | jq
+## curl -s -X POST -H "Content-Type: application/json" http://localhost:7100/dev/hello | jq
 ##
 
 functions:

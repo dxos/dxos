@@ -131,21 +131,17 @@ export class Scheduler {
   }
 
   private async execFunction(def: FunctionDef, data: any) {
-    const { endpoint } = this._options;
-    invariant(endpoint, 'Missing endpoint');
-
     try {
       log('calling', { function: def.id });
-      const url = `${endpoint}/${def.path}`;
-      const res = await fetch(url, {
+      const response = await fetch(`${this._options.endpoint}/${def.path}`, {
         method: 'POST',
-        body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(data),
       });
 
-      const result = await res.json();
+      const result = await response.json();
       log('result', { function: def.id, result });
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
