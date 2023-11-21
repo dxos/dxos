@@ -135,7 +135,7 @@ export class Scheduler {
     invariant(endpoint, 'Missing endpoint');
 
     try {
-      log('invoke', { function: def.id });
+      log('calling', { function: def.id });
       const url = `${endpoint}/${def.path}`;
       const res = await fetch(url, {
         method: 'POST',
