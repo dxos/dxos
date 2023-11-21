@@ -164,6 +164,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
           data={rows}
           border
           onColumnResize={handleColumnResize}
+          role='grid'
         />
         {debug && (
           <div className='flex text-xs'>
