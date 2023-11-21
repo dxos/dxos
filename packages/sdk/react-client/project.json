@@ -17,7 +17,6 @@
       }
     },
     "e2e": {
-      "executor": "@dxos/test:run",
       "options": {
         "playwrightConfigPath": "packages/sdk/react-client/src/playwright/playwright.config.ts",
         "serve": "react-client:storybook",

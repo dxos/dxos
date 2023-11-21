@@ -17,7 +17,6 @@
         "bundle",
         "prebuild"
       ],
-      "executor": "@dxos/test:run",
       "options": {
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
         "headless": false,
