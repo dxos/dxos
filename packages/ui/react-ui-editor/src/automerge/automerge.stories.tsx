@@ -3,8 +3,8 @@
 //
 
 import { type Prop, next as automerge } from '@automerge/automerge';
+import { basicSetup } from '@codemirror/basic-setup';
 import { EditorView } from '@codemirror/view';
-import { basicSetup } from 'codemirror';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { plugin as amgPlugin } from './automerge-plugin';

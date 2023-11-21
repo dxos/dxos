@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { basicSetup } from '@codemirror/basic-setup';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { StoryObj } from '@storybook/html';
-import { basicSetup } from 'codemirror';
 import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
