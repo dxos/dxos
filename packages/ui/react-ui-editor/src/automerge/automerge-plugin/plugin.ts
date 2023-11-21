@@ -14,7 +14,7 @@ import {
   type Transaction,
   type TransactionSpec,
 } from '@codemirror/state';
-import { type EditorView } from 'codemirror';
+import { type EditorView } from '@codemirror/view';
 
 import { PatchSemaphore } from './PatchSemaphore';
 import { type Peer } from '../demo';
