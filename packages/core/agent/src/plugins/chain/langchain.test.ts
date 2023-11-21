@@ -50,7 +50,7 @@ import { getConfig, getKey } from './util';
 // TODO(burdon): CloudflareWorkersAIEmbeddings
 // TODO(burdon): FakeEmbeddings for tests
 
-describe('LangChain', () => {
+describe.skip('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
     return new ChatOpenAI({

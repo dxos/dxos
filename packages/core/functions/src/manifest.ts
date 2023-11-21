@@ -24,6 +24,7 @@ export type TriggerSubscription = {
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 export type FunctionTrigger = {
   function: string;
+  schedule?: string;
   subscription: TriggerSubscription;
 };
 

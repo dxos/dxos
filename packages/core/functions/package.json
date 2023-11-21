@@ -27,6 +27,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "cron": "^1.8.2",
+    "cron-parser": "^4.9.0",
     "express": "^4.17.1",
     "get-port-please": "^3.1.1"
   },

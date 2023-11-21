@@ -124,7 +124,7 @@ export class Agent {
         });
 
         await plugin.open();
-        log('open', { plugin });
+        log.info('open', { plugin });
       }
     }
 

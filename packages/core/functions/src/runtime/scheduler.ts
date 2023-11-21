@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { CronJob } from 'cron';
+
 import { DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
 import type { Query, Space } from '@dxos/client/echo';
@@ -13,32 +15,34 @@ import { ComplexMap } from '@dxos/util';
 
 import { type FunctionManifest, type FunctionTrigger } from '../manifest';
 
-// TODO(burdon): Rename.
-export type InvokeOptions = {
+type SchedulerOptions = {
   endpoint: string;
 };
 
-export class TriggerManager {
+/**
+ * Function scheduler.
+ */
+// TODO(burdon): Create tests.
+export class Scheduler {
+  // Map of mounted functions.
   private readonly _mounts = new ComplexMap<
-    { name: string; spaceKey: PublicKey },
+    { id: string; spaceKey: PublicKey },
     { ctx: Context; trigger: FunctionTrigger }
-  >(({ name, spaceKey }) => `${spaceKey.toHex()}:${name}`);
+  >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
 
   private readonly _queries = new Set<Query>();
 
   constructor(
     private readonly _client: Client,
     private readonly _manifest: FunctionManifest,
-    private readonly _invokeOptions: InvokeOptions,
+    private readonly _options: SchedulerOptions,
   ) {}
 
   async start() {
-    // TODO(burdon): Make runtime configurable (via CLI)?
     this._client.spaces.subscribe(async (spaces) => {
       for (const space of spaces) {
         await space.waitUntilReady();
         for (const trigger of this._manifest.triggers ?? []) {
-          // TODO(burdon): New context? Shared?
           await this.mount(new Context(), space, trigger);
         }
       }
@@ -46,13 +50,13 @@ export class TriggerManager {
   }
 
   async stop() {
-    for (const { name, spaceKey } of this._mounts.keys()) {
-      await this.unmount(name, spaceKey);
+    for (const { id, spaceKey } of this._mounts.keys()) {
+      await this.unmount(id, spaceKey);
     }
   }
 
   private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
-    const key = { name: trigger.function, spaceKey: space.key };
+    const key = { id: trigger.function, spaceKey: space.key };
     const config = this._manifest.functions.find((config) => config.id === trigger.function);
     invariant(config, `Function not found: ${trigger.function}`);
     const exists = this._mounts.get(key);
@@ -63,51 +67,63 @@ export class TriggerManager {
         return;
       }
 
-      // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
-      const objectIds = new Set<string>();
-      const task = new DeferredTask(ctx, async () => {
-        await this.execFunction(this._invokeOptions, config.path, {
-          space: space.key,
-          objects: Array.from(objectIds),
-        });
-      });
-
-      let count = 0;
-      const subscription = createSubscription(({ added, updated }) => {
-        for (const object of added) {
-          objectIds.add(object.id);
-        }
-        for (const object of updated) {
-          objectIds.add(object.id);
-        }
-
-        log('updated', {
-          trigger,
-          space: space.key,
-          objects: objectIds.size,
-          count,
+      if (trigger.schedule) {
+        const job = new CronJob(trigger.schedule, () => {
+          console.log('RUN');
         });
 
-        task.schedule();
-        count++;
-      });
-      // TODO(burdon): DSL for query (replace props).
-      const query = space.db.query(Filter.typename(trigger.subscription.type, trigger.subscription.props));
-      this._queries.add(query);
-      const unsubscribe = query.subscribe(({ objects }) => {
-        subscription.update(objects);
-      }, true);
+        job.start();
+        ctx.onDispose(() => job.stop());
+      }
 
-      ctx.onDispose(() => {
-        subscription.unsubscribe();
-        unsubscribe();
-        this._queries.delete(query);
-      });
+      if (trigger.subscription) {
+        const objectIds = new Set<string>();
+        const task = new DeferredTask(ctx, async () => {
+          await this.execFunction(config.path, {
+            space: space.key,
+            objects: Array.from(objectIds),
+          });
+        });
+
+        let count = 0;
+        const subscription = createSubscription(({ added, updated }) => {
+          for (const object of added) {
+            objectIds.add(object.id);
+          }
+          for (const object of updated) {
+            objectIds.add(object.id);
+          }
+
+          log('updated', {
+            trigger,
+            space: space.key,
+            objects: objectIds.size,
+            count,
+          });
+
+          task.schedule();
+          count++;
+        });
+
+        const { type, props } = trigger.subscription;
+        const query = space.db.query(Filter.typename(type, props));
+        this._queries.add(query);
+
+        const unsubscribe = query.subscribe(({ objects }) => {
+          subscription.update(objects);
+        }, true);
+
+        ctx.onDispose(() => {
+          subscription.unsubscribe();
+          unsubscribe();
+          this._queries.delete(query);
+        });
+      }
     }
   }
 
-  private async unmount(name: string, spaceKey: PublicKey) {
-    const key = { name, spaceKey };
+  private async unmount(id: string, spaceKey: PublicKey) {
+    const key = { id, spaceKey };
     const { ctx } = this._mounts.get(key) ?? {};
     if (ctx) {
       this._mounts.delete(key);
@@ -115,8 +131,8 @@ export class TriggerManager {
     }
   }
 
-  private async execFunction(options: InvokeOptions, functionName: string, data: any) {
-    const { endpoint } = options;
+  private async execFunction(functionName: string, data: any) {
+    const { endpoint } = this._options;
     invariant(endpoint, 'Missing endpoint');
 
     try {

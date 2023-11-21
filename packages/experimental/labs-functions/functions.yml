@@ -30,9 +30,10 @@ functions:
     description: 'Protonmail Sync'
 
 triggers:
-#  - function: 'dxos.org/function/email'
-#    subscription:
-#      type: 'braneframe.Mailbox'
+  - function: 'dxos.org/function/email'
+    schedule: '*/10 * * * * *'
+    subscription:
+      type: 'braneframe.Mailbox'
 
   - function: 'dxos.org/function/chat'
     subscription:
@@ -41,7 +42,7 @@ triggers:
   - function: 'dxos.org/function/chess'
     subscription:
       type: 'dxos.experimental.chess.Game'
-    
+
   - function: 'dxos.org/function/github'
     subscription:
       type: 'example.com/schema/project'

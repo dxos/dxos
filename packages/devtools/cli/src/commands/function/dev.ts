@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
@@ -57,12 +57,12 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await server.start();
 
       // TODO(burdon): Move to plugin (make independent of runtime).
-      const triggers = new TriggerManager(client, manifest, { endpoint: server.proxy! });
-      await triggers.start();
+      const scheduler = new Scheduler(client, manifest, { endpoint: server.proxy! });
+      await scheduler.start();
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
-        await triggers.stop();
+        await scheduler.stop();
         await server.stop();
         process.exit();
       });
