@@ -11,7 +11,7 @@ import { type Entity, type SchemaMap } from './schema';
 import { getConfig, getKey, loadJson } from '../../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
-describe('ChatModel', () => {
+describe.skip('ChatModel', () => {
   const createChatModel = () => {
     const config = getConfig()!;
     return new ChatOpenAI({
