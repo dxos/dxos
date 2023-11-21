@@ -93,7 +93,6 @@ export class Scheduler {
           });
         });
 
-        let count = 0;
         const subscription = createSubscription(({ added, updated }) => {
           for (const object of added) {
             objectIds.add(object.id);
@@ -102,15 +101,7 @@ export class Scheduler {
             objectIds.add(object.id);
           }
 
-          log('updated', {
-            trigger,
-            space: space.key,
-            objects: objectIds.size,
-            count,
-          });
-
           task.schedule();
-          count++;
         });
 
         const { type, props } = trigger.subscription;
