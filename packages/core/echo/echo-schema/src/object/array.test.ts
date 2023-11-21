@@ -38,7 +38,6 @@ describe('Arrays', () => {
     task.tags.splice(1, 0, 'yellow');
     expect(task.tags.slice()).toEqual(['red', 'yellow', 'magenta', 'blue']);
   });
-
   test('array of sub documents', async () => {
     const { db } = await createDatabase();
 

@@ -22,7 +22,6 @@
       ]
     },
     "e2e": {
-      "executor": "@dxos/test:run",
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
         "serve": "composer-app:serve-with-vault",

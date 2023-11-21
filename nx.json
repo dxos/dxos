@@ -132,6 +132,12 @@
       ]
     },
     "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/{projectRoot}",
+        "outputPath": "tmp/playwright/{projectRoot}",
+        "resultsPath": "test-results/{projectRoot}"
+      },
       "inputs": [
         "default",
         "^production",
