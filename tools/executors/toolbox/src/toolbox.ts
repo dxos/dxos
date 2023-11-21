@@ -9,6 +9,7 @@ import deepEqual from 'deep-equal';
 import fs from 'fs';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
+import { inspect } from 'node:util';
 import { join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
@@ -323,6 +324,33 @@ class Toolbox {
     }
   }
 
+  async printStats() {
+    const stats: Record<
+      string,
+      {
+        executors: Set<string>;
+        count: number;
+      }
+    > = {};
+
+    for (const project of this.projects) {
+      const projectPath = join(project.path, 'project.json');
+      const projectJson = await loadJson<ProjectJson>(projectPath);
+
+      for (const target of Object.keys(projectJson.targets ?? {})) {
+        stats[target] ??= {
+          executors: new Set(),
+          count: 0,
+        };
+
+        stats[target].count++;
+        stats[target].executors.add(projectJson.targets[target].executor ?? 'undefined');
+      }
+    }
+
+    console.log(inspect(stats, { depth: null }));
+  }
+
   _getProjectByPackageName(name: string): Project {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
@@ -340,6 +368,8 @@ const run = async () => {
   await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
+
+  // await toolbox.printStats();
 };
 
 void run();

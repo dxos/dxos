@@ -22,7 +22,6 @@
       ]
     },
     "e2e": {
-      "executor": "@dxos/test:run",
       "options": {
         "playwrightConfigPath": "packages/e2e/rpc-tunnel-e2e/src/playwright/playwright.config.ts",
         "serve": "rpc-tunnel-e2e:serve",
