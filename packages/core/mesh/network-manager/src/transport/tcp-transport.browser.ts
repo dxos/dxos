@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 
-import { type Transport, type TransportFactory } from './transport';
+import { type Transport, type TransportFactory, type TransportStats } from './transport';
 
 // NOTE: Browser stub.
 
@@ -23,6 +23,14 @@ export class TcpTransport implements Transport {
   }
 
   signal() {
+    throw new Error('Method not implemented.');
+  }
+
+  async getStats(): Promise<TransportStats> {
+    throw new Error('Method not implemented.');
+  }
+
+  async getDetails(): Promise<string> {
     throw new Error('Method not implemented.');
   }
 }

@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type Transport, type TransportFactory } from './transport';
+import { type Transport, type TransportFactory, type TransportStats } from './transport';
 import { wrtc } from './webrtc';
 
 export type SimplePeerTransportParams = {
@@ -109,7 +109,7 @@ export class SimplePeerTransport implements Transport {
           (this._peer as any)._pc.getStats().then((stats: any) => {
             log.info('report after webrtc error', {
               config: this.params.webrtcConfig,
-              stats,
+              stats: Object.fromEntries((stats as any).entries()),
             });
           });
         }
@@ -119,7 +119,67 @@ export class SimplePeerTransport implements Transport {
 
       await this.destroy();
     });
+
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.end({ id: this._instanceId }));
+  }
+
+  async getStats(): Promise<TransportStats> {
+    const stats = await this._getStats();
+    if (!stats) {
+      return {
+        bytesSent: 0,
+        bytesReceived: 0,
+        packetsSent: 0,
+        packetsReceived: 0,
+        rawStats: {},
+      };
+    }
+
+    // TODO(nf): transport or candidatePair?
+    return {
+      bytesSent: stats.transport.bytesSent,
+      bytesReceived: stats.transport.bytesReceived,
+      packetsSent: stats.transport.messagesSent,
+      packetsReceived: stats.transport.messagesReceived,
+      rawStats: stats.raw,
+    };
+  }
+
+  async _getStats(): Promise<any> {
+    if (typeof (this._peer as any)?._pc?.getStats !== 'function') {
+      return null;
+    }
+    return await (this._peer as any)._pc.getStats().then((stats: any) => {
+      const statsEntries = Array.from(stats.entries() as any[]);
+      const transport = statsEntries.filter((s: any) => s[1].type === 'transport')[0][1];
+      const candidatePair = statsEntries.filter((s: any) => s[0] === transport.selectedCandidatePairId);
+      let selectedCandidatePair: any;
+      let remoteCandidate: any;
+      if (candidatePair.length > 0) {
+        selectedCandidatePair = candidatePair[0][1];
+        remoteCandidate = statsEntries.filter((s: any) => s[0] === selectedCandidatePair.remoteCandidateId)[0][1];
+      }
+      return {
+        datachannel: statsEntries.filter((s: any) => s[1].type === 'data-channel')[0][1],
+        transport,
+        selectedCandidatePair,
+        remoteCandidate,
+        raw: Object.fromEntries(stats.entries()),
+      };
+    });
+  }
+
+  async getDetails(): Promise<string> {
+    const stats = await this._getStats();
+    const rc = stats?.remoteCandidate;
+    if (!rc) {
+      return 'unavailable';
+    }
+
+    if (rc.relay) {
+      return `${rc.ip}:${rc.port}/${rc.protocol} relay for XXX ${rc.candidateType}`;
+    }
+    return `${rc.ip}:${rc.port}/${rc.protocol} ${rc.candidateType}`;
   }
 
   async destroy() {
@@ -130,6 +190,7 @@ export class SimplePeerTransport implements Transport {
     this._closed = true;
     this._disconnectStreams();
     this._peer!.destroy();
+    this._closed = true;
     this.closed.emit();
     log('closed');
   }

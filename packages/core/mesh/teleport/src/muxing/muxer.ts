@@ -8,7 +8,8 @@ import { scheduleTaskInterval, Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { type PublicKey } from '@dxos/keys';
+import { log, logInfo } from '@dxos/log';
 import { schema, TimeoutError } from '@dxos/protocols';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
@@ -104,6 +105,7 @@ export class Muxer {
   private readonly _channelsByLocalId = new Map<number, Channel>();
   private readonly _channelsByTag = new Map<string, Channel>();
   private readonly _ctx = new Context();
+  private _sessionId?: PublicKey;
 
   private _nextId = 1;
 
@@ -124,6 +126,15 @@ export class Muxer {
     this._balancer.incomingData.on(async (msg) => {
       await this._handleCommand(Command.decode(msg));
     });
+  }
+
+  setSessionId(sessionId: PublicKey) {
+    this._sessionId = sessionId;
+  }
+
+  @logInfo
+  get sessionIdString(): string {
+    return this._sessionId ? this._sessionId.truncate() : 'none';
   }
 
   /**
