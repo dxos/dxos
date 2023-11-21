@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import wasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -56,6 +57,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    wasmPlugin(),
     // Required for the script plugin.
     {
       name: 'sandbox-importmap-integration',
