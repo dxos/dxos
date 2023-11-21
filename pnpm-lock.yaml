@@ -3912,8 +3912,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/typings
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
 
   packages/core/echo/echo-generator:
     dependencies:
@@ -44226,19 +44226,11 @@ packages:
       - supports-color
     dev: true
 
-  /yjs@13.6.7:
-    resolution: {integrity: sha512-mCZTh4kjvUS2DnaktsYN6wLH3WZCJBLqrTdkWh1bIDpA/sB/GNFaLA/dyVJj2Hc7KwONuuoC/vWe9bwBBosZLQ==}
-    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
-    dependencies:
-      lib0: 0.2.78
-    dev: true
-
   /yjs@13.6.8:
     resolution: {integrity: sha512-ZPq0hpJQb6f59B++Ngg4cKexDJTvfOgeiv0sBc4sUm8CaBWH7OQC4kcCgrqbjJ/B2+6vO49exvTmYfdlPtcjbg==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
     dependencies:
       lib0: 0.2.78
-    dev: false
 
   /yn@3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
