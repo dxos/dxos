@@ -20,6 +20,7 @@ declare module '@tanstack/react-table' {
     resizable?: boolean;
     model?: SearchListQueryModel<TData>;
     onUpdate?: ValueUpdater<TData, any>;
+    digits?: number;
     header?: {
       classNames?: ClassNameValue;
     };

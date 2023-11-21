@@ -90,16 +90,102 @@ const defaults = <TData extends RowData, TValue>(
 };
 
 const ComboboxBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, TData>) => {
-  const cellValue = cellContext.getValue();
-  const { model, onUpdate, cell } = cellContext.column.columnDef.meta as ColumnMeta<TData, TData>;
-  return model && onUpdate ? (
-    <CellCombobox<any>
-      model={model}
-      value={cellValue}
+  const { model, onUpdate } = cellContext.column.columnDef.meta as ColumnMeta<TData, TData>;
+  return (
+    <CellCombobox<TData>
+      model={model!}
+      value={cellContext.getValue()}
       onValueChange={(value) => onUpdate?.(cellContext.row.original, cellContext.column.id, value)}
     />
-  ) : (
-    <div className={mx('truncate', cell?.classNames)}>{cellValue ? model?.getText(cellValue) : ''}</div>
+  );
+};
+
+const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, string>) => {
+  const { onUpdate } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
+  // https://tanstack.com/table/v8/docs/examples/react/editable-data
+  const initialValue = cellContext.getValue();
+  const [value, setValue] = useState(initialValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = () => {
+    if (value === initialValue) {
+      return;
+    }
+    onUpdate?.(cellContext.row.original, cellContext.column.id, value);
+  };
+
+  const handleCancel = () => {
+    setValue(initialValue);
+  };
+
+  // Check if first input column of last row.
+  const rows = cellContext.table.getRowModel().flatRows;
+  const columns = cellContext.table.getVisibleFlatColumns();
+  const placeholder = cellContext.row.index === rows.length - 1 && columns[0].id === cellContext.column.id;
+
+  // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div)?
+  return (
+    <Input.Root>
+      <Input.TextInput
+        ref={inputRef}
+        variant='subdued'
+        placeholder={placeholder ? 'Add row...' : undefined}
+        classNames={['is-full', textPadding]}
+        value={value ?? ''}
+        onBlur={() => handleSave()}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())}
+      />
+    </Input.Root>
+  );
+};
+
+const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, number>) => {
+  const { onUpdate, cell, digits } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
+  const value = cellContext.getValue();
+  const [text, setText] = useState<string>();
+
+  const handleEdit = () => {
+    if (onUpdate) {
+      setText(value !== undefined ? String(value) : '');
+    }
+  };
+
+  // TODO(burdon): Property is encoded as float (e.g., 6.1 => 6.099)
+  const handleSave = () => {
+    const value = text?.trim().length ? Number(text) : NaN;
+    onUpdate?.(cellContext.row.original, cellContext.column.id, isNaN(value) ? undefined : value);
+    setText(undefined);
+  };
+
+  const handleCancel = () => {
+    setText(undefined);
+  };
+
+  if (text !== undefined) {
+    return (
+      <Input.Root>
+        <Input.TextInput
+          value={text}
+          classNames={['is-full text-end font-mono']}
+          onBlur={handleSave}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => (event.key === 'Escape' && handleCancel()) || (event.key === 'Enter' && handleSave())}
+        />
+      </Input.Root>
+    );
+  }
+
+  return (
+    <div
+      className={mx('is-full text-end font-mono empty:after:content-[" "]', textPadding, cell?.classNames)}
+      onClick={handleEdit}
+    >
+      {value?.toLocaleString(undefined, {
+        minimumFractionDigits: digits ?? 0,
+        maximumFractionDigits: digits ?? 2,
+      })}
+    </div>
   );
 };
 
@@ -127,7 +213,13 @@ export class ColumnBuilder<TData extends RowData> {
       header: (column) => {
         return label ?? column.header.id;
       },
-      cell: ComboboxBuilderCell,
+      cell:
+        model && onUpdate
+          ? ComboboxBuilderCell
+          : (cellContext) => {
+              const cellValue = cellContext.getValue();
+              return <div className={mx('truncate', classNames)}>{cellValue ? model?.getText(cellValue) : ''}</div>;
+            },
     });
   }
 
@@ -139,52 +231,13 @@ export class ColumnBuilder<TData extends RowData> {
   > {
     return defaults(props, {
       minSize: 100,
-      meta: { cell: { classNames } },
+      meta: { onUpdate, cell: { classNames } },
       // TODO(burdon): Default.
       header: (column) => {
         return label ?? column.header.id;
       },
       cell: onUpdate
-        ? (cell) => {
-            // https://tanstack.com/table/v8/docs/examples/react/editable-data
-            const initialValue = cell.getValue();
-            const [value, setValue] = useState(initialValue);
-            const inputRef = useRef<HTMLInputElement>(null);
-
-            const handleSave = () => {
-              if (value === initialValue) {
-                return;
-              }
-              onUpdate?.(cell.row.original, cell.column.id, value);
-            };
-
-            const handleCancel = () => {
-              setValue(initialValue);
-            };
-
-            // Check if first input column of last row.
-            const rows = cell.table.getRowModel().flatRows;
-            const columns = cell.table.getVisibleFlatColumns();
-            const placeholder = cell.row.index === rows.length - 1 && columns[0].id === cell.column.id;
-
-            // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div)?
-            return (
-              <Input.Root>
-                <Input.TextInput
-                  ref={inputRef}
-                  variant='subdued'
-                  placeholder={placeholder ? 'Add row...' : undefined}
-                  classNames={['is-full', textPadding]}
-                  value={(value as string) ?? ''}
-                  onBlur={() => handleSave()}
-                  onChange={(event) => setValue(event.target.value)}
-                  onKeyDown={(event) =>
-                    (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())
-                  }
-                />
-              </Input.Root>
-            );
-          }
+        ? StringBuilderCell
         : (cell) => {
             const value = cell.getValue();
             return <div className={mx('truncate', textPadding, classNames)}>{value}</div>;
@@ -201,57 +254,9 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 100,
       minSize: 100,
-      meta: { header: { classNames: 'text-end' }, cell: { classNames } },
+      meta: { onUpdate, digits, header: { classNames: 'text-end' }, cell: { classNames } },
       header: (cell) => label ?? cell.header.id,
-      cell: (cell) => {
-        const value = cell.getValue();
-        const [text, setText] = useState<string>();
-
-        const handleEdit = () => {
-          if (onUpdate) {
-            setText(value !== undefined ? String(value) : '');
-          }
-        };
-
-        // TODO(burdon): Property is encoded as float (e.g., 6.1 => 6.099)
-        const handleSave = () => {
-          const value = text?.trim().length ? Number(text) : NaN;
-          onUpdate?.(cell.row.original, cell.column.id, isNaN(value) ? undefined : value);
-          setText(undefined);
-        };
-
-        const handleCancel = () => {
-          setText(undefined);
-        };
-
-        if (text !== undefined) {
-          return (
-            <Input.Root>
-              <Input.TextInput
-                value={text}
-                classNames={['is-full text-end font-mono']}
-                onBlur={handleSave}
-                onChange={(event) => setText(event.target.value)}
-                onKeyDown={(event) =>
-                  (event.key === 'Escape' && handleCancel()) || (event.key === 'Enter' && handleSave())
-                }
-              />
-            </Input.Root>
-          );
-        }
-
-        return (
-          <div
-            className={mx('is-full text-end font-mono empty:after:content-[" "]', textPadding, classNames)}
-            onClick={handleEdit}
-          >
-            {value?.toLocaleString(undefined, {
-              minimumFractionDigits: digits ?? 0,
-              maximumFractionDigits: digits ?? 2,
-            })}
-          </div>
-        );
-      },
+      cell: NumberBuilderCell,
     });
   }
 
@@ -354,7 +359,7 @@ export class ColumnBuilder<TData extends RowData> {
               size={4}
               classNames={['mli-auto', classNames]}
               checked={checked}
-              onCheckedChange={(event) => table.toggleAllRowsSelected()}
+              onCheckedChange={() => table.toggleAllRowsSelected()}
             />
           </Input.Root>
         ) : null;
@@ -404,7 +409,6 @@ export class ColumnBuilder<TData extends RowData> {
               disabled={!onUpdate}
               checked={!!value}
               onCheckedChange={(value) => {
-                console.log('[switch oncheckedchange]', value);
                 onUpdate?.(cell.row.original, cell.column.id, !!value);
               }}
             />
