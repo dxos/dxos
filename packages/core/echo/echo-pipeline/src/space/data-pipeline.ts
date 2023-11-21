@@ -217,6 +217,7 @@ export class DataPipeline implements CredentialProcessor {
       await waitForOneEpoch;
     }
 
+    // CPU bottleneck control.
     let messageCounter = 0;
 
     invariant(this._pipeline, 'Pipeline is not initialized.');
@@ -263,10 +264,10 @@ export class DataPipeline implements CredentialProcessor {
 
       span.end();
 
-      if (++messageCounter > 1_000) {
+      if (++messageCounter > 100) {
         messageCounter = 0;
         // Allow other tasks to process.
-        await sleep(1);
+        await idle(1_000);
       }
     }
   }
@@ -418,3 +419,39 @@ export class DataPipeline implements CredentialProcessor {
     await this._params.metadataStore.flush();
   }
 }
+
+/**
+ * Waits up to `timeout` ms for the browser to be idle.
+ */
+const idle = async (timeout?: number) => {
+  if (!('scheduler' in globalThis && typeof (globalThis as any).scheduler.postTask === 'function')) {
+    await sleep(1);
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    // const beginTime = performance.now();
+    const cleanup = () => {
+      clearTimeout(timer);
+      controller.abort();
+      // log.warn('yielded for', { ms: performance.now() - beginTime });
+    };
+
+    const controller = new AbortController();
+
+    void (globalThis as any).scheduler
+      .postTask(
+        () => {
+          cleanup();
+          resolve();
+        },
+        { priority: 'background', signal: controller.signal },
+      )
+      .catch(() => {});
+
+    const timer = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, timeout);
+  });
+};
