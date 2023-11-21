@@ -2,18 +2,6 @@
   "sourceRoot": "tools/eslint-plugin",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "tools/eslint-plugin/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   }
 }

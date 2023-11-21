@@ -8,9 +8,10 @@ export default [
   {
     'en-US': {
       [INBOX_PLUGIN]: {
-        'plugin name': 'Inbox',
+        'plugin name': 'Mailbox',
         'create inbox label': 'Create mailbox',
         'inbox title placeholder': 'New mailbox',
+        'no messages': 'Mailbox empty',
       },
     },
   },

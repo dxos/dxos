@@ -53,19 +53,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/kube-console/**/*.{ts,tsx,js,jsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": { },
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
@@ -97,9 +85,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kube-console",
-        "outputPath": "tmp/mocha/packages/experimental/kube-console",
-        "resultsPath": "test-results/packages/experimental/kube-console",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/kube-console/src/**/*.test.{ts,js}"
         ],
@@ -107,11 +95,7 @@
           "packages/experimental/kube-console/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

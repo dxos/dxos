@@ -76,6 +76,7 @@ export class Scheduler {
           });
         });
 
+        // TODO(burdon): Check greater than 30s min (use cron-parser).
         const job = new CronJob(trigger.schedule, () => task.schedule());
 
         job.start();

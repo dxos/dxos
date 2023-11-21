@@ -26,19 +26,7 @@
         "{options.outputPath}"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/kai-types/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": { },
     "prebuild": {
       "executor": "nx:run-script",
       "options": {
@@ -51,9 +39,9 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/experimental/kai-types",
-        "outputPath": "tmp/mocha/packages/experimental/kai-types",
-        "resultsPath": "test-results/packages/experimental/kai-types",
+        
+        
+        
         "testPatterns": [
           "packages/experimental/kai-types/src/**/*.test.{ts,js}"
         ],
@@ -61,11 +49,7 @@
           "packages/experimental/kai-types/src/**/*"
         ]
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      
     }
   },
   "implicitDependencies": [

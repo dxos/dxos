@@ -6,12 +6,15 @@ import { Circle } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
+import { useTranslation } from '@dxos/react-ui';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { formatDate } from './util';
+import { INBOX_PLUGIN } from '../meta';
 
 // TODO(burdon): Factor out.
-const styles = {
+export const styles = {
+  border: 'border-neutral-400 dark:border-neutral-800',
   hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
   selected: '!bg-cyan-100 !dark:bg-cyan-900',
 };
@@ -22,12 +25,15 @@ export type MessageListProps = {
   onSelect?: (selected: MessageType) => void;
 };
 
-// TODO(burdon): Use List (see composer settings/kai).
+// TODO(burdon): Use List component for keyboard navigation.
 
 export const MessageList = ({ messages = [], selected, onSelect }: MessageListProps) => {
+  const { t } = useTranslation(INBOX_PLUGIN);
+
   return (
     <div className={mx('flex flex-col grow max-w-[400px] overflow-hidden', inputSurface)}>
-      <div className='flex flex-col overflow-y-auto divide-y'>
+      <div className='flex flex-col overflow-y-auto'>
+        {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
         {messages?.map((message) => (
           <MessageItem key={message.id} message={message} selected={message.id === selected} onSelect={onSelect} />
         ))}
@@ -46,7 +52,7 @@ export const MessageItem: FC<{ message: MessageType; selected?: boolean; onSelec
   const subject = message.subject ?? message.blocks[0].text;
   return (
     <div
-      className={mx('flex p-2 cursor-pointer', styles.hover, selected && styles.selected)}
+      className={mx('flex p-2 cursor-pointer border-b', styles.border, styles.hover, selected && styles.selected)}
       onClick={() => onSelect?.(message)}
     >
       <div className='flex pr-2 pt-[2px]'>

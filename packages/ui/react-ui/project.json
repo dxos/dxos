@@ -2,44 +2,23 @@
   "sourceRoot": "packages/ui/react-ui/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/react-ui/src/index.ts",
-        "outputPath": "packages/ui/react-ui/dist/types",
-        "tsConfig": "packages/ui/react-ui/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/ui/react-ui/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
       "options": {
-        "format": "unix",
         "lintFilePatterns": [
-          "packages/ui/react-ui/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
+          "packages/ui/react-ui/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
     },
     "storybook": {
       "configurations": {
