@@ -6,7 +6,7 @@ import { CronJob } from 'cron';
 
 import { DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
-import type { Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, createSubscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
