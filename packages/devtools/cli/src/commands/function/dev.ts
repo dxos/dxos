@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
@@ -29,6 +29,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
     require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
     baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     manifest: Flags.string({ description: 'Functions manifest file.' }),
+    reload: Flags.boolean({ description: 'Reload functions on change.' }),
   };
 
   async run(): Promise<any> {
@@ -51,18 +52,19 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const server = new DevServer(client, {
         directory,
         manifest,
+        reload: this.flags.reload,
       });
 
       await server.initialize();
       await server.start();
 
       // TODO(burdon): Move to plugin (make independent of runtime).
-      const triggers = new TriggerManager(client, manifest, { endpoint: server.proxy! });
-      await triggers.start();
+      const scheduler = new Scheduler(client, manifest, { endpoint: server.proxy! });
+      await scheduler.start();
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
-        await triggers.stop();
+        await scheduler.stop();
         await server.stop();
         process.exit();
       });
@@ -74,7 +76,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         this.log(
           'Functions:\n' +
             server.functions
-              .map(({ def: { id, path } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, path)}}`)
+              .map(({ def: { id, name } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, name)}}`)
               .join('\n'),
         );
       }

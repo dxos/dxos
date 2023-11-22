@@ -21,7 +21,7 @@ export {
   TypeCollection,
   TextObject,
   TypedObject,
-  type EchoObject, // TODO(burdon): Remove?
+  type EchoObject, // TODO(burdon): Remove from API?
   type FilterSource,
   type ObjectMeta,
   type Selection,
@@ -35,5 +35,5 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { TextModel } from '@dxos/text-model';
 
 export { SpaceList } from './space-list';
-export { SpaceProxy } from './space-proxy';
+export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
 export { createDefaultModelFactory, getSpaceForObject } from './util';

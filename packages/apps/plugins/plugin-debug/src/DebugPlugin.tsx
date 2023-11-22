@@ -207,7 +207,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     void intentPlugin?.provides.intent.dispatch(
                       objects.map((object) => ({
                         action: SpaceAction.ADD_OBJECT,
-                        data: { folder, object },
+                        data: { target: folder, object },
                       })),
                     );
                   }}
