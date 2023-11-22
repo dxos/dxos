@@ -112,7 +112,7 @@ export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, 
   mx(
     getSize(size),
     'shrink-0 flex items-center justify-center rounded text-white',
-    'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
+    'bg-neutral-200 dark:bg-neutral-700 aria-checked:bg-primary-600 aria-[checked=mixed]:bg-primary-600',
     focusRing,
     ...etc,
   );
@@ -124,7 +124,7 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5 }, ..
   mx(
     getSizeHeight(size),
     getSizeWidth(computeSize(sizeValue(size) * 1.75, 9)),
-    'cursor-pointer shrink-0 bg-transparent rounded-full pli-0.5 border-2 border-neutral-500 relative data-[state=checked]:border-primary-500 data-[state=checked]:bg-primary-500 outline-none cursor-default',
+    'cursor-pointer shrink-0 bg-transparent rounded-full pli-0.5 border-2 border-neutral-500 relative aria-checked:border-primary-500 aria-checked:bg-primary-500 outline-none cursor-default',
     ...etc,
   );
 

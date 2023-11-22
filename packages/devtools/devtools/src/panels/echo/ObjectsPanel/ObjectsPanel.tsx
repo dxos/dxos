@@ -56,7 +56,7 @@ export const ObjectsPanel = () => {
       <MasterDetailTable<TypedObject>
         columns={columns}
         data={items.filter(textFilter(filter))}
-        widths={['w-auto min-w-[30%]', 'w-auto']}
+        widths={['is-1/3 shrink-0', '']}
       />
     </PanelContainer>
   );

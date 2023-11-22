@@ -43,5 +43,5 @@ const logColumns = (() => {
 })();
 
 export const LogView: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
-  return <Table<LogEntry> columns={logColumns} data={logs} />;
+  return <Table<LogEntry> columns={logColumns} data={logs} fullWidth />;
 };
