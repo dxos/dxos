@@ -4,13 +4,12 @@
 
 import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 import bytes from 'bytes';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
-import { AnchoredOverflow } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
 
@@ -85,55 +84,49 @@ export const SwarmPanel = () => {
     }
   }
 
-  const [session, setSession] = useState<SwarmConnection>();
+  const [sessionId, setSessionId] = useState<PublicKey>();
+  const handleSelect = (selected: SwarmConnection[] | undefined) => {
+    setSessionId(selected?.[0].connection?.sessionId);
+  };
 
-  const [items, connectionMap] = swarms.reduce<[SwarmConnection[], ComplexMap<PublicKey, ConnectionInfo>]>(
-    (acc, swarm) => {
-      if (!swarm.connections?.length) {
-        acc[0].push(swarm);
-      } else {
-        for (const connection of swarm.connections ?? []) {
-          const identity = identityMap.get(connection.remotePeerId)?.identity;
-          if (identity) {
-            connection.identity = identity.identityKey.truncate();
-            if (identity.profile?.displayName) {
-              connection.identity = connection.identity + ' (' + identity.profile?.displayName + ')';
-            }
+  const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
+  const connection = sessionId ? connectionMap.get(sessionId) : undefined;
+  const items = swarms.reduce<SwarmConnection[]>((connections, swarm) => {
+    if (!swarm.connections?.length) {
+      connections.push(swarm);
+    } else {
+      for (const connection of swarm.connections ?? []) {
+        const identity = identityMap.get(connection.remotePeerId)?.identity;
+        if (identity) {
+          connection.identity = identity.identityKey.truncate();
+          if (identity.profile?.displayName) {
+            connection.identity = connection.identity + ' (' + identity.profile?.displayName + ')';
           }
-          acc[1].set(connection.sessionId, connection);
-          acc[0].push({ ...swarm, connection });
         }
+        connectionMap.set(connection.sessionId, connection);
+        connections.push({ ...swarm, connection });
       }
-      return acc;
-    },
-    [[], new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash)],
-  ) ?? [swarms];
+    }
 
-  const connection = session?.id ? connectionMap.get(session.id) : undefined;
-
-  // useEffect(() => {
-  //   console.log('[current]', session, connection, connectionMap, swarms);
-  // }, [session, connection, connectionMap, swarms]);
+    return connections;
+  }, []) ?? [swarms];
 
   // TODO(dmaretskyi): Grid already has some sort features.
   items.sort(comparer((row) => (row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity)));
 
   return (
     <PanelContainer classNames='divide-y'>
-      <AnchoredOverflow.Root classNames='h-1/2 overflow-auto'>
+      <div className='h-1/2 overflow-hidden'>
         <Table<SwarmConnection>
           columns={columns}
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
-          currentDatum={session}
-          onDatumClick={setSession}
-          fullWidth
+          onDatumClick={(datum) => handleSelect([datum])}
         />
-        <AnchoredOverflow.Anchor />
-      </AnchoredOverflow.Root>
+      </div>
       <div className='h-1/2 overflow-auto'>
-        {session ? (
+        {sessionId ? (
           connection ? (
             <ConnectionInfoView connection={connection} />
           ) : (
