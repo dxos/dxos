@@ -34,7 +34,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from './util';
+import { getConfig, getKey } from '../../util';
 
 // TODO(burdon): Demo:
 //  - Email pipeline (summarize daily set of messages from contacts in CRM).
@@ -140,7 +140,7 @@ describe.skip('LangChain', () => {
     ----------------
     question: {question}`);
 
-    const chain = RunnableSequence.from([
+    const agent = RunnableSequence.from([
       {
         context: retriever.pipe(formatDocumentsAsString),
         question: new RunnablePassthrough(),
@@ -152,7 +152,7 @@ describe.skip('LangChain', () => {
 
     const call = async (inputText: string) => {
       console.log(`\n> ${inputText}`);
-      const response = await chain.invoke(inputText);
+      const response = await agent.invoke(inputText);
       console.log(response);
     };
 

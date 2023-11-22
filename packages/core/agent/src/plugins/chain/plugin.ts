@@ -10,6 +10,6 @@ import { Plugin } from '../plugin';
 export class ChainPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/chain';
 
-  // TODO(burdon): Provide resources (e.g., vector database) to other plugins, functions, etc.
+  // TODO(burdon): Expose chain/model service API to functions.
   override async onOpen() {}
 }
