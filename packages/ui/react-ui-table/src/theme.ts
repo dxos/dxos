@@ -2,66 +2,98 @@
 // Copyright 2023 DXOS.org
 //
 
-import { chromeSurface } from '@dxos/react-ui-theme';
+import { type CellContext } from '@tanstack/react-table';
 
-// TODO(burdon): Remove nested classNames? Add to theme?
-export type TableSlots = {
-  root?: {
-    className?: string | string[];
-  };
-  table?: {
-    className?: string | string[];
-  };
-  header?: {
-    className?: string | string[];
-  };
-  footer?: {
-    className?: string | string[];
-  };
-  group?: {
-    className?: string | string[];
-  };
-  row?: {
-    className?: string | string[];
-  };
-  cell?: {
-    className?: string | string[];
-  };
-  focus?: {
-    className?: string | string[];
-  };
-  selected?: {
-    className?: string | string[];
-  };
-  margin?: {
-    className?: string | string[];
-  };
-};
+import { chromeSurface, fixedSurface, focusRing, groupBorder, hoverColors, mx } from '@dxos/react-ui-theme';
+import { type ComponentFunction } from '@dxos/react-ui-types';
 
-// TODO(burdon): Change to groups.
-/*
-head: {
-  default:
-  cell:
-}
-row: {
-  default: '',
-  selected: ''
-}
-*/
+import { type TableContextValue, type TableFlags } from './components';
 
-// TODO(burdon): Scrollbar area.
-// TODO(burdon): Overscroll horizontal (full width).
+export const currentRow = '!bg-neutral-75 !dark:bg-neutral-850';
+export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
+export const flushPadding = 'pli-0 plb-0';
+export const textPadding = 'pli-2 plb-0.5';
+export const headPadding = 'pli-2 plb-1.5';
 
-// TODO(burdon): Integrate with DXOS UI theme (direct dependency -- see react-ui-editor, tailwind.ts).
-//  See Link.tsx const { tx } = useThemeContext();
-//  Reuse button fragments for hoverColors, selected, primary, etc.
-export const defaultTableSlots: TableSlots = {
-  // TODO(burdon): head/body/table rows.
-  header: { className: [chromeSurface, 'px-2 font-light select-none'] },
-  footer: { className: [chromeSurface, 'px-2 font-light'] },
-  cell: { className: 'px-2' },
-  group: { className: 'px-2 font-light text-xs text-left' },
-  focus: { className: 'ring ring-primary-600 ring-inset' },
-  selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
-};
+export const gridCellFocusRing = 'focus:z-[11] focus:outline outline-2 outline-primary-500 dark:outline-primary-400';
+
+//
+// table
+//
+
+export type TableStyleProps = Partial<TableContextValue<any>>;
+
+export const tableRoot: ComponentFunction<TableStyleProps> = ({ fullWidth }, ...etc) =>
+  mx('table-fixed', fullWidth && 'is-full', ...etc);
+
+export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
+  mx('text-start font-medium', flushPadding, ...etc);
+
+//
+// thead
+//
+
+export type TheadStyleProps = Partial<TableFlags>;
+
+export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header }, ...etc) =>
+  mx(header ? 'sticky block-start-0 z-10' : 'collapse', header && fixedSurface, ...etc);
+
+export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
+
+export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) =>
+  mx(
+    'relative text-start font-medium select-none truncate',
+    headPadding,
+    border && 'border',
+    border && groupBorder,
+    ...etc,
+  );
+
+export const theadResizeRoot: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
+  mx(
+    'absolute top-0 pis-1 h-full z-[10] w-[7px] -right-[5px] cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
+    ...etc,
+  );
+
+export const theadResizeThumb: ComponentFunction<TheadStyleProps> = (_props, ...etc) =>
+  mx('flex group-hover:bg-neutral-700 -ml-[2px] w-[1px] h-full', ...etc);
+
+//
+// tbody
+//
+
+export type TbodyStyleProps = Partial<TableContextValue<any>>;
+export const tbodyRoot: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx(...etc);
+
+export type TbodyTrStyleProps = Partial<{ isSelected?: boolean; isCurrent?: boolean; canBeCurrent?: boolean }>;
+export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ isSelected, isCurrent, canBeCurrent }, ...etc) =>
+  mx(
+    'group',
+    isSelected ? selectedRow : isCurrent && currentRow,
+    canBeCurrent && focusRing,
+    canBeCurrent && hoverColors,
+    canBeCurrent && 'cursor-pointer rounded',
+    ...etc,
+  );
+
+//
+// td, th
+//
+
+export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border, isGrid }, ...etc) =>
+  mx('relative', flushPadding, border && 'border', border && groupBorder, isGrid && gridCellFocusRing, ...etc);
+export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...etc) => mx(...etc);
+
+//
+// tfoot
+//
+
+export type TfootStyleProps = Partial<TableContextValue<any>>;
+
+export const tfootRoot: ComponentFunction<TfootStyleProps> = (_props, ...etc) =>
+  mx('sticky block-end-0 z-10', chromeSurface, ...etc);
+
+export const tfootTr: ComponentFunction<TfootStyleProps> = (_props, ...etc) => mx(...etc);
+
+export const tfootTh: ComponentFunction<TfootStyleProps> = ({ border }, ...etc) =>
+  mx(textPadding, chromeSurface, border && groupBorder, ...etc);

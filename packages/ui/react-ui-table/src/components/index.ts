@@ -4,4 +4,4 @@
 
 export * from './ColumnMenu';
 export * from './Table';
-export * from './ComboboxCell';
+export * from './Cell';

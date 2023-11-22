@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
+import { AnchoredOverflow } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
 
@@ -84,13 +85,10 @@ export const SwarmPanel = () => {
     }
   }
 
-  const [sessionId, setSessionId] = useState<PublicKey>();
-  const handleSelect = (selected: SwarmConnection[] | undefined) => {
-    setSessionId(selected?.[0].connection?.sessionId);
-  };
+  const [session, setSession] = useState<SwarmConnection>();
 
   const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
-  const connection = sessionId ? connectionMap.get(sessionId) : undefined;
+  const connection = session?.id ? connectionMap.get(session.id) : undefined;
   const items = swarms.reduce<SwarmConnection[]>((connections, swarm) => {
     if (!swarm.connections?.length) {
       connections.push(swarm);
@@ -116,15 +114,18 @@ export const SwarmPanel = () => {
 
   return (
     <PanelContainer>
-      <div className='h-1/2 overflow-hidden'>
+      <AnchoredOverflow.Root classNames='h-1/2 overflow-auto'>
         <Table<SwarmConnection>
           columns={columns}
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
-          onSelectedChange={handleSelect}
+          currentDatum={session}
+          onDatumClick={setSession}
+          fullWidth
         />
-      </div>
+        <AnchoredOverflow.Anchor />
+      </AnchoredOverflow.Root>
       <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
     </PanelContainer>
   );

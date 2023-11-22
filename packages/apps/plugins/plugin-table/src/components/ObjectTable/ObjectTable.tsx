@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { Expando, type TypedObject, Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
-import { chromeSurface } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Remove deps.
 import { getSchema, schemaPropMapper, TableColumnBuilder } from '../../schema';
@@ -164,14 +163,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
           columns={columns}
           data={rows}
           border
-          slots={{
-            header: { className: [chromeSurface, 'px-2 font-light select-none'] },
-            footer: { className: [chromeSurface, 'px-2 font-light'] },
-            group: { className: 'px-2 font-light text-xs text-left' },
-            focus: { className: 'ring ring-primary-600 ring-inset' },
-            selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
-          }}
           onColumnResize={handleColumnResize}
+          role='grid'
         />
         {debug && (
           <div className='flex text-xs'>
