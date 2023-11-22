@@ -6,6 +6,8 @@ import { expect } from 'chai';
 import fs from 'fs';
 import { AgentExecutor } from 'langchain/agents';
 import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
+import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
+import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
 import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { type Document } from 'langchain/document';
@@ -16,6 +18,7 @@ import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
+  MessagesPlaceholder,
   PromptTemplate,
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
@@ -23,6 +26,7 @@ import { type AgentStep, type BaseMessage } from 'langchain/schema';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnableSequence, RunnablePassthrough } from 'langchain/schema/runnable';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { DynamicStructuredTool, formatToOpenAITool } from 'langchain/tools';
 import { Calculator } from 'langchain/tools/calculator';
 import { renderTextDescription } from 'langchain/tools/render';
 import { formatDocumentsAsString } from 'langchain/util/document';
@@ -46,7 +50,7 @@ import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Scripts/notebook with agent plugin/functions
 // TODO(burdon): Graph database: https://js.langchain.com/docs/modules/data_connection/experimental/graph_databases/neo4j
-// TODO(burdon): Document chains: http://localhost:3000/docs/modules/chains/document
+// TODO(burdon): Document chains: https://js.langchain.com/docs/modules/chains/document
 // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
 // TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
 // TODO(burdon): FakeEmbeddings for tests
@@ -193,8 +197,8 @@ describe.skip('LangChain', () => {
     const prompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
         [
-          'Use the following pieces of context to answer the question at the end.',
-          "If you don't know the answer, just say that you don't know, don't try to make up an answer.",
+          'use the following pieces of context to answer the question at the end.',
+          "if you don't know the answer, just say that you don't know, don't try to make up an answer.",
           '----------------',
           '{context}',
         ].join('\n'),
@@ -224,7 +228,7 @@ describe.skip('LangChain', () => {
 
   //
   // Structured output
-  // http://localhost:3000/docs/modules/chains/popular/structured_output
+  // https://js.langchain.com/docs/modules/chains/popular/structured_output
   // TODO(burdon): How to make prompt satisfy all fields?
   //
   test('functions', async () => {
@@ -284,9 +288,9 @@ describe.skip('LangChain', () => {
 
   //
   // Agents, ReAct prompts, and Tools.
-  // http://localhost:3000/docs/modules/agents/agent_types/chat_conversation_agent
-  // TODO(burdon): http://localhost:3000/docs/modules/agents/agent_types/openai_assistant
-  // TODO(burdon): http://localhost:3000/docs/modules/agents/agent_types/plan_and_execute
+  // https://js.langchain.com/docs/modules/agents/agent_types/chat_conversation_agent
+  // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/openai_assistant
+  // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/plan_and_execute
   //
   test('agent', async () => {
     // Bind stop token.
@@ -351,7 +355,68 @@ describe.skip('LangChain', () => {
     await call('what is 6 times 7?');
   });
 
-  test.only('chain', async () => {
+  //
+  // Custom tools
+  // https://js.langchain.com/docs/modules/agents/agent_types/openai_tools_agent
+  //
+  test('custom tool', async () => {
+    const tools = [
+      new DynamicStructuredTool({
+        name: 'get_current_weather',
+        description: 'Get the current weather in a given location',
+        schema: z.object({
+          location: z.string().describe('The city and state, e.g. San Francisco, CA'),
+          unit: z.enum(['celsius', 'fahrenheit']),
+        }),
+        func: async ({ location }) => {
+          const data = new Map<string, number>([
+            ['new york', 20],
+            ['san francisco', 25],
+            ['tokyo', 31],
+          ]);
+
+          const temperature = data.get(location.toLowerCase());
+          if (temperature !== undefined) {
+            return JSON.stringify({ location, temperature, unit: 'celsius' });
+          } else {
+            return JSON.stringify({}); // TODO(burdon): Say I don't know.
+          }
+        },
+      }),
+    ];
+
+    const model = createModel().bind({ tools: tools.map(formatToOpenAITool) });
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      ['ai', 'You are a helpful assistant'],
+      ['human', '{input}'],
+      new MessagesPlaceholder('agent_scratchpad'),
+    ]);
+
+    const agent = RunnableSequence.from([
+      {
+        input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
+        agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) => formatToOpenAIToolMessages(i.steps),
+      },
+      prompt,
+      model,
+      new OpenAIToolsAgentOutputParser(),
+    ]).withConfig({ runName: 'OpenAIToolsAgent' });
+
+    const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
+
+    const call = async (input: string) => {
+      const result = await executor.invoke({ input });
+      console.log(`\n> ${input}`);
+      console.log(result.output);
+      return result;
+    };
+
+    await call('what is the temperature in tokyo?');
+    await call('what is the temperature in paris?');
+  });
+
+  test('chain', async () => {
     const docs: Document[] = [
       {
         metadata: { id: 1 },

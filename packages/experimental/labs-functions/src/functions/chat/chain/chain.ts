@@ -76,7 +76,7 @@ export class Chain {
     ]);
   }
 
-  async call(text: string) {
-    return await this._agent.invoke(text);
+  async call(inputText: string) {
+    return await this._agent.invoke(inputText);
   }
 }
