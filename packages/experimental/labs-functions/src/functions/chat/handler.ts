@@ -57,24 +57,22 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 
         // TODO(burdon): Streaming API.
         // TODO(burdon): Error handling (e.g., 401);
-        const { content } = await chat.call(messages);
-        log('response', { content });
-        if (content) {
-          const blocks = createResponse(client, space, content);
-          thread.messages.push(
-            new MessageType(
-              {
-                identityKey,
-                blocks,
+        const { content } = await chat.invoke(messages);
+        log('response', { content: content.toString() });
+        const blocks = createResponse(client, space, content.toString());
+        thread.messages.push(
+          new MessageType(
+            {
+              identityKey,
+              blocks,
+            },
+            {
+              meta: {
+                keys: [{ source: 'openai.com' }],
               },
-              {
-                meta: {
-                  keys: [{ source: 'openai.com' }],
-                },
-              },
-            ),
-          );
-        }
+            },
+          ),
+        );
       }
     }),
   );
