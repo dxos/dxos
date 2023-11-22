@@ -5,6 +5,7 @@
 import React, { type FC } from 'react';
 
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { AnchoredOverflow } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
@@ -43,13 +44,15 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         }}
       />
 
-      <div className='flex grow overflow-hidden'>
+      <AnchoredOverflow.Root classNames='flex grow'>
         <Table<ConnectionInfo.StreamStats>
           columns={columns}
           data={connection.streams ?? []}
           keyAccessor={(row) => row.id.toString()}
+          fullWidth
         />
-      </div>
+        <AnchoredOverflow.Anchor />
+      </AnchoredOverflow.Root>
     </>
   );
 };
