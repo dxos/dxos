@@ -458,7 +458,21 @@ export class Muxer {
 
   private async _emitStats() {
     if (this._disposed || this._destroying) {
+      if (!this._lastStats) {
+        return;
+      }
+
+      // zero out counting stats to not skew metrics.
+      const lastStats = this._lastStats;
       this._lastStats = undefined;
+
+      lastStats.readBufferSize = 0;
+      lastStats.writeBufferSize = 0;
+      for (const c of lastStats.channels) {
+        c.writeBufferSize = 0;
+      }
+      this.statsUpdated.emit(lastStats);
+
       this._lastChannelStats.clear();
       return;
     }
