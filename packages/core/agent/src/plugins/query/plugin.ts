@@ -2,18 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import defaultsDeep from 'lodash.defaultsdeep';
+
 import { QueryOptions } from '@dxos/client/echo';
 import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
 import { getStateMachineFromItem } from '@dxos/echo-db';
 import { getEchoObjectItem } from '@dxos/echo-schema';
 import { type EchoObject, Filter, base } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { Plugin } from '../plugin';
 
@@ -29,8 +29,13 @@ export class QueryPlugin extends Plugin {
 
       const space = this.context.client.spaces.default;
       const unsubscribe = space.listen(QUERY_CHANNEL, async (message) => {
+        if (message.payload['@type'] !== 'dxos.agent.query.QueryRequest') {
+          log.warn('unexpected message type.', { type: message.payload['@type'] });
+          return;
+        }
+
         log('received message', { message });
-        await this._processRequest(message);
+        await this._processRequest(message.payload);
       });
 
       this._ctx?.onDispose(unsubscribe);
@@ -39,20 +44,10 @@ export class QueryPlugin extends Plugin {
     this._ctx.onDispose(() => subscription.unsubscribe());
   }
 
-  private async _processRequest(message: GossipMessage) {
-    if (message.payload['@type'] !== 'dxos.agent.query.QueryRequest') {
-      log('Indexing plugin received unexpected message type.', { type: message.payload['@type'] });
-      return;
-    }
-    invariant(this._ctx, 'Plugin not opened.');
-
-    // TODO(burdon): Race condition?
-    // await this._initialized.wait();
-
-    const request: QueryRequest = message.payload;
-
-    request.filter.options = { ...request.filter.options, dataLocation: QueryOptions.DataLocation.LOCAL };
-    const filter = Filter.fromProto(request.filter);
+  private async _processRequest(request: QueryRequest) {
+    const filter = Filter.fromProto(
+      defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),
+    );
     const { results: queryResults } = this.context.client.spaces.query(filter, filter.options);
 
     const response: QueryResponse = {
@@ -86,6 +81,7 @@ const createSnapshot = (object: EchoObject): EchoObjectProto => {
   } else {
     model = (item.modelMeta.snapshotCodec as ProtoCodec).encodeAsAny(getStateMachineFromItem(item)?.snapshot());
   }
+
   return {
     objectId: object.id,
     genesis: {

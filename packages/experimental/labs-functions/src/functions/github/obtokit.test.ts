@@ -4,7 +4,6 @@
 
 import { Octokit } from '@octokit/rest';
 
-import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 // TODO(mykola): Mock Octokit. Unskip tests.
@@ -17,7 +16,7 @@ describe.skip('Octokit', () => {
     });
 
     const userData = response.data;
-    log.info('userData', { userData });
+    console.log({ userData });
   });
 
   test('Parse project', async () => {
@@ -25,13 +24,13 @@ describe.skip('Octokit', () => {
     // const PROJECT = 'https://github.com/dxos/dxos';
     const response = await octokit.repos.get({ owner: 'dxos', repo: 'dxos' });
     const repoData = response.data;
-    log.info('repoData', { repoData });
+    console.log({ repoData });
   });
 
   test('Parse contributors', async () => {
     const octokit = new Octokit();
     const response = await octokit.repos.listContributors({ owner: 'dxos', repo: 'dxos' });
     const contributors = response.data;
-    log.info('contributors', { contributors });
+    console.log({ contributors });
   });
 });

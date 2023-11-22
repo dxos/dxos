@@ -16,6 +16,7 @@ import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
 import GridMeta from '@braneframe/plugin-grid/meta';
+import InboxMeta from '@braneframe/plugin-inbox/meta';
 import IpfsMeta from '@braneframe/plugin-ipfs/meta';
 import KanbanMeta from '@braneframe/plugin-kanban/meta';
 import LayoutMeta from '@braneframe/plugin-layout/meta';
@@ -101,6 +102,7 @@ const main = async () => {
       MarkdownMeta,
       SketchMeta,
       GridMeta,
+      InboxMeta,
       KanbanMeta,
       MapMeta,
       ScriptMeta,
@@ -127,6 +129,7 @@ const main = async () => {
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
+      [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
       [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout')),

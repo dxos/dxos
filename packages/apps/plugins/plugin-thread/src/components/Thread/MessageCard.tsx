@@ -6,7 +6,7 @@ import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
 import React, { forwardRef, useId } from 'react';
 
-import { type Thread as ThreadType } from '@braneframe/types';
+import { type Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, TextObject } from '@dxos/react-client/echo';
 import { Card, DensityProvider } from '@dxos/react-ui';
@@ -17,32 +17,32 @@ import { useSubscription } from '../util';
 
 export type BlockProperties = {
   displayName?: string;
-  classes: string;
+  classes?: string;
 };
 
-export type ThreadBlockProps = {
-  block: ThreadType.Block;
+export type ThreadMessageProps = {
+  message: MessageType;
   identityKey: PublicKey;
-  getBlockProperties: (identityKey: PublicKey) => BlockProperties;
+  propertiesProvider: (identityKey: PublicKey) => BlockProperties;
   onDelete?: (blockId: string, idx: number) => void;
 };
 
-export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlockProps) => {
-  useSubscription(block.messages); // TODO(burdon): Not updated.
-  if (!block.messages.length || !block.identityKey) {
+export const MessageCard = ({ message, propertiesProvider, onDelete }: ThreadMessageProps) => {
+  useSubscription(message.blocks); // TODO(burdon): Not updated.
+  if (!message.blocks.length || !message.identityKey) {
     return null;
   }
 
-  const message = block.messages[0]!;
-  const { classes, displayName } = getBlockProperties(PublicKey.from(block.identityKey!));
-  const date = message.timestamp ? new Date(message.timestamp) : undefined;
+  const message2 = message.blocks[0]!;
+  const { classes, displayName } = propertiesProvider(PublicKey.from(message.identityKey!));
+  const date = message2.timestamp ? new Date(message2.timestamp) : undefined;
 
   // TODO(burdon): Use aurora cards.
   // TODO(burdon): Reply button.
   return (
     <DensityProvider density='fine'>
       <div
-        key={block.id}
+        key={message.id}
         className={mx(
           'flex flex-col overflow-hidden rounded shadow',
           inputSurface,
@@ -65,8 +65,8 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
             </div>
 
             <div className='overflow-hidden pb-1'>
-              {block.messages.map((message, i) => (
-                <ThreadMessage key={i} message={message} onDelete={onDelete && (() => onDelete(block.id, i))} />
+              {message.blocks.map((block, i) => (
+                <ThreadBlock key={i} block={block} onDelete={onDelete && (() => onDelete(message.id, i))} />
               ))}
             </div>
           </div>
@@ -76,14 +76,14 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
   );
 };
 
-const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onDelete?: () => void }) => {
+const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?: () => void }) => {
   const id = useId();
 
-  if (message.object) {
+  if (block.object) {
     return (
       <div className='flex overflow-hidden px-2 py-1 group'>
         <Mosaic.Container id={id} Component={Pill}>
-          <Mosaic.DraggableTile path={id} item={message.object} Component={Pill} onRemove={onDelete} />
+          <Mosaic.DraggableTile path={id} item={block.object} Component={Pill} onRemove={onDelete} />
         </Mosaic.Container>
       </div>
     );
@@ -91,11 +91,11 @@ const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onD
 
   return (
     <div className='flex overflow-hidden px-2 py-1 group'>
-      {message.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{message.text}</div>}
-      {message.data && (
+      {block.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>}
+      {block.data && (
         // TODO(burdon): Colorize (reuse codemirror or hljs?)
         <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
-          <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
+          <code>{JSON.stringify(safeParseJson(block.data), undefined, 2)}</code>
         </pre>
       )}
 

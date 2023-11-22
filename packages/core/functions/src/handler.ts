@@ -4,26 +4,25 @@
 
 import { type Client } from '@dxos/client';
 
+// TODO(burdon): No response?
 export interface Response {
   status(code: number): Response;
-  succeed(data?: object): Response;
 }
 
+// TODO(burdon): Limit access to individual space?
 export interface FunctionContext {
   client: Client;
-  status(code: number): Response;
 }
 
-/**
- * Function handler.
- */
+// TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
+// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 export type FunctionHandler<T extends {}> = (params: {
-  context: FunctionContext;
   event: T;
+  context: FunctionContext;
+  response: Response;
 }) => Promise<Response | void>;
 
-// TODO(burdon): Types.
 export type FunctionSubscriptionEvent = {
-  space: string;
+  space: string; // TODO(burdon): Convert to PublicKey.
   objects: string[];
 };

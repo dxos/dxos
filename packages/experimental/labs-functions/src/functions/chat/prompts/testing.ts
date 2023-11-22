@@ -13,7 +13,7 @@ export class TestBuilder {
   model: BaseChatModel = new FakeListChatModel({ responses: ['fake response!'] });
 
   init() {
-    const config = getConfig(`${process.env.HOME}/.config/dx/profile/default.yml`)!;
+    const config = getConfig()!;
     this.model = new ChatOpenAI({
       temperature: 0.9,
       openAIApiKey: getKey(config, 'openai.com/api_key')!,
