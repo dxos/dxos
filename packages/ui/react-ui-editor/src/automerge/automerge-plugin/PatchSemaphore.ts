@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as automerge } from '@dxos/automerge/automerge';
 import { type EditorView } from '@codemirror/view';
+
+import { next as automerge } from '@dxos/automerge/automerge';
 
 import amToCodemirror from './amToCodemirror';
 import codeMirrorToAm from './codeMirrorToAm';

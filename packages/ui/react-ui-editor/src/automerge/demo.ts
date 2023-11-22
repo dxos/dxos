@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import {
   type Doc,
   next as automerge,
@@ -10,8 +11,6 @@ import {
   type Heads,
   type SyncState,
 } from '@dxos/automerge/automerge';
-
-import { Event } from '@dxos/async';
 
 export class Peer {
   changeEvent = new Event();

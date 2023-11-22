@@ -3,7 +3,6 @@
 //
 
 import { Repo as AutomergeRepo, type DocHandle } from '@dxos/automerge/automerge-repo';
-
 import { invariant } from '@dxos/invariant';
 
 import { AutomergeObject } from './automerge-object';

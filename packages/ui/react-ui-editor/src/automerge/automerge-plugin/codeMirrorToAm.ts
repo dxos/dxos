@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as am, type Heads } from '@dxos/automerge/automerge';
 import { type EditorState, type Text, type Transaction } from '@codemirror/state';
+
+import { next as am, type Heads } from '@dxos/automerge/automerge';
 
 import { type Field } from './plugin';
 import { type Peer } from '../demo';
