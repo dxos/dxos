@@ -11,7 +11,7 @@ import { type TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@d
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
-import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
+import { baseSurface, chromeSurface, topbarBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
 import { defaultFileTypes } from '../hooks';
@@ -99,7 +99,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   };
 
   return (
-    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
         Component={StackContent}

@@ -15,15 +15,11 @@
       ]
     },
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "docs/src/index.ts",
         "outputPath": "docs/dist",
         "tsConfig": "docs/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "bundle": {
       "dependsOn": [
@@ -41,7 +37,6 @@
       ]
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

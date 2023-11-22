@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { KanbanBoard } from './KanbanBoard';
 import { type KanbanModel } from '../types';
@@ -28,7 +28,7 @@ export const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   };
 
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <KanbanBoard model={model} />
     </Main.Content>
   );

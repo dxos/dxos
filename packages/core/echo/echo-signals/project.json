@@ -2,44 +2,17 @@
   "sourceRoot": "packages/core/echo/echo-signals/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/echo/echo-signals/src/index.ts",
-        "outputPath": "packages/core/echo/echo-signals/dist/types",
-        "tsConfig": "packages/core/echo/echo-signals/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/echo/echo-signals/src/core.ts",
           "packages/core/echo/echo-signals/src/index.ts",
           "packages/core/echo/echo-signals/src/react.ts"
-        ],
-        "outputPath": "packages/core/echo/echo-signals/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/echo/echo-signals/src/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   },
   "implicitDependencies": [
     "esbuild"

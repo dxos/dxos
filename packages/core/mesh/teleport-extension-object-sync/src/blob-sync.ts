@@ -110,6 +110,10 @@ export class BlobSync {
         log('extension closed');
         this._extensions.delete(extension);
       },
+      onAbort: async () => {
+        log('extension aborted');
+        this._extensions.delete(extension);
+      },
       onPush: async (blobChunk) => {
         if (!this._downloadRequests.has(blobChunk.id)) {
           return;

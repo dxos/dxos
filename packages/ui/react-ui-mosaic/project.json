@@ -2,45 +2,18 @@
   "sourceRoot": "packages/ui/react-ui-mosaic/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/react-ui-mosaic/src/index.ts",
-        "outputPath": "packages/ui/react-ui-mosaic/dist/types",
-        "tsConfig": "packages/ui/react-ui-mosaic/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/ui/react-ui-mosaic/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-mosaic/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/ui/react-ui-mosaic/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -67,25 +40,7 @@
         "{options.outputDir}"
       ]
     },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/ui/react-ui-mosaic",
-        "outputPath": "tmp/mocha/packages/ui/react-ui-mosaic",
-        "resultsPath": "test-results/packages/ui/react-ui-mosaic",
-        "testPatterns": [
-          "packages/ui/react-ui-mosaic/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/ui/react-ui-mosaic/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

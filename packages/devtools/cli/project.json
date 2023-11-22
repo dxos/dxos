@@ -12,7 +12,6 @@
       }
     },
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/devtools/cli/src/index.ts",
         "outputPath": "packages/devtools/cli/dist",
@@ -20,24 +19,9 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "packages/devtools/cli/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/devtools/cli/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "inputs": [
@@ -67,27 +51,12 @@
       ]
     },
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
-        ],
-        "coveragePath": "coverage/packages/devtools/cli",
-        "outputPath": "tmp/mocha/packages/devtools/cli",
-        "resultsPath": "test-results/packages/devtools/cli",
-        "testPatterns": [
-          "packages/devtools/cli/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/devtools/cli/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     }
   },
   "implicitDependencies": [

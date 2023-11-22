@@ -2,62 +2,17 @@
   "sourceRoot": "packages/core/halo/keyring/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/halo/keyring/src/index.ts",
-        "outputPath": "packages/core/halo/keyring/dist/types",
-        "tsConfig": "packages/core/halo/keyring/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/halo/keyring/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/halo/keyring/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        "injectGlobals": true
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/halo/keyring/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/core/halo/keyring",
-        "outputPath": "tmp/mocha/packages/core/halo/keyring",
-        "resultsPath": "test-results/packages/core/halo/keyring",
-        "testPatterns": [
-          "packages/core/halo/keyring/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/halo/keyring/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

@@ -12,6 +12,8 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
+import { AutomergeDb } from './automerge/automerge-db';
+import { AutomergeObject } from './automerge/automerge-object';
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
@@ -38,6 +40,8 @@ export class EchoDatabase {
   readonly _updateEvent = new Event<UpdateEvent>();
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
+
+  public readonly automerge = new AutomergeDb(this._graph);
 
   constructor(
     /**
@@ -78,6 +82,10 @@ export class EchoDatabase {
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {
+    if (obj[base] instanceof AutomergeObject) {
+      return this.automerge.add(obj);
+    }
+
     log('add', { id: obj.id, type: (obj as any).__typename });
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
@@ -146,6 +154,10 @@ export class EchoDatabase {
    * Remove object.
    */
   remove<T extends EchoObject>(obj: T) {
+    if (obj[base] instanceof AutomergeObject) {
+      return this.automerge.remove(obj);
+    }
+
     log('remove', { id: obj.id, type: (obj as any).__typename });
 
     this._backend.mutate({
