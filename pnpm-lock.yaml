@@ -332,9 +332,6 @@ importers:
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
-      vite-plugin-wasm:
-        specifier: ^3.2.2
-        version: 3.2.2(vite@4.3.9)
       vitest:
         specifier: ^0.31.2
         version: 0.31.2(jsdom@20.0.1)
@@ -42384,14 +42381,6 @@ packages:
 
   /vite-plugin-turbosnap@1.0.2:
     resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
-    dev: true
-
-  /vite-plugin-wasm@3.2.2(vite@4.3.9):
-    resolution: {integrity: sha512-cdbBUNR850AEoMd5nvLmnyeq63CSfoP1ctD/L2vLk/5+wsgAPlAVAzUK5nGKWO/jtehNlrSSHLteN+gFQw7VOA==}
-    peerDependencies:
-      vite: ^2 || ^3 || ^4
-    dependencies:
-      vite: 4.3.9(@types/node@18.11.9)
     dev: true
 
   /vite-plugin-web-extension@3.0.7(vite@4.3.9):
