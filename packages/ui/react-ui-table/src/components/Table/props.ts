@@ -18,6 +18,9 @@ export type TableFlags = Partial<{
   rowsSelectable: boolean | 'multi';
 }>;
 
+/**
+ * This is ‘current’ in the `aria-current` sense.
+ */
 export type TableCurrent<TData extends RowData> = Partial<{
   // App state
   currentDatum: TData;

@@ -25,32 +25,22 @@ export const MasterDetailTable = <T extends {}>({
 }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
 
+  const TableContainer = pinToBottom ? AnchoredOverflow.Root : 'div';
+  const tableContainerStyles = pinToBottom ? { classNames: widths[0] } : { className: mx('overflow-auto', widths[0]) };
+
   return (
     <div className='flex grow overflow-hidden divide-x'>
-      {pinToBottom ? (
-        <AnchoredOverflow.Root classNames={widths[0]}>
-          <Table<T>
-            columns={columns}
-            data={data}
-            rowsSelectable
-            currentDatum={selected}
-            onDatumClick={setSelected}
-            fullWidth
-          />
-          <AnchoredOverflow.Anchor />
-        </AnchoredOverflow.Root>
-      ) : (
-        <div className={mx('overflow-auto', widths[0])}>
-          <Table<T>
-            columns={columns}
-            data={data}
-            rowsSelectable
-            currentDatum={selected}
-            onDatumClick={setSelected}
-            fullWidth
-          />
-        </div>
-      )}
+      <TableContainer {...tableContainerStyles}>
+        <Table<T>
+          columns={columns}
+          data={data}
+          rowsSelectable
+          currentDatum={selected}
+          onDatumClick={setSelected}
+          fullWidth
+        />
+        {pinToBottom && <AnchoredOverflow.Anchor />}
+      </TableContainer>
       <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected} />}</div>
     </div>
   );
