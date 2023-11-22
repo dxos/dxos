@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.3.8](https://github.com/dxos/dxos/compare/v0.3.7...v0.3.8) (2023-11-22)
+
+
+### Features
+
+* Add browser support in testbench ([#3909](https://github.com/dxos/dxos/issues/3909)) ([56eb422](https://github.com/dxos/dxos/commit/56eb42202dea998ebea88f8b612f4678278fc92b))
+* Begin automerge integration into database API ([#4726](https://github.com/dxos/dxos/issues/4726)) ([7a72fea](https://github.com/dxos/dxos/commit/7a72fea58fd8a2a085c3b8248bc801d048e0fead))
+* Clean-up function handlers ([#4693](https://github.com/dxos/dxos/issues/4693)) ([f605520](https://github.com/dxos/dxos/commit/f605520bff2044b5e22511f49cb186bc17449efe))
+* context menu for stack sections ([#4722](https://github.com/dxos/dxos/issues/4722)) ([0918578](https://github.com/dxos/dxos/commit/09185781fd15358db7905a7cf6a9049112d872a3))
+* **functions:** Add GitHub resolver ([#4609](https://github.com/dxos/dxos/issues/4609)) ([6e627a0](https://github.com/dxos/dxos/commit/6e627a0672795e597741b3862c7c73b52a4144be))
+* Inbox plugin ([#4737](https://github.com/dxos/dxos/issues/4737)) ([c66298b](https://github.com/dxos/dxos/commit/c66298be35ba889dabd9d201e0ab6a36e935af1f))
+
+
+### Bug Fixes
+
+* Add missing e2e target config ([#4742](https://github.com/dxos/dxos/issues/4742)) ([0ae9c21](https://github.com/dxos/dxos/commit/0ae9c21b0c9ac329dfe486efdb182379271c71f2))
+* Add proxy package for automerge ([#4758](https://github.com/dxos/dxos/issues/4758)) ([9a32253](https://github.com/dxos/dxos/commit/9a3225374efd0ef964ef03553c2d50dbef700961))
+* Enable code-splitting and remove duplicated code during CJS build ([#4735](https://github.com/dxos/dxos/issues/4735)) ([152ec6f](https://github.com/dxos/dxos/commit/152ec6f1562e60e40af724f5869efdd62bb04fdc))
+* implement abort for blob-sync-extension ([#4746](https://github.com/dxos/dxos/issues/4746)) ([d2e5c5e](https://github.com/dxos/dxos/commit/d2e5c5eb5800b3ced54a7eeaafcb0da7c95f6f4e))
+* improve graceful close behavior ([#4728](https://github.com/dxos/dxos/issues/4728)) ([c3b295a](https://github.com/dxos/dxos/commit/c3b295aff05523861f59b576684c1aea88e704ce))
+* log severity ([#4723](https://github.com/dxos/dxos/issues/4723)) ([6e95d31](https://github.com/dxos/dxos/commit/6e95d3198b5f35ce743ba2fe87b8b17532d30534))
+* **plugin-space:** space reordering ([#4752](https://github.com/dxos/dxos/issues/4752)) ([07aed43](https://github.com/dxos/dxos/commit/07aed433451344aa32dafb54b3e882b89abd7d5e))
+* **react-ui-editor:** Upgrade @lezer/* and codemirror ([#4754](https://github.com/dxos/dxos/issues/4754)) ([18017b9](https://github.com/dxos/dxos/commit/18017b97e0ed6fcfc373790b1809eefddebeb0f0))
+* **react-ui-theme:** Define and apply `topbar-size` ([#4741](https://github.com/dxos/dxos/issues/4741)) ([46178c4](https://github.com/dxos/dxos/commit/46178c4703c806348971e6c5320afb8922262af7))
+* **react-ui-theme:** Subtler open state style & popover border ([#4718](https://github.com/dxos/dxos/issues/4718)) ([8be0ad4](https://github.com/dxos/dxos/commit/8be0ad45ca4bfa638d0da7144b8e89c480f1b7d8))
+* reduce duplicate space folder cruft ([#4721](https://github.com/dxos/dxos/issues/4721)) ([598e316](https://github.com/dxos/dxos/commit/598e31646910f4d807f3486841bc4dc8ef61a5ea))
+* Refactor agent plugins ([#4734](https://github.com/dxos/dxos/issues/4734)) ([64c4d0a](https://github.com/dxos/dxos/commit/64c4d0a591cddab812865b5f46fccd667e8383e9))
+* remove inacessible space node from parent ([#4717](https://github.com/dxos/dxos/issues/4717)) ([a3d042a](https://github.com/dxos/dxos/commit/a3d042a9d9d54847c5a9cbdd7c395c13febd0c93))
+* Shared worker missing connect event ([#4756](https://github.com/dxos/dxos/issues/4756)) ([0694b57](https://github.com/dxos/dxos/commit/0694b5732eaae96c60abc2ee736f82d23d09d24f))
+* teleport controlextension timeouts ([#4708](https://github.com/dxos/dxos/issues/4708)) ([c5fa717](https://github.com/dxos/dxos/commit/c5fa7177f1f7c45f55df9212b9a40c495a1a500c))
+* Vault bundling ([#4755](https://github.com/dxos/dxos/issues/4755)) ([492e587](https://github.com/dxos/dxos/commit/492e5879d0d6f41046403cfca97042e729bf1bab))
+* Yield in the data pipeline processing loop ([913b25a](https://github.com/dxos/dxos/commit/913b25a88e49c6ccb2c6224e583887ea01bb35ef))
+
 ## [0.3.7](https://github.com/dxos/dxos/compare/v0.3.6...v0.3.7) (2023-11-14)
 
 
