@@ -152,8 +152,9 @@ describe.skip('LangChain', () => {
 
     const call = async (inputText: string) => {
       console.log(`\n> ${inputText}`);
-      const response = await agent.invoke(inputText);
-      console.log(response);
+      const result = await agent.invoke(inputText);
+      console.log(result);
+      return result;
     };
 
     await call('what kind of database does DXOS use?');
@@ -198,8 +199,9 @@ describe.skip('LangChain', () => {
 
     const call = async (inputText: string) => {
       console.log(`\n> ${inputText}`);
-      const response = await chain.invoke(inputText);
-      console.log(response);
+      const result = await chain.invoke(inputText);
+      console.log(result);
+      return result;
     };
 
     await call('What did Satya Nadella say about Sam Altman?');
@@ -233,6 +235,7 @@ describe.skip('LangChain', () => {
     });
 
     const model = createModel().bind({
+      function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
@@ -240,29 +243,28 @@ describe.skip('LangChain', () => {
           parameters: zodToJsonSchema(schema),
         },
       ],
-      function_call: { name: 'output_formatter' },
     });
 
     const outputParser = new JsonOutputFunctionsParser();
 
-    {
-      const prompt = new ChatPromptTemplate({
-        promptMessages: [
-          SystemMessagePromptTemplate.fromTemplate('List all people and companies mentioned in the following text.'),
-          HumanMessagePromptTemplate.fromTemplate('{inputText}'),
-        ],
-        inputVariables: ['inputText'],
-      });
+    const prompt = new ChatPromptTemplate({
+      inputVariables: ['inputText'],
+      promptMessages: [
+        SystemMessagePromptTemplate.fromTemplate('List all people and companies mentioned in the following text.'),
+        HumanMessagePromptTemplate.fromTemplate('{inputText}'),
+      ],
+    });
 
-      const chain = prompt.pipe(model).pipe(outputParser);
-      const call = async (inputText: string) => {
-        console.log(`\n> ${inputText}`);
-        const response = await chain.invoke({ inputText });
-        console.log(JSON.stringify(response, null, 2));
-      };
+    const chain = prompt.pipe(model).pipe(outputParser);
 
-      await call('Satya Nadella announced today that Microsoft will hire former OpenAI CEO Sam Altman.');
-    }
+    const call = async (inputText: string) => {
+      console.log(`\n> ${inputText}`);
+      const result = await chain.invoke({ inputText });
+      console.log(JSON.stringify(result, null, 2));
+      return result;
+    };
+
+    await call('Satya Nadella announced today that Microsoft will hire former OpenAI CEO Sam Altman.');
   });
 
   //
@@ -317,20 +319,20 @@ describe.skip('LangChain', () => {
       new ReActSingleInputOutputParser({ toolNames }),
     ]);
 
-    // TODO(burdon): Session state for agent.
     const memory = new BufferMemory({ memoryKey: 'chat_history' });
 
-    // chat-conversational-react-description
+    // TODO(burdon): See: chat-conversational-react-description
     const executor = AgentExecutor.fromAgentAndTools({ agent, tools, memory });
 
-    const chat = async (input: string) => {
+    const call = async (input: string) => {
       const result = await executor.invoke({ input });
       console.log(`\n> ${input}`);
       console.log(result.output);
+      return result;
     };
 
-    await chat('hello, i am DXOS');
-    await chat('what is my name?');
-    await chat('what is 6 times 7?');
+    await call('hello, i am DXOS');
+    await call('what is my name?');
+    await call('what is 6 times 7?');
   });
 });
