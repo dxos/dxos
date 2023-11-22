@@ -7,6 +7,13 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "exports": {
+    "./automerge-wasm": {
+      "browser": "./dist/lib/browser/automerge-wasm.mjs",
+      "import": "./dist/lib/browser/automerge-wasm.mjs",
+      "require": "./exports/node/automerge-wasm.cjs",
+      "node": "./exports/node/automerge-wasm.cjs",
+      "types": "./dist/types/src/automerge-wasm.d.ts"
+    },
     "./automerge": {
       "browser": "./dist/lib/browser/automerge.mjs",
       "import": "./dist/lib/browser/automerge.mjs",
@@ -27,13 +34,29 @@
       "require": "./dist/lib/node/automerge-repo.cjs",
       "node": "./dist/lib/node/automerge-repo.cjs",
       "types": "./dist/types/src/automerge-repo.d.ts"
-    },
-    "./automerge-wasm": {
+    }
+  },
+  "imports": {
+    "#automerge-wasm": {
       "browser": "./dist/lib/browser/automerge-wasm.mjs",
       "import": "./dist/lib/browser/automerge-wasm.mjs",
       "require": "./exports/node/automerge-wasm.cjs",
       "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
+    },
+    "#automerge": {
+      "browser": "./dist/lib/browser/automerge.mjs",
+      "import": "./dist/lib/browser/automerge.mjs",
+      "require": "./dist/lib/node/automerge.cjs",
+      "node": "./dist/lib/node/automerge.cjs",
+      "types": "./dist/types/src/automerge.d.ts"
+    },
+    "#automerge/next": {
+      "browser": "./dist/lib/browser/automerge/next.mjs",
+      "import": "./dist/lib/browser/automerge/next.mjs",
+      "require": "./dist/lib/node/automerge/next.cjs",
+      "node": "./dist/lib/node/automerge/next.cjs",
+      "types": "./dist/types/src/automerge/next.d.ts"
     }
   },
   "typesVersions": {

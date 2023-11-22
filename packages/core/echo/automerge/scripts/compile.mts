@@ -37,7 +37,7 @@ for (const platform of ['node', 'browser'] as const) {
             if (args.path.startsWith('@automerge/') && !args.importer.includes(join(process.cwd(), 'src'))) {
               return {
                 external: true,
-                path: args.path.replace('@automerge/', '@dxos/automerge/')
+                path: args.path.replace('@automerge/', '#')
               }
             }
           })
