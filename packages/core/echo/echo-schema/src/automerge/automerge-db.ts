@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Repo as AutomergeRepo, DocHandle } from '@automerge/automerge-repo';
-
+import { Repo as AutomergeRepo, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 
 import { AutomergeObject } from './automerge-object';
@@ -18,7 +17,6 @@ export class AutomergeDb {
 
   async open() {
     // eslint-disable-next-line no-eval
-    const { Repo: AutomergeRepo } = await eval("import('@automerge/automerge-repo')");
     this._repo = new AutomergeRepo({
       network: [],
     });

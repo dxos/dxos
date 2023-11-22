@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as automerge from '@automerge/automerge';
-import { type Doc, type Heads, type Prop } from '@automerge/automerge';
 import {
   Annotation,
   type EditorState,
@@ -15,6 +13,9 @@ import {
   type TransactionSpec,
 } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
+
+import * as automerge from '@dxos/automerge/automerge';
+import { type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 
 import { PatchSemaphore } from './PatchSemaphore';
 import { type Peer } from '../demo';
