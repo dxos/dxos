@@ -6031,6 +6031,9 @@ importers:
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
+      faiss-node:
+        specifier: ^0.5.1
+        version: 0.5.1
       fast-xml-parser:
         specifier: ^4.3.2
         version: 4.3.2
@@ -6048,7 +6051,7 @@ importers:
         version: 4.1.0
       langchain:
         specifier: ^0.0.196
-        version: 0.0.196(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1)
+        version: 0.0.196(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -28150,6 +28153,16 @@ packages:
     resolution: {integrity: sha512-11Ndz7Nv+mvAC1j0ktTa7fAb0vLyGGX+rMHNBYQviQDGU0Hw7lhctJANqbPhu9nV9/izT/IntTgZ7Im/9LJs9g==}
     engines: {'0': node >=0.6.0}
 
+  /faiss-node@0.5.1:
+    resolution: {integrity: sha512-zD8wobJn8C6OLWo68Unho+Ih8l6nSRB2w3Amj01a+xc4bsEvd2mBDLklAn7VocA9XO3WDvQL/bLpi5flkCn/XQ==}
+    engines: {node: '>= 14.0.0'}
+    requiresBuild: true
+    dependencies:
+      bindings: 1.5.0
+      node-addon-api: 6.1.0
+      prebuild-install: 7.1.1
+    dev: false
+
   /fancy-test@2.0.31:
     resolution: {integrity: sha512-Ok4L7GuoVdOBKtwlHdSnBYDBSFeWazcr6+/lhcC0LWS+sJYOXgbyCPP54fTt2TM1T8QWUm4ULHKQGOHKS61pfg==}
     engines: {node: '>=12.0.0'}
@@ -32785,7 +32798,7 @@ packages:
       uuid: 9.0.0
     dev: false
 
-  /langchain@0.0.196(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1):
+  /langchain@0.0.196(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1):
     resolution: {integrity: sha512-kt17GGTDFWHNv3jJOIXymsQxfa+h9UQ6hrHbhur+V2pV6RBKO5E+RRCvnCqBzbnOPtrlkENF6Wl3Ezmsfo21dg==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -33088,6 +33101,7 @@ packages:
       '@anthropic-ai/sdk': 0.9.1
       binary-extensions: 2.2.0
       expr-eval: 2.0.2
+      faiss-node: 0.5.1
       fast-xml-parser: 4.3.2
       flat: 5.0.2
       html-to-text: 9.0.5
