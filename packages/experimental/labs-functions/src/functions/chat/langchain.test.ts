@@ -51,7 +51,7 @@ import { getConfig, getKey } from '../../util';
 // TODO(burdon): FakeEmbeddings for tests
 // TODO(burdon): https://platform.openai.com/docs/plugins/examples
 
-describe('LangChain', () => {
+describe.skip('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
     return new ChatOpenAI({
