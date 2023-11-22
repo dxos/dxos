@@ -160,7 +160,11 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     // info.push(`%cDXOS vault (shared worker) connection: ${window.location.origin}`);
     info.push('%cTo inspect/reset the vault (shared worker) copy the URL: chrome://inspect/#workers');
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
-    createWorker().port.onmessage = (event) => {
+    const worker = createWorker();
+    worker.onerror = (event) => {
+      log.error('worker error', { event });
+    };
+    worker.port.onmessage = (event) => {
       const { command, payload } = event.data;
       if (command === 'init') {
         ports.wake(payload);
