@@ -8,6 +8,7 @@ import { rmSync } from 'node:fs';
 
 import {
   Agent,
+  ChainPlugin,
   DashboardPlugin,
   EchoProxyPlugin,
   EpochMonitorPlugin,
@@ -80,9 +81,8 @@ export default class Start extends BaseCommand<typeof Start> {
         socket,
         webSocket: this.flags.ws,
       },
-      // TODO(burdon): Pass config to plugins.
       plugins: [
-        // new ChainPlugin(),
+        new ChainPlugin(),
         new DashboardPlugin({ configPath: this.flags.config }),
         new EchoProxyPlugin(),
         new EpochMonitorPlugin(),

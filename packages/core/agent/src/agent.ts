@@ -61,11 +61,8 @@ export class Agent {
     invariant(!this._clientServices);
     log('starting...');
 
-    // Create client services.
-
     // TODO(nf): move to config
     let transportFactory: TransportFactory;
-
     if (process.env.WEBRTCLIBRARY === 'LibDataChannel') {
       log.info('using LibDataChannel');
       transportFactory = createLibDataChannelTransportFactory();
@@ -74,6 +71,7 @@ export class Agent {
       transportFactory = createSimplePeerTransportFactory();
     }
 
+    // Create client services.
     this._clientServices = await fromHost(this._options.config, {
       lockKey: lockFilePath(this._options.profile),
       transportFactory,
