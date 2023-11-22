@@ -12,7 +12,7 @@ import { Game, types } from '@dxos/chess-app/proto';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { subscribe } from '@dxos/echo-schema';
-import { DevServer, type FunctionManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
 const FUNCTIONS_PORT = 8757;
@@ -63,12 +63,12 @@ describe('Chess', () => {
     await server.start();
     afterTest(() => server.stop());
 
-    const triggers = new TriggerManager(client, manifest, {
+    const scheduler = new Scheduler(client, manifest, {
       endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
     });
 
-    await triggers.start();
-    afterTest(() => triggers.stop());
+    await scheduler.start();
+    afterTest(() => scheduler.stop());
 
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();

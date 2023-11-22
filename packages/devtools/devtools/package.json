@@ -58,7 +58,7 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-vis": "^1.11.12",
     "use-resize-observer": "^9.0.0",
-    "ws": "^7.4.4"
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",

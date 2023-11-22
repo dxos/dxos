@@ -7,10 +7,11 @@ import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
+// TODO(burdon): Rename Mailbox?
 export const INBOX_PLUGIN = 'dxos.org/plugin/inbox';
 
 export default pluginMeta({
   id: INBOX_PLUGIN,
-  name: 'Inbox',
+  name: 'Mailbox',
   iconComponent: (props) => <Envelope {...props} />,
 });

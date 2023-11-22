@@ -45,13 +45,15 @@
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",
     "js-yaml": "^4.1.0",
-    "langchain": "^0.0.180",
+    "langchain": "^0.0.196",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.startcase": "^4.4.0",
     "mailparser": "^3.6.4",
     "node-fetch": "^2.6.0",
     "openai": "^3.2.1",
-    "split2": "^4.1.0"
+    "split2": "^4.1.0",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.0"
   },
   "devDependencies": {
     "@dxos/agent": "workspace:*",
