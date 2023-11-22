@@ -6,33 +6,26 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Chain, type ChainDocument, type ChainOptions, ChainResources } from './chain';
+import { Chain } from './chain';
+import { type ChainDocument, type ChainResourcesOptions, ChainResources } from './resources';
 import { getConfig, getKey } from '../../../util';
 
 const docs: ChainDocument[] = [
-  {
-    metadata: { id: 'doc-1' },
-    pageContent: 'DXOS consists of HALO, ECHO and MESH.',
-  },
-  {
-    metadata: { id: 'doc-2' },
-    pageContent: 'HALO is a mechanism for self-sovereign identity.',
-  },
-  {
-    metadata: { id: 'doc-3' },
-    pageContent: 'ECHO is a decentralized graph database.',
-  },
-  {
-    metadata: { id: 'doc-4' },
-    pageContent: 'MESH provides infrastructure for resilient peer-to-peer networks.',
-  },
-];
+  'DXOS consists of HALO, ECHO and MESH.',
+  'HALO is a mechanism for self-sovereign identity.',
+  'ECHO is a decentralized graph database.',
+  'ECHO provides data consistency using the Automerge CRDT algorithms.',
+  'MESH provides infrastructure for resilient peer-to-peer networks.',
+].map((text, i) => ({
+  metadata: { id: `doc-${i + 1}` },
+  pageContent: text,
+}));
 
 // TODO(burdon): Use fakes for testing?
 
 describe('Chain', () => {
   const baseDir = '/tmp/dxos/agent/functions/chat/chain';
-  const getOptions = (options: Partial<ChainOptions> = {}) => {
+  const getOptions = (options: Partial<ChainResourcesOptions> = {}) => {
     const config = getConfig()!;
     return {
       apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
@@ -68,25 +61,27 @@ describe('Chain', () => {
     }
   });
 
-  test('chat', async () => {
-    {
-      const resources = new ChainResources(getOptions());
-      await resources.initialize();
-      await resources.addDocuments(docs);
+  test
+    .only('chat', async () => {
+      {
+        const resources = new ChainResources(getOptions());
+        await resources.initialize();
+        await resources.addDocuments(docs);
 
-      const chain = new Chain(resources);
-      {
-        const result = await chain.call('what kind of database does DXOS use?');
-        console.log(`> ${result}`);
+        const chain = new Chain(resources, { precise: false });
+        const call = async (input: string) => {
+          const result = await chain.call(input);
+          console.log(`\n> ${input}`);
+          console.log(result);
+          return result;
+        };
+
+        await call('what kind of database does DXOS use?');
+        await call('what is HALO part of?');
+        await call('what language is MESH written in?');
+        await call('what are alternative CRDT systems to those used by ECHO?');
+        await call('who is the prime minister of japan?');
       }
-      {
-        const result = await chain.call('what is HALO part of?');
-        console.log(`> ${result}`);
-      }
-      {
-        const result = await chain.call('what language is MESH written in?');
-        console.log(`> ${result}`);
-      }
-    }
-  });
-}).timeout(60_000);
+    })
+    .timeout(60_000);
+});
