@@ -23,7 +23,7 @@ export type ChainDocument = Document & {
   };
 };
 
-const getId = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
+const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
 
 export type ChainResourcesOptions = {
   apiKey: string;
@@ -104,7 +104,9 @@ export class ChainResources {
   // TODO(burdon): Split into chunks?
   async addDocuments(docs: ChainDocument[]) {
     invariant(this._vectorStore);
-    const documentIds = docs.map(({ metadata }) => this._vectorIndex.get(getId(metadata))).filter(Boolean) as string[];
+    const documentIds = docs
+      .map(({ metadata }) => this._vectorIndex.get(metaKey(metadata)))
+      .filter(Boolean) as string[];
     if (documentIds.length) {
       await this._vectorStore.delete({ ids: documentIds });
     }
@@ -112,7 +114,7 @@ export class ChainResources {
     {
       const documentIds = (await this.vectorStore.addDocuments(docs)) as string[];
       for (let i = 0; i < documentIds.length; ++i) {
-        this._vectorIndex.set(getId(docs[i].metadata), documentIds[i]);
+        this._vectorIndex.set(metaKey(docs[i].metadata), documentIds[i]);
       }
     }
   }
@@ -121,7 +123,7 @@ export class ChainResources {
     invariant(this._vectorStore);
     const documentIds = meta
       .map((metadata) => {
-        const id = getId(metadata);
+        const id = metaKey(metadata);
         const documentId = this._vectorIndex.get(id);
         if (documentId) {
           this._vectorIndex.delete(id);

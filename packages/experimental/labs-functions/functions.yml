@@ -49,7 +49,9 @@ triggers:
       type: 'braneframe.Mailbox'
 
   - function: 'dxos.org/function/embedding'
-    schedule: '*/30 * * * * *'
+    subscription:
+      delay: 10
+      type: 'braneframe.Document'
 
   - function: 'dxos.org/function/github'
     subscription:

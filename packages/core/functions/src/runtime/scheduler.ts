@@ -4,7 +4,7 @@
 
 import { CronJob } from 'cron';
 
-import { DeferredTask } from '@dxos/async';
+import { debounce, DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -102,11 +102,16 @@ export class Scheduler {
           task.schedule();
         });
 
-        const { type, props } = trigger.subscription;
+        const { type, props, delay } = trigger.subscription;
         const query = space.db.query(Filter.typename(type, props));
-        const unsubscribe = query.subscribe(({ objects }) => {
-          subscription.update(objects);
-        }, true);
+        const unsubscribe = query.subscribe(
+          delay
+            ? debounce(({ objects }) => {
+                subscription.update(objects);
+              }, delay)
+            : ({ objects }) => subscription.update(objects),
+          true,
+        );
 
         ctx.onDispose(() => {
           subscription.unsubscribe();

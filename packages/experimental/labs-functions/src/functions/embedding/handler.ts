@@ -11,8 +11,9 @@ import { PublicKey } from '@dxos/keys';
 import { getKey } from '../../util';
 import { ChainResources } from '../chat';
 
-// TODO(burdon): Debounce query subscriptions.
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context, response }) => {
+  console.log('>>>', JSON.stringify(event));
+
   const docs: Document[] = [];
   const addDocument =
     (space: PublicKey | undefined = undefined) =>
@@ -23,12 +24,11 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
       });
 
   const spaces = context.client.spaces.get();
-  if (event.space && event.objects.length === 0) {
-    const space = context.client.spaces.get(PublicKey.from(event.space));
+  if (event.space && event.objects.length > 0) {
+    const space = context.client.spaces.get(PublicKey.from(event.space))!;
+    const add = addDocument(space.key);
     if (space) {
-      // TODO(burdon): Filter by id.
-      const { objects } = space.db.query(DocumentType.filter());
-      objects.forEach(addDocument(space.key));
+      event.objects.forEach((id) => add(space.db.getObjectById(id)!));
     }
   } else {
     for (const space of spaces) {
@@ -48,9 +48,9 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
 
     await resources.initialize();
 
-    // TODO(burdon): Remove previous.
+    // TODO(burdon): Remove deleted docs.
     await resources.vectorStore.addDocuments(docs);
-    console.log('###', resources.stats);
+    console.log('===', resources.stats);
   }
 
   return response.status(200);

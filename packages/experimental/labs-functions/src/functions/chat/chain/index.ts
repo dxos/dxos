@@ -3,3 +3,4 @@
 //
 
 export * from './chain';
+export * from './resources';

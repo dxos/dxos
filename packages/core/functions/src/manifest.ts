@@ -20,6 +20,7 @@ export type TriggerSubscription = {
   spaceKey: string;
   props?: Record<string, any>;
   nested?: string[];
+  delay?: number;
 };
 
 // TODO(burdon): Generalize binding.
