@@ -7,7 +7,6 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import wasmPlugin from 'vite-plugin-wasm';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -39,18 +38,15 @@ export default defineConfig({
     },
   },
   plugins: [
-    wasmPlugin(),
     {
       name: 'package-version',
       config: () => ({
         define: {
           'process.env.PACKAGE_VERSION': `'${PACKAGE_VERSION}'`,
-        },
-      }),
+        }
+      })
     },
-    ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'],
-    }),
+    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'] }),
     ThemePlugin({
       root: __dirname,
       content: [
@@ -58,7 +54,7 @@ export default defineConfig({
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/**/*.mjs'),
       ],
-      extensions: [],
+      extensions: []
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
