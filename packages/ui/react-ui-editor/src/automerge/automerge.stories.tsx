@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Prop, next as automerge } from '@automerge/automerge';
 import { basicSetup } from '@codemirror/basic-setup';
 import { EditorView } from '@codemirror/view';
 import React, { useEffect, useRef, useState } from 'react';
+
+import { type Prop, next as automerge } from '@dxos/automerge/automerge';
 
 import { plugin as amgPlugin } from './automerge-plugin';
 import { reconcile } from './automerge-plugin/plugin';

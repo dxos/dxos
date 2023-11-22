@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
+
 import {
   type DelPatch,
   type InsertPatch,
@@ -9,9 +12,7 @@ import {
   type Prop,
   type PutPatch,
   type SpliceTextPatch,
-} from '@automerge/automerge';
-import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+} from '@dxos/automerge/automerge';
 
 import { reconcileAnnotationType } from './plugin';
 
