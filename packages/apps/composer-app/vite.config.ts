@@ -27,6 +27,7 @@ export default defineConfig({
           }
         : false,
     fs: {
+      strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
@@ -55,6 +56,21 @@ export default defineConfig({
     alias: {
       'node-fetch': 'isomorphic-fetch',
     },
+  },
+  optimizeDeps: {
+    // This is necessary because otherwise `vite dev` includes two separate
+    // versions of the JS wrapper. This causes problems because the JS
+    // wrapper has a module level variable to track JS side heap
+    // allocations, and initializing this twice causes horrible breakage
+    exclude: [
+      "@automerge/automerge-wasm",
+      "@automerge/automerge-wasm/bundler/bindgen_bg.wasm",
+      "@syntect/wasm",
+    ],
+  },
+  worker: {
+    format: 'es',
+    plugins: [wasmPlugin()],
   },
   plugins: [
     wasmPlugin(),
