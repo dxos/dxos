@@ -10,12 +10,12 @@ import { deepSignal } from 'deepsignal';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { DensityProvider } from '@dxos/react-ui';
+import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
-import { createColumnBuilder, type SelectQueryModel, type ValueUpdater } from '../helpers';
-import { type TableColumnDef } from '../types';
+import { createColumnBuilder, type SearchListQueryModel, type ValueUpdater } from '../../helpers';
+import { type TableColumnDef } from '../../types';
 
 // TODO(burdon): Header menu builder.
 // TODO(burdon): Expand width if not all columns have explicit size.
@@ -58,7 +58,7 @@ const tableStorySelectItems: Record<string, Item> = range(128).reduce((acc: Reco
 
 const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const tableStorySelectModel: SelectQueryModel<Item> = {
+const tableStorySelectModel: SearchListQueryModel<Item> = {
   getId: (object) => object?.publicKey?.toHex() ?? 'never',
   getText: (object) => object?.name ?? 'never',
   query: async (search: string) => {
@@ -70,36 +70,44 @@ const tableStorySelectModel: SelectQueryModel<Item> = {
 };
 
 const { helper, builder } = createColumnBuilder<Item>();
+
 const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
-  helper.accessor(
-    'complete',
-    builder.checkbox({
-      // enableGrouping: true,
-      getGroupingValue: (row) => row.complete === true,
-      label: '',
-      onUpdate,
-    }),
-  ),
+  helper.display(builder.selectRow()),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor(
     'name',
-    builder.string({ onUpdate, meta: { expand: true }, footer: (props) => props.table.getRowModel().rows.length }),
+    builder.string({
+      label: 'Name',
+      onUpdate,
+      meta: { expand: true },
+      footer: (props) => props.table.getRowModel().rows.length,
+    }),
+  ),
+  helper.accessor('started', builder.date({ label: 'Started', relative: true, meta: { resizable: true } })),
+  helper.accessor(
+    'count',
+    builder.number({
+      label: 'Count',
+      meta: { resizable: true },
+      // TODO(burdon): Sorting.
+      getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
+    }),
   ),
   helper.accessor(
     'company',
-    builder.select({
+    builder.combobox({
       label: 'Company',
       model: tableStorySelectModel,
       onUpdate,
     }),
   ),
-  helper.accessor('started', builder.date({ relative: true, meta: { resizable: true } })),
   helper.accessor(
-    'count',
-    builder.number({
-      meta: { resizable: true },
-      // TODO(burdon): Sorting.
-      getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
+    'complete',
+    builder.switch({
+      // enableGrouping: true,
+      getGroupingValue: (row) => row.complete === true,
+      label: '',
+      onUpdate,
     }),
   ),
   helper.accessor('complete', builder.icon({ id: 'done', label: '' })),
@@ -137,9 +145,6 @@ export default {
     fullWidth: {
       control: 'boolean',
     },
-    pinToBottom: {
-      control: 'boolean',
-    },
     grouping: {
       control: 'select',
       options: ['none', 'complete', 'count'],
@@ -157,9 +162,9 @@ export default {
         limited: { key: false, started: false },
       },
     },
-    select: {
+    rowsSelectable: {
       control: 'select',
-      options: ['single', 'single-toggle', 'multiple', 'multiple-toggle'],
+      options: [false, true, 'multi'],
     },
   },
   decorators: [
@@ -208,25 +213,23 @@ export const Dynamic = {
           if (items.length >= 200) {
             clearInterval(interval);
           }
-
           return [...items, ...createItems(1)];
         });
       }, 500);
       return () => clearInterval(interval);
     }, []);
-
     return (
-      <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
+      <AnchoredOverflow.Root classNames='max-bs-[80dvh]'>
         <Table<Item>
-          keyAccessor={row => row.publicKey.toHex()}
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
           columns={columns()}
           data={items}
           fullWidth
-          pinToBottom
           footer
         />
-      </div>
+        <AnchoredOverflow.Anchor />
+      </AnchoredOverflow.Root>
     );
   },
 };
@@ -239,15 +242,15 @@ export const Editable = {
     };
 
     return (
-      <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
-        <Table<Item>
-          keyAccessor={row => row.publicKey.toHex()}
-          columns={columns(onUpdate)}
-          data={items}
-          fullWidth
-        />
-      </div>
+      <Table<Item>
+        role='grid'
+        rowsSelectable='multi'
+        keyAccessor={(row) => row.publicKey.toHex()}
+        columns={columns(onUpdate)}
+        data={items}
+        fullWidth
+        border
+      />
     );
   },
 };
@@ -264,16 +267,14 @@ export const Resizable = {
     // };
 
     return (
-      <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
-        <Table<Item>
-          keyAccessor={row => row.publicKey.toHex()}
-          columns={columns(onUpdate)}
-          data={items}
-          fullWidth
-          // onColumnResize={handleColumnResize}
-        />
-      </div>
+      <Table<Item>
+        rowsSelectable='multi'
+        keyAccessor={(row) => row.publicKey.toHex()}
+        columns={columns(onUpdate)}
+        data={items}
+        fullWidth
+        // onColumnResize={handleColumnResize}
+      />
     );
   },
 };

@@ -32,5 +32,5 @@ export const PluginList = ({ plugins, togglePlugin }: PluginListProps) => {
       ),
     }),
   ];
-  return <Table<PluginState> columns={columns} data={plugins} />;
+  return <Table<PluginState> columns={columns} data={plugins} fullWidth />;
 };
