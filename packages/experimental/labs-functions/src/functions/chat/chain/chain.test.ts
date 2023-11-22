@@ -295,10 +295,14 @@ describe.skip('LangChain', () => {
   //
   test('plan and execute', async () => {
     const config = getConfig()!;
-    const model = createModel('gpt-3.5-turbo');
+    const model = createModel();
 
+    // Tools.
+    // https://api.js.langchain.com/classes/tools.Tool.html
     // TODO(burdon): BraveSearch
+    // TODO(burdon): SearxngSearch (metasearch tool for current events: https://github.com/searxng/searxng)
     // TODO(burdon): VectorStoreQATool
+    // TODO(burdon): WebBrowser (extract info from web page).
     // TODO(burdon): WolframAlphaTool
     const tools = [
       // https://serpapi.com/dashboard
@@ -337,8 +341,6 @@ describe.skip('LangChain', () => {
     // ~~~~~~~~~~~
     const model = createModel().bind({ stop: ['\nObservation'] });
 
-    // Tools.
-    // https://api.js.langchain.com/classes/tools.Tool.html
     const tools = [new Calculator()];
     const toolNames = tools.map((tool) => tool.name);
 
