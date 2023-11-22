@@ -8,7 +8,6 @@ import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import wasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -57,23 +56,10 @@ export default defineConfig({
       'node-fetch': 'isomorphic-fetch',
     },
   },
-  optimizeDeps: {
-    // This is necessary because otherwise `vite dev` includes two separate
-    // versions of the JS wrapper. This causes problems because the JS
-    // wrapper has a module level variable to track JS side heap
-    // allocations, and initializing this twice causes horrible breakage
-    exclude: [
-      "@automerge/automerge-wasm",
-      "@automerge/automerge-wasm/bundler/bindgen_bg.wasm",
-      "@syntect/wasm",
-    ],
-  },
   worker: {
     format: 'es',
-    plugins: [wasmPlugin()],
   },
   plugins: [
-    wasmPlugin(),
     // Required for the script plugin.
     {
       name: 'sandbox-importmap-integration',

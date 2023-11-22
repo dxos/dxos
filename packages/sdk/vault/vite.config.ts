@@ -6,7 +6,6 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import wasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -41,28 +40,15 @@ export default defineConfig({
       },
     },
   },
-  optimizeDeps: {
-    // This is necessary because otherwise `vite dev` includes two separate
-    // versions of the JS wrapper. This causes problems because the JS
-    // wrapper has a module level variable to track JS side heap
-    // allocations, and initializing this twice causes horrible breakage
-    exclude: [
-      "@automerge/automerge-wasm",
-      "@automerge/automerge-wasm/bundler/bindgen_bg.wasm",
-      "@syntect/wasm",
-    ],
-  },
   worker: {
     format: 'es',
     plugins: [
-      wasmPlugin(),
       ConfigPlugin({
         env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'],
       }),
     ],
   },
   plugins: [
-    wasmPlugin(),
     ConfigPlugin({
       // TODO(wittjosiah): This generates config not found errors when not served by `startVault`.
       //   This is currently the case inside this monorepo in an attempt to avoid having the vault
