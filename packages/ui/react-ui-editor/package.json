@@ -61,10 +61,8 @@
     "yjs": "^13.6.8"
   },
   "devDependencies": {
-    "@automerge/automerge": "^2.1.7",
-    "@automerge/automerge-codemirror": "^0.0.7",
-    "@automerge/automerge-repo": "^1.0.17",
     "@codemirror/basic-setup": "^0.20.0",
+    "@dxos/automerge": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
