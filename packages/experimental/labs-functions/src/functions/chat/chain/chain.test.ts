@@ -12,6 +12,7 @@ import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_pars
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { type Document } from 'langchain/document';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
+import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
 import { pull } from 'langchain/hub';
 import { BufferMemory } from 'langchain/memory';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
@@ -26,7 +27,7 @@ import { type AgentStep, type BaseMessage } from 'langchain/schema';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnableSequence, RunnablePassthrough } from 'langchain/schema/runnable';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { DynamicStructuredTool, formatToOpenAITool } from 'langchain/tools';
+import { DynamicStructuredTool, formatToOpenAITool, SerpAPI } from 'langchain/tools';
 import { Calculator } from 'langchain/tools/calculator';
 import { renderTextDescription } from 'langchain/tools/render';
 import { formatDocumentsAsString } from 'langchain/util/document';
@@ -65,6 +66,8 @@ describe.skip('LangChain', () => {
     return new ChatOpenAI({
       openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key'),
       modelName,
+      temperature: 0,
+      // verbose: true,
     });
   };
 
@@ -287,10 +290,40 @@ describe.skip('LangChain', () => {
   });
 
   //
+  // Plan and execute.
+  // https://js.langchain.com/docs/modules/agents/agent_types/plan_and_execute
+  //
+  test('plan and execute', async () => {
+    const config = getConfig()!;
+    const model = createModel('gpt-3.5-turbo');
+
+    // TODO(burdon): BraveSearch
+    // TODO(burdon): VectorStoreQATool
+    // TODO(burdon): WolframAlphaTool
+    const tools = [
+      // https://serpapi.com/dashboard
+      new SerpAPI(process.env.SERPAPI_API_KEY ?? getKey(config, 'serpapi.com/api_key')),
+      new Calculator(),
+    ];
+
+    const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
+      llm: model,
+      tools,
+    });
+
+    const result = await executor.invoke({
+      input: ['Who is the current president of France?', 'What is their current age raised to the second power?'].join(
+        '\n',
+      ),
+    });
+
+    console.log({ result });
+  }).timeout(60_000);
+
+  //
   // Agents, ReAct prompts, and Tools.
   // https://js.langchain.com/docs/modules/agents/agent_types/chat_conversation_agent
   // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/openai_assistant
-  // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/plan_and_execute
   //
   test('agent', async () => {
     // Bind stop token.
@@ -306,13 +339,7 @@ describe.skip('LangChain', () => {
 
     // Tools.
     // https://api.js.langchain.com/classes/tools.Tool.html
-    const tools = [
-      // TODO(burdon): Custom tool
-      // TODO(burdon): BraveSearch
-      // TODO(burdon): VectorStoreQATool
-      // TODO(burdon): WolframAlphaTool
-      new Calculator(),
-    ];
+    const tools = [new Calculator()];
     const toolNames = tools.map((tool) => tool.name);
 
     // Get prompt form LangChain Hub.
