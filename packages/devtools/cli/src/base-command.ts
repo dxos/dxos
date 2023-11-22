@@ -333,16 +333,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       return;
     }
 
+    // TODO(burdon): Errors should not be imported (polluting base command); just stringify.
     // Convert known errors to human readable messages.
     if (err instanceof SpaceWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: ${err.message} [still processing?]`);
+      this.logToStderr(chalk`{red Error}: ${err.message}`);
     } else if (err instanceof AgentWaitTimeoutError) {
-      // TODO(burdon): Need better diagnostics -- might fail for other reasons.
+      // TODO(burdon): Need better diagnostics: might fail for other reasons.
       this.logToStderr(chalk`{red Error}: Agent may be stale (to restart: 'dx agent restart --force')`);
     } else if (err instanceof AgentIsNotStartedByCLIError) {
-      this.logToStderr(
-        chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually or as a system daemon.`,
-      );
+      this.logToStderr(chalk`{red Error}: Agent may be running in the foreground or as a system daemon.`);
     } else if (err instanceof PublisherConnectionError) {
       this.logToStderr(chalk`{red Error}: Could not connect to publisher.`);
     } else if (err instanceof IdentityWaitTimeoutError) {

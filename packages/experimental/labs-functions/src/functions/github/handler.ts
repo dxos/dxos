@@ -18,7 +18,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
 
   for (const objectId of event.objects) {
     const space = context.client.spaces.get(PublicKey.from(event.space));
-    invariant(space, 'Missing space.');
+    invariant(space);
     await space.waitUntilReady();
 
     const project = context.client.spaces.query({ id: objectId }).objects[0];
@@ -58,34 +58,33 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
     }
 
     const contactSchema = space.db.query({ typename: TestSchemaType.contact }).objects[0] as Schema;
-    invariant(contactSchema, 'Missing contact schema.');
+    invariant(contactSchema);
 
     //
     // Add contributors as contacts to database.
     //
     const response = await octokit.repos.listContributors({ owner, repo });
     const contributors: GithubContributors = response.data;
-    log.info('Contributors', { repo: project.repo, amount: contributors.length });
+    log('contributors', { repo: project.repo, amount: contributors.length });
 
     await Promise.all(
       contributors.map(async (contributor) => {
         if (!contributor.login) {
-          log.warn('Missing user login.');
+          log.warn('missing user login.');
           return;
         }
 
         const { data: user } = await octokit.users.getByUsername({ username: contributor.login });
         if (!user.name) {
-          log.warn('Missing user name.');
+          log.warn('missing user name.');
           return;
         }
 
         const foreignKey: ForeignKey = { source: 'github.com', id: String(user.id) };
-        const existing = space.db.query((object) =>
+        const { objects: existing } = space.db.query((object) =>
           object.__meta.keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
-        ).objects;
+        );
         if (existing.length !== 0) {
-          log.info('User already exists', { name: user.name });
           return;
         }
 
@@ -106,8 +105,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
         );
       }),
     );
+
     project.__meta.keys.push({ source: 'github.com' });
+
+    // TODO(burdon): Make automatic.
     await space.db.flush();
   }
-  context.status(200).succeed({});
 };

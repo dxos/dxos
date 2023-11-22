@@ -25,6 +25,7 @@ export default defineConfig({
           }
         : false,
     fs: {
+      strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
@@ -39,6 +40,26 @@ export default defineConfig({
         vault: resolve(__dirname, 'vault.html'),
       },
     },
+  },
+  optimizeDeps: {
+    // This is necessary because otherwise `vite dev` includes two separate
+    // versions of the JS wrapper. This causes problems because the JS
+    // wrapper has a module level variable to track JS side heap
+    // allocations, and initializing this twice causes horrible breakage
+    exclude: [
+      "@automerge/automerge-wasm",
+      "@automerge/automerge-wasm/bundler/bindgen_bg.wasm",
+      "@syntect/wasm",
+    ],
+  },
+  worker: {
+    format: 'es',
+    plugins: [
+      wasmPlugin(),
+      ConfigPlugin({
+        env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'],
+      }),
+    ],
   },
   plugins: [
     wasmPlugin(),
@@ -88,12 +109,4 @@ export default defineConfig({
       },
     },
   ],
-  worker: {
-    format: 'es',
-    plugins: [
-      ConfigPlugin({
-        env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'],
-      }),
-    ],
-  },
 });
