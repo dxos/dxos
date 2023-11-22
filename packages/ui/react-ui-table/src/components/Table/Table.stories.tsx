@@ -29,7 +29,6 @@ type Item = {
   complete?: boolean;
 };
 
-// TODO(thure): …y’all okay?
 faker.seed(911);
 
 const createItems = (count: number) =>

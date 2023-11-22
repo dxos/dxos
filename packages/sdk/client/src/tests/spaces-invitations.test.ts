@@ -10,7 +10,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
-import { type SpaceProxy } from '../echo/space-proxy';
+import { type SpaceProxy } from '../echo';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces/invitations', () => {

@@ -18,6 +18,7 @@ import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 import { Plugin } from '../plugin';
 
 export const CHANNEL_NAME = 'dxos.org/agent/plugin/dashboard';
+
 export const UPDATE_INTERVAL = 5_000;
 
 export type ServiceBundle = {
@@ -33,6 +34,7 @@ export class DashboardPlugin extends Plugin {
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
+  // TODO(burdon): Push config to base class.
   constructor(private readonly _params: DashboardPluginParams) {
     super();
   }
@@ -105,6 +107,7 @@ export class DashboardPlugin extends Plugin {
     {
       // Note: After changing the config file, client config and config file will be out of sync until agent restart.
       //       We are changing only config of specific plugin, it should not cause problems.
+      // TODO(burdon): Pass in config.
       const configAsString = await readFile(this._params.configPath, { encoding: 'utf-8' });
       const yamlConfig = yaml.parseDocument(configAsString);
       const plugins = yamlConfig.getIn(['runtime', 'agent', 'plugins']);
