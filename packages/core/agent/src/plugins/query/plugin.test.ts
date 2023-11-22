@@ -8,8 +8,8 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { createSpaceObjectGenerator, testSchemas, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, base, type TypedObject, type Query } from '@dxos/echo-schema';
+import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { Filter, type TypedObject, type Query } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -17,7 +17,7 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { QueryPlugin } from './plugin';
 
-describe('SearchPlugin', () => {
+describe('QueryPlugin', () => {
   test('search request/response', async () => {
     //
     // 1. Test topology:
@@ -198,15 +198,14 @@ describe('SearchPlugin', () => {
       expect(results[0].name).to.equal(testName);
     });
 
-    // TODO(mykola): Will not work because @dxos/echo-generator fo not register types
-    test.skip('Schema query', async () => {
-      const orgSchema = client.experimental.graph.types.getSchema(testSchemas()[TestSchemaType.organization].typename)!;
-      const query = client.spaces.query(Filter.schema(orgSchema), {
+    test('Typename query', async () => {
+      const query = client.spaces.query(Filter.typename(TestSchemaType.organization), {
         dataLocation: QueryOptions.DataLocation.REMOTE,
       });
       const results = await waitForQueryResults(query);
       expect(results.length).to.equal(1);
-      expect(results[0][base].__typename).to.equal(orgSchema.typename);
+      // TODO(mykola): Pass schema as linked cache from remote query.
+      // expect(results[0].typename).to.equal(TestSchemaType.organization);
     });
 
     test('Property query', async () => {
