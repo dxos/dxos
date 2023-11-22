@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import fs from 'fs';
 import { type BaseChatModel } from 'langchain/chat_models/base';
 import { ChatOpenAI, type OpenAIChatInput } from 'langchain/chat_models/openai';
 import { type Document } from 'langchain/document';
@@ -11,7 +10,8 @@ import { type OpenAIEmbeddingsParams } from 'langchain/embeddings/openai';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { type VectorStore } from 'langchain/vectorstores/base';
 import { FaissStore } from 'langchain/vectorstores/faiss';
-import { join } from 'path';
+import fs from 'node:fs';
+import { join } from 'node:path';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

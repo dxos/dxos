@@ -3,7 +3,6 @@
 //
 
 import { expect } from 'chai';
-import fs from 'fs';
 import { AgentExecutor } from 'langchain/agents';
 import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
 import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
@@ -33,6 +32,7 @@ import { renderTextDescription } from 'langchain/tools/render';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
