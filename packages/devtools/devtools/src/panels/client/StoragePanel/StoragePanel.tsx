@@ -234,7 +234,7 @@ export const StoragePanel = () => {
 
   return (
     <PanelContainer
-      className='flex-row divide-x'
+      classNames='flex-row divide-x'
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
