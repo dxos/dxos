@@ -168,10 +168,7 @@ describe('LangChain', () => {
     const embeddings = createEmbeddings();
 
     // Get data.
-    const text = fs.readFileSync(
-      path.join(process.cwd(), 'packages/core/agent/src/plugins/chain/testing/text.txt'),
-      'utf8',
-    );
+    const text = fs.readFileSync(path.join(__dirname, 'testing/text.txt'), 'utf8');
     const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
     const docs = await textSplitter.createDocuments([text]);
 
