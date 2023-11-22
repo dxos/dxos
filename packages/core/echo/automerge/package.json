@@ -1,0 +1,72 @@
+{
+  "name": "@dxos/automerge",
+  "version": "0.3.7",
+  "description": "Automerge adapter.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "exports": {
+    "./automerge": {
+      "browser": "./dist/lib/browser/automerge.mjs",
+      "import": "./dist/lib/browser/automerge.mjs",
+      "require": "./dist/lib/node/automerge.cjs",
+      "node": "./dist/lib/node/automerge.cjs",
+      "types": "./dist/types/src/automerge.d.ts"
+    },
+    "./automerge/next": {
+      "browser": "./dist/lib/browser/automerge/next.mjs",
+      "import": "./dist/lib/browser/automerge/next.mjs",
+      "require": "./dist/lib/node/automerge/next.cjs",
+      "node": "./dist/lib/node/automerge/next.cjs",
+      "types": "./dist/types/src/automerge/next.d.ts"
+    },
+    "./automerge-repo": {
+      "browser": "./dist/lib/browser/automerge-repo.mjs",
+      "import": "./dist/lib/browser/automerge-repo.mjs",
+      "require": "./dist/lib/node/automerge-repo.cjs",
+      "node": "./dist/lib/node/automerge-repo.cjs",
+      "types": "./dist/types/src/automerge-repo.d.ts"
+    },
+    "./automerge-wasm": {
+      "browser": "./dist/lib/browser/automerge-wasm.mjs",
+      "import": "./dist/lib/browser/automerge-wasm.mjs",
+      "require": "./dist/lib/node/automerge-wasm.cjs",
+      "node": "./dist/lib/node/automerge-wasm.cjs",
+      "types": "./dist/types/src/automerge-wasm.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "automerge": [
+        "dist/types/src/automerge.d.ts"
+      ],
+      "automerge/next": [
+        "dist/types/src/automerge/next.d.ts"
+      ],
+      "automerge-repo": [
+        "dist/types/src/automerge-repo.d.ts"
+      ],
+      "automerge-wasm": [
+        "dist/types/src/automerge-wasm.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "compile": "ts-node-esm scripts/compile.mts"
+  },
+  "dependencies": {
+    "@automerge/automerge": "^2.1.7",
+    "@automerge/automerge-repo": "^1.0.17",
+    "@automerge/automerge-wasm": "^0.5.0"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}
