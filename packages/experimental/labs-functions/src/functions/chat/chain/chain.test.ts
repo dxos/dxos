@@ -34,7 +34,8 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../../util';
+import { Chain, ChainResources } from './chain';
+import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Demo:
 //  - Email pipeline (summarize daily set of messages from contacts in CRM).
@@ -47,13 +48,16 @@ import { getConfig, getKey } from '../../util';
 // TODO(burdon): Graph database: https://js.langchain.com/docs/modules/data_connection/experimental/graph_databases/neo4j
 // TODO(burdon): Document chains: http://localhost:3000/docs/modules/chains/document
 // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
-// TODO(burdon): CloudflareWorkersAIEmbeddings
+// TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
 // TODO(burdon): FakeEmbeddings for tests
-// TODO(burdon): https://platform.openai.com/docs/plugins/examples
 
-describe.skip('LangChain', () => {
+describe('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
+
+    // Pre-trained transformer (LLM).
+    // https://platform.openai.com/docs/guides/text-generation
+    // TODO(burdon): Alt: https://developers.cloudflare.com/workers-ai/models/text-generation
     return new ChatOpenAI({
       openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key'),
       modelName,
@@ -62,6 +66,10 @@ describe.skip('LangChain', () => {
 
   const createEmbeddings = () => {
     const config = getConfig()!;
+
+    // Text embeddings measure the relatedness of text strings.
+    // https://platform.openai.com/docs/guides/embeddings
+    // TODO(burdon): Alt: https://developers.cloudflare.com/workers-ai/models/text-embeddings
     return new OpenAIEmbeddings({
       openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key'),
     });
@@ -106,8 +114,8 @@ describe.skip('LangChain', () => {
   // https://js.langchain.com/docs/expression_language/cookbook/retrieval
   //
   test('rag', async () => {
-    const model = createModel();
     const embeddings = createEmbeddings();
+    const model = createModel();
 
     const docs: Document[] = [
       {
@@ -132,13 +140,18 @@ describe.skip('LangChain', () => {
     // https://api.js.langchain.com/classes/vectorstores_hnswlib.HNSWLib.html
     // https://js.langchain.com/docs/modules/data_connection/retrievers/how_to/vectorstore
     // https://github.com/langchain-ai/langchainjs/discussions/2842
-    const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
-    const retriever = vectorStore.asRetriever();
+    const vectorStore = await HNSWLib.fromDocuments([], embeddings);
+    await vectorStore.addDocuments(docs);
 
-    const prompt = PromptTemplate.fromTemplate(`answer the question based only on the following context:
-    {context}
-    ----------------
-    question: {question}`);
+    const retriever = vectorStore.asRetriever();
+    const prompt = PromptTemplate.fromTemplate(
+      [
+        'answer the question based only on the following context:',
+        '{context}',
+        '----------------',
+        'question: {question}',
+      ].join('\n'),
+    );
 
     const agent = RunnableSequence.from([
       {
@@ -177,13 +190,15 @@ describe.skip('LangChain', () => {
     const retriever = vectorStore.asRetriever(1); // Sets max docs to retrieve.
 
     // Create a system & human prompt for the chat model
-    const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
-    ----------------
-    {context}`;
-
     const prompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
+      SystemMessagePromptTemplate.fromTemplate(
+        [
+          'Use the following pieces of context to answer the question at the end.',
+          "If you don't know the answer, just say that you don't know, don't try to make up an answer.",
+          '----------------',
+          '{context}',
+        ].join('\n'),
+      ),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ]);
 
@@ -334,5 +349,49 @@ describe.skip('LangChain', () => {
     await call('hello, i am DXOS');
     await call('what is my name?');
     await call('what is 6 times 7?');
+  });
+
+  test.only('chain', async () => {
+    const docs: Document[] = [
+      {
+        metadata: { id: 1 },
+        pageContent: 'DXOS consists of HALO, ECHO and MESH.',
+      },
+      {
+        metadata: { id: 2 },
+        pageContent: 'HALO is a mechanism for self-sovereign identity.',
+      },
+      {
+        metadata: { id: 3 },
+        pageContent: 'ECHO is a decentralized graph database.',
+      },
+      {
+        metadata: { id: 4 },
+        pageContent: 'MESH provides infrastructure for resilient peer-to-peer networks.',
+      },
+    ];
+
+    const config = getConfig()!;
+    const resources = new ChainResources({
+      apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
+      chat: { modelName: 'gpt-4' },
+    });
+
+    await resources.initialize();
+    await resources.vectorStore.addDocuments(docs);
+
+    const chain = new Chain(resources);
+    {
+      const result = await chain.call('what kind of database does DXOS use?');
+      console.log(`> ${result}`);
+    }
+    {
+      const result = await chain.call('what is HALO part of?');
+      console.log(`> ${result}`);
+    }
+    {
+      const result = await chain.call('what language is MESH written in?');
+      console.log(`> ${result}`);
+    }
   });
 });
