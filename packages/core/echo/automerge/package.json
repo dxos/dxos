@@ -31,8 +31,8 @@
     "./automerge-wasm": {
       "browser": "./dist/lib/browser/automerge-wasm.mjs",
       "import": "./dist/lib/browser/automerge-wasm.mjs",
-      "require": "./dist/lib/node/automerge-wasm.cjs",
-      "node": "./dist/lib/node/automerge-wasm.cjs",
+      "require": "./exports/node/automerge-wasm.cjs",
+      "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
     }
   },

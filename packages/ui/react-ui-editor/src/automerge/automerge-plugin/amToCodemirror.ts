@@ -9,7 +9,7 @@ import {
   type Prop,
   type PutPatch,
   type SpliceTextPatch,
-} from '@automerge/automerge';
+} from '@dxos/automerge/automerge';
 import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 

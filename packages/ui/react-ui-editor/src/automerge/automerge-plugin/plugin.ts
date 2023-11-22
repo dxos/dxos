@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as automerge from '@automerge/automerge';
-import { type Doc, type Heads, type Prop } from '@automerge/automerge';
+import * as automerge from '@dxos/automerge/automerge';
+import { type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 import {
   Annotation,
   type EditorState,

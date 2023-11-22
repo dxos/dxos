@@ -9,7 +9,7 @@ import {
   type ChangeFn,
   type Heads,
   type SyncState,
-} from '@automerge/automerge';
+} from '@dxos/automerge/automerge';
 
 import { Event } from '@dxos/async';
 

@@ -3,9 +3,13 @@ import { copyFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
-for(const platform of ['node', 'browser'] as const) {
-  await build({
-    entryPoints: [
+for (const platform of ['node', 'browser'] as const) {
+  const result = await build({
+    entryPoints: platform === 'node' ? [
+      'src/automerge.ts',
+      'src/automerge/next.ts',
+      'src/automerge-repo.ts',
+    ] : [
       'src/automerge-wasm.ts',
       'src/automerge.ts',
       'src/automerge/next.ts',
@@ -14,7 +18,7 @@ for(const platform of ['node', 'browser'] as const) {
     bundle: true,
     format: 'esm',
     platform: platform,
-    outdir: `dist/${platform}`,
+    outdir: `dist/lib/${platform}`,
     splitting: true,
     outExtension: { '.js': platform === 'node' ? '.cjs' : '.mjs' },
     metafile: true,
@@ -22,61 +26,57 @@ for(const platform of ['node', 'browser'] as const) {
       {
         name: 'external-deps',
         setup: build => {
-        build.onResolve({ filter: /.*/ }, args => {
-          if(args.path.endsWith('.wasm')) {
-            return {
-              external: true,
-              path: args.path + '?init',
+          build.onResolve({ filter: /.*/ }, args => {
+            if (args.path.endsWith('.wasm')) {
+              return {
+                external: true,
+                path: args.path + '?init',
+              }
             }
-          }
 
-          if(args.path.startsWith('@automerge/') && !args.importer.includes(join(process.cwd(), 'src'))) {
-            return {
-              external: true,
-              path: args.path.replace('@automerge/', '@dxos/automerge/')
+            if (args.path.startsWith('@automerge/') && !args.importer.includes(join(process.cwd(), 'src'))) {
+              return {
+                external: true,
+                path: args.path.replace('@automerge/', '@dxos/automerge/')
+              }
             }
-          }
-        })
+          })
         }
       },
-      {
-        name: 'esmOutputToCjs',
-        setup: (pluginBuild) => {
-          if(platform !== 'node') return;
-          pluginBuild.onEnd(async (result) => {
-            if (!result.metafile) {
-              throw new Error('Missing metafile.');
-            }
-            const outFiles = Object.keys(result.metafile?.outputs ?? {});
-            const jsFiles = outFiles.filter((f) => f.endsWith('js'));
-      
-            await Promise.all(
-              jsFiles.map(async (file) => {
-                await build({
-                  entryPoints: [file],
-                  outfile: file,
-                  format: 'cjs',
-                  platform: 'node',
-                  sourcemap: 'linked',
-                  allowOverwrite: true,
-                });
-              }),
-            );
-          });
-        },
-      }
     ]
   });
+
+  if (platform === 'node') {
+    if (!result.metafile) {
+      throw new Error('Missing metafile.');
+    }
+    const outFiles = Object.keys(result.metafile?.outputs ?? {});
+    const jsFiles = outFiles.filter((f) => f.endsWith('js'));
+
+    await Promise.all(
+      jsFiles.map(async (file) => {
+        await build({
+          entryPoints: [file],
+          outfile: file,
+          bundle: false,
+          format: 'cjs',
+          platform: 'node',
+          sourcemap: 'linked',
+          allowOverwrite: true,
+        });
+      }),
+    );
+  }
 }
 
 const require = createRequire(import.meta.url);
 
-await copyFile(
-  join(dirname(await require.resolve('@automerge/automerge-wasm')), './automerge_wasm_bg.wasm'),
-  'dist/node/automerge_wasm_bg.wasm'
-)
+// await copyFile(
+//   join(dirname(await require.resolve('@automerge/automerge-wasm')), './automerge_wasm_bg.wasm'),
+//   'dist/lib/node/automerge_wasm_bg.wasm'
+// )
 
 await copyFile(
   join(dirname(await require.resolve('@automerge/automerge-wasm')), '../bundler/automerge_wasm_bg.wasm'),
-  'dist/browser/automerge_wasm_bg.wasm'
+  'dist/lib/browser/automerge_wasm_bg.wasm'
 )
