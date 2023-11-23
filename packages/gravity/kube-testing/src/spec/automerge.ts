@@ -61,7 +61,8 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     const {
       BrowserWebSocketClientAdapter,
       NodeWSServerAdapter,
-    }: typeof import('@automerge/automerge-repo-network-websocket') = await importEsm(
+    }: // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    typeof import('@automerge/automerge-repo-network-websocket') = await importEsm(
       '@automerge/automerge-repo-network-websocket',
     );
     let repo: Repo;
@@ -99,4 +100,5 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
   async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
 }
 
+// eslint-disable-next-line no-new-func
 const importEsm = Function('path', 'return import(path)');
