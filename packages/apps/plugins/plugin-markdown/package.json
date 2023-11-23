@@ -28,6 +28,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@preact/signals-react": "^1.3.6",
     "deepsignal": "1.4.0-shallow.0"

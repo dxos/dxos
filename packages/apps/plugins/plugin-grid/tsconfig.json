@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../core/echo/echo-generator"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

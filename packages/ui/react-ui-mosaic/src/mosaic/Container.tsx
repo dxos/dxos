@@ -37,7 +37,8 @@ export type MosaicTileOverlayProps = {
  * * `reject` - The tile is not allowed where it was dropped.
  */
 // TODO(wittjosiah): Add 'delete'. Consider adding 'swap'.
-export type MosaicOperation = 'transfer' | 'copy' | 'rearrange' | 'reject';
+export const MosaicOperations = ['transfer', 'copy', 'rearrange', 'reject'] as const;
+export type MosaicOperation = (typeof MosaicOperations)[number];
 
 export type MosaicMoveEvent<TPosition = unknown> = {
   active: MosaicDraggedItem<TPosition>;

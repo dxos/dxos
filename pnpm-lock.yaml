@@ -584,6 +584,9 @@ importers:
       '@braneframe/plugin-thread':
         specifier: workspace:*
         version: link:../plugins/plugin-thread
+      '@braneframe/plugin-wildcard':
+        specifier: workspace:*
+        version: link:../plugins/plugin-wildcard
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
@@ -1272,15 +1275,24 @@ importers:
 
   packages/apps/plugins/plugin-grid:
     dependencies:
+      '@dnd-kit/core':
+        specifier: ^6.0.5
+        version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.0.21)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^7.1.2
+        version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -1291,6 +1303,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1309,6 +1324,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -1394,6 +1412,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -1626,6 +1647,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model
@@ -2547,6 +2571,46 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-wildcard:
+    dependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.3.1
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -13136,8 +13200,6 @@ packages:
     resolution: {integrity: sha512-FdgpFxY6V6rLZE9mmIBb9hM0xpfvQOSNOLnzolzKwsE1DH+gC7lEKV1p1IbR0lAYyvYd5a4u3qWJzowUkw1bIw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
     requiresBuild: true
-    dev: false
-    optional: true
 
   /@fal-works/esbuild-plugin-global-externals@2.1.2:
     resolution: {integrity: sha512-cEee/Z+I12mZcFJshKcCqC8tuX5hG3s+d+9nZ3LabqKF1vKdF41B92pJVCBggjAGORAeOzyyDDKrZwIkLffeOQ==}
