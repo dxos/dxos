@@ -18,7 +18,7 @@ import { TraceView } from './TraceView';
 import { type ResourceState, type State } from './types';
 import { PanelContainer } from '../../../components';
 
-const { helper, builder } = createColumnBuilder<ResourceState>();
+const { helper } = createColumnBuilder<ResourceState>();
 const columns: TableColumnDef<ResourceState, any>[] = [
   helper.accessor('resource', {
     id: 'name',
