@@ -23,6 +23,8 @@ import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
 
+export const DEFAULT_TYPE = 'stack-section';
+
 type StackItem = MosaicDataItem & {
   items: StackSectionItem[];
 };
@@ -43,6 +45,7 @@ export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit
 
 export const Stack = ({
   id,
+  type = DEFAULT_TYPE,
   className,
   Component: SectionContent,
   items = [],
@@ -83,9 +86,10 @@ export const Stack = ({
 
   return (
     <div ref={containerRef}>
-      <Mosaic.Container {...{ id, Component, getOverlayStyle, onOver, onDrop }}>
+      <Mosaic.Container {...{ id, type, Component, getOverlayStyle, onOver, onDrop }}>
         <Mosaic.DroppableTile
           path={id}
+          type={type}
           className={className}
           item={{ id, items: itemsWithPreview }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
@@ -99,7 +103,7 @@ export const Stack = ({
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
   ({ className, path, isOver, item: { items } }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { Component } = useContainer();
+    const { Component, type } = useContainer();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
@@ -107,7 +111,14 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (
-              <Mosaic.SortableTile key={item.id} item={item} path={path} position={index} Component={Component!} />
+              <Mosaic.SortableTile
+                key={item.id}
+                item={item}
+                path={path}
+                type={type}
+                position={index}
+                Component={Component!}
+              />
             ))}
           </Mosaic.SortableContext>
         ) : (
