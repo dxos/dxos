@@ -51,6 +51,6 @@ export class AutomergeDb {
     invariant(obj[base] instanceof AutomergeObject);
     invariant(this._objects.has(obj.id));
     this._objects.delete(obj.id);
-    (obj[base] as AutomergeObject).__system.deleted = true;
+    (obj[base] as AutomergeObject).__system!.deleted = true;
   }
 }

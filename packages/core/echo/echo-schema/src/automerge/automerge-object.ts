@@ -77,11 +77,11 @@ export class AutomergeObject implements TypedObjectProperties {
     return undefined;
   }
 
-  get __meta(): ObjectMeta | undefined {
+  get __meta(): ObjectMeta {
     return this._createProxy(['meta']);
   }
 
-  get __system(): ObjectSystem | undefined {
+  get __system(): ObjectSystem {
     return this._createProxy(['system']);
   }
 
