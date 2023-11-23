@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { AnchoredOverflow } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
@@ -16,7 +16,7 @@ const columns: TableColumnDef<ConnectionInfo.StreamStats, any>[] = [
   helper.accessor('bytesReceived', builder.number({ header: 'received' })),
   helper.accessor('bytesSentRate', builder.number({ header: 'sent b/s' })),
   helper.accessor('bytesReceivedRate', builder.number({ header: 'received b/s' })),
-  helper.accessor('tag', {}),
+  helper.accessor('tag', { meta: { cell: { classNames: textPadding } } }),
 ];
 
 const schema = {

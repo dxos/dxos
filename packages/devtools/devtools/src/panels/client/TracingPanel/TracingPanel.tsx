@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { AnchoredOverflow } from '@dxos/react-ui'; // Deliberately not using the common components export to aid in code-splitting.
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { LogView } from './LogView';
@@ -18,23 +18,27 @@ import { TraceView } from './TraceView';
 import { type ResourceState, type State } from './types';
 import { PanelContainer } from '../../../components';
 
-const { helper } = createColumnBuilder<ResourceState>();
+const { helper, builder } = createColumnBuilder<ResourceState>();
 const columns: TableColumnDef<ResourceState, any>[] = [
   helper.accessor('resource', {
     id: 'name',
     size: 200,
+    meta: { cell: { classNames: textPadding } },
     cell: (cell) => <ResourceName resource={cell.getValue()} />,
   }),
   helper.accessor((state) => state.logs.length, {
     id: 'logs',
     size: 50,
+    meta: { cell: { classNames: textPadding } },
   }),
   helper.accessor((state) => state.spans.length, {
     id: 'spans',
     size: 50,
+    meta: { cell: { classNames: textPadding } },
   }),
   helper.accessor((state) => state.resource.info, {
     id: 'info',
+    meta: { cell: { classNames: textPadding } },
     cell: (cell) => <div className='font-mono text-green-500'>{JSON.stringify(cell.getValue())}</div>,
   }),
 ];

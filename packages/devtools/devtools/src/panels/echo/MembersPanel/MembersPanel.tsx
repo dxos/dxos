@@ -6,7 +6,7 @@ import React from 'react';
 
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
@@ -15,7 +15,10 @@ import { useDevtoolsState } from '../../../hooks';
 const { helper, builder } = createColumnBuilder<SpaceMember>();
 const columns: TableColumnDef<SpaceMember, any>[] = [
   helper.accessor((member) => member.identity.identityKey, { id: 'key', ...builder.key({ tooltip: true }) }),
-  helper.accessor((member) => member.identity.profile?.displayName, { id: 'name' }),
+  helper.accessor((member) => member.identity.profile?.displayName, {
+    id: 'name',
+    meta: { cell: { classNames: textPadding } },
+  }),
   helper.accessor(
     (member) => {
       switch (member.presence) {
@@ -25,7 +28,10 @@ const columns: TableColumnDef<SpaceMember, any>[] = [
           return 'offline';
       }
     },
-    { id: 'status' },
+    {
+      id: 'status',
+      meta: { cell: { classNames: textPadding } },
+    },
   ),
 ];
 
