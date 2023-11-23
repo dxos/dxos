@@ -19,6 +19,9 @@ export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
 
+// TODO(burdon): Fix garbage collection.
+const queries: Query<any>[] = [];
+
 export type QueryResult<T extends EchoObject> = {
   id: string;
   spaceKey: PublicKey;
@@ -150,11 +153,15 @@ export class Query<T extends TypedObject = TypedObject> {
 
   // TODO(burdon): Change to SubscriptionHandle.
   subscribe(callback: (query: Query<T>) => void, fire = false): Subscription {
+    queries.push(this);
     const subscription = this._event.on(callback);
     if (fire) {
       callback(this);
     }
 
-    return subscription;
+    return () => {
+      queries.splice(queries.indexOf(this), 1);
+      subscription();
+    };
   }
 }

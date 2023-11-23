@@ -15,11 +15,12 @@ export type FunctionDef = {
   description?: string;
 };
 
+// TODO(burdon): Query DSL.
 export type TriggerSubscription = {
   type: string;
   spaceKey: string;
   props?: Record<string, any>;
-  nested?: string[];
+  deep?: boolean;
   delay?: number;
 };
 

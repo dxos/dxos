@@ -51,6 +51,7 @@ triggers:
   - function: 'dxos.org/function/embedding'
     subscription:
       type: 'braneframe.Document'
+      deep: true
       delay: 10
 
 #  - function: 'dxos.org/function/github'

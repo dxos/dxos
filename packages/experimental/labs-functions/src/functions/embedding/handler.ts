@@ -40,7 +40,6 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
     const config = context.client.config;
     const resources = new ChainResources({
       apiKey: getKey(config, 'openai.com/api_key')!,
-      chat: { modelName: 'gpt-4' },
       // TODO(burdon): Get from context (for agent profile).
       baseDir: '/tmp/dxos/agent/functions/embedding',
     });

@@ -69,7 +69,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 
           let blocks: MessageType.Block[];
           const text = message.blocks[0]?.text;
-          if (text?.charAt(0) === '/') {
+          if (text?.charAt(0) === '$') {
             const response = await chain.call(text.slice(1));
             blocks = [
               {

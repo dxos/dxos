@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { CronJob } from 'cron';
 
 import { debounce, DeferredTask } from '@dxos/async';
@@ -102,12 +103,31 @@ export class Scheduler {
           task.schedule();
         });
 
-        const { type, props, delay } = trigger.subscription;
+        const { type, props, deep, delay } = trigger.subscription;
         const update = ({ objects }: Query) => {
           log.info('update', { type, objects: objects.length });
           subscription.update(objects);
+
+          // TODO(burdon): Hack to monitor text changes.
+          if (deep) {
+            effect(() => {
+              for (const object of objects) {
+                // TODO(burdon): Test type.
+                const currentText = object?.content?.text?.trim();
+                if (currentText) {
+                  const upperCase = currentText.toUpperCase();
+                  if (upperCase !== currentText) {
+                    // Prevent recursion.
+                    object.content.splice(0, currentText.length, upperCase);
+                    console.log('=====', currentText, upperCase);
+                  }
+                }
+              }
+            });
+          }
         };
 
+        // TODO(burdon): Bug: callbacks fired when starting up.
         const query = space.db.query(Filter.typename(type, props));
         const unsubscribe = query.subscribe(delay ? debounce(update, delay * 1_000) : update);
 
