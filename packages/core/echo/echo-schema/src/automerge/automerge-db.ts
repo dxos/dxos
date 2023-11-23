@@ -27,6 +27,7 @@ export class AutomergeDb {
    * @internal
    */
   readonly _objects = new Map<string, EchoObject>();
+  readonly _objectsSystem = new Map<string, EchoObject>();
 
   getObjectById(id: string): EchoObject | undefined {
     return this._objects.get(id);
@@ -45,6 +46,9 @@ export class AutomergeDb {
   }
 
   remove<T extends EchoObject>(obj: T) {
-    throw new Error('Not implemented');
+    invariant(obj[base] instanceof AutomergeObject);
+    invariant(this._objects.has(obj.id));
+    this._objects.delete(obj.id);
+    (obj[base] as AutomergeObject).__system!.deleted = true;
   }
 }
