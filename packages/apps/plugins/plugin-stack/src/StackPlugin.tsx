@@ -49,6 +49,22 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
+          [StackType.Section.schema.typename]: {
+            parse: ({ object }: StackType.Section, type: string) => {
+              switch (type) {
+                case 'object': {
+                  return object;
+                }
+
+                case 'node': {
+                  return { id: object.id, label: object.title, data: object };
+                }
+
+                default:
+                  return undefined;
+              }
+            },
+          },
         },
       },
       translations,
