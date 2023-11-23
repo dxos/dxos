@@ -360,15 +360,17 @@ export class ColumnBuilder<TData extends RowData> {
           <Tooltip.Provider>
             <Tooltip.Root>
               <Tooltip.Trigger>{element}</Tooltip.Trigger>
-              <Tooltip.Content side='right'>
-                <Tooltip.Arrow />
-                <ClipboardText
-                  onClick={(ev) => {
-                    ev.stopPropagation(); // Prevent select row.
-                    void navigator.clipboard.writeText(value.toHex());
-                  }}
-                />
-              </Tooltip.Content>
+              <Tooltip.Portal>
+                <Tooltip.Content side='right'>
+                  <Tooltip.Arrow />
+                  <ClipboardText
+                    onClick={(ev) => {
+                      ev.stopPropagation(); // Prevent select row.
+                      void navigator.clipboard.writeText(value.toHex());
+                    }}
+                  />
+                </Tooltip.Content>
+              </Tooltip.Portal>
             </Tooltip.Root>
           </Tooltip.Provider>
         );

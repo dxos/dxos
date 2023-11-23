@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { type PublicKey } from '@dxos/keys';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Table, type TableColumnDef, createColumnBuilder } from '@dxos/react-ui-table';
+import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
@@ -35,7 +35,10 @@ export const SpaceListPanel: FC = () => {
   const { helper, builder } = createColumnBuilder<Space>();
   const columns: TableColumnDef<Space, any>[] = [
     helper.accessor('key', builder.key({ tooltip: true })),
-    helper.accessor((space) => space.properties.name, { id: 'name' }),
+    helper.accessor((space) => space.properties.name, {
+      id: 'name',
+      meta: { cell: { classNames: textPadding } },
+    }),
     helper.accessor((space) => space.db.objects.length, {
       id: 'objects',
       ...builder.number(),
