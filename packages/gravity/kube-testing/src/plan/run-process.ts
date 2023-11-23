@@ -106,11 +106,23 @@ export const runBrowser = <S, C>(
     const start = Date.now();
     invariant(agentParams.runtime.platform);
 
-    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: true });
+    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: options.headless ?? true });
     ctx.onDispose(async () => {
       await page.close();
       await context.close();
     });
+
+    page.on('crash', () => {
+      log.error('page crashed') 
+    })
+    page.on('console', msg => {
+      if(msg.type() === 'error') {
+        log.error('page console error', { msg })
+      }
+    })
+    page.on('pageerror', error => {
+      log.error('page error', { error: error })
+    })
 
     const fileProcessor = createFileProcessor({
       path: join(agentParams.outDir, AGENT_LOG_FILE),
@@ -154,7 +166,7 @@ export const runBrowser = <S, C>(
         GRAVITY_SPEC: planName,
       })}
     </script>
-    <script src="index.js"></script>
+    <script type="module" src="index.js"></script>
   </body>
   </html>
   `,

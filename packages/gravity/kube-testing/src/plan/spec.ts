@@ -12,6 +12,7 @@ export type PlanOptions = {
   randomSeed?: string;
   profile?: boolean;
   debug?: boolean;
+  headless?: boolean;
 };
 
 export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
