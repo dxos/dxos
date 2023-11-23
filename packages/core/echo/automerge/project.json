@@ -5,13 +5,13 @@
     "build": {},
     "compile": {
       "executor": "nx:run-script",
+      "inputs": [
+        "{projectRoot}/scripts/**/*",
+        "{projectRoot}/src/**/*"
+      ],
       "options": {
         "script": "compile"
       },
-      "inputs": [
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/scripts/**/*"
-      ],
       "outputs": [
         "packages/core/echo/automerge/dist/lib"
       ]
