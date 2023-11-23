@@ -1,3 +1,7 @@
 // Imported from WASM module.
 
-export * from '@automerge/automerge-wasm/bundler/automerge_wasm_bg.js'
+//
+// Copyright 2023 DXOS.org
+//
+
+export * from '@automerge/automerge-wasm/bundler/automerge_wasm_bg.js';

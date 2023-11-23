@@ -51,7 +51,7 @@ export class AgentEnv<S, C> {
     const agentCount = Object.keys(this.params.agents).length;
     const syncKey = `${this.params.testId}:${key}`;
 
-    if(data !== undefined) {
+    if (data !== undefined) {
       await this.redis.set(`${syncKey}:data:${this.params.agentIdx}`, JSON.stringify(data));
     }
     await this._barrier(syncKey, agentCount);

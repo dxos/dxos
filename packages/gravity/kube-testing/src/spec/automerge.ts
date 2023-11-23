@@ -2,6 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Server } from 'isomorphic-ws';
+
+import { Repo } from '@dxos/automerge/automerge-repo';
+import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import {
@@ -12,11 +16,7 @@ import {
   type TestParams,
   type TestPlan,
 } from '../plan';
-
-import { Repo } from '@dxos/automerge/automerge-repo';
 import { randomArraySlice } from '../util';
-import { Server } from 'isomorphic-ws';
-import { log } from '@dxos/log';
 
 export type AutomergeTestSpec = {
   platform: Platform;
@@ -85,17 +85,17 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     const handle = repo.create();
     handle.change((doc: any) => {
       doc.author = `agent-${config.agentIdx}`;
-    })
+    });
     const docUrls = (await env.syncData('doc-created', [handle.url])).flat();
     log.info('shared docs', { docUrls });
 
-    const docs = docUrls.map(url => repo.find(url));
-    await Promise.all(docs.map(doc => doc.whenReady()));
+    const docs = docUrls.map((url) => repo.find(url));
+    await Promise.all(docs.map((doc) => doc.whenReady()));
 
     log.info('docs ready', { count: docs.length });
-    console.log(docs.map(doc => doc.docSync()));
-
+    console.log(docs.map((doc) => doc.docSync()));
   }
+
   async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
 }
 

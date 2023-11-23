@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Plugin } from 'esbuild';
+import wasm from 'esbuild-plugin-wasm';
+
 import {
   FixGracefulFsPlugin,
   FixMemdownPlugin,
   NodeGlobalsPolyfillPlugin,
   NodeModulesPlugin,
 } from '@dxos/esbuild-plugins';
-import { Plugin } from 'esbuild';
-import wasm from 'esbuild-plugin-wasm';
 
 export const buildBrowserBundle = async (outfile: string) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -34,16 +35,15 @@ export const buildBrowserBundle = async (outfile: string) => {
   return result;
 };
 
-
 const wasmCompat = (): Plugin => ({
   name: 'wasm-compat',
-  setup: build => {
-    build.onResolve({ filter: /.*\.wasm\?init$/ }, async args => {
+  setup: (build) => {
+    build.onResolve({ filter: /.*\.wasm\?init$/ }, async (args) => {
       return build.resolve(args.path.replace(/\?init$/, ''), {
         importer: args.importer,
         kind: args.kind,
         resolveDir: args.resolveDir,
       });
-    })
-  }
-})
+    });
+  },
+});
