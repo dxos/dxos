@@ -109,7 +109,7 @@ export class Scheduler {
         };
 
         const query = space.db.query(Filter.typename(type, props));
-        const unsubscribe = query.subscribe(delay ? debounce(update, delay * 1_000) : update, true);
+        const unsubscribe = query.subscribe(delay ? debounce(update, delay * 1_000) : update);
 
         ctx.onDispose(() => {
           subscription.unsubscribe();
