@@ -8,6 +8,10 @@
       "options": {
         "script": "compile"
       },
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/scripts/**/*"
+      ],
       "outputs": [
         "packages/core/echo/automerge/dist/lib"
       ]
