@@ -39,6 +39,7 @@
     "@braneframe/plugin-template": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-thread": "workspace:*",
+    "@braneframe/plugin-wildcard": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/config": "workspace:*",
