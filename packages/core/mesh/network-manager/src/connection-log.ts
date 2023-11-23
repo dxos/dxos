@@ -12,6 +12,8 @@ import { ComplexMap } from '@dxos/util';
 import { ConnectionState, type Swarm } from './swarm';
 import { type WireProtocol } from './wire-protocol';
 
+const CONNECTION_GC_THRESHOLD = 1000 * 60 * 15;
+
 export enum EventType {
   CONNECTION_STATE_CHANGED = 'CONNECTION_STATE_CHANGED',
   PROTOCOL_ERROR = 'PROTOCOL_ERROR',
@@ -57,6 +59,7 @@ export class ConnectionLog {
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: [], // TODO(dmaretskyi): Fix.
         events: [],
+        lastUpdate: new Date(),
       };
       info.connections!.push(connectionInfo);
       this.update.emit();
@@ -64,6 +67,7 @@ export class ConnectionLog {
       connection.stateChanged.on((state) => {
         connectionInfo.state = state;
         connectionInfo.closeReason = connection.closeReason;
+        connectionInfo.lastUpdate = new Date();
         connectionInfo.events!.push({
           type: EventType.CONNECTION_STATE_CHANGED,
           newState: state,
@@ -75,8 +79,11 @@ export class ConnectionLog {
         connectionInfo.readBufferSize = stats.readBufferSize;
         connectionInfo.writeBufferSize = stats.writeBufferSize;
         connectionInfo.streams = stats.channels;
+        connectionInfo.lastUpdate = new Date();
         this.update.emit();
       });
+
+      gcSwarm(info);
 
       // connection.protocol.protocol?.error.on((error) => {
       //   connectionInfo.events!.push({
@@ -111,3 +118,9 @@ export class ConnectionLog {
     this.update.emit();
   }
 }
+
+const gcSwarm = (swarm: SwarmInfo) => {
+  swarm.connections = swarm.connections?.filter((connection) => {
+    return connection.lastUpdate ? Date.now() - connection.lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true;
+  });
+};
