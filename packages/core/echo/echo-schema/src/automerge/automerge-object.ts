@@ -22,7 +22,6 @@ import {
   db,
   debug,
   subscribe,
-  type ObjectSystem,
 } from '../object/types';
 import { type dxos } from '../proto/gen/schema';
 import { compositeRuntime } from '../util';
