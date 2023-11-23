@@ -79,7 +79,7 @@ export const DashboardPanel = () => {
   };
 
   return (
-    <PanelContainer className='flex-1 flex-row'>
+    <PanelContainer classNames='flex-1 flex-row'>
       <div className='flex-1 flex-col w-50%'>
         <AgentStat status={agentState} />
       </div>
