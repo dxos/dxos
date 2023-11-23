@@ -59,8 +59,8 @@ export const SpaceInfoPanel: FC = () => {
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: FeedInfo[] | undefined) => {
-    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
+  const handleSelect = (selected: FeedInfo | undefined) => {
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
     navigate('/echo/feeds');
   };
 
@@ -92,7 +92,7 @@ export const SpaceInfoPanel: FC = () => {
         <div className='flex flex-col gap-4'>
           <SpaceProperties space={space} metadata={metadata} />
           <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-          <Table<FeedInfo> columns={columns} data={updatedFeeds} onSelectedChange={handleSelect} />
+          <Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
         </div>
       )}
     </PanelContainer>

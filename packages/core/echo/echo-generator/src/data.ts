@@ -100,6 +100,10 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         type: Schema.PropType.STRING,
       },
       {
+        id: 'website',
+        type: Schema.PropType.STRING,
+      },
+      {
         id: 'status',
         type: Schema.PropType.STRING,
       },
@@ -110,6 +114,11 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       {
         id: 'active',
         type: Schema.PropType.BOOLEAN,
+      },
+      {
+        id: 'org',
+        type: Schema.PropType.REF,
+        ref: organization,
       },
     ],
   });

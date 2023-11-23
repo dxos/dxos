@@ -8,10 +8,7 @@
         "main": "packages/common/process/src/index.ts",
         "outputPath": "packages/common/process/dist",
         "tsConfig": "packages/common/process/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",

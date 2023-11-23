@@ -10,9 +10,19 @@ import * as process from 'node:process';
 import { Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 
+// TODO(burdon): Factor out.
+
 export const loadJson = (filename: string) => {
   invariant(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
+};
+
+export const getConfig = (
+  filename = process.env.TEST_CONFIG ?? path.join(process.env.HOME!, '.config/dx/profile/default.yml'),
+): Config | undefined => {
+  if (fs.existsSync(filename)) {
+    return new Config(yaml.load(String(fs.readFileSync(filename))) as any);
+  }
 };
 
 export const getKey = (config: Config, name: string) => {
@@ -21,15 +31,6 @@ export const getKey = (config: Config, name: string) => {
   return key?.value;
 };
 
-export const getConfig = (
-  filename = path.join(process.cwd(), process.env.TEST_CONFIG ?? 'config.yml'),
-): Config | undefined => {
-  if (fs.existsSync(filename)) {
-    return new Config(yaml.load(String(fs.readFileSync(filename))) as any);
-  }
-};
-
-// TODO(burdon): Full text search utils?
 export const stringMatch = (text: string, prefix = false) => {
   const match = text.toLowerCase();
   return prefix

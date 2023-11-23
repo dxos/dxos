@@ -21,8 +21,8 @@ const defaultItems: StoryItems = faker.helpers
 
 const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) => {
   return (
-    <SearchList.Root filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
-      <SearchList.Input placeholder='Select...' />
+    <SearchList.Root filter={(value, search) => (items[value].includes(search) ? 1 : 0)}>
+      <SearchList.Input placeholder='Search...' />
       <SearchList.Content>
         {Object.entries(items).map(([value, label]) => (
           <SearchList.Item key={value} value={value} onSelect={(value) => console.log('[item select]', value)}>
@@ -37,8 +37,6 @@ const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) =>
 export default {
   component: SearchListStory,
 };
-
-// TODO(burdon): Test controlled and uncontrolled.
 
 export const Default = {
   args: {},

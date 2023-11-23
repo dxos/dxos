@@ -6,12 +6,12 @@ import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
-import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
+import { LayoutAction, Surface, useIntent, usePlugin } from '@dxos/app-framework';
 import { type TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
-import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
+import { baseSurface, chromeSurface, topbarBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
 import { defaultFileTypes } from '../hooks';
@@ -91,8 +91,15 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     [stack, stack.sections],
   );
 
+  const handleNavigate = async (id: string) => {
+    await dispatch({
+      action: LayoutAction.ACTIVATE,
+      data: { id },
+    });
+  };
+
   return (
-    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
         Component={StackContent}
@@ -100,6 +107,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
         onOver={handleOver}
         onDrop={handleDrop}
         onRemoveSection={handleRemove}
+        onNavigateToSection={handleNavigate}
       />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>

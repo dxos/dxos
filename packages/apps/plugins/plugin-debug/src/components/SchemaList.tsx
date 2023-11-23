@@ -42,9 +42,9 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: n
   const columns: TableColumnDef<SchemaRecord>[] = [
     helper.accessor((object) => object.id.slice(0, 8), {
       id: 'id',
-      ...builder.string({ size: 120, className: 'font-mono' }),
+      ...builder.string({ size: 120, classNames: 'font-mono' }),
     }),
-    helper.accessor('typename', builder.string({ className: 'font-mono', meta: { expand: true } })),
+    helper.accessor('typename', builder.string({ classNames: 'font-mono', meta: { expand: true } })),
     helper.accessor(
       'count',
       builder.number({

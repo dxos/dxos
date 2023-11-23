@@ -2,17 +2,7 @@
   "sourceRoot": "packages/ui/react-ui-theme/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/ui/react-ui-theme/src/index.ts",
-        "outputPath": "packages/ui/react-ui-theme/dist/types",
-        "tsConfig": "packages/ui/react-ui-theme/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "dependsOn": [
         "compile-lib",
@@ -64,17 +54,11 @@
       ]
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
       "options": {
-        "format": "unix",
         "lintFilePatterns": [
-          "packages/ui/react-ui-theme/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
+          "packages/ui/react-ui-theme/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
     }
   },
   "implicitDependencies": [

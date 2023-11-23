@@ -1,18 +1,48 @@
+##
+## Test:
+## curl -s -X POST -H "Content-Type: application/json" http://localhost:7100/dev/hello | jq
+##
+
 functions:
-  - id: 'assistant'
+  - id: 'dxos.org/function/chat'
+    name: 'chat'
+    handler: 'chat'
     description: 'AI Chat'
 
-  - id: 'chess'
+  - id: 'dxos.org/function/chess'
+    name: 'chess'
+    handler: 'chess'
     description: 'Chess'
 
-  - id: 'hello'
-    description: 'Test'
+  - id: 'dxos.org/function/email'
+    name: 'email'
+    handler: 'email'
+    description: 'Email Sync'
+
+  - id: 'dxos.org/function/hello'
+    name: 'hello'
+    handler: 'hello'
+    description: 'Hello world'
+
+  - id: 'dxos.org/function/github'
+    name: 'github'
+    handler: 'github'
+    description: 'Github Sync'
 
 triggers:
-  - function: 'assistant'
+  - function: 'dxos.org/function/chat'
     subscription:
-      type: 'braneframe.Thread.Block'
+      type: 'braneframe.Message'
 
-  - function: 'chess'
+  - function: 'dxos.org/function/chess'
     subscription:
       type: 'dxos.experimental.chess.Game'
+
+  - function: 'dxos.org/function/email'
+    schedule: '*/30 * * * * *'
+    subscription:
+      type: 'braneframe.Mailbox'
+
+  - function: 'dxos.org/function/github'
+    subscription:
+      type: 'example.com/schema/project'

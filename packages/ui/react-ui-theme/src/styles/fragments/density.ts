@@ -5,7 +5,6 @@
 import { type Density } from '@dxos/react-ui-types';
 
 export const coarseBlockSize = 'min-bs-[2.5rem]';
-export const coarseBlockPaddingStart = 'pbs-[2.5rem]';
 export const coarseTextPadding = 'pli-3';
 export const coarseButtonPadding = 'pli-4';
 export const coarseDimensions = `${coarseBlockSize} ${coarseTextPadding}`;

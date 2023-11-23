@@ -34,7 +34,7 @@ const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props
 const defaultCount: Partial<Record<TestSchemaType, number>> = {
   [TestSchemaType.organization]: 40,
   [TestSchemaType.project]: 80,
-  [TestSchemaType.contact]: 320,
+  [TestSchemaType.contact]: 160,
 };
 
 export class Generator {

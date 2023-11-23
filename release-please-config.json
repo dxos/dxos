@@ -79,6 +79,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-ipfs/package.json",
           "jsonpath": "$.version"
         },
@@ -345,6 +350,11 @@
         {
           "type": "json",
           "path": "packages/core/agent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/automerge/package.json",
           "jsonpath": "$.version"
         },
         {

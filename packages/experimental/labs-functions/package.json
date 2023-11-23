@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-functions",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -23,6 +23,8 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/document-model": "workspace:*",
+    "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -43,13 +45,15 @@
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",
     "js-yaml": "^4.1.0",
-    "langchain": "^0.0.180",
+    "langchain": "^0.0.196",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.startcase": "^4.4.0",
     "mailparser": "^3.6.4",
     "node-fetch": "^2.6.0",
     "openai": "^3.2.1",
-    "split2": "^4.1.0"
+    "split2": "^4.1.0",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.0"
   },
   "devDependencies": {
     "@dxos/agent": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolbox",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,12 +15,14 @@
     "chalk": "^4.1.0",
     "comment-json": "^4.2.3",
     "console-table-printer": "^2.11.0",
+    "deep-equal": "^2.2.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
     "lodash.sortby": "^4.7.0",
     "sort-package-json": "^1.57.0"
   },
   "devDependencies": {
+    "@types/deep-equal": "^1.0.4",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pick": "^4.4.7",
     "@types/lodash.sortby": "^4.7.7",

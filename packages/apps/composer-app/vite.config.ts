@@ -26,6 +26,7 @@ export default defineConfig({
           }
         : false,
     fs: {
+      strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
@@ -54,6 +55,9 @@ export default defineConfig({
     alias: {
       'node-fetch': 'isomorphic-fetch',
     },
+  },
+  worker: {
+    format: 'es',
   },
   plugins: [
     // Required for the script plugin.
@@ -98,6 +102,8 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-table/node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-table/node_modules/@dxos/react-ui-table/node_modules/@dxos/react-ui-searchlist/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-debug/node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
 
         // TODO(burdon): Hoisted as direct deps.
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),

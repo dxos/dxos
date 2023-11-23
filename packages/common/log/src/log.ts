@@ -4,6 +4,7 @@
 
 import { type LogConfig, LogLevel, type LogOptions } from './config';
 import { type LogContext, type LogProcessor } from './context';
+import { createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
 import { getConfig, DEFAULT_PROCESSORS } from './options';
 
@@ -15,7 +16,7 @@ type LogFunction = (message: string, context?: LogContext, meta?: CallMetadata) 
 /**
  * Logging methods.
  */
-interface LogMethods {
+export interface LogMethods {
   trace: LogFunction;
   debug: LogFunction;
   info: LogFunction;
@@ -24,6 +25,7 @@ interface LogMethods {
   catch: (error: Error | any, context?: LogContext, meta?: CallMetadata) => void;
   break: () => void;
   stack: (message?: string, context?: never, meta?: CallMetadata) => void;
+  method: (arg0?: never, arg1?: never, meta?: CallMetadata) => MethodDecorator;
 }
 
 /**
@@ -76,6 +78,8 @@ const createLog = (): LogImp => {
 
   log.stack = (message, context, meta) =>
     processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
+
+  log.method = createMethodLogDecorator(log);
 
   /**
    * Process the current log call.
