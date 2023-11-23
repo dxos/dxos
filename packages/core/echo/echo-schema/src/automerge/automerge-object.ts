@@ -22,6 +22,7 @@ import {
   db,
   debug,
   subscribe,
+  type ObjectSystem,
 } from '../object/types';
 import { type dxos } from '../proto/gen/schema';
 import { compositeRuntime } from '../util';
@@ -31,6 +32,18 @@ export type BindOptions = {
   docHandle: DocHandle<any>;
   path: string[];
 };
+
+/**
+ * Automerge object system properties.
+ * (Is automerge specific.)
+ */
+export type ObjectSystem = {
+  /**
+   * Deletion marker.
+   */
+  deleted: boolean;
+};
+
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb;
   private _doc?: Doc<any>;
@@ -69,8 +82,12 @@ export class AutomergeObject implements TypedObjectProperties {
     return this._createProxy(['meta']);
   }
 
+  get __system(): ObjectSystem | undefined {
+    return this._createProxy(['system']);
+  }
+
   get __deleted(): boolean {
-    return this._getDoc().deleted;
+    return this.__system?.deleted ?? false;
   }
 
   toJSON() {
