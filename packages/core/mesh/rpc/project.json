@@ -2,64 +2,22 @@
   "sourceRoot": "packages/core/mesh/rpc/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/rpc/src/index.ts",
-        "outputPath": "packages/core/mesh/rpc/dist/types",
-        "tsConfig": "packages/core/mesh/rpc/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/mesh/rpc/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/mesh/rpc/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        "injectGlobals": true
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/mesh/rpc/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "coveragePath": "coverage/packages/core/mesh/rpc",
-        "outputPath": "tmp/mocha/packages/core/mesh/rpc",
-        "resultsPath": "test-results/packages/core/mesh/rpc",
-        "testPatterns": [
-          "packages/core/mesh/rpc/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/mesh/rpc/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     }
   },
   "implicitDependencies": [

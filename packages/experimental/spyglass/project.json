@@ -3,15 +3,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/experimental/spyglass/src/index.ts",
         "outputPath": "packages/experimental/spyglass/dist",
         "tsConfig": "packages/experimental/spyglass/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     }
   }
 }

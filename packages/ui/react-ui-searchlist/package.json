@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-searchlist",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "A themed ⌘K-style combobox component, triggered by a button (or keyboard shortcut), where values are queried only within the invoked modal.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,6 +21,8 @@
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-use-controllable-state": "^1.0.0",
     "cmdk": "^0.2.0"
   },
   "devDependencies": {

@@ -7,16 +7,16 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
+import { AnchoredOverflow } from '@dxos/react-ui'; // Deliberately not using the common components export to aid in code-splitting.
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotNullOrUndefined } from '@dxos/util';
 
 import { LogView } from './LogView';
 import { MetricsView } from './MetricsView';
 import { ResourceName } from './Resource';
 import { TraceView } from './TraceView';
 import { type ResourceState, type State } from './types';
-import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
+import { PanelContainer } from '../../../components';
 
 const { helper } = createColumnBuilder<ResourceState>();
 const columns: TableColumnDef<ResourceState, any>[] = [
@@ -109,19 +109,16 @@ export const TracingPanel = () => {
 
   return (
     <PanelContainer>
-      <div className='flex flex-col h-1/3 overflow-hidden'>
+      <AnchoredOverflow.Root classNames='flex flex-col h-1/3 overflow-auto'>
         <Table<ResourceState>
           columns={columns}
           data={Array.from(state.current.resources.values())}
-          select='single-toggle'
-          selected={
-            selectedResourceId !== undefined
-              ? [state.current.resources.get(selectedResourceId)].filter(isNotNullOrUndefined)
-              : undefined
-          }
-          onSelectedChange={(resources) => setSelectedResourceId(resources?.[0]?.resource.id)}
+          currentDatum={selectedResource}
+          onDatumClick={(resourceState) => setSelectedResourceId(resourceState.resource.id)}
+          fullWidth
         />
-      </div>
+        <AnchoredOverflow.Anchor />
+      </AnchoredOverflow.Root>
       <div className='flex flex-col h-2/3 overflow-hidden border-t'>
         <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
           <Tabs.List className='flex'>

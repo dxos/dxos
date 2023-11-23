@@ -45,19 +45,7 @@
         "packages/core/protocols/dist/cjs"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/protocols/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "dependsOn": [
         "^build",
@@ -72,29 +60,7 @@
         "{options.basePath}/gen"
       ]
     },
-    "test": {
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ],
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/core/protocols",
-        "outputPath": "tmp/mocha/packages/core/protocols",
-        "resultsPath": "test-results/packages/core/protocols",
-        "testPatterns": [
-          "packages/core/protocols/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/protocols/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "nx-protobuf-compiler",

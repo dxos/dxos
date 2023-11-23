@@ -15,11 +15,11 @@ const KUBE_REPO = process.env.KUBE_HOME ?? raise(new Error('KUBE_HOME environmen
 const BIN_PATH = './cmds/signal-test/main.go';
 
 {
-  if (!fs.existsSync(KUBE_REPO)) {
+  if (typeof window === 'undefined' && !fs.existsSync(KUBE_REPO)) {
     throw new Error(`Kube repo does not exist: ${KUBE_REPO}`);
   }
 
-  if (!fs.existsSync(path.join(KUBE_REPO, BIN_PATH))) {
+  if (typeof window === 'undefined' && !fs.existsSync(path.join(KUBE_REPO, BIN_PATH))) {
     throw new Error(`Bin does not exist: ${path.join(KUBE_REPO, BIN_PATH)}`);
   }
 }

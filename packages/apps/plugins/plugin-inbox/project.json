@@ -1,0 +1,34 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-inbox/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-inbox/src/index.ts",
+          "packages/apps/plugins/plugin-inbox/src/meta.tsx"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {},
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-inbox/.storybook"
+      }
+    },
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

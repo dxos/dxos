@@ -22,8 +22,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpaceForObject } from '../echo';
-import { type SpaceProxy } from '../echo/space-proxy';
+import { type SpaceProxy, SpaceState, getSpaceForObject } from '../echo';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces', () => {

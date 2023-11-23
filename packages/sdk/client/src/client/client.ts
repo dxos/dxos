@@ -161,6 +161,9 @@ export class Client {
     return this._runtime.mesh;
   }
 
+  /**
+   *
+   */
   get shell(): Shell {
     invariant(this._runtime, 'Client not initialized.');
     invariant(this._runtime.shell, 'Shell not available.');
@@ -174,8 +177,8 @@ export class Client {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
-      get types() {
-        return self._graph.types;
+      get graph() {
+        return self._graph;
       },
     };
   }

@@ -7,6 +7,7 @@ import get from 'lodash.get';
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 
 import {
+  anchoredOverflowTheme,
   avatarTheme,
   breadcrumbTheme,
   buttonTheme,
@@ -31,6 +32,7 @@ import {
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
 
+  anchoredOverflow: anchoredOverflowTheme,
   avatar: avatarTheme,
   breadcrumb: breadcrumbTheme,
   button: buttonTheme,

@@ -6,12 +6,14 @@
     }
   ],
   "cSpell.words": [
+    "Automerge",
     "bitfield",
     "burdon",
     "dxos",
     "DXOS",
     "Expando",
     "Faas",
+    "Hypergraph",
     "protobuf",
     "testutils"
   ],

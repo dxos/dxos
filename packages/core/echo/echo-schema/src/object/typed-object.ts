@@ -13,7 +13,6 @@ import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
 import { AbstractEchoObject } from './object';
-import { TextObject } from './text-object';
 import {
   base,
   data,
@@ -26,6 +25,7 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
+import { AutomergeObject } from '../automerge/automerge-object';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -72,6 +72,7 @@ export type TypedObjectOptions = {
   type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
+  useAutomergeBackend?: boolean;
 };
 
 /**
@@ -92,6 +93,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
+
+    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+      return new AutomergeObject(initialProps, opts) as any;
+    }
 
     invariant(!(opts?.schema && opts?.type), 'Cannot specify both schema and type.');
 
@@ -122,6 +127,8 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
         if (field.repeated) {
           this._set(field.id!, new EchoArray());
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { TextObject } = require('./text-object');
           this._set(field.id!, new TextObject());
         }
       }
@@ -289,6 +296,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   private _convert(visitors: ConvertVisitors = {}) {
     return {
       '@id': this.id,
+      // TODO(mykola): Secondary path is non reachable.
       '@type': this.__typename ?? (this.__schema ? { '@id': this.__schema!.id } : undefined),
       // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
@@ -361,7 +369,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
-      if (value instanceof AbstractEchoObject) {
+      if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
         const ref = this._linkObject(value);
         this._mutate(this._model.builder().set(key, ref).build(meta));
       } else if (value instanceof EchoArray) {
@@ -530,7 +538,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * Store referenced object.
    * @internal
    */
-  _linkObject(obj: AbstractEchoObject): Reference {
+  _linkObject(obj: EchoObject): Reference {
     if (this._database) {
       if (!obj[base]._database) {
         this._database.add(obj as TypedObject);
@@ -630,4 +638,20 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
+};
+
+// TODO(dmaretskyi): Remove once migration is complete.
+let globalAutomergePreference: boolean | undefined;
+
+export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
+  globalAutomergePreference = useAutomerge;
+};
+
+export const getGlobalAutomergePreference = () => {
+  return (
+    globalAutomergePreference ??
+    (globalThis as any).DXOS_FORCE_AUTOMERGE ??
+    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
+    false
+  );
 };

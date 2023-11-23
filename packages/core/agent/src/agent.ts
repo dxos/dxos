@@ -20,7 +20,7 @@ import {
 import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { type Plugin } from './plugins';
+import { getPluginConfig, type Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
 interface Service {
@@ -61,11 +61,8 @@ export class Agent {
     invariant(!this._clientServices);
     log('starting...');
 
-    // Create client services.
-
     // TODO(nf): move to config
     let transportFactory: TransportFactory;
-
     if (process.env.WEBRTCLIBRARY === 'LibDataChannel') {
       log.info('using LibDataChannel');
       transportFactory = createLibDataChannelTransportFactory();
@@ -74,6 +71,7 @@ export class Agent {
       transportFactory = createSimplePeerTransportFactory();
     }
 
+    // Create client services.
     this._clientServices = await fromHost(this._options.config, {
       lockKey: lockFilePath(this._options.profile),
       transportFactory,
@@ -115,9 +113,17 @@ export class Agent {
 
     // Open plugins.
     for (const plugin of this._plugins) {
-      await plugin.initialize({ client: this._client!, clientServices: this._clientServices!, plugins: this._plugins });
-      await plugin.open();
-      log('open', { plugin });
+      const config = getPluginConfig(this._client.config, plugin.id);
+      if (config) {
+        await plugin.initialize({
+          client: this._client!,
+          clientServices: this._clientServices!,
+          plugins: this._plugins,
+        });
+
+        await plugin.open();
+        log.info('open', { plugin: plugin.id });
+      }
     }
 
     log('started');

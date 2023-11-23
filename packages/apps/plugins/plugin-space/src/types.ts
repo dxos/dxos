@@ -28,8 +28,6 @@ export enum SpaceAction {
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
-  ADD_TO_FOLDER = `${SPACE_ACTION}/add-to-folder`,
-  REMOVE_FROM_FOLDER = `${SPACE_ACTION}/remove-from-folder`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
 }
 

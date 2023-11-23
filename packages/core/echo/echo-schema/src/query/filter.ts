@@ -7,6 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
+import { AutomergeObject } from '../automerge/automerge-object';
 import {
   base,
   getDatabaseFromObject,
@@ -24,7 +25,7 @@ export type PropertyFilter = Record<string, any>;
 
 export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
 
-export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
+export type FilterSource<T extends EchoObject = EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
@@ -85,8 +86,8 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
-  static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>) {
-    const type = Reference.fromLegacyTypename(typename); // TODO(burdon): ???
+  static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
+    const type = Reference.fromLegacyTypename(typename);
 
     switch (typeof filter) {
       case 'function':
@@ -202,7 +203,7 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   if (!(filter.options.models && filter.options.models.includes('*'))) {
     // TODO(burdon): Expose default options that are merged if not null.
     const models = filter.options.models ?? [DocumentModel.meta.type];
-    if (!models.includes(object[base]._modelConstructor.meta.type)) {
+    if (!(object[base] instanceof AutomergeObject) && !models.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }
   }

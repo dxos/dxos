@@ -29,8 +29,9 @@ message Schema {
     string name = 2;
   }
 
+  // TODO(burdon): Clean-up.
   message Prop {
-    string id = 1; // TODO(burdon): Rename key.
+    string id = 1; // TODO(burdon): Rename key/name.
     PropType type = 2;
 
     /// Human readable name.
@@ -56,6 +57,8 @@ message Schema {
     repeated EnumVariant variants = 9;
 
     int32 digits = 10;
+
+    optional string description = 20;
   }
 
   // FQ type name (e.g., dxos.org/type/Document

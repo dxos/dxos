@@ -18,8 +18,8 @@ const toArray = (value: any) => (Array.isArray(value) ? value : [value]);
 // https://proton.me/blog/bridge-security-model
 // NOTE: Configure bridge settings: SSL; download the cert.
 
-// TODO(burdon): Object with spam and blacklist arrays.
-const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
+// TODO(burdon): Object with spam and block list arrays.
+const ignoreMatchingEmail = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
 
 export class ImapProcessor {
   private _connection?: ImapSimple;
@@ -36,19 +36,19 @@ export class ImapProcessor {
   // https://www.npmjs.com/package/imap-simple
   async connect() {
     if (!this._connection) {
-      log.info('connecting...', { config: this._config });
+      log('connecting...', { config: this._config });
       this._connection = await imaps.connect({ imap: this._config! });
       await this._connection.openBox('INBOX');
-      log.info('connected');
+      log('connected');
     }
   }
 
   async disconnect() {
     if (this._connection) {
-      log.info('disconnecting...');
-      await this._connection.end();
+      log('disconnecting...');
+      this._connection.end();
       this._connection = undefined;
-      log.info('disconnected');
+      log('disconnected');
     }
   }
 
@@ -57,7 +57,7 @@ export class ImapProcessor {
    */
   // TODO(burdon): Request since timestamp.
   async requestMessages({ days }: { days: number } = { days: 28 }): Promise<MessageType[]> {
-    log.info('requesting...');
+    log('requesting...', { days });
 
     // https://github.com/mscdex/node-imap
     const messages = await this._connection!.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
@@ -66,7 +66,7 @@ export class ImapProcessor {
     });
 
     const parsedMessage = await this.parseMessages(messages);
-    log.info('parsed', { messages: parsedMessage.length });
+    log('parsed', { messages: parsedMessage.length });
     return parsedMessage;
   }
 
@@ -74,7 +74,7 @@ export class ImapProcessor {
    * Parse raw IMAP messages.
    */
   private async parseMessages(rawMessages: ImapMessage[]): Promise<MessageType[]> {
-    log.info('parsing', { messages: rawMessages.length });
+    log('parsing', { messages: rawMessages.length });
 
     const messages = await Promise.all(
       rawMessages.map(async (raw): Promise<MessageType | undefined> => {
@@ -85,23 +85,25 @@ export class ImapProcessor {
           return;
         }
 
-        const convertToContact = ({ address: email, name }: EmailAddress): MessageType.Recipient =>
-          new MessageType.Recipient({ email, name: name?.length ? name : undefined });
-
-        const message = new MessageType({
-          // TODO(burdon): Meta.
-          // source: {
-          //   resolver: this._id,
-          //   guid: messageId,
-          // },
-          date: date.toISOString(),
-          from: convertToContact(from.value[0]),
-          to: toArray(to).map((to) => convertToContact(to.value[0])),
-          subject,
+        const toRecipient = ({ address: email, name }: EmailAddress): MessageType.Recipient => ({
+          email,
+          name: name?.length ? name : undefined,
         });
 
+        const message = new MessageType(
+          {
+            date: date.toISOString(),
+            from: toRecipient(from.value[0]),
+            to: toArray(to).map((to) => toRecipient(to.value[0])),
+            subject,
+          },
+          {
+            meta: { keys: [{ source: this._id, id: messageId }] },
+          },
+        );
+
         // Skip bulk mail.
-        if (!message.from?.email || blacklist.some((regex) => regex.test(message.from!.email!))) {
+        if (!message.from?.email || ignoreMatchingEmail.some((regex) => regex.test(message.from!.email!))) {
           return;
         }
 
@@ -141,7 +143,7 @@ export class ImapProcessor {
           body = str;
         }
 
-        message.body = body;
+        message.blocks = [{ text: body }];
         return message;
       }),
     );

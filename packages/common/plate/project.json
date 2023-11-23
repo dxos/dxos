@@ -2,32 +2,17 @@
   "sourceRoot": "packages/common/plate/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/plate/src/index.ts",
-        "outputPath": "packages/common/plate/dist/types",
-        "tsConfig": "packages/common/plate/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/plate/src/index.ts",
           "packages/common/plate/src/main.ts"
         ],
-        "outputPath": "packages/common/plate/dist/lib",
         "platforms": [
           "node"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "dev": {
       "dependsOn": [
@@ -38,42 +23,15 @@
         "script": "dev"
       }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/common/plate/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/common/plate",
-        "forceExit": true,
-        "outputPath": "tmp/mocha/packages/common/plate",
-        "resultsPath": "test-results/packages/common/plate",
-        "testPatterns": [
-          "packages/common/plate/test/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/plate/test/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+        "forceExit": true
+      }
     }
   },
   "implicitDependencies": [

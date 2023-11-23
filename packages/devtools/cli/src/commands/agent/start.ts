@@ -8,9 +8,10 @@ import { rmSync } from 'node:fs';
 
 import {
   Agent,
+  ChainPlugin,
   DashboardPlugin,
-  EchoProxyServer,
-  EpochMonitor,
+  EchoProxyPlugin,
+  EpochMonitorPlugin,
   FunctionsPlugin,
   QueryPlugin,
   parseAddress,
@@ -72,8 +73,6 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    // TODO(burdon): Option to start metrics recording (via config).
-
     const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
@@ -83,20 +82,12 @@ export default class Start extends BaseCommand<typeof Start> {
         webSocket: this.flags.ws,
       },
       plugins: [
-        // Epoch monitoring.
-        new EpochMonitor(),
-
-        // Query plugin.
-        new QueryPlugin(),
-
-        // Dashboard.
+        new ChainPlugin(),
         new DashboardPlugin({ configPath: this.flags.config }),
-
-        // ECHO API.
-        new EchoProxyServer(),
-
-        // Functions.
+        new EchoProxyPlugin(),
+        new EpochMonitorPlugin(),
         new FunctionsPlugin(),
+        new QueryPlugin(),
       ],
     });
 

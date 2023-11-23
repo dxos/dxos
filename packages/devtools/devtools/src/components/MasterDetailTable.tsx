@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 
+import { AnchoredOverflow } from '@dxos/react-ui';
 import { Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -22,21 +23,25 @@ export const MasterDetailTable = <T extends {}>({
   pinToBottom,
   widths = ['w-1/2', 'w-1/2'],
 }: MasterTableProps<T>) => {
-  const [selected, setSelected] = useState<T[]>();
+  const [selected, setSelected] = useState<T>();
+
+  const TableContainer = pinToBottom ? AnchoredOverflow.Root : 'div';
+  const tableContainerStyles = pinToBottom ? { classNames: widths[0] } : { className: mx('overflow-auto', widths[0]) };
 
   return (
     <div className='flex grow overflow-hidden divide-x'>
-      <div className={mx('flex overflow-hidden', widths[0])}>
+      <TableContainer {...tableContainerStyles}>
         <Table<T>
           columns={columns}
           data={data}
-          selected={selected}
-          onSelectedChange={setSelected}
-          pinToBottom={pinToBottom}
+          rowsSelectable
+          currentDatum={selected}
+          onDatumClick={setSelected}
+          fullWidth
         />
-      </div>
-
-      <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected?.[0]} />}</div>
+        {pinToBottom && <AnchoredOverflow.Anchor />}
+      </TableContainer>
+      <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected} />}</div>
     </div>
   );
 };
