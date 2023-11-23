@@ -18,7 +18,7 @@ export const ContextPanel = () => {
       <div className='flex shrink-0 overflow-hidden'>
         <Surface role={Role.SEARCH} />
       </div>
-      <div className='flex overflow-hidden'>
+      <div className='flex flex-1 overflow-hidden'>
         <Surface role={Role.THREAD} />
       </div>
     </div>

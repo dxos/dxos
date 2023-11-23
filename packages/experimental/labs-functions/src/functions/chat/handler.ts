@@ -40,6 +40,9 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     return response.status(400);
   }
 
+  // TODO(burdon): The handler is called before the mutation is processed!
+  await sleep(500);
+
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = space.db.query(ThreadType.filter());
@@ -56,10 +59,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   if (activeThreads) {
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
-        // TODO(burdon): The handler is called before the mutation is processed!
-        await sleep(1_000);
         const message = thread.messages[thread.messages.length - 1];
-
         if (message.__meta.keys.length === 0) {
           const messages = createRequest(space, message);
           log('request', { messages });

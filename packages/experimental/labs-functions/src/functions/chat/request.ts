@@ -23,6 +23,7 @@ export const createRequest = (space: Space, message: MessageType): ChatMessage[]
   }
 
   // TODO(burdon): Expect client to set schema.
+  // TODO(burdon): Get from type collection.
   let schema: Schema | undefined;
   if (context?.__typename === 'braneframe.Grid') {
     schema = new Schema({

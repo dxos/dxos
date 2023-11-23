@@ -42,27 +42,6 @@ export const createResponse = (client: Client, space: Space, content: string): M
           return { timestamp, object };
         }
 
-        // if (typeof data['@type'] === 'string') {
-        //   // TODO(burdon): Experimental?
-        //   const Type = client.experimental.types.getPrototype(data['@type']);
-        //   const schema = client.experimental.types.getSchema(data['@type']);
-        //
-        //   if (Type && schema) {
-        //     // Pre-processing according to schema.
-        //     delete data['@type'];
-        //     for (const prop of schema.props) {
-        //       if (data[prop.id!]) {
-        //         if (prop.refModelType === 'dxos.org/model/text' && typeof data[prop.id!] === 'string') {
-        //           data[prop.id!] = new TextObject(data[prop.id!]);
-        //         }
-        //       }
-        //     }
-        //
-        //     const object = new Expando(data, {});
-        //     return { timestamp, object };
-        //   }
-        // }
-
         // TODO(burdon): Create ref?
         return { timestamp, data: JSON.stringify(data) };
       }),

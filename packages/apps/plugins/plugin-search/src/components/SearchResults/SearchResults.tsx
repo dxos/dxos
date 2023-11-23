@@ -57,7 +57,7 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
-  ({ draggableStyle, draggableProps, item }, forwardRef) => {
+  ({ draggableStyle, draggableProps, item, debug = true }, forwardRef) => {
     const { id, type, label, snippet, match, selected, onSelect } = item;
     const Icon = type ? getIcon(type) : undefined;
 
@@ -76,6 +76,11 @@ export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
         {snippet && (
           <Card.Body gutter>
             <Snippet text={snippet} match={match} />
+          </Card.Body>
+        )}
+        {debug && (
+          <Card.Body gutter>
+            <pre className='text-xs whitespace-pre-line'>{JSON.stringify(item)}</pre>
           </Card.Body>
         )}
       </Card.Root>
