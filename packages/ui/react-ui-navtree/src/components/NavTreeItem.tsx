@@ -16,7 +16,7 @@ import {
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
   mx,
-  subtleHover,
+  staticGhostSelectedCurrent,
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
@@ -148,9 +148,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 hoverableFocusedWithinControls,
                 hoverableDescriptionIcons,
                 level < 1 && topLevelCollapsibleSpacing,
-                (active && active !== 'overlay') || path === current
-                  ? 'bg-neutral-75 dark:bg-neutral-850'
-                  : subtleHover,
+                staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
               )}
             >
               <NavTreeItemHeading

@@ -30,8 +30,9 @@ const TableBody = <TData extends RowData>({ rows }: TableBodyProps<TData>) => {
         return (
           <tr
             key={keyAccessor ? keyAccessor(row.original) : row.id}
-            className={tbodyTr({ isSelected, isCurrent, canBeCurrent })}
+            className={tbodyTr({ canBeCurrent })}
             {...(isCurrent && { 'aria-current': 'location' })}
+            {...(isSelected && { 'aria-selected': 'true' })}
             {...(canBeCurrent && {
               tabIndex: 0,
               onClick: () => {
