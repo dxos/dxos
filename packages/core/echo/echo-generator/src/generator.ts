@@ -6,13 +6,14 @@ import { faker } from '@faker-js/faker';
 
 import { Expando, type TypedObject, Schema, type Space } from '@dxos/client/echo';
 
+import { type TestSchemaType } from './data';
 import { type TestGeneratorMap, type TestObjectProvider, type TestSchemaMap } from './types';
 import { range } from './util';
 
 /**
  * Typed object generator.
  */
-export class TestObjectGenerator<T extends string> {
+export class TestObjectGenerator<T extends string = TestSchemaType> {
   // prettier-ignore
   constructor(
     private readonly _schemas: TestSchemaMap<T>,
