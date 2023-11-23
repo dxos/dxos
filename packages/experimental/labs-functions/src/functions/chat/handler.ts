@@ -56,16 +56,13 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   if (activeThreads) {
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
-        // TODO(burdon): Wait for block to be added???
-        await sleep(100);
-
+        // TODO(burdon): The handler is called before the mutation is processed!
+        await sleep(1_000);
         const message = thread.messages[thread.messages.length - 1];
+
         if (message.__meta.keys.length === 0) {
           const messages = createRequest(space, message);
           log('request', { messages });
-
-          // TODO(burdon): Streaming API.
-          // TODO(burdon): Error handling (e.g., 401);
 
           let blocks: MessageType.Block[];
           const text = message.blocks[0]?.text;

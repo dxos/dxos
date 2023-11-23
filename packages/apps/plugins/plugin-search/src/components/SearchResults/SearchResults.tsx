@@ -7,14 +7,13 @@ import React, { type FC, forwardRef } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
-import { groupSurface, mx } from '@dxos/react-ui-theme';
+import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { type SearchResult } from '../../search';
 
 // TODO(burdon): Factor out.
 const styles = {
-  hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
-  selected: '!bg-teal-100 !dark:bg-teal-900',
+  selected: '!bg-primary-100 !dark:bg-primary-900',
 };
 
 // TODO(burdon): Registry defined by plugins?
@@ -66,7 +65,7 @@ export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
       <Card.Root
         ref={forwardRef}
         style={draggableStyle}
-        classNames={mx('mx-2 mt-2 cursor-pointer', styles.hover, selected && styles.selected)}
+        classNames={mx('mx-2 mt-2 cursor-pointer', ghostHover, selected && styles.selected)}
         onClick={() => onSelect?.(id)}
       >
         <Card.Header>
@@ -95,9 +94,9 @@ export type SearchResultsProps = {
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   const path = 'search';
   return (
-    <ScrollArea.Root classNames={['grow', groupSurface]}>
+    <ScrollArea.Root classNames={['grow']}>
       <ScrollArea.Viewport>
-        <div className='flex flex-col'>
+        <div className='flex flex-col py-1'>
           <Mosaic.Container id={path} Component={SearchItem}>
             {items.map((item) => (
               <Mosaic.DraggableTile

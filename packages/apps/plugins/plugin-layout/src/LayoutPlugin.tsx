@@ -33,7 +33,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextView, ContentEmpty, LayoutSettings } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -219,7 +219,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               return <ContentEmpty />;
 
             case `${LAYOUT_PLUGIN}/ContextView`:
-              return <ContextView />;
+              return <ContextPanel />;
 
             default:
               return null;

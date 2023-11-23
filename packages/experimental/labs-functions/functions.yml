@@ -52,7 +52,7 @@ triggers:
     subscription:
       type: 'braneframe.Document'
       deep: true
-      delay: 10
+#      delay: 5
 
 #  - function: 'dxos.org/function/github'
 #    subscription:

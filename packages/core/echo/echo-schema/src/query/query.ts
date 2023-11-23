@@ -94,11 +94,12 @@ export class Query<T extends TypedObject = TypedObject> {
   });
 
   private readonly _filter: Filter;
-  private _sources = new Set<QuerySource>();
+  private readonly _sources = new Set<QuerySource>();
+  private readonly _signal = compositeRuntime.createSignal();
+  private readonly _event = new Event<Query<T>>();
+
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: T[] | undefined = undefined;
-  private _signal = compositeRuntime.createSignal();
-  private _event = new Event<Query<T>>();
 
   constructor(private readonly _queryContext: QueryContext, filter: Filter) {
     this._filter = filter;
@@ -113,9 +114,11 @@ export class Query<T extends TypedObject = TypedObject> {
       });
       source.update(this._filter);
     });
+
     this._queryContext.removed.on((source) => {
       this._sources.delete(source);
     });
+
     this._queryContext.start();
   }
 
@@ -151,9 +154,11 @@ export class Query<T extends TypedObject = TypedObject> {
     }
   }
 
-  // TODO(burdon): Change to SubscriptionHandle.
+  // TODO(burdon): Change to SubscriptionHandle (make uniform).
   subscribe(callback: (query: Query<T>) => void, fire = false): Subscription {
     queries.push(this);
+    log.info('subscribe', queries.length); // TODO(burdon): Assign id?
+
     const subscription = this._event.on(callback);
     if (fire) {
       callback(this);
@@ -161,6 +166,7 @@ export class Query<T extends TypedObject = TypedObject> {
 
     return () => {
       queries.splice(queries.indexOf(this), 1);
+      log.info('unsubscribe', queries.length);
       subscription();
     };
   }

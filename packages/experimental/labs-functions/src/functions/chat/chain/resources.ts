@@ -35,6 +35,7 @@ export type ChainResourcesOptions = {
   baseDir?: string;
 };
 
+const VERSION = 1;
 const INDEX_FILE = 'document_index.json';
 
 export class ChainResources {
@@ -60,6 +61,7 @@ export class ChainResources {
 
   get stats() {
     return {
+      version: VERSION,
       documents: this._vectorIndex.size,
     };
   }
@@ -73,11 +75,17 @@ export class ChainResources {
     try {
       if (this._options.baseDir) {
         this._vectorStore = await FaissStore.load(this._options.baseDir, this.embeddings);
-        const index = JSON.parse(fs.readFileSync(join(this._options.baseDir, INDEX_FILE), 'utf8'));
+
+        // Check version.
+        const { version, index } = JSON.parse(fs.readFileSync(join(this._options.baseDir, INDEX_FILE), 'utf8'));
+        if (version !== VERSION) {
+          throw new Error(`Invalid version (expected: ${VERSION}; got: ${version})`);
+        }
+
         this._vectorIndex = new Map(index);
       }
     } catch (err: any) {
-      log.warn('Corrupt store', err.message);
+      log.error('Corrupt store', String(err));
     }
 
     if (!this._vectorStore) {
@@ -90,8 +98,9 @@ export class ChainResources {
   async save() {
     invariant(this._options.baseDir && this._vectorStore);
     await this._vectorStore.save(this._options.baseDir);
-    const index = JSON.stringify(Array.from(this._vectorIndex.entries()));
-    fs.writeFileSync(join(this._options.baseDir, INDEX_FILE), index);
+
+    const data = JSON.stringify({ version: VERSION, index: Array.from(this._vectorIndex.entries()) });
+    fs.writeFileSync(join(this._options.baseDir, INDEX_FILE), data);
     return this;
   }
 
@@ -102,6 +111,7 @@ export class ChainResources {
   }
 
   // TODO(burdon): Split into chunks?
+  // TODO(burdon): Store hash to check document has changed.
   async addDocuments(docs: ChainDocument[]) {
     invariant(this._vectorStore);
     const documentIds = docs

@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { CronJob } from 'cron';
 
 import { debounce, DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
+import { type Space, TextObject } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Filter, createSubscription, type Query } from '@dxos/echo-schema';
+import { Filter, createSubscription, type Query, subscribe } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -92,6 +91,8 @@ export class Scheduler {
           });
         });
 
+        // TODO(burdon): Standardize subscription handles.
+        const subscriptions: (() => void)[] = [];
         const subscription = createSubscription(({ added, updated }) => {
           for (const object of added) {
             objectIds.add(object.id);
@@ -102,38 +103,31 @@ export class Scheduler {
 
           task.schedule();
         });
+        subscriptions.push(() => subscription.unsubscribe());
 
         const { type, props, deep, delay } = trigger.subscription;
         const update = ({ objects }: Query) => {
-          log.info('update', { type, objects: objects.length });
           subscription.update(objects);
 
-          // TODO(burdon): Hack to monitor text changes.
+          // TODO(burdon): Hack to monitor changes to Document's text object.
           if (deep) {
-            effect(() => {
-              for (const object of objects) {
-                // TODO(burdon): Test type.
-                const currentText = object?.content?.text?.trim();
-                if (currentText) {
-                  const upperCase = currentText.toUpperCase();
-                  if (upperCase !== currentText) {
-                    // Prevent recursion.
-                    object.content.splice(0, currentText.length, upperCase);
-                    console.log('=====', currentText, upperCase);
-                  }
-                }
+            log.info('update', { type, deep, objects: objects.length });
+            for (const object of objects) {
+              const content = object.content;
+              if (content instanceof TextObject) {
+                subscriptions.push(content[subscribe](debounce(() => subscription.update([object]), 1_000)));
               }
-            });
+            }
           }
         };
 
-        // TODO(burdon): Bug: callbacks fired when starting up.
+        // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
+        // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
         const query = space.db.query(Filter.typename(type, props));
-        const unsubscribe = query.subscribe(delay ? debounce(update, delay * 1_000) : update);
+        subscriptions.push(query.subscribe(delay ? debounce(update, delay * 1_000) : update));
 
         ctx.onDispose(() => {
-          subscription.unsubscribe();
-          unsubscribe();
+          subscriptions.forEach((unsubscribe) => unsubscribe());
         });
       }
     }
