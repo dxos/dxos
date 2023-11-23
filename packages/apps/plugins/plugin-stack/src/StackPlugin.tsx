@@ -50,14 +50,18 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
           [StackType.Section.schema.typename]: {
-            parse: ({ object }: StackType.Section, type: string) => {
+            parse: (section: StackType.Section, type: string) => {
               switch (type) {
-                case 'object': {
-                  return object;
+                case 'node': {
+                  return { id: section.object.id, label: section.object.title, data: section.object };
                 }
 
-                case 'node': {
-                  return { id: object.id, label: object.title, data: object };
+                case 'object': {
+                  return section.object;
+                }
+
+                case 'view-object': {
+                  return section;
                 }
 
                 default:

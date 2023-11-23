@@ -36,6 +36,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
+import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
 import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
@@ -97,8 +98,8 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
-      PresenterMeta, // Before Stack.
       StackMeta,
+      PresenterMeta,
       MarkdownMeta,
       SketchMeta,
       GridMeta,
@@ -110,6 +111,7 @@ const main = async () => {
       ThreadMeta,
       ExplorerMeta,
       ChessMeta,
+      WildcardMeta,
       // TODO(burdon): Currently last so that action are added at end of dropdown menu.
       SearchMeta,
     ],
@@ -164,6 +166,7 @@ const main = async () => {
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme')),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
+      [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
       ClientMeta.id,
@@ -177,6 +180,7 @@ const main = async () => {
       SpaceMeta.id,
       ThemeMeta.id,
       TelemetryMeta.id,
+      WildcardMeta.id,
     ],
     defaults: [MarkdownMeta.id, StackMeta.id],
   });
