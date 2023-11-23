@@ -43,7 +43,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = space.db.query(ThreadType.filter());
-  const activeThreads = messageIds.reduce((activeThreads, blockId) => {
+  const activeThreads = messageIds?.reduce((activeThreads, blockId) => {
     const thread = threads.find((thread) => thread.messages.some((message) => message.id === blockId));
     if (thread) {
       activeThreads.add(thread);
@@ -53,49 +53,51 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   }, new Set<ThreadType>());
 
   // Process threads.
-  await Promise.all(
-    Array.from(activeThreads).map(async (thread) => {
-      // TODO(burdon): Wait for block to be added???
-      await sleep(100);
+  if (activeThreads) {
+    await Promise.all(
+      Array.from(activeThreads).map(async (thread) => {
+        // TODO(burdon): Wait for block to be added???
+        await sleep(100);
 
-      const message = thread.messages[thread.messages.length - 1];
-      if (message.__meta.keys.length === 0) {
-        const messages = createRequest(space, message);
-        log('request', { messages });
+        const message = thread.messages[thread.messages.length - 1];
+        if (message.__meta.keys.length === 0) {
+          const messages = createRequest(space, message);
+          log('request', { messages });
 
-        // TODO(burdon): Streaming API.
-        // TODO(burdon): Error handling (e.g., 401);
+          // TODO(burdon): Streaming API.
+          // TODO(burdon): Error handling (e.g., 401);
 
-        let blocks: MessageType.Block[];
-        const text = message.blocks[0]?.text;
-        if (text?.charAt(0) === '/') {
-          const response = await chain.call(text.slice(1));
-          blocks = [
-            {
-              timestamp: new Date().toISOString(),
-              text: response,
-            },
-          ];
-        } else {
-          const { content } = await chat.invoke(messages);
-          log('response', { content: content.toString() });
-          blocks = createResponse(client, space, content.toString());
-        }
-
-        thread.messages.push(
-          new MessageType(
-            {
-              identityKey,
-              blocks,
-            },
-            {
-              meta: {
-                keys: [{ source: 'openai.com' }],
+          let blocks: MessageType.Block[];
+          const text = message.blocks[0]?.text;
+          if (text?.charAt(0) === '/') {
+            const response = await chain.call(text.slice(1));
+            blocks = [
+              {
+                timestamp: new Date().toISOString(),
+                text: response,
               },
-            },
-          ),
-        );
-      }
-    }),
-  );
+            ];
+          } else {
+            const { content } = await chat.invoke(messages);
+            log('response', { content: content.toString() });
+            blocks = createResponse(client, space, content.toString());
+          }
+
+          thread.messages.push(
+            new MessageType(
+              {
+                identityKey,
+                blocks,
+              },
+              {
+                meta: {
+                  keys: [{ source: 'openai.com' }],
+                },
+              },
+            ),
+          );
+        }
+      }),
+    );
+  }
 };
