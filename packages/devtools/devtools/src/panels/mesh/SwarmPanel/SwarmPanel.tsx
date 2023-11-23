@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
-import { AnchoredOverflow } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
 
@@ -85,10 +84,13 @@ export const SwarmPanel = () => {
     }
   }
 
-  const [session, setSession] = useState<SwarmConnection>();
+  const [sessionId, setSessionId] = useState<PublicKey>();
+  const handleSelect = (selected: SwarmConnection[] | undefined) => {
+    setSessionId(selected?.[0].connection?.sessionId);
+  };
 
   const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
-  const connection = session?.id ? connectionMap.get(session.id) : undefined;
+  const connection = sessionId ? connectionMap.get(sessionId) : undefined;
   const items = swarms.reduce<SwarmConnection[]>((connections, swarm) => {
     if (!swarm.connections?.length) {
       connections.push(swarm);
@@ -113,20 +115,35 @@ export const SwarmPanel = () => {
   items.sort(comparer((row) => (row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity)));
 
   return (
-    <PanelContainer>
-      <AnchoredOverflow.Root classNames='h-1/2 overflow-auto'>
+    <PanelContainer classNames='divide-y'>
+      <div className='h-1/2 overflow-hidden'>
         <Table<SwarmConnection>
           columns={columns}
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
-          currentDatum={session}
-          onDatumClick={setSession}
-          fullWidth
+          onDatumClick={(datum) => handleSelect([datum])}
         />
-        <AnchoredOverflow.Anchor />
-      </AnchoredOverflow.Root>
-      <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
+      </div>
+      <div className='h-1/2 overflow-auto'>
+        {sessionId ? (
+          connection ? (
+            <ConnectionInfoView connection={connection} />
+          ) : (
+            <div className='bs-full flex items-center justify-center'>
+              <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
+                No connection for session
+              </p>
+            </div>
+          )
+        ) : (
+          <div className='bs-full flex items-center justify-center'>
+            <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
+              Select a session
+            </p>
+          </div>
+        )}
+      </div>
     </PanelContainer>
   );
 };
