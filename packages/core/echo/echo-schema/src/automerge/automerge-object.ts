@@ -30,6 +30,18 @@ export type BindOptions = {
   docHandle: DocHandle<any>;
   path: string[];
 };
+
+/**
+ * Automerge object system properties.
+ * (Is automerge specific.)
+ */
+export type ObjectSystem = {
+  /**
+   * Deletion marker.
+   */
+  deleted: boolean;
+};
+
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb;
   private _doc?: Doc<any>;
@@ -64,12 +76,16 @@ export class AutomergeObject implements TypedObjectProperties {
     return undefined;
   }
 
-  get __meta(): ObjectMeta | undefined {
+  get __meta(): ObjectMeta {
     return this._createProxy(['meta']);
   }
 
+  get __system(): ObjectSystem {
+    return this._createProxy(['system']);
+  }
+
   get __deleted(): boolean {
-    return this._getDoc().deleted;
+    return this.__system?.deleted ?? false;
   }
 
   toJSON() {
