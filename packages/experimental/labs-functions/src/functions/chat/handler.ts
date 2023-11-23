@@ -10,6 +10,7 @@ import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/func
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { Chain, ChainResources } from './chain';
 import { createRequest } from './request';
 import { createResponse } from './response';
 import { getKey } from '../../util';
@@ -23,11 +24,18 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 }) => {
   const config = client.config;
   const chat = new ChatOpenAI({
-    openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
+    openAIApiKey: getKey(config, 'openai.com/api_key')!,
   });
+  const resources = new ChainResources({
+    apiKey: getKey(config, 'openai.com/api_key')!,
+    chat: { modelName: 'gpt-4' },
+    // TODO(burdon): Get from context (for agent profile).
+    baseDir: '/tmp/dxos/agent/functions/embedding',
+  });
+  await resources.initialize();
+  const chain = new Chain(resources, { precise: false });
 
-  // TODO(burdon): Logging (filename missing).
-  const space = client.spaces.get(PublicKey.from(spaceKey));
+  const space = spaceKey && client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
     return response.status(400);
   }
@@ -57,9 +65,23 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 
         // TODO(burdon): Streaming API.
         // TODO(burdon): Error handling (e.g., 401);
-        const { content } = await chat.invoke(messages);
-        log('response', { content: content.toString() });
-        const blocks = createResponse(client, space, content.toString());
+
+        let blocks: MessageType.Block[];
+        const text = message.blocks[0]?.text;
+        if (text?.charAt(0) === '/') {
+          const response = await chain.call(text.slice(1));
+          blocks = [
+            {
+              timestamp: new Date().toISOString(),
+              text: response,
+            },
+          ];
+        } else {
+          const { content } = await chat.invoke(messages);
+          log('response', { content: content.toString() });
+          blocks = createResponse(client, space, content.toString());
+        }
+
         thread.messages.push(
           new MessageType(
             {

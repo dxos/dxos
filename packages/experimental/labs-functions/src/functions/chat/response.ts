@@ -12,18 +12,18 @@ import { parseMessage } from './parser';
 export const createResponse = (client: Client, space: Space, content: string): MessageType.Block[] => {
   const timestamp = new Date().toISOString();
 
-  const messages: MessageType.Block[] = [];
+  const blocks: MessageType.Block[] = [];
   const result = parseMessage(content, 'json');
   if (result) {
     const { pre, data, post } = result;
-    pre && messages.push({ timestamp, text: pre });
+    pre && blocks.push({ timestamp, text: pre });
     const dataArray = Array.isArray(data) ? data : [data];
 
     // TODO(burdon): Create test.
     // TODO(burdon): What format does the Thread messenger require?
     // console.log('response', { dataArray });
 
-    messages.push(
+    blocks.push(
       ...dataArray.map((data): MessageType.Block => {
         // TODO(burdon): Hack in the schema.
         data['@type'] = 'example.com/schema/project';
@@ -68,13 +68,13 @@ export const createResponse = (client: Client, space: Space, content: string): M
       }),
     );
 
-    post && messages.push({ timestamp, text: post });
+    post && blocks.push({ timestamp, text: post });
   } else {
-    messages.push({
+    blocks.push({
       timestamp,
       text: content,
     });
   }
 
-  return messages;
+  return blocks;
 };

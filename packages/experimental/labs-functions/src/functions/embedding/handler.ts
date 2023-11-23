@@ -2,22 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Document } from 'langchain/document';
-
 import { Document as DocumentType } from '@braneframe/types';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { getKey } from '../../util';
-import { ChainResources } from '../chat';
+import { type ChainDocument, ChainResources } from '../chat';
 
+// TODO(burdon): Query update isn't fired when documents are edited.
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context, response }) => {
-  console.log('>>>', JSON.stringify(event));
-
-  const docs: Document[] = [];
+  const docs: ChainDocument[] = [];
   const addDocument =
     (space: PublicKey | undefined = undefined) =>
     (object: DocumentType) =>
+      object.content.text.trim().length > 0 &&
       docs.push({
         metadata: { space: space?.toHex(), id: object.id },
         pageContent: object.content.text,
@@ -49,8 +48,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
     await resources.initialize();
 
     // TODO(burdon): Remove deleted docs.
-    await resources.vectorStore.addDocuments(docs);
-    console.log('===', resources.stats);
+    await resources.addDocuments(docs);
+    await resources.save();
+
+    log.info('embedding', { resources: resources.stats });
   }
 
   return response.status(200);

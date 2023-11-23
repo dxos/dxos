@@ -8,7 +8,7 @@ import { debounce, DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Filter, createSubscription } from '@dxos/echo-schema';
+import { Filter, createSubscription, type Query } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -61,7 +61,7 @@ export class Scheduler {
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
-      log('mount', { space: space.key, trigger });
+      log.info('mount', { space: space.key, trigger });
       if (ctx.disposed) {
         return;
       }
@@ -103,15 +103,13 @@ export class Scheduler {
         });
 
         const { type, props, delay } = trigger.subscription;
+        const update = ({ objects }: Query) => {
+          log.info('update', { type, objects: objects.length });
+          subscription.update(objects);
+        };
+
         const query = space.db.query(Filter.typename(type, props));
-        const unsubscribe = query.subscribe(
-          delay
-            ? debounce(({ objects }) => {
-                subscription.update(objects);
-              }, delay)
-            : ({ objects }) => subscription.update(objects),
-          true,
-        );
+        const unsubscribe = query.subscribe(delay ? debounce(update, delay * 1_000) : update, true);
 
         ctx.onDispose(() => {
           subscription.unsubscribe();

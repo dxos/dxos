@@ -77,7 +77,7 @@ export class ChainResources {
         this._vectorIndex = new Map(index);
       }
     } catch (err: any) {
-      log.warn('Corrupt store', err);
+      log.warn('Corrupt store', err.message);
     }
 
     if (!this._vectorStore) {
