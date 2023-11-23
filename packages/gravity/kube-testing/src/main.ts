@@ -49,6 +49,7 @@ const start = async () => {
     invariant(name, 'missing GRAVITY_SPEC');
     invariant(params, 'missing GRAVITY_AGENT_PARAMS');
     await runAgentForPlan(name, params, plans[name]());
+    return;
   }
 
   const argv = yargs(hideBin(process.argv))

@@ -24,7 +24,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec, EmptyAgentConfig> 
   defaultSpec(): EmptyTestSpec {
     return {
       agents: 1,
-      platform: 'nodejs',
+      platform: 'chromium',
     };
   }
 

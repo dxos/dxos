@@ -13,7 +13,7 @@ import { sleep, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { buildBrowserBundle } from './browser-bundle';
+import { buildBrowserBundle } from './browser/browser-bundle';
 import { WebSocketRedisProxy } from './env/websocket-redis-proxy';
 import { runNode, runBrowser } from './run-process';
 import { type PlanOptions, type AgentParams, type PlanResults, type TestPlan } from './spec';
@@ -92,6 +92,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     await buildBrowserBundle(join(outDir, 'browser.js'));
     log.info('browser bundle built', {
       time: Date.now() - begin,
+      size: fs.statSync(join(outDir, 'browser.js')).size,
     });
   }
 
