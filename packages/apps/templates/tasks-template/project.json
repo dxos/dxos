@@ -3,52 +3,21 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/templates/tasks-template/src/index.ts",
         "outputPath": "packages/apps/templates/tasks-template/dist",
         "tsConfig": "packages/apps/templates/tasks-template/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/templates/tasks-template/{src,test}/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/apps/templates/tasks-template",
-        "forceExit": true,
-        "outputPath": "tmp/mocha/packages/apps/templates/tasks-template",
-        "resultsPath": "test-results/packages/apps/templates/tasks-template",
-        "testPatterns": [
-          "packages/apps/templates/tasks-template/test/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/templates/tasks-template/test/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+        "forceExit": true
+      }
     }
   }
 }

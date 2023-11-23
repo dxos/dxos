@@ -338,7 +338,7 @@ export class Muxer {
 
   private async _handleCommand(cmd: Command) {
     if (this._disposed) {
-      log.warn('Received command after destroy', { cmd });
+      log.warn('Received command after disposed', { cmd });
       return;
     }
 
@@ -384,6 +384,10 @@ export class Muxer {
   }
 
   private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT) {
+    if (this._disposed) {
+      log.info('ignoring sendCommand after disposed', { cmd });
+      return;
+    }
     try {
       const trigger = new Trigger<void>();
       this._balancer.pushData(Command.encode(cmd), trigger, channelId);

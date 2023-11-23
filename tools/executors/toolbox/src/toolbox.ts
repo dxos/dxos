@@ -5,9 +5,11 @@
 import chalk from 'chalk';
 import { execSync } from 'child_process';
 import { Table } from 'console-table-printer';
+import deepEqual from 'deep-equal';
 import fs from 'fs';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
+import { inspect } from 'node:util';
 import { join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
@@ -42,9 +44,23 @@ type ProjectJson = {
   projectType: string;
   targets: {
     [target: string]: {
-      executor: string;
+      executor?: string;
       options?: any;
       outputs?: string[];
+      inputs?: string[];
+      dependsOn?: string[];
+    };
+  };
+};
+
+type NxJson = {
+  targetDefaults: {
+    [target: string]: {
+      executor?: string;
+      options?: any;
+      outputs?: string[];
+      inputs?: string[];
+      dependsOn?: string[];
     };
   };
 };
@@ -200,14 +216,40 @@ class Toolbox {
    * - Sort keys.
    */
   async updateProjects() {
+    const nxJson = await loadJson<NxJson>(join(this.rootDir, 'nx.json'));
+
     console.log('Updating all project.json');
     for (const project of this.projects) {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
       if (projectJson?.targets) {
-        if (projectJson.targets.lint) {
-          projectJson.targets.lint.options.format = 'unix';
-          projectJson.targets.lint.options.quiet = true;
+        for (const target of Object.keys(projectJson.targets)) {
+          if (projectJson.targets[target].executor === nxJson.targetDefaults[target]?.executor) {
+            delete projectJson.targets[target].executor;
+          }
+
+          if (
+            projectJson.targets[target].outputs &&
+            deepEqual(projectJson.targets[target].outputs, nxJson.targetDefaults[target]?.outputs)
+          ) {
+            delete projectJson.targets[target].outputs;
+          }
+          if (
+            projectJson.targets[target].inputs &&
+            deepEqual(projectJson.targets[target].inputs, nxJson.targetDefaults[target]?.inputs)
+          ) {
+            delete projectJson.targets[target].outputs;
+          }
+          if (
+            projectJson.targets[target].dependsOn &&
+            deepEqual(projectJson.targets[target].dependsOn, nxJson.targetDefaults[target]?.dependsOn)
+          ) {
+            delete projectJson.targets[target].outputs;
+          }
+
+          if (projectJson.targets[target].options && Object.keys(projectJson.targets[target].options).length === 0) {
+            delete projectJson.targets[target].options;
+          }
         }
 
         const updated = sortJson(projectJson, {
@@ -282,6 +324,33 @@ class Toolbox {
     }
   }
 
+  async printStats() {
+    const stats: Record<
+      string,
+      {
+        executors: Set<string>;
+        count: number;
+      }
+    > = {};
+
+    for (const project of this.projects) {
+      const projectPath = join(project.path, 'project.json');
+      const projectJson = await loadJson<ProjectJson>(projectPath);
+
+      for (const target of Object.keys(projectJson.targets ?? {})) {
+        stats[target] ??= {
+          executors: new Set(),
+          count: 0,
+        };
+
+        stats[target].count++;
+        stats[target].executors.add(projectJson.targets[target].executor ?? 'undefined');
+      }
+    }
+
+    console.log(inspect(stats, { depth: null }));
+  }
+
   _getProjectByPackageName(name: string): Project {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
@@ -299,6 +368,8 @@ const run = async () => {
   await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
+
+  // await toolbox.printStats();
 };
 
 void run();

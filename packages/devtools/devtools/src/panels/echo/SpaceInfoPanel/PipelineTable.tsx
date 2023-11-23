@@ -114,10 +114,10 @@ export const PipelineTable: FC<{
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: PipelineTableRow[] | undefined) => {
-    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
+  const handleSelect = (selected: PipelineTableRow | undefined) => {
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
     navigate('/echo/feeds');
   };
 
-  return <Table<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} />;
+  return <Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />;
 };

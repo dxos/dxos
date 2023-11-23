@@ -36,19 +36,19 @@ export class ImapProcessor {
   // https://www.npmjs.com/package/imap-simple
   async connect() {
     if (!this._connection) {
-      log.info('connecting...', { config: this._config });
+      log('connecting...', { config: this._config });
       this._connection = await imaps.connect({ imap: this._config! });
       await this._connection.openBox('INBOX');
-      log.info('connected');
+      log('connected');
     }
   }
 
   async disconnect() {
     if (this._connection) {
-      log.info('disconnecting...');
+      log('disconnecting...');
       await this._connection.end();
       this._connection = undefined;
-      log.info('disconnected');
+      log('disconnected');
     }
   }
 
@@ -57,7 +57,7 @@ export class ImapProcessor {
    */
   // TODO(burdon): Request since timestamp.
   async requestMessages({ days }: { days: number } = { days: 28 }): Promise<Message[]> {
-    log.info('requesting...');
+    log('requesting...');
 
     // https://github.com/mscdex/node-imap
     const messages = await this._connection!.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
@@ -66,7 +66,7 @@ export class ImapProcessor {
     });
 
     const parsedMessage = await this.parseMessages(messages);
-    log.info('parsed', { messages: parsedMessage.length });
+    log('parsed', { messages: parsedMessage.length });
     return parsedMessage;
   }
 
@@ -74,7 +74,7 @@ export class ImapProcessor {
    * Parse raw IMAP messages.
    */
   private async parseMessages(rawMessages: ImapMessage[]): Promise<Message[]> {
-    log.info('parsing', { messages: rawMessages.length });
+    log('parsing', { messages: rawMessages.length });
 
     const messages = await Promise.all(
       rawMessages.map(async (raw): Promise<Message | undefined> => {

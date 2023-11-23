@@ -2,7 +2,6 @@
   "sourceRoot": "tools/apidoc/src",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/apidoc/src/index.ts",
         "outputPath": "tools/apidoc/dist",
@@ -10,10 +9,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/apidoc/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "dev": {
       "dependsOn": [
@@ -24,18 +20,6 @@
         "script": "dev"
       }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "tools/apidoc/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   }
 }

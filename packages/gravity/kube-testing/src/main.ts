@@ -5,10 +5,12 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runAgentForPlan } from './plan';
-import { EchoTestPlan, ReplicationTestPlan, SignalTestPlan, TransportTestPlan } from './spec';
+import { ReplicationTestPlan, EmptyTestPlan, SignalTestPlan, TransportTestPlan, EchoTestPlan } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
@@ -18,6 +20,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
   transport: () => new TransportTestPlan(),
   echo: () => new EchoTestPlan(),
   replication: () => new ReplicationTestPlan(),
+  empty: () => new EmptyTestPlan(),
 };
 
 /**
@@ -29,10 +32,21 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
  * Example: KUBE_HOME=~/Code/dxos/kube p run-tests echo
  */
 const start = async () => {
+  // Run agent entry point in node process.
   if (process.env.GRAVITY_SPEC) {
     const name = process.env.GRAVITY_SPEC;
     await runAgentForPlan(name, process.env.GRAVITY_AGENT_PARAMS!, plans[name]());
     return;
+  }
+
+  // Run agent entry point in browser.
+  if ((globalThis as any).dxgravity_env) {
+    console.log('running in browser');
+    const name = (globalThis as any).dxgravity_env.GRAVITY_SPEC;
+    const params = (globalThis as any).dxgravity_env.GRAVITY_AGENT_PARAMS;
+    invariant(name, 'missing GRAVITY_SPEC');
+    invariant(params, 'missing GRAVITY_AGENT_PARAMS');
+    await runAgentForPlan(name, params, plans[name]());
   }
 
   const argv = yargs(hideBin(process.argv))
@@ -72,7 +86,7 @@ const start = async () => {
   }
 
   if (argv.specfile) {
-    console.info(`\nusing spec file: ${argv.specfile}`);
+    log.info(`using spec file: ${argv.specfile}`);
     plan = await readYAMLSpecFile(argv.specfile, planGenerator(), options);
   } else {
     plan = () => ({

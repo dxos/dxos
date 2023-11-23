@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
+import { type AutomergeDb } from './automerge/automerge-db';
 import { type EchoDatabase } from './database';
 import { type EchoObject, type TypedObject } from './object';
 import {
@@ -52,6 +53,7 @@ export class Hypergraph {
    * Register a database in hyper-graph.
    * @param owningObject Database owner, usually a space.
    */
+  // TODO(burdon): When is the owner not a space?
   _register(spaceKey: PublicKey, database: EchoDatabase, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
@@ -75,8 +77,8 @@ export class Hypergraph {
   }
 
   _unregister(spaceKey: PublicKey) {
-    this._databases.delete(spaceKey);
     // TODO(dmaretskyi): Remove db from query contexts.
+    this._databases.delete(spaceKey);
   }
 
   _getOwningObject(spaceKey: PublicKey): unknown | undefined {
@@ -96,7 +98,11 @@ export class Hypergraph {
    * @internal
    * @param onResolve will be weakly referenced.
    */
-  _lookupLink(ref: Reference, from: EchoDatabase, onResolve: (obj: EchoObject) => void): EchoObject | undefined {
+  _lookupLink(
+    ref: Reference,
+    from: EchoDatabase | AutomergeDb,
+    onResolve: (obj: EchoObject) => void,
+  ): EchoObject | undefined {
     if (ref.host === undefined) {
       const local = from.getObjectById(ref.itemId);
       if (local) {
@@ -235,7 +241,7 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = Array.from(this._database._objects.values())
+      this._results = [...this._database._objects.values(), ...this._database.automerge._objects.values()]
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,

@@ -3,67 +3,28 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/core/agent/src/index.ts",
-        "outputPath": "packages/core/agent/dist/types",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/agent/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/agent/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/agent/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        "injectGlobals": true
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/agent/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
-        ],
-        "coveragePath": "coverage/packages/core/agent",
-        "outputPath": "tmp/mocha/packages/core/agent",
-        "resultsPath": "test-results/packages/core/agent",
-        "testPatterns": [
-          "packages/core/agent/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/agent/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     }
   },
   "implicitDependencies": [

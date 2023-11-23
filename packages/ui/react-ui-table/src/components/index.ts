@@ -4,3 +4,4 @@
 
 export * from './ColumnMenu';
 export * from './Table';
+export * from './Cell';

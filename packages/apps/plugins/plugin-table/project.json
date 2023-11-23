@@ -2,46 +2,19 @@
   "sourceRoot": "packages/apps/plugins/plugin-table/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-table/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-table/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-table/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/plugins/plugin-table/src/index.ts",
           "packages/apps/plugins/plugin-table/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-table/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-table/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {

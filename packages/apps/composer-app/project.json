@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/composer-app/src/index.ts",
         "outputPath": "packages/apps/composer-app/dist",
@@ -11,10 +10,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "packages/apps/composer-app/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "bundle": {
       "executor": "@nx/vite:build",
@@ -26,12 +22,8 @@
       ]
     },
     "e2e": {
-      "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/composer-app",
-        "outputPath": "tmp/playwright/packages/apps/composer-app",
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/apps/composer-app",
         "serve": "composer-app:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
@@ -42,26 +34,9 @@
         "watchPatterns": [
           "packages/apps/composer-app/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/composer-app/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {

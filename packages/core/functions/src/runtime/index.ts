@@ -3,4 +3,4 @@
 //
 
 export * from './dev-server';
-export * from './trigger-manager';
+export * from './scheduler';

@@ -8,6 +8,7 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, View as ViewType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ExplorerMain } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
@@ -33,13 +34,12 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          // TODO(burdon): Util.
           parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${EXPLORER_PLUGIN}/create`,
             label: ['create object label', { ns: EXPLORER_PLUGIN }],
@@ -51,8 +51,8 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                   action: ExplorerAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,

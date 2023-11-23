@@ -50,7 +50,7 @@ runtime:
 Start functions in dev mode (from the related package):
 
 ```bash
-dx function dev-server -r ts-node/register --verbose
+dx function dev -r ts-node/register --verbose
 ```
 
 > NOTE: `-r ts-node/register` configures native TypesScript support.
@@ -61,7 +61,7 @@ Install `nodemon` to support live reloading:
 npm i -g nodemon
 
 nodemon -w ./src -e ts --exec $(git rev-parse --show-toplevel)/packages/devtools/cli/bin/dev \
-  function dev-server -r ts-node/register --verbose
+  function dev -r ts-node/register --verbose
 ```
 
 ## Invoking functions

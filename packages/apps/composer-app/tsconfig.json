@@ -86,6 +86,9 @@
       "path": "../plugins/plugin-grid"
     },
     {
+      "path": "../plugins/plugin-inbox"
+    },
+    {
       "path": "../plugins/plugin-ipfs"
     },
     {
