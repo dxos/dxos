@@ -60,7 +60,7 @@ export class AutomergeArray<T> implements Array<T> {
 
   get length(): number {
     if (this._object) {
-      const array = this._getModelArray(false);
+      const array = this._getArray();
       if (!array) {
         return 0;
       }
@@ -243,13 +243,12 @@ export class AutomergeArray<T> implements Array<T> {
     if (this._object) {
       invariant(this._object?.[base] instanceof AutomergeObject);
 
-      const array = this._getModelArray();
+      const array = this._getArray();
       if (!array) {
         return [][Symbol.iterator]();
       }
-      invariant(Array.isArray(array));
 
-      return (array.map((value: string) => this._object!._decode(value)).filter(Boolean) as T[]).values();
+      return (array.filter(Boolean) as T[]).values();
     } else {
       invariant(this._uninitialized);
       return this._uninitialized[Symbol.iterator]();
@@ -356,9 +355,7 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   private _getModel(index: number): T | undefined {
-    const array = this._getModelArray();
-    invariant(Array.isArray(array));
-    return this._object!._decode(array[index]) as T | undefined;
+    return this._getArray()[index] as T | undefined;
   }
 
   private _setModel(index: number, value: T) {
@@ -378,8 +375,10 @@ export class AutomergeArray<T> implements Array<T> {
     this._object._change(changeFn);
   }
 
-  private _getModelArray(decode = true): any[] | undefined {
+  private _getArray(): T[] {
     invariant(this._object?.[base] instanceof AutomergeObject);
-    return this._object._get(this._path!, decode);
+    const array = this._object._get(this._path!);
+    invariant(Array.isArray(array));
+    return array;
   }
 }

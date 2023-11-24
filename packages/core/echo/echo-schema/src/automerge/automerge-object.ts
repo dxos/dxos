@@ -94,7 +94,11 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   toJSON() {
-    return this._getDoc();
+    let value = this[base]._getDoc();
+    for (const key of this[base]._path) {
+      value = value?.[key];
+    }
+    return value;
   }
 
   get id(): string {
@@ -200,14 +204,14 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _get(path: string[], decode = true) {
+  _get(path: string[]) {
     const fullPath = [...this._path, ...path];
     let value = this._getDoc();
     for (const key of fullPath) {
       value = value?.[key];
     }
 
-    return decode ? this._decode(value) : value;
+    return this._decode(value);
   }
 
   /**
