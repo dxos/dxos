@@ -180,7 +180,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
         const value = this._get([...path, key as string]);
 
-        if (typeof value === 'object' && value !== null) {
+        if (typeof value === 'object' && value !== null && !(value instanceof AutomergeArray)) {
           // TODO(dmaretskyi): Check for Reference types.
           return this._createProxy(path);
         }
@@ -256,7 +256,7 @@ export class AutomergeObject implements TypedObjectProperties {
       };
     } else if (value instanceof AutomergeArray) {
       const values: any = value.map((val) => {
-        if (value instanceof AutomergeArray || Array.isArray(value)) {
+        if (val instanceof AutomergeArray || Array.isArray(val)) {
           // TODO(mykola): Add support for nested arrays.
           throw new Error('Nested arrays are not supported');
         }
@@ -279,7 +279,10 @@ export class AutomergeObject implements TypedObjectProperties {
     return value;
   }
 
-  private _getDoc(): Doc<any> {
+  /**
+   * @internal
+   */
+  _getDoc(): Doc<any> {
     return this._doc ?? this._docHandle?.docSync() ?? failedInvariant();
   }
 

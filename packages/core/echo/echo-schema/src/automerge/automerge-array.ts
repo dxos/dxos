@@ -116,7 +116,26 @@ export class AutomergeArray<T> implements Array<T> {
   splice(start: number, deleteCount: number, ...items: T[]): T[];
   splice(start: number, deleteCount?: number | undefined, ...items: T[]): T[] {
     if (this._object) {
-      throw new Error('Method not implemented.');
+      invariant(this._object?.[base] instanceof AutomergeObject);
+      const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
+
+      const fullPath = [...this._object._path, ...this._path!];
+
+      const changeFn: ChangeFn<any> = (doc) => {
+        let parent = doc;
+        for (const key of fullPath.slice(0, -1)) {
+          parent = parent[key];
+        }
+        const array: any[] = parent[fullPath.at(-1)!];
+        invariant(Array.isArray(array));
+        array.splice(
+          start,
+          deleteCount ?? 0,
+          ...items.map((value) => this._object!._encode(this._path!, this._encode(value))),
+        );
+      };
+      this._object._change(changeFn);
+      return deletedItems;
     } else {
       invariant(this._uninitialized);
       // TODO(burdon): Check param types.
@@ -231,7 +250,7 @@ export class AutomergeArray<T> implements Array<T> {
     if (this._object) {
       invariant(this._object?.[base] instanceof AutomergeObject);
 
-      const array: any[] = this._object[base]._get(this._path!);
+      const array = this._getModelArray();
       if (!array) {
         return [][Symbol.iterator]();
       }
@@ -265,6 +284,7 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   push(...items: T[]) {
+    log.info('push', { items });
     if (this._object) {
       const fullPath = [...this._object._path, ...this._path!];
 
@@ -405,8 +425,13 @@ export class AutomergeArray<T> implements Array<T> {
   private _getModelArray(): any[] | undefined {
     invariant(this._object?.[base] instanceof AutomergeObject);
 
-    const array: any[] = this._object[base]._get(this._path!);
-    return array;
+    const fullPath = [...this._object._path, ...this._path!];
+    let value = this._object._getDoc();
+    for (const key of fullPath) {
+      value = value?.[key];
+    }
+
+    return value as any[];
   }
 }
 
