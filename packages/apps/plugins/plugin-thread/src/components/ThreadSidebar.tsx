@@ -18,22 +18,17 @@ export const ThreadSidebar: FC<{ space?: Space; thread?: ThreadType }> = ({ spac
   const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const { t } = useTranslation('os');
 
-  // TODO(burdon): Get current context.
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  // console.log('layout:', layoutPlugin?.provides.layout.active);
-
   const [thread, setThread] = useState(initialThread);
-  // const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
-  // const space = thread && spacePlugin?.provides.space;
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.
       const { objects: threads } = space.db.query(ThreadType.filter());
       if (threads.length) {
-        setThread(threads[0] as ThreadType);
+        setThread(threads[0].id === layoutPlugin?.provides.layout.active ? undefined : (threads[0] as ThreadType));
       }
     }
-  }, [space, thread]);
+  }, [space, thread, layoutPlugin?.provides.layout.active]);
 
   if (!space || !thread) {
     return null;

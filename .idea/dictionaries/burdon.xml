@@ -1,6 +1,7 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>automerge</w>
       <w>blueyard</w>
       <w>bot's</w>
       <w>braneframe</w>
@@ -30,6 +31,7 @@
       <w>hypercard</w>
       <w>hypercore</w>
       <w>hypercore's</w>
+      <w>hypergraph</w>
       <w>hypertrie</w>
       <w>iata</w>
       <w>ipdata</w>
@@ -50,6 +52,7 @@
       <w>nanomessage</w>
       <w>nanoresource</w>
       <w>oclif</w>
+      <w>ollama</w>
       <w>onauthenticate</w>
       <w>onchannelclose</w>
       <w>ondata</w>
@@ -89,6 +92,7 @@
       <w>testutils</w>
       <w>textbox</w>
       <w>tldraw</w>
+      <w>topbar</w>
       <w>treeitem</w>
       <w>truncatable</w>
       <w>typegen</w>
