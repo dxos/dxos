@@ -22,6 +22,7 @@ export default [
         'open space label': 'Open space',
         'export data label': 'Export data',
         'import data label': 'Import data',
+        'migrate space label': 'Migrate space',
         'share space': 'Share space',
         'confirm restore title': 'Overwrite files in this space?',
         'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',

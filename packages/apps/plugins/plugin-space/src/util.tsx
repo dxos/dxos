@@ -14,6 +14,7 @@ import {
   Users,
   Upload,
   X,
+  Database,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
@@ -24,6 +25,7 @@ import { type DispatchIntent, type MetadataResolver } from '@dxos/app-framework'
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { Migrations } from '@dxos/migrations';
 import {
   EchoDatabase,
   type Space,
@@ -138,12 +140,14 @@ export const spaceToGraphNode = ({
   space,
   parent,
   hidden,
+  version,
   dispatch,
   resolve,
 }: {
   space: Space;
   parent: Node;
   hidden?: boolean;
+  version?: string;
   dispatch: DispatchIntent;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
@@ -176,6 +180,19 @@ export const spaceToGraphNode = ({
         testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       },
     });
+
+    if (
+      space.state.get() === SpaceState.READY &&
+      Migrations.versionProperty &&
+      space.properties[Migrations.versionProperty] !== version
+    ) {
+      node.addAction({
+        id: 'migrate-space',
+        label: ['migrate space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <Database {...props} />,
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } }),
+      });
+    }
 
     if (!isPersonalSpace && space.state.get() === SpaceState.READY) {
       node.addAction(
