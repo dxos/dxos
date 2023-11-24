@@ -17,7 +17,7 @@ export type Task = {
   done?: boolean;
   title?: string;
   text?: TextObject;
-  subtasks?: Task[];
+  subTasks?: Task[];
 };
 
 //
@@ -166,13 +166,13 @@ const List = ({ parent, tasks = [], active, onFocus, onCreate, onDelete, onInden
             onDelete={() => onDelete?.(parent, task)}
             onIndent={(left) => onIndent?.(parent, task, left)}
           />
-          {(task.subtasks?.length ?? 0) > 0 && (
+          {(task.subTasks?.length ?? 0) > 0 && (
             // TODO(burdon): Indent based on density.
             <div className='pl-4'>
               <List
                 active={active}
                 parent={task}
-                tasks={task.subtasks}
+                tasks={task.subTasks}
                 onFocus={onFocus}
                 onCreate={onCreate}
                 onDelete={onDelete}
@@ -200,26 +200,24 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   const [active, setActive] = useState<string>();
 
-  const getParent = (tasks: Task[], task: Task): Task | null => {
+  const getParent = (tasks: Task[], task: Task): Task | undefined => {
     for (const subTask of tasks) {
-      if (subTask.subtasks) {
-        if (subTask.subtasks.includes(task)) {
+      if (subTask.subTasks) {
+        if (subTask.subTasks.includes(task)) {
           return subTask;
         }
 
-        const ancestor = getParent(subTask.subtasks, task);
+        const ancestor = getParent(subTask.subTasks, task);
         if (ancestor) {
           return ancestor;
         }
       }
     }
-
-    return null;
   };
 
   const getSubTasks = (parent: Task | undefined): Task[] => {
     if (parent) {
-      return (parent.subtasks ??= []);
+      return (parent.subTasks ??= []);
     } else {
       return tasks;
     }
@@ -232,8 +230,8 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     if (before) {
       tasks.splice(idx, 0, task);
     } else {
-      if (current.subtasks?.length) {
-        current.subtasks.splice(0, 0, task);
+      if (current.subTasks?.length) {
+        current.subTasks.splice(0, 0, task);
       } else {
         tasks.splice(idx + 1, 0, task);
       }
@@ -267,13 +265,10 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
       // TODO(burdon): [Bug]: Can't un-indent if no parent (normalize all callbacks to strictly have parent).
       if (parent) {
         const ancestor = getParent(tasks, parent);
-        if (ancestor?.subtasks) {
-          subTasks.splice(idx, 1);
-          {
-            const idx = ancestor.subtasks.findIndex(({ id }) => id === parent.id);
-            ancestor.subtasks.splice(idx + 1, 0, task);
-          }
-        }
+        const subTasks = getSubTasks(ancestor);
+        subTasks.splice(idx, 1);
+        const parentIdx = subTasks.findIndex(({ id }) => id === parent.id);
+        subTasks.splice(parentIdx + 1, 0, task);
       }
     } else {
       if (idx > 0) {

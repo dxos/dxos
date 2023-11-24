@@ -97,7 +97,7 @@ export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
             case TasksAction.CREATE: {
               return {
                 object: new TaskType({
-                  subtasks: [new TaskType()],
+                  subTasks: [new TaskType()],
                 }),
               };
             }

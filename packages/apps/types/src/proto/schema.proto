@@ -112,7 +112,7 @@ message Task {
 
   string title = 1;
   dxos.schema.Text text = 2;
-  repeated Task subtasks = 3;
+  repeated Task subTasks = 3;
 }
 
 /**
