@@ -1,5 +1,9 @@
-import { PlanResults } from '../plan';
+//
+// Copyright 2023 DXOS.org
+//
+
 import { getReader } from './stats';
+import { type PlanResults } from '../plan';
 
 export const RESOURCE_USAGE_LOG = 'dxos.gravity.resource-usage';
 
@@ -33,7 +37,7 @@ export const analyzeResourceUsage = async (results: PlanResults): Promise<Resour
 
       if (lastProbeTs[context.agentId] !== undefined) {
         stats[context.agentId] ??= [];
-        const duration = context.ts - lastProbeTs[context.agentId]
+        const duration = context.ts - lastProbeTs[context.agentId];
         stats[context.agentId].push({
           ts: context.ts,
           duration,

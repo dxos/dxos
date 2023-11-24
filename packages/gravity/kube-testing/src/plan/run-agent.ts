@@ -12,7 +12,7 @@ import { AgentEnv, type RedisOptions } from './env';
 import { WebSocketConnector } from './env/websocket-connector';
 import { DEFAULT_WEBSOCKET_ADDRESS } from './env/websocket-redis-proxy';
 import { type TestPlan, type AgentParams, AGENT_LOG_FILE } from './spec';
-import { RESOURCE_USAGE_LOG, ResourceUsageLogEntry } from '../analysys/resource-usage';
+import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../analysys/resource-usage';
 
 /**
  * Entry point for process running in agent mode.
@@ -74,7 +74,7 @@ const finish = (code: number) => {
 };
 
 const initDiagnostics = () => {
-  if(isNode()) {
+  if (isNode()) {
     let prevCpuUsage = process.cpuUsage();
 
     log.trace(RESOURCE_USAGE_LOG, {
@@ -85,7 +85,7 @@ const initDiagnostics = () => {
       const cpuUsage = process.cpuUsage(prevCpuUsage);
       prevCpuUsage = process.cpuUsage();
 
-      const memoryUsage = process.memoryUsage()
+      const memoryUsage = process.memoryUsage();
 
       log.trace(RESOURCE_USAGE_LOG, {
         ts: performance.now(),
@@ -94,4 +94,4 @@ const initDiagnostics = () => {
       } satisfies ResourceUsageLogEntry);
     }, 200);
   }
-}
+};
