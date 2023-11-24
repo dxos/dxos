@@ -24,6 +24,9 @@ export type AutomergeTestSpec = {
 
   // Number of connections per client.
   clientConnections: number;
+
+  docCount: number;
+  changeCount: number;
 };
 
 export type AutomergeAgentConfig = {
@@ -38,6 +41,8 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       platform: 'nodejs',
       clientConnections: 1,
       agents: 2,
+      docCount: 10,
+      changeCount: 100,
     };
   }
 
@@ -55,7 +60,51 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     });
   }
 
+  repo!: Repo;
+
   async run(env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>): Promise<void> {
+    await this._init(env);
+    const { config, spec, agents } = env.params;
+
+    performance.mark('create:begin');
+    const localDocs = range(spec.docCount).map((idx) => {
+      const handle = this.repo.create();
+      handle.change((doc: any) => {
+        doc.author = `agent-${config.agentIdx}`;
+        doc.idx = idx;
+      });
+
+      for(const i of range(spec.changeCount)) {
+        handle.change((doc: any) => {
+          doc[`key-${i}`] = `value-${i}`;
+        });
+      }
+
+      return handle;
+    });
+    performance.mark('create:end');
+    log.info('docs created', { count: localDocs.length, time: performance.measure('create', 'create:begin', 'create:end').duration });
+
+    const docUrls = (
+      await env.syncData(
+        'doc-created',
+        localDocs.map((doc) => doc.url),
+      )
+    ).flat();
+    log.info('docs shared', { count: docUrls.length });
+
+    performance.mark('ready:begin');
+    const docs = docUrls.map((url) => this.repo.find(url));
+    await Promise.all(docs.map((doc) => doc.whenReady()));
+    performance.mark('ready:end');
+    log.info('docs ready', { count: docs.length, time: performance.measure('ready', 'ready:begin', 'ready:end').duration });
+
+    await env.syncBarrier('done');
+  }
+
+  async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
+
+  private async _init(env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>): Promise<void> {
     const { config, spec, agents } = env.params;
 
     const {
@@ -65,16 +114,15 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     typeof import('@automerge/automerge-repo-network-websocket') = await importEsm(
       '@automerge/automerge-repo-network-websocket',
     );
-    let repo: Repo;
 
     switch (config.type) {
       case 'server':
-        repo = new Repo({
+        this.repo = new Repo({
           network: [new NodeWSServerAdapter(new Server({ port: config.port }))],
         });
         break;
       case 'client':
-        repo = new Repo({
+        this.repo = new Repo({
           network: randomArraySlice(
             Object.values(agents).filter((a) => a.config.type === 'server'),
             spec.clientConnections,
@@ -82,22 +130,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
         });
         break;
     }
-
-    const handle = repo.create();
-    handle.change((doc: any) => {
-      doc.author = `agent-${config.agentIdx}`;
-    });
-    const docUrls = (await env.syncData('doc-created', [handle.url])).flat();
-    log.info('shared docs', { docUrls });
-
-    const docs = docUrls.map((url) => repo.find(url));
-    await Promise.all(docs.map((doc) => doc.whenReady()));
-
-    log.info('docs ready', { count: docs.length });
-    console.log(docs.map((doc) => doc.docSync()));
   }
-
-  async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
 }
 
 // eslint-disable-next-line no-new-func
