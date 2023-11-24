@@ -47,8 +47,8 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       clientConnections: 1,
       symetric: false,
       agents: 2,
-      docCount: 10,
-      changeCount: 1000,
+      docCount: 1000,
+      changeCount: 10,
       contentKind: 'strings',
     };
   }
