@@ -9,6 +9,7 @@ import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
+import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type EchoDatabase } from '../database';
 import { type TypedObjectOptions } from '../object';
@@ -46,7 +47,11 @@ export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb;
   private _doc?: Doc<any>;
   private _docHandle?: DocHandle<any>;
-  private _path: string[] = [];
+
+  /**
+   * @internal
+   */
+  _path: string[] = [];
   protected readonly _signal = compositeRuntime.createSignal();
 
   private _updates = new Event();
@@ -120,8 +125,8 @@ export class AutomergeObject implements TypedObjectProperties {
       // TODO(dmaretskyi): type: ???.
 
       // TODO(dmaretskyi): Initial values for data.
-      data: this._encode(initialProps ?? {}),
-      meta: this._encode({
+      data: this._encode(['data'], initialProps ?? {}),
+      meta: this._encode(['meta'], {
         keys: [],
         ...opts?.meta,
       }),
@@ -190,17 +195,23 @@ export class AutomergeObject implements TypedObjectProperties {
     });
   }
 
-  private _get(path: string[]) {
+  /**
+   * @internal
+   */
+  _get(path: string[]) {
     const fullPath = [...this._path, ...path];
     let value = this._getDoc();
     for (const key of fullPath) {
       value = value?.[key];
     }
 
-    return this._decode(value);
+    return this._decode(path, value);
   }
 
-  private _set(path: string[], value: any) {
+  /**
+   * @internal
+   */
+  _set(path: string[], value: any) {
     const fullPath = [...this._path, ...path];
 
     const changeFn: ChangeFn<any> = (doc) => {
@@ -209,9 +220,16 @@ export class AutomergeObject implements TypedObjectProperties {
         parent[key] ??= {};
         parent = parent[key];
       }
-      parent[fullPath.at(-1)!] = this._encode(value);
+      parent[fullPath.at(-1)!] = this._encode(path, value);
     };
 
+    this._change(changeFn);
+  }
+
+  /**
+   * @internal
+   */
+  _change(changeFn: ChangeFn<any>) {
     if (this._docHandle) {
       this._docHandle.change(changeFn);
     } else if (this._doc) {
@@ -221,7 +239,10 @@ export class AutomergeObject implements TypedObjectProperties {
     }
   }
 
-  private _encode(value: any) {
+  /**
+   * @internal
+   */
+  _encode(path: string[], value: any) {
     if (value === undefined) {
       return null;
     }
@@ -233,12 +254,24 @@ export class AutomergeObject implements TypedObjectProperties {
         protocol: reference.protocol ?? null,
         host: reference.host ?? null,
       };
+    } else if (value instanceof AutomergeArray) {
+      const values: any = value.map((val) => {
+        if (value instanceof AutomergeArray || Array.isArray(value)) {
+          // TODO(mykola): Add support for nested arrays.
+          throw new Error('Nested arrays are not supported');
+        }
+        return this._encode(path, val);
+      });
+      value._attach(this[base], path);
+      return values;
     }
     return value;
   }
 
-  private _decode(value: any) {
-    if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
+  private _decode(path: string[], value: any) {
+    if (Array.isArray(value)) {
+      return new AutomergeArray()._attach(this[base], path);
+    } else if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
       const reference = new Reference(value.itemId, value.protocol, value.host);
       return this._lookupLink(reference);
     }
