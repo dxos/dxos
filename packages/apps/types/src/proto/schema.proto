@@ -113,7 +113,7 @@ message Kanban {
   message Column {
     // TODO(burdon): Should this be an object?
     option (object) = true;
-    option (index) = false;
+    // option (index) = false;
 
     string title = 1;
     string index = 2;
@@ -123,7 +123,7 @@ message Kanban {
   // TODO(burdon): Reconcile with Grid.Item.
   message Item {
     option (object) = true;
-    option (index) = false;
+    // option (index) = false;
 
     dxos.schema.TypedObject object = 1;
     dxos.schema.Text title = 2; // TODO(burdon): Remove.
@@ -150,7 +150,7 @@ message Grid {
   // TODO(burdon): Reconcile with Kanban.Item.
   message Item {
     option (object) = true;
-    option (index) = false;
+    // option (index) = false;
 
     dxos.schema.TypedObject object = 1;
 
@@ -170,7 +170,7 @@ message Sketch {
 
   string title = 1;
   // TODO(burdon): YJS document (map). Don't index.
-  dxos.schema.Text data = 2 [(index) = false];
+  dxos.schema.Text data = 2; // [(index) = false];
 }
 
 /**
@@ -209,7 +209,7 @@ message Message {
   message Block {
     string timestamp = 1;
     string text = 2;
-    string data = 3 [(index) = false]; // JSON.
+    string data = 3; // JSON. / [(index) = false]
     dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 

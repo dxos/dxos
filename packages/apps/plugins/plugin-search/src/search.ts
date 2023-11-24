@@ -62,7 +62,6 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
           object,
         });
 
-        console.log(':::::', JSON.stringify(object));
         return true;
       }
 
