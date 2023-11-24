@@ -4,7 +4,7 @@
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, type KeyboardEvent, useRef, useState } from 'react';
+import React, { type HTMLAttributes, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
 import { Button, DropdownMenu, Input } from '@dxos/react-ui';
@@ -47,6 +47,11 @@ const Item = ({
 }: ItemProps) => {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (active) {
+      inputRef.current?.focus();
+    }
+  }, [active]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
@@ -55,11 +60,12 @@ const Item = ({
         onIndent?.(event.shiftKey);
         break;
       case 'Enter':
-        onEnter?.(inputRef.current?.selectionStart === 0);
+        onEnter?.(!!task.title?.length && inputRef.current?.selectionStart === 0);
         break;
       case 'Backspace':
-        // TODO(burdon): Merge with previous if at start of line.
-        if (task.title?.length === 0) {
+        // TODO(burdon): Merge with previous if caret at start.
+        if (!task.title?.length) {
+          event.preventDefault();
           onDelete?.();
         }
         break;
@@ -88,7 +94,7 @@ const Item = ({
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
-          autoFocus={active}
+          // autoFocus={active}
           autoComplete='off'
           spellCheck={spellCheck}
           placeholder={focused ? placeholder : undefined}
@@ -236,12 +242,20 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     return task;
   };
 
-  // TODO(burdon): Set focus.
   const handleDelete = (parent: Task | undefined, task: Task) => {
     const tasks = getSubTasks(parent);
-    const idx = tasks.findIndex(({ id }) => id === task.id);
-    tasks.splice(idx, 1);
-    setActive(tasks[idx - 1]?.id);
+    if (parent || tasks.length > 1) {
+      const idx = tasks.findIndex(({ id }) => id === task.id);
+      tasks.splice(idx, 1);
+      if (idx - 1 >= 0) {
+        // TODO(burdon): Select last child of previous.
+        setActive(tasks[idx - 1].id);
+      } else {
+        if (parent) {
+          setActive(parent.id);
+        }
+      }
+    }
   };
 
   const handleIndent = (parent: Task | undefined, task: Task, left?: boolean) => {
@@ -249,6 +263,7 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     const idx = subTasks.findIndex(({ id }) => id === task.id) ?? -1;
     // Can't indent first child.
     if (left) {
+      // TODO(burdon): [Bug]: Can't un-indent if no parent (normalize all callbacks to strictly have parent).
       if (parent) {
         const ancestor = getParent(tasks, parent);
         if (ancestor?.subtasks) {
