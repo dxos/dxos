@@ -55,31 +55,29 @@ describe('Database', () => {
       expect(objects).toHaveLength(n);
     });
 
-    if (!getGlobalAutomergePreference()) {
-      test('removing objects', async () => {
-        const { db } = await createDatabase();
+    test('removing objects', async () => {
+      const { db } = await createDatabase();
 
-        const n = 10;
-        for (const _ of Array.from({ length: n })) {
-          const obj = new TypedObject();
-          db.add(obj);
-        }
-        await db.flush();
+      const n = 10;
+      for (const _ of Array.from({ length: n })) {
+        const obj = new TypedObject();
+        db.add(obj);
+      }
+      await db.flush();
 
-        {
-          const { objects } = db.query();
-          expect(objects).toHaveLength(n);
-        }
+      {
+        const { objects } = db.query();
+        expect(objects).toHaveLength(n);
+      }
 
-        db.remove(db.query().objects[0]);
-        await db.flush();
+      db.remove(db.query().objects[0]);
+      await db.flush();
 
-        {
-          const { objects } = db.query();
-          expect(objects).toHaveLength(n - 1);
-        }
-      });
-    }
+      {
+        const { objects } = db.query();
+        expect(objects).toHaveLength(n - 1);
+      }
+    });
 
     // TODO(burdon): 100 times (not batched).
     test.skip('flush callback', async () => {

@@ -121,6 +121,8 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                 />
               ) : null;
           }
+
+          return null;
         },
       },
       intent: {

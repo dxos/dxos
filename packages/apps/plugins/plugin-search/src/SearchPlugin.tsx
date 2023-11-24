@@ -43,11 +43,13 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       },
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       surface: {
-        component: ({ data, role }) => {
+        component: ({ role }) => {
           switch (role) {
             case 'context-search':
               return <SearchMain />;
           }
+
+          return null;
         },
       },
       intent: {

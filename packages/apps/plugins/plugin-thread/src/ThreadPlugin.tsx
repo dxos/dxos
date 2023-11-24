@@ -9,7 +9,7 @@ import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-sp
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
   LayoutAction,
-  type GraphPluginProvides,
+  type GraphProvides,
   type LayoutProvides,
   type Plugin,
   type PluginDefinition,
@@ -30,7 +30,7 @@ import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  let graphPlugin: Plugin<GraphProvides> | undefined;
   let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
   return {
