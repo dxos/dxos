@@ -8,20 +8,20 @@ import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
 
-import { TaskBlock } from './TaskBlock';
+import { ItemBlock } from './ItemBlock';
 
 const Story = () => {
   const [text] = useState(new TextObject('Hello'));
 
   return (
     <div className='m-2 ring'>
-      <TaskBlock task={{ id: 'task-1', text }} />
+      <ItemBlock item={{ id: 'item-1', text }} />
     </div>
   );
 };
 
 export default {
-  component: TaskBlock,
+  component: ItemBlock,
   render: Story,
 };
 

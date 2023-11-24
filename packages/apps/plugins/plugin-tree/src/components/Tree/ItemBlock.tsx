@@ -4,12 +4,11 @@
 
 import React, { type FC } from 'react';
 
+import { type TextObject } from '@dxos/client/echo';
 import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 
-import { type Task } from './Task';
-
-export const TaskBlock: FC<{ task: Task }> = ({ task }) => {
-  const model = useTextModel({ text: task.text });
+export const ItemBlock: FC<{ item: { id: string; text: TextObject } }> = ({ item }) => {
+  const model = useTextModel({ text: item.text });
 
   return (
     <div className='flex p-2'>

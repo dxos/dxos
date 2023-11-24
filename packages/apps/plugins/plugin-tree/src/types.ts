@@ -3,7 +3,7 @@
 //
 
 import type { StackProvides } from '@braneframe/plugin-stack';
-import { Task as TaskType } from '@braneframe/types';
+import { Tree as TreeType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -13,15 +13,15 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 
-import { TASKS_PLUGIN } from './meta';
+import { TREE_PLUGIN } from './meta';
 
-const TEMPLATE_ACTION = `${TASKS_PLUGIN}/action`;
+const TEMPLATE_ACTION = `${TREE_PLUGIN}/action`;
 
-export enum TasksAction {
+export enum TreeAction {
   CREATE = `${TEMPLATE_ACTION}/create`,
 }
 
-export type TasksPluginProvides = SurfaceProvides &
+export type TreePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
@@ -29,5 +29,5 @@ export type TasksPluginProvides = SurfaceProvides &
   StackProvides;
 
 export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && TaskType.schema.typename === object.__typename;
+  return isTypedObject(object) && TreeType.schema.typename === object.__typename;
 };

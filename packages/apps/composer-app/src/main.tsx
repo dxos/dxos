@@ -33,10 +33,10 @@ import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
 import TableMeta from '@braneframe/plugin-table/meta';
-import TasksMeta from '@braneframe/plugin-tasks/meta';
 import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
+import TreeMeta from '@braneframe/plugin-tree/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
@@ -109,7 +109,7 @@ const main = async () => {
       MapMeta,
       ScriptMeta,
       TableMeta,
-      TasksMeta,
+      TreeMeta,
       ThreadMeta,
       ExplorerMeta,
       ChessMeta,
@@ -165,9 +165,9 @@ const main = async () => {
         config: new Config(Defaults()),
       }),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
-      [TasksMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-tasks')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme')),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
+      [TreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-tree')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [

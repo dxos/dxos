@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-tasks",
+  "name": "@braneframe/plugin-tree",
   "version": "0.3.8",
-  "description": "Tasks plugin",
+  "description": "Tree plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

@@ -6,27 +6,27 @@ import { Check, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Task as TaskType } from '@braneframe/types';
+import { Tree as TreeType, Folder } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
-import { TaskMain, TaskSection } from './components';
-import meta, { TASKS_PLUGIN } from './meta';
+import { TreeMain, TreeSection } from './components';
+import meta, { TREE_PLUGIN } from './meta';
 import translations from './translations';
-import { TasksAction, type TasksPluginProvides, isObject } from './types';
+import { TreeAction, type TreePluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TaskType.name] = TaskType;
+(globalThis as any)[TreeType.name] = TreeType;
 
-export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
+export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
   return {
     meta,
     provides: {
       metadata: {
         records: {
-          [TaskType.schema.typename]: {
-            placeholder: ['object placeholder', { ns: TASKS_PLUGIN }],
+          [TreeType.schema.typename]: {
+            placeholder: ['object placeholder', { ns: TREE_PLUGIN }],
             icon: (props: IconProps) => <Check {...props} />,
           },
         },
@@ -41,15 +41,15 @@ export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${TASKS_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
-            label: ['create object label', { ns: TASKS_PLUGIN }], // TODO(burdon): "object"
+            id: `${TREE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
+            label: ['create object label', { ns: TREE_PLUGIN }], // TODO(burdon): "object"
             icon: (props) => <Check {...props} />,
             // TODO(burdon): Factor out helper.
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {
-                  plugin: TASKS_PLUGIN,
-                  action: TasksAction.CREATE,
+                  plugin: TREE_PLUGIN,
+                  action: TreeAction.CREATE,
                 },
                 {
                   action: SpaceAction.ADD_OBJECT,
@@ -60,7 +60,7 @@ export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
                 },
               ]),
             properties: {
-              testId: 'taskPlugin.createObject',
+              testId: 'treePlugin.createObject',
             },
           });
         },
@@ -68,13 +68,13 @@ export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
       stack: {
         creators: [
           {
-            id: 'create-stack-section-tasks',
-            testId: 'tasksPlugin.createSectionSpaceTasks',
-            label: ['create stack section label', { ns: TASKS_PLUGIN }],
+            id: 'create-stack-section-tree',
+            testId: 'treePlugin.createSectionSpaceTree',
+            label: ['create stack section label', { ns: TREE_PLUGIN }],
             icon: (props: any) => <Check {...props} />,
             intent: {
-              plugin: TASKS_PLUGIN,
-              action: TasksAction.CREATE,
+              plugin: TREE_PLUGIN,
+              action: TreeAction.CREATE,
             },
           },
         ],
@@ -83,9 +83,9 @@ export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isObject(data.active) ? <TaskMain task={data.active as TaskType} /> : null;
+              return isObject(data.active) ? <TreeMain tree={data.active as TreeType} /> : null;
             case 'section':
-              return isObject(data.object) ? <TaskSection task={data.object as TaskType} /> : null;
+              return isObject(data.object) ? <TreeSection tree={data.object as TreeType} /> : null;
           }
 
           return null;
@@ -94,10 +94,12 @@ export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case TasksAction.CREATE: {
+            case TreeAction.CREATE: {
               return {
-                object: new TaskType({
-                  subTasks: [new TaskType()],
+                object: new TreeType({
+                  root: new TreeType.Item({
+                    items: [new TreeType.Item()],
+                  }),
                 }),
               };
             }

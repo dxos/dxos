@@ -8,7 +8,7 @@ import React, { type HTMLAttributes, type KeyboardEvent, useEffect, useRef, useS
 import { Button, DropdownMenu, Input } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { getNext, getParent, getPrevious, getSubTasks, type Task } from './types';
+import { getNext, getParent, getPrevious, getItems, type Item } from './types';
 
 // TODO(burdon): Adapt from Tree (incl. drag/drop)?
 
@@ -17,18 +17,18 @@ import { getNext, getParent, getPrevious, getSubTasks, type Task } from './types
 //
 
 type ItemProps = Pick<HTMLAttributes<HTMLDivElement>, 'placeholder' | 'spellCheck'> & {
-  task: Task;
+  item: Item;
   active?: boolean;
   showCheckbox?: boolean;
   onFocus?: () => void;
   onEnter?: (before?: boolean) => void;
   onDelete?: () => void;
   onIndent?: (left?: boolean) => void;
-  onNav?: (task: Task, direction?: 'home' | 'end' | 'up' | 'down') => void;
+  onNav?: (item: Item, direction?: 'home' | 'end' | 'up' | 'down') => void;
 };
 
 const Item = ({
-  task,
+  item,
   active,
   showCheckbox = true,
   placeholder,
@@ -50,21 +50,21 @@ const Item = ({
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
       case 'ArrowUp':
-        onNav?.(task, event.shiftKey ? 'home' : 'up');
+        onNav?.(item, event.shiftKey ? 'home' : 'up');
         break;
       case 'ArrowDown':
-        onNav?.(task, event.shiftKey ? 'end' : 'down');
+        onNav?.(item, event.shiftKey ? 'end' : 'down');
         break;
       case 'Tab':
         event.preventDefault();
         onIndent?.(event.shiftKey);
         break;
       case 'Enter':
-        onEnter?.(!!task.title?.length && inputRef.current?.selectionStart === 0);
+        onEnter?.(!!item.text?.length && inputRef.current?.selectionStart === 0);
         break;
       case 'Backspace':
         // TODO(burdon): Merge with previous if caret at start.
-        if (!task.title?.length) {
+        if (!item.text?.length) {
           event.preventDefault();
           onDelete?.();
         }
@@ -80,9 +80,9 @@ const Item = ({
       {(showCheckbox && (
         <Input.Root>
           <Input.Checkbox
-            checked={task.done}
+            checked={item.done}
             onCheckedChange={(checked) => {
-              task.done = !!checked;
+              item.done = !!checked;
             }}
           />
         </Input.Root>
@@ -100,7 +100,7 @@ const Item = ({
           placeholder={focused ? placeholder : undefined}
           classNames='w-full'
           variant='subdued'
-          value={task.title ?? ''}
+          value={item.text ?? ''}
           onFocus={() => {
             setFocused(true);
             onFocus?.();
@@ -108,7 +108,7 @@ const Item = ({
           onBlur={() => setFocused(false)}
           onKeyDown={handleKeyDown}
           onChange={({ target: { value } }) => {
-            task.title = value;
+            item.text = value;
           }}
         />
       </Input.Root>
@@ -142,34 +142,34 @@ const Item = ({
 //
 
 type ListProps = {
-  root: Task;
+  root: Item;
   active?: string;
-  onFocus?: (task: Task) => void;
-  onCreate?: (parent: Task, task: Task, after?: boolean) => Task;
-  onDelete?: (parent: Task, task: Task) => void;
-  onIndent?: (parent: Task, task: Task, left?: boolean) => void;
+  onFocus?: (item: Item) => void;
+  onCreate?: (parent: Item, item: Item, after?: boolean) => Item;
+  onDelete?: (parent: Item, item: Item) => void;
+  onIndent?: (parent: Item, item: Item, left?: boolean) => void;
 } & Pick<ItemProps, 'onNav'>;
 
 const List = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav }: ListProps) => {
   return (
     <div className='flex flex-col w-full'>
-      {root.subTasks?.map((task) => (
-        <div key={task.id} className='w-full'>
+      {root.items?.map((item) => (
+        <div key={item.id} className='w-full'>
           <Item
-            task={task}
-            active={active === task.id}
+            item={item}
+            active={active === item.id}
             placeholder='Enter text'
-            onFocus={() => onFocus?.(task)}
-            onEnter={(before) => onCreate?.(root, task, before)}
-            onDelete={() => onDelete?.(root, task)}
-            onIndent={(left) => onIndent?.(root, task, left)}
+            onFocus={() => onFocus?.(item)}
+            onEnter={(before) => onCreate?.(root, item, before)}
+            onDelete={() => onDelete?.(root, item)}
+            onIndent={(left) => onIndent?.(root, item, left)}
             onNav={onNav}
           />
-          {(task.subTasks?.length ?? 0) > 0 && (
+          {(item.items?.length ?? 0) > 0 && (
             // TODO(burdon): Indent based on density.
             <div className='pl-4'>
               <List
-                root={task}
+                root={item}
                 active={active}
                 onFocus={onFocus}
                 onCreate={onCreate}
@@ -190,39 +190,39 @@ const List = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav }: Li
 //
 
 type RootProps = {
-  root: Task;
-  onCreate?: () => Task;
+  root: Item;
+  onCreate?: () => Item;
 };
 
 const Root = ({ root, onCreate }: RootProps) => {
   const [active, setActive] = useState<string>();
 
   const handleCreate: ListProps['onCreate'] = (parent, current, before) => {
-    const task = onCreate!();
-    const tasks = getSubTasks(parent);
-    const idx = tasks.findIndex(({ id }) => current.id === id);
+    const item = onCreate!();
+    const tree = getItems(parent);
+    const idx = tree.findIndex(({ id }) => current.id === id);
     if (before) {
-      tasks.splice(idx, 0, task);
+      tree.splice(idx, 0, item);
     } else {
-      if (current.subTasks?.length) {
-        current.subTasks.splice(0, 0, task);
+      if (current.items?.length) {
+        current.items.splice(0, 0, item);
       } else {
-        tasks.splice(idx + 1, 0, task);
+        tree.splice(idx + 1, 0, item);
       }
     }
 
-    setActive(task.id);
-    return task;
+    setActive(item.id);
+    return item;
   };
 
-  const handleDelete: ListProps['onDelete'] = (parent, task) => {
-    const tasks = getSubTasks(parent);
-    if (parent || tasks.length > 1) {
-      const idx = tasks.findIndex(({ id }) => id === task.id);
-      tasks.splice(idx, 1);
+  const handleDelete: ListProps['onDelete'] = (parent, item) => {
+    const tree = getItems(parent);
+    if (parent || tree.length > 1) {
+      const idx = tree.findIndex(({ id }) => id === item.id);
+      tree.splice(idx, 1);
       if (idx - 1 >= 0) {
         // TODO(burdon): Select last child of previous.
-        setActive(tasks[idx - 1].id);
+        setActive(tree[idx - 1].id);
       } else {
         if (parent) {
           setActive(parent.id);
@@ -231,46 +231,46 @@ const Root = ({ root, onCreate }: RootProps) => {
     }
   };
 
-  const handleIndent: ListProps['onIndent'] = (parent, task, left) => {
-    const subTasks = getSubTasks(parent);
-    const idx = subTasks.findIndex(({ id }) => id === task.id) ?? -1;
+  const handleIndent: ListProps['onIndent'] = (parent, item, left) => {
+    const items = getItems(parent);
+    const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
     if (left) {
       if (parent) {
         // Move all siblings.
-        const move = subTasks.splice(idx, subTasks.length - idx);
+        const move = items.splice(idx, items.length - idx);
 
         // Get parent's parent.
         const ancestor = getParent(root, parent);
         if (ancestor) {
-          const ancestorSubTasks = getSubTasks(ancestor);
-          const parentIdx = ancestorSubTasks.findIndex(({ id }) => id === parent.id);
-          ancestorSubTasks.splice(parentIdx + 1, 0, ...move);
+          const ancestorItems = getItems(ancestor);
+          const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
+          ancestorItems.splice(parentIdx + 1, 0, ...move);
         }
       }
     } else {
       // Can't indent first child.
       if (idx > 0) {
-        subTasks.splice(idx, 1);
-        const newTasks = getSubTasks(subTasks[idx - 1]);
-        newTasks.push(task);
+        items.splice(idx, 1);
+        const newTree = getItems(items[idx - 1]);
+        newTree.push(item);
       }
     }
   };
 
   // TODO(burdon): Preserve caret position.
-  const handleNav: ListProps['onNav'] = (task, direction) => {
+  const handleNav: ListProps['onNav'] = (item, direction) => {
     switch (direction) {
       case 'home':
         // TODO(burdon): Go to first child of group.
-        setActive(root.subTasks![0].id);
+        setActive(root.items![0].id);
         break;
       case 'end':
         // TODO(burdon): Go to last child of group.
-        setActive(root.subTasks![root.subTasks!.length - 1].id);
+        setActive(root.items![root.items!.length - 1].id);
         break;
       case 'up':
         {
-          const previous = getPrevious(root, task);
+          const previous = getPrevious(root, item);
           if (previous) {
             setActive(previous.id);
           }
@@ -278,7 +278,7 @@ const Root = ({ root, onCreate }: RootProps) => {
         break;
       case 'down':
         {
-          const next = getNext(root, task);
+          const next = getNext(root, item);
           if (next) {
             setActive(next.id);
           }
@@ -292,7 +292,7 @@ const Root = ({ root, onCreate }: RootProps) => {
       <List
         root={root}
         active={active}
-        onFocus={(task) => setActive(task.id)}
+        onFocus={(item) => setActive(item.id)}
         onCreate={onCreate && handleCreate}
         onDelete={handleDelete}
         onIndent={handleIndent}
@@ -302,8 +302,8 @@ const Root = ({ root, onCreate }: RootProps) => {
   );
 };
 
-export const TaskList = {
+export const Tree = {
   Root,
-  List,
+  List, // TODO(burdon): Branch?
   Item,
 };

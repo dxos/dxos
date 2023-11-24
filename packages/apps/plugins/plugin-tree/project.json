@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-tasks/src",
+  "sourceRoot": "packages/apps/plugins/plugin-tree/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-tasks/src/index.ts",
-          "packages/apps/plugins/plugin-tasks/src/meta.tsx"
+          "packages/apps/plugins/plugin-tree/src/index.ts",
+          "packages/apps/plugins/plugin-tree/src/meta.tsx"
         ],
         "platforms": [
           "browser"
@@ -23,7 +23,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-tasks/.storybook"
+        "configDir": "packages/apps/plugins/plugin-tree/.storybook"
       }
     }
   },

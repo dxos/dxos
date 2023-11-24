@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TASKS_PLUGIN } from './meta';
+import { TREE_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [TASKS_PLUGIN]: {
-        'plugin name': 'Tasks',
+      [TREE_PLUGIN]: {
+        'plugin name': 'List',
         'object placeholder': 'New list',
         'create object label': 'Create list',
         'delete object label': 'Delete',

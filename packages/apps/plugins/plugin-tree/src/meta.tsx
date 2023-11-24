@@ -7,11 +7,10 @@ import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
-// TODO(burdon): Generalize to lists (optional checkbox)?
-export const TASKS_PLUGIN = 'dxos.org/plugin/tasks';
+export const TREE_PLUGIN = 'dxos.org/plugin/tree';
 
 export default pluginMeta({
-  id: TASKS_PLUGIN,
-  name: 'Tasks',
+  id: TREE_PLUGIN,
+  name: 'Tree',
   iconComponent: (props) => <Check {...props} />,
 });
