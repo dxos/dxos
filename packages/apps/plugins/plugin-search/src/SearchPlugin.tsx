@@ -11,7 +11,8 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
-import meta, { SEARCH_PLUGIN } from './meta';
+import meta, { SEARCH_PLUGIN, SEARCH_RESULT } from './meta';
+import type { SearchResult } from './search';
 import translations from './translations';
 import { SearchAction, type SearchPluginProvides } from './types';
 
@@ -20,6 +21,30 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
     meta,
     provides: {
       translations,
+      metadata: {
+        records: {
+          [SEARCH_RESULT]: {
+            parse: (item: SearchResult, type: string) => {
+              switch (type) {
+                case 'node': {
+                  return { id: item.id, label: item.label, data: item.object };
+                }
+
+                case 'object': {
+                  return item.object;
+                }
+
+                case 'view-object': {
+                  return item;
+                }
+
+                default:
+                  return undefined;
+              }
+            },
+          },
+        },
+      },
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);

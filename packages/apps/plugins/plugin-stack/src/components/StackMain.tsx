@@ -14,10 +14,10 @@ import {
   usePlugin,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { type TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
-import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
+import { Stack, type StackProps } from '@dxos/react-ui-stack';
 import { baseSurface, chromeSurface, topbarBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
@@ -25,11 +25,7 @@ import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
-const StackContent = ({ data }: { data: StackSectionItem }) => {
-  // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
-  const object = (data as any).node?.data ?? data;
-  return <Surface role='section' data={{ object }} />;
-};
+const SectionContent: StackProps['SectionContent'] = ({ data }) => <Surface role='section' data={{ object: data }} />;
 
 export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
@@ -39,10 +35,9 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
-    .map(({ object }) => object as TypedObject<StackSectionItem>)
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter((object) => Boolean(object));
+    .filter(({ object }) => Boolean(object));
   const space = getSpaceForObject(stack);
   const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
 
@@ -74,6 +69,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
 
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const object = parseData?.(active.item, 'object');
+    // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
       stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
     } else if (object && over.path === id) {
@@ -82,7 +78,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   };
 
   const handleRemove = (path: string) => {
-    const index = stack.sections.findIndex(({ object }) => object.id === Path.last(path));
+    const index = stack.sections.findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
       stack.sections.splice(index, 1);
     }
@@ -104,13 +100,19 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     });
   };
 
+  const handleTransform = (item: MosaicDataItem, type?: string) => {
+    const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
+    return parseData ? parseData(item, 'view-object') : item;
+  };
+
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
-        Component={StackContent}
+        SectionContent={SectionContent}
         type={StackType.Section.schema.typename}
         items={items}
+        transform={handleTransform}
         onOver={handleOver}
         onDrop={handleDrop}
         onRemoveSection={handleRemove}
