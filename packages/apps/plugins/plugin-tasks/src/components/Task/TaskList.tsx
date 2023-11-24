@@ -36,13 +36,14 @@ const Item = ({ task, focus, spellCheck = false, onEnter, onDelete, onIndent }: 
         // TODO(burdon): Insert above if at start of line (or split).
         onEnter?.();
         break;
-      case 'Escape':
-        // TODO(burdon): Toggle checkbox.
-        break;
       case 'Backspace':
+        // TODO(burdon): Merge with previous if at start of line.
         if (task.title?.length === 0) {
           onDelete?.();
         }
+        break;
+      case 'Escape':
+        // TODO(burdon): Toggle checkbox?
         break;
     }
   };
