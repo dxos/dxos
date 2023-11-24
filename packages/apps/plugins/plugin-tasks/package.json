@@ -1,0 +1,59 @@
+{
+  "name": "@braneframe/plugin-tasks",
+  "version": "0.3.8",
+  "description": "Tasks plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@braneframe/plugin-stack": "workspace:*",
+    "@braneframe/types": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@fluentui/react-tabster": "^9.12.0",
+    "deepsignal": "1.4.0-shallow.0",
+    "lodash.get": "^4.4.2"
+  },
+  "devDependencies": {
+    "@braneframe/plugin-space": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "@types/lodash.get": "^4.4.7",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^4.3.9"
+  },
+  "peerDependencies": {
+    "@braneframe/plugin-space": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
