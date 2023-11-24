@@ -10,7 +10,7 @@ import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/func
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Chain, ChainResources } from './chain';
+import { Chain, createOpenAIChainResources } from './chain';
 import { createRequest } from './request';
 import { createResponse } from './response';
 import { getKey } from '../../util';
@@ -26,11 +26,11 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   const chat = new ChatOpenAI({
     openAIApiKey: getKey(config, 'openai.com/api_key')!,
   });
-  const resources = new ChainResources({
-    apiKey: getKey(config, 'openai.com/api_key')!,
-    chat: { modelName: 'gpt-4' },
+  const resources = createOpenAIChainResources({
     // TODO(burdon): Get from context (for agent profile).
     baseDir: '/tmp/dxos/agent/functions/embedding',
+    apiKey: getKey(config, 'openai.com/api_key')!,
+    chat: { modelName: 'gpt-4' },
   });
   await resources.initialize();
   const chain = new Chain(resources, { precise: false });
