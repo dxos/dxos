@@ -35,7 +35,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
               <Input.TextInput
                 variant='subdued'
                 classNames='p-0'
-                placeholder={t('title placeholder')}
+                placeholder={t('document title placeholder')}
                 value={object.title}
                 onChange={(event) => (object.title = event.target.value)}
               />
@@ -62,7 +62,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
                     '[&>div]:h-full',
                   ),
                 },
-                editor: { className: 'h-full', placeholder: t('content placeholder') },
+                editor: { className: 'h-full', placeholder: t('editor placeholder') },
               }}
             />
           </Card.Body>
