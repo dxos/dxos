@@ -25,7 +25,7 @@ export const TaskMain: FC<{ task?: Task }> = ({ task }) => {
 
 export const TaskSection: FC<{ task?: Task }> = ({ task }) => {
   return (
-    <div role='none' className='flex flex-col pbs-4 pbe-4'>
+    <div role='none' className='flex flex-col w-full pbs-4 pbe-4'>
       <TaskList.Root tasks={task?.subtasks} onCreate={() => new TaskType()} />
     </div>
   );

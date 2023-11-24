@@ -58,6 +58,8 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
             )}
           >
             <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading>
+
+            {/* Drag handle */}
             <div
               className={mx(
                 fineButtonDimensions,
@@ -75,52 +77,57 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
               />
             </div>
 
-            {/* Main content. */}
+            {/* Main content */}
             <div role='none' className='flex flex-1 min-is-0 overflow-hidden'>
               {children}
             </div>
-            <DropdownMenu.Root
-              {...{
-                open: optionsMenuOpen,
-                onOpenChange: (nextOpen: boolean) => {
-                  // if (!nextOpen) {
-                  //   suppressNextTooltip.current = true;
-                  // }
-                  return setOptionsMenuOpen(nextOpen);
-                },
-              }}
-            >
-              <DropdownMenu.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  classNames={[
-                    'shrink-0 pli-2 pointer-fine:pli-1 rounded-none',
-                    hoverableControlItem,
-                    hoverableFocusedControls,
-                    hoverableOpenControlItem,
-                    active === 'overlay' && 'invisible',
-                  ]}
-                  // data-testid={testId}
-                >
-                  <DotsThreeVertical className={getSize(4)} />
-                </Button>
-              </DropdownMenu.Trigger>
 
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={onNavigate}>
-                      <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('navigate to section label')}</span>
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={onRemove}>
-                      <X className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('remove section label')}</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
+            {/* Menu */}
+            <div role='none' className='flex shink-0'>
+              <div className='p-1'>
+                <DropdownMenu.Root
+                  {...{
+                    open: optionsMenuOpen,
+                    onOpenChange: (nextOpen: boolean) => {
+                      // if (!nextOpen) {
+                      //   suppressNextTooltip.current = true;
+                      // }
+                      return setOptionsMenuOpen(nextOpen);
+                    },
+                  }}
+                >
+                  <DropdownMenu.Trigger asChild>
+                    <Button
+                      variant='ghost'
+                      classNames={[
+                        hoverableControlItem,
+                        hoverableFocusedControls,
+                        hoverableOpenControlItem,
+                        active === 'overlay' && 'invisible',
+                      ]}
+                      // data-testid={testId}
+                    >
+                      <DotsThreeVertical className={getSize(4)} />
+                    </Button>
+                  </DropdownMenu.Trigger>
+
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content>
+                      <DropdownMenu.Viewport>
+                        <DropdownMenu.Item onClick={onNavigate}>
+                          <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('navigate to section label')}</span>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={onRemove}>
+                          <X className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('remove section label')}</span>
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Viewport>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </div>
+            </div>
           </div>
         </ListItem.Root>
       </DensityProvider>
