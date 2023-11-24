@@ -9,7 +9,8 @@ import { Card, ScrollArea } from '@dxos/react-ui';
 import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { type SearchResult } from '../../search';
+import { SEARCH_RESULT } from '../../meta';
+import type { SearchResult } from '../../search';
 
 // TODO(burdon): Factor out.
 const styles = {
@@ -103,6 +104,7 @@ export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps)
               <Mosaic.DraggableTile
                 key={item.id}
                 path={path}
+                type={SEARCH_RESULT}
                 item={{ ...item, selected: selected === item.id, onSelect }}
                 Component={SearchItem}
               />

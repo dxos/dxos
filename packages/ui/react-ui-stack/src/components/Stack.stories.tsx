@@ -9,14 +9,14 @@ import React, { useRef, useState } from 'react';
 
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
 
-import { Stack, type StackProps, type StackSectionItem } from './Stack';
+import { Stack, type StackSectionContent, type StackProps, type StackSectionItem } from './Stack';
 import { FullscreenDecorator, TestObjectGenerator } from '../testing';
 
 faker.seed(3);
 
-const SimpleContent = ({ data }: { data: StackSectionItem }) => <div className='p-4 text-center'>{data.title}</div>;
+const SimpleContent = ({ data }: { data: StackSectionContent }) => <div className='p-4 text-center'>{data.title}</div>;
 
-const ComplexContent = ({ data }: { data: StackSectionItem & { body?: string; image?: string } }) => (
+const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string; image?: string } }) => (
   <div className='flex'>
     <div className='grow p-4'>
       <h1>{data.title ?? data.id}</h1>
@@ -40,14 +40,14 @@ export default {
 
 export const Empty = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     count: 0,
   },
 };
 
 export const Simple = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     types: ['document'],
     debug: true,
   },
@@ -55,7 +55,7 @@ export const Simple = {
 
 export const Complex = {
   args: {
-    Component: ComplexContent,
+    SectionContent: ComplexContent,
     types: ['document', 'image'],
     debug: true,
   },
@@ -63,7 +63,7 @@ export const Complex = {
 
 export const Transfer = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     types: ['document'],
     count: 8,
     className: 'w-[400px]',
@@ -86,7 +86,7 @@ export const Transfer = {
 
 export const Copy = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     types: ['document'],
     className: 'w-[400px]',
   },
@@ -114,7 +114,7 @@ export type DemoStackProps = StackProps & {
 
 const DemoStack = ({
   id = 'stack',
-  Component,
+  SectionContent,
   types,
   count = 8,
   operation = 'transfer',
@@ -175,7 +175,7 @@ const DemoStack = ({
     <Stack
       id={id}
       className={className}
-      Component={Component}
+      SectionContent={SectionContent}
       items={items}
       onOver={handleOver}
       onDrop={handleDrop}
