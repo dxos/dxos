@@ -118,6 +118,7 @@ export class AutomergeArray<T> implements Array<T> {
 
       const fullPath = [...this._object._path, ...this._path!];
 
+      // TODO(mykola): Do not allow direct access to doc in array.
       const changeFn: ChangeFn<any> = (doc) => {
         let parent = doc;
         for (const key of fullPath.slice(0, -1)) {
@@ -279,6 +280,7 @@ export class AutomergeArray<T> implements Array<T> {
     if (this._object) {
       const fullPath = [...this._object._path, ...this._path!];
 
+      // TODO(mykola): Do not allow direct access to doc in array.
       const changeFn: ChangeFn<any> = (doc) => {
         let parent = doc;
         for (const key of fullPath.slice(0, -1)) {
@@ -363,6 +365,7 @@ export class AutomergeArray<T> implements Array<T> {
 
     const fullPath = [...this._object._path, ...this._path!];
 
+    // TODO(mykola): Do not allow direct access to doc in array.
     const changeFn: ChangeFn<any> = (doc) => {
       let parent = doc;
       for (const key of fullPath.slice(0, -1)) {
