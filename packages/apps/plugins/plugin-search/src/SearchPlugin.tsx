@@ -11,8 +11,8 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
-import meta, { SEARCH_PLUGIN } from './meta';
-import { SEARCH_RESULT, type SearchResult } from './search';
+import meta, { SEARCH_PLUGIN, SEARCH_RESULT } from './meta';
+import type { SearchResult } from './search';
 import translations from './translations';
 import { SearchAction, type SearchPluginProvides } from './types';
 

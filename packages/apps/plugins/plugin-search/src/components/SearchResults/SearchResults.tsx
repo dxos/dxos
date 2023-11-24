@@ -9,7 +9,8 @@ import { Card, ScrollArea } from '@dxos/react-ui';
 import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { SEARCH_RESULT, type SearchResult } from '../../search';
+import { SEARCH_RESULT } from '../../meta';
+import type { SearchResult } from '../../search';
 
 // TODO(burdon): Factor out.
 const styles = {
