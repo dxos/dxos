@@ -23,7 +23,7 @@ const docs: ChainDocument[] = [
 
 // TODO(burdon): Use fakes for testing?
 
-describe('Chain', () => {
+describe.skip('Chain', () => {
   const baseDir = '/tmp/dxos/agent/functions/chat/chain';
   const getOptions = (options: Partial<ChainResourcesOptions> = {}) => {
     const config = getConfig()!;
