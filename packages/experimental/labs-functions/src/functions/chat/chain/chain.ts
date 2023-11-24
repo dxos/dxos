@@ -24,7 +24,7 @@ export class Chain {
       [
         this._options.precise
           ? 'answer the question based only on the following context:'
-          : 'try to answer the question using the following context otherwise just answer directly from your training data:',
+          : 'try to be brief and answer the question using the following context otherwise just answer directly from your training data:',
         '{context}',
         '----------------',
         'question: {question}',
