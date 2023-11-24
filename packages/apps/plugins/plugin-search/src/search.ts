@@ -4,6 +4,8 @@
 
 import { type Schema, TextObject } from '@dxos/react-client/echo';
 
+import { SEARCH_PLUGIN } from './meta';
+
 // TODO(burdon): Type name registry linked to schema?
 const getIcon = (schema: Schema): string | undefined => {
   const keys = schema.props.map((prop) => prop.id);
@@ -23,6 +25,8 @@ const getIcon = (schema: Schema): string | undefined => {
 // Plain text fields.
 // TODO(burdon): Reconcile with agent index.
 export type TextFields = Record<string, string>;
+
+export const SEARCH_RESULT = `${SEARCH_PLUGIN}/result`;
 
 export type SearchResult = {
   id: string;
