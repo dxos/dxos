@@ -7,6 +7,7 @@ import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
+// TODO(burdon): Generalize to lists (optional checkbox)?
 export const TASKS_PLUGIN = 'dxos.org/plugin/tasks';
 
 export default pluginMeta({

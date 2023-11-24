@@ -37,7 +37,7 @@ type ItemProps = Pick<HTMLAttributes<HTMLDivElement>, 'placeholder' | 'spellChec
 const Item = ({
   task,
   active,
-  showCheckbox,
+  showCheckbox = true,
   placeholder,
   spellCheck = false,
   onFocus,
@@ -196,6 +196,7 @@ type RootProps = {
 };
 
 const Root = ({ tasks = [], onCreate }: RootProps) => {
+  // TODO(burdon): Nav up/down hierarchy isn't working.
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   const [active, setActive] = useState<string>();
 

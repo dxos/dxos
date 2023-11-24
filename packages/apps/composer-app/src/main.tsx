@@ -153,7 +153,6 @@ const main = async () => {
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
           const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);
-
           void dispatch({
             action: LayoutAction.ACTIVATE,
             data: { id: document.id },

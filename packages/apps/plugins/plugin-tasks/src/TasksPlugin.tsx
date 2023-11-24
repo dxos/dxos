@@ -19,15 +19,13 @@ import { TasksAction, type TasksPluginProvides, isObject } from './types';
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TaskType.name] = TaskType;
 
-const typename = 'tasks'; // Type.schema.typename
-
 export const TasksPlugin = (): PluginDefinition<TasksPluginProvides> => {
   return {
     meta,
     provides: {
       metadata: {
         records: {
-          [typename]: {
+          [TaskType.schema.typename]: {
             placeholder: ['object placeholder', { ns: TASKS_PLUGIN }],
             icon: (props: IconProps) => <Check {...props} />,
           },
