@@ -2,23 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { type TextObject } from '@dxos/client/echo';
 import { Button, DropdownMenu, Input } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Adapt from Tree (incl. drag/drop).
+import { getNext, getParent, getPrevious, getSubTasks, type Task } from './types';
 
-export type Task = {
-  id: string;
-  done?: boolean;
-  title?: string;
-  text?: TextObject;
-  subTasks?: Task[];
-};
+// TODO(burdon): Adapt from Tree (incl. drag/drop)?
 
 //
 // Item
@@ -32,6 +24,7 @@ type ItemProps = Pick<HTMLAttributes<HTMLDivElement>, 'placeholder' | 'spellChec
   onEnter?: (before?: boolean) => void;
   onDelete?: () => void;
   onIndent?: (left?: boolean) => void;
+  onNav?: (task: Task, direction?: 'home' | 'end' | 'up' | 'down') => void;
 };
 
 const Item = ({
@@ -44,6 +37,7 @@ const Item = ({
   onEnter,
   onDelete,
   onIndent,
+  onNav,
 }: ItemProps) => {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +49,12 @@ const Item = ({
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
+      case 'ArrowUp':
+        onNav?.(task, event.shiftKey ? 'home' : 'up');
+        break;
+      case 'ArrowDown':
+        onNav?.(task, event.shiftKey ? 'end' : 'down');
+        break;
       case 'Tab':
         event.preventDefault();
         onIndent?.(event.shiftKey);
@@ -141,42 +141,41 @@ const Item = ({
 // List
 //
 
-// TODO(burdon): Pass in Task (simplifies callbacks).
 type ListProps = {
-  parent?: Task;
-  tasks?: Task[];
+  root: Task;
   active?: string;
   onFocus?: (task: Task) => void;
-  onCreate?: (parent: Task | undefined, task: Task, after?: boolean) => Task;
-  onDelete?: (parent: Task | undefined, task: Task) => void;
-  onIndent?: (parent: Task | undefined, task: Task, left?: boolean) => void;
-};
+  onCreate?: (parent: Task, task: Task, after?: boolean) => Task;
+  onDelete?: (parent: Task, task: Task) => void;
+  onIndent?: (parent: Task, task: Task, left?: boolean) => void;
+} & Pick<ItemProps, 'onNav'>;
 
-const List = ({ parent, tasks = [], active, onFocus, onCreate, onDelete, onIndent }: ListProps) => {
+const List = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav }: ListProps) => {
   return (
     <div className='flex flex-col w-full'>
-      {tasks?.map((task) => (
+      {root.subTasks?.map((task) => (
         <div key={task.id} className='w-full'>
           <Item
             task={task}
             active={active === task.id}
             placeholder='Enter text'
             onFocus={() => onFocus?.(task)}
-            onEnter={(before) => onCreate?.(parent, task, before)}
-            onDelete={() => onDelete?.(parent, task)}
-            onIndent={(left) => onIndent?.(parent, task, left)}
+            onEnter={(before) => onCreate?.(root, task, before)}
+            onDelete={() => onDelete?.(root, task)}
+            onIndent={(left) => onIndent?.(root, task, left)}
+            onNav={onNav}
           />
           {(task.subTasks?.length ?? 0) > 0 && (
             // TODO(burdon): Indent based on density.
             <div className='pl-4'>
               <List
+                root={task}
                 active={active}
-                parent={task}
-                tasks={task.subTasks}
                 onFocus={onFocus}
                 onCreate={onCreate}
                 onDelete={onDelete}
                 onIndent={onIndent}
+                onNav={onNav}
               />
             </div>
           )}
@@ -191,39 +190,14 @@ const List = ({ parent, tasks = [], active, onFocus, onCreate, onDelete, onInden
 //
 
 type RootProps = {
-  tasks?: Task[];
+  root: Task;
   onCreate?: () => Task;
 };
 
-const Root = ({ tasks = [], onCreate }: RootProps) => {
-  // TODO(burdon): Nav up/down hierarchy isn't working; skip menu.
-  const domAttributes = useArrowNavigationGroup({ axis: 'vertical' });
+const Root = ({ root, onCreate }: RootProps) => {
   const [active, setActive] = useState<string>();
 
-  const getParent = (tasks: Task[], task: Task): Task | undefined => {
-    for (const subTask of tasks) {
-      if (subTask.subTasks) {
-        if (subTask.subTasks.includes(task)) {
-          return subTask;
-        }
-
-        const ancestor = getParent(subTask.subTasks, task);
-        if (ancestor) {
-          return ancestor;
-        }
-      }
-    }
-  };
-
-  const getSubTasks = (parent: Task | undefined): Task[] => {
-    if (parent) {
-      return (parent.subTasks ??= []);
-    } else {
-      return tasks;
-    }
-  };
-
-  const handleCreate = (parent: Task | undefined, current: Task, before?: boolean) => {
+  const handleCreate: ListProps['onCreate'] = (parent, current, before) => {
     const task = onCreate!();
     const tasks = getSubTasks(parent);
     const idx = tasks.findIndex(({ id }) => current.id === id);
@@ -241,7 +215,7 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     return task;
   };
 
-  const handleDelete = (parent: Task | undefined, task: Task) => {
+  const handleDelete: ListProps['onDelete'] = (parent, task) => {
     const tasks = getSubTasks(parent);
     if (parent || tasks.length > 1) {
       const idx = tasks.findIndex(({ id }) => id === task.id);
@@ -257,7 +231,7 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     }
   };
 
-  const handleIndent = (parent: Task | undefined, task: Task, left?: boolean) => {
+  const handleIndent: ListProps['onIndent'] = (parent, task, left) => {
     const subTasks = getSubTasks(parent);
     const idx = subTasks.findIndex(({ id }) => id === task.id) ?? -1;
     if (left) {
@@ -266,10 +240,12 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
         const move = subTasks.splice(idx, subTasks.length - idx);
 
         // Get parent's parent.
-        const ancestor = getParent(tasks, parent);
-        const ancestorSubTasks = getSubTasks(ancestor);
-        const parentIdx = ancestorSubTasks.findIndex(({ id }) => id === parent.id);
-        ancestorSubTasks.splice(parentIdx + 1, 0, ...move);
+        const ancestor = getParent(root, parent);
+        if (ancestor) {
+          const ancestorSubTasks = getSubTasks(ancestor);
+          const parentIdx = ancestorSubTasks.findIndex(({ id }) => id === parent.id);
+          ancestorSubTasks.splice(parentIdx + 1, 0, ...move);
+        }
       }
     } else {
       // Can't indent first child.
@@ -281,15 +257,44 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     }
   };
 
+  // TODO(burdon): Preserve caret position.
+  const handleNav: ListProps['onNav'] = (task, direction) => {
+    switch (direction) {
+      case 'home':
+        setActive(root.subTasks![0].id);
+        break;
+      case 'end':
+        setActive(root.subTasks![root.subTasks!.length - 1].id);
+        break;
+      case 'up':
+        {
+          const previous = getPrevious(root, task);
+          if (previous) {
+            setActive(previous.id);
+          }
+        }
+        break;
+      case 'down':
+        {
+          const next = getNext(root, task);
+          if (next) {
+            setActive(next.id);
+          }
+        }
+        break;
+    }
+  };
+
   return (
-    <div className='w-full' {...domAttributes}>
+    <div className='w-full'>
       <List
-        tasks={tasks}
+        root={root}
         active={active}
         onFocus={(task) => setActive(task.id)}
         onCreate={onCreate && handleCreate}
         onDelete={handleDelete}
         onIndent={handleIndent}
+        onNav={handleNav}
       />
     </div>
   );

@@ -13,55 +13,63 @@ import { DensityProvider } from '@dxos/react-ui';
 import React, { useState } from 'react';
 import { TaskList } from './TaskList';
 
-// TODO(burdon): Indent.
-// TODO(burdon): Move up/down.
-// TODO(burdon): Insert ahead.
-// TODO(burdon): Delete.
-
 const Story = () => {
-  const [tasks] = useState(
-    deepSignal([
-      deepSignal({
-        id: 'task-1',
-        title: 'London',
-      }),
-      deepSignal({
-        id: 'task-2',
-        title: 'New York',
-        subTasks: [
-          deepSignal({
-            id: 'task-2a',
-            title: 'Brooklyn',
-          }),
-          deepSignal({
-            id: 'task-2b',
-            title: 'Manhattan',
-            subTasks: [
-              deepSignal({
-                id: 'task-2b1',
-                title: 'East Village',
-              }),
-              deepSignal({
-                id: 'task-2b2',
-                title: 'West Village',
-              }),
-              deepSignal({
-                id: 'task-2b3',
-                title: 'SoHo',
-              }),
-            ],
-          }),
-        ],
-      }),
-      deepSignal({
-        id: 'task-3',
-        title: 'Tokyo',
-      }),
-      deepSignal({
-        id: 'task-4',
-        title: 'Paris',
-      }),
-    ]),
+  const [root] = useState(
+    deepSignal({
+      id: 'root',
+      subTasks: [
+        deepSignal({
+          id: 'task-1',
+          title: 'London',
+        }),
+        deepSignal({
+          id: 'task-2',
+          title: 'New York',
+          subTasks: [
+            deepSignal({
+              id: 'task-2a',
+              title: 'Brooklyn',
+            }),
+            deepSignal({
+              id: 'task-2b',
+              title: 'Manhattan',
+              subTasks: [
+                deepSignal({
+                  id: 'task-2b1',
+                  title: 'East Village',
+                }),
+                deepSignal({
+                  id: 'task-2b2',
+                  title: 'West Village',
+                }),
+                deepSignal({
+                  id: 'task-2b3',
+                  title: 'SoHo',
+                }),
+              ],
+            }),
+            deepSignal({
+              id: 'task-2c',
+              title: 'Queens',
+              subTasks: [
+                deepSignal({
+                  id: 'task-2c1',
+                  title: 'Astoria',
+                }),
+              ],
+            }),
+          ],
+        }),
+        deepSignal({
+          id: 'task-3',
+          title: 'Tokyo',
+        }),
+        deepSignal({
+          id: 'task-4',
+          title: 'Paris',
+        }),
+      ],
+    }),
   );
 
   const handleCreate = () => {
@@ -74,7 +82,7 @@ const Story = () => {
     <DensityProvider density='fine'>
       <div className='flex w-full h-screen justify-center bg-neutral-100 dark:bg-neutral-900'>
         <div className='flex h-full w-[600px] p-2 bg-white dark:bg-black'>
-          <TaskList.Root tasks={tasks} onCreate={handleCreate} />
+          <TaskList.Root root={root} onCreate={handleCreate} />
         </div>
       </div>
     </DensityProvider>
