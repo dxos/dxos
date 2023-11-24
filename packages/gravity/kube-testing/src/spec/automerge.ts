@@ -47,9 +47,9 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       clientConnections: 1,
       symetric: false,
       agents: 2,
-      docCount: 100,
-      changeCount: 5,
-      contentKind: 'seq-numbers',
+      docCount: 10,
+      changeCount: 100,
+      contentKind: 'strings',
     };
   }
 
@@ -62,7 +62,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
           type,
           port: type === 'server' ? 12340 + agentIdx : undefined,
         },
-        runtime: { platform: spec.platform },
+        runtime: { platform: type === 'server' ? 'nodejs' : spec.platform },
       };
     });
   }
@@ -129,15 +129,15 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
   async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
 
   private async _init(env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>): Promise<void> {
-    const { config, spec, agents } = env.params;
+    const { config, spec, agents, runtime } = env.params;
 
     const {
       BrowserWebSocketClientAdapter,
       NodeWSServerAdapter,
     }: // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    typeof import('@automerge/automerge-repo-network-websocket') = await importEsm(
+    typeof import('@automerge/automerge-repo-network-websocket') = runtime.platform === 'nodejs' ? await importEsm(
       '@automerge/automerge-repo-network-websocket',
-    );
+    ) : await import('@automerge/automerge-repo-network-websocket');
 
     switch (config.type) {
       case 'server':
