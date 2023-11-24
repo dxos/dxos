@@ -4,7 +4,7 @@
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, type KeyboardEvent, useState } from 'react';
+import React, { type HTMLAttributes, type KeyboardEvent, useRef, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
 import { Button, DropdownMenu, Input } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ type ItemProps = Pick<HTMLAttributes<HTMLDivElement>, 'placeholder' | 'spellChec
   active?: boolean;
   showCheckbox?: boolean;
   onFocus?: () => void;
-  onEnter?: () => void;
+  onEnter?: (before?: boolean) => void;
   onDelete?: () => void;
   onIndent?: (left?: boolean) => void;
 };
@@ -46,6 +46,7 @@ const Item = ({
   onIndent,
 }: ItemProps) => {
   const [focused, setFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
@@ -54,8 +55,7 @@ const Item = ({
         onIndent?.(event.shiftKey);
         break;
       case 'Enter':
-        // TODO(burdon): Insert above if at start of line (or split).
-        onEnter?.();
+        onEnter?.(inputRef.current?.selectionStart === 0);
         break;
       case 'Backspace':
         // TODO(burdon): Merge with previous if at start of line.
@@ -82,12 +82,12 @@ const Item = ({
         </Input.Root>
       )) || (
         <div className='shrink-0'>
-          <Circle weight={active ? 'duotone' : undefined} className={mx(getSize(2), active && 'text-primary-500')} />
+          <Circle weight={active ? 'fill' : undefined} className={mx(getSize(2), active && 'text-primary-500')} />
         </div>
       )}
-      {/* TODO(burdon): Show placeholder if active. */}
       <Input.Root>
         <Input.TextInput
+          ref={inputRef}
           autoFocus={active}
           autoComplete='off'
           spellCheck={spellCheck}
@@ -147,10 +147,6 @@ type ListProps = {
 };
 
 const List = ({ parent, tasks = [], active, onFocus, onCreate, onDelete, onIndent }: ListProps) => {
-  const handleCreate = (task: Task) => {
-    onCreate?.(parent, task);
-  };
-
   return (
     <div className='flex flex-col w-full'>
       {tasks?.map((task) => (
@@ -160,7 +156,7 @@ const List = ({ parent, tasks = [], active, onFocus, onCreate, onDelete, onInden
             active={active === task.id}
             placeholder='Enter text'
             onFocus={() => onFocus?.(task)}
-            onEnter={() => handleCreate(task)}
+            onEnter={(before) => onCreate?.(parent, task, before)}
             onDelete={() => onDelete?.(parent, task)}
             onIndent={(left) => onIndent?.(parent, task, left)}
           />
@@ -197,20 +193,21 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   const [active, setActive] = useState<string>();
 
-  const getParent = (tasks: Task[], task: Task): Task | undefined => {
-    const ancestor = tasks.find(({ id }) => id === task.id);
-    if (ancestor) {
-      return ancestor;
-    }
-
+  const getParent = (tasks: Task[], task: Task): Task | null => {
     for (const subTask of tasks) {
       if (subTask.subtasks) {
+        if (subTask.subtasks.includes(task)) {
+          return subTask;
+        }
+
         const ancestor = getParent(subTask.subtasks, task);
         if (ancestor) {
           return ancestor;
         }
       }
     }
+
+    return null;
   };
 
   const getSubTasks = (parent: Task | undefined): Task[] => {
@@ -239,19 +236,28 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     return task;
   };
 
+  // TODO(burdon): Set focus.
   const handleDelete = (parent: Task | undefined, task: Task) => {
     const tasks = getSubTasks(parent);
-    const index = tasks.findIndex(({ id }) => id === task.id);
-    tasks.splice(index ?? tasks.length, 1);
+    const idx = tasks.findIndex(({ id }) => id === task.id);
+    tasks.splice(idx, 1);
+    setActive(tasks[idx - 1]?.id);
   };
 
   const handleIndent = (parent: Task | undefined, task: Task, left?: boolean) => {
     const subTasks = getSubTasks(parent);
     const idx = subTasks.findIndex(({ id }) => id === task.id) ?? -1;
+    // Can't indent first child.
     if (left) {
-      if (parent?.subtasks) {
+      if (parent) {
         const ancestor = getParent(tasks, parent);
-        console.log('##', ancestor?.id, parent.id);
+        if (ancestor?.subtasks) {
+          subTasks.splice(idx, 1);
+          {
+            const idx = ancestor.subtasks.findIndex(({ id }) => id === parent.id);
+            ancestor.subtasks.splice(idx + 1, 0, task);
+          }
+        }
       }
     } else {
       if (idx > 0) {
