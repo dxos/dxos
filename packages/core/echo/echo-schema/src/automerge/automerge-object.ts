@@ -273,7 +273,7 @@ export class AutomergeObject implements TypedObjectProperties {
         return this._encode(val);
       });
       return values;
-    } else if (typeof value === 'object') {
+    } else if (typeof value === 'object' && value !== null) {
       Object.freeze(value);
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
