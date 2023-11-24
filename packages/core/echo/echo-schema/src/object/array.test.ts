@@ -20,7 +20,7 @@ describe.only('Arrays', () => {
       await db.flush();
 
       task.tags = new EchoArray();
-      task.tags.push('red');  
+      task.tags.push('red');
       task.tags.push('green');
       task.tags.push('blue');
       expect(task.tags.length).toEqual(3);
