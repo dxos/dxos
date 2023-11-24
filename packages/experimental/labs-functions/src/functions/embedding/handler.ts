@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { getKey } from '../../util';
-import { type ChainDocument, ChainResources } from '../chat';
+import { type ChainDocument, createOpenAIChainResources } from '../chat';
 
 // TODO(burdon): Query update isn't fired when documents are edited.
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context, response }) => {
@@ -38,10 +38,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
 
   if (docs.length) {
     const config = context.client.config;
-    const resources = new ChainResources({
-      apiKey: getKey(config, 'openai.com/api_key')!,
+    const resources = createOpenAIChainResources({
       // TODO(burdon): Get from context (for agent profile).
       baseDir: '/tmp/dxos/agent/functions/embedding',
+      apiKey: getKey(config, 'openai.com/api_key')!,
     });
 
     await resources.initialize();

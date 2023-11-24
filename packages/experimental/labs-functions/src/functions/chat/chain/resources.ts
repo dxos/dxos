@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BaseChatModel } from 'langchain/chat_models/base';
-import { ChatOpenAI, type OpenAIChatInput } from 'langchain/chat_models/openai';
+import { type BaseChatModel, type BaseChatModelParams } from 'langchain/chat_models/base';
 import { type Document } from 'langchain/document';
-import { type Embeddings } from 'langchain/embeddings/base';
-import { type OpenAIEmbeddingsParams } from 'langchain/embeddings/openai';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
+import { type EmbeddingsParams, type Embeddings } from 'langchain/embeddings/base';
 import { type VectorStore } from 'langchain/vectorstores/base';
 import { FaissStore } from 'langchain/vectorstores/faiss';
 import fs from 'node:fs';
@@ -25,39 +22,39 @@ export type ChainDocument = Document & {
 
 const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
 
-export type ChainResourcesOptions = {
-  apiKey: string;
+const VERSION = 1;
+const INDEX_FILE = 'dxos_index.json';
 
-  // TODO(burdon): Generalize?
-  embeddings?: Partial<OpenAIEmbeddingsParams>;
-  chat?: Partial<OpenAIChatInput>;
-
+export type ChainResourcesOptions<E extends EmbeddingsParams, M extends BaseChatModelParams> = {
   baseDir?: string;
+  apiKey?: string;
+
+  // https://js.langchain.com/docs/integrations/text_embedding
+  embeddings?: Partial<E>;
+
+  // https://js.langchain.com/docs/integrations/chat
+  // https://platform.openai.com/docs/models
+  chat?: Partial<M>;
 };
 
-const VERSION = 1;
-const INDEX_FILE = 'document_index.json';
+export type ChainResourcesFactory<E extends EmbeddingsParams, M extends BaseChatModelParams> = (
+  options: ChainResourcesOptions<E, M>,
+) => ChainResources<E, M>;
 
-export class ChainResources {
-  public readonly embeddings: Embeddings;
-  public readonly chat: BaseChatModel;
-
-  // TODO(burdon): Factor out store abstraction.
+export class ChainResources<
+  E extends EmbeddingsParams = EmbeddingsParams,
+  M extends BaseChatModelParams = BaseChatModelParams,
+> {
+  // TODO(burdon): Factor out vector store abstraction.
   private _vectorStore?: FaissStore;
   // Map of <space, id> to vector document id.
   private _vectorIndex = new Map<string, string>();
 
-  constructor(private readonly _options: ChainResourcesOptions) {
-    this.embeddings = new OpenAIEmbeddings({
-      openAIApiKey: _options.apiKey,
-      ...this._options.embeddings,
-    });
-
-    this.chat = new ChatOpenAI({
-      openAIApiKey: _options.apiKey,
-      ...this._options.chat,
-    });
-  }
+  constructor(
+    public readonly embeddings: Embeddings,
+    public readonly chat: BaseChatModel,
+    private readonly _options: ChainResourcesOptions<E, M> = {},
+  ) {}
 
   get stats() {
     return {
@@ -96,7 +93,8 @@ export class ChainResources {
   }
 
   async save() {
-    invariant(this._options.baseDir && this._vectorStore);
+    invariant(this._options.baseDir);
+    invariant(this._vectorStore);
     await this._vectorStore.save(this._options.baseDir);
 
     const data = JSON.stringify({ version: VERSION, index: Array.from(this._vectorIndex.entries()) });
