@@ -29,6 +29,7 @@ type TestSummary = {
   params: {
     testId: string;
     outDir: string;
+    planName: string;
   };
   diagnostics: {
     resourceUsage: ResourceUsageStats;
@@ -206,6 +207,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     params: {
       testId,
       outDir,
+      planName: Object.getPrototypeOf(plan).constructor.name,
     },
     results: planResults,
     diagnostics: {
