@@ -92,7 +92,9 @@ const getStringProperty = (object: Record<string, unknown>, keys: string[]): str
 const getKeys = (object: Record<string, unknown>): string[] => {
   try {
     const obj = JSON.parse(JSON.stringify(object));
-    return Object.keys(obj).filter((key) => key !== 'id' && key[0] !== '_' && key[0] !== '@') as string[];
+    return Object.keys(obj).filter(
+      (key) => key !== 'id' && key !== 'identityKey' && key[0] !== '_' && key[0] !== '@',
+    ) as string[];
   } catch (err) {
     // TODO(burdon): Error with TLDraw sketch.
     //  Uncaught Error: Type with the name content has already been defined with a different constructor
