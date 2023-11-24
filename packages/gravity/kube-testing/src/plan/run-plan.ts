@@ -17,6 +17,7 @@ import { buildBrowserBundle } from './browser/browser-bundle';
 import { WebSocketRedisProxy } from './env/websocket-redis-proxy';
 import { runNode, runBrowser } from './run-process';
 import { type PlanOptions, type AgentParams, type PlanResults, type TestPlan } from './spec';
+import { ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
 
 const SUMMARY_FILENAME = 'test.json';
 
@@ -29,6 +30,9 @@ type TestSummary = {
     testId: string;
     outDir: string;
   };
+  diagnostics: {
+    resourceUsage: ResourceUsageStats;
+  },
   agents: Record<string, any>;
 };
 
@@ -180,6 +184,14 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
 
   void server.destroy();
 
+
+  let resourceUsageStats: ResourceUsageStats | undefined;
+  try {
+    resourceUsageStats = await analyzeResourceUsage(planResults);
+  } catch (err) {
+    log.warn('error analyzing resource usage', err);
+  }
+
   let stats: any;
   try {
     stats = await plan.finish({ spec, outDir, testId }, planResults);
@@ -196,6 +208,9 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
       outDir,
     },
     results: planResults,
+    diagnostics: {
+      resourceUsage: resourceUsageStats ?? {},
+    },
     agents,
   };
 

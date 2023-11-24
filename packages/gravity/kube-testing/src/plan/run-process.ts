@@ -47,6 +47,7 @@ export const runNode = <S, C>(
     );
   }
 
+  const startTs = performance.now();
   const childProcess = fork(process.argv[1], {
     execArgv: options.debug
       ? [
@@ -84,6 +85,8 @@ export const runNode = <S, C>(
           result: exitCode ?? -1,
           outDir: agentParams.outDir,
           logFile: join(agentParams.outDir, AGENT_LOG_FILE),
+          startTs,
+          endTs: performance.now(),
         });
       });
       // TODO(nf): add timeout for agent completion

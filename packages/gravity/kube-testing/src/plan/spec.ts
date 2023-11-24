@@ -53,6 +53,8 @@ export type AgentResult = {
   result: number;
   outDir: string;
   logFile: string;
+  startTs?: number;
+  endTs?: number;
 };
 
 // plan vs environment
