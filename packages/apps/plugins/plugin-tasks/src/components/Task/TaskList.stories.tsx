@@ -28,7 +28,7 @@ const Story = () => {
       deepSignal({
         id: 'task-2',
         title: 'New York',
-        subtasks: [
+        subTasks: [
           deepSignal({
             id: 'task-2a',
             title: 'Brooklyn',
@@ -36,7 +36,7 @@ const Story = () => {
           deepSignal({
             id: 'task-2b',
             title: 'Manhattan',
-            subtasks: [
+            subTasks: [
               deepSignal({
                 id: 'task-2b1',
                 title: 'East Village',

@@ -196,8 +196,8 @@ type RootProps = {
 };
 
 const Root = ({ tasks = [], onCreate }: RootProps) => {
-  // TODO(burdon): Nav up/down hierarchy isn't working.
-  const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
+  // TODO(burdon): Nav up/down hierarchy isn't working; skip menu.
+  const domAttributes = useArrowNavigationGroup({ axis: 'vertical' });
   const [active, setActive] = useState<string>();
 
   const getParent = (tasks: Task[], task: Task): Task | undefined => {
@@ -260,17 +260,19 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
   const handleIndent = (parent: Task | undefined, task: Task, left?: boolean) => {
     const subTasks = getSubTasks(parent);
     const idx = subTasks.findIndex(({ id }) => id === task.id) ?? -1;
-    // Can't indent first child.
     if (left) {
-      // TODO(burdon): [Bug]: Can't un-indent if no parent (normalize all callbacks to strictly have parent).
       if (parent) {
+        // Move all siblings.
+        const move = subTasks.splice(idx, subTasks.length - idx);
+
+        // Get parent's parent.
         const ancestor = getParent(tasks, parent);
-        const subTasks = getSubTasks(ancestor);
-        subTasks.splice(idx, 1);
-        const parentIdx = subTasks.findIndex(({ id }) => id === parent.id);
-        subTasks.splice(parentIdx + 1, 0, task);
+        const ancestorSubTasks = getSubTasks(ancestor);
+        const parentIdx = ancestorSubTasks.findIndex(({ id }) => id === parent.id);
+        ancestorSubTasks.splice(parentIdx + 1, 0, ...move);
       }
     } else {
+      // Can't indent first child.
       if (idx > 0) {
         subTasks.splice(idx, 1);
         const newTasks = getSubTasks(subTasks[idx - 1]);
