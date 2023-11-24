@@ -3,10 +3,14 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import React, { type KeyboardEvent, useEffect, useState } from 'react';
+import { Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
+import React, { type HTMLAttributes, type KeyboardEvent, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
-import { Input } from '@dxos/react-ui';
+import { Button, DropdownMenu, Input } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
+
+// TODO(burdon): Adapt from Tree (incl. drag/drop).
 
 export type Task = {
   id: string;
@@ -16,16 +20,33 @@ export type Task = {
   subtasks?: Task[];
 };
 
-type ItemProps = {
+//
+// Item
+//
+
+type ItemProps = Pick<HTMLAttributes<HTMLDivElement>, 'placeholder' | 'spellCheck'> & {
   task: Task;
-  focus?: boolean;
-  spellCheck?: boolean;
+  active?: boolean;
+  showCheckbox?: boolean;
+  onFocus?: () => void;
   onEnter?: () => void;
   onDelete?: () => void;
   onIndent?: (left?: boolean) => void;
 };
 
-const Item = ({ task, focus, spellCheck = false, onEnter, onDelete, onIndent }: ItemProps) => {
+const Item = ({
+  task,
+  active,
+  showCheckbox,
+  placeholder,
+  spellCheck = false,
+  onFocus,
+  onEnter,
+  onDelete,
+  onIndent,
+}: ItemProps) => {
+  const [focused, setFocused] = useState(false);
+
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
       case 'Tab':
@@ -50,53 +71,84 @@ const Item = ({ task, focus, spellCheck = false, onEnter, onDelete, onIndent }: 
 
   return (
     <div className='flex items-center px-2 gap-3'>
-      <Input.Root>
-        <Input.Checkbox
-          checked={task.done}
-          onCheckedChange={(checked) => {
-            task.done = !!checked;
-          }}
-        />
-      </Input.Root>
-      {/* TODO(burdon): Placeholder if focused. */}
+      {(showCheckbox && (
+        <Input.Root>
+          <Input.Checkbox
+            checked={task.done}
+            onCheckedChange={(checked) => {
+              task.done = !!checked;
+            }}
+          />
+        </Input.Root>
+      )) || (
+        <div className='shrink-0'>
+          <Circle weight={active ? 'duotone' : undefined} className={mx(getSize(2), active && 'text-primary-500')} />
+        </div>
+      )}
+      {/* TODO(burdon): Show placeholder if active. */}
       <Input.Root>
         <Input.TextInput
-          autoFocus={focus}
+          autoFocus={active}
           autoComplete='off'
           spellCheck={spellCheck}
+          placeholder={focused ? placeholder : undefined}
           classNames='w-full'
           variant='subdued'
           value={task.title ?? ''}
+          onFocus={() => {
+            setFocused(true);
+            onFocus?.();
+          }}
+          onBlur={() => setFocused(false)}
+          onKeyDown={handleKeyDown}
           onChange={({ target: { value } }) => {
             task.title = value;
           }}
-          onKeyDown={handleKeyDown}
         />
       </Input.Root>
+      {active && (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <Button variant='ghost'>
+              <DotsThreeVertical />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                {onDelete && (
+                  <DropdownMenu.Item onClick={onDelete}>
+                    <X className={getSize(5)} />
+                    <p>Delete item</p>
+                  </DropdownMenu.Item>
+                )}
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      )}
     </div>
   );
 };
 
+//
+// List
+//
+
+// TODO(burdon): Pass in Task (simplifies callbacks).
 type ListProps = {
   parent?: Task;
   tasks?: Task[];
-  onCreate?: (parent: Task | undefined, index?: number) => Task;
+  active?: string;
+  onFocus?: (task: Task) => void;
+  onCreate?: (parent: Task | undefined, task: Task, after?: boolean) => Task;
   onDelete?: (parent: Task | undefined, task: Task) => void;
   onIndent?: (parent: Task | undefined, task: Task, left?: boolean) => void;
 };
 
-const List = ({ parent, tasks = [], onCreate, onDelete, onIndent }: ListProps) => {
-  const [active, setActive] = useState<string>();
-  useEffect(() => {
-    setActive(undefined);
-  }, [active]);
-
-  const handleCreate = (id: string) => {
-    const idx = tasks.findIndex((task) => task.id === id);
-    const created = onCreate?.(undefined, idx + 1);
-    if (created) {
-      setActive(created.id);
-    }
+const List = ({ parent, tasks = [], active, onFocus, onCreate, onDelete, onIndent }: ListProps) => {
+  const handleCreate = (task: Task) => {
+    onCreate?.(parent, task);
   };
 
   return (
@@ -105,8 +157,10 @@ const List = ({ parent, tasks = [], onCreate, onDelete, onIndent }: ListProps) =
         <div key={task.id} className='w-full'>
           <Item
             task={task}
-            focus={active === task.id}
-            onEnter={() => handleCreate(task.id)}
+            active={active === task.id}
+            placeholder='Enter text'
+            onFocus={() => onFocus?.(task)}
+            onEnter={() => handleCreate(task)}
             onDelete={() => onDelete?.(parent, task)}
             onIndent={(left) => onIndent?.(parent, task, left)}
           />
@@ -114,9 +168,11 @@ const List = ({ parent, tasks = [], onCreate, onDelete, onIndent }: ListProps) =
             // TODO(burdon): Indent based on density.
             <div className='pl-4'>
               <List
+                active={active}
                 parent={task}
                 tasks={task.subtasks}
-                onCreate={onCreate ? (_, idx) => onCreate?.(task, idx) : undefined}
+                onFocus={onFocus}
+                onCreate={onCreate}
                 onDelete={onDelete}
                 onIndent={onIndent}
               />
@@ -128,6 +184,10 @@ const List = ({ parent, tasks = [], onCreate, onDelete, onIndent }: ListProps) =
   );
 };
 
+//
+// Root
+//
+
 type RootProps = {
   tasks?: Task[];
   onCreate?: () => Task;
@@ -135,6 +195,7 @@ type RootProps = {
 
 const Root = ({ tasks = [], onCreate }: RootProps) => {
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
+  const [active, setActive] = useState<string>();
 
   const getParent = (tasks: Task[], task: Task): Task | undefined => {
     const ancestor = tasks.find(({ id }) => id === task.id);
@@ -160,11 +221,21 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
     }
   };
 
-  // TODO(burdon): Add to first child if exists.
-  const handleCreate = (parent: Task | undefined, index?: number) => {
+  const handleCreate = (parent: Task | undefined, current: Task, before?: boolean) => {
     const task = onCreate!();
     const tasks = getSubTasks(parent);
-    tasks.splice(index ?? tasks.length, 0, task);
+    const idx = tasks.findIndex(({ id }) => current.id === id);
+    if (before) {
+      tasks.splice(idx, 0, task);
+    } else {
+      if (current.subtasks?.length) {
+        current.subtasks.splice(0, 0, task);
+      } else {
+        tasks.splice(idx + 1, 0, task);
+      }
+    }
+
+    setActive(task.id);
     return task;
   };
 
@@ -193,7 +264,14 @@ const Root = ({ tasks = [], onCreate }: RootProps) => {
 
   return (
     <div className='w-full' {...domAttributes}>
-      <List tasks={tasks} onCreate={onCreate && handleCreate} onDelete={handleDelete} onIndent={handleIndent} />
+      <List
+        tasks={tasks}
+        active={active}
+        onFocus={(task) => setActive(task.id)}
+        onCreate={onCreate && handleCreate}
+        onDelete={handleDelete}
+        onIndent={handleIndent}
+      />
     </div>
   );
 };
