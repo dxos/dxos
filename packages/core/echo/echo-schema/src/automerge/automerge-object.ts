@@ -180,7 +180,9 @@ export class AutomergeObject implements TypedObjectProperties {
 
         const value = this._get([...path, key as string]);
 
-        if (typeof value === 'object' && value !== null && !(value instanceof AutomergeArray)) {
+        if (Array.isArray(value)) {
+          return new AutomergeArray()._attach(this[base], [...path, key as string]);
+        } else if (typeof value === 'object' && value !== null) {
           // TODO(dmaretskyi): Check for Reference types.
           return this._createProxy(path);
         }
@@ -205,7 +207,7 @@ export class AutomergeObject implements TypedObjectProperties {
       value = value?.[key];
     }
 
-    return this._decode(path, value);
+    return this._decode(value);
   }
 
   /**
@@ -268,9 +270,9 @@ export class AutomergeObject implements TypedObjectProperties {
     return value;
   }
 
-  private _decode(path: string[], value: any) {
+  private _decode(value: any): any {
     if (Array.isArray(value)) {
-      return new AutomergeArray()._attach(this[base], path);
+      return value.map((val) => this._decode(val));
     } else if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
       const reference = new Reference(value.itemId, value.protocol, value.host);
       return this._lookupLink(reference);
@@ -279,10 +281,7 @@ export class AutomergeObject implements TypedObjectProperties {
     return value;
   }
 
-  /**
-   * @internal
-   */
-  _getDoc(): Doc<any> {
+  private _getDoc(): Doc<any> {
     return this._doc ?? this._docHandle?.docSync() ?? failedInvariant();
   }
 

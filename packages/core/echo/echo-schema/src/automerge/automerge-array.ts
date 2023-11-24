@@ -284,7 +284,6 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   push(...items: T[]) {
-    log.info('push', { items });
     if (this._object) {
       const fullPath = [...this._object._path, ...this._path!];
 
@@ -424,14 +423,7 @@ export class AutomergeArray<T> implements Array<T> {
 
   private _getModelArray(): any[] | undefined {
     invariant(this._object?.[base] instanceof AutomergeObject);
-
-    const fullPath = [...this._object._path, ...this._path!];
-    let value = this._object._getDoc();
-    for (const key of fullPath) {
-      value = value?.[key];
-    }
-
-    return value as any[];
+    return this._object._get(this._path!);
   }
 }
 
