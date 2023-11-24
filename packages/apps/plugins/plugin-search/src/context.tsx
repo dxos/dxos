@@ -18,7 +18,8 @@ const SearchContext = createContext<SearchContextType>({});
 export const SearchContextProvider = ({ children }: PropsWithChildren) => {
   const [match, setMatch] = useState<RegExp>();
   const handleMatch = (text?: string) => {
-    setMatch(text?.length ? new RegExp(text, 'i') : undefined);
+    const trimmed = text?.trim();
+    setMatch(trimmed ? new RegExp(trimmed, 'i') : undefined);
   };
 
   return <SearchContext.Provider value={{ match, setMatch: handleMatch }}>{children}</SearchContext.Provider>;

@@ -72,6 +72,9 @@ export type TypedObjectOptions = {
   type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
+} & AutomergeOptions;
+
+export type AutomergeOptions = {
   useAutomergeBackend?: boolean;
 };
 

@@ -1,40 +1,28 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 import { inspect, type CustomInspectFunction } from 'node:util';
 
-import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { type ChangeFn } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
-import { AbstractEchoObject } from './object';
-import { getGlobalAutomergePreference, type AutomergeOptions, type TypedObject } from './typed-object';
-import { base } from './types';
-import { AutomergeArray } from '../automerge/automerge-array';
+import { AutomergeObject } from './automerge-object';
+import { base } from '../object';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
 
-/**
- * Array of complex or scalar values.
- */
-// TODO(burdon): Rename OrderedList.
-export class EchoArray<T> implements Array<T> {
-  static get [Symbol.species]() {
-    return Array;
-  }
-
+export class AutomergeArray<T> implements Array<T> {
   /**
    * Until this array is attached a document, the items are stored in this array.
    */
   private _uninitialized?: T[] = [];
 
-  private _object?: TypedObject;
-  private _property?: string;
-  private _isMeta?: boolean;
+  private _object?: AutomergeObject;
+  private _path?: string[];
 
-  [base]: EchoArray<T> = this;
+  [base]: AutomergeArray<T> = this;
 
   [n: number]: T;
 
@@ -46,11 +34,7 @@ export class EchoArray<T> implements Array<T> {
     throw new Error('Method not implemented.');
   }
 
-  constructor(items: T[] = [], opts?: AutomergeOptions) {
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
-      return new AutomergeArray(items) as any;
-    }
-
+  constructor(items: T[] = []) {
     this._uninitialized = [...items];
 
     // Change type returned by `new`.
@@ -75,14 +59,13 @@ export class EchoArray<T> implements Array<T> {
   }
 
   get length(): number {
-    const model = this._getBackingModel();
-    if (model) {
-      const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
+    if (this._object) {
+      // TODO(mykola) Triggers deserialization. We can avoid it to improve performance.
+      const array = this._getArray();
       if (!array) {
         return 0;
       }
-      invariant(array instanceof OrderedArray);
-      return array.array.length;
+      return array.length;
     } else {
       invariant(this._uninitialized);
       return this._uninitialized.length;
@@ -130,20 +113,23 @@ export class EchoArray<T> implements Array<T> {
   splice(start: number, deleteCount?: number | undefined): T[];
   splice(start: number, deleteCount: number, ...items: T[]): T[];
   splice(start: number, deleteCount?: number | undefined, ...items: T[]): T[] {
-    const model = this._getBackingModel();
-    if (model) {
+    if (this._object) {
+      invariant(this._object?.[base] instanceof AutomergeObject);
       const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
 
-      void model
-        .builder(this._isMeta)
-        .arrayDelete(this._property!, start, deleteCount)
-        .arrayInsert(
-          this._property!,
-          start,
-          items.map((item) => this._encode(item)),
-        )
-        .commit();
+      const fullPath = [...this._object._path, ...this._path!];
 
+      // TODO(mykola): Do not allow direct access to doc in array.
+      const changeFn: ChangeFn<any> = (doc) => {
+        let parent = doc;
+        for (const key of fullPath.slice(0, -1)) {
+          parent = parent[key];
+        }
+        const array: any[] = parent[fullPath.at(-1)!];
+        invariant(Array.isArray(array));
+        array.splice(start, deleteCount ?? 0, ...items.map((value) => this._object!._encode(value)));
+      };
+      this._object._change(changeFn);
       return deletedItems;
     } else {
       invariant(this._uninitialized);
@@ -256,19 +242,15 @@ export class EchoArray<T> implements Array<T> {
   }
 
   values(): IterableIterator<T> {
-    const model = this._getBackingModel();
-    if (model) {
-      const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
+    if (this._object) {
+      invariant(this._object?.[base] instanceof AutomergeObject);
+
+      const array = this._getArray();
       if (!array) {
         return [][Symbol.iterator]();
       }
-      invariant(array instanceof OrderedArray);
 
-      return array
-        .toArray()
-        .map((value: string) => this._decode(value))
-        .filter(Boolean)
-        .values();
+      return (array.filter(Boolean) as T[]).values();
     } else {
       invariant(this._uninitialized);
       return this._uninitialized[Symbol.iterator]();
@@ -296,15 +278,21 @@ export class EchoArray<T> implements Array<T> {
   }
 
   push(...items: T[]) {
-    const model = this._getBackingModel();
-    if (model) {
-      void model
-        .builder(this._isMeta)
-        .arrayPush(
-          this._property!,
-          items.map((item) => this._encode(item)),
-        )
-        .commit();
+    if (this._object) {
+      const fullPath = [...this._object._path, ...this._path!];
+
+      // TODO(mykola): Do not allow direct access to doc in array.
+      const changeFn: ChangeFn<any> = (doc) => {
+        let parent = doc;
+        for (const key of fullPath.slice(0, -1)) {
+          parent = parent[key];
+        }
+        const array: any[] = parent[fullPath.at(-1)!];
+        invariant(Array.isArray(array));
+
+        array.push(...items.map((value) => this._object!._encode(value)));
+      };
+      this._object._change(changeFn);
     } else {
       invariant(this._uninitialized);
       this._uninitialized.push(...items);
@@ -341,61 +329,18 @@ export class EchoArray<T> implements Array<T> {
   // Impl.
   //
 
-  private _getBackingModel(): DocumentModel | undefined {
-    return this._object?._model;
-  }
-
-  private _decode(value: any): T | undefined {
-    if (value instanceof Reference) {
-      return this._object!._lookupLink(value) as T | undefined;
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      return decodeRecords(value, this._object!);
-    } else {
-      return value;
-    }
-  }
-
-  private _encode(value: T) {
-    if (value instanceof AbstractEchoObject) {
-      return this._object!._linkObject(value);
-    } else if (
-      typeof value === 'object' &&
-      value !== null &&
-      Object.getOwnPropertyNames(value).length === 1 &&
-      (value as any)['@id']
-    ) {
-      return new Reference((value as any)['@id']);
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      log('Freezing object before encoding', value);
-      Object.freeze(value);
-      return encodeRecords(value, this._object!);
-    } else {
-      invariant(
-        value === null ||
-          value === undefined ||
-          typeof value === 'boolean' ||
-          typeof value === 'number' ||
-          typeof value === 'string',
-        `Invalid type: ${JSON.stringify(value)}`,
-      );
-      return value;
-    }
-  }
-
   /**
    * @internal
    */
-  _attach(document: TypedObject, property: string, isMeta?: boolean) {
+  _attach(document: AutomergeObject, path: string[]) {
     this._object = document;
-    this._property = property;
-    this._isMeta = isMeta;
+    this._path = path;
     this._uninitialized = undefined;
-
     return this;
   }
 
   private _get(index: number): T | undefined {
-    if (this._getBackingModel()) {
+    if (this._object) {
       return this._getModel(index);
     } else {
       invariant(this._uninitialized);
@@ -404,7 +349,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _set(index: number, value: T) {
-    if (this._getBackingModel()) {
+    if (this._object) {
       this._setModel(index, value);
     } else {
       invariant(this._uninitialized);
@@ -413,45 +358,32 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _getModel(index: number): T | undefined {
-    const model = this._getBackingModel()!;
-    const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
-    invariant(array instanceof OrderedArray);
-
-    return this._decode(array.get(index)) as T | undefined;
+    return this._getArray()[index] as T | undefined;
   }
 
   private _setModel(index: number, value: T) {
-    const model = this._getBackingModel()!;
-    void model
-      .builder(this._isMeta)
-      .arrayDelete(this._property!, index)
-      .arrayInsert(this._property!, index, [this._encode(value)])
-      .commit();
+    invariant(this._object?.[base] instanceof AutomergeObject);
+
+    const fullPath = [...this._object._path, ...this._path!];
+
+    // TODO(mykola): Do not allow direct access to doc in array.
+    const changeFn: ChangeFn<any> = (doc) => {
+      let parent = doc;
+      for (const key of fullPath.slice(0, -1)) {
+        parent = parent[key];
+      }
+      const array: any[] = parent[fullPath.at(-1)!];
+      invariant(Array.isArray(array));
+      array[index] = this._object!._encode(value);
+    };
+    this._object._change(changeFn);
+  }
+
+  private _getArray(): T[] {
+    // TODO(mykola): Add cache to improve performance?
+    invariant(this._object?.[base] instanceof AutomergeObject);
+    const array = this._object._get(this._path!);
+    invariant(Array.isArray(array));
+    return array;
   }
 }
-
-const encodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof AbstractEchoObject) {
-    return document!._linkObject(value);
-  } else if (Array.isArray(value)) {
-    return value.map((value) => encodeRecords(value, document));
-  } else if (typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)]),
-    );
-  }
-  return value;
-};
-
-const decodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof Reference) {
-    return document._lookupLink(value);
-  } else if (Array.isArray(value)) {
-    return value.map((value) => decodeRecords(value, document));
-  } else if (typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)]),
-    );
-  }
-  return value;
-};
