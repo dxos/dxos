@@ -24,13 +24,13 @@ export const getParent = (root: Item, item: Item): Item | undefined => {
   }
 };
 
-export const getLast = (root: Item): Item => {
-  const last = root.items![root.items!.length - 1];
-  if (last.items?.length) {
-    return getLast(last);
+export const getLastDescendent = (item: Item): Item => {
+  if (item.items?.length) {
+    const last = item.items[item.items.length - 1];
+    return getLastDescendent(last);
   }
 
-  return last;
+  return item;
 };
 
 export const getPrevious = (root: Item, item: Item): Item | undefined => {
@@ -39,7 +39,7 @@ export const getPrevious = (root: Item, item: Item): Item | undefined => {
   if (idx > 0) {
     const previous = parent.items![idx - 1];
     if (previous.items?.length) {
-      return getLast(previous);
+      return getLastDescendent(previous);
     }
 
     return previous;

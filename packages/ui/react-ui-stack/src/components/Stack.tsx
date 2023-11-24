@@ -113,7 +113,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'p-2', isOver && dropRing)}>
+      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'm-1 p-2', isOver && dropRing)}>
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (

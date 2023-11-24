@@ -8,7 +8,7 @@ import React, { type HTMLAttributes, type KeyboardEvent, useEffect, useRef, useS
 import { Button, DropdownMenu, Input } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { getNext, getParent, getPrevious, getItems, type Item } from './types';
+import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 
 // TODO(burdon): Break/join lines.
 // TODO(burdon): TextObject/MarkdownEditor
@@ -212,15 +212,15 @@ const Root = ({ root, onCreate }: RootProps) => {
 
   const handleCreate: BranchProps['onCreate'] = (parent, current, before) => {
     const item = onCreate!();
-    const tree = getItems(parent);
-    const idx = tree.findIndex(({ id }) => current.id === id);
+    const items = getItems(parent);
+    const idx = items.findIndex(({ id }) => current.id === id);
     if (before) {
-      tree.splice(idx, 0, item);
+      items.splice(idx, 0, item);
     } else {
       if (current.items?.length) {
         current.items.splice(0, 0, item);
       } else {
-        tree.splice(idx + 1, 0, item);
+        items.splice(idx + 1, 0, item);
       }
     }
 
@@ -229,17 +229,19 @@ const Root = ({ root, onCreate }: RootProps) => {
   };
 
   const handleDelete: BranchProps['onDelete'] = (parent, item) => {
-    const tree = getItems(parent);
-    if (parent || tree.length > 1) {
-      const idx = tree.findIndex(({ id }) => id === item.id);
-      tree.splice(idx, 1);
-      if (idx - 1 >= 0) {
-        // TODO(burdon): Select last child of previous.
-        setActive(tree[idx - 1].id);
-      } else {
-        if (parent) {
-          setActive(parent.id);
-        }
+    if (parent === root && parent.items?.length === 1) {
+      return;
+    }
+
+    const items = getItems(parent);
+    const idx = items.findIndex(({ id }) => id === item.id);
+    items.splice(idx, 1);
+    if (idx - 1 >= 0) {
+      const active = getLastDescendent(items[idx - 1]);
+      setActive(active.id);
+    } else {
+      if (parent) {
+        setActive(parent.id);
       }
     }
   };
@@ -264,8 +266,8 @@ const Root = ({ root, onCreate }: RootProps) => {
       // Can't indent first child.
       if (idx > 0) {
         items.splice(idx, 1);
-        const newTree = getItems(items[idx - 1]);
-        newTree.push(item);
+        const newItems = getItems(items[idx - 1]);
+        newItems.push(item);
       }
     }
   };
