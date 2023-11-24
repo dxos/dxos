@@ -60,6 +60,7 @@ export class AutomergeArray<T> implements Array<T> {
 
   get length(): number {
     if (this._object) {
+      // TODO(mykola) Triggers deserialization. We can avoid it to improve performance.
       const array = this._getArray();
       if (!array) {
         return 0;
@@ -379,6 +380,7 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   private _getArray(): T[] {
+    // TODO(mykola): Add cache to improve performance.
     invariant(this._object?.[base] instanceof AutomergeObject);
     const array = this._object._get(this._path!);
     invariant(Array.isArray(array));
