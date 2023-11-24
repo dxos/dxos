@@ -27,35 +27,43 @@ export const getParent = (root: Task, task: Task): Task | undefined => {
   }
 };
 
+export const getLast = (root: Task): Task => {
+  const last = root.subTasks![root.subTasks!.length - 1];
+  if (last.subTasks?.length) {
+    return getLast(last);
+  }
+
+  return last;
+};
+
 export const getPrevious = (root: Task, task: Task): Task | undefined => {
   const parent = getParent(root, task)!;
   const idx = parent.subTasks!.findIndex(({ id }) => id === task.id);
   if (idx > 0) {
-    // TODO(burdon): Get last child.
-    return parent.subTasks![idx - 1];
+    const previous = parent.subTasks![idx - 1];
+    if (previous.subTasks?.length) {
+      return getLast(previous);
+    }
+
+    return previous;
   } else {
     return parent;
   }
 };
 
-export const getNext = (root: Task, task: Task): Task | undefined => {
-  if (task.subTasks?.length) {
+export const getNext = (root: Task, task: Task, descend = true): Task | undefined => {
+  if (task.subTasks?.length && descend) {
+    // Go to first child.
     return task.subTasks[0];
   } else {
-    const parent = getParent(root, task)!;
-    const idx = parent.subTasks!.findIndex(({ id }) => id === task.id);
-    if (idx < parent.subTasks!.length - 1) {
-      return parent.subTasks![idx + 1];
-    } else {
-      // TODO(burdon): Get parent's sibling.
-      const ancestor = getParent(root, parent);
-      if (ancestor) {
-        const idx = ancestor.subTasks!.findIndex(({ id }) => id === parent.id);
-        if (idx < ancestor.subTasks!.length - 1) {
-          return ancestor.subTasks![idx + 1];
-        } else {
-          console.log('!!');
-        }
+    const parent = getParent(root, task);
+    if (parent) {
+      const idx = parent.subTasks!.findIndex(({ id }) => id === task.id);
+      if (idx < parent.subTasks!.length - 1) {
+        return parent.subTasks![idx + 1];
+      } else {
+        // Get parent's next sibling.
+        return getNext(root, parent, false);
       }
     }
   }

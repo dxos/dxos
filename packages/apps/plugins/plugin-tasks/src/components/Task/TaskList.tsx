@@ -261,9 +261,11 @@ const Root = ({ root, onCreate }: RootProps) => {
   const handleNav: ListProps['onNav'] = (task, direction) => {
     switch (direction) {
       case 'home':
+        // TODO(burdon): Go to first child of group.
         setActive(root.subTasks![0].id);
         break;
       case 'end':
+        // TODO(burdon): Go to last child of group.
         setActive(root.subTasks![root.subTasks!.length - 1].id);
         break;
       case 'up':
