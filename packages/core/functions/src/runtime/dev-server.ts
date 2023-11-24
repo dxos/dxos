@@ -79,7 +79,7 @@ export class DevServer {
         res.statusCode = await this._invoke(name, req.body);
         res.end();
       } catch (err: any) {
-        log.error(err);
+        log.catch(err);
         res.statusCode = 500;
         res.end();
       }

@@ -2,81 +2,50 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BaseChatModel } from 'langchain/chat_models/base';
-import { ChatOpenAI, type OpenAIChatInput } from 'langchain/chat_models/openai';
-import { type Embeddings } from 'langchain/embeddings/base';
-import { type OpenAIEmbeddingsParams } from 'langchain/embeddings/openai';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { PromptTemplate } from 'langchain/prompts';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
 import { formatDocumentsAsString } from 'langchain/util/document';
-import { type VectorStore } from 'langchain/vectorstores/base';
-import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 
-import { invariant } from '@dxos/invariant';
+import { type ChainResources } from './resources';
 
 export type ChainOptions = {
-  apiKey: string;
-  // TODO(burdon): Generalize?
-  embeddings?: Partial<OpenAIEmbeddingsParams>;
-  chat?: Partial<OpenAIChatInput>;
+  precise?: boolean;
 };
 
-export class ChainResources {
-  public readonly embeddings: Embeddings;
-  public readonly chat: BaseChatModel;
-
-  private _vectorStore?: VectorStore;
-
-  constructor(private readonly _options: ChainOptions) {
-    this.embeddings = new OpenAIEmbeddings({
-      openAIApiKey: _options.apiKey,
-      ...this._options.embeddings,
-    });
-
-    this.chat = new ChatOpenAI({
-      openAIApiKey: _options.apiKey,
-      ...this._options.chat,
-    });
-  }
-
-  get vectorStore() {
-    invariant(this._vectorStore);
-    return this._vectorStore;
-  }
-
-  async initialize() {
-    this._vectorStore = await HNSWLib.fromDocuments([], this.embeddings);
-  }
-}
-
 export class Chain {
-  private readonly _agent: RunnableSequence;
+  private readonly _chain: RunnableSequence;
 
-  constructor(private readonly _resources: ChainResources) {
+  constructor(private readonly _resources: ChainResources, private readonly _options: ChainOptions = {}) {
     const retriever = this._resources.vectorStore.asRetriever();
-    const prompt = PromptTemplate.fromTemplate(
+
+    // TODO(burdon): Construct different chains on the fly?
+    const promptTemplate = PromptTemplate.fromTemplate(
       [
-        'answer the question based only on the following context:',
+        this._options.precise
+          ? 'answer the question based only on the following context:'
+          : 'try to answer the question using the following context otherwise just answer directly from your training data:',
         '{context}',
         '----------------',
         'question: {question}',
-      ].join('\n'),
+      ]
+        .flat()
+        .join('\n'),
     );
 
-    this._agent = RunnableSequence.from([
+    this._chain = RunnableSequence.from([
+      // Inputs to prompt template.
       {
         context: retriever.pipe(formatDocumentsAsString),
         question: new RunnablePassthrough(),
       },
-      prompt,
+      promptTemplate,
       this._resources.chat,
       new StringOutputParser(),
     ]);
   }
 
   async call(inputText: string) {
-    return await this._agent.invoke(inputText);
+    return await this._chain.invoke(inputText);
   }
 }
