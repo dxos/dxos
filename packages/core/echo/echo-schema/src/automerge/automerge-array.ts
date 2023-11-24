@@ -5,13 +5,10 @@
 import { inspect, type CustomInspectFunction } from 'node:util';
 
 import { type ChangeFn } from '@dxos/automerge/automerge';
-import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { AutomergeObject } from './automerge-object';
 import { base } from '../object';
-import { AbstractEchoObject } from '../object/object';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -63,7 +60,7 @@ export class AutomergeArray<T> implements Array<T> {
 
   get length(): number {
     if (this._object) {
-      const array = this._getModelArray();
+      const array = this._getModelArray(false);
       if (!array) {
         return 0;
       }
@@ -128,7 +125,7 @@ export class AutomergeArray<T> implements Array<T> {
         }
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
-        array.splice(start, deleteCount ?? 0, ...items.map((value) => this._object!._encode(this._encode(value))));
+        array.splice(start, deleteCount ?? 0, ...items.map((value) => this._object!._encode(value)));
       };
       this._object._change(changeFn);
       return deletedItems;
@@ -252,7 +249,7 @@ export class AutomergeArray<T> implements Array<T> {
       }
       invariant(Array.isArray(array));
 
-      return (array.map((value: string) => this._decode(value)).filter(Boolean) as T[]).values();
+      return (array.map((value: string) => this._object!._decode(value)).filter(Boolean) as T[]).values();
     } else {
       invariant(this._uninitialized);
       return this._uninitialized[Symbol.iterator]();
@@ -290,7 +287,8 @@ export class AutomergeArray<T> implements Array<T> {
         }
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
-        array.push(...items.map((value) => this._object!._encode(this._encode(value))));
+
+        array.push(...items.map((value) => this._object!._encode(value)));
       };
       this._object._change(changeFn);
     } else {
@@ -329,43 +327,6 @@ export class AutomergeArray<T> implements Array<T> {
   // Impl.
   //
 
-  private _decode(value: any): T | undefined {
-    if (value instanceof Reference) {
-      return this._object!._lookupLink(value) as T | undefined;
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      return decodeRecords(value, this._object!);
-    } else {
-      return value;
-    }
-  }
-
-  private _encode(value: T) {
-    if (value instanceof AbstractEchoObject) {
-      return this._object!._linkObject(value);
-    } else if (
-      typeof value === 'object' &&
-      value !== null &&
-      Object.getOwnPropertyNames(value).length === 1 &&
-      (value as any)['@id']
-    ) {
-      return new Reference((value as any)['@id']);
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      log('Freezing object before encoding', value);
-      Object.freeze(value);
-      return encodeRecords(value, this._object!);
-    } else {
-      invariant(
-        value === null ||
-          value === undefined ||
-          typeof value === 'boolean' ||
-          typeof value === 'number' ||
-          typeof value === 'string',
-        `Invalid type: ${JSON.stringify(value)}`,
-      );
-      return value;
-    }
-  }
-
   /**
    * @internal
    */
@@ -397,7 +358,7 @@ export class AutomergeArray<T> implements Array<T> {
   private _getModel(index: number): T | undefined {
     const array = this._getModelArray();
     invariant(Array.isArray(array));
-    return this._decode(array[index]) as T | undefined;
+    return this._object!._decode(array[index]) as T | undefined;
   }
 
   private _setModel(index: number, value: T) {
@@ -412,39 +373,13 @@ export class AutomergeArray<T> implements Array<T> {
       }
       const array: any[] = parent[fullPath.at(-1)!];
       invariant(Array.isArray(array));
-      array[index] = this._object!._encode(this._encode(value));
+      array[index] = this._object!._encode(value);
     };
     this._object._change(changeFn);
   }
 
-  private _getModelArray(): any[] | undefined {
+  private _getModelArray(decode = true): any[] | undefined {
     invariant(this._object?.[base] instanceof AutomergeObject);
-    return this._object._get(this._path!);
+    return this._object._get(this._path!, decode);
   }
 }
-
-const encodeRecords = (value: any, document: AutomergeObject): any => {
-  if (value instanceof AbstractEchoObject) {
-    return document!._linkObject(value);
-  } else if (Array.isArray(value)) {
-    return value.map((value) => encodeRecords(value, document));
-  } else if (typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)]),
-    );
-  }
-  return value;
-};
-
-const decodeRecords = (value: any, document: AutomergeObject): any => {
-  if (value instanceof Reference) {
-    return document._lookupLink(value);
-  } else if (Array.isArray(value)) {
-    return value.map((value) => decodeRecords(value, document));
-  } else if (typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)]),
-    );
-  }
-  return value;
-};

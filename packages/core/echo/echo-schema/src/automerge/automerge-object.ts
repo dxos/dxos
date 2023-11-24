@@ -200,14 +200,14 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _get(path: string[]) {
+  _get(path: string[], decode = true) {
     const fullPath = [...this._path, ...path];
     let value = this._getDoc();
     for (const key of fullPath) {
       value = value?.[key];
     }
 
-    return this._decode(value);
+    return decode ? this._decode(value) : value;
   }
 
   /**
@@ -260,25 +260,33 @@ export class AutomergeObject implements TypedObjectProperties {
         protocol: reference.protocol ?? null,
         host: reference.host ?? null,
       };
-    } else if (value instanceof AutomergeArray) {
+    } else if (value instanceof AutomergeArray || Array.isArray(value)) {
       const values: any = value.map((val) => {
         if (val instanceof AutomergeArray || Array.isArray(val)) {
-          // TODO(mykola): Add support for nested arrays.
+          // s TODO(mykola): Add support for nested arrays.
           throw new Error('Nested arrays are not supported');
         }
         return this._encode(val);
       });
       return values;
+    } else if (typeof value === 'object') {
+      Object.freeze(value);
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
     return value;
   }
 
-  private _decode(value: any): any {
+  /**
+   * @internal
+   */
+  _decode(value: any): any {
     if (Array.isArray(value)) {
       return value.map((val) => this._decode(val));
     } else if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
-      const reference = new Reference(value.itemId, value.protocol, value.host);
+      const reference = new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
       return this._lookupLink(reference);
+    } else if (typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._decode(value)]));
     }
 
     return value;
