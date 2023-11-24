@@ -128,11 +128,7 @@ export class AutomergeArray<T> implements Array<T> {
         }
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
-        array.splice(
-          start,
-          deleteCount ?? 0,
-          ...items.map((value) => this._object!._encode(this._path!, this._encode(value))),
-        );
+        array.splice(start, deleteCount ?? 0, ...items.map((value) => this._object!._encode(this._encode(value))));
       };
       this._object._change(changeFn);
       return deletedItems;
