@@ -258,6 +258,7 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
       const reference = this._linkObject(value);
+      // NOTE: Automerge do not support undefined values, so we need to use null instead.
       return {
         '@type': REFERENCE_TYPE_TAG,
         itemId: reference.itemId ?? null,
