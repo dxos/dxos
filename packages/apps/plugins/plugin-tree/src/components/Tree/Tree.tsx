@@ -10,27 +10,34 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item } from './types';
 
-// TODO(burdon): Adapt from Tree (incl. drag/drop)?
+// TODO(burdon): Break/join lines.
+// TODO(burdon): TextObject/MarkdownEditor
+// TODO(burdon): Cut-and-Paste.
+// TODO(burdon): Drag-and-drop.
+// TODO(burdon): Better key nav.
+
+type TreeOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
+  checkbox?: boolean;
+};
 
 //
 // Item
 //
 
-type ItemProps = Pick<HTMLAttributes<HTMLDivElement>, 'placeholder' | 'spellCheck'> & {
+type ItemProps = {
   item: Item;
   active?: boolean;
-  showCheckbox?: boolean;
   onFocus?: () => void;
   onEnter?: (before?: boolean) => void;
   onDelete?: () => void;
   onIndent?: (left?: boolean) => void;
   onNav?: (item: Item, direction?: 'home' | 'end' | 'up' | 'down') => void;
-};
+} & TreeOptions;
 
 const Item = ({
   item,
   active,
-  showCheckbox = true,
+  checkbox,
   placeholder,
   spellCheck = false,
   onFocus,
@@ -50,17 +57,20 @@ const Item = ({
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
       case 'ArrowUp':
+        // TODO(burdon): Maintain caret position.
+        // TODO(burdon): Go to first child of group.
         onNav?.(item, event.shiftKey ? 'home' : 'up');
         break;
       case 'ArrowDown':
         onNav?.(item, event.shiftKey ? 'end' : 'down');
         break;
       case 'Tab':
-        // TODO(burdon): Tab
+        // TODO(burdon): Tab still fires in app.
         event.preventDefault();
         onIndent?.(event.shiftKey);
         break;
       case 'Enter':
+        // TODO(burdon): Split line (shift to create new).
         onEnter?.(!!item.text?.length && inputRef.current?.selectionStart === 0);
         break;
       case 'Backspace':
@@ -78,7 +88,7 @@ const Item = ({
 
   return (
     <div className='flex items-center px-2 gap-3'>
-      {(showCheckbox && (
+      {(checkbox && (
         <Input.Root>
           <Input.Checkbox
             checked={item.done}
@@ -139,10 +149,10 @@ const Item = ({
 };
 
 //
-// List
+// Branch
 //
 
-type ListProps = {
+type BranchProps = TreeOptions & {
   root: Item;
   active?: string;
   onFocus?: (item: Item) => void;
@@ -151,7 +161,7 @@ type ListProps = {
   onIndent?: (parent: Item, item: Item, left?: boolean) => void;
 } & Pick<ItemProps, 'onNav'>;
 
-const List = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav }: ListProps) => {
+const Branch = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav, ...props }: BranchProps) => {
   return (
     <div className='flex flex-col w-full'>
       {root.items?.map((item) => (
@@ -165,11 +175,12 @@ const List = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav }: Li
             onDelete={() => onDelete?.(root, item)}
             onIndent={(left) => onIndent?.(root, item, left)}
             onNav={onNav}
+            {...props}
           />
           {(item.items?.length ?? 0) > 0 && (
             // TODO(burdon): Indent based on density.
             <div className='pl-4'>
-              <List
+              <Branch
                 root={item}
                 active={active}
                 onFocus={onFocus}
@@ -177,6 +188,7 @@ const List = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav }: Li
                 onDelete={onDelete}
                 onIndent={onIndent}
                 onNav={onNav}
+                {...props}
               />
             </div>
           )}
@@ -193,12 +205,12 @@ const List = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav }: Li
 type RootProps = {
   root: Item;
   onCreate?: () => Item;
-};
+} & TreeOptions;
 
 const Root = ({ root, onCreate }: RootProps) => {
   const [active, setActive] = useState<string>();
 
-  const handleCreate: ListProps['onCreate'] = (parent, current, before) => {
+  const handleCreate: BranchProps['onCreate'] = (parent, current, before) => {
     const item = onCreate!();
     const tree = getItems(parent);
     const idx = tree.findIndex(({ id }) => current.id === id);
@@ -216,7 +228,7 @@ const Root = ({ root, onCreate }: RootProps) => {
     return item;
   };
 
-  const handleDelete: ListProps['onDelete'] = (parent, item) => {
+  const handleDelete: BranchProps['onDelete'] = (parent, item) => {
     const tree = getItems(parent);
     if (parent || tree.length > 1) {
       const idx = tree.findIndex(({ id }) => id === item.id);
@@ -232,7 +244,7 @@ const Root = ({ root, onCreate }: RootProps) => {
     }
   };
 
-  const handleIndent: ListProps['onIndent'] = (parent, item, left) => {
+  const handleIndent: BranchProps['onIndent'] = (parent, item, left) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
     if (left) {
@@ -258,15 +270,12 @@ const Root = ({ root, onCreate }: RootProps) => {
     }
   };
 
-  // TODO(burdon): Preserve caret position.
-  const handleNav: ListProps['onNav'] = (item, direction) => {
+  const handleNav: BranchProps['onNav'] = (item, direction) => {
     switch (direction) {
       case 'home':
-        // TODO(burdon): Go to first child of group.
         setActive(root.items![0].id);
         break;
       case 'end':
-        // TODO(burdon): Go to last child of group.
         setActive(root.items![root.items!.length - 1].id);
         break;
       case 'up':
@@ -290,7 +299,7 @@ const Root = ({ root, onCreate }: RootProps) => {
 
   return (
     <div className='w-full'>
-      <List
+      <Branch
         root={root}
         active={active}
         onFocus={(item) => setActive(item.id)}
@@ -305,6 +314,6 @@ const Root = ({ root, onCreate }: RootProps) => {
 
 export const Tree = {
   Root,
-  List, // TODO(burdon): Branch?
+  Branch,
   Item,
 };

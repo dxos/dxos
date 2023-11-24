@@ -5,12 +5,12 @@
 import '@dxosTheme';
 
 import { deepSignal } from 'deepsignal/react';
+// eslint-disable-next-line
+import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider } from '@dxos/react-ui';
 
-// eslint-disable-next-line
-import React, { useState } from 'react';
 import { Tree } from './Tree';
 
 const Story = () => {
@@ -20,41 +20,41 @@ const Story = () => {
       items: [
         deepSignal({
           id: 'item-1',
-          title: 'London',
+          text: 'London',
         }),
         deepSignal({
           id: 'item-2',
-          title: 'New York',
+          text: 'New York',
           items: [
             deepSignal({
               id: 'item-2a',
-              title: 'Brooklyn',
+              text: 'Brooklyn',
             }),
             deepSignal({
               id: 'item-2b',
-              title: 'Manhattan',
+              text: 'Manhattan',
               items: [
                 deepSignal({
                   id: 'item-2b1',
-                  title: 'East Village',
+                  text: 'East Village',
                 }),
                 deepSignal({
                   id: 'item-2b2',
-                  title: 'West Village',
+                  text: 'West Village',
                 }),
                 deepSignal({
                   id: 'item-2b3',
-                  title: 'SoHo',
+                  text: 'SoHo',
                 }),
               ],
             }),
             deepSignal({
               id: 'item-2c',
-              title: 'Queens',
+              text: 'Queens',
               items: [
                 deepSignal({
                   id: 'item-2c1',
-                  title: 'Astoria',
+                  text: 'Astoria',
                 }),
               ],
             }),
@@ -62,11 +62,11 @@ const Story = () => {
         }),
         deepSignal({
           id: 'item-3',
-          title: 'Tokyo',
+          text: 'Tokyo',
         }),
         deepSignal({
           id: 'item-4',
-          title: 'Paris',
+          text: 'Paris',
         }),
       ],
     }),
