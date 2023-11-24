@@ -23,6 +23,8 @@ export const RegistryPlugin = (): PluginDefinition<RegistryPluginProvides> => {
             case 'settings':
               return <Settings />;
           }
+
+          return null;
         },
       },
     },

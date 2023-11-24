@@ -4,12 +4,7 @@
 
 import React from 'react';
 
-import {
-  filterPlugins,
-  type GraphPluginProvides,
-  type PluginDefinition,
-  parseGraphBuilderPlugin,
-} from '@dxos/app-framework';
+import { filterPlugins, type GraphProvides, type PluginDefinition, parseGraphBuilderPlugin } from '@dxos/app-framework';
 import { GraphBuilder } from '@dxos/app-graph';
 
 import { GraphContext } from './GraphContext';
@@ -20,7 +15,7 @@ import meta from './meta';
  * Enables other plugins to register node builders to add nodes to the graph.
  * This includes actions and annotation each other's nodes.
  */
-export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
+export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
   const builder = new GraphBuilder();
   const graph = builder.build();
 
@@ -34,8 +29,8 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       builder.build(graph);
     },
     provides: {
-      context: ({ children }) => <GraphContext.Provider value={{ graph }}>{children}</GraphContext.Provider>,
       graph,
+      context: ({ children }) => <GraphContext.Provider value={{ graph }}>{children}</GraphContext.Provider>,
     },
   };
 };

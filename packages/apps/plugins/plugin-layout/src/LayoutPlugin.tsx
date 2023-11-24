@@ -22,7 +22,7 @@ import {
   type PluginDefinition,
   type LayoutProvides,
   type IntentResolverProvides,
-  type GraphPluginProvides,
+  type GraphProvides,
   type GraphBuilderProvides,
   type SurfaceProvides,
   type TranslationsProvides,
@@ -45,7 +45,7 @@ export type LayoutPluginProvides = SurfaceProvides &
   LayoutProvides;
 
 export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
-  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  let graphPlugin: Plugin<GraphProvides> | undefined;
   const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,

@@ -142,6 +142,11 @@ message Kanban {
 message Grid {
   option (object) = true;
 
+  message Position {
+    int32 x = 1;
+    int32 y = 2;
+  }
+
   // TODO(burdon): Reconcile with Kanban.Item.
   message Item {
     option (object) = true;
@@ -149,13 +154,12 @@ message Grid {
 
     dxos.schema.TypedObject object = 1;
 
-    string position = 10; // TODO(burdon): Replace layout object?
+    Position position = 10;
     string color = 11;
   }
 
   string title = 1;
   repeated Item items = 2;
-  dxos.schema.TypedObject layout = 3;
 }
 
 /**

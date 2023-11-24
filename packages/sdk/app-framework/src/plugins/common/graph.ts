@@ -10,7 +10,7 @@ import type { Plugin } from '../PluginHost';
 /**
  * Provides for a plugin that exposes the application graph.
  */
-export type GraphPluginProvides = {
+export type GraphProvides = {
   graph: Graph;
 };
 
@@ -24,7 +24,7 @@ export type GraphBuilderProvides = {
  * Type guard for graph plugins.
  */
 export const parseGraphPlugin = (plugin: Plugin) =>
-  (plugin.provides as any).graph?.root ? (plugin as Plugin<GraphPluginProvides>) : undefined;
+  (plugin.provides as any).graph?.root ? (plugin as Plugin<GraphProvides>) : undefined;
 
 /**
  * Type guard for graph builder plugins.
