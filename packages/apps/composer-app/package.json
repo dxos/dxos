@@ -35,6 +35,7 @@
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/plugin-table": "workspace:*",
+    "@braneframe/plugin-tasks": "workspace:*",
     "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/plugin-template": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",

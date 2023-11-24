@@ -33,6 +33,7 @@ import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
 import TableMeta from '@braneframe/plugin-table/meta';
+import TasksMeta from '@braneframe/plugin-tasks/meta';
 import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
@@ -108,11 +109,12 @@ const main = async () => {
       MapMeta,
       ScriptMeta,
       TableMeta,
+      TasksMeta,
       ThreadMeta,
       ExplorerMeta,
       ChessMeta,
       WildcardMeta,
-      // TODO(burdon): Currently last so that action are added at end of dropdown menu.
+      // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
     ],
     plugins: {
@@ -164,6 +166,7 @@ const main = async () => {
         config: new Config(Defaults()),
       }),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
+      [TasksMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-tasks')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme')),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),

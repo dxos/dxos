@@ -112,7 +112,7 @@ export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, 
   mx(
     getSize(size),
     'shrink-0 flex items-center justify-center rounded text-white',
-    'bg-neutral-200 dark:bg-neutral-700 aria-checked:bg-primary-600 dark:aria-checked:bg-primary-600 aria-[checked=mixed]:bg-primary-600 dark:aria-[checked=mixed]:bg-primary-600',
+    'bg-neutral-100 dark:bg-neutral-800 aria-checked:bg-primary-600 dark:aria-checked:bg-primary-600 aria-[checked=mixed]:bg-primary-600 dark:aria-[checked=mixed]:bg-primary-600',
     focusRing,
     ...etc,
   );

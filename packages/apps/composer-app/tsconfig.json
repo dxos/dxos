@@ -137,6 +137,9 @@
       "path": "../plugins/plugin-table"
     },
     {
+      "path": "../plugins/plugin-tasks"
+    },
+    {
       "path": "../plugins/plugin-telemetry"
     },
     {
