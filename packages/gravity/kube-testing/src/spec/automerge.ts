@@ -25,8 +25,13 @@ export type AutomergeTestSpec = {
   // Number of connections per client.
   clientConnections: number;
 
+  /**
+   * Both server and client create docs.
+   */
+  symetric: boolean;
   docCount: number;
   changeCount: number;
+  contentKind: 'strings' | 'seq-numbers';
 };
 
 export type AutomergeAgentConfig = {
@@ -40,9 +45,11 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     return {
       platform: 'nodejs',
       clientConnections: 1,
+      symetric: false,
       agents: 2,
-      docCount: 10,
+      docCount: 200,
       changeCount: 100,
+      contentKind: 'seq-numbers',
     };
   }
 
@@ -64,26 +71,40 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
 
   async run(env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>): Promise<void> {
     await this._init(env);
-    const { config, spec, agents } = env.params;
+    const { config, spec } = env.params;
 
     performance.mark('create:begin');
-    const localDocs = range(spec.docCount).map((idx) => {
+    const docsToCreate = spec.symetric || config.type === 'server' ? spec.docCount : 0;
+    const localDocs = range(docsToCreate).map((idx) => {
       const handle = this.repo.create();
       handle.change((doc: any) => {
         doc.author = `agent-${config.agentIdx}`;
         doc.idx = idx;
       });
 
-      for(const i of range(spec.changeCount)) {
-        handle.change((doc: any) => {
-          doc[`key-${i}`] = `value-${i}`;
-        });
+      for (const i of range(spec.changeCount)) {
+        switch (spec.contentKind) {
+          case 'strings':
+            handle.change((doc: any) => {
+              doc[`key-${i}`] = `value-${i}`;
+            });
+            break;
+          case 'seq-numbers':
+            handle.change((doc: any) => {
+              doc.numbers ??= [];
+              doc.numbers.push(i);
+            });
+            break;
+        }
       }
 
       return handle;
     });
     performance.mark('create:end');
-    log.info('docs created', { count: localDocs.length, time: performance.measure('create', 'create:begin', 'create:end').duration });
+    log.info('docs created', {
+      count: localDocs.length,
+      time: performance.measure('create', 'create:begin', 'create:end').duration,
+    });
 
     const docUrls = (
       await env.syncData(
@@ -97,7 +118,10 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     const docs = docUrls.map((url) => this.repo.find(url));
     await Promise.all(docs.map((doc) => doc.whenReady()));
     performance.mark('ready:end');
-    log.info('docs ready', { count: docs.length, time: performance.measure('ready', 'ready:begin', 'ready:end').duration });
+    log.info('docs ready', {
+      count: docs.length,
+      time: performance.measure('ready', 'ready:begin', 'ready:end').duration,
+    });
 
     await env.syncBarrier('done');
   }
