@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, type IconProps } from '@phosphor-icons/react';
+import { TreeStructure, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -27,7 +27,7 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
         records: {
           [TreeType.schema.typename]: {
             placeholder: ['object placeholder', { ns: TREE_PLUGIN }],
-            icon: (props: IconProps) => <Check {...props} />,
+            icon: (props: IconProps) => <TreeStructure {...props} />,
           },
         },
       },
@@ -43,7 +43,7 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
           parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${TREE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
             label: ['create object label', { ns: TREE_PLUGIN }], // TODO(burdon): "object"
-            icon: (props) => <Check {...props} />,
+            icon: (props) => <TreeStructure {...props} />,
             // TODO(burdon): Factor out helper.
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
@@ -71,7 +71,7 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
             id: 'create-stack-section-tree',
             testId: 'treePlugin.createSectionSpaceTree',
             label: ['create stack section label', { ns: TREE_PLUGIN }],
-            icon: (props: any) => <Check {...props} />,
+            icon: (props: any) => <TreeStructure {...props} />,
             intent: {
               plugin: TREE_PLUGIN,
               action: TreeAction.CREATE,

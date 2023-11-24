@@ -56,6 +56,7 @@ const Item = ({
         onNav?.(item, event.shiftKey ? 'end' : 'down');
         break;
       case 'Tab':
+        // TODO(burdon): Tab
         event.preventDefault();
         onIndent?.(event.shiftKey);
         break;
