@@ -58,14 +58,14 @@ const Item = ({
     switch (event.key) {
       case 'ArrowUp':
         // TODO(burdon): Maintain caret position.
-        // TODO(burdon): Go to first child of group.
+        // TODO(burdon): Go to first/last child of group.
         onNav?.(item, event.shiftKey ? 'home' : 'up');
         break;
       case 'ArrowDown':
         onNav?.(item, event.shiftKey ? 'end' : 'down');
         break;
       case 'Tab':
-        // TODO(burdon): Tab still fires in app.
+        // TODO(burdon): [Bug]: Loses focus if pressing tab on last item.
         event.preventDefault();
         onIndent?.(event.shiftKey);
         break;
