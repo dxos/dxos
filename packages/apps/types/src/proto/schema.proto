@@ -107,6 +107,17 @@ message Stack {
 /**
  *
  */
+message Task {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text text = 2;
+  repeated Task subtasks = 3;
+}
+
+/**
+ *
+ */
 message Kanban {
   option (object) = true;
 
