@@ -380,7 +380,7 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   private _getArray(): T[] {
-    // TODO(mykola): Add cache to improve performance.
+    // TODO(mykola): Add cache to improve performance?
     invariant(this._object?.[base] instanceof AutomergeObject);
     const array = this._object._get(this._path!);
     invariant(Array.isArray(array));
