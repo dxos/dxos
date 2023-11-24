@@ -294,7 +294,7 @@ export class AutomergeArray<T> implements Array<T> {
         }
         const array: any[] = parent[fullPath.at(-1)!];
         invariant(Array.isArray(array));
-        array.push(...items.map((value) => this._object!._encode(this._path!, this._encode(value))));
+        array.push(...items.map((value) => this._object!._encode(this._encode(value))));
       };
       this._object._change(changeFn);
     } else {
@@ -416,7 +416,7 @@ export class AutomergeArray<T> implements Array<T> {
       }
       const array: any[] = parent[fullPath.at(-1)!];
       invariant(Array.isArray(array));
-      array[index] = this._object!._encode(this._path!, this._encode(value));
+      array[index] = this._object!._encode(this._encode(value));
     };
     this._object._change(changeFn);
   }

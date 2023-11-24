@@ -125,8 +125,8 @@ export class AutomergeObject implements TypedObjectProperties {
       // TODO(dmaretskyi): type: ???.
 
       // TODO(dmaretskyi): Initial values for data.
-      data: this._encode(['data'], initialProps ?? {}),
-      meta: this._encode(['meta'], {
+      data: this._encode(initialProps ?? {}),
+      meta: this._encode({
         keys: [],
         ...opts?.meta,
       }),
@@ -222,7 +222,11 @@ export class AutomergeObject implements TypedObjectProperties {
         parent[key] ??= {};
         parent = parent[key];
       }
-      parent[fullPath.at(-1)!] = this._encode(path, value);
+      parent[fullPath.at(-1)!] = this._encode(value);
+
+      if (value instanceof AutomergeArray) {
+        value._attach(this[base], path);
+      }
     };
 
     this._change(changeFn);
@@ -244,7 +248,7 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _encode(path: string[], value: any) {
+  _encode(value: any) {
     if (value === undefined) {
       return null;
     }
@@ -262,9 +266,8 @@ export class AutomergeObject implements TypedObjectProperties {
           // TODO(mykola): Add support for nested arrays.
           throw new Error('Nested arrays are not supported');
         }
-        return this._encode(path, val);
+        return this._encode(val);
       });
-      value._attach(this[base], path);
       return values;
     }
     return value;
