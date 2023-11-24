@@ -10,13 +10,13 @@ import { baseSurface, topbarBlockPaddingStart, textBlockWidth, mx, inputSurface 
 
 import { Tree } from './Tree';
 
-// TODO(burdon): Style like document.
 export const TreeMain: FC<{ tree: TreeType }> = ({ tree }) => {
   return (
+    // TODO(burdon): Style like document.
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, inputSurface, 'pli-2')}>
         <div role='none' className={mx('pbs-4 pbe-4', 'min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
-          <Tree.Root root={tree.root} onCreate={() => new TreeType()} />
+          <Tree.Root checkbox={tree.checkbox} root={tree.root} onCreate={() => new TreeType()} />
         </div>
       </div>
     </Main.Content>
@@ -26,7 +26,7 @@ export const TreeMain: FC<{ tree: TreeType }> = ({ tree }) => {
 export const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
   return (
     <div role='none' className='flex flex-col w-full pbs-4 pbe-4'>
-      <Tree.Root root={tree.root} onCreate={() => new TreeType()} />
+      <Tree.Root checkbox={tree.checkbox} root={tree.root} onCreate={() => new TreeType()} />
     </div>
   );
 };

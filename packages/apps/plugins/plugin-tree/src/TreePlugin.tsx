@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TreeStructure, type IconProps } from '@phosphor-icons/react';
+import { Check, TreeStructure, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -34,35 +34,45 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
-            return;
-          }
-
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${TREE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
-            label: ['create object label', { ns: TREE_PLUGIN }], // TODO(burdon): "object"
-            icon: (props) => <TreeStructure {...props} />,
-            // TODO(burdon): Factor out helper.
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          if (parent.data instanceof Folder && parent.data instanceof SpaceProxy) {
+            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+              id: `${TREE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
+              label: ['create object label', { ns: TREE_PLUGIN }], // TODO(burdon): "object"
+              icon: (props) => <TreeStructure {...props} />,
+              // TODO(burdon): Factor out helper.
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: TREE_PLUGIN,
+                    action: TreeAction.CREATE,
+                  },
+                  {
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target: parent.data },
+                  },
+                  {
+                    action: LayoutAction.ACTIVATE,
+                  },
+                ]),
+              properties: {
+                testId: 'treePlugin.createObject',
+              },
+            });
+          } else if (isObject(parent.data)) {
+            parent.addAction({
+              id: `${TREE_PLUGIN}/toggle-checkbox`,
+              label: ['toggle checkbox label', { ns: TREE_PLUGIN }],
+              icon: (props) => <Check {...props} />,
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
                   plugin: TREE_PLUGIN,
-                  action: TreeAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: LayoutAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'treePlugin.createObject',
-            },
-          });
+                  action: TreeAction.TOGGLE_CHECKBOX,
+                  data: { object: parent.data },
+                }),
+            });
+          }
         },
       },
       stack: {
@@ -102,6 +112,11 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
                   }),
                 }),
               };
+            }
+
+            case TreeAction.TOGGLE_CHECKBOX: {
+              (intent.data.object as TreeType).checkbox = !(intent.data.object as TreeType).checkbox;
+              break;
             }
           }
         },

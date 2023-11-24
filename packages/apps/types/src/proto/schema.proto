@@ -116,11 +116,14 @@ message Tree {
     string text = 1;
     // dxos.schema.Text text = 1;
     repeated Item items = 2;
-    optional bool done = 3;
+    bool done = 3;
   }
 
   string title = 1;
   Item root = 2;
+
+  // Options.
+  bool checkbox = 10;
 }
 
 /**

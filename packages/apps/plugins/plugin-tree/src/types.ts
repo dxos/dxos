@@ -15,10 +15,11 @@ import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 
 import { TREE_PLUGIN } from './meta';
 
-const TEMPLATE_ACTION = `${TREE_PLUGIN}/action`;
+const TREE_ACTION = `${TREE_PLUGIN}/action`;
 
 export enum TreeAction {
-  CREATE = `${TEMPLATE_ACTION}/create`,
+  CREATE = `${TREE_ACTION}/create`,
+  TOGGLE_CHECKBOX = `${TREE_ACTION}/toggle-checkbox`,
 }
 
 export type TreePluginProvides = SurfaceProvides &

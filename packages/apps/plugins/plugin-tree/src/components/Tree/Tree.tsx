@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
+import { Square, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { Button, DropdownMenu, Input } from '@dxos/react-ui';
@@ -65,7 +65,6 @@ const Item = ({
         onNav?.(item, event.shiftKey ? 'end' : 'down');
         break;
       case 'Tab':
-        // TODO(burdon): [Bug]: Loses focus if pressing tab on last item.
         event.preventDefault();
         onIndent?.(event.shiftKey);
         break;
@@ -99,7 +98,7 @@ const Item = ({
         </Input.Root>
       )) || (
         <div className='shrink-0'>
-          <Circle weight={active ? 'fill' : undefined} className={mx(getSize(2), active && 'text-primary-500')} />
+          <Square weight={active ? 'fill' : undefined} className={mx(getSize(2), active && 'text-primary-500')} />
         </div>
       )}
       <Input.Root>
@@ -207,7 +206,7 @@ type RootProps = {
   onCreate?: () => Item;
 } & TreeOptions;
 
-const Root = ({ root, onCreate }: RootProps) => {
+const Root = ({ root, onCreate, ...props }: RootProps) => {
   const [active, setActive] = useState<string>();
 
   const handleCreate: BranchProps['onCreate'] = (parent, current, before) => {
@@ -249,25 +248,26 @@ const Root = ({ root, onCreate }: RootProps) => {
   const handleIndent: BranchProps['onIndent'] = (parent, item, left) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
+    console.log(idx, left);
     if (left) {
       if (parent) {
         // Move all siblings.
         const move = items.splice(idx, items.length - idx);
 
         // Get parent's parent.
-        const ancestor = getParent(root, parent);
-        if (ancestor) {
-          const ancestorItems = getItems(ancestor);
-          const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
-          ancestorItems.splice(parentIdx + 1, 0, ...move);
-        }
+        const ancestor = getParent(root, parent)!;
+        const ancestorItems = getItems(ancestor);
+        const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
+        ancestorItems.splice(parentIdx + 1, 0, ...move);
       }
     } else {
       // Can't indent first child.
       if (idx > 0) {
+        const siblingItems = getItems(items[idx - 1]);
+        siblingItems.splice(siblingItems.length, 0, item);
         items.splice(idx, 1);
-        const newItems = getItems(items[idx - 1]);
-        newItems.push(item);
+        // TODO(burdon): [Bug]: last item is sometimes lost (doesn't show up in tree). Mutation race condition?
+        // console.log(item.id === siblingItems[siblingItems.length - 1].id, siblingItems.length);
       }
     }
   };
@@ -309,6 +309,7 @@ const Root = ({ root, onCreate }: RootProps) => {
         onDelete={handleDelete}
         onIndent={handleIndent}
         onNav={handleNav}
+        {...props}
       />
     </div>
   );

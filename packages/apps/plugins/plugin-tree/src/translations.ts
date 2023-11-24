@@ -13,6 +13,7 @@ export default [
         'create object label': 'Create list',
         'delete object label': 'Delete',
         'create stack section label': 'Create list',
+        'toggle checkbox label': 'Toggle checkbox',
       },
     },
   },
