@@ -40,11 +40,11 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
             }
 
             // Link to schema.
-            // links.push({
-            //   id: `${object.id}-${object.__schema.id}`,
-            //   source: object.id,
-            //   target: object.__schema.id,
-            // });
+            links.push({
+              id: `${object.id}-${object.__schema.id}`,
+              source: object.id,
+              target: object.__schema.id,
+            });
 
             // Parse schema to follow referenced objects.
             object.__schema.props.forEach((prop) => {
@@ -71,12 +71,6 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
                 }
               }
             });
-
-            // TODO(burdon): Follow direct relationships.
-            // if (!schemaMap.has(object.__schema.id)) {
-            //   schemaMap.add(object.__schema.id);
-            //   console.log('schema', JSON.stringify(object.__schema, null, 2));
-            // }
           }
 
           return links;
@@ -104,5 +98,3 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
     return this._graph;
   }
 }
-
-const schemaMap = new Set<string>();
