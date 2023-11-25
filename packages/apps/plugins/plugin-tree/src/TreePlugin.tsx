@@ -36,12 +36,11 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          if (parent.data instanceof Folder && parent.data instanceof SpaceProxy) {
+          if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-              id: `${TREE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
-              label: ['create object label', { ns: TREE_PLUGIN }], // TODO(burdon): "object"
+              id: `${TREE_PLUGIN}/create`,
+              label: ['create object label', { ns: TREE_PLUGIN }],
               icon: (props) => <TreeStructure {...props} />,
-              // TODO(burdon): Factor out helper.
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch([
                   {
