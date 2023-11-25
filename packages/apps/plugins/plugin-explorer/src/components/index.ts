@@ -6,3 +6,4 @@ export * from './Chart';
 export * from './Explorer';
 export * from './ExplorerMain';
 export * from './Globe';
+export * from './Tree';

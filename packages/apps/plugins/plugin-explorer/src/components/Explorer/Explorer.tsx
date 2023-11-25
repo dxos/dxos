@@ -11,6 +11,7 @@ import { Graph, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos
 import { mx } from '@dxos/react-ui-theme';
 
 import { EchoGraphModel } from './graph-model';
+import { TreeComponent } from '../Tree';
 
 type Slots = {
   root?: { className?: string };
@@ -32,8 +33,10 @@ const colors = [
   '[&>circle]:!fill-indigo-300  [&>circle]:!stroke-indigo-600',
 ];
 
+// TODO(burdon): Rename Graph?
 export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
   const model = useMemo(() => (space ? new EchoGraphModel().open(space) : undefined), [space]);
+  const [selected, setSelected] = useState<string>();
 
   const context = createSvgContext();
   const projector = useMemo(
@@ -66,6 +69,16 @@ export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match })
 
   const [colorMap] = useState(new Map<Schema, string>());
 
+  if (!model) {
+    return null;
+  }
+
+  // TODO(burdon): Hack.
+  if (selected) {
+    model.setSelected(selected);
+    return <TreeComponent model={model} type='dendrogram' onClick={() => setSelected(undefined)} />;
+  }
+
   return (
     <SVGContextProvider context={context}>
       <SVG className={slots?.root?.className}>
@@ -77,6 +90,7 @@ export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match })
             projector={projector}
             drag
             arrows
+            onSelect={(node) => setSelected(node?.data?.id)}
             labels={{
               text: (node: GraphLayoutNode<TypedObject>) => {
                 if (filteredRef.current?.length && !filteredRef.current.some((object) => object.id === node.data?.id)) {
