@@ -248,7 +248,6 @@ const Root = ({ root, onCreate, ...props }: RootProps) => {
   const handleIndent: BranchProps['onIndent'] = (parent, item, left) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
-    console.log(idx, left);
     if (left) {
       if (parent) {
         // Move all siblings.
