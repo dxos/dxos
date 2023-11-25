@@ -40,6 +40,7 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
             }
 
             // Link to schema.
+            // TODO(burdon): Configure.
             links.push({
               id: `${object.id}-${object.__schema.id}`,
               source: object.id,
