@@ -30,15 +30,18 @@ type StackItem = MosaicDataItem & {
 };
 
 export type StackSectionItem = MosaicDataItem & {
-  title: string;
+  object: StackSectionContent;
 };
 
-export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit<
+export type StackSectionContent = MosaicDataItem & { title?: string };
+
+export type StackProps<TData extends StackSectionContent = StackSectionContent> = Omit<
   MosaicContainerProps<TData, number>,
   'debug' | 'Component'
 > & {
-  Component: FC<{ data: TData }>;
-  items?: TData[];
+  SectionContent: FC<{ data: TData }>;
+  items?: StackSectionItem[];
+  transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onRemoveSection?: (path: string) => void;
   onNavigateToSection?: (id: string) => void;
 };
@@ -47,38 +50,41 @@ export const Stack = ({
   id,
   type = DEFAULT_TYPE,
   className,
-  Component: SectionContent,
+  SectionContent,
   items = [],
+  transform,
   onOver,
   onDrop,
   onRemoveSection,
   onNavigateToSection,
 }: StackProps) => {
   const { ref: containerRef, width = 0 } = useResizeDetector({ refreshRate: 200 });
-  const { operation, overItem } = useMosaic();
+  const { operation, activeItem, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
   const Component: MosaicTileComponent<StackSectionItem, HTMLLIElement> = useMemo(
     () =>
-      forwardRef(({ path, active, draggableStyle, draggableProps, item }, forwardRef) => {
+      forwardRef(({ path, type, active, draggableStyle, draggableProps, item }, forwardRef) => {
+        const { t } = useTranslation(translationKey);
+        const transformedItem = transform ? transform(item, active ? activeItem?.type : type) : item;
         const section = (
           <Section
             ref={forwardRef}
-            id={item.id}
-            title={item.title}
+            id={transformedItem.id}
+            title={transformedItem.object.title ?? t('untitled section title')}
             active={active}
             draggableProps={draggableProps}
             draggableStyle={draggableStyle}
             onRemove={() => onRemoveSection?.(path)}
-            onNavigate={() => onNavigateToSection?.(item.id)}
+            onNavigate={() => onNavigateToSection?.(transformedItem.id)}
           >
-            <SectionContent data={item} />
+            <SectionContent data={transformedItem.object} />
           </Section>
         );
 
         return active === 'overlay' ? <List>{section}</List> : section;
       }),
-    [id, SectionContent],
+    [id, SectionContent, transform, activeItem],
   );
 
   // TODO(burdon): Create context provider to relay inner section width.
@@ -107,7 +113,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'p-2', isOver && dropRing)}>
+      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'm-1 p-2', isOver && dropRing)}>
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (

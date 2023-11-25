@@ -36,6 +36,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
+import TreeMeta from '@braneframe/plugin-tree/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
@@ -108,11 +109,12 @@ const main = async () => {
       MapMeta,
       ScriptMeta,
       TableMeta,
+      TreeMeta,
       ThreadMeta,
       ExplorerMeta,
       ChessMeta,
       WildcardMeta,
-      // TODO(burdon): Currently last so that action are added at end of dropdown menu.
+      // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
     ],
     plugins: {
@@ -151,7 +153,6 @@ const main = async () => {
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
           const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);
-
           void dispatch({
             action: LayoutAction.ACTIVATE,
             data: { id: document.id },
@@ -166,6 +167,7 @@ const main = async () => {
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme')),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
+      [TreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-tree')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [

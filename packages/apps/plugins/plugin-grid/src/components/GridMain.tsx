@@ -100,5 +100,5 @@ const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props
   const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
   const content = parseData ? parseData(item, 'view-object') : item;
 
-  return <Surface role='card' ref={forwardRef} data={{ content }} {...props} />;
+  return <Surface role='card' ref={forwardRef} limit={1} data={{ content }} {...props} />;
 });

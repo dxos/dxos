@@ -584,6 +584,9 @@ importers:
       '@braneframe/plugin-thread':
         specifier: workspace:*
         version: link:../plugins/plugin-thread
+      '@braneframe/plugin-tree':
+        specifier: workspace:*
+        version: link:../plugins/plugin-tree
       '@braneframe/plugin-wildcard':
         specifier: workspace:*
         version: link:../plugins/plugin-wildcard
@@ -2403,58 +2406,6 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-tasks:
-    dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      deepsignal:
-        specifier: 1.4.0-shallow.0
-        version: 1.4.0-shallow.0(react@18.2.0)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-editor
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
   packages/apps/plugins/plugin-telemetry:
     dependencies:
       '@dxos/async':
@@ -2617,6 +2568,64 @@ importers:
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-tree:
+    dependencies:
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@fluentui/react-tabster':
+        specifier: ^9.12.0
+        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -4465,9 +4474,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.5.0
+        version: 1.5.0
       cron:
         specifier: ^3.1.6
         version: 3.1.6
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       express:
         specifier: ^4.17.1
         version: 4.18.2
@@ -6147,6 +6162,9 @@ importers:
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
+      faiss-node:
+        specifier: ^0.5.1
+        version: 0.5.1
       fast-xml-parser:
         specifier: ^4.3.2
         version: 4.3.2
@@ -6164,7 +6182,7 @@ importers:
         version: 4.1.0
       langchain:
         specifier: ^0.0.196
-        version: 0.0.196(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1)
+        version: 0.0.196(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -28264,6 +28282,16 @@ packages:
     resolution: {integrity: sha512-11Ndz7Nv+mvAC1j0ktTa7fAb0vLyGGX+rMHNBYQviQDGU0Hw7lhctJANqbPhu9nV9/izT/IntTgZ7Im/9LJs9g==}
     engines: {'0': node >=0.6.0}
 
+  /faiss-node@0.5.1:
+    resolution: {integrity: sha512-zD8wobJn8C6OLWo68Unho+Ih8l6nSRB2w3Amj01a+xc4bsEvd2mBDLklAn7VocA9XO3WDvQL/bLpi5flkCn/XQ==}
+    engines: {node: '>= 14.0.0'}
+    requiresBuild: true
+    dependencies:
+      bindings: 1.5.0
+      node-addon-api: 6.1.0
+      prebuild-install: 7.1.1
+    dev: false
+
   /fancy-test@2.0.31:
     resolution: {integrity: sha512-Ok4L7GuoVdOBKtwlHdSnBYDBSFeWazcr6+/lhcC0LWS+sJYOXgbyCPP54fTt2TM1T8QWUm4ULHKQGOHKS61pfg==}
     engines: {node: '>=12.0.0'}
@@ -32899,7 +32927,7 @@ packages:
       uuid: 9.0.0
     dev: false
 
-  /langchain@0.0.196(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1):
+  /langchain@0.0.196(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(html-to-text@9.0.5)(jsdom@20.0.1):
     resolution: {integrity: sha512-kt17GGTDFWHNv3jJOIXymsQxfa+h9UQ6hrHbhur+V2pV6RBKO5E+RRCvnCqBzbnOPtrlkENF6Wl3Ezmsfo21dg==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -33202,6 +33230,7 @@ packages:
       '@anthropic-ai/sdk': 0.9.1
       binary-extensions: 2.2.0
       expr-eval: 2.0.2
+      faiss-node: 0.5.1
       fast-xml-parser: 4.3.2
       flat: 5.0.2
       html-to-text: 9.0.5

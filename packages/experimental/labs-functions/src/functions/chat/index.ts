@@ -5,3 +5,5 @@
 import { handler } from './handler';
 
 export default handler;
+
+export * from './chain';

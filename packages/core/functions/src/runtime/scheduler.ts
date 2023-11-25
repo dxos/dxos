@@ -4,11 +4,11 @@
 
 import { CronJob } from 'cron';
 
-import { DeferredTask } from '@dxos/async';
+import { debounce, DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
+import { type Space, TextObject } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Filter, createSubscription } from '@dxos/echo-schema';
+import { Filter, createSubscription, type Query, subscribe } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -61,7 +61,7 @@ export class Scheduler {
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
-      log('mount', { space: space.key, trigger });
+      log.info('mount', { space: space.key, trigger });
       if (ctx.disposed) {
         return;
       }
@@ -91,6 +91,8 @@ export class Scheduler {
           });
         });
 
+        // TODO(burdon): Standardize subscription handles.
+        const subscriptions: (() => void)[] = [];
         const subscription = createSubscription(({ added, updated }) => {
           for (const object of added) {
             objectIds.add(object.id);
@@ -101,16 +103,31 @@ export class Scheduler {
 
           task.schedule();
         });
+        subscriptions.push(() => subscription.unsubscribe());
 
-        const { type, props } = trigger.subscription;
-        const query = space.db.query(Filter.typename(type, props));
-        const unsubscribe = query.subscribe(({ objects }) => {
+        const { type, props, deep, delay } = trigger.subscription;
+        const update = ({ objects }: Query) => {
           subscription.update(objects);
-        }, true);
+
+          // TODO(burdon): Hack to monitor changes to Document's text object.
+          if (deep) {
+            log.info('update', { type, deep, objects: objects.length });
+            for (const object of objects) {
+              const content = object.content;
+              if (content instanceof TextObject) {
+                subscriptions.push(content[subscribe](debounce(() => subscription.update([object]), 1_000)));
+              }
+            }
+          }
+        };
+
+        // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
+        // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
+        const query = space.db.query(Filter.typename(type, props));
+        subscriptions.push(query.subscribe(delay ? debounce(update, delay * 1_000) : update));
 
         ctx.onDispose(() => {
-          subscription.unsubscribe();
-          unsubscribe();
+          subscriptions.forEach((unsubscribe) => unsubscribe());
         });
       }
     }

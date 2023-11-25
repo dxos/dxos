@@ -107,12 +107,23 @@ message Stack {
 /**
  *
  */
-message Task {
+message Tree {
   option (object) = true;
 
+  message Item {
+    option (object) = true;
+
+    string text = 1;
+    // dxos.schema.Text text = 1;
+    repeated Item items = 2;
+    bool done = 3;
+  }
+
   string title = 1;
-  dxos.schema.Text text = 2;
-  repeated Task subtasks = 3;
+  Item root = 2;
+
+  // Options.
+  bool checkbox = 10;
 }
 
 /**

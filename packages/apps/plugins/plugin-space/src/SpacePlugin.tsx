@@ -445,7 +445,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
               const space = await client.spaces.create(intent.data);
-              const folder = new Folder({ name: space.key.toHex() });
+              const folder = new Folder({ name: space.key.toHex() }); // TODO(burdon): Will show up in search results.
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder.objects.push(folder);
               return { space, id: space.key.toHex() };
