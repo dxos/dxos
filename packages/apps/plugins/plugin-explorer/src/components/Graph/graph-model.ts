@@ -41,6 +41,7 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
             }
 
             // Link to schema.
+            // TODO(burdon): Configure.
             links.push({
               id: `${object.id}-${object.__schema.id}`,
               source: object.id,
@@ -72,12 +73,6 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
                 }
               }
             });
-
-            // TODO(burdon): Follow direct relationships.
-            // if (!schemaMap.has(object.__schema.id)) {
-            //   schemaMap.add(object.__schema.id);
-            //   console.log('schema', JSON.stringify(object.__schema, null, 2));
-            // }
           }
 
           return links;
