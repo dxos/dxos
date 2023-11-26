@@ -5,24 +5,28 @@
 import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { createSvgContext, SVG, SVGContextProvider } from '@dxos/gem-core';
 import { type GraphModel } from '@dxos/gem-spore';
 
-import { RadialTree, TidyTree } from './layout';
+import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
 import { mapGraphToTreeData, type TreeNode } from './types';
 
 // TODO(burdon): Create dge bundling graph using d3.hierarchy.
 // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
 
-type Renderer = (props: { data: any; options: any }) => SVGElement;
+type Renderer = (svg: SVGSVGElement, data: any, options: any) => void;
 
-const renderers: { [type: string]: Renderer } = {
-  dendrogram: TidyTree,
-  radial: RadialTree,
-};
+export type LayoutType = 'dendrogram' | 'radial' | 'edge';
 
-export type TreeComponentProps<N> = {
+const renderers = new Map<LayoutType, Renderer>([
+  ['dendrogram', TidyTree],
+  ['radial', RadialTree],
+  ['edge', HierarchicalEdgeBundling],
+]);
+
+export type TreeComponentProps<N = unknown> = {
   model: GraphModel<N>;
-  type?: 'dendrogram' | 'radial';
+  type?: LayoutType;
   onClick?: (node?: N) => void;
 };
 
@@ -36,26 +40,35 @@ export const Tree = <N,>({ model, type = 'radial', onClick }: TreeComponentProps
     }, true);
   }, [model]);
 
+  const context = createSvgContext();
   const { ref, width = 0, height = 0 } = useResizeDetector();
-  const size = Math.min(width, height);
-  const radius = size * 0.4;
-  const options = {
-    width,
-    height,
-    radius,
-    marginLeft: (width - radius * 2) / 2,
-    marginRight: (width - radius * 2) / 2,
-    marginTop: (height - radius * 2) / 2,
-    marginBottom: (height - radius * 2) / 2,
-    label: (d: any) => d.label,
-  };
 
   useEffect(() => {
     if (width && height) {
-      ref.current.firstChild?.remove();
-      ref.current.append(renderers[type]({ data, options }));
+      const size = Math.min(width, height);
+      const radius = size * 0.4;
+      const options = {
+        width,
+        height,
+        radius,
+        marginLeft: (width - radius * 2) / 2,
+        marginRight: (width - radius * 2) / 2,
+        marginTop: (height - radius * 2) / 2,
+        marginBottom: (height - radius * 2) / 2,
+        label: (d: any) => d.label,
+      };
+
+      const renderer = renderers.get(type);
+      renderer?.(context.ref.current!, data, options);
     }
   }, [data, width, height]);
 
-  return <div ref={ref} className='flex grow overflow-hidden' onClick={() => onClick?.()} />;
+  // TODO(burdon): Provider should expand.
+  return (
+    <div ref={ref} className='flex grow overflow-hidden'>
+      <SVGContextProvider context={context}>
+        <SVG />
+      </SVGContextProvider>
+    </div>
+  );
 };

@@ -7,12 +7,15 @@ import * as d3 from 'd3';
 // Copyright 2021 Observable, Inc.
 // Released under the ISC license.
 // https://observablehq.com/@d3/tree
-const TidyTree = (data, options = {}) => {
+const TidyTree = (s: SVGSVGElement, data: any, options: any = {}) => {
+  const svg = d3.select(s);
+  svg.selectAll('*').remove();
+
   const {
     // data is either tabular (array of objects) or hierarchy (nested objects)
     path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-    id = Array.isArray(data) ? (d) => d.id : null, // if tabular data, given a d in data, returns a unique identifier (string)
-    parentId = Array.isArray(data) ? (d) => d.parentId : null, // if tabular data, given a node d, returns its parent’s identifier
+    id = Array.isArray(data) ? (d: any) => d.id : null, // if tabular data, given a d in data, returns a unique identifier (string)
+    parentId = Array.isArray(data) ? (d: any) => d.parentId : null, // if tabular data, given a node d, returns its parent’s identifier
     children, // if hierarchical data, given a d in data, returns its children
 
     tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
@@ -23,8 +26,8 @@ const TidyTree = (data, options = {}) => {
     link, // given a node d, its link (if any)
     linkTarget = '_blank', // the target attribute for links (if any)
 
-    width, // outer width, in pixels
-    height: initialHeight, // outer height, in pixels
+    width,
+    height,
     r = 3, // radius of nodes
     padding = 4, // horizontal padding for first and last column
 
@@ -61,40 +64,38 @@ const TidyTree = (data, options = {}) => {
   // Compute the layout.
   const dx = 8;
   const dy = width / (root.height + padding);
-  tree().nodeSize([dx + 8, dy])(root);
+  const layout = tree().nodeSize([dx + 8, dy]);
+  layout(root);
 
   // Center the tree.
   let x0 = Infinity;
   let x1 = -x0;
-  root.each((d) => {
+  let y0 = Infinity;
+  let y1 = -y0;
+  root.each((d: any) => {
     if (d.x > x1) {
       x1 = d.x;
     }
     if (d.x < x0) {
       x0 = d.x;
     }
+    if (d.y > y1) {
+      y1 = d.y;
+    }
+    if (d.y < y0) {
+      y0 = d.y;
+    }
   });
 
-  // Compute the default height.
-  let height = initialHeight;
-  if (initialHeight === undefined) {
-    height = x1 - x0 + dx * 2;
-  }
+  const ox = -(width - (x1 - x0)) / 2;
+  const sy = Math.max(1, height / (y1 - y0 - padding * 2));
 
   // Use the required curve
   if (typeof curve !== 'function') {
     throw new Error('Unsupported curve');
   }
 
-  const svg = d3
-    .create('svg')
-    .attr('viewBox', [(-dy * padding) / 2, x0 - dx - 32, width, height])
-    .attr('width', width)
-    .attr('height', height)
-    .attr('style', 'max-width: 100%; height: auto; height: intrinsic;')
-    .attr('font-family', 'sans-serif')
-    .attr('font-size', 10);
-
+  // Links.
   svg
     .append('g')
     .attr('fill', 'none')
@@ -110,10 +111,11 @@ const TidyTree = (data, options = {}) => {
       'd',
       d3
         .link(curve)
-        .x((d) => d.y)
-        .y((d) => d.x),
+        .x((d: any) => d.y + ox)
+        .y((d: any) => d.x * sy) as any,
     );
 
+  // Nodes.
   const node = svg
     .append('g')
     .selectAll('a')
@@ -121,7 +123,7 @@ const TidyTree = (data, options = {}) => {
     .join('a')
     // .attr('xlink:href', link == null ? null : (d) => link(d.data, d))
     .attr('target', link == null ? null : linkTarget)
-    .attr('transform', (d) => `translate(${d.y},${d.x})`);
+    .attr('transform', (d: any) => `translate(${d.y + ox},${d.x * sy})`);
 
   node
     .append('circle')
@@ -143,8 +145,6 @@ const TidyTree = (data, options = {}) => {
       .attr('stroke-width', haloWidth)
       .text((d, i) => getLabel[i]);
   }
-
-  return svg.node();
 };
 
 export default TidyTree;

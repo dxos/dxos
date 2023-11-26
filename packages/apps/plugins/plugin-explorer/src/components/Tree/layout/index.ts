@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-// @ts-ignore
+import HierarchicalEdgeBundling from './HierarchicalEdgeBundling';
 import RadialTree from './RadialTree';
-// @ts-ignore
 import TidyTree from './TidyTree';
 
-export { RadialTree, TidyTree };
+export { HierarchicalEdgeBundling, RadialTree, TidyTree };

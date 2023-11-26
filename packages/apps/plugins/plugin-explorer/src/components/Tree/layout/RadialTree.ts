@@ -8,43 +8,41 @@ import * as d3 from 'd3';
 // Released under the ISC license.
 // https://observablehq.com/@d3/radial-tree
 // https://observablehq.com/@d3/tree
-const RadialTree = (data, options = {}) => {
+const RadialTree = (s: SVGSVGElement, data: any, options: any = {}) => {
+  const svg = d3.select(s);
+  svg.selectAll('*').remove();
+
   const {
     // data is either tabular (array of objects) or hierarchy (nested objects)
     path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-    id = Array.isArray(data) ? (d) => d.id : null, // if tabular data, given a d in data, returns a unique identifier (string)
-    parentId = Array.isArray(data) ? (d) => d.parentId : null, // if tabular data, given a node d, returns its parent’s identifier
+    id = Array.isArray(data) ? (d: any) => d.id : null, // if tabular data, given a d in data, returns a unique identifier (string)
+    parentId = Array.isArray(data) ? (d: any) => d.parentId : null, // if tabular data, given a node d, returns its parent’s identifier
     children, // if hierarchical data, given a d in data, returns its children
 
     tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
     separation = tree === d3.tree
-      ? (a, b) => (a.parent === b.parent ? 1 : 2) / a.depth
-      : (a, b) => (a.parent === b.parent ? 1 : 2),
+      ? (a: any, b: any) => (a.parent === b.parent ? 1 : 2) / a.depth
+      : (a: any, b: any) => (a.parent === b.parent ? 1 : 2),
     sort, // how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
     label, // given a node d, returns the display name
     title, // given a node d, returns its hover text
     link, // given a node d, its link (if any)
     linkTarget = '_blank', // the target attribute for links (if any)
 
-    width = 0, // outer width, in pixels
-    height = 0, // outer height, in pixels
-    margin = 0, // shorthand for margins
-    marginTop = margin, // top margin, in pixels
-    marginRight = margin, // right margin, in pixels
-    marginBottom = margin, // bottom margin, in pixels
-    marginLeft = margin, // left margin, in pixels
-    radius = Math.min(width - marginLeft - marginRight, height - marginTop - marginBottom) / 3, // outer radius
+    radius = 400,
     r = 4, // radius of nodes
+    arc = 2 * Math.PI,
 
     fill = '#999', // fill for nodes
     stroke = '#555', // stroke for links
     strokeWidth = 1.5, // stroke width for links
-    strokeOpacity = 0.4, // stroke opacity for links
+    strokeOpacity = 1, // stroke opacity for links
     strokeLinejoin, // stroke line join for links
     strokeLinecap, // stroke line cap for links
 
-    halo = '#fff', // color of label halo
-    haloWidth = 3, // padding around the labels
+    text = 'gray', // fill for text
+    halo = 'white', // color of label halo
+    haloWidth = 4, // padding around the labels
   } = options;
 
   // If id and parentId options are specified, or the path option, use d3.stratify
@@ -68,19 +66,8 @@ const RadialTree = (data, options = {}) => {
   const getLabel = label === null ? null : descendants.map((d) => label(d.data, d));
 
   // Compute the layout.
-  tree()
-    .size([2 * Math.PI, radius]) // Full circle or not.
-    .separation(separation)(root);
-
-  // TODO(burdon): Factor out.
-  const svg = d3
-    .create('svg')
-    .attr('viewBox', [-marginLeft - radius, -marginTop - radius, width, height])
-    .attr('width', width)
-    .attr('height', height)
-    .attr('style', 'max-width: 100%; width: 100%; height: 100%; height: intrinsic;')
-    .attr('font-family', 'sans-serif')
-    .attr('font-size', 10);
+  const layout = tree().size([arc, radius]).separation(separation);
+  layout(root);
 
   // Links.
   svg
@@ -98,8 +85,8 @@ const RadialTree = (data, options = {}) => {
       'd',
       d3
         .linkRadial()
-        .angle((d) => d.x + Math.PI / 2)
-        .radius((d) => d.y),
+        .angle((d: any) => d.x + Math.PI / 2)
+        .radius((d: any) => d.y) as any,
     );
 
   // Nodes.
@@ -110,7 +97,7 @@ const RadialTree = (data, options = {}) => {
     .join('a')
     // .attr('xlink:href', link == null ? null : (d) => link(d.data, d))
     .attr('target', link == null ? null : linkTarget)
-    .attr('transform', (d) => `rotate(${(d.x * 180) / Math.PI}) translate(${d.y},0)`);
+    .attr('transform', (d: any) => `rotate(${(d.x * 180) / Math.PI}) translate(${d.y},0)`);
 
   node
     .append('circle')
@@ -121,15 +108,17 @@ const RadialTree = (data, options = {}) => {
     node.append('title').text((d) => title(d.data, d));
   }
 
+  // Text.
   if (getLabel) {
     node
       .append('text')
-      .attr('transform', (d) => `rotate(${d.x >= Math.PI ? 180 : 0})`)
+      .attr('fill', text)
+      .attr('transform', (d: any) => `rotate(${d.x >= Math.PI ? 180 : 0})`)
       .attr('dy', '0.32em')
       // eslint-disable-next-line no-mixed-operators
-      .attr('x', (d) => (d.x < Math.PI === !d.children ? 6 : -6))
+      .attr('x', (d: any) => (d.x < Math.PI === !d.children ? 6 : -6))
       // eslint-disable-next-line no-mixed-operators
-      .attr('text-anchor', (d) => (d.x < Math.PI === !d.children ? 'start' : 'end'))
+      .attr('text-anchor', (d: any) => (d.x < Math.PI === !d.children ? 'start' : 'end'))
       .attr('paint-order', 'stroke')
       .attr('stroke', halo)
       .attr('stroke-width', haloWidth)

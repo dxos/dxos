@@ -1083,6 +1083,9 @@ importers:
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
+      '@types/d3-hierarchy':
+        specifier: ^3.1.6
+        version: 3.1.6
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -20414,8 +20417,8 @@ packages:
       '@types/geojson': 7946.0.10
     dev: true
 
-  /@types/d3-hierarchy@3.1.0:
-    resolution: {integrity: sha512-g+sey7qrCa3UbsQlMZZBOHROkFqx7KZKvUpRzI/tAp/8erZWpYq7FgNKvYwebi2LaEiVs1klhUfd3WCThxmmWQ==}
+  /@types/d3-hierarchy@3.1.6:
+    resolution: {integrity: sha512-qlmD/8aMk5xGorUvTUWHCiumvgaUXYldYjNVOWtYoTYY/L+WwIEAmJxUmTgr9LoGNG0PPAOmqMDJVDPc7DOpPw==}
     dev: true
 
   /@types/d3-interpolate@3.0.1:
@@ -20499,7 +20502,7 @@ packages:
       '@types/d3-force': 3.0.3
       '@types/d3-format': 3.0.1
       '@types/d3-geo': 3.0.2
-      '@types/d3-hierarchy': 3.1.0
+      '@types/d3-hierarchy': 3.1.6
       '@types/d3-interpolate': 3.0.1
       '@types/d3-path': 3.0.0
       '@types/d3-polygon': 3.0.0

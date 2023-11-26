@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Re-use Tree lib? Integrate with ECHO.
+
 export type Item = {
   id: string;
   done?: boolean;
