@@ -10,6 +10,16 @@ import { type GraphModel } from '@dxos/gem-spore';
 import { RadialTree, TidyTree } from './layout';
 import { mapGraphToTreeData, type TreeNode } from './types';
 
+// TODO(burdon): Create dge bundling graph using d3.hierarchy.
+// https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
+
+type Renderer = (props: { data: any; options: any }) => SVGElement;
+
+const renderers: { [type: string]: Renderer } = {
+  dendrogram: TidyTree,
+  radial: RadialTree,
+};
+
 export type TreeComponentProps<N> = {
   model: GraphModel<N>;
   type?: 'dendrogram' | 'radial';
@@ -18,9 +28,7 @@ export type TreeComponentProps<N> = {
 
 // TODO(burdon): Pass in TypedObject.
 export const Tree = <N,>({ model, type = 'radial', onClick }: TreeComponentProps<N>) => {
-  const { ref, width = 0, height = 0 } = useResizeDetector();
   const [data, setData] = useState<TreeNode>();
-
   useEffect(() => {
     return model.subscribe(() => {
       const tree = mapGraphToTreeData(model);
@@ -28,6 +36,7 @@ export const Tree = <N,>({ model, type = 'radial', onClick }: TreeComponentProps
     }, true);
   }, [model]);
 
+  const { ref, width = 0, height = 0 } = useResizeDetector();
   const size = Math.min(width, height);
   const radius = size * 0.4;
   const options = {
@@ -43,24 +52,10 @@ export const Tree = <N,>({ model, type = 'radial', onClick }: TreeComponentProps
 
   useEffect(() => {
     if (width && height) {
-      let el;
-      switch (type) {
-        case 'dendrogram': {
-          el = TidyTree(data ?? {}, options as any);
-          break;
-        }
-        case 'radial': {
-          el = RadialTree(data ?? {}, options as any);
-          break;
-        }
-      }
-
-      if (el) {
-        ref.current.firstChild?.remove();
-        ref.current.append(el);
-      }
+      ref.current.firstChild?.remove();
+      ref.current.append(renderers[type]({ data, options }));
     }
   }, [data, width, height]);
 
-  return <div ref={ref} className='flex flex-1 overflow-hidden' onClick={() => onClick?.()} />;
+  return <div ref={ref} className='flex grow overflow-hidden' onClick={() => onClick?.()} />;
 };

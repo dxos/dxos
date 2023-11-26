@@ -8,8 +8,8 @@ import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/r
 /**
  * Converts ECHO objects to a graph.
  */
-export class EchoGraphModel extends GraphModel<TypedObject> {
-  private _graph: GraphData<TypedObject> = {
+export class SpaceGraphModel extends GraphModel<TypedObject> {
+  private readonly _graph: GraphData<TypedObject> = {
     nodes: [],
     links: [],
   };
@@ -17,12 +17,13 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
   private _subscription?: Subscription;
   private _objects?: TypedObject[];
 
+  override get graph(): GraphData<TypedObject> {
+    return this._graph;
+  }
+
   get objects(): TypedObject[] {
     return this._objects ?? [];
   }
-
-  // TODO(burdon): Create dge bundling graph using d3.hierarchy.
-  // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
 
   open(space: Space) {
     if (!this._subscription) {
@@ -40,11 +41,11 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
             }
 
             // Link to schema.
-            // links.push({
-            //   id: `${object.id}-${object.__schema.id}`,
-            //   source: object.id,
-            //   target: object.__schema.id,
-            // });
+            links.push({
+              id: `${object.id}-${object.__schema.id}`,
+              source: object.id,
+              target: object.__schema.id,
+            });
 
             // Parse schema to follow referenced objects.
             object.__schema.props.forEach((prop) => {
@@ -82,8 +83,6 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
           return links;
         }, []);
 
-        // console.log('graph', { nodes: this._graph.nodes.length, links: this._graph.links.length });
-
         this.triggerUpdate();
       }, true);
     }
@@ -99,10 +98,4 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
 
     return this;
   }
-
-  override get graph(): GraphData<TypedObject> {
-    return this._graph;
-  }
 }
-
-const schemaMap = new Set<string>();

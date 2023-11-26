@@ -10,7 +10,7 @@ import { createSvgContext, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem
 import { Graph as GraphComponent, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-ui-theme';
 
-import { EchoGraphModel } from './graph-model';
+import { SpaceGraphModel } from './graph-model';
 import { Tree } from '../Tree';
 
 type Slots = {
@@ -34,7 +34,7 @@ const colors = [
 ];
 
 export const SpaceGraph: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
-  const model = useMemo(() => (space ? new EchoGraphModel().open(space) : undefined), [space]);
+  const model = useMemo(() => (space ? new SpaceGraphModel().open(space) : undefined), [space]);
   const [selected, setSelected] = useState<string>();
 
   const context = createSvgContext();
