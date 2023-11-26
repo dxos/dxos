@@ -59,6 +59,7 @@ export type OllamaChainResourcesOptions = ChainResourcesOptions<
 /**
  * Install and run: `ollama run llama2` (takes 5 mins).
  * https://ollama.ai/download
+ * https://github.com/jmorganca/ollama#model-library
  */
 export const createOllamaChainResources = (options: OllamaChainResourcesOptions) => {
   const embeddings = new OllamaEmbeddings({
