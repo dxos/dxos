@@ -16,10 +16,39 @@ import { mapGraphToTreeData, type TreeNode } from './types';
 
 type Renderer = (svg: SVGSVGElement, data: any, options: any) => void;
 
-export type LayoutType = 'dendrogram' | 'radial' | 'edge';
+export type LayoutType = 'tidy' | 'radial' | 'edge';
+
+// TODO(burdon): Normalize API and styling.
+
+export type TreeLayoutSlots = {
+  node?: string;
+  path?: string;
+  text?: string;
+};
+
+export type TreeOptions = {
+  label: (d: any) => string;
+
+  slots?: TreeLayoutSlots;
+  radius?: number;
+
+  width: number;
+  height: number;
+  margin?: number;
+
+  padding?: number;
+  // Radius of nodes.
+  r?: number;
+};
+
+export const defaultTreeLayoutSlots: TreeLayoutSlots = {
+  node: 'fill-blue-600',
+  path: 'fill-none stroke-blue-400 stroke-[0.5px]',
+  text: 'stroke-[0.5px] stroke-neutral-700 text-xs', // TODO(burdon): Create box instead of halo.
+};
 
 const renderers = new Map<LayoutType, Renderer>([
-  ['dendrogram', TidyTree],
+  ['tidy', TidyTree],
   ['radial', RadialTree],
   ['edge', HierarchicalEdgeBundling],
 ]);
@@ -30,8 +59,8 @@ export type TreeComponentProps<N = unknown> = {
   onClick?: (node?: N) => void;
 };
 
-// TODO(burdon): Pass in TypedObject.
-export const Tree = <N,>({ model, type = 'radial', onClick }: TreeComponentProps<N>) => {
+// TODO(burdon): Normalize API with Graph (e.g., ECHO and non-echo layers).
+export const Tree = <N,>({ model, type = 'tidy', onClick }: TreeComponentProps<N>) => {
   const [data, setData] = useState<TreeNode>();
   useEffect(() => {
     return model.subscribe(() => {
@@ -48,6 +77,8 @@ export const Tree = <N,>({ model, type = 'radial', onClick }: TreeComponentProps
       const size = Math.min(width, height);
       const radius = size * 0.4;
       const options = {
+        // TODO(burdon): Type.
+        label: (d: any) => d.label,
         width,
         height,
         radius,
@@ -55,7 +86,7 @@ export const Tree = <N,>({ model, type = 'radial', onClick }: TreeComponentProps
         marginRight: (width - radius * 2) / 2,
         marginTop: (height - radius * 2) / 2,
         marginBottom: (height - radius * 2) / 2,
-        label: (d: any) => d.label,
+        slots: defaultTreeLayoutSlots,
       };
 
       const renderer = renderers.get(type);

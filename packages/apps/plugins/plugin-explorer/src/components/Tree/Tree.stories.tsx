@@ -33,8 +33,33 @@ const Story: FC<{ type?: TreeComponentProps<any>['type'] }> = ({ type } = {}) =>
           items: [
             new TreeType.Item(),
             new TreeType.Item(),
+            new TreeType.Item(),
+            new TreeType.Item(),
+            new TreeType.Item(),
+            new TreeType.Item(),
+            new TreeType.Item(),
             new TreeType.Item({
-              items: [new TreeType.Item(), new TreeType.Item(), new TreeType.Item()],
+              items: [
+                new TreeType.Item(),
+                new TreeType.Item({
+                  items: [
+                    new TreeType.Item(),
+                    new TreeType.Item(),
+                    new TreeType.Item(),
+                    new TreeType.Item({
+                      items: [new TreeType.Item(), new TreeType.Item()],
+                    }),
+                    new TreeType.Item(),
+                    new TreeType.Item(),
+                    new TreeType.Item({
+                      items: [new TreeType.Item(), new TreeType.Item()],
+                    }),
+                    new TreeType.Item(),
+                    new TreeType.Item(),
+                  ],
+                }),
+                new TreeType.Item(),
+              ],
             }),
             new TreeType.Item(),
             new TreeType.Item(),
@@ -46,7 +71,7 @@ const Story: FC<{ type?: TreeComponentProps<any>['type'] }> = ({ type } = {}) =>
                     new TreeType.Item(),
                     new TreeType.Item(),
                     new TreeType.Item({
-                      items: [new TreeType.Item()],
+                      items: [new TreeType.Item(), new TreeType.Item()],
                     }),
                   ],
                 }),
@@ -88,9 +113,9 @@ export default {
   },
 };
 
-export const Dendrogram = {
+export const Tidy = {
   args: {
-    type: 'dendrogram',
+    type: 'tidy',
   },
 };
 

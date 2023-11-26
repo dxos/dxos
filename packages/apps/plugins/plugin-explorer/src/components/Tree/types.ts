@@ -6,7 +6,7 @@ import type { GraphModel } from '@dxos/gem-spore';
 
 export type TreeNode = {
   id: string;
-  label: string;
+  label?: string;
   children?: TreeNode[];
 };
 

@@ -1,98 +1,59 @@
 //
 // Copyright 2023 DXOS.org
+// Copyright 2022 Observable, Inc.
 //
 
 import * as d3 from 'd3';
 import { type HierarchyNode } from 'd3-hierarchy';
 
-const color = {
-  in: '#00f',
-  out: '#f00',
-  none: '#ccc',
-  text: '#333',
-};
+import { type TreeOptions } from '../Tree';
+import { type TreeNode } from '../types';
 
 // Create hierarchical ID.
-const getId = (node: HierarchyNode<Datum>): string =>
+// eslint-disable-next-line unused-imports/no-unused-vars
+const getId = (node: HierarchyNode<TreeNode>): string =>
   `${node.parent ? getId(node.parent) + '/' : ''}${node.data.id.slice(0, 4)}`;
-
-const getName = (datum: Datum) => datum.id;
-
-type Options = {
-  path?: string;
-  id?: any;
-  parentId?: any;
-  children?: any;
-
-  radius?: number;
-  padding?: number;
-};
 
 // https://github.com/d3/d3-hierarchy
 // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
-const HierarchicalEdgeBundling = (s: SVGSVGElement, data: Datum, options: Options = {}) => {
+const HierarchicalEdgeBundling = (s: SVGSVGElement, data: TreeNode, options: TreeOptions) => {
   const svg = d3.select(s);
   svg.selectAll('*').remove();
 
-  const {
-    // data is either tabular (array of objects) or hierarchy (nested objects)
-    path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-    id = Array.isArray(data) ? (d: any) => d.id : null, // if tabular data, given a d in data, returns a unique identifier (string)
-    parentId = Array.isArray(data) ? (d: any) => d.parentId : null, // if tabular data, given a node d, returns its parent’s identifier
-    children, // if hierarchical data, given a d in data, returns its children
-
-    radius = 600,
-    padding = 100,
-  } = options;
-
-  // const hierarchy = d3.hierarchy<Datum>(data);
-  // .sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(getName(a.data), getName(b.data)));
+  const { radius = 600, padding = 100, slots } = options;
 
   // https://d3js.org/d3-hierarchy/hierarchy
-  const hierarchy =
-    // path != null
-    //   ? d3.stratify().path(id)(data)
-    //   : getId != null || parentId != null
-    //   ? d3.stratify().id(id).parentId(parentId)(data)
-    d3.hierarchy(data, children);
+  const root = d3.hierarchy(flatten(data));
+  // .sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(getName(a.data), getName(b.data)));
 
-  console.log(data);
-  // console.log(data.id);
-  // console.log(data.children[0].id);
-  // console.log(hierarchy);
-  console.log(hierarchy.leaves().map((d) => d.data.id.slice(0, 4)));
-  return;
-
-  console.log(bilink(hierarchy));
-
-  const tree = d3.cluster<Datum>().size([2 * Math.PI, radius - padding]);
-  const root = tree(bilink(hierarchy));
+  const tree = d3.cluster<TreeNode>().size([2 * Math.PI, radius - padding]);
+  const layout = tree(addLinks(root));
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   const node = svg
     .append('g')
     .selectAll()
-    .data(root.leaves())
+    .data(layout.leaves())
     .join('g')
-    .attr('transform', (d) => `rotate(${(d.x * 180) / Math.PI - 90}) translate(${d.y},0)`)
+    .attr('transform', (d) => `rotate(${d.x * (180 / Math.PI) - 90}) translate(${d.y},0)`)
     .append('text')
-    .attr('fill', color.text)
-    .attr('dy', '0.31em')
+    .attr('class', slots?.text ?? '')
+    .attr('dy', '0.31em') // TODO(burdon): Based on font size.
     .attr('x', (d) => (d.x < Math.PI ? 6 : -6))
     .attr('text-anchor', (d) => (d.x < Math.PI ? 'start' : 'end'))
     .attr('transform', (d) => (d.x >= Math.PI ? 'rotate(180)' : null))
-    .text((d: any) => d.data.name)
-    .each(function (d: any) {
-      d.text = this;
-    })
+    // .text((d: any) => d.data.id)
+    // .each(function (d: any) {
+    //   d.text = this;
+    // })
     // .on('mouseover', overed)
     // .on('mouseout', outed)
-    .call((text) =>
-      text
-        // .append('title')
-        .text((d: any) => `${getId(d)} [${[(d as any).outgoing.length]} ${[(d as any).incoming.length]}]`),
+    .call(
+      (text) => text.text((d: any) => d.data.id.slice(0, 8)),
+      // .text((d: any) => `${getId(d)} [${[(d as any).outgoing?.length ?? 0]}]`),
     );
 
+  // https://d3js.org/d3-shape/radial-line
   const line = d3
     .lineRadial()
     .curve(d3.curveBundle.beta(0.85))
@@ -100,15 +61,16 @@ const HierarchicalEdgeBundling = (s: SVGSVGElement, data: Datum, options: Option
     .angle((d: any) => d.x);
 
   // eslint-disable-next-line unused-imports/no-unused-vars
-  const link = svg
+  const links = svg
     .append('g')
-    .attr('stroke', color.none)
-    .attr('fill', 'none')
     .selectAll()
-    .data(root.leaves().flatMap((leaf: any) => leaf.outgoing))
+    .data(layout.leaves().flatMap((leaf: any) => leaf.outgoing))
     .join('path')
     .style('mix-blend-mode', 'multiply')
-    .attr('d', ([i, o]) => line(i.path(o)))
+    .attr('class', slots?.path ?? '')
+    .attr('d', ([i, o]) => {
+      return line(i.path(o));
+    })
     .each(function (d) {
       d.path = this;
     });
@@ -144,28 +106,59 @@ const HierarchicalEdgeBundling = (s: SVGSVGElement, data: Datum, options: Option
   // }
 };
 
-type Datum = {
-  id: string;
-  children: Datum[];
-};
-
-// Monkey-patch incoming/outgoing.
-const bilink = (root: HierarchyNode<Datum>) => {
-  const map = new Map(root.leaves().map((d) => [d.data.id, d]));
-
-  for (const d of root.leaves()) {
-    console.log(d.data.id);
-    (d as any).incoming = [];
-    (d as any).outgoing = d.data.children.map((d) => [d, map.get(d.id)!]) ?? [];
-  }
+// Monkey-patch with incoming/outgoing nodes.
+const addLinks = (root: HierarchyNode<TreeNode>) => {
+  // Map of nodes indexed by ID.
+  const nodes = new Map(root.descendants().map((d) => [d.data.id, d]));
+  const parents = root.descendants().reduce((map, d) => {
+    if (d.children?.length) {
+      map.set(d.data.id, d);
+    }
+    return map;
+  }, new Map<string, HierarchyNode<TreeNode>>());
 
   for (const d of root.leaves()) {
-    for (const o of (d as any).outgoing) {
-      o[1].incoming.push(o);
+    // (d as any).incoming = [];
+
+    const parent = parents.get(d.data.id);
+    if (parent) {
+      // Skip the first node which is a placeholder created by flatten().
+      (d as any).outgoing =
+        parent.data.children?.slice(1).map((child) => {
+          return [d, nodes.get(child.id)!];
+        }) ?? [];
+    } else {
+      (d as any).outgoing = [];
     }
   }
 
+  // for (const d of root.leaves()) {
+  //   for (const [_, o] of (d as any).outgoing) {
+  //     o.incoming.push(o);
+  //   }
+  // }
+
   return root;
+};
+
+/**
+ * We are using a hierarchy in order to group nodes by parent, but we want the parent
+ * nodes to be positioned at the first level along with all descendents.
+ * So we add a placeholder for all parents at the head of each group.
+ * @param node
+ */
+const flatten = (node: TreeNode) => {
+  const clone: TreeNode = {
+    id: node.id,
+  };
+
+  // TODO(burdon): NOTE: Should exclude schema (since requires a tree).
+  if (node.children?.length) {
+    const children = node.children.map((child) => flatten(child));
+    clone.children = [{ id: node.id }, ...children];
+  }
+
+  return clone;
 };
 
 export default HierarchicalEdgeBundling;

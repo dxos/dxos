@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Re-use Tree lib? Integrate with ECHO.
+// TODO(burdon): Re-use Tree lib? Integrate with ECHO (e.g., https://d3js.org/d3-hierarchy/hierarchy)
 
 export type Item = {
   id: string;

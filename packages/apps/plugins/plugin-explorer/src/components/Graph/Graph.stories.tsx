@@ -13,7 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
 
-import { SpaceGraph } from './SpaceGraph';
+import { Graph } from './Graph';
 
 faker.seed(1);
 
@@ -38,11 +38,11 @@ const Story = () => {
     return null;
   }
 
-  return <SpaceGraph space={space} />;
+  return <Graph space={space} />;
 };
 
 export default {
-  component: SpaceGraph,
+  component: Graph,
   render: Story,
   decorators: [
     FullscreenDecorator(),

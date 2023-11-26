@@ -4,4 +4,4 @@
 
 export * from './graph-model';
 
-export * from './SpaceGraph';
+export * from './Graph';

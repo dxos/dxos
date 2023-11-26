@@ -10,7 +10,7 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { SpaceGraph } from './Graph';
+import { Graph } from './Graph';
 
 export const ExplorerMain = ({ view }: { view: View }) => {
   const space = getSpaceForObject(view);
@@ -21,7 +21,7 @@ export const ExplorerMain = ({ view }: { view: View }) => {
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <SpaceGraph space={space} match={match} />
+      <Graph space={space} match={match} />
     </Main.Content>
   );
 };

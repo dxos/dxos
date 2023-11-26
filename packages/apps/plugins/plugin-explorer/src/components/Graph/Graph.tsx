@@ -33,7 +33,7 @@ const colors = [
   '[&>circle]:!fill-indigo-300  [&>circle]:!stroke-indigo-600',
 ];
 
-export const SpaceGraph: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
+export const Graph: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
   const model = useMemo(() => (space ? new SpaceGraphModel().open(space) : undefined), [space]);
   const [selected, setSelected] = useState<string>();
 
@@ -74,7 +74,7 @@ export const SpaceGraph: FC<{ space: Space; match?: RegExp }> = ({ space, match 
 
   if (selected) {
     model.setSelected(selected);
-    return <Tree model={model} type='dendrogram' onClick={() => setSelected(undefined)} />;
+    return <Tree model={model} type='tidy' onClick={() => setSelected(undefined)} />;
   }
 
   return (
