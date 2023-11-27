@@ -15,7 +15,7 @@ import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
+import { afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { data } from './testing';
 import { contains, getConfig, getStorageDir } from './util';
@@ -35,12 +35,9 @@ describe('Tests against old storage', () => {
     fse.copySync(storagePath, testStoragePath, { overwrite: true });
   });
 
-  afterAll(() => {
-    fse.removeSync(testStoragePath);
-  });
-
   test('check if space loads', async () => {
     const builder = new TestBuilder(getConfig(testStoragePath));
+    afterTest(() => builder.destroy());
     const services = builder.createLocal();
 
     log.info('running', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
