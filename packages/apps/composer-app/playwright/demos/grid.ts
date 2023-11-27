@@ -29,12 +29,12 @@ const config = {
 /**
  * Create grid of launchers.
  */
+// TODO(burdon): Test invitation flow.
 const createLaunchers = () => {
   const { width, height } = robot.getScreenSize();
   const grid = new Grid(width, height, config.spacing, config.margin);
   // @ts-ignore
   const [rows, columns] = config.dimensions ?? grid.createDimensions(...config.minSize);
-  console.log(rows, columns);
   return grid.createGrid(rows, columns).map(
     (bounds) =>
       new Launcher(config.baseUrl, chromium, {
@@ -61,7 +61,7 @@ const test = async () => {
   // });
 
   // TODO(burdon): State machine/actions.
-  await sleep(30_000);
+  await sleep(10_000);
   log.info('Done');
 };
 
