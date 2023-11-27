@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 import fse from 'fs-extra';
+import os from 'node:os';
 import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
@@ -20,12 +21,13 @@ import { data } from './testing';
 import { contains, getConfig, getStorageDir } from './util';
 
 describe('Tests against old storage', () => {
-  const testStoragePath = path.join('/tmp/dxos/proto-guard/storage/', STORAGE_VERSION.toString());
+  let testStoragePath: string;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     // Copy storage image to tmp folder against which tests will be run.
     log.info(`Storage version ${STORAGE_VERSION}`);
 
+    testStoragePath = fse.mkdtempSync(path.join(os.tmpdir(), 'proto-guard-'));
     fse.mkdirSync(testStoragePath, { recursive: true });
     const storagePath = path.join(getStorageDir(), STORAGE_VERSION.toString());
 
