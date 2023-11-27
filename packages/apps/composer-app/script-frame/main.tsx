@@ -43,7 +43,7 @@ const services = new ClientServicesProxy(
 
 createRoot(document.getElementById('root')!).render(
   <ClientProvider services={() => services} types={types}>
-    <div className='flex fixed inset-0 m-1 m-ring  '>
+    <div className='flex fixed inset-0'>
       <Component />
     </div>
   </ClientProvider>,
