@@ -177,19 +177,17 @@ describe('Database', () => {
       expect(obj.description).toEqual('Test description');
     });
 
-    if (!getGlobalAutomergePreference()) {
-      test('get/set reference after save', async () => {
-        const { db } = await createDatabase();
+    test('get/set reference after save', async () => {
+      const { db } = await createDatabase();
 
-        const obj = new TypedObject();
-        db.add(obj);
-        await db.flush();
+      const obj = new TypedObject();
+      db.add(obj);
+      await db.flush();
 
-        obj.nested = new TypedObject({ title: 'Test title' });
+      obj.nested = new TypedObject({ title: 'Test title' });
 
-        expect(obj.nested.title).toEqual('Test title');
-      });
-    }
+      expect(obj.nested.title).toEqual('Test title');
+    });
 
     test('object constructor', async () => {
       const { db } = await createDatabase();

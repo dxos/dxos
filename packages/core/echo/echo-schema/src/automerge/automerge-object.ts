@@ -22,6 +22,7 @@ import {
   db,
   debug,
   subscribe,
+  proxy,
 } from '../object/types';
 import { type dxos } from '../proto/gen/schema';
 import { compositeRuntime } from '../util';
@@ -178,16 +179,21 @@ export class AutomergeObject implements TypedObjectProperties {
       },
 
       get: (_, key) => {
+        // Enable detection of proxy objects.
+        if (key === proxy) {
+          return true;
+        }
+
         if (!isValidKey(key)) {
           return Reflect.get(this, key);
         }
 
         const value = this._get([...path, key as string]);
-
-        if (Array.isArray(value)) {
+        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+          return value;
+        } else if (Array.isArray(value)) {
           return new AutomergeArray()._attach(this[base], [...path, key as string]);
         } else if (typeof value === 'object' && value !== null) {
-          // TODO(dmaretskyi): Check for Reference types.
           return this._createProxy(path);
         }
 
