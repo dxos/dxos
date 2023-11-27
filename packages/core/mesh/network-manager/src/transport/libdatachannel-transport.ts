@@ -126,14 +126,18 @@ export class LibDataChannelTransport implements Transport {
       log.debug('dataChannel.onopen');
       const duplex = new Duplex({
         read: () => {},
-        write: (chunk, encoding, callback) => {
+        write: async (chunk, encoding, callback) => {
           // todo wait to open
 
           if (chunk.length > MAX_MESSAGE_SIZE) {
             this.errors.raise(new Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
           }
-          dataChannel.send(chunk);
-
+          try {
+            dataChannel.send(chunk);
+          } catch (err: any) {
+            this.errors.raise(err);
+            await this._close();
+          }
           if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
             if (this._writeCallback !== null) {
               log.error("consumer trying to write before we're ready for more data");

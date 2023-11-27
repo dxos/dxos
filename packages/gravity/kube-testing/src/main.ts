@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 
 import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runAgentForPlan } from './plan';
 import { ReplicationTestPlan, EmptyTestPlan, SignalTestPlan, TransportTestPlan, EchoTestPlan } from './spec';
+import { AutomergeTestPlan } from './spec/automerge';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
@@ -20,6 +21,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
   transport: () => new TransportTestPlan(),
   echo: () => new EchoTestPlan(),
   replication: () => new ReplicationTestPlan(),
+  automerge: () => new AutomergeTestPlan(),
   empty: () => new EmptyTestPlan(),
 };
 
@@ -47,6 +49,7 @@ const start = async () => {
     invariant(name, 'missing GRAVITY_SPEC');
     invariant(params, 'missing GRAVITY_AGENT_PARAMS');
     await runAgentForPlan(name, params, plans[name]());
+    return;
   }
 
   const argv = yargs(hideBin(process.argv))
