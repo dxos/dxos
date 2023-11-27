@@ -30,6 +30,7 @@ export const createColumnBuilder = <TData extends RowData>() => ({
   builder: new ColumnBuilder<TData>(),
 });
 
+// TODO(thure): This interface is redundant, e.g. `classNames` == `meta.cell.classNames`
 /**
  * NOTE: Can use `meta` for custom properties.
  */
