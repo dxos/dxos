@@ -42,6 +42,8 @@ export default defineConfig({
         'script-frame': resolve(__dirname, './script-frame/index.html'),
       },
       output: {
+        // Generate nicer chunk names. Default makes most chunks have names like index-[hash].js.
+        chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
           dxos: ['@dxos/react-client'],
@@ -181,3 +183,24 @@ export default defineConfig({
     },
   ],
 });
+
+function chunkFileNames (chunkInfo) {
+  if(chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+    let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    const nodeModulesIdx = segments.indexOf('node_modules');
+    if(nodeModulesIdx !== -1) {
+      segments = segments.slice(0, nodeModulesIdx);
+    } 
+    const ignoredNames = [
+      'dist',
+      'lib',
+      'browser'
+    ]
+    const significantSegment = segments.find(segment => !ignoredNames.includes(segment));
+    if(significantSegment) {
+      return `assets/${significantSegment}-[hash].js`;
+    }
+  }
+
+  return 'assets/[name]-[hash].js';
+};
