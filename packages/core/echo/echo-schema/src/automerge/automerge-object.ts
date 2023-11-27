@@ -194,7 +194,7 @@ export class AutomergeObject implements TypedObjectProperties {
         } else if (Array.isArray(value)) {
           return new AutomergeArray()._attach(this[base], [...path, key as string]);
         } else if (typeof value === 'object' && value !== null) {
-          return this._createProxy(path);
+          return this._createProxy([...path, key as string]);
         }
 
         return value;
