@@ -9,6 +9,7 @@ import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
+import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type EchoDatabase } from '../database';
 import { type TypedObjectOptions } from '../object';
@@ -21,6 +22,7 @@ import {
   db,
   debug,
   subscribe,
+  proxy,
 } from '../object/types';
 import { type dxos } from '../proto/gen/schema';
 import { compositeRuntime } from '../util';
@@ -30,11 +32,27 @@ export type BindOptions = {
   docHandle: DocHandle<any>;
   path: string[];
 };
+
+/**
+ * Automerge object system properties.
+ * (Is automerge specific.)
+ */
+export type ObjectSystem = {
+  /**
+   * Deletion marker.
+   */
+  deleted: boolean;
+};
+
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb;
   private _doc?: Doc<any>;
   private _docHandle?: DocHandle<any>;
-  private _path: string[] = [];
+
+  /**
+   * @internal
+   */
+  _path: string[] = [];
   protected readonly _signal = compositeRuntime.createSignal();
 
   private _updates = new Event();
@@ -64,16 +82,24 @@ export class AutomergeObject implements TypedObjectProperties {
     return undefined;
   }
 
-  get __meta(): ObjectMeta | undefined {
+  get __meta(): ObjectMeta {
     return this._createProxy(['meta']);
   }
 
+  get __system(): ObjectSystem {
+    return this._createProxy(['system']);
+  }
+
   get __deleted(): boolean {
-    return this._getDoc().deleted;
+    return this.__system?.deleted ?? false;
   }
 
   toJSON() {
-    return this._getDoc();
+    let value = this[base]._getDoc();
+    for (const key of this[base]._path) {
+      value = value?.[key];
+    }
+    return value;
   }
 
   get id(): string {
@@ -153,15 +179,22 @@ export class AutomergeObject implements TypedObjectProperties {
       },
 
       get: (_, key) => {
+        // Enable detection of proxy objects.
+        if (key === proxy) {
+          return true;
+        }
+
         if (!isValidKey(key)) {
           return Reflect.get(this, key);
         }
 
         const value = this._get([...path, key as string]);
-
-        if (typeof value === 'object' && value !== null) {
-          // TODO(dmaretskyi): Check for Reference types.
-          return this._createProxy(path);
+        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+          return value;
+        } else if (Array.isArray(value)) {
+          return new AutomergeArray()._attach(this[base], [...path, key as string]);
+        } else if (typeof value === 'object' && value !== null) {
+          return this._createProxy([...path, key as string]);
         }
 
         return value;
@@ -174,7 +207,10 @@ export class AutomergeObject implements TypedObjectProperties {
     });
   }
 
-  private _get(path: string[]) {
+  /**
+   * @internal
+   */
+  _get(path: string[]) {
     const fullPath = [...this._path, ...path];
     let value = this._getDoc();
     for (const key of fullPath) {
@@ -184,7 +220,10 @@ export class AutomergeObject implements TypedObjectProperties {
     return this._decode(value);
   }
 
-  private _set(path: string[], value: any) {
+  /**
+   * @internal
+   */
+  _set(path: string[], value: any) {
     const fullPath = [...this._path, ...path];
 
     const changeFn: ChangeFn<any> = (doc) => {
@@ -194,8 +233,19 @@ export class AutomergeObject implements TypedObjectProperties {
         parent = parent[key];
       }
       parent[fullPath.at(-1)!] = this._encode(value);
+
+      if (value instanceof AutomergeArray) {
+        value._attach(this[base], path);
+      }
     };
 
+    this._change(changeFn);
+  }
+
+  /**
+   * @internal
+   */
+  _change(changeFn: ChangeFn<any>) {
     if (this._docHandle) {
       this._docHandle.change(changeFn);
     } else if (this._doc) {
@@ -205,26 +255,49 @@ export class AutomergeObject implements TypedObjectProperties {
     }
   }
 
-  private _encode(value: any) {
+  /**
+   * @internal
+   */
+  _encode(value: any) {
     if (value === undefined) {
       return null;
     }
     if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
       const reference = this._linkObject(value);
+      // NOTE: Automerge do not support undefined values, so we need to use null instead.
       return {
         '@type': REFERENCE_TYPE_TAG,
         itemId: reference.itemId ?? null,
         protocol: reference.protocol ?? null,
         host: reference.host ?? null,
       };
+    } else if (value instanceof AutomergeArray || Array.isArray(value)) {
+      const values: any = value.map((val) => {
+        if (val instanceof AutomergeArray || Array.isArray(val)) {
+          // s TODO(mykola): Add support for nested arrays.
+          throw new Error('Nested arrays are not supported');
+        }
+        return this._encode(val);
+      });
+      return values;
+    } else if (typeof value === 'object' && value !== null) {
+      Object.freeze(value);
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
     return value;
   }
 
-  private _decode(value: any) {
-    if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
-      const reference = new Reference(value.itemId, value.protocol, value.host);
+  /**
+   * @internal
+   */
+  _decode(value: any): any {
+    if (Array.isArray(value)) {
+      return value.map((val) => this._decode(val));
+    } else if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
+      const reference = new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
       return this._lookupLink(reference);
+    } else if (typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._decode(value)]));
     }
 
     return value;

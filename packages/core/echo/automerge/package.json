@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,22 +8,22 @@
   "author": "info@dxos.org",
   "imports": {
     "#automerge-wasm": {
-      "browser": "./dist/lib/browser/automerge-wasm.mjs",
-      "import": "./dist/lib/browser/automerge-wasm.mjs",
+      "browser": "./dist/lib/browser/automerge-wasm.js",
+      "import": "./dist/lib/browser/automerge-wasm.js",
       "require": "./exports/node/automerge-wasm.cjs",
       "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
     },
     "#automerge": {
-      "browser": "./dist/lib/browser/automerge.mjs",
-      "import": "./dist/lib/browser/automerge.mjs",
+      "browser": "./dist/lib/browser/automerge.js",
+      "import": "./dist/lib/browser/automerge.js",
       "require": "./dist/lib/node/automerge.cjs",
       "node": "./dist/lib/node/automerge.cjs",
       "types": "./dist/types/src/automerge.d.ts"
     },
     "#automerge/next": {
-      "browser": "./dist/lib/browser/automerge/next.mjs",
-      "import": "./dist/lib/browser/automerge/next.mjs",
+      "browser": "./dist/lib/browser/automerge/next.js",
+      "import": "./dist/lib/browser/automerge/next.js",
       "require": "./dist/lib/node/automerge/next.cjs",
       "node": "./dist/lib/node/automerge/next.cjs",
       "types": "./dist/types/src/automerge/next.d.ts"
@@ -31,29 +31,29 @@
   },
   "exports": {
     "./automerge-wasm": {
-      "browser": "./dist/lib/browser/automerge-wasm.mjs",
-      "import": "./dist/lib/browser/automerge-wasm.mjs",
+      "browser": "./dist/lib/browser/automerge-wasm.js",
+      "import": "./dist/lib/browser/automerge-wasm.js",
       "require": "./exports/node/automerge-wasm.cjs",
       "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
     },
     "./automerge": {
-      "browser": "./dist/lib/browser/automerge.mjs",
-      "import": "./dist/lib/browser/automerge.mjs",
+      "browser": "./dist/lib/browser/automerge.js",
+      "import": "./dist/lib/browser/automerge.js",
       "require": "./dist/lib/node/automerge.cjs",
       "node": "./dist/lib/node/automerge.cjs",
       "types": "./dist/types/src/automerge.d.ts"
     },
     "./automerge/next": {
-      "browser": "./dist/lib/browser/automerge/next.mjs",
-      "import": "./dist/lib/browser/automerge/next.mjs",
+      "browser": "./dist/lib/browser/automerge/next.js",
+      "import": "./dist/lib/browser/automerge/next.js",
       "require": "./dist/lib/node/automerge/next.cjs",
       "node": "./dist/lib/node/automerge/next.cjs",
       "types": "./dist/types/src/automerge/next.d.ts"
     },
     "./automerge-repo": {
-      "browser": "./dist/lib/browser/automerge-repo.mjs",
-      "import": "./dist/lib/browser/automerge-repo.mjs",
+      "browser": "./dist/lib/browser/automerge-repo.js",
+      "import": "./dist/lib/browser/automerge-repo.js",
       "require": "./dist/lib/node/automerge-repo.cjs",
       "node": "./dist/lib/node/automerge-repo.cjs",
       "types": "./dist/types/src/automerge-repo.d.ts"

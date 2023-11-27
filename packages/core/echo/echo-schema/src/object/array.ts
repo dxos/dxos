@@ -9,8 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { AbstractEchoObject } from './object';
-import { type TypedObject } from './typed-object';
+import { getGlobalAutomergePreference, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
+import { AutomergeArray } from '../automerge/automerge-array';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -45,7 +46,11 @@ export class EchoArray<T> implements Array<T> {
     throw new Error('Method not implemented.');
   }
 
-  constructor(items: T[] = []) {
+  constructor(items: T[] = [], opts?: AutomergeOptions) {
+    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+      return new AutomergeArray(items) as any;
+    }
+
     this._uninitialized = [...items];
 
     // Change type returned by `new`.

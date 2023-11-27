@@ -42,6 +42,9 @@
       "path": "../../../ui/react-ui-editor"
     },
     {
+      "path": "../../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../../ui/react-ui-theme"
     },
     {

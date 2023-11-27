@@ -37,14 +37,37 @@ export class AgentEnv<S, C> {
   }
 
   async syncBarrier(key: string) {
-    const done = new Trigger();
     const agentCount = Object.keys(this.params.agents).length;
     const syncKey = `${this.params.testId}:${key}`;
 
+    await this._barrier(syncKey, agentCount);
+  }
+
+  /**
+   * Waits for all agents to reach this statement.
+   * Each agent can optionally submit data to be returned to all agents.
+   */
+  async syncData<T>(key: string, data?: T): Promise<T[]> {
+    const agentCount = Object.keys(this.params.agents).length;
+    const syncKey = `${this.params.testId}:${key}`;
+
+    if (data !== undefined) {
+      await this.redis.set(`${syncKey}:data:${this.params.agentIdx}`, JSON.stringify(data));
+    }
+    await this._barrier(syncKey, agentCount);
+
+    const values = await this.redis.keys(`${syncKey}:data:*`);
+    const dataValues = await this.redis.mget(values);
+    const result = dataValues.map((value) => JSON.parse(value!));
+    return result;
+  }
+
+  private async _barrier(syncKey: string, count: number) {
+    const done = new Trigger();
     const listener: Callback<unknown> = async (error, result) => {
       const value = await this.redis.get(syncKey);
 
-      if (parseInt(value!) === agentCount) {
+      if (parseInt(value!) === count) {
         done.wake();
       }
     };

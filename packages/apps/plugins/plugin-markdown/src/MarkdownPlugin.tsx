@@ -5,12 +5,12 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, useCallback, type Ref } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -20,8 +20,10 @@ import {
   type MarkdownEditorRef,
   useTextModel,
 } from '@dxos/react-ui-editor';
+import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
+  EditorCard,
   EditorMain,
   EditorMainEmbedded,
   EditorSection,
@@ -225,7 +227,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
+        component: ({ data, role, ...props }, forwardedRef) => {
           // TODO(burdon): Document.
           // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
@@ -264,6 +266,24 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'section': {
               if (isDocument(data.object) && isMarkdown(data.object.content)) {
                 return <EditorSection content={data.object.content} />;
+              }
+              break;
+            }
+
+            case 'card': {
+              if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+                const cardProps = {
+                  ...props,
+                  item: {
+                    id: data.content.id,
+                    object: data.content.object,
+                    color: typeof data.content.color === 'string' ? data.content.color : undefined,
+                  },
+                };
+
+                return isTileComponentProps(cardProps) ? (
+                  <EditorCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
+                ) : null;
               }
               break;
             }

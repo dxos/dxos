@@ -2,11 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { forwardRef, type FC, type ReactNode, Fragment, type ForwardedRef, type PropsWithChildren } from 'react';
+import React, {
+  forwardRef,
+  type FC,
+  type ReactNode,
+  Fragment,
+  type ForwardedRef,
+  type PropsWithChildren,
+  isValidElement,
+} from 'react';
 import { createContext, useContext } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
-import { type SurfaceComponent, useSurface } from './SurfaceRootContext';
+import { type SurfaceComponent, useSurface, type SurfaceResult } from './SurfaceRootContext';
 
 /**
  * Direction determines how multiple components are laid out.
@@ -43,6 +51,8 @@ export type SurfaceProps = PropsWithChildren<{
 
   /**
    * If specified, this will render if no plugin can offer renderable content for the surface.
+   *
+   * @deprecated Provide a component with `disposition: 'fallback'` instead.
    */
   contentFallback?: FC<{}>;
 
@@ -120,11 +130,30 @@ const resolveNodes = (
   };
 
   const nodes = Object.entries(components)
-    .map(([key, component]) => {
+    .map(([key, component]): [string, SurfaceResult] | undefined => {
       const result = component({ ...props, data }, forwardedRef);
-      return result ? <Fragment key={key}>{result}</Fragment> : undefined;
+      if (!result || typeof result !== 'object') {
+        return undefined;
+      }
+
+      return 'node' in result ? [key, result] : isValidElement(result) ? [key, { node: result }] : undefined;
     })
-    .filter((Component): Component is JSX.Element => Boolean(Component));
+    .filter((result): result is [string, SurfaceResult] => Boolean(result))
+    .sort(([, a], [, b]) => {
+      const aDisposition = a.disposition ?? 'default';
+      const bDisposition = b.disposition ?? 'default';
+
+      if (aDisposition === bDisposition) {
+        return 0;
+      } else if (aDisposition === 'hoist' || bDisposition === 'fallback') {
+        return -1;
+      } else if (bDisposition === 'hoist' || aDisposition === 'fallback') {
+        return 1;
+      }
+
+      return 0;
+    })
+    .map(([key, result]) => <Fragment key={key}>{result.node}</Fragment>);
 
   return props.limit ? nodes.slice(0, props.limit) : nodes;
 };

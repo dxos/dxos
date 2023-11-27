@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-ipfs",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "IPFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,6 +25,7 @@
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
     "lodash.get": "^4.4.2",
     "url-join": "^5.0.0"

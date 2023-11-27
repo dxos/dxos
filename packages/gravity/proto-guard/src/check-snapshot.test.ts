@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 import fse from 'fs-extra';
+import os from 'node:os';
 import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
@@ -14,18 +15,19 @@ import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
+import { afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { data } from './testing';
 import { contains, getConfig, getStorageDir } from './util';
 
 describe('Tests against old storage', () => {
-  const testStoragePath = path.join('/tmp/dxos/proto-guard/storage/', STORAGE_VERSION.toString());
+  let testStoragePath: string;
 
   beforeAll(() => {
     // Copy storage image to tmp folder against which tests will be run.
     log.info(`Storage version ${STORAGE_VERSION}`);
 
+    testStoragePath = fse.mkdtempSync(path.join(os.tmpdir(), 'proto-guard-'));
     fse.mkdirSync(testStoragePath, { recursive: true });
     const storagePath = path.join(getStorageDir(), STORAGE_VERSION.toString());
 
@@ -33,12 +35,9 @@ describe('Tests against old storage', () => {
     fse.copySync(storagePath, testStoragePath, { overwrite: true });
   });
 
-  afterAll(() => {
-    fse.removeSync(testStoragePath);
-  });
-
   test('check if space loads', async () => {
     const builder = new TestBuilder(getConfig(testStoragePath));
+    afterTest(() => builder.destroy());
     const services = builder.createLocal();
 
     log.info('running', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
