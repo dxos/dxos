@@ -6680,9 +6680,15 @@ importers:
 
   packages/gravity/kube-testing:
     dependencies:
+      '@automerge/automerge-repo-network-websocket':
+        specifier: ^1.0.19
+        version: 1.0.19(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -6758,6 +6764,9 @@ importers:
       esbuild:
         specifier: ^0.19.6
         version: 0.19.6
+      esbuild-plugin-wasm:
+        specifier: ^1.1.0
+        version: 1.1.0
       ioredis:
         specifier: ^5.3.2
         version: 5.3.2
@@ -9283,6 +9292,24 @@ packages:
       leven: 3.1.0
     dev: true
 
+  /@automerge/automerge-repo-network-websocket@1.0.19(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-he/cRcZ9byNHZN0ws/c7rwjT6ocbAdPr2EGvTUp6QeIhRlcICqyTuIJjUSG0MyxckO8FbqcBKnfsiaTRCx/b3Q==}
+    dependencies:
+      '@automerge/automerge-repo': 1.0.19(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
+      cbor-x: 1.5.4
+      eventemitter3: 5.0.1
+      isomorphic-ws: 5.0.0(ws@8.14.2)
+      ws: 8.14.2
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - bufferutil
+      - supports-color
+      - typescript
+      - utf-8-validate
+    dev: false
+
   /@automerge/automerge-repo@1.0.17(@automerge/automerge@2.1.7)(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2):
     resolution: {integrity: sha512-FOs5jLHe+lh44Enq7FiKfOD2itLm0zQRIe01mcCiFAZS7w4X2KJ/l6JdkaN814wgBnUGAslkB2Vr6BKMXR/6tQ==}
     peerDependencies:
@@ -9304,6 +9331,27 @@ packages:
       - '@types/node'
       - supports-color
       - typescript
+
+  /@automerge/automerge-repo@1.0.19(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-IcfX9xkbk+YY7IhG+ZCoUVccou2MmHGXvu/XGOICFmUIaG1mkQAPzZU2u5r2JUX0cpr/2PcIPOeCletJMssnWw==}
+    dependencies:
+      '@automerge/automerge': 2.1.7
+      bs58check: 3.0.1
+      cbor-x: 1.5.4
+      debug: 4.3.4(supports-color@8.1.1)
+      eventemitter3: 5.0.1
+      fast-sha256: 1.3.0
+      tiny-typed-emitter: 2.1.0
+      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
+      uuid: 9.0.0
+      xstate: 4.37.1
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - supports-color
+      - typescript
+    dev: false
 
   /@automerge/automerge-wasm@0.5.0:
     resolution: {integrity: sha512-01hAzCG0QlP6Ts/kbF2TGFhSK8ndg+HtUEqmX4SMHIdIrpLBipFsRc/U9iGtouNSe8cXdkXshfX68A7lVN1BpA==}
@@ -26639,6 +26687,7 @@ packages:
 
   /domexception@1.0.1:
     resolution: {integrity: sha512-raigMkn7CJNNo6Ihro1fzG7wr3fHuYVytzquZKX5n0yizGsTcYgzdIUwj1X9pK0VvjeihV+XiclP+DjwbsSKug==}
+    deprecated: Use your platform's native DOMException instead
     requiresBuild: true
     dependencies:
       webidl-conversions: 4.0.2
@@ -27278,6 +27327,11 @@ packages:
     dependencies:
       esbuild: 0.19.6
     dev: true
+
+  /esbuild-plugin-wasm@1.1.0:
+    resolution: {integrity: sha512-0bQ6+1tUbySSnxzn5jnXHMDvYnT0cN/Wd4Syk8g/sqAIJUg7buTIi22svS3Qz6ssx895NT+TgLPb33xi1OkZig==}
+    engines: {node: '>=0.10.0'}
+    dev: false
 
   /esbuild-plugin-yaml@0.0.1:
     resolution: {integrity: sha512-s3jqOeeCd+dUuUsuBqLRgN2SeQjPF2ppIglvV3B//txgQpTDThGvxu6sqiOUOJ0NOzegitmpWCXoCONdRbUS7w==}
@@ -31360,6 +31414,14 @@ packages:
 
   /isomorphic-ws@4.0.1(ws@8.14.2):
     resolution: {integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==}
+    peerDependencies:
+      ws: '*'
+    dependencies:
+      ws: 8.14.2
+    dev: false
+
+  /isomorphic-ws@5.0.0(ws@8.14.2):
+    resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
     peerDependencies:
       ws: '*'
     dependencies:
