@@ -24,7 +24,7 @@ export class Grid {
    * @returns [rows, columns]
    */
   createDimensions(minWidth: number, minHeight: number): [number, number] {
-    return [Math.floor(this.width / minWidth), Math.floor(this.height / minHeight)];
+    return [Math.floor(this.height / minHeight), Math.floor(this.width / minWidth)];
   }
 
   /**

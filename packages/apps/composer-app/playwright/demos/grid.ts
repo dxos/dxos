@@ -17,7 +17,7 @@ const config = {
   // TODO(burdon): Configure based on vite config.
   baseUrl: process.env.TEST_BASEURL ?? 'http://localhost:5173/#/',
   // TEST_GRID=[rows,columns]
-  dimensions: process.env.TEST_GRID?.split(',').map((i) => parseInt(i)) ?? [2, 1],
+  dimensions: process.env.TEST_GRID?.split(',').map((i) => parseInt(i)) ?? [1, 2],
   // TEST_MINSIZE=[width,height]
   minSize: process.env.TEST_MINSIZE?.split(',').map((i) => parseInt(i)) ?? [750, 500],
   // Menubar with OSX notch is 40.
@@ -34,6 +34,7 @@ const createLaunchers = () => {
   const grid = new Grid(width, height, config.spacing, config.margin);
   // @ts-ignore
   const [rows, columns] = config.dimensions ?? grid.createDimensions(...config.minSize);
+  console.log(rows, columns);
   return grid.createGrid(rows, columns).map(
     (bounds) =>
       new Launcher(config.baseUrl, chromium, {
