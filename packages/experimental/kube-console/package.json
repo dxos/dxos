@@ -24,7 +24,6 @@
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
-    "@dxos/kai-frames": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/metagraph": "workspace:*",
     "@dxos/mosaic": "workspace:*",
