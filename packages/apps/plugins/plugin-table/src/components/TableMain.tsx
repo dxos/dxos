@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { Main } from '@dxos/react-ui';
-import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
@@ -27,10 +27,8 @@ export const TableSlide: FC<ObjectTableProps> = ({ table }) => {
 
 export const TableMain: FC<ObjectTableProps> = ({ table }) => {
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <div className={'flex grow m-4 overflow-hidden'}>
-        <ObjectTable table={table} />
-      </div>
+    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
+      <ObjectTable table={table} />
     </Main.Content>
   );
 };
