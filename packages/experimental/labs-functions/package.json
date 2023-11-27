@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-functions",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -40,6 +40,7 @@
     "csv-parse": "^5.3.6",
     "date-fns": "^2.29.3",
     "email-addresses": "^5.0.0",
+    "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.3.2",
     "html-to-text": "^9.0.4",
     "imap": "^0.8.19",

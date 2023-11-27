@@ -5,6 +5,7 @@
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -20,4 +21,5 @@ export enum SearchAction {
 export type SearchPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides;

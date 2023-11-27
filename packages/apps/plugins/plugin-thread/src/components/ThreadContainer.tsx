@@ -96,7 +96,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
       const message = thread.messages[messageIndex];
       message.blocks.splice(index, 1);
       if (message.blocks.length === 0) {
-        message.blocks.splice(messageIndex, 1);
+        thread.messages.splice(messageIndex, 1);
       }
     }
   };

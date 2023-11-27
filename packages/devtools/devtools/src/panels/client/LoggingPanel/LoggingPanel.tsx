@@ -10,7 +10,7 @@ import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/
 import { useClientServices } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
@@ -40,11 +40,16 @@ const columns: TableColumnDef<LogEntry, any>[] = [
     {
       id: 'level',
       size: 60,
+      meta: { cell: { classNames: textPadding } },
       cell: (cell) => <div className={colors[cell.row.original.level]}>{cell.getValue()}</div>,
     },
   ),
-  helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, { id: 'file', size: 160 }),
-  helper.accessor('message', {}),
+  helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, {
+    id: 'file',
+    meta: { cell: { classNames: textPadding } },
+    size: 160,
+  }),
+  helper.accessor('message', { meta: { cell: { classNames: textPadding } } }),
 ];
 
 // TODO(wittjosiah): Virtualization.

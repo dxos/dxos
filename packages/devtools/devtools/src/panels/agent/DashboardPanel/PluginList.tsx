@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type PluginState } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { Button } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 export type PluginListProps = {
   plugins: PluginState[];
@@ -20,6 +20,7 @@ export const PluginList = ({ plugins, togglePlugin }: PluginListProps) => {
     helper.accessor((plugin) => !!plugin.config.enabled, { id: 'enabled', ...builder.icon(), size: 80 }),
     helper.display({
       id: 'toggle',
+      meta: { cell: { classNames: textPadding } },
       cell: (context) => (
         <Button
           disabled={context.row.original.id === 'dxos.org/agent/plugin/dashboard'}

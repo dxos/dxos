@@ -7,14 +7,14 @@ import React, { type FC, forwardRef } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
-import { groupSurface, mx } from '@dxos/react-ui-theme';
+import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { type SearchResult } from '../../search';
+import { SEARCH_RESULT } from '../../meta';
+import type { SearchResult } from '../../search';
 
 // TODO(burdon): Factor out.
 const styles = {
-  hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
-  selected: '!bg-teal-100 !dark:bg-teal-900',
+  selected: '!bg-primary-100 !dark:bg-primary-900',
 };
 
 // TODO(burdon): Registry defined by plugins?
@@ -58,7 +58,7 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
-  ({ draggableStyle, draggableProps, item }, forwardRef) => {
+  ({ draggableStyle, draggableProps, item, debug = true }, forwardRef) => {
     const { id, type, label, snippet, match, selected, onSelect } = item;
     const Icon = type ? getIcon(type) : undefined;
 
@@ -66,7 +66,7 @@ export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
       <Card.Root
         ref={forwardRef}
         style={draggableStyle}
-        classNames={mx('mx-2 mt-2 cursor-pointer', styles.hover, selected && styles.selected)}
+        classNames={mx('mx-2 mt-2 cursor-pointer', ghostHover, selected && styles.selected)}
         onClick={() => onSelect?.(id)}
       >
         <Card.Header>
@@ -77,6 +77,11 @@ export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
         {snippet && (
           <Card.Body gutter>
             <Snippet text={snippet} match={match} />
+          </Card.Body>
+        )}
+        {debug && (
+          <Card.Body gutter>
+            <pre className='text-xs whitespace-pre-line'>{JSON.stringify(item)}</pre>
           </Card.Body>
         )}
       </Card.Root>
@@ -95,14 +100,15 @@ export type SearchResultsProps = {
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   const path = 'search';
   return (
-    <ScrollArea.Root classNames={['grow', groupSurface]}>
+    <ScrollArea.Root classNames={['grow']}>
       <ScrollArea.Viewport>
-        <div className='flex flex-col'>
+        <div className='flex flex-col py-1'>
           <Mosaic.Container id={path} Component={SearchItem}>
             {items.map((item) => (
               <Mosaic.DraggableTile
                 key={item.id}
                 path={path}
+                type={SEARCH_RESULT}
                 item={{ ...item, selected: selected === item.id, onSelect }}
                 Component={SearchItem}
               />

@@ -6,7 +6,7 @@ import React, { useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 import { type PublicKey } from '@dxos/client';
-import { groupSurface, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ChatInput } from './ChatInput';
 import { type BlockProperties, MessageCard } from './MessageCard';
@@ -61,8 +61,7 @@ export const ThreadChannel = ({
   };
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', groupSurface)}>
-      {/* TODO(burdon): Break into days. */}
+    <div className='flex flex-col grow overflow-hidden'>
       <div className='flex flex-col-reverse grow overflow-auto px-2 pt-4'>
         <div ref={bottomRef} />
         {(thread.messages ?? [])
