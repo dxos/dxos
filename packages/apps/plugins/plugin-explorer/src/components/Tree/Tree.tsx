@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { type Space } from '@dxos/client/echo';
 import { createSvgContext, SVG, SVGContextProvider } from '@dxos/gem-core';
-import { type GraphModel } from '@dxos/gem-spore';
 
 import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
 import { mapGraphToTreeData, type TreeNode } from './types';
+import { SpaceGraphModel } from '../Graph';
 
 // TODO(burdon): Create dge bundling graph using d3.hierarchy.
 // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
@@ -54,16 +55,17 @@ const renderers = new Map<LayoutType, Renderer>([
 ]);
 
 export type TreeComponentProps<N = unknown> = {
-  model: GraphModel<N>;
+  space: Space;
+  selected?: string;
   type?: LayoutType;
   onClick?: (node?: N) => void;
 };
 
-// TODO(burdon): Normalize API with Graph (e.g., ECHO and non-echo layers).
-export const Tree = <N,>({ model, type = 'tidy', onClick }: TreeComponentProps<N>) => {
+export const Tree = <N,>({ space, selected, type = 'tidy', onClick }: TreeComponentProps<N>) => {
+  const model = useMemo(() => (space ? new SpaceGraphModel().open(space, selected) : undefined), [space, selected]);
   const [data, setData] = useState<TreeNode>();
   useEffect(() => {
-    return model.subscribe(() => {
+    return model?.subscribe(() => {
       const tree = mapGraphToTreeData(model);
       setData(tree);
     }, true);
@@ -96,7 +98,7 @@ export const Tree = <N,>({ model, type = 'tidy', onClick }: TreeComponentProps<N
 
   // TODO(burdon): Provider should expand.
   return (
-    <div ref={ref} className='flex grow overflow-hidden'>
+    <div ref={ref} className='flex grow overflow-hidden' onClick={() => onClick?.()}>
       <SVGContextProvider context={context}>
         <SVG />
       </SVGContextProvider>

@@ -5,6 +5,10 @@
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/react-client/echo';
 
+export type SpaceGraphModelOptions = {
+  schema?: boolean;
+};
+
 /**
  * Converts ECHO objects to a graph.
  */
@@ -17,6 +21,10 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
   private _subscription?: Subscription;
   private _objects?: TypedObject[];
 
+  constructor(private readonly _options: SpaceGraphModelOptions = {}) {
+    super();
+  }
+
   override get graph(): GraphData<TypedObject> {
     return this._graph;
   }
@@ -25,7 +33,8 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
     return this._objects ?? [];
   }
 
-  open(space: Space) {
+  open(space: Space, objectId?: string) {
+    this.setSelected(objectId);
     if (!this._subscription) {
       // TODO(burdon): Filter.
       const query = space.db.query((object) => object.__typename !== 'braneframe.Folder');
@@ -41,12 +50,13 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
             }
 
             // Link to schema.
-            // TODO(burdon): Configure.
-            links.push({
-              id: `${object.id}-${object.__schema.id}`,
-              source: object.id,
-              target: object.__schema.id,
-            });
+            if (this._options.schema) {
+              links.push({
+                id: `${object.id}-${object.__schema.id}`,
+                source: object.id,
+                target: object.__schema.id,
+              });
+            }
 
             // Parse schema to follow referenced objects.
             object.__schema.props.forEach((prop) => {

@@ -33,8 +33,13 @@ const colors = [
   '[&>circle]:!fill-indigo-300  [&>circle]:!stroke-indigo-600',
 ];
 
-export const Graph: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
-  const model = useMemo(() => (space ? new SpaceGraphModel().open(space) : undefined), [space]);
+export type GraphProps = {
+  space: Space;
+  match?: RegExp;
+};
+
+export const Graph: FC<GraphProps> = ({ space, match }) => {
+  const model = useMemo(() => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined), [space]);
   const [selected, setSelected] = useState<string>();
 
   const context = createSvgContext();
@@ -73,8 +78,7 @@ export const Graph: FC<{ space: Space; match?: RegExp }> = ({ space, match }) =>
   }
 
   if (selected) {
-    model.setSelected(selected);
-    return <Tree model={model} type='tidy' onClick={() => setSelected(undefined)} />;
+    return <Tree space={space} selected={selected} type='tidy' onClick={() => setSelected(undefined)} />;
   }
 
   return (

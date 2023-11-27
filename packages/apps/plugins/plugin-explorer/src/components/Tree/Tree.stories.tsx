@@ -8,12 +8,10 @@ import { faker } from '@faker-js/faker';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { types, Tree as TreeType } from '@braneframe/types';
-import { type GraphModel } from '@dxos/gem-spore';
 import { useClient } from '@dxos/react-client';
 import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Tree, type TreeComponentProps } from './Tree';
-import { SpaceGraphModel } from '../Graph';
 
 // TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
 // TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.
@@ -23,12 +21,11 @@ faker.seed(1);
 
 const Story: FC<{ type?: TreeComponentProps<any>['type'] }> = ({ type } = {}) => {
   const client = useClient();
-  const [model, setModel] = useState<GraphModel<any>>();
+  const space = client.spaces.default;
+  const [object, setObject] = useState<TreeType>();
   useEffect(() => {
     setTimeout(() => {
-      const space = client.spaces.default;
-
-      const object = new TreeType({
+      const tree = new TreeType({
         root: new TreeType.Item({
           items: [
             new TreeType.Item(),
@@ -84,19 +81,16 @@ const Story: FC<{ type?: TreeComponentProps<any>['type'] }> = ({ type } = {}) =>
         }),
       });
 
-      space.db.add(object);
-      const model = new SpaceGraphModel().open(space);
-      model.setSelected(object.root.id);
-
-      setModel(model);
+      space.db.add(tree);
+      setObject(tree);
     });
   }, []);
 
-  if (!model) {
+  if (!object) {
     return null;
   }
 
-  return <Tree type={type} model={model} />;
+  return <Tree space={space} selected={object?.id} type={type} />;
 };
 
 export default {
