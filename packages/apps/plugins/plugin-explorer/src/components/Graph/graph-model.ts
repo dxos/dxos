@@ -43,6 +43,10 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
         this._objects = objects;
         this._graph.nodes = objects;
         this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
+          if (!object.__schema) {
+            console.warn('no schema for object:', object.id.slice(0, 8), object.__typename);
+          }
+
           if (object.__schema) {
             const idx = objects.findIndex((obj) => obj.id === object.__schema?.id);
             if (idx === -1) {

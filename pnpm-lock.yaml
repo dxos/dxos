@@ -1964,6 +1964,9 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2025,9 +2028,6 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework

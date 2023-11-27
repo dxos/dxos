@@ -62,6 +62,7 @@ export type TreeComponentProps<N = unknown> = {
 };
 
 export const Tree = <N,>({ space, selected, type = 'tidy', onClick }: TreeComponentProps<N>) => {
+  // TODO(burdon): Model isn't getting updated. Subscribe to changes on space (like Graph).
   const model = useMemo(() => (space ? new SpaceGraphModel().open(space, selected) : undefined), [space, selected]);
   const [data, setData] = useState<TreeNode>();
   useEffect(() => {

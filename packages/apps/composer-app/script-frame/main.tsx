@@ -5,6 +5,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { types } from '@braneframe/types';
 import { ClientServicesProxy } from '@dxos/client/services';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -27,6 +28,7 @@ window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
   '@dxos/react-client': await import('@dxos/react-client'),
   '@dxos/react-client/echo': await import('@dxos/react-client/echo'),
   '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
+  '@braneframe/types': await import('@braneframe/types'), // TODO(burdon): Make runtime dep?
 }));
 
 // eslint-disable-next-line no-new-func
@@ -40,8 +42,8 @@ const services = new ClientServicesProxy(
 );
 
 createRoot(document.getElementById('root')!).render(
-  <ClientProvider services={() => services}>
-    <div className='flex fixed inset-0'>
+  <ClientProvider services={() => services} types={types}>
+    <div className='flex fixed inset-0 m-1 m-ring  '>
       <Component />
     </div>
   </ClientProvider>,
