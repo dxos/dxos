@@ -24,5 +24,6 @@ export { IFrameClientServicesProxy, type IFrameClientServicesProxyOptions } from
 export { LocalClientServices } from './local-client-services';
 export { ClientServicesProxy } from './service-proxy';
 export { Shell } from './shell';
+export { ShellManager } from './shell-manager';
 export { fromSocket } from './socket';
 export { fromHost, fromIFrame } from './utils';

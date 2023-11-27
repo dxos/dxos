@@ -40,7 +40,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
   private _invitationProxy?: InvitationsProxy;
   private readonly _defaultSpaceAvailable = new PushStream<boolean>();
-  private readonly _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
+  private _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
@@ -163,6 +163,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await this._ctx.dispose();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
+    this._isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
 
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;

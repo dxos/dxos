@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { StrictMode } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import ChessMeta from '@braneframe/plugin-chess/meta';
@@ -186,9 +186,9 @@ const main = async () => {
   });
 
   createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
+    // <StrictMode>
+    <App />,
+    // </StrictMode>,
   );
 };
 

@@ -58,11 +58,6 @@ export const ClientPlugin = ({
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
-        } else if (client.halo.identity.get() && deviceInvitationCode) {
-          // Ignore device invitation if identity already exists.
-          // TODO(wittjosiah): Identity merging.
-          searchParams.delete('deviceInvitationCode');
-          window.history.replaceState({}, '', `${location.pathname}?${searchParams}`);
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }

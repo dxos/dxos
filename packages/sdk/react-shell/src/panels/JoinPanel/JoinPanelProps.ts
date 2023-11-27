@@ -8,7 +8,7 @@ import type { Identity } from '@dxos/react-client/halo';
 import type { Invitation, AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
 import { type JoinSend } from './joinMachine';
-import { type IdentityInputProps } from './steps';
+import { type ResetIdentityProps, type IdentityInputProps } from './steps';
 import { type StepProps } from '../../steps';
 import { type FailReason } from '../../types';
 
@@ -62,6 +62,7 @@ export type JoinPanelImplProps = Pick<
   onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   IdentityInput?: React.FC<IdentityInputProps>;
+  ResetIdentity?: React.FC<ResetIdentityProps>;
 };
 
 export interface IdentityAction {

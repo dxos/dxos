@@ -38,7 +38,7 @@ export class WorkerRuntime {
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => {
-          self.close();
+          // self.close();
         },
       },
     });

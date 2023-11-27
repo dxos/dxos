@@ -101,8 +101,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       const dispatch = intentPlugin.provides.intent.dispatch;
 
       // Create root folder structure.
-      const defaultSpace = client.spaces.default;
       if (clientPlugin.provides.firstRun) {
+        const defaultSpace = client.spaces.default;
         const personalSpaceFolder = defaultSpace.db.add(new Folder({ name: client.spaces.default.key.toHex() }));
         defaultSpace.properties[Folder.schema.typename] = personalSpaceFolder;
         onFirstRun?.({

@@ -53,7 +53,19 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
   switch (panel) {
     case 'identity': {
-      return <JoinPanel mode='halo-only' onDone={() => setPanel(undefined)} onExit={() => setPanel(undefined)} />;
+      return (
+        <JoinPanel
+          mode='halo-only'
+          onDone={() => {
+            setPanel(undefined);
+            console.log('done');
+          }}
+          onExit={() => {
+            setPanel(undefined);
+            console.log('exit');
+          }}
+        />
+      );
     }
 
     case 'devices': {
@@ -144,7 +156,7 @@ const Invitations = ({ id }: { id: number }) => {
       <Tooltip content='Join Existing Identity'> */}
       <Button
         onClick={() => setPanel('identity')}
-        disabled={Boolean(identity) || panel === 'identity'}
+        disabled={panel === 'identity'}
         data-testid='invitations.open-join-identity'
       >
         <QrCode weight='fill' className={getSize(6)} />
@@ -191,6 +203,8 @@ const Invitations = ({ id }: { id: number }) => {
     </div>
   );
 
+  console.log({ identity, panel });
+
   return (
     <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
       <div className={`${groupSurface} rounded p-2 mbe-2`}>
@@ -205,7 +219,14 @@ const Invitations = ({ id }: { id: number }) => {
       </div>
       {identity || panel ? (
         <div className={`${groupSurface} rounded p-2`}>
-          <Panel id={id} panel={panel} setPanel={setPanel} />
+          <Panel
+            id={id}
+            panel={panel}
+            setPanel={(x) => {
+              console.log('test');
+              setPanel(x);
+            }}
+          />
         </div>
       ) : null}
     </div>

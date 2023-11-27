@@ -157,7 +157,7 @@ export class Query<T extends TypedObject = TypedObject> {
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
   subscribe(callback: (query: Query<T>) => void, fire = false): Subscription {
     queries.push(this);
-    log.info('subscribe', queries.length); // TODO(burdon): Assign id?
+    log('subscribe', queries.length); // TODO(burdon): Assign id?
 
     const subscription = this._event.on(callback);
     if (fire) {

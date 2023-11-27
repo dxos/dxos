@@ -93,4 +93,8 @@ export const os = {
   'invite many qr label': 'Multiple-use',
   'invite many list item label': 'Active multiple-use invitation',
   'invite options label': 'Change the active invite option.',
+  'confirm label': 'Confirm',
+  'reset identity input label':
+    'This will clear this device and all associated data. Type {{confirmationValue}} and confirm to continue.',
+  'confirmation value': 'CONFIRM',
 };

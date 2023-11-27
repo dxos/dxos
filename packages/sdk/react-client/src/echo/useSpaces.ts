@@ -41,7 +41,7 @@ export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
     return spaces.find((space) => space.key.equals(spaceKey));
   }
 
-  if (ready) {
+  if (ready && client.halo.identity.get()) {
     return client.spaces.default;
   }
 };

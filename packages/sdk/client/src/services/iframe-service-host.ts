@@ -36,8 +36,8 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
   /**
    * @internal
    */
-  _shellManager?: ShellManager;
-  private _iframeManager?: IFrameManager;
+  private readonly _shellManager: ShellManager;
+  private readonly _iframeManager: IFrameManager;
   private readonly _host: ClientServicesProvider;
   private readonly _source: string;
   private readonly _vault: string;
@@ -53,25 +53,12 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
     this._source = source;
     this._vault = vault;
     this._timeout = timeout;
-  }
 
-  get descriptors(): ServiceBundle<ClientServices> {
-    return this._host.descriptors;
-  }
-
-  get services(): Partial<ClientServices> {
-    return this._host.services;
-  }
-
-  async open() {
-    await this._host.open(new Context());
-
-    // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
-    //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
-    const source = new URL(this._source, window.location.origin);
     const loaded = new Trigger();
     this._iframeManager = new IFrameManager({
-      source,
+      // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
+      //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
+      source: new URL(this._source, window.location.origin),
       onOpen: async () => {
         await asyncTimeout(loaded.wait(), this._timeout, new RemoteServiceConnectionTimeout('Vault failed to load'));
 
@@ -116,14 +103,24 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
     });
 
     this._shellManager = new ShellManager(this._iframeManager, this.joinedSpace);
+  }
+
+  get descriptors(): ServiceBundle<ClientServices> {
+    return this._host.descriptors;
+  }
+
+  get services(): Partial<ClientServices> {
+    return this._host.services;
+  }
+
+  async open() {
+    await this._host.open(new Context());
     await this._shellManager.open();
   }
 
   async close() {
-    await this._shellManager?.close();
-    this._shellManager = undefined;
-    await this._iframeManager?.close();
-    this._iframeManager = undefined;
+    await this._shellManager.close();
+    await this._iframeManager.close();
     await this._host.close(new Context());
   }
 }

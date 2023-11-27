@@ -272,6 +272,7 @@ const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
 
 type EmptyJoinEvent = {
   type:
+    | 'resetIdentity'
     | 'recoverIdentity'
     | 'createIdentity'
     | 'acceptHaloInvitation'
@@ -296,6 +297,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
     states: {
       unknown: {
         always: [
+          { cond: 'existingIdentity', target: 'resettingIdentity', actions: 'log' },
           { cond: 'noSelectedIdentity', target: 'choosingIdentity', actions: 'log' },
           { target: 'acceptingSpaceInvitation', actions: 'log' },
         ],
@@ -327,6 +329,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' },
         },
       },
+      resettingIdentity: {},
       acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoiningSpace'),
       finishingJoiningSpace: {
         type: 'final',
@@ -335,9 +338,13 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
         type: 'final',
       },
     },
+    on: {
+      resetIdentity: { target: 'choosingIdentity', actions: 'unsetIdentity' },
+    },
   },
   {
     guards: {
+      existingIdentity: ({ identity, mode }, _event) => mode === 'halo-only' && !!identity,
       noSelectedIdentity: ({ identity }, _event) => !identity,
       hasHaloUnredeemedCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
@@ -390,7 +397,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space,
       }),
       log: (context, event) => {
-        log('[transition]', {
+        log.info('[transition]', {
           event,
           haloInvitation: context.halo.invitation,
           spaceInvitation: context.space.invitation,

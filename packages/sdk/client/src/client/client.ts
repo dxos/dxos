@@ -58,8 +58,6 @@ export class Client {
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
-  // TODO(wittjosiah): Remove.
-  private _defaultKey!: string;
 
   private _initialized = false;
   private _statusStream?: Stream<QueryStatusResponse>;
@@ -72,6 +70,7 @@ export class Client {
    * Unique id of the Client, local to the current peer.
    */
   private readonly _instanceId = PublicKey.random().toHex();
+
   constructor(options: ClientOptions = {}) {
     if (
       typeof window !== 'undefined' &&
@@ -223,20 +222,18 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame, IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import(
-      '../services'
-    );
+    const { fromHost, fromIFrame, Shell, ShellManager } = await import('../services');
 
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    await this._services!.open(new Context());
 
-    const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
+    console.log('CLIENT SERVICES:', this._services);
+
+    const { SpaceList, createDefaultModelFactory } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 
-    this._defaultKey = defaultKey;
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
@@ -249,8 +246,7 @@ export class Client {
     );
 
     let shell: Shell | undefined;
-    if (this._services instanceof IFrameClientServicesHost || this._services instanceof IFrameClientServicesProxy) {
-      invariant(this._services._shellManager, 'ShellManager is not available.');
+    if ('_shellManager' in this._services && this._services._shellManager instanceof ShellManager) {
       shell = new Shell({
         shellManager: this._services._shellManager,
         identity: halo.identity,
@@ -267,8 +263,20 @@ export class Client {
       mountDevtoolsHooks({ client: this });
     }
 
+    await this._open();
+
+    this._initialized = true;
+    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
+  }
+
+  private async _open() {
+    invariant(this._services, 'Client services not set.');
+    invariant(this._runtime, 'Client runtime not set.');
+
+    await this._services.open(new Context());
+
     const trigger = new Trigger<Error | undefined>();
-    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {
@@ -282,7 +290,9 @@ export class Client {
       },
       (err) => {
         trigger.wake(err);
-        this._statusUpdate.emit(null);
+        if (err) {
+          this._statusUpdate.emit(null);
+        }
       },
     );
 
@@ -292,9 +302,6 @@ export class Client {
     }
 
     await this._runtime.open();
-
-    this._initialized = true;
-    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
   }
 
   /**
@@ -307,10 +314,11 @@ export class Client {
       return;
     }
 
-    await this._runtime!.close();
     this._statusTimeout && clearTimeout(this._statusTimeout);
-    await this._statusStream!.close();
-    await this.services.close(new Context());
+    await this._statusStream?.close();
+    await this._runtime?.close();
+    await this._services?.close(new Context());
+    this._statusUpdate.emit(null);
 
     this._initialized = false;
   }
@@ -334,10 +342,12 @@ export class Client {
       throw new ApiError('Client not open.');
     }
 
-    invariant(this.services.services.SystemService, 'SystemService is not available.');
-    await this.services.services?.SystemService.reset();
-    await this.destroy();
-    // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
-    this._initialized = false;
+    this._statusTimeout && clearTimeout(this._statusTimeout);
+    await this._statusStream?.close();
+    await this._runtime?.close();
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    await this._services?.services.SystemService.reset();
+    await this._services?.close(new Context());
+    await this._open();
   }
 }
