@@ -157,22 +157,21 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col grow overflow-hidden'>
-        <Table<TypedObject>
-          keyAccessor={(row) => row.id ?? '__new'}
-          columns={columns}
-          data={rows}
-          border
-          onColumnResize={handleColumnResize}
-          role='grid'
-        />
-        {debug && (
-          <div className='flex text-xs'>
-            <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
-            <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
-          </div>
-        )}
-      </div>
+      <Table<TypedObject>
+        keyAccessor={(row) => row.id ?? '__new'}
+        columns={columns}
+        data={rows}
+        border
+        onColumnResize={handleColumnResize}
+        role='grid'
+        classNames='m-4'
+      />
+      {debug && (
+        <div className='flex text-xs'>
+          <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
+          <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
+        </div>
+      )}
     </DensityProvider>
   );
 };

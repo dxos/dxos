@@ -13,13 +13,11 @@ import {
 } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
-import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
 import { type ClassNameValue, Input, Tooltip } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { stripUndefinedValues } from '@dxos/util';
 
 import { CellCombobox } from './components';
 import { useTableContext } from './components/Table/TableContext';
@@ -32,6 +30,7 @@ export const createColumnBuilder = <TData extends RowData>() => ({
   builder: new ColumnBuilder<TData>(),
 });
 
+// TODO(thure): This interface is redundant, e.g. `classNames` == `meta.cell.classNames`
 /**
  * NOTE: Can use `meta` for custom properties.
  */
@@ -82,22 +81,15 @@ export type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, 
   };
 };
 
-const defaults = <TData extends RowData, TValue>(
-  options: Partial<ColumnDef<TData, TValue>>,
-  ...sources: Partial<ColumnDef<TData, TValue>>[]
-): Partial<ColumnDef<TData, TValue>> => {
-  return stripUndefinedValues(defaultsDeep({}, options, ...sources));
-};
-
 const ComboboxBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, TData>) => {
   const { model, onUpdate } = cellContext.column.columnDef.meta as ColumnMeta<TData, TData>;
-  return (
+  return model ? (
     <CellCombobox<TData>
-      model={model!}
+      model={model}
       value={cellContext.getValue()}
       onValueChange={(value) => onUpdate?.(cellContext.row.original, cellContext.column.id, value)}
     />
-  );
+  ) : null;
 };
 
 const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, string>) => {
@@ -245,12 +237,14 @@ export class ColumnBuilder<TData extends RowData> {
     onUpdate,
     ...props
   }: ComboboxColumnOptions<TData>): Partial<ColumnDef<TData, any>> {
-    return defaults(props, {
+    return {
+      ...props,
       minSize: 100,
       meta: {
+        ...props.meta,
         model,
         onUpdate,
-        cell: { classNames },
+        cell: { classNames, ...props.meta?.cell },
       },
       header: (column) => {
         return label ?? column.header.id;
@@ -262,7 +256,7 @@ export class ColumnBuilder<TData extends RowData> {
               const cellValue = cellContext.getValue();
               return <div className={mx('truncate', classNames)}>{cellValue ? model?.getText(cellValue) : ''}</div>;
             },
-    });
+    };
   }
 
   /**
@@ -271,9 +265,14 @@ export class ColumnBuilder<TData extends RowData> {
   string({ label, classNames, onUpdate, ...props }: StringColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, string>
   > {
-    return defaults(props, {
+    return {
+      ...props,
       minSize: 100,
-      meta: { onUpdate, cell: { classNames } },
+      meta: {
+        ...props.meta,
+        onUpdate,
+        cell: { ...props.meta?.cell, classNames },
+      },
       // TODO(burdon): Default.
       header: (column) => {
         return label ?? column.header.id;
@@ -284,7 +283,7 @@ export class ColumnBuilder<TData extends RowData> {
             const value = cell.getValue();
             return <div className={mx('truncate', textPadding, classNames)}>{value}</div>;
           },
-    });
+    };
   }
 
   /**
@@ -293,13 +292,20 @@ export class ColumnBuilder<TData extends RowData> {
   number({ label, minSize, classNames, digits, onUpdate, ...props }: NumberColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, number>
   > {
-    return defaults(props, {
+    return {
+      ...props,
       size: 100,
       minSize: 100,
-      meta: { onUpdate, digits, header: { classNames: 'text-end' }, cell: { classNames } },
+      meta: {
+        ...props.meta,
+        onUpdate,
+        digits,
+        header: { classNames: 'text-end', ...props.meta?.header },
+        cell: { ...props.meta?.cell, classNames },
+      },
       header: (cell) => label ?? cell.header.id,
       cell: NumberBuilderCell,
-    });
+    };
   }
 
   /**
@@ -309,10 +315,11 @@ export class ColumnBuilder<TData extends RowData> {
   date({ label, format: formatSpec, relative, classNames, ...props }: DateColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, Date>
   > {
-    return defaults(props, {
+    return {
+      ...props,
       size: 220, // TODO(burdon): Depends on format.
       minSize: 100,
-      meta: { cell: { classNames } },
+      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
@@ -332,17 +339,18 @@ export class ColumnBuilder<TData extends RowData> {
           return null;
         }
       },
-    });
+    };
   }
 
   /**
    * PublicKey with tooltip.
    */
-  key({ label, tooltip, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
-    return defaults(props, {
+  key({ label, tooltip, classNames, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+    return {
+      ...props,
       size: 94,
       minSize: 94,
-      meta: { cell: { classNames: ['font-mono', textPadding] } },
+      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames: ['font-mono', textPadding, classNames] } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
@@ -375,19 +383,15 @@ export class ColumnBuilder<TData extends RowData> {
           </Tooltip.Provider>
         );
       },
-    });
+    };
   }
 
   /**
    * Row selector
    */
-  selectRow({
-    label,
-    classNames,
-    onUpdate,
-    id = 'selectRow',
-    ...props
-  }: SelectRowColumnOptions<TData> = {}): Parameters<ColumnHelper<TData>['display']>[0] {
+  selectRow({ classNames, onUpdate, id = 'selectRow' }: SelectRowColumnOptions<TData> = {}): Parameters<
+    ColumnHelper<TData>['display']
+  >[0] {
     return {
       id,
       size: 32,
@@ -418,13 +422,14 @@ export class ColumnBuilder<TData extends RowData> {
   switch({ label, classNames, onUpdate, ...props }: SwitchColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, boolean>
   > {
-    return defaults(props, {
+    return {
+      ...props,
       size: 50,
       minSize: 50,
-      meta: { onUpdate, cell: { classNames: [textPadding, classNames] } },
+      meta: { ...props.meta, onUpdate, cell: { ...props.meta?.cell, classNames: [textPadding, classNames] } },
       header: (column) => label ?? column.header.id,
       cell: SwitchBuilderCell,
-    });
+    };
   }
 
   /**
@@ -433,7 +438,8 @@ export class ColumnBuilder<TData extends RowData> {
   icon({ label, size, on, off, ...props }: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
     const IconOn = on?.Icon ?? Check;
     const IconOff = off?.Icon ?? X;
-    return defaults(props, {
+    return {
+      ...props,
       size: size ?? 32,
       header: (column) => <div className={'justify-center'}>{label ?? column.header.id}</div>,
       cell: (cell) => {
@@ -446,6 +452,6 @@ export class ColumnBuilder<TData extends RowData> {
           return null;
         }
       },
-    });
+    };
   }
 }

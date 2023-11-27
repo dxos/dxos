@@ -38,6 +38,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     fullWidth,
     debug,
     onDataSelectionChange,
+    classNames,
   } = props;
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
@@ -138,7 +139,11 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       table={table}
       isGrid={role === 'grid' || role === 'treegrid'}
     >
-      <table role={role} className={tableRoot(props)} {...(!fullWidth && { style: { width: table.getTotalSize() } })}>
+      <table
+        role={role}
+        className={tableRoot(props, classNames)}
+        {...(!fullWidth && { style: { width: table.getTotalSize() } })}
+      >
         <TableHead />
 
         {grouping.length === 0 && <TableBody rows={table.getRowModel().rows} />}
