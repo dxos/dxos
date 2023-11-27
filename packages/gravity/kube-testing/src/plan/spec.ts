@@ -12,6 +12,7 @@ export type PlanOptions = {
   randomSeed?: string;
   profile?: boolean;
   debug?: boolean;
+  headless?: boolean;
 };
 
 export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
@@ -52,6 +53,8 @@ export type AgentResult = {
   result: number;
   outDir: string;
   logFile: string;
+  startTs?: number;
+  endTs?: number;
 };
 
 // plan vs environment
