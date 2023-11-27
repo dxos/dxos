@@ -5,6 +5,10 @@
     "build": {},
     "compile": {
       "executor": "nx:run-script",
+      "inputs": [
+        "{projectRoot}/scripts/**/*",
+        "{projectRoot}/src/**/*"
+      ],
       "options": {
         "script": "compile"
       },
