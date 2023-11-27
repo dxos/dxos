@@ -3,6 +3,15 @@
 
 KUBE Testing.
 
+## Prerequisites
+
+- Run redis
+
+```bash
+brew install redis
+redis-server
+```
+
 ## Simple Usage
 ```bash
 pnpm run-tests <testname>
