@@ -23,7 +23,7 @@ import { contains, getConfig, getStorageDir } from './util';
 describe('Tests against old storage', () => {
   let testStoragePath: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     // Copy storage image to tmp folder against which tests will be run.
     log.info(`Storage version ${STORAGE_VERSION}`);
 
