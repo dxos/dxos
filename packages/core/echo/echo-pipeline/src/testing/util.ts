@@ -13,6 +13,7 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { DatabaseHost, type DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { type DataPipeline } from '../space';
+import { AutomergeHost } from '../automerge';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
@@ -44,7 +45,8 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   dataServiceHost: DataServiceHost,
 ) => {
   const dataServiceSubscriptions = new DataServiceSubscriptions();
-  const dataService = new DataServiceImpl(dataServiceSubscriptions);
+  const automergeHost = new AutomergeHost();
+  const dataService = new DataServiceImpl(dataServiceSubscriptions, automergeHost);
 
   const spaceKey = PublicKey.random();
   await dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
