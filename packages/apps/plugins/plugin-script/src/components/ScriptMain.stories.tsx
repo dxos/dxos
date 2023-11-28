@@ -45,7 +45,8 @@ const Story = () => {
     return null;
   }
 
-  // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in labs-app.
+  // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
+  // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
     <div className={'flex fixed inset-0'}>
       <ScriptSection id='test' source={source} containerUrl={mainUrl} />

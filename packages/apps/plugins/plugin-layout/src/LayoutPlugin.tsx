@@ -189,7 +189,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
                 },
                 // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
+                documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
               },
             };
 

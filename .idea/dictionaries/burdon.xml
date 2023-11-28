@@ -51,6 +51,7 @@
       <w>nanoerror</w>
       <w>nanomessage</w>
       <w>nanoresource</w>
+      <w>observablehq</w>
       <w>oclif</w>
       <w>ollama</w>
       <w>onauthenticate</w>
@@ -71,6 +72,7 @@
       <w>openfaas</w>
       <w>orgs</w>
       <w>outdir</w>
+      <w>outliner</w>
       <w>packlets</w>
       <w>permissionless</w>
       <w>prefs</w>
@@ -89,6 +91,7 @@
       <w>stringified</w>
       <w>subtiles</w>
       <w>svg's</w>
+      <w>tasklist</w>
       <w>testutils</w>
       <w>textbox</w>
       <w>tldraw</w>

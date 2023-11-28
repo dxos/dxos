@@ -4,4 +4,4 @@
 
 export * from './graph-model';
 
-export * from './Explorer';
+export * from './Graph';

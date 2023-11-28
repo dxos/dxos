@@ -110,6 +110,9 @@
       "path": "../plugins/plugin-navtree"
     },
     {
+      "path": "../plugins/plugin-outliner"
+    },
+    {
       "path": "../plugins/plugin-presenter"
     },
     {

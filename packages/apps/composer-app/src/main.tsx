@@ -24,6 +24,7 @@ import MapMeta from '@braneframe/plugin-map/meta';
 import MarkdownMeta from '@braneframe/plugin-markdown/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
+import OutlinerMeta from '@braneframe/plugin-outliner/meta';
 import PresenterMeta from '@braneframe/plugin-presenter/meta';
 import PwaMeta from '@braneframe/plugin-pwa/meta';
 import RegistryMeta from '@braneframe/plugin-registry/meta';
@@ -106,13 +107,14 @@ const main = async () => {
       InboxMeta,
       KanbanMeta,
       MapMeta,
+      OutlinerMeta,
       ScriptMeta,
       TableMeta,
       ThreadMeta,
       ExplorerMeta,
       ChessMeta,
       WildcardMeta,
-      // TODO(burdon): Currently last so that action are added at end of dropdown menu.
+      // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
     ],
     plugins: {
@@ -139,6 +141,7 @@ const main = async () => {
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
+      [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
       [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
@@ -151,7 +154,6 @@ const main = async () => {
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
           const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);
-
           void dispatch({
             action: LayoutAction.ACTIVATE,
             data: { id: document.id },
