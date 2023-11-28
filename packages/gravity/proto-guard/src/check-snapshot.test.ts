@@ -3,8 +3,7 @@
 //
 
 import { expect } from 'chai';
-import fse from 'fs-extra';
-import os from 'node:os';
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
@@ -18,7 +17,7 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import { afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { data } from './testing';
-import { contains, getConfig, getStorageDir } from './util';
+import { contains, copySync, getConfig, getStorageDir } from './util';
 
 describe('Tests against old storage', () => {
   let testStoragePath: string;
@@ -27,12 +26,11 @@ describe('Tests against old storage', () => {
     // Copy storage image to tmp folder against which tests will be run.
     log.info(`Storage version ${STORAGE_VERSION}`);
 
-    testStoragePath = fse.mkdtempSync(path.join(os.tmpdir(), 'proto-guard-'));
-    fse.mkdirSync(testStoragePath, { recursive: true });
+    testStoragePath = fs.mkdtempSync(path.join('tmp', 'proto-guard-'));
     const storagePath = path.join(getStorageDir(), STORAGE_VERSION.toString());
-
     log.info('Copy storage', { src: storagePath, dest: testStoragePath });
-    fse.copySync(storagePath, testStoragePath, { overwrite: true });
+
+    copySync(storagePath, testStoragePath);
   });
 
   test('check if space loads', async () => {
