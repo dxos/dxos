@@ -83,11 +83,12 @@ export class ChainResources<
         this._vectorIndex = new Map(index);
       }
     } catch (err: any) {
-      log.error('Corrupt store', String(err));
+      log.error('Corrupt store', { path: this._options.baseDir, version: VERSION, error: String(err) });
     }
 
     if (!this._vectorStore) {
       this._vectorStore = await FaissStore.fromDocuments([], this.embeddings);
+      log.info('ok', { path: this._options.baseDir, version: VERSION });
     }
 
     return this;
@@ -96,6 +97,7 @@ export class ChainResources<
   async save() {
     invariant(this._options.baseDir);
     invariant(this._vectorStore);
+    log.info('saving...');
     await this._vectorStore.save(this._options.baseDir);
 
     const data = JSON.stringify({ version: VERSION, index: Array.from(this._vectorIndex.entries()) });
@@ -113,6 +115,7 @@ export class ChainResources<
   // TODO(burdon): Store hash to check document has changed.
   async addDocuments(docs: ChainDocument[]) {
     invariant(this._vectorStore);
+    log.info('addDocuments', { count: docs.length });
     const documentIds = docs
       .map(({ metadata }) => this._vectorIndex.get(metaKey(metadata)))
       .filter(Boolean) as string[];
@@ -126,10 +129,12 @@ export class ChainResources<
         this._vectorIndex.set(metaKey(docs[i].metadata), documentIds[i]);
       }
     }
+    log.info('ok');
   }
 
   async deleteDocuments(meta: ChainDocument['metadata'][]) {
     invariant(this._vectorStore);
+    log.info('deleteDocuments', { count: meta.length });
     const documentIds = meta
       .map((metadata) => {
         const id = metaKey(metadata);
@@ -144,5 +149,6 @@ export class ChainResources<
     if (documentIds.length) {
       await this._vectorStore.delete({ ids: documentIds });
     }
+    log.info('ok');
   }
 }
