@@ -5,10 +5,11 @@
 import { Square, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { Button, DropdownMenu, Input } from '@dxos/react-ui';
+import { Button, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
+import { OUTLINER_PLUGIN } from '../../meta';
 
 // TODO(burdon): Break/join lines.
 // TODO(burdon): TextObject/MarkdownEditor
@@ -17,7 +18,7 @@ import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent
 // TODO(burdon): Better key nav.
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
-  checkbox?: boolean;
+  isTasklist?: boolean;
 };
 
 //
@@ -37,7 +38,7 @@ type ItemProps = {
 const Item = ({
   item,
   active,
-  checkbox,
+  isTasklist,
   placeholder,
   spellCheck = false,
   onFocus,
@@ -46,6 +47,7 @@ const Item = ({
   onIndent,
   onNav,
 }: ItemProps) => {
+  const { t } = useTranslation(OUTLINER_PLUGIN);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -87,7 +89,7 @@ const Item = ({
 
   return (
     <div className='flex items-center px-2 gap-3'>
-      {(checkbox && (
+      {(isTasklist && (
         <Input.Root>
           <Input.Checkbox
             checked={item.done}
@@ -97,9 +99,10 @@ const Item = ({
           />
         </Input.Root>
       )) || (
-        <div className='shrink-0'>
-          <Square weight={active ? 'fill' : undefined} className={mx(getSize(2), active && 'text-primary-500')} />
-        </div>
+        <Square
+          weight={active ? 'fill' : undefined}
+          className={mx('shrink-0', getSize(2), active && 'text-primary-500')}
+        />
       )}
       <Input.Root>
         <Input.TextInput
@@ -135,7 +138,7 @@ const Item = ({
                 {onDelete && (
                   <DropdownMenu.Item onClick={onDelete}>
                     <X className={getSize(5)} />
-                    <p>Delete item</p>
+                    <p>{t('delete object label')}</p>
                   </DropdownMenu.Item>
                 )}
               </DropdownMenu.Viewport>
@@ -152,44 +155,53 @@ const Item = ({
 //
 
 type BranchProps = OutlinerOptions & {
+  className?: string;
   root: Item;
   active?: string;
-  onFocus?: (item: Item) => void;
-  onCreate?: (parent: Item, item: Item, after?: boolean) => Item;
-  onDelete?: (parent: Item, item: Item) => void;
-  onIndent?: (parent: Item, item: Item, left?: boolean) => void;
+  onItemFocus?: (item: Item) => void;
+  onItemCreate?: (parent: Item, item: Item, after?: boolean) => Item;
+  onItemDelete?: (parent: Item, item: Item) => void;
+  onItemIndent?: (parent: Item, item: Item, left?: boolean) => void;
 } & Pick<ItemProps, 'onNav'>;
 
-const Branch = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav, ...props }: BranchProps) => {
+const Branch = ({
+  className,
+  root,
+  active,
+  onItemFocus,
+  onItemCreate,
+  onItemDelete,
+  onItemIndent,
+  onNav,
+  ...props
+}: BranchProps) => {
   return (
-    <div className='flex flex-col w-full'>
+    <div className={className}>
       {root.items?.map((item) => (
-        <div key={item.id} className='w-full'>
+        <div key={item.id}>
           <Item
             item={item}
             active={active === item.id}
             placeholder='Enter text'
-            onFocus={() => onFocus?.(item)}
-            onEnter={(before) => onCreate?.(root, item, before)}
-            onDelete={() => onDelete?.(root, item)}
-            onIndent={(left) => onIndent?.(root, item, left)}
+            onFocus={() => onItemFocus?.(item)}
+            onEnter={(before) => onItemCreate?.(root, item, before)}
+            onDelete={() => onItemDelete?.(root, item)}
+            onIndent={(left) => onItemIndent?.(root, item, left)}
             onNav={onNav}
             {...props}
           />
           {(item.items?.length ?? 0) > 0 && (
-            // TODO(burdon): Indent based on density.
-            <div className='pl-4'>
-              <Branch
-                root={item}
-                active={active}
-                onFocus={onFocus}
-                onCreate={onCreate}
-                onDelete={onDelete}
-                onIndent={onIndent}
-                onNav={onNav}
-                {...props}
-              />
-            </div>
+            <Branch
+              className='pl-4'
+              root={item}
+              active={active}
+              onItemFocus={onItemFocus}
+              onItemCreate={onItemCreate}
+              onItemDelete={onItemDelete}
+              onItemIndent={onItemIndent}
+              onNav={onNav}
+              {...props}
+            />
           )}
         </div>
       ))}
@@ -209,7 +221,7 @@ type RootProps = {
 const Root = ({ root, onCreate, ...props }: RootProps) => {
   const [active, setActive] = useState<string>();
 
-  const handleCreate: BranchProps['onCreate'] = (parent, current, before) => {
+  const handleCreate: BranchProps['onItemCreate'] = (parent, current, before) => {
     const item = onCreate!();
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => current.id === id);
@@ -227,7 +239,7 @@ const Root = ({ root, onCreate, ...props }: RootProps) => {
     return item;
   };
 
-  const handleDelete: BranchProps['onDelete'] = (parent, item) => {
+  const handleDelete: BranchProps['onItemDelete'] = (parent, item) => {
     if (parent === root && parent.items?.length === 1) {
       return;
     }
@@ -245,7 +257,7 @@ const Root = ({ root, onCreate, ...props }: RootProps) => {
     }
   };
 
-  const handleIndent: BranchProps['onIndent'] = (parent, item, left) => {
+  const handleIndent: BranchProps['onItemIndent'] = (parent, item, left) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
     if (left) {
@@ -299,14 +311,14 @@ const Root = ({ root, onCreate, ...props }: RootProps) => {
   };
 
   return (
-    <div className='w-full'>
+    <div role='tree'>
       <Branch
         root={root}
         active={active}
-        onFocus={(item) => setActive(item.id)}
-        onCreate={onCreate && handleCreate}
-        onDelete={handleDelete}
-        onIndent={handleIndent}
+        onItemFocus={(item) => setActive(item.id)}
+        onItemCreate={onCreate && handleCreate}
+        onItemDelete={handleDelete}
+        onItemIndent={handleIndent}
         onNav={handleNav}
         {...props}
       />

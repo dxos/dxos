@@ -19,7 +19,7 @@ import { Tree, type TreeComponentProps } from './Tree';
 
 faker.seed(1);
 
-const Story: FC<{ type?: TreeComponentProps<any>['type'] }> = ({ type } = {}) => {
+const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {}) => {
   const client = useClient();
   const space = client.spaces.default;
   const [object, setObject] = useState<TreeType>();
@@ -90,7 +90,7 @@ const Story: FC<{ type?: TreeComponentProps<any>['type'] }> = ({ type } = {}) =>
     return null;
   }
 
-  return <Tree space={space} selected={object?.id} type={type} />;
+  return <Tree space={space} selected={object?.id} variant={type} />;
 };
 
 export default {

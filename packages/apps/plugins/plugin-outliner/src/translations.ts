@@ -8,11 +8,11 @@ export default [
   {
     'en-US': {
       [OUTLINER_PLUGIN]: {
-        'plugin name': 'List',
-        'object placeholder': 'New list',
-        'create object label': 'Create list',
-        'delete object label': 'Delete',
-        'create stack section label': 'Create list',
+        'plugin name': 'Outliner',
+        'object placeholder': 'New outline',
+        'create object label': 'Create outline',
+        'delete object label': 'Delete item',
+        'create stack section label': 'Create outline',
         'toggle checkbox label': 'Toggle checkbox',
       },
     },

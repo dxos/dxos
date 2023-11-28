@@ -78,7 +78,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
   }
 
   if (selected) {
-    return <Tree space={space} selected={selected} type='tidy' onClick={() => setSelected(undefined)} />;
+    return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
   }
 
   return (

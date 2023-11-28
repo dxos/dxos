@@ -17,10 +17,9 @@ import { SpaceGraphModel } from '../Graph';
 
 type Renderer = (svg: SVGSVGElement, data: any, options: any) => void;
 
-export type LayoutType = 'tidy' | 'radial' | 'edge';
+export type LayoutVariant = 'tidy' | 'radial' | 'edge';
 
-// TODO(burdon): Normalize API and styling.
-
+// TODO(burdon): Remove slots?
 export type TreeLayoutSlots = {
   node?: string;
   path?: string;
@@ -48,7 +47,7 @@ export const defaultTreeLayoutSlots: TreeLayoutSlots = {
   text: 'stroke-[0.5px] stroke-neutral-700 text-xs', // TODO(burdon): Create box instead of halo.
 };
 
-const renderers = new Map<LayoutType, Renderer>([
+const renderers = new Map<LayoutVariant, Renderer>([
   ['tidy', TidyTree],
   ['radial', RadialTree],
   ['edge', HierarchicalEdgeBundling],
@@ -57,11 +56,11 @@ const renderers = new Map<LayoutType, Renderer>([
 export type TreeComponentProps<N = unknown> = {
   space: Space;
   selected?: string;
-  type?: LayoutType;
-  onClick?: (node?: N) => void;
+  variant?: LayoutVariant;
+  onNodeClick?: (node?: N) => void;
 };
 
-export const Tree = <N,>({ space, selected, type = 'tidy', onClick }: TreeComponentProps<N>) => {
+export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: TreeComponentProps<N>) => {
   // TODO(burdon): Model isn't getting updated. Subscribe to changes on space (like Graph).
   const model = useMemo(() => (space ? new SpaceGraphModel().open(space, selected) : undefined), [space, selected]);
   const [data, setData] = useState<TreeNode>();
@@ -92,14 +91,14 @@ export const Tree = <N,>({ space, selected, type = 'tidy', onClick }: TreeCompon
         slots: defaultTreeLayoutSlots,
       };
 
-      const renderer = renderers.get(type);
+      const renderer = renderers.get(variant);
       renderer?.(context.ref.current!, data, options);
     }
   }, [data, width, height]);
 
   // TODO(burdon): Provider should expand.
   return (
-    <div ref={ref} className='flex grow overflow-hidden' onClick={() => onClick?.()}>
+    <div ref={ref} className='flex grow overflow-hidden' onClick={() => onNodeClick?.()}>
       <SVGContextProvider context={context}>
         <SVG />
       </SVGContextProvider>

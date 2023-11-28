@@ -15,8 +15,8 @@ export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
     // TODO(burdon): Style like document.
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, inputSurface, 'pli-2')}>
-        <div role='none' className={mx('pbs-4 pbe-4', 'min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
-          <Outliner.Root checkbox={tree.checkbox} root={tree.root} onCreate={() => new TreeType.Item()} />
+        <div role='none' className={mx('plb-6 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
+          <Outliner.Root isTasklist={tree.checkbox} root={tree.root} onCreate={() => new TreeType.Item()} />
         </div>
       </div>
     </Main.Content>
@@ -25,8 +25,8 @@ export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
 
 export const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
   return (
-    <div role='none' className='flex flex-col w-full pbs-4 pbe-4'>
-      <Outliner.Root checkbox={tree.checkbox} root={tree.root} onCreate={() => new TreeType.Item()} />
+    <div role='none' className='flex flex-col w-full plb-6'>
+      <Outliner.Root isTasklist={tree.checkbox} root={tree.root} onCreate={() => new TreeType.Item()} />
     </div>
   );
 };
