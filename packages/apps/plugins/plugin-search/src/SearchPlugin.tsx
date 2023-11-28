@@ -32,6 +32,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
                   return item.object;
                 case 'view-object':
                   return item;
+                }
               }
             },
           },
