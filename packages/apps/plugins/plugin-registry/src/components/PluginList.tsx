@@ -6,10 +6,29 @@ import { Circle } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
-import { DensityProvider, Input, List, ListItem, useId, useTranslation } from '@dxos/react-ui';
+import {
+  type ChromaticPalette,
+  DensityProvider,
+  Input,
+  List,
+  ListItem,
+  type NeutralPalette,
+  Tag,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
+
+const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
+  default: 'neutral',
+  new: 'green',
+  beta: 'cyan',
+  alpha: 'purple',
+  experimental: 'indigo',
+  新発売: 'red',
+};
 
 export type PluginListProps = {
   plugins?: Plugin['meta'][];
@@ -25,7 +44,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], className,
   return (
     <DensityProvider density='fine'>
       <List classNames='select-none'>
-        {plugins.map(({ id, name, description, iconComponent: Icon = Circle }) => {
+        {plugins.map(({ id, name, description, tags, iconComponent: Icon = Circle }) => {
           const isEnabled = enabled.includes(id);
           const isLoaded = loaded.includes(id);
           const reloadRequired = isEnabled !== isLoaded;
@@ -41,15 +60,24 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], className,
                 onClick={() => onChange?.(id, !isEnabled)}
                 aria-describedby={descriptionId}
               >
-                <Icon weight='duotone' className={mx(getSize(6), 'mbs-1')} />
+                <Icon weight='duotone' className={mx('shrink-0 mbs-1', getSize(6))} />
                 <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
                   <label htmlFor={inputId} id={labelId} className='truncate'>
                     {name ?? id}
                   </label>
                   {(description || reloadRequired) && (
-                    <div id={descriptionId} className='space-b-1 pbe-1'>
+                    <div id={descriptionId} className='space-b-1 pbs-1 pbe-1'>
                       <p className={descriptionText}>{description}</p>
                       {reloadRequired && <p className='text-sm font-system-medium'>{t('reload required message')}</p>}
+                    </div>
+                  )}
+                  {tags?.length && (
+                    <div className='flex my-1'>
+                      {tags.map((tag) => (
+                        <Tag key={tag} palette={palette[tag] ?? palette.default}>
+                          {tag}
+                        </Tag>
+                      ))}
                     </div>
                   )}
                 </div>
