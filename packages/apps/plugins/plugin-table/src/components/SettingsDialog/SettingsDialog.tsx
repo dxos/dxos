@@ -4,8 +4,10 @@
 
 import React, { type FC, type PropsWithChildren, useEffect, useRef } from 'react';
 
-import { Button, Dialog, type DialogRootProps } from '@dxos/react-ui';
+import { Button, Dialog, type DialogRootProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { TABLE_PLUGIN } from '../../meta';
 
 export type SettingsDialogProps = {
   title: string;
@@ -15,6 +17,7 @@ export type SettingsDialogProps = {
 
 // TODO(burdon): Factor out styles instead of wrapping?
 export const SettingsDialog: FC<SettingsDialogProps> = ({ title, className, open, children, onClose }) => {
+  const { t } = useTranslation(TABLE_PLUGIN);
   const success = useRef(false);
   useEffect(() => {
     success.current = false;
@@ -34,9 +37,9 @@ export const SettingsDialog: FC<SettingsDialogProps> = ({ title, className, open
                 success.current = true;
               }}
             >
-              <Button variant='primary'>Done</Button>
+              <Button variant='primary'>{t('close dialog')}</Button>
             </Dialog.Close>
-            <Button onClick={() => onClose?.(false)}>Cancel</Button>
+            <Button onClick={() => onClose?.(false)}>{t('cancel dialog')}</Button>
           </ButtonBar>
         </Dialog.Content>
       </Dialog.Overlay>
