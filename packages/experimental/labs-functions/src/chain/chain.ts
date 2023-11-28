@@ -8,7 +8,7 @@ import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable
 import { formatDocumentsAsString } from 'langchain/util/document';
 
 import { type ChainResources } from './resources';
-import { str } from './util';
+import { str } from '../util';
 
 export type ChainOptions = {
   context?: boolean;

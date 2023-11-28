@@ -13,7 +13,7 @@ import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { nonNullable } from './util';
+import { nonNullable } from '../util';
 
 const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
 
@@ -31,7 +31,7 @@ export type ChainDocument = Document & {
 export type ChainDocumentInfo = { id: string; hash: ArrayBuffer };
 
 export type ChainStoreOptions = {
-  id: string;
+  id?: string;
   baseDir?: string;
 };
 
@@ -60,7 +60,7 @@ export class ChainStore {
 
   get baseDir() {
     return this._options?.baseDir
-      ? join(this._options.baseDir, this._options.id, VERSION.replace(/\W/g, '_'))
+      ? join(this._options.baseDir, this._options.id ?? '', VERSION.replace(/\W/g, '_'))
       : undefined;
   }
 
