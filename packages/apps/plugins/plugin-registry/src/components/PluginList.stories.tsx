@@ -23,8 +23,8 @@ const Story = () => {
         id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
         name: `${faker.lorem.sentence(3)}`,
         description: faker.datatype.boolean() ? `${faker.lorem.sentences()}` : undefined,
-        tags: faker.datatype.boolean({ probability: 0.2 })
-          ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new'])]
+        tags: faker.datatype.boolean({ probability: 0.4 })
+          ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
           : undefined,
         iconComponent: faker.helpers.arrayElement(icons),
       }),
