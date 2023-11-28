@@ -9,11 +9,18 @@ import { FaissStore } from 'langchain/vectorstores/faiss';
 import fs from 'node:fs';
 import { join } from 'node:path';
 
+import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 // TODO(burdon): Factor out.
 export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
+
+const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
+
+const VERSION = '0.1';
+
+const INDEX_FILE = 'dxos_index.json';
 
 export type ChainDocument = Document & {
   metadata: {
@@ -22,13 +29,7 @@ export type ChainDocument = Document & {
   };
 };
 
-const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
-
-const VERSION = '0.1';
-
-const INDEX_FILE = 'dxos_index.json';
-
-type DocumentInfo = { id: string; hash: string };
+export type DocumentInfo = { id: string; hash: ArrayBuffer };
 
 export class VectorStoreImpl {
   private _vectorStore?: FaissStore;
@@ -93,7 +94,6 @@ export class VectorStoreImpl {
   }
 
   // TODO(burdon): Split into chunks?
-  // TODO(burdon): Store hash to check document has changed.
   async addDocuments(docs: ChainDocument[]) {
     invariant(this._vectorStore);
     const documentIds = docs.map(({ metadata }) => this._vectorIndex.get(metaKey(metadata))).filter(nonNullable);
@@ -102,9 +102,9 @@ export class VectorStoreImpl {
     }
 
     {
-      const documentIds = (await this._vectorStore.addDocuments(docs)) as string[];
+      const documentIds = await this._vectorStore.addDocuments(docs);
       for (let i = 0; i < documentIds.length; ++i) {
-        const hash = ''; // TODO(burdon): !!!
+        const hash = await subtleCrypto.digest('SHA-256', Buffer.from(docs[i].pageContent));
         this._vectorIndex.set(metaKey(docs[i].metadata), { id: documentIds[i], hash });
       }
     }
