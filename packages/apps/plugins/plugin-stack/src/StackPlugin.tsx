@@ -58,8 +58,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   return section.object;
                 case 'view-object':
                   return section;
-                default:
-                  return undefined;
               }
             },
           },

@@ -18,7 +18,7 @@ import {
   parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { type TypedObject, SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
@@ -43,8 +43,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       metadata: {
         records: {
           [THREAD_ITEM]: {
-            // TODO(burdon): !!!
-            parse: (item: any, type: string) => {
+            parse: (item: TypedObject, type: string) => {
               switch (type) {
                 case 'node':
                   return { id: item.id, label: item.title, data: item };
