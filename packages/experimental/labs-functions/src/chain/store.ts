@@ -60,7 +60,7 @@ export class ChainStore {
 
   get baseDir() {
     return this._options?.baseDir
-      ? join(this._options.baseDir, this._options.id ?? '', VERSION.replace(/\W/g, '_'))
+      ? join(this._options.baseDir, [this._options.id, VERSION].filter(Boolean).join('_').replace(/\W/g, '_'))
       : undefined;
   }
 
