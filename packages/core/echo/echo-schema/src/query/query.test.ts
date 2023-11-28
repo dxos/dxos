@@ -11,120 +11,122 @@ import { afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
 import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
 import { Expando, TypedObject, TextObject } from '../object';
-import { TestBuilder, createDatabase } from '../testing';
+import { TestBuilder, createDatabase, testWithAutomerge } from '../testing';
 import { Contact, types } from '../tests/proto';
 
 describe('Queries', () => {
-  let db: EchoDatabase;
-  beforeAll(async () => {
-    ({ db } = await createDatabase());
+  testWithAutomerge(() => {
+    let db: EchoDatabase;
+    beforeAll(async () => {
+      ({ db } = await createDatabase());
 
-    // TODO(burdon): Factor out common dataset. Change to Expando.
-    const objects = [
-      new TypedObject({ idx: 0, title: 'Task 0', label: 'red' }),
-      new TypedObject({ idx: 1, title: 'Task 1', label: 'red' }),
-      new TypedObject({ idx: 2, title: 'Task 2', label: 'red' }),
-      new TypedObject({ idx: 3, title: 'Task 3', label: 'green' }),
-      new TypedObject({ idx: 4, title: 'Task 4', label: 'green' }),
-      new TypedObject({ idx: 5, title: 'Task 5', label: 'blue' }),
-      new TypedObject({ idx: 6, title: 'Task 6', label: 'blue' }),
-      new TypedObject({ idx: 7, title: 'Task 7', label: 'blue' }),
-      new TypedObject({ idx: 8, title: 'Task 8', label: 'blue' }),
-      new TypedObject({ idx: 9, title: 'Task 9' }),
-    ];
+      // TODO(burdon): Factor out common dataset. Change to Expando.
+      const objects = [
+        new TypedObject({ idx: 0, title: 'Task 0', label: 'red' }),
+        new TypedObject({ idx: 1, title: 'Task 1', label: 'red' }),
+        new TypedObject({ idx: 2, title: 'Task 2', label: 'red' }),
+        new TypedObject({ idx: 3, title: 'Task 3', label: 'green' }),
+        new TypedObject({ idx: 4, title: 'Task 4', label: 'green' }),
+        new TypedObject({ idx: 5, title: 'Task 5', label: 'blue' }),
+        new TypedObject({ idx: 6, title: 'Task 6', label: 'blue' }),
+        new TypedObject({ idx: 7, title: 'Task 7', label: 'blue' }),
+        new TypedObject({ idx: 8, title: 'Task 8', label: 'blue' }),
+        new TypedObject({ idx: 9, title: 'Task 9' }),
+      ];
 
-    for (const object of objects) {
-      db.add(object);
-    }
+      for (const object of objects) {
+        db.add(object);
+      }
 
-    await db.flush();
-  });
+      await db.flush();
+    });
 
-  test('filter properties', async () => {
-    {
-      const { objects } = db.query();
-      expect(objects).to.have.length(10);
-    }
+    test('filter properties', async () => {
+      {
+        const { objects } = db.query();
+        expect(objects).to.have.length(10);
+      }
 
-    {
-      const { objects, results } = db.query({ label: undefined });
-      expect(objects).to.have.length(1);
-      expect(results).to.have.length(1);
-      expect(results[0].object).to.eq(objects[0]);
-      expect(results[0].id).to.eq(objects[0].id);
-      expect(results[0].spaceKey).to.eq(db._backend.spaceKey);
-    }
+      {
+        const { objects, results } = db.query({ label: undefined });
+        expect(objects).to.have.length(1);
+        expect(results).to.have.length(1);
+        expect(results[0].object).to.eq(objects[0]);
+        expect(results[0].id).to.eq(objects[0].id);
+        expect(results[0].spaceKey).to.eq(db._backend.spaceKey);
+      }
 
-    {
-      const { objects } = db.query({ label: 'red' });
-      expect(objects).to.have.length(3);
-    }
+      {
+        const { objects } = db.query({ label: 'red' });
+        expect(objects).to.have.length(3);
+      }
 
-    {
-      const { objects } = db.query({ label: 'pink' });
-      expect(objects).to.have.length(0);
-    }
-  });
+      {
+        const { objects } = db.query({ label: 'pink' });
+        expect(objects).to.have.length(0);
+      }
+    });
 
-  test('filter operators', async () => {
-    {
-      const { objects } = db.query(() => false);
-      expect(objects).to.have.length(0);
-    }
+    test('filter operators', async () => {
+      {
+        const { objects } = db.query(() => false);
+        expect(objects).to.have.length(0);
+      }
 
-    {
-      const { objects } = db.query(() => true);
-      expect(objects).to.have.length(10);
-    }
+      {
+        const { objects } = db.query(() => true);
+        expect(objects).to.have.length(10);
+      }
 
-    {
-      const { objects } = db.query((object) => object.label === 'red' || object.label === 'green');
-      expect(objects).to.have.length(5);
-    }
-  });
+      {
+        const { objects } = db.query((object) => object.label === 'red' || object.label === 'green');
+        expect(objects).to.have.length(5);
+      }
+    });
 
-  test('filter chaining', async () => {
-    {
-      // prettier-ignore
-      const { objects } = db.query([
+    test('filter chaining', async () => {
+      {
+        // prettier-ignore
+        const { objects } = db.query([
         () => true,
         { label: 'blue' },
         (object: any) => object.idx > 6
       ]);
-      expect(objects).to.have.length(2);
-    }
-  });
-
-  test('options', async () => {
-    {
-      const { objects } = db.query({ label: 'red' });
-      expect(objects).to.have.length(3);
-
-      for (const object of objects) {
-        db.remove(object);
+        expect(objects).to.have.length(2);
       }
-      await db.flush();
-    }
+    });
 
-    {
-      const { objects } = db.query();
-      expect(objects).to.have.length(7);
-    }
+    test('options', async () => {
+      {
+        const { objects } = db.query({ label: 'red' });
+        expect(objects).to.have.length(3);
 
-    {
-      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
-      expect(objects).to.have.length(7);
-    }
+        for (const object of objects) {
+          db.remove(object);
+        }
+        await db.flush();
+      }
 
-    {
-      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
-      expect(objects).to.have.length(10);
-    }
+      {
+        const { objects } = db.query();
+        expect(objects).to.have.length(7);
+      }
 
-    {
-      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY });
-      expect(objects).to.have.length(3);
-    }
+      {
+        const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
+        expect(objects).to.have.length(7);
+      }
+
+      {
+        const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
+        expect(objects).to.have.length(10);
+      }
+
+      {
+        const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY });
+        expect(objects).to.have.length(3);
+      }
+    });
   });
 });
 
