@@ -216,9 +216,10 @@ const Branch = ({
 type RootProps = {
   root: Item;
   onCreate?: () => Item;
+  onDelete?: (item: Item) => void;
 } & OutlinerOptions;
 
-const Root = ({ root, onCreate, ...props }: RootProps) => {
+const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
   const [active, setActive] = useState<string>();
 
   const handleCreate: BranchProps['onItemCreate'] = (parent, current, before) => {
@@ -247,6 +248,7 @@ const Root = ({ root, onCreate, ...props }: RootProps) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id);
     items.splice(idx, 1);
+    onDelete!(item); // TODO(burdon): Is this required (implement garbage collection)?
     if (idx - 1 >= 0) {
       const active = getLastDescendent(items[idx - 1]);
       setActive(active.id);
@@ -317,7 +319,7 @@ const Root = ({ root, onCreate, ...props }: RootProps) => {
         active={active}
         onItemFocus={(item) => setActive(item.id)}
         onItemCreate={onCreate && handleCreate}
-        onItemDelete={handleDelete}
+        onItemDelete={onDelete && handleDelete}
         onItemIndent={handleIndent}
         onNav={handleNav}
         {...props}

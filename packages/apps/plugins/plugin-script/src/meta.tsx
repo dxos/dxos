@@ -12,5 +12,6 @@ export const SCRIPT_PLUGIN = 'dxos.org/plugin/script';
 export default pluginMeta({
   id: SCRIPT_PLUGIN,
   name: 'Scripts',
+  tags: ['experimental'],
   iconComponent: (props) => <Code {...props} />,
 });
