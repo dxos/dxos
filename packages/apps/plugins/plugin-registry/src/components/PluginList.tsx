@@ -21,9 +21,9 @@ import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/r
 import { REGISTRY_PLUGIN } from '../meta';
 
 const palette: { [tag: string]: ChromaticPalette } = {
-  alpha: 'amber',
+  alpha: 'teal',
   beta: 'sky',
-  experimental: 'warning',
+  experimental: 'amber',
   new: 'red',
   新発売: 'red',
 };
