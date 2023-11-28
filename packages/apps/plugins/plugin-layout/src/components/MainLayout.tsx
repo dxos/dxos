@@ -69,7 +69,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         )}
 
         {/* Top (header) bar. */}
-        <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[1]', baseSurface]} asChild>
+        <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[2]', baseSurface]} asChild>
           <div aria-label={t('main header label')} role='none'>
             <div role='none' className={'flex gap-1 p-1 bs-[--topbar-size]'}>
               <DensityProvider density='coarse'>

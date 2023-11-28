@@ -44,7 +44,7 @@ export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
 export type TheadStyleProps = Partial<TableFlags>;
 
 export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header }, ...etc) =>
-  mx(header ? 'sticky block-start-[--sticky-top] z-10' : 'collapse', header && fixedSurface, ...etc);
+  mx(header ? 'sticky block-start-[--sticky-top] z-[1]' : 'collapse', header && fixedSurface, ...etc);
 
 export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
 
