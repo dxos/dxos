@@ -45,7 +45,7 @@ export type Plugin<TProvides = {}> = {
     shortId?: string;
 
     /**
-     * Human readable name.
+     * Human-readable name.
      */
     name?: string;
 
@@ -53,6 +53,11 @@ export type Plugin<TProvides = {}> = {
      * Short description of plugin functionality.
      */
     description?: string;
+
+    /**
+     * Tags to help categorize the plugin.
+     */
+    tags?: string[];
 
     /**
      * Component to render icon for the plugin when displayed in a list.

@@ -153,6 +153,7 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
+  // TODO(burdon): Rename delete.
   remove<T extends EchoObject>(obj: T) {
     if (obj[base] instanceof AutomergeObject) {
       return this.automerge.remove(obj);
