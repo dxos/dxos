@@ -21,7 +21,7 @@ import {
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
-import meta, { THREAD_PLUGIN } from './meta';
+import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
@@ -42,6 +42,19 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     provides: {
       metadata: {
         records: {
+          [THREAD_ITEM]: {
+            // TODO(burdon): !!!
+            parse: (item: any, type: string) => {
+              switch (type) {
+                case 'node':
+                  return { id: item.id, label: item.title, data: item };
+                case 'object':
+                  return item;
+                case 'view-object':
+                  return { id: `${item.id}-view`, object: item };
+              }
+            },
+          },
           [ThreadType.schema.typename]: {
             placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,

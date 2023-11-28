@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
@@ -23,14 +21,12 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   response,
 }) => {
   const config = client.config;
-  const chat = new ChatOpenAI({
-    openAIApiKey: getKey(config, 'openai.com/api_key')!,
-  });
   const resources = createOpenAIChainResources({
     // TODO(burdon): Get from context (for agent profile).
-    baseDir: '/tmp/dxos/agent/functions/embedding',
+    baseDir: '/tmp/dxos/agent/functions/embedding/openai',
     apiKey: getKey(config, 'openai.com/api_key')!,
     chat: { modelName: 'gpt-4' },
+    // chat: { model: 'llama2' },
   });
   await resources.initialize();
   const chain = new Chain(resources, { precise: false });
@@ -75,7 +71,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
               },
             ];
           } else {
-            const { content } = await chat.invoke(messages);
+            const { content } = await resources.chat.invoke(messages);
             log('response', { content: content.toString() });
             blocks = createResponse(client, space, content.toString());
           }

@@ -43,9 +43,6 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                 case 'view-object': {
                   return item;
                 }
-
-                default:
-                  return undefined;
               }
             },
           },
