@@ -31,11 +31,19 @@ export class ChainResources<
   private readonly _store;
 
   constructor(
-    public readonly embeddings: Embeddings,
-    public readonly chat: BaseChatModel,
+    private readonly _embeddings: Embeddings,
+    private readonly _chat: BaseChatModel,
     private readonly _options: ChainResourcesOptions<E, M> = {},
   ) {
-    this._store = new VectorStoreImpl(embeddings, this._options.baseDir);
+    this._store = new VectorStoreImpl(this._embeddings, this._options.baseDir);
+  }
+
+  get embeddings() {
+    return this._embeddings;
+  }
+
+  get chat() {
+    return this._chat;
   }
 
   get store() {

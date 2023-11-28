@@ -32,18 +32,19 @@ export type DocumentInfo = { id: string; hash: ArrayBuffer };
 
 export class VectorStoreImpl {
   private _vectorStore?: FaissStore;
-  private _vectorIndex = new Map<string, DocumentInfo>();
+  private _documentById = new Map<string, DocumentInfo>();
+  private _documentByHash = new Map<string, string>();
 
   constructor(private readonly _embeddings: Embeddings, private readonly _baseDir?: string) {}
 
   get size() {
-    return this._vectorIndex.size;
+    return this._documentById.size;
   }
 
   get stats() {
     return {
       version: VERSION,
-      documents: this._vectorIndex.size,
+      documents: this._documentById.size,
     };
   }
 
@@ -58,12 +59,13 @@ export class VectorStoreImpl {
         this._vectorStore = await FaissStore.load(this._baseDir, this._embeddings);
 
         // Check version.
-        const { version, index } = JSON.parse(fs.readFileSync(join(this._baseDir, INDEX_FILE), 'utf8'));
+        const { version, index, hash } = JSON.parse(fs.readFileSync(join(this._baseDir, INDEX_FILE), 'utf8'));
         if (version !== VERSION) {
           throw new Error(`Invalid version (expected: ${VERSION}; got: ${version})`);
         }
 
-        this._vectorIndex = new Map(index);
+        this._documentById = new Map(index);
+        this._documentByHash = new Map(hash);
       }
     } catch (err: any) {
       log.error('Corrupt store', String(err));
@@ -81,8 +83,15 @@ export class VectorStoreImpl {
     invariant(this._vectorStore);
     await this._vectorStore.save(this._baseDir);
 
-    const data = JSON.stringify({ version: VERSION, index: Array.from(this._vectorIndex.entries()) });
-    fs.writeFileSync(join(this._baseDir, INDEX_FILE), data);
+    fs.writeFileSync(
+      join(this._baseDir, INDEX_FILE),
+      JSON.stringify({
+        version: VERSION,
+        index: Array.from(this._documentById.entries()),
+        hash: Array.from(this._documentByHash.entries()),
+      }),
+    );
+
     return this;
   }
 
@@ -92,31 +101,41 @@ export class VectorStoreImpl {
     return this;
   }
 
+  // TODO(burdon): Pass in hash?
+  async hasDocument(doc: ChainDocument): Promise<boolean> {
+    const hash = await subtleCrypto.digest('SHA-256', Buffer.from(doc.pageContent));
+    return this._documentByHash.has(Buffer.from(hash).toString('hex'));
+  }
+
   // TODO(burdon): Split into chunks?
   async addDocuments(docs: ChainDocument[]) {
     invariant(this._vectorStore);
-    const documentIds = docs.map(({ metadata }) => this._vectorIndex.get(metaKey(metadata))).filter(nonNullable);
+    const documentIds = docs.map(({ metadata }) => this._documentById.get(metaKey(metadata))).filter(nonNullable);
     if (documentIds.length) {
       await this._vectorStore.delete({ ids: documentIds.map(({ id }) => id) });
     }
 
     {
+      // TODO(burdon): Check hash first.
       const documentIds = await this._vectorStore.addDocuments(docs);
+
+      // Update index.
       for (let i = 0; i < documentIds.length; ++i) {
         const hash = await subtleCrypto.digest('SHA-256', Buffer.from(docs[i].pageContent));
-        this._vectorIndex.set(metaKey(docs[i].metadata), { id: documentIds[i], hash });
+        this._documentById.set(metaKey(docs[i].metadata), { id: documentIds[i], hash });
+        this._documentByHash.set(Buffer.from(hash).toString('hex'), documentIds[i]);
       }
     }
   }
 
-  async deleteDocuments(meta: ChainDocument['metadata'][]) {
+  async deleteDocuments(metadata: ChainDocument['metadata'][]) {
     invariant(this._vectorStore);
-    const documentIds = meta
+    const documentIds = metadata
       .map((metadata) => {
         const id = metaKey(metadata);
-        const documentId = this._vectorIndex.get(id);
+        const documentId = this._documentById.get(id);
         if (documentId) {
-          this._vectorIndex.delete(id);
+          this._documentById.delete(id);
         }
         return documentId;
       })
