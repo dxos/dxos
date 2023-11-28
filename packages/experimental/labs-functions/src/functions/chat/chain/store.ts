@@ -28,11 +28,11 @@ export type ChainDocument = Document & {
   };
 };
 
-export type DocumentInfo = { id: string; hash: ArrayBuffer };
+export type ChainDocumentInfo = { id: string; hash: ArrayBuffer };
 
 export class ChainStore {
   private _vectorStore?: FaissStore;
-  private _documentById = new Map<string, DocumentInfo>();
+  private _documentById = new Map<string, ChainDocumentInfo>();
   private _documentByHash = new Map<string, string>();
 
   constructor(private readonly _embeddings: Embeddings, private readonly _baseDir?: string) {}

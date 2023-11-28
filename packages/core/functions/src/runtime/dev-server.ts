@@ -20,6 +20,7 @@ export type DevServerOptions = {
   directory: string;
   manifest: FunctionManifest;
   reload?: boolean;
+  dataDir?: string;
 };
 
 /**
@@ -39,7 +40,9 @@ export class DevServer {
   constructor(
     private readonly _client: Client,
     private readonly _options: DevServerOptions,
-  ) {}
+  ) {
+    console.log(':::::::::', this._options);
+  }
 
   get endpoint() {
     invariant(this._port);
@@ -161,6 +164,7 @@ export class DevServer {
 
     const context: FunctionContext = {
       client: this._client,
+      dataDir: this._options.dataDir,
     };
 
     let statusCode = 200;

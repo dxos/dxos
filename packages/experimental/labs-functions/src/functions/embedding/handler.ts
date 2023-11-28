@@ -2,16 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
+import { join } from 'node:path';
+
 import { Document as DocumentType } from '@braneframe/types';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { getKey } from '../../util';
 import { type ChainDocument, createOpenAIChainResources } from '../chat';
 
-// TODO(burdon): Query update isn't fired when documents are edited.
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context, response }) => {
+export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
+  event,
+  context: { client, dataDir },
+  response,
+}) => {
+  invariant(dataDir);
+
   const docs: ChainDocument[] = [];
   const addDocument =
     (space: PublicKey | undefined = undefined) =>
@@ -22,9 +30,9 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
         pageContent: object.content.text,
       });
 
-  const spaces = context.client.spaces.get();
+  const spaces = client.spaces.get();
   if (event.space && event.objects.length > 0) {
-    const space = context.client.spaces.get(PublicKey.from(event.space))!;
+    const space = client.spaces.get(PublicKey.from(event.space))!;
     const add = addDocument(space.key);
     if (space) {
       event.objects.forEach((id) => add(space.db.getObjectById(id)!));
@@ -37,10 +45,9 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
   }
 
   if (docs.length) {
-    const config = context.client.config;
+    const config = client.config;
     const { store } = createOpenAIChainResources({
-      // TODO(burdon): Get from context (for agent profile).
-      baseDir: '/tmp/dxos/agent/functions/embedding',
+      baseDir: join(dataDir, 'agent/functions/embedding'),
       apiKey: getKey(config, 'openai.com/api_key')!,
     });
 

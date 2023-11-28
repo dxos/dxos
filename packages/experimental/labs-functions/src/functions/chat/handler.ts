@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { join } from 'node:path';
+
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -17,13 +20,13 @@ const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to cont
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   event: { space: spaceKey, objects: messageIds },
-  context: { client },
+  context: { client, dataDir },
   response,
 }) => {
+  invariant(dataDir);
   const config = client.config;
   const resources = createOpenAIChainResources({
-    // TODO(burdon): Get from context (for agent profile).
-    baseDir: '/tmp/dxos/agent/functions/embedding',
+    baseDir: join(dataDir, 'agent/functions/embedding'),
     apiKey: getKey(config, 'openai.com/api_key')!,
     chat: { modelName: 'gpt-4' },
   });
