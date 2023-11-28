@@ -30,12 +30,17 @@ export type ChainDocument = Document & {
 
 export type ChainDocumentInfo = { id: string; hash: ArrayBuffer };
 
+export type ChainStoreOptions = {
+  id: string;
+  baseDir?: string;
+};
+
 export class ChainStore {
   private _vectorStore?: FaissStore;
   private _documentById = new Map<string, ChainDocumentInfo>();
   private _documentByHash = new Map<string, string>();
 
-  constructor(private readonly _embeddings: Embeddings, private readonly _baseDir?: string) {}
+  constructor(private readonly _embeddings: Embeddings, private readonly _options: ChainStoreOptions = {}) {}
 
   get size() {
     return this._documentById.size;
@@ -53,13 +58,19 @@ export class ChainStore {
     return this._vectorStore;
   }
 
+  get baseDir() {
+    return this._options?.baseDir
+      ? join(this._options.baseDir, this._options.id, VERSION.replace(/\W/g, '_'))
+      : undefined;
+  }
+
   async initialize() {
     try {
-      if (this._baseDir) {
-        this._vectorStore = await FaissStore.load(this._baseDir, this._embeddings);
+      if (this.baseDir) {
+        this._vectorStore = await FaissStore.load(this.baseDir, this._embeddings);
 
         // Check version.
-        const { version, index, hash } = JSON.parse(fs.readFileSync(join(this._baseDir, INDEX_FILE), 'utf8'));
+        const { version, index, hash } = JSON.parse(fs.readFileSync(join(this.baseDir, INDEX_FILE), 'utf8'));
         if (version !== VERSION) {
           throw new Error(`Invalid version (expected: ${VERSION}; got: ${version})`);
         }
@@ -68,24 +79,24 @@ export class ChainStore {
         this._documentByHash = new Map(hash);
       }
     } catch (err: any) {
-      log.error('Corrupt store', { baseDir: this._baseDir, version: VERSION, error: String(err) });
+      log.error('Corrupt store', { baseDir: this.baseDir, version: VERSION, error: String(err) });
     }
 
     if (!this._vectorStore) {
       this._vectorStore = await FaissStore.fromDocuments([], this._embeddings);
     }
 
-    log.info('initialized', { baseDir: this._baseDir, version: VERSION });
+    log.info('initialized', { baseDir: this.baseDir, version: VERSION });
     return this;
   }
 
   async save() {
-    invariant(this._baseDir);
+    invariant(this.baseDir);
     invariant(this._vectorStore);
-    await this._vectorStore.save(this._baseDir);
+    await this._vectorStore.save(this.baseDir);
 
     fs.writeFileSync(
-      join(this._baseDir, INDEX_FILE),
+      join(this.baseDir, INDEX_FILE),
       JSON.stringify({
         version: VERSION,
         index: Array.from(this._documentById.entries()),
@@ -97,8 +108,8 @@ export class ChainStore {
   }
 
   async delete() {
-    invariant(this._baseDir);
-    fs.rmSync(this._baseDir, { recursive: true, force: true });
+    invariant(this.baseDir);
+    fs.rmSync(this.baseDir, { recursive: true, force: true });
     return this;
   }
 

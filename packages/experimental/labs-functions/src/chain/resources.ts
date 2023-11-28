@@ -31,11 +31,12 @@ export class ChainResources<
   private readonly _store: ChainStore;
 
   constructor(
+    private readonly _id: string,
     private readonly _embeddings: Embeddings,
     private readonly _chat: BaseChatModel,
     private readonly _options: ChainResourcesOptions<E, M> = {},
   ) {
-    this._store = new ChainStore(this._embeddings, this._options.baseDir);
+    this._store = new ChainStore(this._embeddings, { id: this._id, baseDir: this._options.baseDir });
   }
 
   get embeddings() {
