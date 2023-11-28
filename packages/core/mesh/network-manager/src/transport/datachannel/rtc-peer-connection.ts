@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import node from 'node-datachannel';
+import node, { type SelectedCandidateInfo } from 'node-datachannel';
 import defer, { type DeferredPromise } from 'p-defer';
 
 import { DataChannel } from './rtc-data-channel';
@@ -188,6 +188,10 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
     this.#peerConnection.addRemoteCandidate(candidate.candidate, candidate.sdpMid ?? '0');
   }
 
+  getSelectedCandidatePair(): { local: SelectedCandidateInfo; remote: SelectedCandidateInfo } | null {
+    return this.#peerConnection.getSelectedCandidatePair();
+  }
+
   addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
     throw new Error('addTrack Not implemented');
   }
@@ -204,6 +208,14 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
 
     this.#peerConnection.close();
     this.#peerConnection.destroy();
+  }
+
+  bytesSent(): number {
+    return this.#peerConnection.bytesSent();
+  }
+
+  bytesReceived(): number {
+    return this.#peerConnection.bytesReceived();
   }
 
   createDataChannel(label: string, dataChannelDict: RTCDataChannelInit = {}): RTCDataChannel {

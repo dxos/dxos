@@ -62,6 +62,8 @@ export class SpaceProtocol {
   @logInfo
   private readonly _topic: Promise<PublicKey>;
 
+  private readonly _spaceKey: PublicKey;
+
   private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
   private readonly _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 
@@ -81,6 +83,7 @@ export class SpaceProtocol {
   }
 
   constructor({ topic, swarmIdentity, networkManager, onSessionAuth, onAuthFailure, blobStore }: SpaceProtocolOptions) {
+    this._spaceKey = topic;
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
@@ -126,7 +129,7 @@ export class SpaceProtocol {
       peerId: this._swarmIdentity.peerKey,
       topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `space swarm ${topic.truncate()}`,
+      label: `swarm ${topic.truncate()} for space ${this._spaceKey.truncate()}`,
     });
 
     log('started');
@@ -227,8 +230,8 @@ export class SpaceProtocolSession implements WireProtocol {
     return this._teleport.stream;
   }
 
-  async open(): Promise<void> {
-    await this._teleport.open();
+  async open(sessionId?: PublicKey): Promise<void> {
+    await this._teleport.open(sessionId);
     this._teleport.addExtension(
       'dxos.mesh.teleport.auth',
       new AuthExtension({

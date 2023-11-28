@@ -16,6 +16,7 @@ const columns: TableColumnDef<ConnectionInfo.StreamStats, any>[] = [
   helper.accessor('bytesReceived', builder.number({ header: 'received' })),
   helper.accessor('bytesSentRate', builder.number({ header: 'sent b/s' })),
   helper.accessor('bytesReceivedRate', builder.number({ header: 'received b/s' })),
+  helper.accessor('writeBufferSize', builder.number({ header: 'write buffer' })),
   helper.accessor('tag', { meta: { cell: { classNames: textPadding } } }),
 ];
 
@@ -36,6 +37,8 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         schema={schema}
         object={{
           state: connection.state,
+          transportBytesSent: connection.transportBytesSent,
+          transportBytesReceived: connection.transportBytesReceived,
           closeReason: connection.closeReason,
           session: connection.sessionId,
           remotePeer: connection.remotePeerId,
