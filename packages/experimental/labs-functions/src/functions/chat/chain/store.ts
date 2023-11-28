@@ -30,7 +30,7 @@ export type ChainDocument = Document & {
 
 export type DocumentInfo = { id: string; hash: ArrayBuffer };
 
-export class VectorStoreImpl {
+export class ChainStore {
   private _vectorStore?: FaissStore;
   private _documentById = new Map<string, DocumentInfo>();
   private _documentByHash = new Map<string, string>();

@@ -5,7 +5,7 @@
 import { type BaseChatModel, type BaseChatModelParams } from 'langchain/chat_models/base';
 import { type EmbeddingsParams, type Embeddings } from 'langchain/embeddings/base';
 
-import { VectorStoreImpl } from './store';
+import { ChainStore } from './store';
 
 export type ChainResourcesOptions<E extends EmbeddingsParams, M extends BaseChatModelParams> = {
   baseDir?: string;
@@ -28,14 +28,14 @@ export class ChainResources<
   E extends EmbeddingsParams = EmbeddingsParams,
   M extends BaseChatModelParams = BaseChatModelParams,
 > {
-  private readonly _store;
+  private readonly _store: ChainStore;
 
   constructor(
     private readonly _embeddings: Embeddings,
     private readonly _chat: BaseChatModel,
     private readonly _options: ChainResourcesOptions<E, M> = {},
   ) {
-    this._store = new VectorStoreImpl(this._embeddings, this._options.baseDir);
+    this._store = new ChainStore(this._embeddings, this._options.baseDir);
   }
 
   get embeddings() {

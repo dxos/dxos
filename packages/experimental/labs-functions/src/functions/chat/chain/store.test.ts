@@ -7,7 +7,7 @@ import { FakeEmbeddings } from 'langchain/embeddings/fake';
 
 import { describe, test } from '@dxos/test';
 
-import { VectorStoreImpl } from './store';
+import { ChainStore } from './store';
 
 describe('store', () => {
   test('add', async () => {
@@ -22,7 +22,7 @@ describe('store', () => {
       },
     ];
 
-    const store = new VectorStoreImpl(new FakeEmbeddings());
+    const store = new ChainStore(new FakeEmbeddings());
     await store.initialize();
     await store.addDocuments([documents[0]]);
     expect(store.stats.documents).to.eq(1);
