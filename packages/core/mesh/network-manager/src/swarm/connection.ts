@@ -13,6 +13,7 @@ import {
   ProtocolError,
   ConnectionResetError,
   ConnectivityError,
+  TimeoutError,
   UnknownProtocolError,
   trace,
 } from '@dxos/protocols';
@@ -186,8 +187,10 @@ export class Connection {
     scheduleTask(
       this.connectedTimeoutContext,
       async () => {
-        log.info('timeout waiting for transport to connect, aborting');
-        await this.abort().catch((err) => this.errors.raise(err));
+        log.info(`timeout waiting ${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect, aborting`);
+        await this.abort(new TimeoutError(`${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect`)).catch(
+          (err) => this.errors.raise(err),
+        );
       },
       TRANSPORT_CONNECTION_TIMEOUT,
     );
@@ -320,6 +323,18 @@ export class Connection {
 
       try {
         // After the transport is closed streams are disconnected.
+        await this._transport?.destroy();
+      } catch (err: any) {
+        log.catch(err);
+      }
+    } else {
+      log.info(`graceful close requested when we were in ${lastState} state? aborting`);
+      try {
+        await this._protocol.abort();
+      } catch (err: any) {
+        log.catch(err);
+      }
+      try {
         await this._transport?.destroy();
       } catch (err: any) {
         log.catch(err);

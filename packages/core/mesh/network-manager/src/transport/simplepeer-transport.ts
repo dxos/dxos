@@ -71,6 +71,7 @@ export class SimplePeerTransport implements Transport {
         if (err.errorDetail === 'sctp-failure') {
           this.errors.raise(new ConnectionResetError('sctp-failure from RTCError', err));
         } else {
+          log.info('unknown RTCError', { err });
           this.errors.raise(new UnknownProtocolError('unknown RTCError', err));
         }
         // catch more generic simple-peer errors: https://github.com/feross/simple-peer/blob/master/README.md#error-codes
@@ -80,10 +81,12 @@ export class SimplePeerTransport implements Transport {
           case 'ERR_WEBRTC_SUPPORT':
             this.errors.raise(new ProtocolError('WebRTC not supported', err));
             break;
+          case 'ERR_SIGNALING':
+            this.errors.raise(new ConnectivityError('signaling failure', err));
+            break;
           case 'ERR_ICE_CONNECTION_FAILURE':
           case 'ERR_DATA_CHANNEL':
           case 'ERR_CONNECTION_FAILURE':
-          case 'ERR_SIGNALING':
             this.errors.raise(new ConnectivityError('unknown communication failure', err));
             break;
           // errors due to library issues or improper API usage

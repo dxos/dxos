@@ -166,7 +166,15 @@ export class Muxer {
     };
     channel.destroy = (err) => {
       // TODO(dmaretskyi): Call stream.end() instead?
-      stream.destroy(err);
+      if (err) {
+        if (stream.listeners('error').length > 0) {
+          stream.destroy(err);
+        } else {
+          stream.destroy();
+        }
+      } else {
+        stream.destroy();
+      }
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
@@ -276,9 +284,10 @@ export class Muxer {
     ).catch(async (err: any) => {
       log('error sending close command', { err });
 
-      await this.dispose(err);
+      await this._dispose(err);
     });
 
+    // don't return until close is complete or timeout
     await Promise.race([
       new Promise((_resolve, reject) => {
         setTimeout(() => {
@@ -286,7 +295,7 @@ export class Muxer {
         }, GRACEFUL_CLOSE_TIMEOUT);
       }),
       (async () => {
-        await this.dispose(err);
+        await this._dispose(err);
       })(),
     ]);
   }
@@ -318,14 +327,14 @@ export class Muxer {
       });
     }
 
-    this.dispose(err).catch((err) => {
+    this._dispose(err).catch((err) => {
       log('error disposing after destroy', { err });
     });
   }
 
   // complete the termination, graceful or otherwise
 
-  async dispose(err?: Error) {
+  async _dispose(err?: Error) {
     if (this._disposed) {
       log('already destroyed, ignoring dispose request');
       return;
@@ -339,6 +348,7 @@ export class Muxer {
       channel.destroy?.(err);
     }
     this._disposed = true;
+    await this._emitStats();
 
     this.afterClosed.emit(err);
 
@@ -356,7 +366,7 @@ export class Muxer {
     if (cmd.close) {
       if (!this._closing) {
         log('received peer close, initiating my own graceful close');
-        await this.close();
+        await this.close(new Error('received peer close'));
       } else {
         log('received close from peer, already closing');
       }
