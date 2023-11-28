@@ -12,6 +12,7 @@ import {
   Input,
   List,
   ListItem,
+  type NeutralPalette,
   Tag,
   useId,
   useTranslation,
@@ -20,11 +21,12 @@ import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/r
 
 import { REGISTRY_PLUGIN } from '../meta';
 
-const palette: { [tag: string]: ChromaticPalette } = {
-  alpha: 'teal',
-  beta: 'sky',
-  experimental: 'amber',
-  new: 'red',
+const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
+  default: 'neutral',
+  new: 'green',
+  beta: 'cyan',
+  alpha: 'purple',
+  experimental: 'indigo',
   新発売: 'red',
 };
 
@@ -72,7 +74,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], className,
                   {tags?.length && (
                     <div className='flex my-1'>
                       {tags.map((tag) => (
-                        <Tag key={tag} palette={palette[tag]}>
+                        <Tag key={tag} palette={palette[tag] ?? palette.default}>
                           {tag}
                         </Tag>
                       ))}
