@@ -15,6 +15,8 @@ export default [
         'settings title': 'Table settings',
         'table schema label': 'Schema',
         'new schema': 'New schema',
+        'close dialog': 'Close',
+        'cancel dialog': 'Cancel',
       },
     },
   },
