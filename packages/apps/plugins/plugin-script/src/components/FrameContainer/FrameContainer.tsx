@@ -85,7 +85,6 @@ export const FrameContainer = ({ containerUrl, result, debug = false }: FrameCon
 /**
  * Create import map used to resolve modules in the browser.
  * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap
- * @param mainUrl
  * @param result
  */
 const createImportMap = (result: CompilerResult) => {

@@ -7,10 +7,11 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { filterObjects, type SearchResult } from '@braneframe/plugin-search';
 import { type Schema, type Space, type TypedObject } from '@dxos/client/echo';
 import { createSvgContext, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { Graph, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
+import { Graph as GraphComponent, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-ui-theme';
 
-import { EchoGraphModel } from './graph-model';
+import { SpaceGraphModel } from './graph-model';
+import { Tree } from '../Tree';
 
 type Slots = {
   root?: { className?: string };
@@ -32,8 +33,14 @@ const colors = [
   '[&>circle]:!fill-indigo-300  [&>circle]:!stroke-indigo-600',
 ];
 
-export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
-  const model = useMemo(() => (space ? new EchoGraphModel().open(space) : undefined), [space]);
+export type GraphProps = {
+  space: Space;
+  match?: RegExp;
+};
+
+export const Graph: FC<GraphProps> = ({ space, match }) => {
+  const model = useMemo(() => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined), [space]);
+  const [selected, setSelected] = useState<string>();
 
   const context = createSvgContext();
   const projector = useMemo(
@@ -66,17 +73,26 @@ export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match })
 
   const [colorMap] = useState(new Map<Schema, string>());
 
+  if (!model) {
+    return null;
+  }
+
+  if (selected) {
+    return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
+  }
+
   return (
     <SVGContextProvider context={context}>
       <SVG className={slots?.root?.className}>
         <Markers arrowSize={6} />
         <Grid className={slots?.grid?.className} />
         <Zoom extent={[1 / 2, 4]}>
-          <Graph
+          <GraphComponent
             model={model}
             projector={projector}
             drag
             arrows
+            onSelect={(node) => setSelected(node?.data?.id)}
             labels={{
               text: (node: GraphLayoutNode<TypedObject>) => {
                 if (filteredRef.current?.length && !filteredRef.current.some((object) => object.id === node.data?.id)) {
