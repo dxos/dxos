@@ -1,6 +1,7 @@
 import { Stream } from "@dxos/codec-protobuf";
 import { SyncRepoRequest, SyncRepoResponse } from "@dxos/protocols/proto/dxos/echo/service";
-import { Repo, NetworkAdapter, StorageAdapter, Message, PeerId, Chunk, StorageKey } from '@dxos/automerge/automerge-repo'
+import { Repo, NetworkAdapter, StorageAdapter, Message, PeerId, Chunk, StorageKey, cbor } from '@dxos/automerge/automerge-repo'
+import { invariant } from "@dxos/invariant";
 
 export class AutomergeHost {
   private readonly _repo: Repo;
@@ -34,29 +35,75 @@ export class AutomergeHost {
   }
 }
 
+type ClientSyncState = {
+  connected: boolean;
+  send: (message: Message) => void;
+  disconnect: () => void;
+}
+
 /**
  * Used to replicate with apps running on the same device.
  */
 class ClientNetworkAdapter extends NetworkAdapter {
+
+  private readonly _peers: Map<PeerId, ClientSyncState> = new Map();
+
+  constructor() {
+    super();
+
+    this.emit('ready', {
+      network: this,
+    })
+  }
+
   override connect(peerId: PeerId): void {
-    throw new Error("Method not implemented.");
+    // No-op. Client always connects first
   }
+
   override send(message: Message): void {
-    throw new Error("Method not implemented.");
+    const peer = this._peers.get(message.targetId);
+    invariant(peer, `Peer not found.`);
+    peer.send(message);
   }
+
   override disconnect(): void {
     throw new Error("Method not implemented.");
   }
 
   syncRepo({id, syncMessage}: SyncRepoRequest): Stream<SyncRepoResponse> {
-    const stream = new Stream(({}) => {
+    const peerId = this._getPeerId(id);
 
+    return new Stream(({ next, close }) => {
+      invariant(!this._peers.has(peerId), `Peer already connected.`);
+      this._peers.set(peerId, {
+        connected: true,
+        send: (message) => {
+          next({
+            syncMessage: cbor.encode(message),
+          });
+        },
+        disconnect: () => {
+          this._peers.delete(peerId);
+          close();
+          this.emit('peer-disconnected', {
+            peerId,
+          });
+        },
+      });
+
+      this.emit('peer-candidate', {
+        peerId,
+      });
     })
-    throw new Error('Method not implemented.');
   }
 
-  sendSyncMessage({id, syncMessage}: SyncRepoRequest): Promise<void> {
-    throw new Error('Method not implemented.');
+  async sendSyncMessage({id, syncMessage}: SyncRepoRequest): Promise<void> {
+    const message = cbor.decode(syncMessage!) as Message;
+    this.emit('message', message)
+  }
+
+  private _getPeerId(id: string): PeerId {
+    return `client:${id}` as PeerId;
   }
 }
 
