@@ -77,9 +77,11 @@ const Story = () => {
     });
   };
 
+  const handleDelete = () => {};
+
   return (
     <DensityProvider density='fine'>
-      <Outliner.Root root={root} onCreate={handleCreate} />
+      <Outliner.Root root={root} onCreate={handleCreate} onDelete={handleDelete} />
     </DensityProvider>
   );
 };
