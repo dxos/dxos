@@ -38,19 +38,19 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
 
   if (docs.length) {
     const config = context.client.config;
-    const resources = createOpenAIChainResources({
+    const { store } = createOpenAIChainResources({
       // TODO(burdon): Get from context (for agent profile).
       baseDir: '/tmp/dxos/agent/functions/embedding',
       apiKey: getKey(config, 'openai.com/api_key')!,
     });
 
-    await resources.initialize();
+    await store.initialize();
 
     // TODO(burdon): Remove deleted docs.
-    await resources.addDocuments(docs);
-    await resources.save();
+    await store.addDocuments(docs);
+    await store.save();
 
-    log.info('embedding', { resources: resources.stats });
+    log.info('embedding', { resources: store.stats });
   }
 
   return response.status(200);

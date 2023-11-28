@@ -17,7 +17,7 @@ export class Chain {
   private readonly _chain: RunnableSequence;
 
   constructor(private readonly _resources: ChainResources, private readonly _options: ChainOptions = {}) {
-    const retriever = this._resources.vectorStore.asRetriever();
+    const retriever = this._resources.store.vectorStore.asRetriever();
 
     // TODO(burdon): Construct different chains on the fly?
     const promptTemplate = PromptTemplate.fromTemplate(

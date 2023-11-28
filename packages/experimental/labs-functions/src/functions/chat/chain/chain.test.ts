@@ -7,7 +7,8 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Chain } from './chain';
-import { type ChainDocument, type ChainResourcesOptions } from './resources';
+import { type ChainResourcesOptions } from './resources';
+import { type ChainDocument } from './store';
 import { createOpenAIChainResources, createOllamaChainResources } from './vendors';
 import { getConfig, getKey } from '../../../util';
 
@@ -56,36 +57,36 @@ describe.skip('Chain', () => {
 
   test('add and remove documents', async () => {
     const resources = getResources();
-    await resources.initialize();
-    await resources.addDocuments(docs);
-    expect(resources.stats.documents).to.equal(docs.length);
-    await resources.addDocuments(docs);
-    expect(resources.stats.documents).to.equal(docs.length);
-    await resources.deleteDocuments(docs.slice(0, 2).map((doc) => doc.metadata));
-    expect(resources.stats.documents).to.equal(docs.length - 2);
+    await resources.store.initialize();
+    await resources.store.addDocuments(docs);
+    expect(resources.store.stats.documents).to.equal(docs.length);
+    await resources.store.addDocuments(docs);
+    expect(resources.store.stats.documents).to.equal(docs.length);
+    await resources.store.deleteDocuments(docs.slice(0, 2).map((doc) => doc.metadata));
+    expect(resources.store.stats.documents).to.equal(docs.length - 2);
   });
 
   test('load and save', async () => {
     {
       const resources = getResources();
-      await resources.initialize();
-      await resources.addDocuments(docs);
-      expect(resources.stats.documents).to.equal(docs.length);
-      await resources.save();
+      await resources.store.initialize();
+      await resources.store.addDocuments(docs);
+      expect(resources.store.stats.documents).to.equal(docs.length);
+      await resources.store.save();
     }
 
     {
       const resources = getResources();
-      await resources.initialize();
-      expect(resources.stats.documents).to.equal(docs.length);
+      await resources.store.initialize();
+      expect(resources.store.stats.documents).to.equal(docs.length);
     }
   });
 
   test('chat', async () => {
     {
       const resources = getResources();
-      await resources.initialize();
-      await resources.addDocuments(docs);
+      await resources.store.initialize();
+      await resources.store.addDocuments(docs);
 
       const chain = new Chain(resources, { precise: false });
       const call = async (input: string) => {

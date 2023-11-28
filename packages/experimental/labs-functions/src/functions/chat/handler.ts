@@ -32,7 +32,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     apiKey: getKey(config, 'openai.com/api_key')!,
     chat: { modelName: 'gpt-4' },
   });
-  await resources.initialize();
+  await resources.store.initialize();
   const chain = new Chain(resources, { precise: false });
 
   const space = spaceKey && client.spaces.get(PublicKey.from(spaceKey));
