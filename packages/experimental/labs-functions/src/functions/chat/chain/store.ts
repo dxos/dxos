@@ -13,8 +13,7 @@ import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-// TODO(burdon): Factor out.
-export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
+import { nonNullable } from './util';
 
 const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
 
