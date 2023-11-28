@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { translations as tableTranslations } from '@dxos/react-ui-table';
+
 import { TABLE_PLUGIN } from './meta';
 
 export default [
@@ -20,4 +22,5 @@ export default [
       },
     },
   },
+  ...tableTranslations,
 ];
