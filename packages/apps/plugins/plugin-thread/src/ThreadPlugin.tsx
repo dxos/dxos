@@ -42,6 +42,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     provides: {
       metadata: {
         records: {
+          [ThreadType.schema.typename]: {
+            placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
+            icon: (props: IconProps) => <Chat {...props} />,
+          },
           [THREAD_ITEM]: {
             parse: (item: TypedObject, type: string) => {
               switch (type) {
@@ -53,10 +57,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   return { id: `${item.id}-view`, object: item };
               }
             },
-          },
-          [ThreadType.schema.typename]: {
-            placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
-            icon: (props: IconProps) => <Chat {...props} />,
           },
         },
       },
