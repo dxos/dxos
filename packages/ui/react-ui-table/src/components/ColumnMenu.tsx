@@ -23,13 +23,11 @@ export type ColumnMenuProps<TData extends RowData, TValue> = {
 
 export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: ColumnMenuProps<TData, TValue>) => {
   const title = column.label?.length ? column.label : column.id;
-
   return (
-    <div className='flex grow items-center overflow-hidden'>
-      <div className='truncate' title={title}>
+    <div className='flex items-center gap-2'>
+      <div className='flex-1 min-is-0 truncate' title={title}>
         {title}
       </div>
-      <div className='grow' />
       <div className='flex shrink-0'>
         <ColumnPanel {...props} column={column} />
       </div>
@@ -99,7 +97,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
   return (
     <Popover.Root open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
       <Popover.Trigger asChild>
-        <Button variant='ghost' classNames='p-0'>
+        <Button variant='ghost' classNames='p-1'>
           <CaretDown className={getSize(4)} />
         </Button>
       </Popover.Trigger>
