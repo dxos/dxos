@@ -22,7 +22,7 @@ import { ConnectionState, type BridgeEvent, type BridgeService } from '@dxos/pro
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
 const RESP_MIN_THRESHOLD = 500;
 const TIMEOUT_THRESHOLD = 10;
@@ -143,6 +143,14 @@ export class SimplePeerTransportProxy implements Transport {
         signal,
       })
       .catch((err) => this.errors.raise(decodeError(err)));
+  }
+
+  async getDetails(): Promise<string> {
+    return (await this._params.bridgeService.getDetails({ proxyId: this._proxyId })).details;
+  }
+
+  async getStats(): Promise<TransportStats> {
+    return (await this._params.bridgeService.getStats({ proxyId: this._proxyId })).stats as TransportStats;
   }
 
   // TODO(burdon): Move open from constructor.

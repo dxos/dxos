@@ -12,7 +12,7 @@ import { log, logInfo } from '@dxos/log';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
 // TODO(burdon): Make configurable.
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
@@ -165,5 +165,18 @@ export class MemoryTransport implements Transport {
       const remoteId = PublicKey.fromHex(transportId);
       this._remote.wake(remoteId);
     }
+  }
+
+  async getDetails(): Promise<string> {
+    return this._instanceId.toHex();
+  }
+
+  async getStats(): Promise<TransportStats> {
+    return {
+      bytesSent: 0,
+      bytesReceived: 0,
+      packetsSent: 0,
+      packetsReceived: 0,
+    };
   }
 }
