@@ -10,7 +10,7 @@ import { Chain } from './chain';
 import { type ChainResourcesOptions } from './resources';
 import { type ChainDocument } from './store';
 import { createOpenAIChainResources, createOllamaChainResources } from './vendors';
-import { getConfig, getKey } from '../../../util';
+import { getConfig, getKey } from '../util';
 
 const docs: ChainDocument[] = [
   'DXOS consists of HALO, ECHO and MESH.',
@@ -34,8 +34,8 @@ describe.skip('Chain', () => {
           apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
           chat: {
             temperature: 0,
-            modelName: 'gpt-3.5-turbo-1106',
-            // modelName: 'gpt-4',
+            // modelName: 'gpt-3.5-turbo-1106',
+            modelName: 'gpt-4',
           },
           ...options,
         });

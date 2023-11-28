@@ -58,7 +58,7 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
-  ({ draggableStyle, draggableProps, item, debug = true }, forwardRef) => {
+  ({ draggableStyle, draggableProps, item, debug = false }, forwardRef) => {
     const { id, type, label, snippet, match, selected, onSelect } = item;
     const Icon = type ? getIcon(type) : undefined;
 

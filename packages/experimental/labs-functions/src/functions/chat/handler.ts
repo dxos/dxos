@@ -11,9 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Chain, createOpenAIChainResources } from './chain';
 import { createRequest } from './request';
 import { createResponse } from './response';
+import { Chain, createOpenAIChainResources } from '../../chain';
 import { getKey } from '../../util';
 
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
@@ -26,9 +26,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   invariant(dataDir);
   const config = client.config;
   const resources = createOpenAIChainResources({
-    baseDir: join(dataDir, 'agent/functions/embedding'),
+    baseDir: join(dataDir, 'agent/functions/embedding/openai'),
     apiKey: getKey(config, 'openai.com/api_key')!,
     chat: { modelName: 'gpt-4' },
+    // chat: { model: 'llama2' },
   });
   await resources.store.initialize();
   const chain = new Chain(resources, { context: false });

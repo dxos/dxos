@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { type ChainDocument, createOpenAIChainResources } from '../../chain';
 import { getKey } from '../../util';
-import { type ChainDocument, createOpenAIChainResources } from '../chat';
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   event,

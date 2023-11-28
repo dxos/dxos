@@ -68,13 +68,14 @@ export class ChainStore {
         this._documentByHash = new Map(hash);
       }
     } catch (err: any) {
-      log.error('Corrupt store', String(err));
+      log.error('Corrupt store', { baseDir: this._baseDir, version: VERSION, error: String(err) });
     }
 
     if (!this._vectorStore) {
       this._vectorStore = await FaissStore.fromDocuments([], this._embeddings);
     }
 
+    log.info('initialized', { baseDir: this._baseDir, version: VERSION });
     return this;
   }
 

@@ -6111,9 +6111,6 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../common/crypto
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -6849,13 +6846,7 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      fs-extra:
-        specifier: ^8.1.0
-        version: 8.1.0
     devDependencies:
-      '@types/fs-extra':
-        specifier: ^9.0.4
-        version: 9.0.13
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9
