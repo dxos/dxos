@@ -13,16 +13,16 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 
-import { TREE_PLUGIN } from './meta';
+import { OUTLINER_PLUGIN } from './meta';
 
-const TREE_ACTION = `${TREE_PLUGIN}/action`;
+const OUTLINER_ACTION = `${OUTLINER_PLUGIN}/action`;
 
-export enum TreeAction {
-  CREATE = `${TREE_ACTION}/create`,
-  TOGGLE_CHECKBOX = `${TREE_ACTION}/toggle-checkbox`,
+export enum OutlinerAction {
+  CREATE = `${OUTLINER_ACTION}/create`,
+  TOGGLE_CHECKBOX = `${OUTLINER_ACTION}/toggle-checkbox`,
 }
 
-export type TreePluginProvides = SurfaceProvides &
+export type OutlinerPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &

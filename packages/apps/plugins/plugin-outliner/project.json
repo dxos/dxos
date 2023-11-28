@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-tree/src",
+  "sourceRoot": "packages/apps/plugins/plugin-outliner/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-tree/src/index.ts",
-          "packages/apps/plugins/plugin-tree/src/meta.tsx"
+          "packages/apps/plugins/plugin-outliner/src/index.ts",
+          "packages/apps/plugins/plugin-outliner/src/meta.tsx"
         ],
         "platforms": [
           "browser"
@@ -23,7 +23,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-tree/.storybook"
+        "configDir": "packages/apps/plugins/plugin-outliner/.storybook"
       }
     }
   },

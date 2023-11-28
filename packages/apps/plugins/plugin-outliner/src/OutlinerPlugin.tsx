@@ -10,23 +10,23 @@ import { Tree as TreeType, Folder } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
-import { TreeMain, TreeSection } from './components';
-import meta, { TREE_PLUGIN } from './meta';
+import { OutlinerMain, TreeSection } from './components';
+import meta, { OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
-import { TreeAction, type TreePluginProvides, isObject } from './types';
+import { OutlinerAction, type OutlinerPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TreeType.name] = TreeType;
 
-export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
+export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
   return {
     meta,
     provides: {
       metadata: {
         records: {
           [TreeType.schema.typename]: {
-            placeholder: ['object placeholder', { ns: TREE_PLUGIN }],
+            placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: (props: IconProps) => <TreeStructure {...props} />,
           },
         },
@@ -38,14 +38,14 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
 
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-              id: `${TREE_PLUGIN}/create`,
-              label: ['create object label', { ns: TREE_PLUGIN }],
+              id: `${OUTLINER_PLUGIN}/create`,
+              label: ['create object label', { ns: OUTLINER_PLUGIN }],
               icon: (props) => <TreeStructure {...props} />,
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch([
                   {
-                    plugin: TREE_PLUGIN,
-                    action: TreeAction.CREATE,
+                    plugin: OUTLINER_PLUGIN,
+                    action: OutlinerAction.CREATE,
                   },
                   {
                     action: SpaceAction.ADD_OBJECT,
@@ -61,13 +61,13 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
             });
           } else if (isObject(parent.data)) {
             parent.addAction({
-              id: `${TREE_PLUGIN}/toggle-checkbox`,
-              label: ['toggle checkbox label', { ns: TREE_PLUGIN }],
+              id: `${OUTLINER_PLUGIN}/toggle-checkbox`,
+              label: ['toggle checkbox label', { ns: OUTLINER_PLUGIN }],
               icon: (props) => <Check {...props} />,
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
-                  plugin: TREE_PLUGIN,
-                  action: TreeAction.TOGGLE_CHECKBOX,
+                  plugin: OUTLINER_PLUGIN,
+                  action: OutlinerAction.TOGGLE_CHECKBOX,
                   data: { object: parent.data },
                 }),
             });
@@ -79,11 +79,11 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
           {
             id: 'create-stack-section-tree',
             testId: 'treePlugin.createSectionSpaceTree',
-            label: ['create stack section label', { ns: TREE_PLUGIN }],
+            label: ['create stack section label', { ns: OUTLINER_PLUGIN }],
             icon: (props: any) => <TreeStructure {...props} />,
             intent: {
-              plugin: TREE_PLUGIN,
-              action: TreeAction.CREATE,
+              plugin: OUTLINER_PLUGIN,
+              action: OutlinerAction.CREATE,
             },
           },
         ],
@@ -92,7 +92,7 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isObject(data.active) ? <TreeMain tree={data.active as TreeType} /> : null;
+              return isObject(data.active) ? <OutlinerMain tree={data.active as TreeType} /> : null;
             case 'section':
               return isObject(data.object) ? <TreeSection tree={data.object as TreeType} /> : null;
           }
@@ -103,7 +103,7 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case TreeAction.CREATE: {
+            case OutlinerAction.CREATE: {
               return {
                 object: new TreeType({
                   root: new TreeType.Item({
@@ -113,7 +113,7 @@ export const TreePlugin = (): PluginDefinition<TreePluginProvides> => {
               };
             }
 
-            case TreeAction.TOGGLE_CHECKBOX: {
+            case OutlinerAction.TOGGLE_CHECKBOX: {
               (intent.data.object as TreeType).checkbox = !(intent.data.object as TreeType).checkbox;
               break;
             }

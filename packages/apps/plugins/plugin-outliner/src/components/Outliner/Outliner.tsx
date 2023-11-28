@@ -16,7 +16,7 @@ import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent
 // TODO(burdon): Drag-and-drop.
 // TODO(burdon): Better key nav.
 
-type TreeOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
+type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   checkbox?: boolean;
 };
 
@@ -32,7 +32,7 @@ type ItemProps = {
   onDelete?: () => void;
   onIndent?: (left?: boolean) => void;
   onNav?: (item: Item, direction?: 'home' | 'end' | 'up' | 'down') => void;
-} & TreeOptions;
+} & OutlinerOptions;
 
 const Item = ({
   item,
@@ -151,7 +151,7 @@ const Item = ({
 // Branch
 //
 
-type BranchProps = TreeOptions & {
+type BranchProps = OutlinerOptions & {
   root: Item;
   active?: string;
   onFocus?: (item: Item) => void;
@@ -204,7 +204,7 @@ const Branch = ({ root, active, onFocus, onCreate, onDelete, onIndent, onNav, ..
 type RootProps = {
   root: Item;
   onCreate?: () => Item;
-} & TreeOptions;
+} & OutlinerOptions;
 
 const Root = ({ root, onCreate, ...props }: RootProps) => {
   const [active, setActive] = useState<string>();
@@ -314,7 +314,7 @@ const Root = ({ root, onCreate, ...props }: RootProps) => {
   );
 };
 
-export const Tree = {
+export const Outliner = {
   Root,
   Branch,
   Item,

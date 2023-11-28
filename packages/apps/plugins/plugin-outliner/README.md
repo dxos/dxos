@@ -1,6 +1,6 @@
-# @braneframe/plugin-template
+# @braneframe/plugin-outliner
 
-Plugin template.
+Outliner (hierarchical list) plugin.
 
 ## DXOS Resources
 

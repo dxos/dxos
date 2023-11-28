@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TREE_PLUGIN } from './meta';
+import { OUTLINER_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [TREE_PLUGIN]: {
+      [OUTLINER_PLUGIN]: {
         'plugin name': 'List',
         'object placeholder': 'New list',
         'create object label': 'Create list',

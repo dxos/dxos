@@ -584,9 +584,9 @@ importers:
       '@braneframe/plugin-thread':
         specifier: workspace:*
         version: link:../plugins/plugin-thread
-      '@braneframe/plugin-tree':
+      '@braneframe/plugin-outliner':
         specifier: workspace:*
-        version: link:../plugins/plugin-tree
+        version: link:../plugins/plugin-outliner
       '@braneframe/plugin-wildcard':
         specifier: workspace:*
         version: link:../plugins/plugin-wildcard
@@ -2593,7 +2593,7 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-tree:
+  packages/apps/plugins/plugin-outliner:
     dependencies:
       '@braneframe/plugin-stack':
         specifier: workspace:*

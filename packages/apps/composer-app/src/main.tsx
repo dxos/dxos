@@ -24,6 +24,7 @@ import MapMeta from '@braneframe/plugin-map/meta';
 import MarkdownMeta from '@braneframe/plugin-markdown/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
+import OutlinerMeta from '@braneframe/plugin-outliner/meta';
 import PresenterMeta from '@braneframe/plugin-presenter/meta';
 import PwaMeta from '@braneframe/plugin-pwa/meta';
 import RegistryMeta from '@braneframe/plugin-registry/meta';
@@ -36,7 +37,6 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
-import TreeMeta from '@braneframe/plugin-tree/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
@@ -107,9 +107,9 @@ const main = async () => {
       InboxMeta,
       KanbanMeta,
       MapMeta,
+      OutlinerMeta,
       ScriptMeta,
       TableMeta,
-      TreeMeta,
       ThreadMeta,
       ExplorerMeta,
       ChessMeta,
@@ -141,6 +141,7 @@ const main = async () => {
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
+      [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
       [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
@@ -167,7 +168,6 @@ const main = async () => {
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme')),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
-      [TreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-tree')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [

@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider } from '@dxos/react-ui';
 
-import { Tree } from './Tree';
+import { Outliner } from './Outliner';
 
 const Story = () => {
   const [root] = useState(
@@ -82,7 +82,7 @@ const Story = () => {
     <DensityProvider density='fine'>
       <div className='flex w-full h-screen justify-center bg-neutral-100 dark:bg-neutral-900'>
         <div className='flex h-full w-[600px] p-2 bg-white dark:bg-black'>
-          <Tree.Root root={root} onCreate={handleCreate} />
+          <Outliner.Root root={root} onCreate={handleCreate} />
         </div>
       </div>
     </DensityProvider>
@@ -90,7 +90,7 @@ const Story = () => {
 };
 
 export default {
-  component: Tree,
+  component: Outliner,
   render: Story,
   parameters: {
     layout: 'fullscreen',

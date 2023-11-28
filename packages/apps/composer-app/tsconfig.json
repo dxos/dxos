@@ -110,6 +110,9 @@
       "path": "../plugins/plugin-navtree"
     },
     {
+      "path": "../plugins/plugin-outliner"
+    },
+    {
       "path": "../plugins/plugin-presenter"
     },
     {
@@ -147,9 +150,6 @@
     },
     {
       "path": "../plugins/plugin-thread"
-    },
-    {
-      "path": "../plugins/plugin-tree"
     },
     {
       "path": "../plugins/plugin-wildcard"

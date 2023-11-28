@@ -7,10 +7,10 @@ import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
-export const TREE_PLUGIN = 'dxos.org/plugin/tree';
+export const OUTLINER_PLUGIN = 'dxos.org/plugin/outliner';
 
 export default pluginMeta({
-  id: TREE_PLUGIN,
-  name: 'Tree',
+  id: OUTLINER_PLUGIN,
+  name: 'Outliner',
   iconComponent: (props) => <TreeStructure {...props} />,
 });
