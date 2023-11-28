@@ -28,7 +28,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     typename: TestSchemaType.document,
     props: [
       {
-        id: 'title',
+        id: 'name',
         type: Schema.PropType.STRING,
       },
       {
