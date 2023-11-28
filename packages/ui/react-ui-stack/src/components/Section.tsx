@@ -83,49 +83,51 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
             </div>
 
             {/* Menu */}
-            <DropdownMenu.Root
-              {...{
-                open: optionsMenuOpen,
-                onOpenChange: (nextOpen: boolean) => {
-                  // if (!nextOpen) {
-                  //   suppressNextTooltip.current = true;
-                  // }
-                  return setOptionsMenuOpen(nextOpen);
-                },
-              }}
-            >
-              <DropdownMenu.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  classNames={[
-                    'm-1 shrink-0',
-                    hoverableControlItem,
-                    hoverableFocusedControls,
-                    hoverableOpenControlItem,
-                    active === 'overlay' && 'invisible',
-                  ]}
-                  // data-testid={testId}
-                >
-                  <DotsThreeVertical className={getSize(4)} />
-                </Button>
-              </DropdownMenu.Trigger>
+            <div>
+              <DropdownMenu.Root
+                {...{
+                  open: optionsMenuOpen,
+                  onOpenChange: (nextOpen: boolean) => {
+                    // if (!nextOpen) {
+                    //   suppressNextTooltip.current = true;
+                    // }
+                    return setOptionsMenuOpen(nextOpen);
+                  },
+                }}
+              >
+                <DropdownMenu.Trigger asChild>
+                  <Button
+                    variant='ghost'
+                    classNames={[
+                      'm-1 shrink-0',
+                      hoverableControlItem,
+                      hoverableFocusedControls,
+                      hoverableOpenControlItem,
+                      active === 'overlay' && 'invisible',
+                    ]}
+                    // data-testid={testId}
+                  >
+                    <DotsThreeVertical className={getSize(4)} />
+                  </Button>
+                </DropdownMenu.Trigger>
 
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={onNavigate}>
-                      <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('navigate to section label')}</span>
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={onRemove}>
-                      <X className={mx(getSize(5), 'mr-2')} />
-                      <span className='grow'>{t('remove section label')}</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content>
+                    <DropdownMenu.Viewport>
+                      <DropdownMenu.Item onClick={onNavigate}>
+                        <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                        <span className='grow'>{t('navigate to section label')}</span>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item onClick={onRemove}>
+                        <X className={mx(getSize(5), 'mr-2')} />
+                        <span className='grow'>{t('remove section label')}</span>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Viewport>
+                    <DropdownMenu.Arrow />
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            </div>
           </div>
         </ListItem.Root>
       </DensityProvider>
