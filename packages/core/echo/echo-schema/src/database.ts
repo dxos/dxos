@@ -19,6 +19,7 @@ import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
 import { type Schema } from './proto';
 import { type FilterSource, type Query } from './query';
+import { AutomergeContext } from './automerge/automerge-context';
 
 /**
  * Database wrapper.
@@ -41,7 +42,7 @@ export class EchoDatabase {
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
-  public readonly automerge = new AutomergeDb(this._graph);
+  public readonly automerge: AutomergeDb;
 
   constructor(
     /**
@@ -50,7 +51,10 @@ export class EchoDatabase {
     readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
     private readonly _graph: Hypergraph,
+    automergeContext: AutomergeContext,
   ) {
+    this.automerge = new AutomergeDb(this._graph, automergeContext);
+
     this._backend.itemUpdate.on(this._update.bind(this));
 
     // Load all existing objects.

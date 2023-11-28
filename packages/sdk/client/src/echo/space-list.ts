@@ -35,6 +35,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
+import { AutomergeContext } from '@dxos/echo-schema';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -44,6 +45,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
+
+  private readonly _automergeContext: AutomergeContext;
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
@@ -58,6 +61,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
+    this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService);
   }
 
   [inspect.custom]() {
@@ -107,7 +111,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this._graph);
+          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this._graph, this._automergeContext);
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {

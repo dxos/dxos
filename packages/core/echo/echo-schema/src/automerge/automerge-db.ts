@@ -8,12 +8,16 @@ import { invariant } from '@dxos/invariant';
 import { AutomergeObject } from './automerge-object';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject, base } from '../object';
+import { AutomergeContext } from './automerge-context';
 
 export class AutomergeDb {
   private _repo!: AutomergeRepo;
   private _docHandle!: DocHandle<any>;
 
-  constructor(public readonly graph: Hypergraph) {}
+  constructor(
+    public readonly graph: Hypergraph,
+    public readonly automerge: AutomergeContext,
+  ) {}
 
   async open() {
     // eslint-disable-next-line no-eval

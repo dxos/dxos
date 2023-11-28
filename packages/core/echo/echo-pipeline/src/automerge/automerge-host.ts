@@ -6,12 +6,12 @@ import { invariant } from "@dxos/invariant";
 export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
-  private readonly _clientNetwork: ClientNetworkAdapter;
+  private readonly _clientNetwork: LocalHostNetworkAdapter;
   private readonly _storage: AutomergeStorageAdapter;
 
   constructor() {
     this._meshNetwork = new MeshNetworkAdapter();
-    this._clientNetwork = new ClientNetworkAdapter();
+    this._clientNetwork = new LocalHostNetworkAdapter();
     this._storage = new AutomergeStorageAdapter();
     this._repo = new Repo({
       network: [
@@ -44,8 +44,7 @@ type ClientSyncState = {
 /**
  * Used to replicate with apps running on the same device.
  */
-class ClientNetworkAdapter extends NetworkAdapter {
-
+class LocalHostNetworkAdapter extends NetworkAdapter {
   private readonly _peers: Map<PeerId, ClientSyncState> = new Map();
 
   constructor() {
@@ -103,7 +102,7 @@ class ClientNetworkAdapter extends NetworkAdapter {
   }
 
   private _getPeerId(id: string): PeerId {
-    return `client:${id}` as PeerId;
+    return id as PeerId;
   }
 }
 

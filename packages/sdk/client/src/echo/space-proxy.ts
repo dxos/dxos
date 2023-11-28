@@ -27,6 +27,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
+import { AutomergeContext } from '@dxos/echo-schema';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
@@ -81,6 +82,7 @@ export class SpaceProxy implements Space {
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
     graph: Hypergraph,
+    automergeContext: AutomergeContext,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -96,7 +98,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoDatabase(this._itemManager, this._dbBackend, graph);
+    this._db = new EchoDatabase(this._itemManager, this._dbBackend, graph, automergeContext);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;

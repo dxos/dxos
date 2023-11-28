@@ -19,6 +19,7 @@ import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { setGlobalAutomergePreference } from '../object';
 import { schemaBuiltin } from '../proto';
+import { AutomergeContext } from '../automerge/automerge-context';
 
 /**
  * @deprecated Use TestBuilder.
@@ -35,7 +36,7 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   // TODO(dmaretskyi): Fix.
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
-  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph);
+  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph, new AutomergeContext());
   await db.automerge.open();
   graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
   return { db, host };
@@ -65,7 +66,7 @@ export class TestBuilder {
 }
 
 export class TestPeer {
-  public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
+  public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph, new AutomergeContext());
 
   constructor(
     public readonly builder: TestBuilder,
@@ -75,7 +76,7 @@ export class TestPeer {
 
   async reload() {
     await this.base.reload();
-    this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
+    this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph, new AutomergeContext());
     await this.db.automerge.open();
     this.builder.graph._register(this.spaceKey, this.db);
   }
