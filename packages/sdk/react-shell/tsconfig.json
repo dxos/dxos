@@ -39,6 +39,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -49,6 +52,12 @@
     },
     {
       "path": "../../ui/react-ui-types"
+    },
+    {
+      "path": "../client-protocol"
+    },
+    {
+      "path": "../client-services"
     },
     {
       "path": "../config"

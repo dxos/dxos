@@ -5,8 +5,8 @@
 import { Trigger } from '@dxos/async';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 import { type ClientServicesProvider, ClientServicesProxy, type ShellRuntime } from '@dxos/client/services';
-import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
-import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
+import { DEFAULT_INTERNAL_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
+import type { IFrameHostRuntime } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
@@ -191,11 +191,11 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       void shellClientProxy.open(new Context());
     }
 
-    const { IFrameProxyRuntime } = await import('@dxos/client-services');
-    const iframeRuntime: IFrameProxyRuntime = new IFrameProxyRuntime({
+    const { WorkerProxyRuntime } = await import('@dxos/client-services');
+    const iframeRuntime = new WorkerProxyRuntime({
       config,
       systemPort: createWorkerPort({ port: systemPort }),
-      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' }),
+      shellPort: shellDisabled ? undefined : createIFramePort({ channel: DEFAULT_SHELL_CHANNEL }),
     });
 
     await iframeRuntime.open(origin);

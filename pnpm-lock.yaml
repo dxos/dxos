@@ -7425,6 +7425,12 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../client-services
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -7446,6 +7452,9 @@ importers:
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../../ui/react-ui-types
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc-tunnel
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

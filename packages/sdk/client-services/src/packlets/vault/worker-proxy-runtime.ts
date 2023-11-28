@@ -20,7 +20,7 @@ import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
 import { ShellRuntimeImpl } from './shell-runtime';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
-export type IFrameProxyRuntimeParams = {
+export type WorkerProxyRuntimeParams = {
   config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
   shellPort?: RpcPort;
@@ -29,9 +29,9 @@ export type IFrameProxyRuntimeParams = {
 /**
  * Manages the client connection to the shared worker.
  */
-export class IFrameProxyRuntime {
+export class WorkerProxyRuntime {
   private readonly _id = String(Math.floor(Math.random() * 1000000));
-  private readonly _configProvider: IFrameProxyRuntimeParams['config'];
+  private readonly _configProvider: WorkerProxyRuntimeParams['config'];
   private readonly _systemPort: RpcPort;
   private readonly _shellPort?: RpcPort;
   private _release = new Trigger();
@@ -40,7 +40,7 @@ export class IFrameProxyRuntime {
   private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
   private _shellRuntime?: ShellRuntimeImpl;
 
-  constructor({ config, systemPort, shellPort }: IFrameProxyRuntimeParams) {
+  constructor({ config, systemPort, shellPort }: WorkerProxyRuntimeParams) {
     this._configProvider = config;
     this._systemPort = systemPort;
     this._shellPort = shellPort;

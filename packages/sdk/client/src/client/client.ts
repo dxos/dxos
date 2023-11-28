@@ -229,9 +229,7 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame, IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import(
-      '../services'
-    );
+    const { fromHost, fromIFrame, Shell, ShellManager } = await import('../services');
 
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
@@ -255,8 +253,7 @@ export class Client {
     );
 
     let shell: Shell | undefined;
-    if (this._services instanceof IFrameClientServicesHost || this._services instanceof IFrameClientServicesProxy) {
-      invariant(this._services._shellManager, 'ShellManager is not available.');
+    if (this._services && (this._services as any)._shellManager instanceof ShellManager) {
       shell = new Shell({
         shellManager: this._services._shellManager,
         identity: halo.identity,

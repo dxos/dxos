@@ -13,6 +13,7 @@ import { getAsyncValue, safariCheck } from '@dxos/util';
 import { IFrameClientServicesHost } from './iframe-service-host';
 import { IFrameClientServicesProxy, type IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 import { LocalClientServices } from './local-client-services';
+import { WorkerClientServices } from './worker-client-services';
 
 /**
  * Create services provider proxy connected via iFrame to host.
@@ -40,6 +41,21 @@ export const fromIFrame = async (
   }
 
   return new IFrameClientServicesProxy({ source, ...options });
+};
+
+/**
+ * Creates services provider connected via worker.
+ */
+// TODO(wittjosiah): Make this the default.
+export const fromWorker = async (config: Config = new Config()) => {
+  return new WorkerClientServices({
+    config,
+    createWorker: () =>
+      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+  });
 };
 
 /**
