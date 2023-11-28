@@ -3,17 +3,20 @@
 //
 
 import { Repo as AutomergeRepo, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 
 import { AutomergeObject } from './automerge-object';
+import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base } from '../object';
+import { type EchoObject, base, TypedObject } from '../object';
+import { type Schema } from '../proto';
 
 export class AutomergeDb {
   private _repo!: AutomergeRepo;
   private _docHandle!: DocHandle<any>;
 
-  constructor(public readonly graph: Hypergraph) {}
+  constructor(public readonly graph: Hypergraph, private readonly _echoDatabase: EchoDatabase) {}
 
   async open() {
     // eslint-disable-next-line no-eval
@@ -34,6 +37,10 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
+    if (obj[base] instanceof TypedObject) {
+      return this._echoDatabase.add(obj);
+    }
+
     invariant(obj[base] instanceof AutomergeObject);
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
@@ -49,5 +56,17 @@ export class AutomergeDb {
     invariant(obj[base] instanceof AutomergeObject);
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
+  }
+
+  /**
+   * @internal
+   */
+  _resolveSchema(type: Reference): Schema | undefined {
+    if (type.protocol === 'protobuf') {
+      return this.graph.types.getSchema(type.itemId);
+    } else {
+      // TODO(dmaretskyi): Cross-space references.
+      return this.getObjectById(type.itemId) as Schema | undefined;
+    }
   }
 }

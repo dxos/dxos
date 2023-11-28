@@ -41,7 +41,7 @@ export class EchoDatabase {
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
-  public readonly automerge = new AutomergeDb(this._graph);
+  public readonly automerge = new AutomergeDb(this._graph, this);
 
   constructor(
     /**
@@ -66,7 +66,8 @@ export class EchoDatabase {
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
-    const obj = this._objects.get(id);
+    const obj = this._objects.get(id) ?? this.automerge.getObjectById(id);
+
     if (!obj) {
       return undefined;
     }
