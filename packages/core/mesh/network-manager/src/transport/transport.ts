@@ -4,6 +4,7 @@
 
 import { type Event } from '@dxos/async';
 import { type ErrorStream } from '@dxos/debug';
+import { type PublicKey } from '@dxos/keys';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export enum TransportKind {
@@ -22,6 +23,14 @@ export interface Transport {
   connected: Event;
   errors: ErrorStream;
 
+  /**
+   * Transport-specfic stats.
+   */
+  getStats(): Promise<TransportStats>;
+  /**
+   * Transport-specfic connection details.
+   */
+  getDetails(): Promise<string>;
   destroy(): Promise<void>;
   signal(signal: Signal): void;
 }
@@ -43,6 +52,8 @@ export type TransportOptions = {
   sendSignal: (signal: Signal) => Promise<void>; // TODO(burdon): Remove async?
 
   timeout?: number;
+
+  sessionId?: PublicKey;
 };
 
 /**
@@ -51,3 +62,11 @@ export type TransportOptions = {
 export interface TransportFactory {
   createTransport(options: TransportOptions): Transport;
 }
+
+export type TransportStats = {
+  bytesSent: number;
+  bytesReceived: number;
+  packetsSent: number;
+  packetsReceived: number;
+  rawStats?: any;
+};

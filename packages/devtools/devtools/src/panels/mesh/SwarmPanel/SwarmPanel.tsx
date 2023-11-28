@@ -55,6 +55,16 @@ const columns: TableColumnDef<SwarmConnection, any>[] = [
     meta: { cell: { classNames: textPadding } },
     cell: (cell) => <span className={stateFormat[cell.getValue()]?.className}>{cell.getValue()}</span>,
   }),
+  helper.accessor(
+    (connection) =>
+      (connection.connection?.readBufferSize ?? 0) + ' / ' + (connection.connection?.writeBufferSize ?? 0),
+    {
+      id: 'buffer (r/w)',
+    },
+  ),
+  helper.accessor((connection) => connection.connection?.transportDetails, {
+    id: 'details',
+  }),
   helper.accessor((connection) => connection.connection && getStats(connection.connection), {
     id: 'stats',
     meta: { cell: { classNames: textPadding } },
