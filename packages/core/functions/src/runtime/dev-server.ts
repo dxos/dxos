@@ -40,9 +40,7 @@ export class DevServer {
   constructor(
     private readonly _client: Client,
     private readonly _options: DevServerOptions,
-  ) {
-    console.log(':::::::::', this._options);
-  }
+  ) {}
 
   get endpoint() {
     invariant(this._port);
