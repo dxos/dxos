@@ -12,5 +12,6 @@ export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
 export default pluginMeta({
   id: SKETCH_PLUGIN,
   name: 'Sketch',
+  tags: ['stable'],
   iconComponent: (props) => <CompassTool {...props} />,
 });
