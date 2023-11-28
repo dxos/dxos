@@ -6,17 +6,26 @@ import { Circle } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
-import { DensityProvider, Input, List, ListItem, useId, useTranslation } from '@dxos/react-ui';
+import {
+  type ChromaticPalette,
+  DensityProvider,
+  Input,
+  List,
+  ListItem,
+  Tag,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
 
-const colors: { [tag: string]: string } = {
-  alpha: 'bg-purple-600 dark:bg-purple-400 text-white dark:text-black',
-  beta: 'bg-blue-600 dark:bg-blue-400 text-white dark:text-black',
-  experimental: 'bg-red-600 dark:bg-red-400 text-white dark:text-black',
-  new: 'bg-red-600 dark:bg-red-400 text-white dark:text-black',
-  stable: 'bg-green-600 dark:bg-green-400 text-white dark:text-black',
+const palette: { [tag: string]: ChromaticPalette } = {
+  alpha: 'amber',
+  beta: 'sky',
+  experimental: 'warning',
+  new: 'red',
+  新発売: 'red',
 };
 
 export type PluginListProps = {
@@ -63,9 +72,9 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], className,
                   {tags?.length && (
                     <div className='flex my-1'>
                       {tags.map((tag) => (
-                        <div key={tag} className={mx('text-xs px-1 py-[1px] bg-gray-200 rounded-md mr-1', colors[tag])}>
+                        <Tag key={tag} palette={palette[tag]}>
                           {tag}
-                        </div>
+                        </Tag>
                       ))}
                     </div>
                   )}

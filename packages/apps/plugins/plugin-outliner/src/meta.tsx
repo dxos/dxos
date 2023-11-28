@@ -12,6 +12,6 @@ export const OUTLINER_PLUGIN = 'dxos.org/plugin/outliner';
 export default pluginMeta({
   id: OUTLINER_PLUGIN,
   name: 'Outliner',
-  tags: ['experimental'],
+  tags: ['新発売'],
   iconComponent: (props) => <TreeStructure {...props} />,
 });
