@@ -88,7 +88,7 @@ describe.skip('Chain', () => {
       await resources.store.initialize();
       await resources.store.addDocuments(docs);
 
-      const chain = new Chain(resources, { precise: false });
+      const chain = new Chain(resources, { context: false });
       const call = async (input: string) => {
         const result = await chain.call(input);
         console.log(`\n> ${input}`);

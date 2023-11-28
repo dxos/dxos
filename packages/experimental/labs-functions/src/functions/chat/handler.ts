@@ -28,7 +28,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     chat: { modelName: 'gpt-4' },
   });
   await resources.store.initialize();
-  const chain = new Chain(resources, { precise: false });
+  const chain = new Chain(resources, { context: false });
 
   const space = spaceKey && client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
@@ -63,6 +63,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
           const text = message.blocks[0]?.text;
           if (text?.charAt(0) === '$') {
             const response = await chain.call(text.slice(1));
+            log('response', { content: response });
             blocks = [
               {
                 timestamp: new Date().toISOString(),
