@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { Tree as TreeType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/client/dist/types/src/echo';
+import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, textBlockWidth, mx, inputSurface } from '@dxos/react-ui-theme';
 
