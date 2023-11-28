@@ -247,6 +247,7 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
 
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id);
+    items.splice(idx, 1);
     onDelete!(item);
     if (idx - 1 >= 0) {
       const active = getLastDescendent(items[idx - 1]);
