@@ -19,8 +19,6 @@ export enum TemplateAction {
   CREATE = `${TEMPLATE_ACTION}/create`,
 }
 
-export type TemplateProvides = {};
-
 export type TemplatePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &

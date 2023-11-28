@@ -17,7 +17,6 @@ import {
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
-import { stripUndefinedValues } from '@dxos/util';
 
 import { createUniqueProp } from './types';
 
@@ -69,7 +68,7 @@ export const createColumns = (
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
 
-    const options: BaseColumnOptions<TypedObject, any> = stripUndefinedValues({
+    const options: BaseColumnOptions<TypedObject, any> = {
       ...props,
       meta: { resizable },
       label,
@@ -86,7 +85,7 @@ export const createColumns = (
             />
           ),
       onUpdate: onRowUpdate,
-    });
+    };
 
     switch (type) {
       case 'ref':

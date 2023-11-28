@@ -25,6 +25,7 @@
   "dependencies": {
     "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/crypto": "workspace:*",
@@ -47,7 +48,6 @@
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/react-ui": "workspace:*",

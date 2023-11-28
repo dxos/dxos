@@ -119,6 +119,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-outliner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-presenter/package.json",
           "jsonpath": "$.version"
         },
