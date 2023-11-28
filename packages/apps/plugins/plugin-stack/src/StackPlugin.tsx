@@ -52,18 +52,12 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           [StackType.Section.schema.typename]: {
             parse: (section: StackType.Section, type: string) => {
               switch (type) {
-                case 'node': {
+                case 'node':
                   return { id: section.object.id, label: section.object.title, data: section.object };
-                }
-
-                case 'object': {
+                case 'object':
                   return section.object;
-                }
-
-                case 'view-object': {
+                case 'view-object':
                   return section;
-                }
-
                 default:
                   return undefined;
               }
@@ -113,7 +107,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           switch (role) {
             case 'main':
               return <StackMain stack={data.active} />;
-
             default:
               return null;
           }
