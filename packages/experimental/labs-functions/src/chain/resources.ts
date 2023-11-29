@@ -42,6 +42,7 @@ export class ChainResources<
   get info() {
     return {
       store: this._store.info,
+      options: this._options,
     };
   }
 
