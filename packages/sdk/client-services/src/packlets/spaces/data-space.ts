@@ -6,7 +6,14 @@ import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/asyn
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
-import { type MetadataStore, type Space, createMappedFeedWriter, type DataPipeline, CreateEpochOptions, AutomergeHost } from '@dxos/echo-pipeline';
+import {
+  type MetadataStore,
+  type Space,
+  createMappedFeedWriter,
+  type DataPipeline,
+  type CreateEpochOptions,
+  type AutomergeHost,
+} from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -15,17 +22,22 @@ import { CancelledError, SystemError } from '@dxos/protocols';
 import { SpaceState, type Space as SpaceProto, CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type ProfileDocument, type Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  AdmittedFeed,
+  type ProfileDocument,
+  type Credential,
+  type Epoch,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
+import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
-import { AutomergeSpaceState } from './automerge-space-state';
 
 export type DataSpaceCallbacks = {
   /**
@@ -365,27 +377,26 @@ export class DataSpace {
   }
 
   async createEpoch(options?: CreateEpochOptions) {
-    let epoch: Epoch | undefined = undefined;
-    switch(options?.migration) {
+    let epoch: Epoch | undefined;
+    switch (options?.migration) {
       case undefined:
       case CreateEpochRequest.Migration.NONE:
         {
           epoch = await this.dataPipeline.createEpoch();
         }
         break;
-      case CreateEpochRequest.Migration.INIT_AUTOMERGE:
-        {
-          const document = this._automergeHost?.repo.create();
-          epoch = {
-            previousId: this._automergeSpaceState.lastEpoch?.id,
-            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-            automergeRoot: document?.url,
-          }
-        }
+      case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
+        const document = this._automergeHost?.repo.create();
+        epoch = {
+          previousId: this._automergeSpaceState.lastEpoch?.id,
+          number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+          timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+          automergeRoot: document?.url,
+        };
+      }
     }
 
-    if(!epoch) {
+    if (!epoch) {
       return;
     }
 

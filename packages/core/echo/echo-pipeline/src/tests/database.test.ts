@@ -12,10 +12,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { test } from '@dxos/test';
 
+import { AutomergeHost } from '../automerge';
 import { createMappedFeedWriter } from '../common';
 import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
-import { AutomergeHost } from '../automerge';
 
 const createDatabase = async () => {
   // prettier-ignore

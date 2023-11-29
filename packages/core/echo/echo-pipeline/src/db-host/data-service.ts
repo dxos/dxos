@@ -20,7 +20,7 @@ import {
 import { ComplexMap } from '@dxos/util';
 
 import { type DataServiceHost } from './data-service-host';
-import { AutomergeHost } from '../automerge';
+import { type AutomergeHost } from '../automerge';
 
 // TODO(burdon): Clear on close.
 export class DataServiceSubscriptions {

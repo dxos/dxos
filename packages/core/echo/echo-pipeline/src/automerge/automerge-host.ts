@@ -1,7 +1,20 @@
-import { Stream } from "@dxos/codec-protobuf";
-import { SyncRepoRequest, SyncRepoResponse } from "@dxos/protocols/proto/dxos/echo/service";
-import { Repo, NetworkAdapter, StorageAdapter, Message, PeerId, Chunk, StorageKey, cbor } from '@dxos/automerge/automerge-repo'
-import { invariant } from "@dxos/invariant";
+//
+// Copyright 2023 DXOS.org
+//
+
+import {
+  Repo,
+  NetworkAdapter,
+  StorageAdapter,
+  type Message,
+  type PeerId,
+  type Chunk,
+  type StorageKey,
+  cbor,
+} from '@dxos/automerge/automerge-repo';
+import { Stream } from '@dxos/codec-protobuf';
+import { invariant } from '@dxos/invariant';
+import { type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
 export class AutomergeHost {
   private readonly _repo: Repo;
@@ -43,7 +56,7 @@ type ClientSyncState = {
   connected: boolean;
   send: (message: Message) => void;
   disconnect: () => void;
-}
+};
 
 /**
  * Used to replicate with apps running on the same device.
@@ -56,7 +69,7 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
 
     this.emit('ready', {
       network: this,
-    })
+    });
   }
 
   override connect(peerId: PeerId): void {
@@ -65,19 +78,19 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
 
   override send(message: Message): void {
     const peer = this._peers.get(message.targetId);
-    invariant(peer, `Peer not found.`);
+    invariant(peer, 'Peer not found.');
     peer.send(message);
   }
 
   override disconnect(): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
-  syncRepo({id, syncMessage}: SyncRepoRequest): Stream<SyncRepoResponse> {
+  syncRepo({ id, syncMessage }: SyncRepoRequest): Stream<SyncRepoResponse> {
     const peerId = this._getPeerId(id);
 
     return new Stream(({ next, close }) => {
-      invariant(!this._peers.has(peerId), `Peer already connected.`);
+      invariant(!this._peers.has(peerId), 'Peer already connected.');
       this._peers.set(peerId, {
         connected: true,
         send: (message) => {
@@ -97,12 +110,12 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
       this.emit('peer-candidate', {
         peerId,
       });
-    })
+    });
   }
 
-  async sendSyncMessage({id, syncMessage}: SyncRepoRequest): Promise<void> {
+  async sendSyncMessage({ id, syncMessage }: SyncRepoRequest): Promise<void> {
     const message = cbor.decode(syncMessage!) as Message;
-    this.emit('message', message)
+    this.emit('message', message);
   }
 
   private _getPeerId(id: string): PeerId {
@@ -115,31 +128,36 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
  */
 class MeshNetworkAdapter extends NetworkAdapter {
   override connect(peerId: PeerId): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
+
   override send(message: Message): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
+
   override disconnect(): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 }
 
 class AutomergeStorageAdapter extends StorageAdapter {
   override load(key: StorageKey): Promise<Uint8Array | undefined> {
-    throw new Error("Method not implemented.");
-  }
-  override save(key: StorageKey, data: Uint8Array): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  override remove(key: StorageKey): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  override loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    throw new Error("Method not implemented.");
-  }
-  override removeRange(keyPrefix: StorageKey): Promise<void> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
+  override save(key: StorageKey, data: Uint8Array): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
+  override remove(key: StorageKey): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
+  override loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  override removeRange(keyPrefix: StorageKey): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 }

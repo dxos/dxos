@@ -11,9 +11,9 @@ import { ModelFactory } from '@dxos/model-factory';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
+import { AutomergeHost } from '../automerge';
 import { DatabaseHost, type DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { type DataPipeline } from '../space';
-import { AutomergeHost } from '../automerge';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();

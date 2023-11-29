@@ -2,28 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Repo as AutomergeRepo, DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Event } from '@dxos/async';
+import { type DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
+import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject, base, getGlobalAutomergePreference, TypedObject } from '../object';
-import { AutomergeContext } from './automerge-context';
-import { log } from '@dxos/log';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
   // Url of the root automerge document.
   rootUrl?: string;
-}
+};
 
 export class AutomergeDb {
   private _docHandle!: DocHandle<any>;
-
 
   /**
    * @internal
@@ -31,14 +30,13 @@ export class AutomergeDb {
   _objects = new Map<string, EchoObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
-
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     private readonly _echoDatabase: EchoDatabase,
-  ) { }
+  ) {}
 
   async open(spaceState: SpaceState) {
     if (spaceState.rootUrl) {
@@ -63,11 +61,10 @@ export class AutomergeDb {
 
   private async _fallbackToNewDoc() {
     if (getGlobalAutomergePreference()) {
-      log.error('Automerge is falling back to creating a new document for the space. Changed won\'t be persisted.');
+      log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
     }
     this._docHandle = this.automerge.repo.create();
   }
-
 
   getObjectById(id: string): EchoObject | undefined {
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);

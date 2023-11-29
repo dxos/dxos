@@ -11,7 +11,14 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { type Hypergraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
+import {
+  type Hypergraph,
+  EchoDatabase,
+  forceUpdate,
+  setStateFromSnapshot,
+  type TypedObject,
+  type AutomergeContext,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -27,7 +34,6 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
-import { AutomergeContext } from '@dxos/echo-schema';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
@@ -280,7 +286,7 @@ export class SpaceProxy implements Space {
     await this._dbBackend!.open(this._modelFactory);
 
     {
-      let automergeRoot = undefined;
+      let automergeRoot;
       if (this._data.pipeline?.appliedEpoch) {
         invariant(checkCredentialType(this._data.pipeline.appliedEpoch, 'dxos.halo.credentials.Epoch'));
         automergeRoot = this._data.pipeline.appliedEpoch.subject.assertion.automergeRoot;

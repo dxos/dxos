@@ -1,9 +1,13 @@
-import { Message, NetworkAdapter, PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
-import { Stream } from '@dxos/codec-protobuf';
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
+import { type Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DataService, SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
 /**
  * Shared context for all spaces in the client.
@@ -43,7 +47,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override connect(peerId: PeerId): void {
-    if(peerId !== SERVER_ID) {
+    if (peerId !== SERVER_ID) {
       return;
     }
     invariant(!this._stream);
@@ -67,14 +71,20 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-    this._dataService.sendSyncMessage({
-      id: this._clientId,
-      syncMessage: cbor.encode(message),
-    });
+    void this._dataService
+      .sendSyncMessage({
+        id: this._clientId,
+        syncMessage: cbor.encode(message),
+      })
+      .catch((err) => {
+        log.catch(err);
+      });
   }
 
   override disconnect(): void {
-    this._stream?.close();
+    void this._stream?.close().catch((err) => {
+      log.catch(err);
+    });
     this._stream = undefined;
   }
 }

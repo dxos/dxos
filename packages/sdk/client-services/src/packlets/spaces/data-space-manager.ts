@@ -5,7 +5,13 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { type CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
-import { AutomergeHost, type DataServiceSubscriptions, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import {
+  type AutomergeHost,
+  type DataServiceSubscriptions,
+  type MetadataStore,
+  type Space,
+  type SpaceManager,
+} from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';

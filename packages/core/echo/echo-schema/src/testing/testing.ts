@@ -15,11 +15,11 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
+import { AutomergeContext } from '../automerge/automerge-context';
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { setGlobalAutomergePreference } from '../object';
 import { schemaBuiltin } from '../proto';
-import { AutomergeContext } from '../automerge/automerge-context';
 
 /**
  * @deprecated Use TestBuilder.
@@ -73,7 +73,7 @@ export class TestBuilder {
 
 export class TestPeer {
   public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
-  
+
   constructor(
     public readonly builder: TestBuilder,
     public readonly base: BasePeer,
