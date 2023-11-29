@@ -10,8 +10,8 @@ import {
   focusRing,
   inlineSeparator,
   mx,
-  defaultAppButtonColors,
-  primaryAppButtonColors,
+  defaultButtonColors,
+  primaryButtonColors,
   surfaceElevation,
   ghostHover,
 } from '@dxos/react-ui-theme';
@@ -67,7 +67,7 @@ const NavMenuInvokerItem = forwardRef(
         <NavigationMenuPrimitive.Trigger
           className={mx(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
-            active ? primaryAppButtonColors : defaultAppButtonColors,
+            active ? primaryButtonColors : defaultButtonColors,
             focusRing,
             ghostHover,
           )}
@@ -98,7 +98,7 @@ const NavMenuLinkItem = forwardRef(
         active={active}
         className={mx(
           'px-3 py-2 text-sm rounded-md transition-color',
-          active ? primaryAppButtonColors : defaultAppButtonColors,
+          active ? primaryButtonColors : defaultButtonColors,
           active ? 'font-medium' : 'font-normal',
           focusRing,
           ghostHover,
@@ -123,7 +123,7 @@ const NavMenuTooltipLinkItem = forwardRef(
             active={active}
             className={mx(
               'px-3 py-2 text-sm rounded-md transition-color',
-              active ? primaryAppButtonColors : defaultAppButtonColors,
+              active ? primaryButtonColors : defaultButtonColors,
               active ? 'font-medium' : 'font-normal',
               focusRing,
               ghostHover,
