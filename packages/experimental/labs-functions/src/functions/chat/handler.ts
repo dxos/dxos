@@ -7,7 +7,6 @@ import { join } from 'node:path';
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -23,13 +22,11 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   context: { client, dataDir },
   response,
 }) => {
-  invariant(dataDir);
+  // TODO(burdon): Configure model variant based on env.
   const config = client.config;
   const resources = createOpenAIChainResources({
-    baseDir: join(dataDir, 'agent/functions/embedding/openai'),
-    apiKey: getKey(config, 'openai.com/api_key')!,
-    chat: { modelName: 'gpt-4' },
-    // chat: { model: 'llama2' },
+    baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
+    apiKey: getKey(config, 'openai.com/api_key'),
   });
   await resources.store.initialize();
   const chain = new Chain(resources, { context: false });
