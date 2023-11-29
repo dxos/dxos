@@ -18,7 +18,7 @@
       }
     },
     "lint": {},
-    "test": {
+    "e2e": {
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
