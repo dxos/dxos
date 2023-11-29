@@ -57,18 +57,18 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   if (docs.length) {
     // TODO(burdon): Configure model variant based on env.
     const config = client.config;
-    const { store } = createOpenAIChainResources({
+    const resources = createOpenAIChainResources({
       baseDir: join(dataDir, 'agent/functions/embedding'),
       apiKey: getKey(config, 'openai.com/api_key'),
     });
 
-    await store.initialize();
+    await resources.store.initialize();
 
     // TODO(burdon): Remove deleted docs.
-    await store.addDocuments(docs);
-    await store.save();
+    await resources.store.addDocuments(docs);
+    await resources.store.save();
 
-    log.info('embedding', { resources: store.stats });
+    log.info('embedding', resources.info);
   }
 
   return response.status(200);

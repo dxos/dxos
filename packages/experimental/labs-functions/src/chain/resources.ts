@@ -15,8 +15,6 @@ export type ChainResourcesOptions<E extends EmbeddingsParams, M extends BaseChat
   embeddings?: Partial<E>;
 
   // https://js.langchain.com/docs/integrations/chat
-  // https://github.com/jmorganca/ollama#model-library
-  // https://platform.openai.com/docs/models
   chat?: Partial<M>;
 };
 

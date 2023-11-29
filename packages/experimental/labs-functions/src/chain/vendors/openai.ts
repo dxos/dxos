@@ -28,7 +28,7 @@ export declare interface OpenAIBaseInput {
 }
 
 export const defaultOpenAIBaseInput: Partial<OpenAIBaseInput> = {
-  modelName: 'gpt-4',
+  modelName: 'gpt-4-1106-preview',
 };
 
 export type OpenAIChainResourcesOptions = ChainResourcesOptions<
@@ -38,6 +38,7 @@ export type OpenAIChainResourcesOptions = ChainResourcesOptions<
 
 /**
  * https://github.com/openai/openai-node
+ * https://platform.openai.com/docs/models
  */
 export const createOpenAIChainResources: ChainResourcesFactory<
   OpenAIEmbeddingsParams,

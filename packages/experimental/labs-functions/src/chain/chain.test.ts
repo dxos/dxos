@@ -59,11 +59,11 @@ describe.skip('Chain', () => {
     const resources = getResources();
     await resources.store.initialize();
     await resources.store.addDocuments(docs);
-    expect(resources.store.stats.documents).to.equal(docs.length);
+    expect(resources.store.info.documents).to.equal(docs.length);
     await resources.store.addDocuments(docs);
-    expect(resources.store.stats.documents).to.equal(docs.length);
+    expect(resources.store.info.documents).to.equal(docs.length);
     await resources.store.deleteDocuments(docs.slice(0, 2).map((doc) => doc.metadata));
-    expect(resources.store.stats.documents).to.equal(docs.length - 2);
+    expect(resources.store.info.documents).to.equal(docs.length - 2);
   });
 
   test('load and save', async () => {
@@ -71,14 +71,14 @@ describe.skip('Chain', () => {
       const resources = getResources();
       await resources.store.initialize();
       await resources.store.addDocuments(docs);
-      expect(resources.store.stats.documents).to.equal(docs.length);
+      expect(resources.store.info.documents).to.equal(docs.length);
       await resources.store.save();
     }
 
     {
       const resources = getResources();
       await resources.store.initialize();
-      expect(resources.store.stats.documents).to.equal(docs.length);
+      expect(resources.store.info.documents).to.equal(docs.length);
     }
   });
 
