@@ -12,6 +12,10 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Factor out.
 
+export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
+
+export const str = (...text: (string | undefined | boolean)[]): string => text.filter(Boolean).flat().join('\n');
+
 export const loadJson = (filename: string) => {
   invariant(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
