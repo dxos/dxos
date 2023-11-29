@@ -29,10 +29,9 @@ export const TableSlide: FC<ObjectTableProps> = ({ table }) => {
 
 export const TableMain: FC<ObjectTableProps> = ({ table }) => {
   return (
-    <Main.Content classNames={[
-      baseSurface,
-      'fixed inset-inline-0 block-start-[--topbar-size] block-end-0 overflow-auto'
-    ]}>
+    <Main.Content
+      classNames={[baseSurface, 'fixed inset-inline-0 block-start-[--topbar-size] block-end-0 overflow-auto']}
+    >
       <ObjectTable table={table} stickyHeader role='grid' />
     </Main.Content>
   );
