@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
 import {
   createColumnHelper,
@@ -13,7 +14,7 @@ import {
 } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
 import { type ClassNameValue, Input, Tooltip } from '@dxos/react-ui';
@@ -132,10 +133,27 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   );
 };
 
+const parseNumber = (text?: string) => (text?.trim().length ? Number(text) : NaN);
+
+const displayNumber = (value?: number, digits?: number) =>
+  value || value === 0
+    ? value.toLocaleString(undefined, {
+        minimumFractionDigits: digits ?? 0,
+        maximumFractionDigits: digits ?? 2,
+      })
+    : '';
+
 const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, number>) => {
-  const { onUpdate, cell, digits } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
+  const { onUpdate, digits } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
   const value = cellContext.getValue();
-  const [text, setText] = useState<string>();
+  const [text, setText] = useState<string>(displayNumber(value, digits));
+  const { findPrevFocusable } = useFocusFinders();
+  const ref = useRef<HTMLInputElement | null>(null);
+
+  // Update display value if `digits` changes and input is not in focus.
+  useEffect(() => {
+    (!document.activeElement || document.activeElement !== ref.current) && setText(displayNumber(value, digits));
+  }, [digits, value]);
 
   const handleEdit = () => {
     if (onUpdate) {
@@ -145,39 +163,34 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
 
   // TODO(burdon): Property is encoded as float (e.g., 6.1 => 6.099)
   const handleSave = () => {
-    const value = text?.trim().length ? Number(text) : NaN;
-    onUpdate?.(cellContext.row.original, cellContext.column.id, isNaN(value) ? undefined : value);
-    setText(undefined);
+    const nextValue = parseNumber(text);
+    onUpdate?.(cellContext.row.original, cellContext.column.id, isNaN(nextValue) ? undefined : nextValue);
+    setText(displayNumber(nextValue, digits));
+    // Shift focus only if input is focused on save (e.g. on `Enter`).
+    ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
   };
 
-  const handleCancel = () => {
-    setText(undefined);
+  const _handleCancel = () => {
+    setText(displayNumber(value, digits));
+    ref.current && findPrevFocusable(ref.current)?.focus();
   };
-
-  if (text !== undefined) {
-    return (
-      <Input.Root>
-        <Input.TextInput
-          value={text}
-          classNames={['is-full text-end font-mono']}
-          onBlur={handleSave}
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => (event.key === 'Escape' && handleCancel()) || (event.key === 'Enter' && handleSave())}
-        />
-      </Input.Root>
-    );
-  }
 
   return (
-    <div
-      className={mx('is-full text-end font-mono empty:after:content-[" "]', textPadding, cell?.classNames)}
-      onClick={handleEdit}
-    >
-      {value?.toLocaleString(undefined, {
-        minimumFractionDigits: digits ?? 0,
-        maximumFractionDigits: digits ?? 2,
-      })}
-    </div>
+    <Input.Root>
+      <Input.TextInput
+        ref={ref}
+        variant='subdued'
+        value={text}
+        classNames={['is-full text-end font-mono', textPadding]}
+        onBlur={handleSave}
+        onFocus={handleEdit}
+        onChange={({ target: { value } }) => setText(value)}
+        onKeyDown={(event) => {
+          // TODO(thure): `Escape` is reserved for blurring the input and moving focus to the cell
+          return /* (event.key === 'Escape' && handleCancel()) || */ event.key === 'Enter' && handleSave();
+        }}
+      />
+    </Input.Root>
   );
 };
 
@@ -238,14 +251,7 @@ export class ColumnBuilder<TData extends RowData> {
     ...props
   }: ComboboxColumnOptions<TData>): Partial<ColumnDef<TData, any>> {
     return {
-      ...props,
       minSize: 100,
-      meta: {
-        ...props.meta,
-        model,
-        onUpdate,
-        cell: { classNames, ...props.meta?.cell },
-      },
       header: (column) => {
         return label ?? column.header.id;
       },
@@ -256,6 +262,13 @@ export class ColumnBuilder<TData extends RowData> {
               const cellValue = cellContext.getValue();
               return <div className={mx('truncate', classNames)}>{cellValue ? model?.getText(cellValue) : ''}</div>;
             },
+      ...props,
+      meta: {
+        ...props.meta,
+        model,
+        onUpdate,
+        cell: { classNames, ...props.meta?.cell },
+      },
     };
   }
 
@@ -266,13 +279,7 @@ export class ColumnBuilder<TData extends RowData> {
     ColumnDef<TData, string>
   > {
     return {
-      ...props,
       minSize: 100,
-      meta: {
-        ...props.meta,
-        onUpdate,
-        cell: { ...props.meta?.cell, classNames },
-      },
       // TODO(burdon): Default.
       header: (column) => {
         return label ?? column.header.id;
@@ -283,6 +290,12 @@ export class ColumnBuilder<TData extends RowData> {
             const value = cell.getValue();
             return <div className={mx('truncate', textPadding, classNames)}>{value}</div>;
           },
+      ...props,
+      meta: {
+        ...props.meta,
+        onUpdate,
+        cell: { ...props.meta?.cell, classNames },
+      },
     };
   }
 
@@ -293,9 +306,11 @@ export class ColumnBuilder<TData extends RowData> {
     ColumnDef<TData, number>
   > {
     return {
-      ...props,
       size: 100,
       minSize: 100,
+      header: (cell) => label ?? cell.header.id,
+      cell: NumberBuilderCell,
+      ...props,
       meta: {
         ...props.meta,
         onUpdate,
@@ -303,8 +318,6 @@ export class ColumnBuilder<TData extends RowData> {
         header: { classNames: 'text-end', ...props.meta?.header },
         cell: { ...props.meta?.cell, classNames },
       },
-      header: (cell) => label ?? cell.header.id,
-      cell: NumberBuilderCell,
     };
   }
 
@@ -316,10 +329,8 @@ export class ColumnBuilder<TData extends RowData> {
     ColumnDef<TData, Date>
   > {
     return {
-      ...props,
       size: 220, // TODO(burdon): Depends on format.
       minSize: 100,
-      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
@@ -339,6 +350,8 @@ export class ColumnBuilder<TData extends RowData> {
           return null;
         }
       },
+      ...props,
+      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames } },
     };
   }
 
@@ -347,10 +360,8 @@ export class ColumnBuilder<TData extends RowData> {
    */
   key({ label, tooltip, classNames, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
     return {
-      ...props,
       size: 94,
       minSize: 94,
-      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames: ['font-mono', textPadding, classNames] } },
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
@@ -383,6 +394,8 @@ export class ColumnBuilder<TData extends RowData> {
           </Tooltip.Provider>
         );
       },
+      ...props,
+      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames: ['font-mono', textPadding, classNames] } },
     };
   }
 
@@ -423,12 +436,12 @@ export class ColumnBuilder<TData extends RowData> {
     ColumnDef<TData, boolean>
   > {
     return {
-      ...props,
       size: 50,
       minSize: 50,
-      meta: { ...props.meta, onUpdate, cell: { ...props.meta?.cell, classNames: [textPadding, classNames] } },
       header: (column) => label ?? column.header.id,
       cell: SwitchBuilderCell,
+      ...props,
+      meta: { ...props.meta, onUpdate, cell: { ...props.meta?.cell, classNames: [textPadding, classNames] } },
     };
   }
 
@@ -439,7 +452,6 @@ export class ColumnBuilder<TData extends RowData> {
     const IconOn = on?.Icon ?? Check;
     const IconOff = off?.Icon ?? X;
     return {
-      ...props,
       size: size ?? 32,
       header: (column) => <div className={'justify-center'}>{label ?? column.header.id}</div>,
       cell: (cell) => {
@@ -452,6 +464,7 @@ export class ColumnBuilder<TData extends RowData> {
           return null;
         }
       },
+      ...props,
     };
   }
 }
