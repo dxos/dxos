@@ -13,6 +13,7 @@ import { Card, DensityProvider } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
+import { THREAD_ITEM } from '../../meta';
 import { useSubscription } from '../util';
 
 export type BlockProperties = {
@@ -83,7 +84,7 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
     return (
       <div className='flex overflow-hidden px-2 py-1 group'>
         <Mosaic.Container id={id} Component={Pill}>
-          <Mosaic.DraggableTile path={id} item={block.object} Component={Pill} onRemove={onDelete} />
+          <Mosaic.DraggableTile type={THREAD_ITEM} path={id} item={block.object} Component={Pill} onRemove={onDelete} />
         </Mosaic.Container>
       </div>
     );

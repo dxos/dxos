@@ -82,7 +82,7 @@ export class TestPeer {
 
   async openConnection(connection: TestConnection) {
     invariant(this.connections.has(connection));
-    await connection.teleport.open();
+    await connection.teleport.open(PublicKey.random());
     await this.onOpen(connection);
   }
 

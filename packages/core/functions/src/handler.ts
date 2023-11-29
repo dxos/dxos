@@ -12,6 +12,7 @@ export interface Response {
 // TODO(burdon): Limit access to individual space?
 export interface FunctionContext {
   client: Client;
+  dataDir?: string;
 }
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.

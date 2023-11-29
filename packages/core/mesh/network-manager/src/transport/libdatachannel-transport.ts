@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type PeerConnection } from './datachannel/rtc-peer-connection';
-import { type Transport, type TransportFactory } from './transport';
+import { type Transport, type TransportFactory, type TransportStats } from './transport';
 
 export type LibDataChannelTransportParams = {
   initiator: boolean;
@@ -126,14 +126,18 @@ export class LibDataChannelTransport implements Transport {
       log.debug('dataChannel.onopen');
       const duplex = new Duplex({
         read: () => {},
-        write: (chunk, encoding, callback) => {
+        write: async (chunk, encoding, callback) => {
           // todo wait to open
 
           if (chunk.length > MAX_MESSAGE_SIZE) {
             this.errors.raise(new Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
           }
-          dataChannel.send(chunk);
-
+          try {
+            dataChannel.send(chunk);
+          } catch (err: any) {
+            this.errors.raise(err);
+            await this._close();
+          }
           if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
             if (this._writeCallback !== null) {
               log.error("consumer trying to write before we're ready for more data");
@@ -230,6 +234,42 @@ export class LibDataChannelTransport implements Transport {
       })
       .catch((err) => {
         log.catch(err);
+      });
+  }
+
+  async getDetails(): Promise<string> {
+    return this._peer
+      .then(async (peer) => {
+        const cp = await peer.getSelectedCandidatePair();
+        if (!cp) {
+          return 'unavailable';
+        }
+        return `${cp.remote.address}:${cp.remote.port}/${cp.remote.transportType} ${cp.remote.type}`;
+      })
+      .catch((err) => {
+        log.catch(err);
+        return 'unavailable';
+      });
+  }
+
+  async getStats(): Promise<TransportStats> {
+    return this._peer
+      .then((peer) => {
+        return {
+          bytesSent: peer.bytesSent(),
+          bytesReceived: peer.bytesReceived(),
+          packetsSent: 0,
+          packetsReceived: 0,
+        };
+      })
+      .catch((err) => {
+        log.catch(err);
+        return {
+          bytesSent: 0,
+          bytesReceived: 0,
+          packetsSent: 0,
+          packetsReceived: 0,
+        };
       });
   }
 

@@ -4,6 +4,8 @@
 
 import { type RowData, type RowSelectionState, type Table, type VisibilityState } from '@tanstack/react-table';
 
+import { type ClassNameValue } from '@dxos/react-ui-types';
+
 import { type KeyValue, type TableColumnDef } from '../../types';
 
 export type TableFlags = Partial<{
@@ -15,6 +17,7 @@ export type TableFlags = Partial<{
   fullWidth: boolean;
   debug: boolean;
   expand: boolean;
+  stickyHeader: boolean;
   rowsSelectable: boolean | 'multi';
 }>;
 
@@ -41,6 +44,8 @@ export type TableProps<TData extends RowData> = TableFlags &
     onRowSelectionChange: (rowSelection: RowSelectionState) => void;
     // Derived from row selection
     onDataSelectionChange: (dataSelection: TData[]) => void;
+    // `table` element props
+    classNames: ClassNameValue;
   }>;
 
 export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };

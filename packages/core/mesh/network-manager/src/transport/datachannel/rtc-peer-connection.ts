@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import node from 'node-datachannel';
+import node, { type SelectedCandidateInfo } from 'node-datachannel';
 import defer, { type DeferredPromise } from 'p-defer';
 
 import { DataChannel } from './rtc-data-channel';
@@ -45,21 +45,17 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
     const iceServers = init.iceServers ?? [];
 
     this.#peerConnection = new node.PeerConnection(`peer-${Math.random()}`, {
+      // convert https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection#iceservers to the format expected by https://github.com/murat-dogan/node-datachannel/blob/master/src/peer-connection-wrapper.cpp#L101
       iceServers: iceServers
         .map((server) => {
-          const urls = (Array.isArray(server.urls) ? server.urls : [server.urls]).map((str) => new URL(str));
+          const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
 
           return urls.map((url) => {
-            /** @type {import('../lib/index.js').IceServer} */
-            const iceServer = {
-              hostname: url.hostname,
-              port: parseInt(url.port, 10),
-              username: server.username,
-              password: server.credential,
-              // relayType - how to specify?
-            };
-
-            return iceServer;
+            if (server.username && server.credential) {
+              const [protocol, rest] = url.split(/:(.*)/);
+              return `${protocol}:${server.username}:${server.credential}@${rest}`;
+            }
+            return url;
           });
         })
         .flat(),
@@ -188,6 +184,10 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
     this.#peerConnection.addRemoteCandidate(candidate.candidate, candidate.sdpMid ?? '0');
   }
 
+  getSelectedCandidatePair(): { local: SelectedCandidateInfo; remote: SelectedCandidateInfo } | null {
+    return this.#peerConnection.getSelectedCandidatePair();
+  }
+
   addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
     throw new Error('addTrack Not implemented');
   }
@@ -204,6 +204,14 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
 
     this.#peerConnection.close();
     this.#peerConnection.destroy();
+  }
+
+  bytesSent(): number {
+    return this.#peerConnection.bytesSent();
+  }
+
+  bytesReceived(): number {
+    return this.#peerConnection.bytesReceived();
   }
 
   createDataChannel(label: string, dataChannelDict: RTCDataChannelInit = {}): RTCDataChannel {
