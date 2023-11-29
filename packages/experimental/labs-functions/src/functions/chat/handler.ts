@@ -7,7 +7,6 @@ import { join } from 'node:path';
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -59,13 +58,13 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
           const messages = createRequest(space, message);
-          log('request', { messages });
+          log.info('request', { messages });
 
           let blocks: MessageType.Block[];
           const text = message.blocks[0]?.text;
           if (text?.charAt(0) === '$') {
             const response = await chain.call(text.slice(1));
-            log('response', { content: response });
+            log.info('response', { content: response });
             blocks = [
               {
                 timestamp: new Date().toISOString(),
@@ -74,7 +73,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
             ];
           } else {
             const { content } = await resources.chat.invoke(messages);
-            log('response', { content: content.toString() });
+            log.info('response', { content: content.toString() });
             blocks = createResponse(client, space, content.toString());
           }
 

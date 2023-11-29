@@ -27,6 +27,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
           if (moves.length) {
             const move = moves[Math.floor(Math.random() * moves.length)];
             chess.move(move);
+            // TODO(burdon): Can we defer committing a batch until the function completes (idempotence?)
             game.pgn = chess.pgn();
             console.log(`move: ${chess.history().length}\n` + chess.ascii());
           }
