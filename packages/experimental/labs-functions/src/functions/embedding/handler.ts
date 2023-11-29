@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ChainDocument, createOpenAIChainResources } from '../../chain';
+import { type ChainDocument, createOllamaChainResources } from '../../chain';
 import { getKey, isTypedObject, nonNullable } from '../../util';
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
@@ -99,7 +99,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   if (docs.length) {
     // TODO(burdon): Configure model variant based on env.
     const config = client.config;
-    const resources = createOpenAIChainResources({
+    const resources = createOllamaChainResources({
       baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
       apiKey: getKey(config, 'openai.com/api_key'),
     });

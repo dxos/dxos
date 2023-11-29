@@ -96,11 +96,11 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         type: Schema.PropType.STRING, // TODO(burdon): Text.
       },
       {
-        id: 'repo',
+        id: 'website',
         type: Schema.PropType.STRING,
       },
       {
-        id: 'website',
+        id: 'repo',
         type: Schema.PropType.STRING,
       },
       {
@@ -158,7 +158,7 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
   },
 
   [TestSchemaType.project]: () => ({
-    title: faker.commerce.productName(),
+    name: faker.commerce.productName(),
     repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
     status: faker.helpers.arrayElement(Status),
     priority: faker.helpers.arrayElement(Priority),

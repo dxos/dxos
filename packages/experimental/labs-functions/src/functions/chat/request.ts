@@ -22,34 +22,39 @@ export const createRequest = (space: Space, message: MessageType): ChatMessage[]
     context = objects[0];
   }
 
-  // TODO(burdon): Expect client to set schema.
-  // TODO(burdon): Get from type collection.
+  // TODO(burdon): How to infer schema from message/context/prompt.
   let schema: Schema | undefined;
   if (context?.__typename === 'braneframe.Grid') {
-    schema = new Schema({
-      typename: 'example.com/schema/project',
-      props: [
-        {
-          id: 'name',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'description',
-          description: 'Short summary',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'website',
-          description: 'Web site URL (not github)',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'repo',
-          description: 'Github repo URL',
-          type: Schema.PropType.STRING,
-        },
-      ],
-    });
+    const { objects } = space.db.query(Schema.filter());
+    const schemas = objects.filter((object) => object.typename === 'example.com/schema/project');
+    if (schemas.length) {
+      schema = schemas[0];
+    }
+
+    // schema = new Schema({
+    //   typename: 'example.com/schema/project',
+    //   props: [
+    //     {
+    //       id: 'name',
+    //       type: Schema.PropType.STRING,
+    //     },
+    //     {
+    //       id: 'description',
+    //       description: 'Short summary',
+    //       type: Schema.PropType.STRING,
+    //     },
+    //     {
+    //       id: 'website',
+    //       description: 'Web site URL (not github)',
+    //       type: Schema.PropType.STRING,
+    //     },
+    //     {
+    //       id: 'repo',
+    //       description: 'Github repo URL',
+    //       type: Schema.PropType.STRING,
+    //     },
+    //   ],
+    // });
   }
 
   return createPrompt({ message: text, context, schema })!;

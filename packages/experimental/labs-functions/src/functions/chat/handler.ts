@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { createRequest } from './request';
 import { createResponse } from './response';
-import { Chain, createOpenAIChainResources } from '../../chain';
+import { Chain, createOllamaChainResources } from '../../chain';
 import { getKey } from '../../util';
 
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
@@ -24,7 +24,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 }) => {
   // TODO(burdon): Configure model variant based on env.
   const config = client.config;
-  const resources = createOpenAIChainResources({
+  const resources = createOllamaChainResources({
     baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
     apiKey: getKey(config, 'openai.com/api_key'),
   });
