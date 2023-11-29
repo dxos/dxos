@@ -4,7 +4,7 @@
 
 import { Duplex } from 'node:stream';
 
-import { scheduleTaskInterval, Event, Trigger } from '@dxos/async';
+import { scheduleTaskInterval, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -288,16 +288,11 @@ export class Muxer {
     });
 
     // don't return until close is complete or timeout
-    await Promise.race([
-      new Promise((_resolve, reject) => {
-        setTimeout(() => {
-          reject(new TimeoutError('gracefully closing muxer'));
-        }, GRACEFUL_CLOSE_TIMEOUT);
-      }),
-      (async () => {
-        await this._dispose(err);
-      })(),
-    ]);
+    asyncTimeout(
+      this._dispose(err),
+      GRACEFUL_CLOSE_TIMEOUT,
+      new TimeoutError('gracefully closing muxer')
+    );
   }
 
   // force close without confirmation
