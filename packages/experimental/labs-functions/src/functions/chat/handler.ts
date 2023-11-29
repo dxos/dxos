@@ -2,34 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
+import { join } from 'node:path';
+
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Chain, createOpenAIChainResources } from './chain';
 import { createRequest } from './request';
 import { createResponse } from './response';
+import { Chain, createOpenAIChainResources } from '../../chain';
 import { getKey } from '../../util';
 
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   event: { space: spaceKey, objects: messageIds },
-  context: { client },
+  context: { client, dataDir },
   response,
 }) => {
+  invariant(dataDir);
   const config = client.config;
   const resources = createOpenAIChainResources({
-    // TODO(burdon): Get from context (for agent profile).
-    baseDir: '/tmp/dxos/agent/functions/embedding/openai',
+    baseDir: join(dataDir, 'agent/functions/embedding/openai'),
     apiKey: getKey(config, 'openai.com/api_key')!,
     chat: { modelName: 'gpt-4' },
     // chat: { model: 'llama2' },
   });
-  await resources.initialize();
-  const chain = new Chain(resources, { precise: false });
+  await resources.store.initialize();
+  const chain = new Chain(resources, { context: false });
 
   const space = spaceKey && client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
@@ -64,6 +67,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
           const text = message.blocks[0]?.text;
           if (text?.charAt(0) === '$') {
             const response = await chain.call(text.slice(1));
+            log('response', { content: response });
             blocks = [
               {
                 timestamp: new Date().toISOString(),

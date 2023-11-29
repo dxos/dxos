@@ -71,5 +71,5 @@ export const createOllamaChainResources = (options: OllamaChainResourcesOptions)
     ...options.chat,
   });
 
-  return new ChainResources(embeddings, chat, options);
+  return new ChainResources('ollama', embeddings, chat, options);
 };
