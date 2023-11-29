@@ -192,8 +192,9 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     if (this._doc) {
-      this._set([], this._doc);
+      const doc = this._doc;
       this._doc = undefined;
+      this._set([], doc);
     }
   }
 

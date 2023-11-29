@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { Repo as AutomergeRepo, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 
 import { AutomergeObject } from './automerge-object';
 import { type EchoDatabase } from '../database';
@@ -16,6 +18,8 @@ export class AutomergeDb {
   private _repo!: AutomergeRepo;
   private _docHandle!: DocHandle<any>;
 
+  readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
+
   constructor(public readonly graph: Hypergraph, private readonly _echoDatabase: EchoDatabase) {}
 
   async open() {
@@ -24,6 +28,12 @@ export class AutomergeDb {
       network: [],
     });
     this._docHandle = this._repo.create();
+    this._docHandle.on('change', (event) => {
+      this._updateEvent.emit({
+        spaceKey: this._echoDatabase._backend.spaceKey,
+        itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
+      });
+    });
   }
 
   /**
@@ -39,6 +49,10 @@ export class AutomergeDb {
   add<T extends EchoObject>(obj: T): T {
     if (obj[base] instanceof TypedObject) {
       return this._echoDatabase.add(obj);
+    }
+
+    if (obj[base]._database) {
+      return obj;
     }
 
     invariant(obj[base] instanceof AutomergeObject);
