@@ -6,7 +6,7 @@ import { createOllamaChainResources, type OllamaChainResourcesOptions } from './
 import { createOpenAIChainResources, type OpenAIChainResourcesOptions } from './openai';
 import { type ChainResources } from '../resources';
 
-type ChainVariant = 'openai' | 'ollama';
+export type ChainVariant = 'openai' | 'ollama';
 
 export const createChainResources = (
   variant: ChainVariant,

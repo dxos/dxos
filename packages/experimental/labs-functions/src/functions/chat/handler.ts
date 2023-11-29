@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { createRequest } from './request';
 import { createResponse } from './response';
-import { Chain, createChainResources } from '../../chain';
+import { Chain, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
@@ -21,7 +21,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   response,
 }) => {
   const config = client.config;
-  const resources = createChainResources('openai', {
+  const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
     baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
     apiKey: getKey(config, 'openai.com/api_key'),
   });
