@@ -6,6 +6,7 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist",
     "types": [
       "node"
@@ -36,6 +37,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-shell"
     },
     {
       "path": "../../sdk/react-shell"

@@ -21,7 +21,7 @@ import {
   type QueryStatusResponse,
   SystemStatus,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
+import { type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';
@@ -60,8 +60,6 @@ export class Client {
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
-  // TODO(wittjosiah): Remove.
-  private _defaultKey!: string;
 
   private _initialized = false;
   private _statusStream?: Stream<QueryStatusResponse>;
@@ -229,18 +227,17 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame, Shell, ShellManager } = await import('../services');
+    const { createClientServices, Shell, ShellManager } = await import('../services');
 
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
+    this._services = await (this._options.services ?? createClientServices(this._config));
     await this._services!.open(new Context());
 
-    const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
+    const { SpaceList, createDefaultModelFactory } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 
-    this._defaultKey = defaultKey;
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
@@ -251,17 +248,15 @@ export class Client {
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
-
-    let shell: Shell | undefined;
-    if (this._services && (this._services as any)._shellManager instanceof ShellManager) {
-      shell = new Shell({
-        shellManager: this._services._shellManager,
-        identity: halo.identity,
-        devices: halo.devices,
-        spaces,
-      });
-    }
-
+    const shell =
+      '_shellManager' in this._services && this._services._shellManager instanceof ShellManager
+        ? new Shell({
+            shellManager: this._services._shellManager,
+            identity: halo.identity,
+            devices: halo.devices,
+            spaces,
+          })
+        : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
     // TODO(dmaretskyi): Refactor devtools init.

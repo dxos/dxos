@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { sleep } from '@dxos/async';
-import { IFrameProxyRuntime, WorkerRuntime } from '@dxos/client-services';
+import { WorkerProxyRuntime, WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
@@ -29,7 +29,7 @@ const setup = (getConfig: Provider<MaybePromise<Config>>) => {
     appPort: appPorts[1],
     shellPort: shellPorts[1],
   });
-  const clientProxy = new IFrameProxyRuntime({
+  const clientProxy = new WorkerProxyRuntime({
     config: getConfig,
     systemPort: systemPorts[0],
     shellPort: shellPorts[0],

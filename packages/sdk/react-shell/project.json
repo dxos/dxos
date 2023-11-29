@@ -3,11 +3,19 @@
   "projectType": "library",
   "targets": {
     "build": {},
+    "bundle": {
+      "executor": "@nx/vite:build",
+      "options": {
+        "outputPath": "packages/sdk/react-shell/dist/bundle"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "compile": {
       "options": {
         "entryPoints": [
           "packages/sdk/react-shell/src/index.ts",
-          "packages/sdk/react-shell/src/main.tsx",
           "packages/sdk/react-shell/src/testing/index.ts"
         ],
         "platforms": [

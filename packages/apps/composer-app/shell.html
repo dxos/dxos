@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <style>
+      html, body {
+        background: transparent !important;
+      }
+    </style>
+    <script>
+      function setTheme(darkMode) {
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+      }
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+        setTheme(e.matches)
+      });
+    </script>
+    <style src="./node_modules/@dxos/react-shell/dist/bundle/shell.css"></style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- <script type="module" src="./node_modules/@dxos/react-shell/src/main.tsx"></script> -->
+    <script type="module" src="./node_modules/@dxos/react-shell/dist/bundle/shell.mjs"></script>
+  </body>
+</html>

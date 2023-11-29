@@ -3,59 +3,86 @@
 //
 
 import { Event, Trigger, synchronized } from '@dxos/async';
-import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
+import {
+  type ClientServices,
+  type ClientServicesProvider,
+  clientServiceBundle,
+  DEFAULT_CLIENT_CHANNEL,
+} from '@dxos/client-protocol';
 import { WorkerProxyRuntime } from '@dxos/client-services';
-import { type Config } from '@dxos/config';
-import { type PublicKey } from '@dxos/keys';
-import { type ServiceBundle } from '@dxos/rpc';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
+import type { Stream } from '@dxos/codec-protobuf';
+import { Config } from '@dxos/config';
+import type { PublicKey } from '@dxos/keys';
+import { type LogFilter, parseFilter, log } from '@dxos/log';
+import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
+import { createProtoRpcPeer, type ProtoRpcPeer, type ServiceBundle } from '@dxos/rpc';
+import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { IFrameManager } from './iframe-manager';
 import { ClientServicesProxy } from './service-proxy';
 import { ShellManager } from './shell-manager';
 
 /**
+ * Creates services provider connected via worker.
+ */
+// TODO(wittjosiah): Make this the default.
+export const fromWorker = async (config: Config = new Config()) => {
+  return new WorkerClientServices({
+    config,
+    createWorker: () =>
+      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+  });
+};
+
+export type WorkerClientServicesParams = {
+  config: Config;
+  createWorker: () => SharedWorker;
+  shell?: string | null;
+  logFilter?: string;
+};
+
+/**
  * Proxy to host client service in worker.
  */
-// TODO(wittjosiah): Reconcile with existing ClientServicesProvider implementations.
 export class WorkerClientServices implements ClientServicesProvider {
   readonly joinedSpace = new Event<PublicKey>();
 
   private _isOpen = false;
   private readonly _config: Config;
   private readonly _createWorker: () => SharedWorker;
+  private readonly _logFilter: LogFilter[];
 
   private _runtime!: WorkerProxyRuntime;
   private _services!: ClientServicesProxy;
+  private _proxy?: ProtoRpcPeer<ClientServices>;
+  private _loggingStream?: Stream<LogEntry>;
   private _iframeManager?: IFrameManager;
-  private _shellManager?: ShellManager;
+  /**
+   * @internal
+   */
+  _shellManager?: ShellManager;
 
-  constructor({
-    config,
-    createWorker,
-    shell = true,
-  }: {
-    config: Config;
-    createWorker: () => SharedWorker;
-    shell?: boolean;
-  }) {
+  constructor({ config, createWorker, shell = '/shell.html', logFilter = 'error,warn' }: WorkerClientServicesParams) {
     this._config = config;
     this._createWorker = createWorker;
-    this._iframeManager = shell
-      ? new IFrameManager({ source: new URL('/shell.html', window.location.origin) })
-      : undefined;
+    this._logFilter = parseFilter(logFilter);
+    this._iframeManager = shell ? new IFrameManager({ source: new URL(shell, window.location.origin) }) : undefined;
+    this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager, this.joinedSpace) : undefined;
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
     return clientServiceBundle;
   }
 
-  get runtime(): WorkerProxyRuntime {
-    return this._runtime;
-  }
-
   get services(): Partial<ClientServices> {
     return this._services.services;
+  }
+
+  get runtime(): WorkerProxyRuntime {
+    return this._runtime;
   }
 
   @synchronized
@@ -64,9 +91,8 @@ export class WorkerClientServices implements ClientServicesProvider {
       return;
     }
 
-    console.log('a', this._iframeManager);
     await this._iframeManager?.open();
-    console.log('b');
+    await this._shellManager?.open();
 
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
     const worker = this._createWorker();
@@ -76,26 +102,49 @@ export class WorkerClientServices implements ClientServicesProvider {
         ports.wake(payload);
       }
     };
-
-    console.log('c', worker);
     const { systemPort, appPort } = await ports.wait();
-    console.log('d');
 
     this._runtime = new WorkerProxyRuntime({
       config: this._config,
       systemPort: createWorkerPort({ port: systemPort }),
     });
+    await this._runtime.open(location.origin);
 
     this._services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
-    console.log('e', this._services);
     await this._services.open();
 
-    // TODO(wittjosiah): Forward worker logs.
+    if (this._iframeManager?.iframe) {
+      this._proxy = createProtoRpcPeer({
+        exposed: clientServiceBundle,
+        handlers: this._services.services as ClientServices,
+        port: createIFramePort({
+          channel: DEFAULT_CLIENT_CHANNEL,
+          iframe: this._iframeManager.iframe,
+          origin: this._iframeManager.source.origin,
+        }),
+      });
+      await this._proxy.open();
+    }
 
-    this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager, this.joinedSpace) : undefined;
-    console.log('f', this._shellManager);
-    await this._shellManager?.open();
-    console.log('g');
+    this._loggingStream = this._services.services.LoggingService.queryLogs({
+      filters: this._logFilter,
+    });
+    this._loggingStream.subscribe((entry) => {
+      switch (entry.level) {
+        case LogLevel.DEBUG:
+          log.debug(`[vault] ${entry.message}`, entry.context);
+          break;
+        case LogLevel.INFO:
+          log.info(`[vault] ${entry.message}`, entry.context);
+          break;
+        case LogLevel.WARN:
+          log.warn(`[vault] ${entry.message}`, entry.context);
+          break;
+        case LogLevel.ERROR:
+          log.error(`[vault] ${entry.message}`, entry.context);
+          break;
+      }
+    });
 
     this._isOpen = true;
   }
@@ -106,12 +155,13 @@ export class WorkerClientServices implements ClientServicesProvider {
       return;
     }
 
-    await this._shellManager?.close();
-    this._shellManager = undefined;
-    await this._iframeManager?.close();
-    this._iframeManager = undefined;
+    await this._loggingStream?.close();
+    await this._proxy?.close();
     await this._services.close();
     await this._runtime.close();
+    await this._shellManager?.close();
+    await this._iframeManager?.close();
+
     this._isOpen = false;
   }
 }

@@ -103,7 +103,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       // Create root folder structure.
       const defaultSpace = client.spaces.default;
       if (clientPlugin.provides.firstRun) {
-        const personalSpaceFolder = defaultSpace.db.add(new Folder({ name: client.spaces.default.key.toHex() }));
+        const personalSpaceFolder = defaultSpace.db.add(new Folder());
         defaultSpace.properties[Folder.schema.typename] = personalSpaceFolder;
         onFirstRun?.({
           client,
@@ -443,11 +443,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesFolder],
-              } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
+              } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data);
-              const folder = new Folder({ name: space.key.toHex() }); // TODO(burdon): Will show up in search results.
+              const folder = new Folder();
               space.properties[Folder.schema.typename] = folder;
-              sharedSpacesFolder.objects.push(folder);
+              sharedSpacesFolder?.objects.push(folder);
               return { space, id: space.key.toHex() };
             }
 

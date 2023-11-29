@@ -97,6 +97,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/lib/**/*.mjs'),
 
         // TODO(burdon): Indirect deps.
         resolve(__dirname, './node_modules/@braneframe/plugin-grid/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),

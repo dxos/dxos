@@ -23,6 +23,9 @@ import { ShellRuntimeImpl } from './shell-runtime';
 export type WorkerProxyRuntimeParams = {
   config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
+  /**
+   * @deprecated Only used with iframes.
+   */
   shellPort?: RpcPort;
 };
 
@@ -54,7 +57,12 @@ export class WorkerProxyRuntime {
     return this._shellRuntime;
   }
 
-  async open(origin: string) {
+  async open(
+    /**
+     * @deprecated Only used with iframes.
+     */
+    origin: string,
+  ) {
     this._config = await getAsyncValue(this._configProvider);
 
     this._transportService = new SimplePeerTransportService({

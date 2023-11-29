@@ -40,7 +40,7 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
+import { Config, Defaults, Envs, Local, Remote, createClientServices } from '@dxos/react-client';
 import { EchoDatabase, SpaceProxy, TextObject, TypedObject } from '@dxos/react-client/echo';
 import { ProgressBar } from '@dxos/react-ui';
 

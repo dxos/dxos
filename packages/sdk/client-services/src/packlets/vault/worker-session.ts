@@ -21,7 +21,8 @@ export type WorkerSessionParams = {
   serviceHost: ClientServicesHost;
   systemPort: RpcPort;
   appPort: RpcPort;
-  shellPort: RpcPort;
+  // TODO(wittjosiah): Remove shellPort.
+  shellPort?: RpcPort;
   readySignal: Trigger<Error | undefined>;
 };
 
@@ -30,7 +31,7 @@ export type WorkerSessionParams = {
  */
 export class WorkerSession {
   private readonly _clientRpc: ClientRpcServer;
-  private readonly _shellClientRpc: ClientRpcServer;
+  private readonly _shellClientRpc?: ClientRpcServer;
   private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
@@ -74,11 +75,13 @@ export class WorkerSession {
       ...middleware,
     });
 
-    this._shellClientRpc = new ClientRpcServer({
-      serviceRegistry: this._serviceHost.serviceRegistry,
-      port: shellPort,
-      ...middleware,
-    });
+    this._shellClientRpc = shellPort
+      ? new ClientRpcServer({
+          serviceRegistry: this._serviceHost.serviceRegistry,
+          port: shellPort,
+          ...middleware,
+        })
+      : undefined;
 
     this._iframeRpc = createProtoRpcPeer({
       requested: iframeServiceBundle,
@@ -138,7 +141,7 @@ export class WorkerSession {
 
   private async _maybeOpenShell() {
     try {
-      await asyncTimeout(this._shellClientRpc.open(), 1_000);
+      this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(), 1_000));
     } catch {
       log.info('No shell connected.');
     }
