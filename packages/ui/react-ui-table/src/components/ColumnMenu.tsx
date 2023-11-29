@@ -6,11 +6,12 @@ import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
 import { type HeaderContext, type RowData } from '@tanstack/react-table';
 import React, { type FC, type PropsWithChildren, useRef, useState } from 'react';
 
-import { Button, DensityProvider, Input, Popover, Select, Separator } from '@dxos/react-ui';
+import { Button, DensityProvider, Input, Popover, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { type TableDef, type ColumnProps, columnTypes } from '../schema';
+import { type TableDef, type ColumnProps, type ColumnType } from '../schema';
+import { translationKey } from '../translations';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
@@ -57,6 +58,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
   const [label, setLabel] = useState(column.label);
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
   const propRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation(translationKey);
 
   const handleCancel = () => {
     setProp(column.id);
@@ -108,7 +110,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
               <div className='flex flex-col gap-1'>
                 <Section>
                   <Input.Root>
-                    <Input.Label classNames='mbe-1'>Label</Input.Label>
+                    <Input.Label classNames='mbe-1'>{t('column label label')}</Input.Label>
                     <Input.TextInput
                       placeholder='Column label'
                       value={label ?? ''}
@@ -117,7 +119,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                     />
                   </Input.Root>
                   <Input.Root>
-                    <Input.Label classNames='mbe-1 mbs-3'>Property</Input.Label>
+                    <Input.Label classNames='mbe-1 mbs-3'>{t('property key label')}</Input.Label>
                     <Input.TextInput
                       ref={propRef}
                       placeholder='Property key'
@@ -127,15 +129,15 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                     />
                   </Input.Root>
                   <Input.Root>
-                    <Input.Label classNames='mbe-1 mbs-3'>Type</Input.Label>
+                    <Input.Label classNames='mbe-1 mbs-3'>{t('column type label')}</Input.Label>
                     <Select.Root value={type} onValueChange={setType}>
                       <Select.TriggerButton placeholder='Type' classNames='is-full' />
                       <Select.Portal>
                         <Select.Content>
                           <Select.Viewport>
-                            {Array.from(columnTypes.entries()).map(([type, label]) => (
+                            {(['number', 'boolean', 'string', 'ref'] as ColumnType[]).map((type) => (
                               <Select.Option key={type} value={type}>
-                                {label}
+                                {t(`${type} column type label`)}
                               </Select.Option>
                             ))}
                           </Select.Viewport>
@@ -149,7 +151,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                   <>
                     <Section>
                       <Input.Root>
-                        <Input.Label classNames='mbe-1 mbs-3'>Decimal places</Input.Label>
+                        <Input.Label classNames='mbe-1 mbs-3'>{t('digits label')}</Input.Label>
                         {/* TODO(burdon): Constrain input to numbers. */}
                         <Input.TextInput value={digits ?? ''} onChange={(event) => setDigits(event.target.value)} />
                       </Input.Root>
@@ -211,17 +213,17 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                 <Section className='space-b-1.5'>
                   {/* TODO(burdon): Style as DropdownMenuItem. */}
                   <Button variant='primary' classNames='is-full flex gap-2' onClick={handleSave}>
-                    <span>Save</span>
+                    <span>{t('save label')}</span>
                     <div className='grow' />
                     <Check className={getSize(5)} />
                   </Button>
                   <Button classNames='is-full flex gap-2' onClick={handleCancel}>
-                    <span>Cancel</span>
+                    <span>{t('cancel label', { ns: 'os' })}</span>
                     <div className='grow' />
                     <X className={getSize(5)} />
                   </Button>
                   <Button classNames='is-full flex gap-2' onClick={() => onDelete?.(column.id)}>
-                    <span>Delete</span>
+                    <span>{t('delete label')}</span>
                     <div className='grow' />
                     <Trash className={getSize(5)} />
                   </Button>
