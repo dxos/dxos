@@ -32,8 +32,13 @@ export abstract class GraphModel<N> {
     this.triggerUpdate();
   }
 
-  subscribe(callback: (graph: GraphData<N>) => void) {
-    return this.updated.on(callback);
+  subscribe(callback: (graph: GraphData<N>) => void, fire = false) {
+    const handle = this.updated.on(callback);
+    if (fire) {
+      this.triggerUpdate();
+    }
+
+    return handle;
   }
 
   triggerUpdate() {

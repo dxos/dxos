@@ -64,7 +64,7 @@ export class ConnectionLog {
       info.connections!.push(connectionInfo);
       this.update.emit();
 
-      connection.stateChanged.on((state) => {
+      connection.stateChanged.on(async (state) => {
         connectionInfo.state = state;
         connectionInfo.closeReason = connection.closeReason;
         connectionInfo.lastUpdate = new Date();
@@ -72,6 +72,12 @@ export class ConnectionLog {
           type: EventType.CONNECTION_STATE_CHANGED,
           newState: state,
         });
+
+        if (state === ConnectionState.CONNECTED) {
+          const details = await connection.transport?.getDetails();
+          connectionInfo.transportDetails = details;
+        }
+
         this.update.emit();
       });
 
@@ -81,6 +87,13 @@ export class ConnectionLog {
         connectionInfo.streams = stats.channels;
         connectionInfo.lastUpdate = new Date();
         this.update.emit();
+      });
+
+      connection.transportStats?.on((stats) => {
+        connectionInfo.transportBytesSent = stats.bytesSent;
+        connectionInfo.transportBytesReceived = stats.bytesReceived;
+        connectionInfo.transportPacketsSent = stats.packetsSent;
+        connectionInfo.transportPacketsReceived = stats.packetsReceived;
       });
 
       gcSwarm(info);

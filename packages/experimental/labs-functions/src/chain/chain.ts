@@ -8,29 +8,27 @@ import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable
 import { formatDocumentsAsString } from 'langchain/util/document';
 
 import { type ChainResources } from './resources';
+import { str } from '../util';
 
 export type ChainOptions = {
-  precise?: boolean;
+  context?: boolean;
 };
 
+// TODO(burdon): Create factory.
 export class Chain {
   private readonly _chain: RunnableSequence;
 
   constructor(private readonly _resources: ChainResources, private readonly _options: ChainOptions = {}) {
-    const retriever = this._resources.vectorStore.asRetriever();
-
-    // TODO(burdon): Construct different chains on the fly?
+    const retriever = this._resources.store.vectorStore.asRetriever();
     const promptTemplate = PromptTemplate.fromTemplate(
-      [
-        this._options.precise
+      str(
+        this._options.context
           ? 'answer the question based only on the following context:'
-          : 'try to be brief and answer the question using the following context otherwise just answer directly from your training data:',
+          : 'be brief and answer the question using the following context otherwise answer directly from your training data:',
         '{context}',
         '----------------',
         'question: {question}',
-      ]
-        .flat()
-        .join('\n'),
+      ),
     );
 
     this._chain = RunnableSequence.from([
@@ -45,7 +43,7 @@ export class Chain {
     ]);
   }
 
-  async call(inputText: string) {
+  async call(inputText: string): Promise<string> {
     return await this._chain.invoke(inputText);
   }
 }

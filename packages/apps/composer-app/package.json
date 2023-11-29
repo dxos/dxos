@@ -26,6 +26,7 @@
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-metadata": "workspace:*",
     "@braneframe/plugin-navtree": "workspace:*",
+    "@braneframe/plugin-outliner": "workspace:*",
     "@braneframe/plugin-presenter": "workspace:*",
     "@braneframe/plugin-pwa": "workspace:*",
     "@braneframe/plugin-registry": "workspace:*",

@@ -53,7 +53,7 @@ export class EchoDatabase {
     private readonly _graph: Hypergraph,
     automergeContext: AutomergeContext,
   ) {
-    this.automerge = new AutomergeDb(this._graph, automergeContext);
+    this.automerge = new AutomergeDb(this._graph, automergeContext, this);
 
     this._backend.itemUpdate.on(this._update.bind(this));
 
@@ -70,7 +70,8 @@ export class EchoDatabase {
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
-    const obj = this._objects.get(id);
+    const obj = this._objects.get(id) ?? this.automerge._objects.get(id);
+
     if (!obj) {
       return undefined;
     }
@@ -157,6 +158,7 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
+  // TODO(burdon): Rename delete.
   remove<T extends EchoObject>(obj: T) {
     if (obj[base] instanceof AutomergeObject) {
       return this.automerge.remove(obj);

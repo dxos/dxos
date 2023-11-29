@@ -138,6 +138,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
   };
 };
 
+// TODO(burdon): Import.
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
   "import { Chart } from '@braneframe/plugin-explorer';",

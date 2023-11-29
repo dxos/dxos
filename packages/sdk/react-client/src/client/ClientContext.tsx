@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 
 import { Client } from '@dxos/client';
+import { type TypeCollection } from '@dxos/client/echo';
 import { SystemStatus, type ClientServices, type ClientServicesProvider } from '@dxos/client/services';
 import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -71,6 +72,8 @@ export interface ClientProviderProps {
   //   (Prefering `onInitialized` for custom initialization.)
   client?: Client | Provider<Promise<Client>>;
 
+  types?: TypeCollection;
+
   /**
    * ReactNode to display until the client is available.
    */
@@ -98,13 +101,14 @@ export const ClientProvider = ({
   config: configProvider,
   services: createServices,
   client: clientProvider,
+  types,
   fallback: Fallback = () => null,
   registerSignalFactory: register = true,
   onInitialized,
 }: ClientProviderProps) => {
   useMemo(() => {
     // TODO(wittjosiah): Ideally this should be imported asynchronosly because it is optional.
-    //   Unfortunately, aysnc import seemed to break signals React instrumentation.
+    //   Unfortunately, async import seemed to break signals React instrumentation.
     register && registerSignalFactory();
   }, []);
 
@@ -139,6 +143,10 @@ export const ClientProvider = ({
       if (clientProvider) {
         // Asynchronously request client.
         const client = await getAsyncValue(clientProvider);
+        if (types) {
+          client.addTypes(types);
+        }
+
         await done(client);
       } else {
         // Asynchronously construct client (config may be undefined).
@@ -146,7 +154,7 @@ export const ClientProvider = ({
         log('resolved config', { config });
         const services = await createServices?.(config);
         log('created services', { services });
-        const client = new Client({ config, services });
+        const client = new Client({ config, services, types });
         log('created client');
         await done(client);
       }

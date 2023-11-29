@@ -545,6 +545,9 @@ importers:
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
+      '@braneframe/plugin-outliner':
+        specifier: workspace:*
+        version: link:../plugins/plugin-outliner
       '@braneframe/plugin-presenter':
         specifier: workspace:*
         version: link:../plugins/plugin-presenter
@@ -1080,6 +1083,9 @@ importers:
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
+      '@types/d3-hierarchy':
+        specifier: ^3.1.6
+        version: 3.1.6
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -1801,6 +1807,64 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-outliner:
+    dependencies:
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@fluentui/react-tabster':
+        specifier: ^9.12.0
+        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-presenter:
     dependencies:
       deepsignal:
@@ -1958,6 +2022,9 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2019,9 +2086,6 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -6050,6 +6114,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../common/crypto
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -6785,13 +6852,7 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      fs-extra:
-        specifier: ^8.1.0
-        version: 8.1.0
     devDependencies:
-      '@types/fs-extra':
-        specifier: ^9.0.4
-        version: 9.0.13
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9
@@ -20404,8 +20465,8 @@ packages:
       '@types/geojson': 7946.0.10
     dev: true
 
-  /@types/d3-hierarchy@3.1.0:
-    resolution: {integrity: sha512-g+sey7qrCa3UbsQlMZZBOHROkFqx7KZKvUpRzI/tAp/8erZWpYq7FgNKvYwebi2LaEiVs1klhUfd3WCThxmmWQ==}
+  /@types/d3-hierarchy@3.1.6:
+    resolution: {integrity: sha512-qlmD/8aMk5xGorUvTUWHCiumvgaUXYldYjNVOWtYoTYY/L+WwIEAmJxUmTgr9LoGNG0PPAOmqMDJVDPc7DOpPw==}
     dev: true
 
   /@types/d3-interpolate@3.0.1:
@@ -20489,7 +20550,7 @@ packages:
       '@types/d3-force': 3.0.3
       '@types/d3-format': 3.0.1
       '@types/d3-geo': 3.0.2
-      '@types/d3-hierarchy': 3.1.0
+      '@types/d3-hierarchy': 3.1.6
       '@types/d3-interpolate': 3.0.1
       '@types/d3-path': 3.0.0
       '@types/d3-polygon': 3.0.0
