@@ -182,8 +182,8 @@ export class SimplePeerTransport implements Transport {
       return 'unavailable';
     }
 
-    if (rc.relay) {
-      return `${rc.ip}:${rc.port}/${rc.protocol} relay for XXX ${rc.candidateType}`;
+    if (rc.candidateType === 'relay') {
+      return `${rc.ip}:${rc.port}/${rc.protocol} relay for ${rc.relatedAddress}:${rc.relatedPort}`;
     }
     return `${rc.ip}:${rc.port}/${rc.protocol} ${rc.candidateType}`;
   }
@@ -193,7 +193,6 @@ export class SimplePeerTransport implements Transport {
     if (this._closed) {
       return;
     }
-    this._closed = true;
     this._disconnectStreams();
     this._peer!.destroy();
     this._closed = true;
