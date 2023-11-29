@@ -54,7 +54,7 @@ export const createBackup = async (space: Space, defaultDocumentTitle: string): 
   };
 };
 
-// TODO(burdon): Factor out to ECHO.
+// TODO(burdon): Factor out to ECHO (need common functions for data import/export, with composer-specific additions).
 
 export const exportData = async (space: Space, title: string): Promise<Blob> => {
   const backup = await createBackup(space, title);
