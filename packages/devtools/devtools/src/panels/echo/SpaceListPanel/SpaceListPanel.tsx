@@ -36,7 +36,7 @@ export const SpaceListPanel: FC = () => {
   const { helper, builder } = createColumnBuilder<any>();
   const columns: TableColumnDef<Space, any>[] = [
     helper.accessor('key', builder.key({ tooltip: true })),
-    helper.accessor(space => space.properties.name, {
+    helper.accessor((space) => space.properties.name, {
       id: 'name',
       meta: { cell: { classNames: textPadding } },
     }) as any,
