@@ -93,7 +93,7 @@ export const Copy = {
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
       <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay />
+        <Mosaic.DragOverlay debug={debug} />
         <div className='flex grow justify-center p-4'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
@@ -122,7 +122,7 @@ const DemoStack = ({
 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count });
+    return generator.createObjects({ length: count }).map((object) => ({ id: faker.datatype.uuid(), object }));
   });
 
   const itemsRef = useRef(items);
