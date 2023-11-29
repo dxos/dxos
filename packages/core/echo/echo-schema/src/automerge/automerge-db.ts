@@ -23,7 +23,6 @@ export class AutomergeDb {
   constructor(public readonly graph: Hypergraph, private readonly _echoDatabase: EchoDatabase) {}
 
   async open() {
-    // eslint-disable-next-line no-eval
     this._repo = new AutomergeRepo({
       network: [],
     });
