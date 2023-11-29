@@ -4,14 +4,15 @@
 
 import { join } from 'node:path';
 
-import { Document as DocumentType } from '@braneframe/types';
+import { Document as DocumentType, File as FileType } from '@braneframe/types';
+import { type TypedObject } from '@dxos/echo-schema';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ChainDocument, createOpenAIChainResources } from '../../chain';
-import { getKey, isType, nonNullable } from '../../util';
+import { getKey, isTypedObject, nonNullable } from '../../util';
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   event,
@@ -21,36 +22,59 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   invariant(dataDir);
 
   const docs: ChainDocument[] = [];
-  const addDocument =
+  const addDocuments =
     (space: PublicKey | undefined = undefined) =>
-    (object: DocumentType) =>
-      object.content.text.trim().length > 0 &&
-      docs.push({
-        metadata: { space: space?.toHex(), id: object.id },
-        pageContent: object.content.text,
-      });
+    (objects: TypedObject[]) => {
+      for (const object of objects) {
+        let text: string | undefined;
+        switch (object.__typename) {
+          case DocumentType.schema.typename: {
+            text = object.content?.text.trim();
+            break;
+          }
+
+          case FileType.schema.typename: {
+            break;
+          }
+        }
+
+        if (text?.length) {
+          docs.push({
+            metadata: {
+              space: space?.toHex(),
+              id: object.id,
+            },
+            pageContent: text,
+          });
+        }
+      }
+    };
 
   const spaces = client.spaces.get();
   if (event.space) {
     const space = client.spaces.get(PublicKey.from(event.space))!;
     if (space) {
-      // TODO(burdon): Update API to make this simpler.
-      const objects = event.objects
-        ?.map<DocumentType | undefined>((id) => space.db.getObjectById(id))
-        .filter(nonNullable)
-        .filter(isType(DocumentType.schema));
+      if (event.objects?.length) {
+        // TODO(burdon): Update API to make this simpler.
+        const objects = event.objects
+          ?.map<TypedObject | undefined>((id) => space.db.getObjectById(id))
+          .filter(nonNullable)
+          .filter(isTypedObject);
 
-      if (!event?.objects.length) {
+        addDocuments(space.key)(objects);
+      } else {
         const { objects: documents } = space.db.query(DocumentType.filter());
-        objects.push(...documents);
+        addDocuments(space.key)(documents);
+        const { objects: files } = space.db.query(FileType.filter());
+        addDocuments(space.key)(files);
       }
-
-      objects.forEach(addDocument(space.key));
     }
   } else {
     for (const space of spaces) {
-      const { objects } = space.db.query(DocumentType.filter());
-      objects.forEach(addDocument(space.key));
+      const { objects: documents } = space.db.query(DocumentType.filter());
+      addDocuments(space.key)(documents);
+      const { objects: files } = space.db.query(FileType.filter());
+      addDocuments(space.key)(files);
     }
   }
 
@@ -58,7 +82,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     // TODO(burdon): Configure model variant based on env.
     const config = client.config;
     const resources = createOpenAIChainResources({
-      baseDir: join(dataDir, 'agent/functions/embedding'),
+      baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
       apiKey: getKey(config, 'openai.com/api_key'),
     });
 
