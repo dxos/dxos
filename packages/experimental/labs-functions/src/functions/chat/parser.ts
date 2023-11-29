@@ -27,7 +27,7 @@ export const parseMessage = (content: string, type = '\\w+'): ParseResult | unde
 
   // Check for embedded block content.
   const regexp = new RegExp('(.+)?```(' + type + ')(.+)```');
-  const match = regexp.exec(text); // text.match(/(.+)?```(\w+) (.+)```(.+)/);
+  const match = regexp.exec(text);
   if (match) {
     const [_, pre, type, content, post] = match;
     return {
