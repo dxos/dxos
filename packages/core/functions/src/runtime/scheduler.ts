@@ -61,7 +61,7 @@ export class Scheduler {
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
-      log.info('mount', { space: space.key, trigger });
+      log('mount', { space: space.key, trigger });
       if (ctx.disposed) {
         return;
       }

@@ -45,5 +45,5 @@ export const createOpenAIChainResources: ChainResourcesFactory<
     ...options.chat,
   });
 
-  return new ChainResources(embeddings, chat, options);
+  return new ChainResources('openai', embeddings, chat, options);
 };
