@@ -219,6 +219,7 @@ export class ServiceContext {
       this.keyring,
       signingContext,
       this.feedStore,
+      this.automergeHost,
     );
     await this.dataSpaceManager.open();
 

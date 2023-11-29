@@ -29,6 +29,7 @@ import { tracer } from '@dxos/util';
 import { DatabaseHost, type SnapshotManager } from '../db-host';
 import { type MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
+import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
 export interface PipelineFactory {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
@@ -63,6 +64,10 @@ const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5_000;
  * Minimum time in MS between recording latest timeframe in metadata.
  */
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 5_000;
+
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
+}
 
 /**
  * Controls data pipeline in the space.
@@ -352,6 +357,11 @@ export class DataPipeline implements CredentialProcessor {
       }
       await this._processEpoch(ctx, epoch.subject.assertion);
 
+      // Carry over the snapshot CID from the previous epoch.
+      if(epoch.subject.assertion.snapshotCid === undefined) {
+        epoch.subject.assertion.snapshotCid = this.appliedEpoch?.subject.assertion.snapshotCid;
+      }
+
       this.appliedEpoch = epoch;
       this.onNewEpoch.emit(epoch);
     });
@@ -368,7 +378,7 @@ export class DataPipeline implements CredentialProcessor {
       const snapshot = await this._params.snapshotManager.load(ctx, epoch.snapshotCid);
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
     }
-
+    
     log('restarting pipeline from epoch');
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);

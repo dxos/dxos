@@ -26,6 +26,10 @@ export class AutomergeHost {
     });
   }
 
+  get repo(): Repo {
+    return this._repo;
+  }
+
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
     return this._clientNetwork.syncRepo(request);
   }

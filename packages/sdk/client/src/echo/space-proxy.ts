@@ -278,6 +278,18 @@ export class SpaceProxy implements Space {
 
   private async _initializeDb() {
     await this._dbBackend!.open(this._modelFactory);
+
+    {
+      let automergeRoot = undefined;
+      if (this._data.pipeline?.appliedEpoch) {
+        invariant(checkCredentialType(this._data.pipeline.appliedEpoch, 'dxos.halo.credentials.Epoch'));
+        automergeRoot = this._data.pipeline.appliedEpoch.subject.assertion.automergeRoot;
+      }
+      await this._db.automerge.open({
+        rootUrl: automergeRoot,
+      });
+    }
+
     log('ready');
     this._databaseInitialized.wake();
 

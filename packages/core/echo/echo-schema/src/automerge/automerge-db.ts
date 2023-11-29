@@ -2,16 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Repo as AutomergeRepo, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { Repo as AutomergeRepo, DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 
 import { AutomergeObject } from './automerge-object';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base } from '../object';
+import { type EchoObject, base, getGlobalAutomergePreference } from '../object';
 import { AutomergeContext } from './automerge-context';
+import { log } from '@dxos/log';
+
+export type SpaceState = {
+  // Url of the root automerge document.
+  rootUrl?: string;
+}
 
 export class AutomergeDb {
-  private _repo!: AutomergeRepo;
   private _docHandle!: DocHandle<any>;
 
   constructor(
@@ -19,12 +24,25 @@ export class AutomergeDb {
     public readonly automerge: AutomergeContext,
   ) {}
 
-  async open() {
-    // eslint-disable-next-line no-eval
-    this._repo = new AutomergeRepo({
-      network: [],
-    });
-    this._docHandle = this._repo.create();
+  async open(spaceState: SpaceState) {
+    if(spaceState.rootUrl) {
+      try {
+        this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
+        await this._docHandle.whenReady();
+      } catch(err) {
+        log.catch('Error opening document', err);
+        await this._fallbackToNewDoc();
+      }
+    } else {
+      await this._fallbackToNewDoc();
+    }
+  }
+
+  private async _fallbackToNewDoc() {
+    if(getGlobalAutomergePreference()) {
+      log.error('Automerge is falling back to creating a new document for the space. Changed won\'t be persisted.');
+    }
+    this._docHandle = this.automerge.repo.create();
   }
 
   /**
