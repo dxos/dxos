@@ -39,6 +39,12 @@ export class ChainResources<
     this._store = new ChainStore(this._embeddings, { id: this._id, baseDir: this._options.baseDir });
   }
 
+  get info() {
+    return {
+      store: this._store.info,
+    };
+  }
+
   get embeddings() {
     return this._embeddings;
   }

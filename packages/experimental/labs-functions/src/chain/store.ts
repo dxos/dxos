@@ -46,9 +46,10 @@ export class ChainStore {
     return this._documentById.size;
   }
 
-  get stats() {
+  get info() {
     return {
       version: VERSION,
+      baseDir: this.baseDir,
       documents: this._documentById.size,
     };
   }
@@ -86,7 +87,7 @@ export class ChainStore {
       this._vectorStore = await FaissStore.fromDocuments([], this._embeddings);
     }
 
-    log.info('initialized', { baseDir: this.baseDir, version: VERSION });
+    log.info('initialized', this.info);
     return this;
   }
 
