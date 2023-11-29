@@ -128,7 +128,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     if (this._schema) {
       for (const field of this._schema.props) {
         if (field.repeated) {
-          this._set(field.id!, new EchoArray());
+          this._set(field.id!, new EchoArray([], { useAutomergeBackend: false }));
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { TextObject } = require('./text-object');
@@ -345,7 +345,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray()._attach(this[base], key, meta);
+        return new EchoArray([], { useAutomergeBackend: false })._attach(this[base], key, meta);
       default:
         return value;
     }

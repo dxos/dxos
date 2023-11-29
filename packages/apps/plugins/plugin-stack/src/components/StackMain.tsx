@@ -18,7 +18,13 @@ import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/e
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps } from '@dxos/react-ui-stack';
-import { baseSurface, chromeSurface, topbarBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  getSize,
+  surfaceElevation,
+  staticDefaultButtonColors,
+} from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
 import { defaultFileTypes } from '../hooks';
@@ -106,7 +112,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   };
 
   return (
-    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
         SectionContent={SectionContent}
@@ -120,7 +126,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
       />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
+        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
               <Button variant='ghost'>

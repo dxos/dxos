@@ -17,6 +17,7 @@ export type TableFlags = Partial<{
   fullWidth: boolean;
   debug: boolean;
   expand: boolean;
+  stickyHeader: boolean;
   rowsSelectable: boolean | 'multi';
 }>;
 

@@ -15,11 +15,14 @@ import {
   ghostHover,
 } from '../fragments';
 
-export const primaryAppButtonColors =
+export const primaryButtonColors =
   'bg-primary-550 dark:bg-primary-550 text-white aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 aria-pressed:text-primary-100 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 data-[state=open]:text-primary-100 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
 
-export const defaultAppButtonColors =
-  'text-neutral-800 dark:text-neutral-50 bg-white dark:bg-neutral-800 aria-pressed:text-primary-800 aria-pressed:bg-primary-100 dark:aria-pressed:text-primary-50 dark:aria-pressed:bg-primary-700 data-[state=open]:text-primary-800 data-[state=open]:bg-primary-100 dark:data-[state=open]:text-primary-50 dark:data-[state=open]:bg-primary-700 aria-checked:text-primary-800 aria-checked:bg-primary-100 dark:aria-checked:text-primary-50 dark:aria-checked:bg-primary-700';
+export const staticDefaultButtonColors = 'text-neutral-800 dark:text-neutral-50 bg-white dark:bg-neutral-800';
+
+export const defaultButtonColors =
+  staticDefaultButtonColors +
+  ' text-neutral-800 dark:text-neutral-50 bg-white dark:bg-neutral-800 aria-pressed:text-primary-800 aria-pressed:bg-primary-100 dark:aria-pressed:text-primary-50 dark:aria-pressed:bg-primary-700 data-[state=open]:text-primary-800 data-[state=open]:bg-primary-100 dark:data-[state=open]:text-primary-50 dark:data-[state=open]:bg-primary-700 aria-checked:text-primary-800 aria-checked:bg-primary-100 dark:aria-checked:text-primary-50 dark:aria-checked:bg-primary-700';
 
 export const ghostButtonColors =
   ghostHover +
@@ -49,9 +52,9 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) =
       contentElevation({ elevation: props.elevation }),
     !props.disabled && hoverColors,
     resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
-    resolvedVariant === 'default' && defaultAppButtonColors,
+    resolvedVariant === 'default' && defaultButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
-    resolvedVariant === 'primary' && primaryAppButtonColors,
+    resolvedVariant === 'primary' && primaryButtonColors,
     resolvedVariant === 'outline' &&
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
     !props.disabled && focusRing,
