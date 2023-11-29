@@ -9,7 +9,7 @@ import { Table as TableType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
 import { Expando, type TypedObject, Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
-import { Table, type TableDef } from '@dxos/react-ui-table';
+import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
 
 // TODO(burdon): Remove deps.
 import { getSchema, schemaPropMapper, TableColumnBuilder } from '../../schema';
@@ -20,11 +20,11 @@ const reactDeps = (...obj: TypedObject[]) => {
   return JSON.stringify(obj);
 };
 
-export type ObjectTableProps = {
+export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role'> & {
   table: TableType;
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
+export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
   const [, forceUpdate] = useState({});
   const space = getSpaceForObject(table);
   const objects = useQuery<TypedObject>(
@@ -163,7 +163,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table }) => {
         data={rows}
         border
         onColumnResize={handleColumnResize}
-        role='grid'
+        role={role ?? 'grid'}
+        stickyHeader={stickyHeader}
       />
       {debug && (
         <div className='flex text-xs'>
