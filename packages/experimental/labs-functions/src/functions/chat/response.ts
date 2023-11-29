@@ -6,6 +6,7 @@ import { type Message as MessageType } from '@braneframe/types';
 import { type Client } from '@dxos/client';
 import { Expando, type Space } from '@dxos/client/echo';
 import { Schema, TextObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { parseMessage } from './parser';
 
@@ -14,14 +15,11 @@ export const createResponse = (client: Client, space: Space, content: string): M
 
   const blocks: MessageType.Block[] = [];
   const result = parseMessage(content, 'json');
+  log.info('??????????????????', { result });
   if (result) {
     const { pre, data, post } = result;
     pre && blocks.push({ timestamp, text: pre });
     const dataArray = Array.isArray(data) ? data : [data];
-
-    // TODO(burdon): Create test.
-    // TODO(burdon): What format does the Thread messenger require?
-    // console.log('response', { dataArray });
 
     blocks.push(
       ...dataArray.map((data): MessageType.Block => {

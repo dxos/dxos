@@ -5,6 +5,8 @@
 import { type BaseChatModel, type BaseChatModelParams } from 'langchain/chat_models/base';
 import { type EmbeddingsParams, type Embeddings } from 'langchain/embeddings/base';
 
+import { PublicKey } from '@dxos/keys';
+
 import { ChainStore } from './store';
 
 export type ChainResourcesOptions<E extends EmbeddingsParams, M extends BaseChatModelParams> = {
@@ -18,15 +20,19 @@ export type ChainResourcesOptions<E extends EmbeddingsParams, M extends BaseChat
   chat?: Partial<M>;
 };
 
-export type ChainResourcesFactory<E extends EmbeddingsParams, M extends BaseChatModelParams> = (
-  options: ChainResourcesOptions<E, M>,
-) => ChainResources<E, M>;
+export type ChainResourcesFactory<
+  E extends EmbeddingsParams = EmbeddingsParams,
+  M extends BaseChatModelParams = BaseChatModelParams,
+> = (options: ChainResourcesOptions<E, M>) => ChainResources<E, M>;
 
 export class ChainResources<
   E extends EmbeddingsParams = EmbeddingsParams,
   M extends BaseChatModelParams = BaseChatModelParams,
 > {
   private readonly _store: ChainStore;
+
+  // TODO(burdon): Get ID from device key. Must be stable.
+  identityKey = PublicKey.random().toHex();
 
   constructor(
     private readonly _id: string,

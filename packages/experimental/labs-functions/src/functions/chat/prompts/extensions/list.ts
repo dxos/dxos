@@ -20,7 +20,11 @@ const handler: PromptGenerator = ({ message, schema }) => {
       [
         'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses',
         'Your entire response should be a single array of JSON objects.',
-        `Each item should contain the following fields: ${schema.props.map(({ id }) => id).join(',')}.`,
+        // TODO(burdon): Only fill at most three fields (needs to be adaptive otherwise will hallucinate).
+        `Each item should contain the following fields: ${schema.props
+          .slice(0, 3)
+          .map(({ id }) => id)
+          .join(',')}.`,
         // ...schema.props
         //   .map(({ id, description }) => description && `The field "${id}" should be the ${description}`)
         //   .filter(Boolean),

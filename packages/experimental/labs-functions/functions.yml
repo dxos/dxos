@@ -58,7 +58,6 @@ triggers:
     subscription:
       type: 'braneframe.File'
       deep: true
-#      delay: 5
 
 #  - function: 'dxos.org/function/github'
 #    subscription:
