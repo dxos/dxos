@@ -46,7 +46,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/vault"
+      "path": "../../sdk/shell"
     },
     {
       "path": "../plugins/plugin-telemetry"

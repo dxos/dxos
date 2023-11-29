@@ -19,6 +19,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@sentry/react": "^7.41.0",
     "classnames": "^2.3.2",
@@ -31,7 +32,6 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/vault": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

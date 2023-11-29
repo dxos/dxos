@@ -39,13 +39,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-shell"
+      "path": "../../sdk/shell"
     },
     {
-      "path": "../../sdk/react-shell"
-    },
-    {
-      "path": "../../sdk/vault"
+      "path": "../../sdk/shell"
     },
     {
       "path": "../../ui/react-ui"

@@ -1,12 +1,12 @@
 {
-  "sourceRoot": "packages/sdk/react-shell/src",
+  "sourceRoot": "packages/sdk/shell/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/sdk/react-shell/dist/bundle"
+        "outputPath": "packages/sdk/shell/dist/bundle"
       },
       "outputs": [
         "{options.outputPath}"
@@ -15,8 +15,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/sdk/react-shell/src/index.ts",
-          "packages/sdk/react-shell/src/testing/index.ts"
+          "packages/sdk/shell/src/react.ts",
+          "packages/sdk/shell/src/testing/index.ts"
         ],
         "platforms": [
           "browser"
@@ -25,20 +25,20 @@
     },
     "e2e": {
       "options": {
-        "playwrightConfigPath": "packages/sdk/react-shell/src/playwright/playwright.config.ts",
-        "serve": "react-shell:storybook",
+        "playwrightConfigPath": "packages/sdk/shell/src/playwright/playwright.config.ts",
+        "serve": "shell:storybook",
         "testPatterns": [
-          "packages/sdk/react-shell/src/playwright/**/*.spec.{ts,js}"
+          "packages/sdk/shell/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/sdk/react-shell/src/**/*"
+          "packages/sdk/shell/src/**/*"
         ]
       }
     },
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "packages/sdk/react-shell/src/**/*.{ts,tsx,js,jsx}"
+          "packages/sdk/shell/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
@@ -50,7 +50,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/sdk/react-shell/.storybook"
+        "configDir": "packages/sdk/shell/.storybook"
       }
     },
     "storybook-build": {
@@ -61,8 +61,8 @@
       },
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "packages/sdk/react-shell/.storybook",
-        "outputDir": "packages/sdk/react-shell/out/react-shell"
+        "configDir": "packages/sdk/shell/.storybook",
+        "outputDir": "packages/sdk/shell/out/shell"
       },
       "outputs": [
         "{options.outputDir}"

@@ -6,7 +6,7 @@ import type { Locator, Page, FrameLocator } from '@playwright/test';
 
 type Scope = Locator | FrameLocator | Page;
 
-export class ShellManager {
+export class ScopedShellManager {
   page!: Page;
 
   authenticatorIsVisible(type: 'device' | 'space', scope?: Scope) {

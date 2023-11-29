@@ -26,7 +26,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-icons": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
-    "@dxos/react-shell": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
@@ -48,7 +48,6 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/vault": "workspace:*",
     "@remix-run/router": "^1.0.2",
     "@sentry/vite-plugin": "^0.7.2",
     "@storybook/addons": "^7.0.6",

@@ -20,8 +20,7 @@ import { osTranslations } from './translations';
 // TODO(wittjosiah): Export to allow for configuration.
 //   This package should be renamed to @dxos/shell and this should be the main export.
 //   The components used to build the shell can be exported from @dxos/shell/react if needed.
-// TODO(wittjosiah): This should be bundled with styles so consumers don't need to use ThemePlugin.
-const main = async (config: Config = new Config()) => {
+export const runShell = async (config: Config = new Config()) => {
   const runtime = new ShellRuntimeImpl(createIFramePort({ channel: DEFAULT_SHELL_CHANNEL }));
   const services = new ClientServicesProxy(createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL }));
   const client = new Client({ config, services });
@@ -38,5 +37,3 @@ const main = async (config: Config = new Config()) => {
     </StrictMode>,
   );
 };
-
-void main();

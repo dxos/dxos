@@ -12,8 +12,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
-const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
-
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
@@ -91,7 +89,6 @@ export default defineConfig({
       ],
     }),
     ThemePlugin({
-      extensions: [osThemeExtension],
       root: __dirname,
       content: [
         resolve(__dirname, './index.html'),

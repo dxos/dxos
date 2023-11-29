@@ -6,7 +6,7 @@ import type { Browser, ConsoleMessage, Page } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { setupPage } from '@dxos/test/playwright';
-import { ShellManager } from '@dxos/vault/testing';
+import { ShellManager } from '@dxos/shell/testing';
 
 export class AppManager {
   page!: Page;

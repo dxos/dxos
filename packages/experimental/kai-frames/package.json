@@ -42,7 +42,7 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
-    "@dxos/react-shell": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",

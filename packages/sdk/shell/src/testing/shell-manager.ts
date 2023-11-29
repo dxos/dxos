@@ -5,9 +5,10 @@
 import type { ConsoleMessage, Page } from '@playwright/test';
 
 import { sleep, Trigger } from '@dxos/async';
-import { ShellManager as NaturalShellManager } from '@dxos/react-shell/testing';
 
-export class ShellManager extends NaturalShellManager {
+import { ScopedShellManager } from './scoped-shell-manager';
+
+export class ShellManager extends ScopedShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
 

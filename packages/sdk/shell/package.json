@@ -1,22 +1,22 @@
 {
-  "name": "@dxos/react-shell",
+  "name": "@dxos/shell",
   "version": "0.3.8",
-  "description": "A React component library for DXOS’s OS experiences",
+  "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./main": "./dist/lib/browser/main.mjs",
-    "./testing": "./dist/lib/browser/testing/index.mjs",
-    "./theme-extensions": "./theme-extensions.js"
+    ".": "./dist/bundle/shell.mjs",
+    "./style.css": "./dist/bundle/style.css",
+    "./react": "./dist/lib/browser/react.mjs",
+    "./testing": "./dist/lib/browser/testing/index.mjs"
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/src/main.d.ts",
   "typesVersions": {
     "*": {
-      "main": [
-        "dist/types/src/main.d.ts"
+      "react": [
+        "dist/types/src/react.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
@@ -25,8 +25,7 @@
   },
   "files": [
     "dist",
-    "src",
-    "theme-extensions.js"
+    "src"
   ],
   "scripts": {
     "chromatic": "chromatic --only-changed --project-token=\"chpt_83a397756fbc63f\" --storybook-build-dir out/react-shell --exit-zero-on-changes"

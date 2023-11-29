@@ -9,7 +9,7 @@ import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-import { namespace } from './util';
+import { namespace } from '../namespace';
 
 // TODO(burdon): Make configurable (NOTE: levels lower than info affect performance).
 const LOG_FILTER = 'info';

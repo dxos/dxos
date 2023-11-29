@@ -11,7 +11,7 @@ import { type Invitation } from '@dxos/react-client/invitations';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPage } from '@dxos/test/playwright';
 
-import { ShellManager } from '../testing';
+import { ScopedShellManager } from '../testing';
 
 // TODO(wittjosiah): Factor out.
 // TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
@@ -19,7 +19,7 @@ const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=
 
 export type PanelType = number | 'identity' | 'devices' | 'spaces' | 'join';
 
-export class InvitationsManager extends ShellManager {
+export class InvitationsManager extends ScopedShellManager {
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();

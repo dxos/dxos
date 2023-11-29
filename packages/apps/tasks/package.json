@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@dxos/config": "workspace:*",
-    "@dxos/vault": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",

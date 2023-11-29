@@ -21,7 +21,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const { ThemeProvider, Tooltip } = await import('@dxos/react-ui');
   const { bindTheme, defaultTheme, dialogMotion, mx, surfaceElevation } = await import('@dxos/react-ui-theme');
   const { ClientContext } = await import('@dxos/react-client');
-  const { osTranslations, Shell } = await import('@dxos/react-shell');
+  const { osTranslations, Shell } = await import('@dxos/shell/react');
 
   const shellTx = bindTheme({
     ...defaultTheme,

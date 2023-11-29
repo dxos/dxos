@@ -50,9 +50,6 @@
         "buildTarget": "composer-app:bundle"
       }
     },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
-    },
     "storybook": {
       "configurations": {
         "ci": {
@@ -64,8 +61,5 @@
         "configDir": "packages/apps/composer-app/.storybook"
       }
     }
-  },
-  "implicitDependencies": [
-    "serve-with-vault"
-  ]
+  }
 }

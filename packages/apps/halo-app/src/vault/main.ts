@@ -9,9 +9,9 @@ import { registerSW } from 'virtual:pwa-register';
 import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
 import { Config, Defaults } from '@dxos/config';
 import { log } from '@dxos/log';
-import { startIFrameRuntime } from '@dxos/vault';
 
-import { namespace } from './namespace';
+import { startIFrameRuntime } from './iframe';
+import { namespace } from '../namespace';
 
 // https://vite-plugin-pwa.netlify.app/frameworks/
 // https://github.com/vite-pwa/vite-plugin-pwa/blob/main/types/index.d.ts
@@ -43,7 +43,7 @@ void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
 void startIFrameRuntime(
   () =>
     // NOTE: Url must be within SharedWorker instantiation for bundling to work as expected.
-    new SharedWorker(new URL('@dxos/vault/shared-worker', import.meta.url), {
+    new SharedWorker(new URL('./shared-worker', import.meta.url), {
       type: 'module',
       name: 'dxos-vault',
     }),

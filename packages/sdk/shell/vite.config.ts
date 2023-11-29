@@ -65,7 +65,7 @@ export default defineConfig({
           }
         }
 
-        const outDir = join(__dirname, 'out');
+        const outDir = join(__dirname, 'dist/bundle');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }

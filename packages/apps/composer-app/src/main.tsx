@@ -40,12 +40,13 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { Config, Defaults, Envs, Local, Remote, createClientServices } from '@dxos/react-client';
+import { Config, Defaults, createClientServices } from '@dxos/react-client';
 import { EchoDatabase, SpaceProxy, TextObject, TypedObject } from '@dxos/react-client/echo';
 import { ProgressBar } from '@dxos/react-ui';
 
 // @ts-ignore
 import './globals';
+import { setupConfig } from './config';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -57,9 +58,7 @@ import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 const appKey = 'composer.dxos.org';
 
 const main = async () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
-  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
+  const config = await setupConfig();
   const services = await createClientServices(config);
   const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
 
