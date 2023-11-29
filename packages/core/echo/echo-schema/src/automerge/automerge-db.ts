@@ -42,7 +42,16 @@ export class AutomergeDb {
   readonly _objectsSystem = new Map<string, EchoObject>();
 
   getObjectById(id: string): EchoObject | undefined {
-    return this._objects.get(id);
+    const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
+
+    if (!obj) {
+      return undefined;
+    }
+    if ((obj as any).__deleted === true) {
+      return undefined;
+    }
+
+    return obj;
   }
 
   add<T extends EchoObject>(obj: T): T {
