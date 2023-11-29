@@ -23,8 +23,9 @@ import {
   debug,
   subscribe,
   proxy,
+  immutable,
 } from '../object/types';
-import { type dxos } from '../proto/gen/schema';
+import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
 
 export type BindOptions = {
@@ -42,12 +43,23 @@ export type ObjectSystem = {
    * Deletion marker.
    */
   deleted: boolean;
+
+  /**
+   * Object type. Reference to the schema.
+   */
+  schema: Schema;
+
+  /**
+   * Object reference ('protobuf' protocol) type.
+   */
+  type: Reference;
 };
 
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb;
   private _doc?: Doc<any>;
   private _docHandle?: DocHandle<any>;
+  private _schema?: Schema;
 
   /**
    * @internal
@@ -71,15 +83,40 @@ export class AutomergeObject implements TypedObjectProperties {
   constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
 
+    if (opts?.schema) {
+      this._schema = opts.schema;
+      this.__system.schema = opts.schema;
+    }
+    // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types. References should not leak outside of the AutomergeObject, It should be internal concept.
+    const type =
+      opts?.type ??
+      (this._schema
+        ? this._schema[immutable]
+          ? Reference.fromLegacyTypename(opts!.schema!.typename)
+          : this._linkObject(this._schema)
+        : undefined);
+    if (type) {
+      this.__system.type = type;
+    }
+
     return this._createProxy(['data']);
   }
 
   get __typename(): string | undefined {
-    return undefined;
+    if (this.__schema) {
+      return this.__schema?.typename;
+    }
+    // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+    const typeRef = this.__system.type;
+    if (typeRef?.protocol === 'protobuf') {
+      return typeRef?.itemId;
+    } else {
+      return undefined;
+    }
   }
 
-  get __schema(): dxos.schema.Schema | undefined {
-    return undefined;
+  get __schema(): Schema | undefined {
+    return this[base]._getSchema();
   }
 
   get __meta(): ObjectMeta {
@@ -155,8 +192,9 @@ export class AutomergeObject implements TypedObjectProperties {
     }
 
     if (this._doc) {
-      this._set([], this._doc);
+      const doc = this._doc;
       this._doc = undefined;
+      this._set([], doc);
     }
   }
 
@@ -189,11 +227,18 @@ export class AutomergeObject implements TypedObjectProperties {
         }
 
         const value = this._get([...path, key as string]);
+
         if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
           return value;
-        } else if (Array.isArray(value)) {
+        }
+        if (value instanceof Reference && value.protocol === 'protobuf') {
+          // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+          return value;
+        }
+        if (Array.isArray(value)) {
           return new AutomergeArray()._attach(this[base], [...path, key as string]);
-        } else if (typeof value === 'object' && value !== null) {
+        }
+        if (typeof value === 'object' && value !== null) {
           return this._createProxy([...path, key as string]);
         }
 
@@ -264,23 +309,23 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
       const reference = this._linkObject(value);
-      // NOTE: Automerge do not support undefined values, so we need to use null instead.
-      return {
-        '@type': REFERENCE_TYPE_TAG,
-        itemId: reference.itemId ?? null,
-        protocol: reference.protocol ?? null,
-        host: reference.host ?? null,
-      };
-    } else if (value instanceof AutomergeArray || Array.isArray(value)) {
+      return encodeReference(reference);
+    }
+    if (value instanceof Reference && value.protocol === 'protobuf') {
+      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+      return encodeReference(value);
+    }
+    if (value instanceof AutomergeArray || Array.isArray(value)) {
       const values: any = value.map((val) => {
         if (val instanceof AutomergeArray || Array.isArray(val)) {
-          // s TODO(mykola): Add support for nested arrays.
+          // TODO(mykola): Add support for nested arrays.
           throw new Error('Nested arrays are not supported');
         }
         return this._encode(val);
       });
       return values;
-    } else if (typeof value === 'object' && value !== null) {
+    }
+    if (typeof value === 'object' && value !== null) {
       Object.freeze(value);
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
@@ -293,10 +338,17 @@ export class AutomergeObject implements TypedObjectProperties {
   _decode(value: any): any {
     if (Array.isArray(value)) {
       return value.map((val) => this._decode(val));
-    } else if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
-      const reference = new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
+    }
+    if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
+      if (value.protocol === 'protobuf') {
+        // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+        return decodeReference(value);
+      }
+
+      const reference = decodeReference(value);
       return this._lookupLink(reference);
-    } else if (typeof value === 'object') {
+    }
+    if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._decode(value)]));
     }
 
@@ -348,6 +400,24 @@ export class AutomergeObject implements TypedObjectProperties {
     this._signal.notifyWrite();
     this._updates.emit();
   };
+
+  /**
+   * @internal
+   */
+  // TODO(dmaretskyi): Make public.
+  _getType() {
+    return this.__system.type;
+  }
+
+  private _getSchema(): Schema | undefined {
+    if (!this._schema && this._database) {
+      const type = this.__system.type;
+      if (type) {
+        this._schema = this._database._resolveSchema(type);
+      }
+    }
+    return this._schema;
+  }
 }
 
 const isValidKey = (key: string | symbol) => {
@@ -365,5 +435,16 @@ const isValidKey = (key: string | symbol) => {
     key === '__deleted'
   );
 };
+
+const encodeReference = (reference: Reference) => ({
+  '@type': REFERENCE_TYPE_TAG,
+  // NOTE: Automerge do not support undefined values, so we need to use null instead.
+  itemId: reference.itemId ?? null,
+  protocol: reference.protocol ?? null,
+  host: reference.host ?? null,
+});
+
+const decodeReference = (value: any) =>
+  new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
 
 const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
