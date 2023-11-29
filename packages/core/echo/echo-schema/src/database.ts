@@ -24,6 +24,7 @@ import { type FilterSource, type Query } from './query';
 /**
  * Database wrapper.
  */
+// TODO(dmaretskyi): Extract interface.
 export class EchoDatabase {
   /**
    * @internal
