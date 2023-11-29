@@ -31,7 +31,8 @@ type ItemProps = {
   onFocus?: () => void;
   onEnter?: (before?: boolean) => void;
   onDelete?: () => void;
-  onIndent?: (left?: boolean) => void;
+  onIndent?: (direction?: 'left' | 'right') => void;
+  onShift?: (direction?: 'up' | 'down') => void;
   onNav?: (item: Item, direction?: 'home' | 'end' | 'up' | 'down') => void;
 } & OutlinerOptions;
 
@@ -45,6 +46,7 @@ const Item = ({
   onEnter,
   onDelete,
   onIndent,
+  onShift,
   onNav,
 }: ItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
@@ -58,31 +60,38 @@ const Item = ({
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
+      // TODO(burdon): Maintain caret position.
+      // TODO(burdon): Go to first/last child of group.
       case 'ArrowUp':
-        // TODO(burdon): Maintain caret position.
-        // TODO(burdon): Go to first/last child of group.
-        onNav?.(item, event.shiftKey ? 'home' : 'up');
+        event.preventDefault();
+        if (event.shiftKey) {
+          onShift?.('up');
+        } else {
+          onNav?.(item, event.metaKey ? 'home' : 'up');
+        }
         break;
       case 'ArrowDown':
-        onNav?.(item, event.shiftKey ? 'end' : 'down');
+        event.preventDefault();
+        if (event.shiftKey) {
+          onShift?.('down');
+        } else {
+          onNav?.(item, event.metaKey ? 'end' : 'down');
+        }
         break;
       case 'Tab':
         event.preventDefault();
-        onIndent?.(event.shiftKey);
+        onIndent?.(event.shiftKey ? 'left' : 'right');
         break;
+      // TODO(burdon): Split line (shift to create new).
       case 'Enter':
-        // TODO(burdon): Split line (shift to create new).
         onEnter?.(!!item.text?.length && inputRef.current?.selectionStart === 0);
         break;
+      // TODO(burdon): Merge with previous if caret at start.
       case 'Backspace':
-        // TODO(burdon): Merge with previous if caret at start.
         if (!item.text?.length) {
           event.preventDefault();
           onDelete?.();
         }
-        break;
-      case 'Escape':
-        // TODO(burdon): Toggle checkbox?
         break;
     }
   };
@@ -161,7 +170,8 @@ type BranchProps = OutlinerOptions & {
   onItemFocus?: (item: Item) => void;
   onItemCreate?: (parent: Item, item: Item, after?: boolean) => Item;
   onItemDelete?: (parent: Item, item: Item) => void;
-  onItemIndent?: (parent: Item, item: Item, left?: boolean) => void;
+  onItemIndent?: (parent: Item, item: Item, direction?: string) => void;
+  onItemShift?: (parent: Item, item: Item, direction?: string) => void;
 } & Pick<ItemProps, 'onNav'>;
 
 const Branch = ({
@@ -172,6 +182,7 @@ const Branch = ({
   onItemCreate,
   onItemDelete,
   onItemIndent,
+  onItemShift,
   onNav,
   ...props
 }: BranchProps) => {
@@ -186,7 +197,8 @@ const Branch = ({
             onFocus={() => onItemFocus?.(item)}
             onEnter={(before) => onItemCreate?.(root, item, before)}
             onDelete={() => onItemDelete?.(root, item)}
-            onIndent={(left) => onItemIndent?.(root, item, left)}
+            onIndent={(direction) => onItemIndent?.(root, item, direction)}
+            onShift={(direction) => onItemShift?.(root, item, direction)}
             onNav={onNav}
             {...props}
           />
@@ -199,6 +211,7 @@ const Branch = ({
               onItemCreate={onItemCreate}
               onItemDelete={onItemDelete}
               onItemIndent={onItemIndent}
+              onItemShift={onItemShift}
               onNav={onNav}
               {...props}
             />
@@ -259,29 +272,54 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
     }
   };
 
-  const handleIndent: BranchProps['onItemIndent'] = (parent, item, left) => {
+  const handleIndent: BranchProps['onItemIndent'] = (parent, item, direction) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
-    if (left) {
-      if (parent) {
-        // Move all siblings.
-        const move = items.splice(idx, items.length - idx);
+    switch (direction) {
+      case 'left': {
+        if (parent) {
+          // Move all siblings.
+          const move = items.splice(idx, items.length - idx);
 
-        // Get parent's parent.
-        const ancestor = getParent(root, parent)!;
-        const ancestorItems = getItems(ancestor);
-        const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
-        ancestorItems.splice(parentIdx + 1, 0, ...move);
+          // Get parent's parent.
+          const ancestor = getParent(root, parent)!;
+          const ancestorItems = getItems(ancestor);
+          const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
+          ancestorItems.splice(parentIdx + 1, 0, ...move);
+        }
+        break;
       }
-    } else {
-      // Can't indent first child.
-      if (idx > 0) {
-        const siblingItems = getItems(items[idx - 1]);
-        siblingItems.splice(siblingItems.length, 0, item);
-        items.splice(idx, 1);
-        // TODO(burdon): [Bug]: last item is sometimes lost (doesn't show up in tree). Mutation race condition?
-        // console.log(item.id === siblingItems[siblingItems.length - 1].id, siblingItems.length);
+
+      case 'right': {
+        // Can't indent first child.
+        if (idx > 0) {
+          const siblingItems = getItems(items[idx - 1]);
+          siblingItems.splice(siblingItems.length, 0, item);
+          items.splice(idx, 1);
+          // TODO(burdon): [Bug]: last item is sometimes lost (doesn't show up in tree). Mutation race condition?
+          // console.log(item.id === siblingItems[siblingItems.length - 1].id, siblingItems.length);
+        }
+        break;
       }
+    }
+  };
+
+  const handleShift: BranchProps['onItemShift'] = (parent, item, direction) => {
+    const idx = parent.items!.findIndex(({ id }) => id === item.id) ?? -1;
+    switch (direction) {
+      case 'up': {
+        if (idx > 0) {
+          const previous = parent.items![idx - 1];
+          parent.items!.splice(idx - 1, 2, item, previous);
+        }
+        break;
+      }
+      case 'down':
+        if (idx < parent.items!.length - 1) {
+          const next = parent.items![idx + 1];
+          parent.items!.splice(idx, 2, next, item);
+        }
+        break;
     }
   };
 
@@ -321,6 +359,7 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
         onItemCreate={onCreate && handleCreate}
         onItemDelete={onDelete && handleDelete}
         onItemIndent={handleIndent}
+        onItemShift={handleShift}
         onNav={handleNav}
         {...props}
       />

@@ -37,6 +37,9 @@ export class SimplePeerTransport implements Transport {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
+  /**
+   * @params opts.config formatted as per https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection
+   */
   constructor(private readonly params: SimplePeerTransportParams) {
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.begin({ id: this._instanceId }));
     log('created connection', params);

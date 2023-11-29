@@ -164,7 +164,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader })
         border
         onColumnResize={handleColumnResize}
         role={role ?? 'grid'}
-        classNames='m-4'
         stickyHeader={stickyHeader}
       />
       {debug && (

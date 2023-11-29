@@ -36,11 +36,13 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
     }
   }
 
+  console.log(docs);
+
   if (docs.length) {
     const config = context.client.config;
     const resources = createOpenAIChainResources({
       // TODO(burdon): Get from context (for agent profile).
-      baseDir: '/tmp/dxos/agent/functions/embedding',
+      baseDir: '/tmp/dxos/agent/functions/embedding/openai',
       apiKey: getKey(config, 'openai.com/api_key')!,
     });
 

@@ -29,15 +29,10 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               switch (type) {
                 case 'node':
                   return node;
-
                 case 'object':
                   return node.data;
-
                 case 'view-object':
                   return { id: `${node.id}-view`, object: node.data };
-
-                default:
-                  return undefined;
               }
             },
           },
