@@ -215,7 +215,7 @@ class SpaceQuerySource implements QuerySource {
     return this._database._backend.spaceKey;
   }
 
-  private _onUpdate = (updateEvent: UpdateEvent) => {
+  private _onUpdate = (updateEvent: { spaceKey: PublicKey; itemsUpdated: { id: string }[] }) => {
     if (!this._filter) {
       return;
     }
@@ -225,7 +225,10 @@ class SpaceQuerySource implements QuerySource {
       return (
         !this._results ||
         this._results.find((result) => result.id === object.id) ||
-        (this._database._objects.has(object.id) && filterMatch(this._filter!, this._database._objects.get(object.id)!))
+        (this._database._objects.has(object.id) &&
+          filterMatch(this._filter!, this._database._objects.get(object.id)!)) ||
+        (this._database.automerge._objects.has(object.id) &&
+          filterMatch(this._filter!, this._database.automerge._objects.get(object.id)!))
       );
     });
 
@@ -274,6 +277,7 @@ class SpaceQuerySource implements QuerySource {
 
     // TODO(dmaretskyi): Allow to specify a retainer.
     this._database._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+    this._database.automerge._updateEvent.on(new Context(), this._onUpdate, { weak: true });
 
     this._results = undefined;
     this.changed.emit();
