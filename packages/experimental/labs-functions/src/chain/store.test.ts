@@ -25,7 +25,7 @@ describe('store', () => {
     const store = new ChainStore(new FakeEmbeddings());
     await store.initialize();
     await store.addDocuments([documents[0]]);
-    expect(store.stats.documents).to.eq(1);
+    expect(store.info.documents).to.eq(1);
     expect(await store.hasDocument(documents[0])).to.be.true;
     expect(await store.hasDocument(documents[1])).to.be.false;
   });

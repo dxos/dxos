@@ -10,15 +10,13 @@ import { parseMessage } from './parser';
 
 describe('Parser', () => {
   test('JSON text', () => {
-    const data = {
-      projects: [
-        { name: 'DXOS', url: 'https://dxos.org' },
-        { name: 'Braneframe, Inc.', url: 'https://braneframe.com' },
-        { name: 'Blue Yard', url: 'https://blueyard.com' },
-      ],
-    };
+    const data = [
+      { name: 'DXOS', url: 'https://dxos.org' },
+      { name: 'Braneframe, Inc.', url: 'https://braneframe.com' },
+      { name: 'Blue Yard', url: 'https://blueyard.com' },
+    ];
 
-    const formatJson = (data: any) => '```json ' + JSON.stringify(data) + ' ```';
+    const formatJson = (data: any) => '```json\n' + JSON.stringify(data, undefined, 2) + '\n```';
 
     const content = [
       "Here's an example of a JSON document listing\n the founders of Blue Yard:",
@@ -27,7 +25,6 @@ describe('Parser', () => {
     ].join('\n');
 
     const result = parseMessage(content, 'json');
-    expect(result?.data).to.exist;
-    expect(result?.data.projects).to.have.length(data.projects.length);
+    expect(result?.data).to.have.length(data.length);
   });
 });

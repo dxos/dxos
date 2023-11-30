@@ -27,7 +27,7 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject, SpaceState } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
 
-import { backupSpace } from './backup';
+import { exportData } from './backup';
 import {
   AwaitingObject,
   DialogRestoreSpace,
@@ -498,17 +498,17 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               break;
             }
 
-            case SpaceAction.BACKUP: {
+            case SpaceAction.EXPORT: {
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
                 // TODO(wittjosiah): Expose translations helper from theme plugin provides.
-                const backupBlob = await backupSpace(space, 'unnamed document');
-                const spaceName = space.properties.name || 'unnamed space';
+                const backupBlob = await exportData(space, space.key.toHex());
+                const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
                 const url = URL.createObjectURL(backupBlob);
                 // TODO(burdon): See DebugMain useFileDownload
                 const element = document.createElement('a');
                 element.setAttribute('href', url);
-                element.setAttribute('download', `${spaceName} backup.zip`);
+                element.setAttribute('download', `${filename}.zip`);
                 element.setAttribute('target', 'download');
                 element.click();
                 return true;
@@ -516,7 +516,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               break;
             }
 
-            case SpaceAction.RESTORE: {
+            case SpaceAction.IMPORT: {
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_DIALOG,
