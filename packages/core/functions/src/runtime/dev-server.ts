@@ -86,7 +86,7 @@ export class DevServer {
       }
     });
 
-    this._port = await getPort({ port: 7200, portRange: [7200, 7299] });
+    this._port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
     this._server = app.listen(this._port);
 
     try {
