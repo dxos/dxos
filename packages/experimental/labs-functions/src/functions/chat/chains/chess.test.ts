@@ -6,12 +6,12 @@ import { type TypedObject } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { generator } from './chess';
-import { createChainResources } from '../../../chain';
+import { getResources } from './testing';
 import { type PromptContext } from '../request';
 
-describe('chess', () => {
+describe.skip('chess', () => {
   test('chess', async () => {
-    const resources = createChainResources('ollama');
+    const resources = getResources();
     const context: PromptContext = {
       object: {
         pgn: '1. e4 e5',

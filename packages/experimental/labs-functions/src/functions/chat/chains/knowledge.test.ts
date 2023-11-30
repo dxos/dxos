@@ -3,14 +3,12 @@
 //
 
 import { expect } from 'chai';
-import fs from 'fs';
 
 import { describe, test } from '@dxos/test';
 
 import { generator } from './knowledge';
-import { type ChainResourcesOptions, type ChainDocument } from '../../../chain';
-import { createOpenAIChainResources, createOllamaChainResources } from '../../../chain';
-import { getConfig, getKey } from '../../../util';
+import { getResources } from './testing';
+import { type ChainDocument } from '../../../chain';
 
 const docs: ChainDocument[] = [
   'DXOS consists of HALO, ECHO and MESH.',
@@ -23,46 +21,7 @@ const docs: ChainDocument[] = [
   pageContent: text,
 }));
 
-describe.only('knowledge', () => {
-  const baseDir = '/tmp/dxos/agent/functions/chat/chain';
-  before(() => {
-    fs.rmSync(baseDir, { recursive: true, force: true });
-  });
-
-  // TODO(burdon): Factor out to common testing set-up.
-  const getResources = (
-    type = process.env.DX_AI_MODEL ?? 'openai',
-    options: Partial<ChainResourcesOptions<any, any>> = {},
-  ) => {
-    const config = getConfig()!;
-
-    switch (type) {
-      case 'openai':
-        return createOpenAIChainResources({
-          baseDir,
-          apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
-          chat: {
-            temperature: 0,
-            modelName: 'gpt-3.5-turbo-1106',
-          },
-          ...options,
-        });
-
-      case 'ollama':
-        return createOllamaChainResources({
-          baseDir,
-          chat: {
-            temperature: 0,
-            model: 'llama2',
-          },
-          ...options,
-        });
-
-      default:
-        throw new Error(`Invalid type: ${type}`);
-    }
-  };
-
+describe.skip('knowledge', () => {
   test('add and remove documents', async () => {
     const resources = getResources();
     await resources.store.initialize();
@@ -96,10 +55,10 @@ describe.only('knowledge', () => {
       await resources.store.initialize();
       await resources.store.addDocuments(docs);
 
-      const sequence = generator(resources, () => ({}));
+      const sequence = generator(resources, () => ({}), { noTrainingData: true });
       const call = async (input: string) => {
+        console.log(`\n> ${input}\n`);
         const result = await sequence.invoke(input);
-        console.log(`\n> ${input}`);
         console.log(result);
         return result;
       };

@@ -40,8 +40,8 @@ export const createContext = (space: Space, messageContext: MessageType.Context 
 export type SequenceTest = (context: PromptContext) => boolean;
 
 type SequenceOptions = {
-  noStore?: boolean;
-  storeOnly?: boolean; // Store only.
+  noVectorStore?: boolean;
+  noTrainingData?: boolean;
 };
 
 export type SequenceGenerator = (

@@ -8,6 +8,7 @@ import { Thread as ThreadType, Message as MessageType } from '@braneframe/types'
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { createContext, createSequence } from './request';
 import { createResponse } from './response';
@@ -51,15 +52,21 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       Array.from(activeThreads).map(async (thread) => {
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
-          const context = createContext(space, message.context);
-          const sequence = createSequence(resources, context);
-          const text = message.blocks
-            .map((message) => message.text)
-            .filter(Boolean)
-            .join('\n');
-          const response = await sequence.invoke(text);
+          let blocks: MessageType.Block[];
+          try {
+            const context = createContext(space, message.context);
+            const sequence = createSequence(resources, context);
+            const text = message.blocks
+              .map((message) => message.text)
+              .filter(Boolean)
+              .join('\n');
+            const response = await sequence.invoke(text);
+            blocks = createResponse(space, context, response);
+          } catch (error) {
+            log.error('processing message', error);
+            blocks = [{ text: 'There was an error generating the response.' }];
+          }
 
-          const blocks = createResponse(space, context, response);
           thread.messages.push(
             new MessageType(
               {
