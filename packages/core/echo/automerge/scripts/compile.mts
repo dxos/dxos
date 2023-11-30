@@ -53,10 +53,10 @@ for (const platform of ['node', 'browser'] as const) {
                 path: args.path,
               }
             }
-          });
+          }); 
         },
       },
-    ],
+    ], 
   });
 
   if (platform === 'node') {
@@ -91,3 +91,5 @@ await copyFile(
   join(dirname(await require.resolve('@automerge/automerge-wasm')), '../bundler/automerge_wasm_bg.wasm'),
   'dist/lib/browser/automerge_wasm_bg.wasm',
 );
+
+// bust cache
