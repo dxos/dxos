@@ -25,8 +25,10 @@ import { ShellManager } from './shell-manager';
 /**
  * Creates services provider connected via worker.
  */
-// TODO(wittjosiah): Make this the default.
-export const fromWorker = async (config: Config = new Config()) => {
+export const fromWorker = async (
+  config: Config = new Config(),
+  options: Omit<WorkerClientServicesParams, 'config' | 'createWorker'> = {},
+) => {
   return new WorkerClientServices({
     config,
     createWorker: () =>
@@ -34,6 +36,7 @@ export const fromWorker = async (config: Config = new Config()) => {
         type: 'module',
         name: 'dxos-client-worker',
       }),
+    ...options,
   });
 };
 

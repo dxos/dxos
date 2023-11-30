@@ -12,7 +12,7 @@
     "./react": "./dist/lib/browser/react.mjs",
     "./testing": "./dist/lib/browser/testing/index.mjs"
   },
-  "types": "dist/types/src/main.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "react": [

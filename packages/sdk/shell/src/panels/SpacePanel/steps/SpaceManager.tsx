@@ -5,6 +5,7 @@
 import { Placeholder, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React, { type Dispatch, type SetStateAction, useCallback, useState } from 'react';
 
+import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -36,6 +37,7 @@ export type SpaceManagerProps = SpaceManagerImplProps & {};
 export const SpaceManager = (props: SpaceManagerProps) => {
   const { space } = props;
   const { t } = useTranslation('os');
+  const config = useConfig();
 
   const invitations = useSpaceInvitations(space?.key);
 
@@ -56,8 +58,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
           type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.SHARED_SECRET,
         });
-        // TODO(wittjosiah): Don't depend on NODE_ENV.
-        if (invitation && process.env.NODE_ENV !== 'production') {
+        if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
           invitation.subscribe(onInvitationEvent);
         }
       }, [space]),
@@ -71,8 +72,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
           type: Invitation.Type.MULTIUSE,
           authMethod: Invitation.AuthMethod.NONE,
         });
-        // TODO(wittjosiah): Don't depend on NODE_ENV.
-        if (invitation && process.env.NODE_ENV !== 'production') {
+        if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
           invitation.subscribe(onInvitationEvent);
         }
       }, [space]),

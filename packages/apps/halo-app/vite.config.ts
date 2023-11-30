@@ -14,10 +14,8 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensure relative path to assets.
   server: {
     host: true,
-    port: 3967,
     https:
       process.env.HTTPS === 'true'
         ? {
@@ -26,6 +24,7 @@ export default defineConfig({
           }
         : false,
     fs: {
+      strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow

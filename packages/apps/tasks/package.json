@@ -14,6 +14,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

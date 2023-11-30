@@ -2711,6 +2711,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/shell':
+        specifier: workspace:*
+        version: link:../../sdk/shell
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2859,12 +2862,6 @@ importers:
       '@braneframe/plugin-telemetry':
         specifier: workspace:*
         version: link:../plugins/plugin-telemetry
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config

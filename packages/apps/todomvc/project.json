@@ -24,10 +24,7 @@
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
-        "serve": "todomvc:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
+        "serve": "todomvc:preview",
         "testPatterns": [
           "packages/apps/todomvc/src/playwright/**/*.spec.{ts,js}"
         ],
@@ -58,12 +55,6 @@
       "options": {
         "buildTarget": "todomvc:bundle"
       }
-    },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
     }
-  },
-  "implicitDependencies": [
-    "serve-with-vault"
-  ]
+  }
 }

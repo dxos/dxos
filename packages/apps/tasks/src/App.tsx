@@ -12,14 +12,12 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { ClientProvider, Config, Dynamics, Local, Defaults, useShell } from '@dxos/react-client';
+import { ClientProvider, useShell } from '@dxos/react-client';
 import { useSpace, useQuery } from '@dxos/react-client/echo';
 
 import { TaskList } from './TaskList';
+import { getConfig } from './config';
 import { Task, types } from './proto';
-
-// Dynamics allows configuration to be supplied by the hosting KUBE.
-const config = async () => new Config(await Dynamics(), Local(), Defaults());
 
 export const TaskListContainer = () => {
   const { spaceKey } = useParams<{ spaceKey: string }>();
@@ -103,7 +101,7 @@ const router = createBrowserRouter([
 export const App = () => {
   return (
     <ClientProvider
-      config={config}
+      config={getConfig}
       onInitialized={async (client) => {
         // TODO(wittjosiah): ClientProvider should support adding schemas.
         client.addSchema(types);

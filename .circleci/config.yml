@@ -128,13 +128,11 @@ jobs:
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
-            REMOTE_SOURCE: http://localhost:3967/vault.html
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
             NODE_OPTIONS: --max_old_space_size=10240
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
           environment:
-            REMOTE_SOURCE: http://localhost:3967/vault.html
             # TODO(wittjosiah): Remove. Currently need because e2e seems to be re-running bundling.
             NODE_OPTIONS: --max_old_space_size=10240
       - run:
