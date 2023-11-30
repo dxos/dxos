@@ -9,7 +9,7 @@ import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable
 import { str } from '../../../util';
 import { type SequenceGenerator, type SequenceTest } from '../request';
 
-export const test: SequenceTest = ({ object }) => object?.__typename === 'braneframe.Grid';
+export const test: SequenceTest = ({ schema, object }) => !!(schema && object?.__typename === 'braneframe.Grid');
 
 export const generator: SequenceGenerator = (resources, getContext) => {
   return RunnableSequence.from([
