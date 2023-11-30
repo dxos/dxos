@@ -11,7 +11,14 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { type Hypergraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
+import {
+  type Hypergraph,
+  EchoDatabase,
+  forceUpdate,
+  setStateFromSnapshot,
+  type TypedObject,
+  type AutomergeContext,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -81,6 +88,7 @@ export class SpaceProxy implements Space {
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
     graph: Hypergraph,
+    automergeContext: AutomergeContext,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -96,7 +104,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoDatabase(this._itemManager, this._dbBackend, graph);
+    this._db = new EchoDatabase(this._itemManager, this._dbBackend, graph, automergeContext);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -276,6 +284,18 @@ export class SpaceProxy implements Space {
 
   private async _initializeDb() {
     await this._dbBackend!.open(this._modelFactory);
+
+    {
+      let automergeRoot;
+      if (this._data.pipeline?.appliedEpoch) {
+        invariant(checkCredentialType(this._data.pipeline.appliedEpoch, 'dxos.halo.credentials.Epoch'));
+        automergeRoot = this._data.pipeline.appliedEpoch.subject.assertion.automergeRoot;
+      }
+      await this._db.automerge.open({
+        rootUrl: automergeRoot,
+      });
+    }
+
     log('ready');
     this._databaseInitialized.wake();
 

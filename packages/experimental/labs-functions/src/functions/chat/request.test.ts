@@ -24,7 +24,6 @@ describe.skip('RequestBuilder', () => {
       await space.db.flush();
 
       // console.log(client.experimental.types);
-
       // const builder = new RequestBuilder(client);
       // builder.setContext(generator.getSchema(TestSchemaType.project)!);
       // console.log(JSON.stringify(builder.build(), null, 2));

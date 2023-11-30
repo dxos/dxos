@@ -1,0 +1,13 @@
+diff --git a/dist/DocHandle.js b/dist/DocHandle.js
+index 04700422264e52631ca282d20cce2af2fd6e6015..a8c4a79d941edbcb5c0a1a165f0e12f46fbe0b44 100644
+--- a/dist/DocHandle.js
++++ b/dist/DocHandle.js
+@@ -195,7 +195,7 @@ export class DocHandle//
+         if (!Array.isArray(awaitStates))
+             awaitStates = [awaitStates];
+         return Promise.any(awaitStates.map(state => waitFor(this.#machine, s => s.matches(state), {
+-            timeout: this.#timeoutDelay * 2, // use a longer delay here so as not to race with other delays
++            timeout: Infinity, // use a longer delay here so as not to race with other delays
+         })));
+     }
+     // PUBLIC

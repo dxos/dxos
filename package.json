@@ -145,7 +145,8 @@
       "@nx/vite@16.5.4": "patches/@nx__vite@16.5.4.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
-      "uuid@8.3.2": "patches/uuid@8.3.2.patch"
+      "uuid@8.3.2": "patches/uuid@8.3.2.patch",
+      "@automerge/automerge-repo@1.0.19": "patches/@automerge__automerge-repo@1.0.19.patch"
     }
   }
 }

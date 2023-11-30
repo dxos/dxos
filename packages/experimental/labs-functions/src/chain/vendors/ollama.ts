@@ -6,6 +6,7 @@ import { type BaseChatModelParams } from 'langchain/chat_models/base';
 import { ChatOllama } from 'langchain/chat_models/ollama';
 import { type EmbeddingsParams } from 'langchain/embeddings/base';
 import { OllamaEmbeddings } from 'langchain/embeddings/ollama';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import { ChainResources, type ChainResourcesOptions } from '../resources';
 
@@ -51,6 +52,10 @@ export interface OllamaInput {
   vocabOnly?: boolean;
 }
 
+export const defaultOllamaInput: Partial<OllamaInput> = {
+  model: 'llama2',
+};
+
 export type OllamaChainResourcesOptions = ChainResourcesOptions<
   OllamaEmbeddingsParams,
   OllamaInput & BaseChatModelParams
@@ -67,9 +72,14 @@ export const createOllamaChainResources = (options: OllamaChainResourcesOptions)
     ...options.embeddings,
   });
 
-  const chat = new ChatOllama({
-    ...options.chat,
-  });
+  const chat = new ChatOllama(
+    defaultsDeep(
+      {
+        ...options.chat,
+      },
+      defaultOllamaInput,
+    ),
+  );
 
   return new ChainResources('ollama', embeddings, chat, options);
 };
