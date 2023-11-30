@@ -16,7 +16,7 @@ export * from './List';
 export * from './Main';
 export * from './Message';
 export * from './Popover';
-export * from './ProgressBar';
+export * from './Status';
 export * from './ScrollArea';
 export * from './Select';
 export * from './Separator';
