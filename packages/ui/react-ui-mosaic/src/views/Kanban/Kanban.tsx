@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import {
