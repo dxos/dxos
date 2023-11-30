@@ -1,7 +1,7 @@
 import React, { createElement, useEffect } from 'react';
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { osTranslations } from '../src';
+import { osTranslations } from '../src/translations';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },

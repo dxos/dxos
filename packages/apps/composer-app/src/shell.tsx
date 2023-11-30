@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos/shell/style.css';
-import { runShell } from '@dxos/shell';
+import '@dxosTheme';
+
+import { runShell } from '@dxos/shell/react';
 
 import { setupConfig } from './config';
 

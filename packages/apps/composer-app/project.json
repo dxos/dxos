@@ -24,10 +24,7 @@
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
-        "serve": "composer-app:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
+        "serve": "composer-app:preview",
         "testPatterns": [
           "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
         ],
