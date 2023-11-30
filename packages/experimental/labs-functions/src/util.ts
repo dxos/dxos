@@ -8,9 +8,17 @@ import path from 'node:path';
 import * as process from 'node:process';
 
 import { Config } from '@dxos/config';
+import { type EchoObject, type OperatorFilter, type Schema, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Factor out.
+
+export const isType =
+  <T extends TypedObject>(schema: Schema): OperatorFilter<T> =>
+  (object: T | undefined): boolean =>
+    object?.__typename === schema.typename;
+
+export const isTypedObject = (object: EchoObject) => object instanceof TypedObject;
 
 export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
 

@@ -28,7 +28,7 @@ export type ChainDocument = Document & {
   };
 };
 
-export type ChainDocumentInfo = { id: string; hash: ArrayBuffer };
+export type ChainDocumentInfo = { id: string; hash: string };
 
 export type ChainStoreOptions = {
   id?: string;
@@ -46,9 +46,10 @@ export class ChainStore {
     return this._documentById.size;
   }
 
-  get stats() {
+  get info() {
     return {
       version: VERSION,
+      baseDir: this.baseDir,
       documents: this._documentById.size,
     };
   }
@@ -66,7 +67,7 @@ export class ChainStore {
 
   async initialize() {
     try {
-      if (this.baseDir) {
+      if (this.baseDir && fs.existsSync(this.baseDir)) {
         this._vectorStore = await FaissStore.load(this.baseDir, this._embeddings);
 
         // Check version.
@@ -86,7 +87,7 @@ export class ChainStore {
       this._vectorStore = await FaissStore.fromDocuments([], this._embeddings);
     }
 
-    log.info('initialized', { baseDir: this.baseDir, version: VERSION });
+    log.info('initialized', this.info);
     return this;
   }
 
@@ -133,9 +134,10 @@ export class ChainStore {
 
       // Update index.
       for (let i = 0; i < documentIds.length; ++i) {
-        const hash = await subtleCrypto.digest('SHA-256', Buffer.from(docs[i].pageContent));
+        const digest = await subtleCrypto.digest('SHA-256', Buffer.from(docs[i].pageContent));
+        const hash = Buffer.from(digest).toString('hex');
         this._documentById.set(metaKey(docs[i].metadata), { id: documentIds[i], hash });
-        this._documentByHash.set(Buffer.from(hash).toString('hex'), documentIds[i]);
+        this._documentByHash.set(hash, documentIds[i]);
       }
     }
   }

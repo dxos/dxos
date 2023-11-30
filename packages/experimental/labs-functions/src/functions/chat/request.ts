@@ -2,55 +2,67 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ChatMessage } from 'langchain/schema';
+import { type RunnableSequence } from 'langchain/schema/runnable';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { Schema, type TypedObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
-import { createPrompt } from './prompts';
+import { sequences } from './chains';
+import type { ChainResources } from '../../chain';
 
-export const createRequest = (space: Space, message: MessageType): ChatMessage[] => {
-  const text = message.blocks
-    .map((message) => message.text)
-    .filter(Boolean)
-    .join('\n');
+export type PromptContext = {
+  object?: TypedObject;
+  schema?: Schema;
+};
 
-  let context: TypedObject | undefined;
-  if (message?.context.object) {
-    const { objects } = space.db.query({ id: message.context.object });
-    context = objects[0];
+export const createContext = (space: Space, messageContext: MessageType.Context | undefined): PromptContext => {
+  let object: TypedObject | undefined;
+  if (messageContext?.object) {
+    const { objects } = space.db.query({ id: messageContext?.object });
+    object = objects[0];
   }
 
-  // TODO(burdon): Expect client to set schema.
-  // TODO(burdon): Get from type collection.
+  // TODO(burdon): How to infer schema from message/context/prompt.
   let schema: Schema | undefined;
-  if (context?.__typename === 'braneframe.Grid') {
-    schema = new Schema({
-      typename: 'example.com/schema/project',
-      props: [
-        {
-          id: 'name',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'description',
-          description: 'Short summary',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'website',
-          description: 'Web site URL (not github)',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'repo',
-          description: 'Github repo URL',
-          type: Schema.PropType.STRING,
-        },
-      ],
-    });
+  if (object?.__typename === 'braneframe.Grid') {
+    const { objects: schemas } = space.db.query(Schema.filter());
+    schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
   }
 
-  return createPrompt({ message: text, context, schema })!;
+  return {
+    object,
+    schema,
+  };
+};
+
+export type SequenceTest = (context: PromptContext) => boolean;
+
+type SequenceOptions = {
+  noVectorStore?: boolean;
+  noTrainingData?: boolean;
+};
+
+export type SequenceGenerator = (
+  resources: ChainResources,
+  getContext: () => PromptContext,
+  options?: SequenceOptions,
+) => RunnableSequence;
+
+// TODO(burdon): Create registry class.
+export const createSequence = (
+  resources: ChainResources,
+  context: PromptContext,
+  options: SequenceOptions = {},
+): RunnableSequence => {
+  log.info('create sequence', {
+    context: {
+      object: { id: context.object?.id, schema: context.object?.__typename },
+      schema: context.schema?.typename,
+    },
+  });
+
+  const { generator } = sequences.find(({ test }) => test(context))!;
+  return generator(resources, () => context, options);
 };
