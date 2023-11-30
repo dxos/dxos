@@ -14,8 +14,9 @@ export const test: SequenceTest = ({ object }) => object?.__typename === 'branef
 export const generator: SequenceGenerator = (resources, getContext) => {
   return RunnableSequence.from([
     {
-      // TODO(burdon): Use zod (incl. descriptions).
+      // TODO(burdon): Use zod (incl. descriptions). See experimental (zodToJsonSchema).
       // TODO(burdon): Only fill at most three fields (needs to be adaptive otherwise will hallucinate).
+      //  Test if marking fields as optional helps.
       fields: () => {
         const { schema } = getContext();
         return schema?.props
