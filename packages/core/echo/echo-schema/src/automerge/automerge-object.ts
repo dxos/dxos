@@ -85,8 +85,8 @@ export class AutomergeObject implements TypedObjectProperties {
 
     if (opts?.schema) {
       this._schema = opts.schema;
-      this.__system.schema = opts.schema;
     }
+
     // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types. References should not leak outside of the AutomergeObject, It should be internal concept.
     const type =
       opts?.type ??
@@ -146,7 +146,7 @@ export class AutomergeObject implements TypedObjectProperties {
   [base] = this as any;
 
   get [db](): EchoDatabase | undefined {
-    return undefined;
+    return this[base]._database._echoDatabase;
   }
 
   get [debug](): string {
@@ -154,11 +154,11 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   [subscribe](callback: (value: any) => void): () => void {
-    this._docHandle?.on('change', callback);
-    this._updates.on(callback);
+    this[base]._docHandle?.on('change', callback);
+    this[base]._updates.on(callback);
     return () => {
-      this._docHandle?.off('change', callback);
-      this._updates.off(callback);
+      this[base]._docHandle?.off('change', callback);
+      this[base]._updates.off(callback);
     };
   }
 

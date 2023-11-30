@@ -27,19 +27,22 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  _objects = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, EchoObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
 
-  readonly #echoDatabase: EchoDatabase;
+  /**
+   * @internal
+   */
+  readonly _echoDatabase: EchoDatabase;
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     echoDatabase: EchoDatabase,
   ) {
-    this.#echoDatabase = echoDatabase;
+    this._echoDatabase = echoDatabase;
   }
 
   async open(spaceState: SpaceState) {
@@ -57,7 +60,7 @@ export class AutomergeDb {
 
     this._docHandle.on('change', (event) => {
       this._updateEvent.emit({
-        spaceKey: this.#echoDatabase._backend.spaceKey,
+        spaceKey: this._echoDatabase._backend.spaceKey,
         itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
       });
     });
@@ -71,7 +74,7 @@ export class AutomergeDb {
   }
 
   getObjectById(id: string): EchoObject | undefined {
-    const obj = this._objects.get(id) ?? this.#echoDatabase._objects.get(id);
+    const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
 
     if (!obj) {
       return undefined;
@@ -85,7 +88,7 @@ export class AutomergeDb {
 
   add<T extends EchoObject>(obj: T): T {
     if (obj[base] instanceof TypedObject) {
-      return this.#echoDatabase.add(obj);
+      return this._echoDatabase.add(obj);
     }
 
     if (obj[base]._database) {
