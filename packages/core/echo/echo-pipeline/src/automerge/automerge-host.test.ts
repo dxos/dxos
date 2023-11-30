@@ -1,9 +1,8 @@
-import { describe, test } from "@dxos/test";
-import { AutomergeHost } from "./automerge-host";
-import expect from 'expect';
-import { StorageType, createStorage } from "@dxos/random-access-storage";
 import { sleep } from "@dxos/async";
-import { log } from "@dxos/log";
+import { StorageType, createStorage } from "@dxos/random-access-storage";
+import { describe, test } from "@dxos/test";
+import expect from 'expect';
+import { AutomergeHost } from "./automerge-host";
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
