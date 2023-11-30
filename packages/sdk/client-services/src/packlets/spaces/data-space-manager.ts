@@ -5,7 +5,13 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { type CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
-import { type DataServiceSubscriptions, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import {
+  type AutomergeHost,
+  type DataServiceSubscriptions,
+  type MetadataStore,
+  type Space,
+  type SpaceManager,
+} from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -71,6 +77,9 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
+
+    // TODO(dmaretskyi): Make required.
+    private readonly _automergeHost?: AutomergeHost,
   ) {}
 
   // TODO(burdon): Remove.
@@ -257,6 +266,7 @@ export class DataSpaceManager {
         },
       },
       cache: metadata.cache,
+      automergeHost: this._automergeHost,
     });
 
     if (metadata.state !== SpaceState.INACTIVE) {

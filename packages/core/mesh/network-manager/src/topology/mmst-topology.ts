@@ -57,7 +57,7 @@ export class MMSTTopology implements Topology {
     const { connected, candidates } = this._controller.getState();
     // Run the algorithms if we have first candidates, ran it before, or have more connections than needed.
     if (this._sampleCollected || connected.length > this._maxPeers || candidates.length > 0) {
-      log.info('Running the algorithm.');
+      log('Running the algorithm.');
       this._sampleCollected = true;
       this._runAlgorithm();
     }
@@ -82,7 +82,7 @@ export class MMSTTopology implements Topology {
     // TODO(nf): does this rate limiting/flap dampening logic belong here or in the SwarmController?
     if (connected.length > this._maxPeers) {
       // Disconnect extra peers.
-      log.info(`disconnect ${connected.length - this._maxPeers} peers.`);
+      log(`disconnect ${connected.length - this._maxPeers} peers.`);
       const sorted = sortByXorDistance(connected, ownPeerId)
         .reverse()
         .slice(0, this._maxPeers - connected.length);
@@ -94,16 +94,16 @@ export class MMSTTopology implements Topology {
 
       if (Date.now() - this._lastAction.getTime() > MIN_UPDATE_INTERVAL) {
         for (const peer of sorted.slice(0, MAX_CHANGES_PER_UPDATE)) {
-          log.info(`Disconnect ${peer}.`);
+          log(`Disconnect ${peer}.`);
           this._controller.disconnect(peer);
         }
         this._lastAction = new Date();
       } else {
-        log.info('rate limited discconnect');
+        log('rate limited discconnect');
       }
     } else if (connected.length < this._originateConnections) {
       // Connect new peers to reach desired quota.
-      log.info(`connect ${this._originateConnections - connected.length} peers.`);
+      log(`connect ${this._originateConnections - connected.length} peers.`);
       const sample = candidates.sort(() => Math.random() - 0.5).slice(0, this._sampleSize);
       const sorted = sortByXorDistance(sample, ownPeerId).slice(0, this._originateConnections - connected.length);
 
@@ -112,12 +112,12 @@ export class MMSTTopology implements Topology {
       }
       if (Date.now() - this._lastAction.getTime() > MIN_UPDATE_INTERVAL) {
         for (const peer of sorted.slice(0, MAX_CHANGES_PER_UPDATE)) {
-          log.info(`Connect ${peer}.`);
+          log(`Connect ${peer}.`);
           this._controller.connect(peer);
         }
         this._lastAction = new Date();
       } else {
-        log.info('rate limited connect');
+        log('rate limited connect');
       }
     }
   }

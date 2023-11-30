@@ -12,6 +12,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
+import { type AutomergeContext } from './automerge/automerge-context';
 import { AutomergeDb } from './automerge/automerge-db';
 import { AutomergeObject } from './automerge/automerge-object';
 import { type Hypergraph } from './hypergraph';
@@ -23,6 +24,7 @@ import { type FilterSource, type Query } from './query';
 /**
  * Database wrapper.
  */
+// TODO(dmaretskyi): Extract interface.
 export class EchoDatabase {
   /**
    * @internal
@@ -41,7 +43,7 @@ export class EchoDatabase {
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
-  public readonly automerge = new AutomergeDb(this._graph, this);
+  public readonly automerge: AutomergeDb;
 
   constructor(
     /**
@@ -50,7 +52,10 @@ export class EchoDatabase {
     readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
     private readonly _graph: Hypergraph,
+    automergeContext: AutomergeContext,
   ) {
+    this.automerge = new AutomergeDb(this._graph, automergeContext, this);
+
     this._backend.itemUpdate.on(this._update.bind(this));
 
     // Load all existing objects.
