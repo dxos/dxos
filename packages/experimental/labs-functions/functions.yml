@@ -19,6 +19,11 @@ functions:
     handler: 'email'
     description: 'Email Sync'
 
+  - id: 'dxos.org/function/email-extractor'
+    name: 'email-extractor'
+    handler: 'email-extractor'
+    description: 'Email Extractor'
+
   - id: 'dxos.org/function/embedding'
     name: 'embedding'
     handler: 'embedding'

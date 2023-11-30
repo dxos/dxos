@@ -6168,6 +6168,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@octokit/rest':
         specifier: ^19.0.5
         version: 19.0.5

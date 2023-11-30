@@ -12,9 +12,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { type AutomergeContext } from './automerge/automerge-context';
-import { AutomergeDb } from './automerge/automerge-db';
-import { AutomergeObject } from './automerge/automerge-object';
+import { type AutomergeContext, AutomergeDb, AutomergeObject } from './automerge';
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';

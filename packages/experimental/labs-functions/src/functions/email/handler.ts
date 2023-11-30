@@ -7,20 +7,18 @@ import type { Config as ImapConfig } from 'imap';
 import { Message as MessageType, Mailbox as MailboxType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client/echo';
-import { matchKeys } from '@dxos/echo-schema';
-import { type FunctionHandler } from '@dxos/functions';
+import { hasType, matchKeys } from '@dxos/echo-schema';
+import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { ImapProcessor } from './imap-processor';
 import { getKey } from '../../util';
 
-export const handler: FunctionHandler<any> = async ({
-  event: { space: spaceKey, objects: mailboxIds },
-  context: { client },
-  response,
-}) => {
+export const handler = subscriptionHandler(async ({ event, context, response }) => {
+  const { space, objects } = event;
+  const { client } = context;
+
   // TODO(burdon): Generalize util for getting properties from config/env.
   const config = client.config;
   const imapConfig: ImapConfig = {
@@ -39,12 +37,8 @@ export const handler: FunctionHandler<any> = async ({
 
   let code = 200;
   try {
-    const mailboxes: MailboxType[] = [];
-    if (spaceKey) {
-      const space = client.spaces.get(PublicKey.from(spaceKey))!;
-      const { objects } = space.db.query(MailboxType.filter());
-      mailboxes.push(...objects);
-    } else {
+    const mailboxes: MailboxType[] = objects?.filter(hasType<MailboxType>(MailboxType.schema)) ?? [];
+    if (!space) {
       const { objects } = client.experimental.graph.query(MailboxType.filter());
       mailboxes.push(...objects);
     }
@@ -69,7 +63,7 @@ export const handler: FunctionHandler<any> = async ({
   }
 
   return response.status(code);
-};
+});
 
 // TODO(burdon): Util.
 const processMailbox = async (space: Space, mailbox: MailboxType, messages: MessageType[]) => {
