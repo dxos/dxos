@@ -41,8 +41,6 @@ module.exports = {
           root: __dirname,
           content: [
             resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-            resolve(__dirname, '../node_modules/@dxos/react-client/dist/**/*.mjs'),
-            resolve(__dirname, '../node_modules/@dxos/react-ui-mosaic/dist/**/*.mjs'),
           ],
         }),
         turbosnap({ rootDir: config.root }),
