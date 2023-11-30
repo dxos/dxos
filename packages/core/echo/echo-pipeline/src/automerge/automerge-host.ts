@@ -14,7 +14,10 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { Directory } from '@dxos/random-access-storage';
+import { arrayToBuffer, bufferToArray, getDebugName, getPrototypeSpecificInstanceId } from '@dxos/util';
 
 export class AutomergeHost {
   private readonly _repo: Repo;
@@ -22,17 +25,19 @@ export class AutomergeHost {
   private readonly _clientNetwork: LocalHostNetworkAdapter;
   private readonly _storage: AutomergeStorageAdapter;
 
-  constructor() {
+  constructor(
+    storageDirectory: Directory,
+  ) {
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
-    this._storage = new AutomergeStorageAdapter();
+    this._storage = new AutomergeStorageAdapter(storageDirectory);
     this._repo = new Repo({
       network: [
         // this._meshNetwork,
         this._clientNetwork,
       ],
 
-      // storage: this._storage,
+      storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
       sharePolicy: async (peerId, documentId) => true, // Share everything.
@@ -141,23 +146,64 @@ class MeshNetworkAdapter extends NetworkAdapter {
 }
 
 class AutomergeStorageAdapter extends StorageAdapter {
-  override load(key: StorageKey): Promise<Uint8Array | undefined> {
-    throw new Error('Method not implemented.');
+  constructor(private readonly _directory: Directory) {
+    super();
   }
 
-  override save(key: StorageKey, data: Uint8Array): Promise<void> {
-    throw new Error('Method not implemented.');
+  override async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    const filename = this._getFilename(key);
+    const file = this._directory.getOrCreateFile(filename);
+    const { size } = await file.stat();
+    const buffer = await file.read(0, size);
+    return bufferToArray(buffer);
   }
 
-  override remove(key: StorageKey): Promise<void> {
-    throw new Error('Method not implemented.');
+  override async save(key: StorageKey, data: Uint8Array): Promise<void> {
+    const filename = this._getFilename(key);
+    const file = this._directory.getOrCreateFile(filename);
+    await file.write(0, arrayToBuffer(data));
+    await file.truncate?.(data.length);
+
+    await file.flush?.();
   }
 
-  override loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    throw new Error('Method not implemented.');
+  override async remove(key: StorageKey): Promise<void> {
+    // TODO(dmaretskyi): Better deletion.
+    const filename = this._getFilename(key);
+    const file = this._directory.getOrCreateFile(filename);
+    await file.truncate?.(0);
   }
 
-  override removeRange(keyPrefix: StorageKey): Promise<void> {
-    throw new Error('Method not implemented.');
+  override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    const filename = this._getFilename(keyPrefix);
+    const entries = await this._directory.list();
+    return Promise.all(entries.filter(entry => entry.startsWith(filename))
+      .map(async (entry): Promise<Chunk> => {
+        const file = this._directory.getOrCreateFile(entry);
+        const { size } = await file.stat();
+        const buffer = await file.read(0, size);
+        return {
+          key: this._getKeyFromFilename(entry),
+          data: bufferToArray(buffer),
+        }
+      }))
+  }
+
+  override async removeRange(keyPrefix: StorageKey): Promise<void> {
+    const filename = this._getFilename(keyPrefix);
+    const entries = await this._directory.list();
+    await Promise.all(entries.filter(entry => entry.startsWith(filename))
+      .map(async (entry): Promise<void> => {
+        const file = this._directory.getOrCreateFile(filename);
+        await file.truncate?.(0);
+      }))
+  }
+
+  private _getFilename(key: StorageKey): string {
+    return key.map((k) => k.replaceAll('%', '%25').replaceAll('-', '%2D')).join('-');
+  }
+
+  private _getKeyFromFilename(filename: string): StorageKey {
+    return filename.split('-').map((k) => k.replaceAll('%2D', '-').replaceAll('%25', '%'));
   }
 }
