@@ -611,6 +611,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
@@ -636,9 +639,6 @@ importers:
       '@dxos/react-ui-navtree':
         specifier: workspace:*
         version: link:../../ui/react-ui-navtree
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/vault':
         specifier: workspace:*
         version: link:../../sdk/vault
