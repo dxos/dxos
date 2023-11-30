@@ -5,7 +5,8 @@
 import { type Icon, Buildings, Folders, User } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
