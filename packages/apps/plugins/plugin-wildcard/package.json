@@ -28,6 +28,7 @@
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
@@ -41,6 +42,7 @@
   "peerDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
