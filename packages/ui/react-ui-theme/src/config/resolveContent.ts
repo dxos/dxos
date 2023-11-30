@@ -22,9 +22,9 @@ const packageNamePattern = /.*node_modules\/(.+?)$/;
 const packageName = (path: string) => path.match(packageNamePattern)?.[1];
 
 const flatten = (acc: string[], group: string[]) => [...acc, ...group];
-const dedupe = (acc: Record<string, string>, path) => {
+const dedupe = (acc: Record<string, string>, path: string) => {
   const name = packageName(path);
-  if (!acc[name]) {
+  if (name && !acc[name]) {
     acc[name] = path;
   }
   return acc;
