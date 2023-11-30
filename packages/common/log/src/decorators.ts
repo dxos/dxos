@@ -25,24 +25,37 @@ export const createMethodLogDecorator =
       try {
         const startTime = performance.now();
         const result = method.apply(this, args);
-        
+
         if (isThenable(result)) {
           const id = nextPromiseId++;
           log.info(`${propertyKey as string}(${formattedArgs}) => Promise { #${id} }`, {}, combinedMeta);
           result.then(
-            resolvedValue => {
-              if(resolvedValue !== undefined) {
-                log.info(`✅ resolve #${id} ${(performance.now() - startTime).toFixed(0)}ms => ${inspect(resolvedValue, false, 1, true)}`, {}, combinedMeta);
+            (resolvedValue) => {
+              if (resolvedValue !== undefined) {
+                log.info(
+                  `✅ resolve #${id} ${(performance.now() - startTime).toFixed(0)}ms => ${inspect(
+                    resolvedValue,
+                    false,
+                    1,
+                    true,
+                  )}`,
+                  {},
+                  combinedMeta,
+                );
               } else {
                 log.info(`✅ resolve #${id} ${(performance.now() - startTime).toFixed(0)}ms`, {}, combinedMeta);
               }
             },
-            err => {
+            (err) => {
               log.info(`🔥 reject #${id} #${(performance.now() - startTime).toFixed(0)}ms => ${err}`, {}, combinedMeta);
-            }
-          )
+            },
+          );
         } else {
-          log.info(`${propertyKey as string}(${formattedArgs}) => ${inspect(result, false, 1, true)}`, {}, combinedMeta);
+          log.info(
+            `${propertyKey as string}(${formattedArgs}) => ${inspect(result, false, 1, true)}`,
+            {},
+            combinedMeta,
+          );
         }
 
         return result;

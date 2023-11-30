@@ -1,8 +1,14 @@
-import { sleep } from "@dxos/async";
-import { StorageType, createStorage } from "@dxos/random-access-storage";
-import { describe, test } from "@dxos/test";
+//
+// Copyright 2023 DXOS.org
+//
+
 import expect from 'expect';
-import { AutomergeHost } from "./automerge-host";
+
+import { sleep } from '@dxos/async';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { describe, test } from '@dxos/test';
+
+import { AutomergeHost } from './automerge-host';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
@@ -32,5 +38,5 @@ describe('AutomergeHost', () => {
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
-  })
+  });
 });
