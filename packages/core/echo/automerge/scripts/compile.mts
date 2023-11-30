@@ -46,6 +46,13 @@ for (const platform of ['node', 'browser'] as const) {
                 path: args.path.replace('@automerge/', '#'),
               };
             }
+
+            if(args.kind !== 'entry-point' && !args.path.startsWith('.') && !args.path.startsWith('@automerge/')) {
+              return {
+                external: true,
+                path: args.path,
+              }
+            }
           });
         },
       },
