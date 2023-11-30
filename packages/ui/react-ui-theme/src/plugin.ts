@@ -32,8 +32,8 @@ export const ThemePlugin = (
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
-    config: ({ root }, env) => {
-      const content = root ? resolveKnownPeers(config.content ?? [], root) : config.content;
+    config: async ({ root }, env) => {
+      const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
       return {
         css: {
           postcss: {
