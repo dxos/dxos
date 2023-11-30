@@ -5,8 +5,6 @@ export default template.define.text({
   content: () => plate`
   version: 1
   runtime:
-    client:
-      remoteSource: http://localhost:3967/vault.html
     services:
       signaling: [
         server: wss://kube.dxos.org/.well-known/dx/signal

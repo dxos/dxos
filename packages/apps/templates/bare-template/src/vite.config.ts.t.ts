@@ -54,7 +54,6 @@ export default template.define.script({
     return /* javascript */ plate`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
-  import { VaultPlugin } from '@dxos/vault/vite-plugin';
   ${imports}
 
   // https://vitejs.dev/config/
@@ -64,7 +63,6 @@ export default template.define.script({
     },
     ${input.monorepo ? monorepoConfig : basicConfig}
     plugins: [
-      VaultPlugin(),
       ConfigPlugin(),
       ${react
         // https://github.com/preactjs/signals/issues/269
