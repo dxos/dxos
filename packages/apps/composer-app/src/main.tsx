@@ -42,10 +42,11 @@ import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
 import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
 import { EchoDatabase, SpaceProxy, TextObject, TypedObject } from '@dxos/react-client/echo';
-import { ProgressBar } from '@dxos/react-ui';
+import { Status, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
-// @ts-ignore
 import './globals';
+
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -65,9 +66,11 @@ const main = async () => {
 
   const App = createApp({
     fallback: (
-      <div className='flex h-screen justify-center items-center'>
-        <ProgressBar indeterminate />
-      </div>
+      <ThemeProvider tx={defaultTx}>
+        <div className='flex bs-[100dvh] justify-center items-center'>
+          <Status indeterminate aria-label='Initializing' />
+        </div>
+      </ThemeProvider>
     ),
     order: [
       // Needs to run ASAP on startup (but not blocking).
