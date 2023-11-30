@@ -2,45 +2,49 @@
 // Copyright 2023 DXOS.org
 //
 
-import { resolve } from 'node:path';
+import { glob as globCb } from 'glob';
+import { promisify } from 'node:util';
 
-const knownPeerPackages = [
-  '@braneframe/plugin-markdown',
-  '@braneframe/plugin-stack',
-  '@dxos/react-ui',
-  '@dxos/react-ui-theme',
-  '@dxos/react-appkit',
-  '@dxos/react-shell',
-  '@dxos/react-surface',
-  '@dxos/react-ui-editor',
-  '@dxos/react-ui-navtree',
+const glob = promisify(globCb);
+
+const knownIndirectPeers = [
+  '@dxos/react-*',
+  '@dxos/react-ui-*',
+  '@dxos/devtools',
+  '@dxos/vault',
+  // TODO(thure): glob v7 runs out of memory if we do a `**` search, and this is (hopefully) the only L3 content package; find a better solution.
+  '@dxos/react-ui-table/node_modules/@dxos/react-ui-searchlist',
 ];
 
-const getPackageRootFromResolvedModule = (resolvedPath: string, packageName: string) => {
-  const [, shortName] = packageName.split('/');
-  if (!shortName) {
-    throw new Error('invalid package name encountered ' + packageName);
+const knownDirectPeers = ['@braneframe/plugin-*', ...knownIndirectPeers];
+
+const packageNamePattern = /.*node_modules\/(.+?)$/;
+const packageName = (path: string) => path.match(packageNamePattern)?.[1];
+
+const flatten = (acc: string[], group: string[]) => [...acc, ...group];
+const dedupe = (acc: Record<string, string>, path) => {
+  const name = packageName(path);
+  if (!acc[name]) {
+    acc[name] = path;
   }
-  const position = resolvedPath.indexOf(shortName);
-  return resolvedPath.substring(0, position + shortName.length);
+  return acc;
 };
 
-export const resolveKnownPeers = (content: string[], rootPath: string) => {
-  const result = [...content];
-  knownPeerPackages.forEach((packageName) => {
-    if (result.some((contentPath) => contentPath.indexOf(packageName) >= 0)) {
-      return;
-    }
-    try {
-      const resolved = require.resolve(packageName, {
-        paths: [rootPath],
-      });
-      if (!resolved) {
-        return;
-      }
-      const packageRoot = getPackageRootFromResolvedModule(resolved, packageName);
-      result.push(resolve(packageRoot, 'dist/**/*.mjs'));
-    } catch {}
-  });
-  return result;
+export const resolveKnownPeers = async (content: string[], cwd: string): Promise<string[]> => {
+  const globOptions = { cwd, absolute: true };
+
+  const directPeers = await Promise.all(knownDirectPeers.map((peer) => glob(`./node_modules/${peer}`, globOptions)));
+
+  // NOTE(thure): With glob v7, JS runs out of memory if `**` is used, so this limits the search to @braneframe/plugin-*/node_modules
+  const indirectPeers = await Promise.all(
+    knownIndirectPeers.map((peer) => glob(`./node_modules/@braneframe/plugin-*/node_modules/${peer}`, globOptions)),
+  );
+
+  const knownPeerContent = Object.values(
+    indirectPeers.reduce(flatten, []).reduce(dedupe, directPeers.reduce(flatten, []).reduce(dedupe, {})),
+  ).map((value) => `${value}/dist/lib/**/*.mjs`);
+
+  // console.log('[found known peer content paths]', knownPeerContent);
+
+  return [...content, ...knownPeerContent];
 };
