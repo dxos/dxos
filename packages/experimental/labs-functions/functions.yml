@@ -36,29 +36,31 @@ functions:
 
 triggers:
   - function: 'dxos.org/function/chat'
-    subscription:
-      type: 'braneframe.Message'
+    subscriptions:
+      - type: 'braneframe.Message'
 
   - function: 'dxos.org/function/chess'
-    subscription:
-      type: 'dxos.experimental.chess.Game'
+    subscriptions:
+      - type: 'dxos.experimental.chess.Game'
 
   - function: 'dxos.org/function/email'
     schedule: '*/30 * * * * *'
-    subscription:
-      type: 'braneframe.Mailbox'
+    subscriptions:
+     - type: 'braneframe.Mailbox'
+
+  - function: 'dxos.org/function/email-extractor'
+    subscriptions:
+      - type: 'braneframe.Message'
+        props:
+          type: 'email'
 
   - function: 'dxos.org/function/embedding'
-    subscription:
-      type: 'braneframe.Document'
-      deep: true
-#      delay: 5
-
-  - function: 'dxos.org/function/embedding'
-    subscription:
-      type: 'braneframe.File'
-      deep: true
+    subscriptions:
+      - type: 'braneframe.Document'
+        deep: true
+        delay: 5
+      - type: 'braneframe.File'
 
 #  - function: 'dxos.org/function/github'
-#    subscription:
-#      type: 'example.com/schema/project'
+#    subscriptions:
+#      - type: 'example.com/schema/project'

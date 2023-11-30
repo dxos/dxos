@@ -70,7 +70,9 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
           thread.messages.push(
             new MessageType(
               {
-                identityKey: resources.identityKey,
+                from: {
+                  identityKey: resources.identityKey,
+                },
                 blocks,
               },
               {

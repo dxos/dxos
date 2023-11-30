@@ -3,10 +3,10 @@
 //
 
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { Document as DocumentType, File as FileType } from '@braneframe/types';
-import { Trigger } from '@dxos/async';
 import { type TypedObject } from '@dxos/echo-schema';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -29,6 +29,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     async (objects: TypedObject[]) => {
       for (const object of objects) {
         let pageContent: string | undefined;
+        log.info('processing', { object: { id: object.id, type: object.__typename } });
         switch (object.__typename) {
           case DocumentType.schema.typename: {
             pageContent = object.content?.text.trim();
@@ -42,14 +43,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
               log.info('fetching', { url });
               const res = await fetch(url);
               const buffer = await res.arrayBuffer();
-              const processing = new Trigger<string>();
-              textract.fromBufferWithMime(res.headers.get('content-type')!, Buffer.from(buffer), (error, text) => {
-                if (error) {
-                  processing.throw(error);
-                }
-                processing.wake(text);
-              });
-              pageContent = await processing.wait();
+              const pageContent = (await promisify(textract.fromBufferWithMime)(
+                res.headers.get('content-type')!,
+                Buffer.from(buffer),
+              )) as string;
               log.info('parsed', { cid: object.cid, text: pageContent?.length });
             }
             break;

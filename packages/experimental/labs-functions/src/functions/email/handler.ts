@@ -79,7 +79,8 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
   // console.log(messages.map((message) => message[debug]));
   let added = 0;
   for (const message of messages) {
-    if (!current.find((m) => matchKeys(m.__meta.keys, message.__meta.keys))) {
+    const exists = current.find((m) => matchKeys(m.__meta.keys, message.__meta.keys));
+    if (!exists) {
       mailbox.messages.push(message);
       added++;
     }
