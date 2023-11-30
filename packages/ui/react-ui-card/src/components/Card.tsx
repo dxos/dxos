@@ -12,9 +12,19 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
-import { useDensityContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { DropdownMenu } from '../DropdownMenu';
+import { useDensityContext, DropdownMenu, type ThemedClassName } from '@dxos/react-ui';
+
+import {
+  cardBody,
+  cardDragHandle,
+  cardDragHandleIcon,
+  cardHeader,
+  cardMedia,
+  cardMenu,
+  cardMenuIcon,
+  cardRoot,
+  cardTitle,
+} from '../theme';
 
 type CardRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   grow?: boolean;
@@ -25,9 +35,8 @@ type CardRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>
 // TODO(burdon): Forward refs for all components?
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ grow, square, noPadding, classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
     return (
-      <div {...props} ref={forwardedRef} className={tx('card.root', 'card', { grow, square, noPadding }, classNames)}>
+      <div {...props} ref={forwardedRef} className={cardRoot({ grow, square, noPadding }, classNames)}>
         {children}
       </div>
     );
@@ -37,9 +46,8 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
 type CardHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { floating?: boolean };
 
 export const CardHeader: FC<CardHeaderProps> = ({ floating, classNames, children, ...props }) => {
-  const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('card.header', 'card', { floating }, classNames)}>
+    <div {...props} className={cardHeader({ floating }, classNames)}>
       {children}
     </div>
   );
@@ -51,9 +59,8 @@ type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
 };
 
 export const CardTitle: FC<CardTitleProps> = ({ center, title, classNames, ...props }) => {
-  const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('card.title', 'card', { center }, classNames)}>
+    <div {...props} className={cardTitle({ center }, classNames)}>
       {title}
     </div>
   );
@@ -63,11 +70,10 @@ export const CardTitle: FC<CardTitleProps> = ({ center, title, classNames, ...pr
 type CardDragHandleProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' };
 
 const CardDragHandle: FC<CardDragHandleProps> = ({ position, classNames, ...props }) => {
-  const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
-    <div {...props} className={tx('card.dragHandle', 'card', { density, position }, classNames)}>
-      <DotsSixVertical className={tx('card.dragHandleIcon', 'card')} />
+    <div {...props} className={cardDragHandle({ density, position }, classNames)}>
+      <DotsSixVertical className={cardDragHandleIcon({})} />
     </div>
   );
 };
@@ -75,11 +81,10 @@ const CardDragHandle: FC<CardDragHandleProps> = ({ position, classNames, ...prop
 type CardEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { Icon: Icon; position?: 'left' | 'right' };
 
 const CardEndcap: FC<CardEndcapProps> = ({ Icon, position, classNames, ...props }) => {
-  const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
-    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)}>
-      <Icon className={tx('card.menuIcon', 'card')} />
+    <div {...props} className={cardMenu({ density, position }, classNames)}>
+      <Icon className={cardMenuIcon({})} />
     </div>
   );
 };
@@ -91,13 +96,12 @@ type CardMenuProps = PropsWithChildren<
 // TODO(burdon): Reconcile with Endcap (remove dropdown from here). See ListItem.Endcap (style icon/size?)
 const CardMenu = forwardRef<HTMLDivElement, CardMenuProps>(
   ({ children, position, classNames, ...props }, forwardRef) => {
-    const { tx } = useThemeContext();
     const density = useDensityContext();
     return (
-      <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)} ref={forwardRef}>
+      <div {...props} className={cardMenu({ density, position }, classNames)} ref={forwardRef}>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <DotsThreeVertical className={tx('card.menuIcon', 'card', {})} />
+            <DotsThreeVertical className={cardMenuIcon({})} />
           </DropdownMenu.Trigger>
           {/* TODO(burdon): Position to the left of the menu button. */}
           <DropdownMenu.Content>
@@ -112,10 +116,9 @@ const CardMenu = forwardRef<HTMLDivElement, CardMenuProps>(
 type CardBodyProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { gutter?: boolean };
 
 export const CardBody: FC<CardBodyProps> = ({ gutter, classNames, children, ...props }) => {
-  const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
-    <div {...props} className={tx('card.body', 'card', { density, gutter }, classNames)}>
+    <div {...props} className={cardBody({ density, gutter }, classNames)}>
       {children}
     </div>
   );
@@ -125,10 +128,9 @@ type CardMediaProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { src?:
 
 // TODO(burdon): Option to set to 50% of height of card.
 export const CardMedia: FC<CardMediaProps> = ({ src, contain, classNames, ...props }) => {
-  const { tx } = useThemeContext();
   return (
     <div className='flex grow overflow-hidden'>
-      <img {...props} className={tx('card.media', 'card', { contain }, classNames)} src={src} />
+      <img {...props} className={cardMedia({ contain }, classNames)} src={src} />
     </div>
   );
 };
