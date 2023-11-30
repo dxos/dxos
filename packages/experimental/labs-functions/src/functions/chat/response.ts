@@ -3,19 +3,19 @@
 //
 
 import { type Message as MessageType } from '@braneframe/types';
-import { type Client } from '@dxos/client';
 import { Expando, type Space } from '@dxos/client/echo';
 import { Schema, TextObject } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 
 import { parseMessage } from './parser';
+import { type PromptContext } from './request';
 
-export const createResponse = (client: Client, space: Space, content: string): MessageType.Block[] => {
+// TODO(burdon): Create variant of StringOutputParser.
+//  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
+export const createResponse = (space: Space, context: PromptContext, content: string): MessageType.Block[] => {
   const timestamp = new Date().toISOString();
 
   const blocks: MessageType.Block[] = [];
   const result = parseMessage(content, 'json');
-  log.info('??????????????????', { result });
   if (result) {
     const { pre, data, post } = result;
     pre && blocks.push({ timestamp, text: pre });
@@ -23,8 +23,11 @@ export const createResponse = (client: Client, space: Space, content: string): M
 
     blocks.push(
       ...dataArray.map((data): MessageType.Block => {
-        // TODO(burdon): Hack in the schema.
-        data['@type'] = 'example.com/schema/project';
+        // TODO(burdon): Validate that the schema was used.
+        if (context.schema) {
+          data['@type'] = context.schema.typename;
+        }
+
         const { objects: schemas } = space.db.query(Schema.filter());
         const schema = schemas.find((schema) => schema.typename === data['@type']);
         if (schema) {

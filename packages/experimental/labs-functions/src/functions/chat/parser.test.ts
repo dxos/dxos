@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 import { parseMessage } from './parser';
 
 describe('Parser', () => {
-  test.only('JSON text', () => {
+  test('JSON text', () => {
     const data = [
       { name: 'DXOS', url: 'https://dxos.org' },
       { name: 'Braneframe, Inc.', url: 'https://braneframe.com' },
@@ -24,9 +24,7 @@ describe('Parser', () => {
       'Please note that this is just an example and may not reflect the current or complete list of founders for Blue Yard.',
     ].join('\n');
 
-    console.log({ content });
     const result = parseMessage(content, 'json');
-    console.log(result);
     expect(result?.data).to.have.length(data.length);
   });
 });

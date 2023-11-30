@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 export type ParseResult = {
   pre?: string;
   post?: string;
@@ -11,6 +13,7 @@ export type ParseResult = {
 };
 
 export const parseMessage = (content: string, type = '\\w+'): ParseResult | undefined => {
+  invariant(content);
   const text = content.replace(/[\n\r]/g, ' ');
 
   // Check if entire message is JSON.

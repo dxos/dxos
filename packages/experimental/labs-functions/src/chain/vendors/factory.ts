@@ -10,7 +10,7 @@ export type ChainVariant = 'openai' | 'ollama';
 
 export const createChainResources = (
   variant: ChainVariant,
-  options: OpenAIChainResourcesOptions | OllamaChainResourcesOptions,
+  options: OpenAIChainResourcesOptions | OllamaChainResourcesOptions = {},
 ): ChainResources => {
   switch (variant) {
     case 'openai':

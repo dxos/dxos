@@ -43,10 +43,10 @@ triggers:
     subscription:
       type: 'dxos.experimental.chess.Game'
 
-  - function: 'dxos.org/function/email'
-    schedule: '*/30 * * * * *'
-    subscription:
-      type: 'braneframe.Mailbox'
+#  - function: 'dxos.org/function/email'
+#    schedule: '*/30 * * * * *'
+#    subscription:
+#      type: 'braneframe.Mailbox'
 
   - function: 'dxos.org/function/embedding'
     subscription:

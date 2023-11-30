@@ -3,14 +3,14 @@
 //
 
 import { expect } from 'chai';
+import fs from 'fs';
 
 import { describe, test } from '@dxos/test';
 
-import { Chain } from './chain';
-import { type ChainResourcesOptions } from './resources';
-import { type ChainDocument } from './store';
-import { createOpenAIChainResources, createOllamaChainResources } from './vendors';
-import { getConfig, getKey } from '../util';
+import { generator } from './knowledge';
+import { type ChainResourcesOptions, type ChainDocument } from '../../../chain';
+import { createOpenAIChainResources, createOllamaChainResources } from '../../../chain';
+import { getConfig, getKey } from '../../../util';
 
 const docs: ChainDocument[] = [
   'DXOS consists of HALO, ECHO and MESH.',
@@ -23,26 +23,34 @@ const docs: ChainDocument[] = [
   pageContent: text,
 }));
 
-describe.skip('Chain', () => {
-  const getResources = (type = 'openai', options: Partial<ChainResourcesOptions<any, any>> = {}) => {
+describe.only('knowledge', () => {
+  const baseDir = '/tmp/dxos/agent/functions/chat/chain';
+  before(() => {
+    fs.rmSync(baseDir, { recursive: true, force: true });
+  });
+
+  // TODO(burdon): Factor out to common testing set-up.
+  const getResources = (
+    type = process.env.DX_AI_MODEL ?? 'openai',
+    options: Partial<ChainResourcesOptions<any, any>> = {},
+  ) => {
     const config = getConfig()!;
 
     switch (type) {
       case 'openai':
         return createOpenAIChainResources({
-          baseDir: '/tmp/dxos/agent/functions/chat/chain/openai',
+          baseDir,
           apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
           chat: {
             temperature: 0,
-            // modelName: 'gpt-3.5-turbo-1106',
-            modelName: 'gpt-4',
+            modelName: 'gpt-3.5-turbo-1106',
           },
           ...options,
         });
 
       case 'ollama':
         return createOllamaChainResources({
-          baseDir: '/tmp/dxos/agent/functions/chat/chain/ollama',
+          baseDir,
           chat: {
             temperature: 0,
             model: 'llama2',
@@ -88,9 +96,9 @@ describe.skip('Chain', () => {
       await resources.store.initialize();
       await resources.store.addDocuments(docs);
 
-      const chain = new Chain(resources, { context: false });
+      const sequence = generator(resources, () => ({}));
       const call = async (input: string) => {
-        const result = await chain.call(input);
+        const result = await sequence.invoke(input);
         console.log(`\n> ${input}`);
         console.log(result);
         return result;

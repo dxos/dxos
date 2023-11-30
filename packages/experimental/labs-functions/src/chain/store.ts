@@ -67,7 +67,7 @@ export class ChainStore {
 
   async initialize() {
     try {
-      if (this.baseDir) {
+      if (this.baseDir && fs.existsSync(this.baseDir)) {
         this._vectorStore = await FaissStore.load(this.baseDir, this._embeddings);
 
         // Check version.
