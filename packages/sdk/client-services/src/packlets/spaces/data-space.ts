@@ -6,22 +6,35 @@ import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/asyn
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
-import { type MetadataStore, type Space, createMappedFeedWriter, type DataPipeline } from '@dxos/echo-pipeline';
+import {
+  type MetadataStore,
+  type Space,
+  createMappedFeedWriter,
+  type DataPipeline,
+  type CreateEpochOptions,
+  type AutomergeHost,
+} from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { SpaceState, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState, type Space as SpaceProto, CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  AdmittedFeed,
+  type ProfileDocument,
+  type Credential,
+  type Epoch,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
+import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
@@ -54,6 +67,9 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
+
+  // TODO(dmaretskyi): Make required.
+  automergeHost?: AutomergeHost;
 };
 
 /**
@@ -74,7 +90,11 @@ export class DataSpace {
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPlugin = new NotarizationPlugin();
   private readonly _callbacks: DataSpaceCallbacks;
-  private readonly _cache?: SpaceCache;
+  private readonly _cache?: SpaceCache = undefined;
+  private readonly _automergeHost?: AutomergeHost = undefined;
+
+  // TODO(dmaretskyi): Move into Space?
+  private readonly _automergeSpaceState = new AutomergeSpaceState();
 
   private _state = SpaceState.CLOSED;
 
@@ -151,6 +171,10 @@ export class DataSpace {
     return this._cache;
   }
 
+  get automergeSpaceState() {
+    return this._automergeSpaceState;
+  }
+
   @synchronized
   async open() {
     await this._open();
@@ -160,6 +184,7 @@ export class DataSpace {
     await this._gossip.open();
     await this._notarizationPlugin.open();
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
+    await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState);
     await this._inner.open(new Context());
     this._state = SpaceState.CONTROL_ONLY;
     log('new state', { state: SpaceState[this._state] });
@@ -183,6 +208,7 @@ export class DataSpace {
     await this.authVerifier.close();
 
     await this._inner.close();
+    await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);
     await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
     await this._notarizationPlugin.close();
 
@@ -350,8 +376,29 @@ export class DataSpace {
     await this.inner.controlPipeline.writer.write({ credential: { credential } });
   }
 
-  async createEpoch() {
-    const epoch = await this.dataPipeline.createEpoch();
+  async createEpoch(options?: CreateEpochOptions) {
+    let epoch: Epoch | undefined;
+    switch (options?.migration) {
+      case undefined:
+      case CreateEpochRequest.Migration.NONE:
+        {
+          epoch = await this.dataPipeline.createEpoch();
+        }
+        break;
+      case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
+        const document = this._automergeHost?.repo.create();
+        epoch = {
+          previousId: this._automergeSpaceState.lastEpoch?.id,
+          number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+          timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+          automergeRoot: document?.url,
+        };
+      }
+    }
+
+    if (!epoch) {
+      return;
+    }
 
     const receipt = await this.inner.controlPipeline.writer.write({
       credential: {

@@ -17,6 +17,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log, omit } from '@dxos/log';
 import { type ModelFactory } from '@dxos/model-factory';
 import { CancelledError, type DataPipelineProcessed } from '@dxos/protocols';
+import { type CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
@@ -63,6 +64,10 @@ const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5_000;
  * Minimum time in MS between recording latest timeframe in metadata.
  */
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 5_000;
+
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
+};
 
 /**
  * Controls data pipeline in the space.
@@ -351,6 +356,11 @@ export class DataPipeline implements CredentialProcessor {
         return;
       }
       await this._processEpoch(ctx, epoch.subject.assertion);
+
+      // Carry over the snapshot CID from the previous epoch.
+      if (epoch.subject.assertion.snapshotCid === undefined) {
+        epoch.subject.assertion.snapshotCid = this.appliedEpoch?.subject.assertion.snapshotCid;
+      }
 
       this.appliedEpoch = epoch;
       this.onNewEpoch.emit(epoch);
