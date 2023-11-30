@@ -6,7 +6,6 @@ export * from './AnchoredOverflow';
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Buttons';
-export * from './Card';
 export * from './Dialogs';
 export * from './DropdownMenu';
 export * from './Input';

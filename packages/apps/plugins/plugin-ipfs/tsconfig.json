@@ -30,6 +30,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-card"
+    },
+    {
       "path": "../../../ui/react-ui-mosaic"
     },
     {
