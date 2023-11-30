@@ -3,37 +3,26 @@
 //
 
 import { Event } from '@dxos/async';
-import { Repo as AutomergeRepo, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
+import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base, TypedObject } from '../object';
+import { type EchoObject, base, getGlobalAutomergePreference, TypedObject } from '../object';
 import { type Schema } from '../proto';
 
+export type SpaceState = {
+  // Url of the root automerge document.
+  rootUrl?: string;
+};
+
 export class AutomergeDb {
-  private _repo!: AutomergeRepo;
   private _docHandle!: DocHandle<any>;
-
-  readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
-
-  constructor(public readonly graph: Hypergraph, private readonly _echoDatabase: EchoDatabase) {}
-
-  async open() {
-    this._repo = new AutomergeRepo({
-      network: [],
-    });
-    this._docHandle = this._repo.create();
-    this._docHandle.on('change', (event) => {
-      this._updateEvent.emit({
-        spaceKey: this._echoDatabase._backend.spaceKey,
-        itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
-      });
-    });
-  }
 
   /**
    * @internal
@@ -41,8 +30,48 @@ export class AutomergeDb {
   _objects = new Map<string, EchoObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
+  readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
+
+  readonly #echoDatabase: EchoDatabase;
+
+  constructor(
+    public readonly graph: Hypergraph,
+    public readonly automerge: AutomergeContext,
+    echoDatabase: EchoDatabase,
+  ) {
+    this.#echoDatabase = echoDatabase;
+  }
+
+  async open(spaceState: SpaceState) {
+    if (spaceState.rootUrl) {
+      try {
+        this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
+        await this._docHandle.whenReady();
+      } catch (err) {
+        log.catch('Error opening document', err);
+        await this._fallbackToNewDoc();
+      }
+    } else {
+      await this._fallbackToNewDoc();
+    }
+
+    this._docHandle.on('change', (event) => {
+      this._updateEvent.emit({
+        spaceKey: this.#echoDatabase._backend.spaceKey,
+        itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
+      });
+    });
+  }
+
+  private async _fallbackToNewDoc() {
+    if (getGlobalAutomergePreference()) {
+      log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
+    }
+    this._docHandle = this.automerge.repo.create();
+  }
+
   getObjectById(id: string): EchoObject | undefined {
-    const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
+    const obj = this._objects.get(id) ?? this.#echoDatabase._objects.get(id);
 
     if (!obj) {
       return undefined;
@@ -56,7 +85,7 @@ export class AutomergeDb {
 
   add<T extends EchoObject>(obj: T): T {
     if (obj[base] instanceof TypedObject) {
-      return this._echoDatabase.add(obj);
+      return this.#echoDatabase.add(obj);
     }
 
     if (obj[base]._database) {
