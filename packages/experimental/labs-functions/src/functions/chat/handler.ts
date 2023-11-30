@@ -7,33 +7,25 @@ import { join } from 'node:path';
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { createRequest } from './request';
+import { createContext, createSequence } from './request';
 import { createResponse } from './response';
-import { Chain, createOpenAIChainResources } from '../../chain';
+import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
-
-const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   event: { space: spaceKey, objects: messageIds },
   context: { client, dataDir },
   response,
 }) => {
-  invariant(dataDir);
   const config = client.config;
-  const resources = createOpenAIChainResources({
-    baseDir: join(dataDir, 'agent/functions/embedding/openai'),
-    apiKey: getKey(config, 'openai.com/api_key')!,
-    chat: { modelName: 'gpt-4' },
-    // chat: { model: 'llama2' },
+  const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
+    baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
+    apiKey: getKey(config, 'openai.com/api_key'),
   });
   await resources.store.initialize();
-  const chain = new Chain(resources, { context: false });
-
   const space = spaceKey && client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
     return response.status(400);
@@ -60,30 +52,25 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       Array.from(activeThreads).map(async (thread) => {
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
-          const messages = createRequest(space, message);
-          log('request', { messages });
-
           let blocks: MessageType.Block[];
-          const text = message.blocks[0]?.text;
-          if (text?.charAt(0) === '$') {
-            const response = await chain.call(text.slice(1));
-            log('response', { content: response });
-            blocks = [
-              {
-                timestamp: new Date().toISOString(),
-                text: response,
-              },
-            ];
-          } else {
-            const { content } = await resources.chat.invoke(messages);
-            log('response', { content: content.toString() });
-            blocks = createResponse(client, space, content.toString());
+          try {
+            const context = createContext(space, message.context);
+            const sequence = createSequence(resources, context);
+            const text = message.blocks
+              .map((message) => message.text)
+              .filter(Boolean)
+              .join('\n');
+            const response = await sequence.invoke(text);
+            blocks = createResponse(space, context, response);
+          } catch (error) {
+            log.error('processing message', error);
+            blocks = [{ text: 'There was an error generating the response.' }];
           }
 
           thread.messages.push(
             new MessageType(
               {
-                identityKey,
+                identityKey: resources.identityKey,
                 blocks,
               },
               {

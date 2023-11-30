@@ -214,15 +214,15 @@ export const spaceToGraphNode = ({
     node.addAction(
       {
         id: 'backup-space',
-        label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
+        label: ['export data label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Download {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.BACKUP, data: { space } }),
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.EXPORT, data: { space } }),
       },
       {
         id: 'restore-space',
-        label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
+        label: ['import data label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Upload {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RESTORE, data: { space } }),
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.IMPORT, data: { space } }),
       },
     );
 
