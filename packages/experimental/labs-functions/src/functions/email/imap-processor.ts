@@ -13,6 +13,8 @@ import { Message as MessageType } from '@braneframe/types';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { toArray } from '../../util';
+
 // Protonmail bridge (local IMAP server) as alternative to Gmail, which requires a registered Google workspace.
 // https://proton.me/blog/bridge-security-model
 // NOTE: Configure bridge settings: SSL; download the cert.
@@ -121,9 +123,6 @@ export class ImapProcessor {
 }
 
 // TODO(burdon): Move to utils.
-
-const toArray = <T>(value?: T | T[] | undefined, defValue = undefined): T[] | undefined =>
-  value === undefined || value === null ? defValue : Array.isArray(value) ? value : [value];
 
 const toRecipient = ({ address: email, name }: EmailAddress): MessageType.Recipient => ({
   email,

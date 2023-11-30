@@ -12,6 +12,9 @@ import { invariant } from '@dxos/invariant';
 
 export const str = (...text: (string | undefined | boolean)[]): string => text.filter(Boolean).flat().join('\n');
 
+export const toArray = <T>(value?: T | T[] | undefined, defValue = undefined): T[] | undefined =>
+  value === undefined || value === null ? defValue : Array.isArray(value) ? value : [value];
+
 export const loadJson = (filename: string) => {
   invariant(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
