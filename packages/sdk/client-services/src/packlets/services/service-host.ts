@@ -282,7 +282,10 @@ export class ClientServicesHost {
         },
       ),
 
-      DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+      DataService: new DataServiceImpl(
+        this._serviceContext.dataServiceSubscriptions,
+        this._serviceContext.automergeHost,
+      ),
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 

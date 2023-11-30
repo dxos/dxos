@@ -12,6 +12,7 @@ import {
   SpaceManager,
   DataServiceSubscriptions,
   SnapshotStore,
+  AutomergeHost,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -60,6 +61,7 @@ export class ServiceContext {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
+  public readonly automergeHost: AutomergeHost;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -106,6 +108,8 @@ export class ServiceContext {
     });
 
     this.identityManager = new IdentityManager(this.metadataStore, this.keyring, this.feedStore, this.spaceManager);
+
+    this.automergeHost = new AutomergeHost();
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
@@ -215,6 +219,7 @@ export class ServiceContext {
       this.keyring,
       signingContext,
       this.feedStore,
+      this.automergeHost,
     );
     await this.dataSpaceManager.open();
 

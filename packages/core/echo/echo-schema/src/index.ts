@@ -21,5 +21,6 @@ export * from './query';
 export * from './serializer';
 export { TypeCollection } from './type-collection';
 export * from './util';
+export * from './automerge/automerge-context';
 
 linkDeferred();

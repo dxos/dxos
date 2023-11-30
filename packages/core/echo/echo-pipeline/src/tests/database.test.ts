@@ -12,6 +12,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { test } from '@dxos/test';
 
+import { AutomergeHost } from '../automerge';
 import { createMappedFeedWriter } from '../common';
 import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
@@ -41,7 +42,8 @@ const createDatabaseWithFeeds = async () => {
   await host.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
 
   const dataServiceSubscriptions = new DataServiceSubscriptions();
-  const dataService = new DataServiceImpl(dataServiceSubscriptions);
+  const automergeHost = new AutomergeHost();
+  const dataService = new DataServiceImpl(dataServiceSubscriptions, automergeHost);
 
   const spaceKey = PublicKey.random();
   await dataServiceSubscriptions.registerSpace(spaceKey, host.createDataServiceHost());

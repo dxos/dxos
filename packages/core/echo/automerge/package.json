@@ -84,7 +84,7 @@
   },
   "dependencies": {
     "@automerge/automerge": "^2.1.7",
-    "@automerge/automerge-repo": "^1.0.17",
+    "@automerge/automerge-repo": "^1.0.19",
     "@automerge/automerge-wasm": "^0.5.0"
   },
   "devDependencies": {},
