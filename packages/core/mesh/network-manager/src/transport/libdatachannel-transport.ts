@@ -249,7 +249,6 @@ export class LibDataChannelTransport implements Transport {
     return `${rc.ip}:${rc.port} ${rc.candidateType}`;
   }
 
-
   async _getStats(): Promise<any> {
     return this._peer.then(async (peer) => {
       const stats = await peer.getStats();
