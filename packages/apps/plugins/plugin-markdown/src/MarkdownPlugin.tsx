@@ -228,7 +228,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
-          // TODO(burdon): Document.
           // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {

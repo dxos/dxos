@@ -52,6 +52,7 @@ const OutlinerItem = ({
   onNav,
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
+  const model = useTextModel({ text: item.text });
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -99,8 +100,6 @@ const OutlinerItem = ({
     }
   };
   */
-
-  const model = useTextModel({ text: item.text });
 
   // TODO(burdon): Use different editor.
   // TODO(burdon): Mentions (e.g., /foo).

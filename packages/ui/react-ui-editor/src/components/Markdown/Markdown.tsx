@@ -138,9 +138,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
           bracketMatching(),
           closeBrackets(),
-          autocompletion({
-            // activateOnTyping: true,
-          }),
+          autocompletion(),
           rectangularSelection(),
           crosshairCursor(),
           highlightActiveLine(),
@@ -158,7 +156,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           ]),
           EditorView.lineWrapping,
 
-          // Theme
+          // Themes.
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
           EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
           ...(themeMode === 'dark'
@@ -167,7 +165,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           // TODO(thure): All but one rule here apply to both themes; rename or refactor.
           syntaxHighlighting(markdownDarkHighlighting),
 
-          // Collaboration
+          // Collaboration (awareness and remote selection).
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
         ],
       });
