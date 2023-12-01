@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
+import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 enum Role {
   SEARCH = 'context-search',
@@ -12,9 +13,8 @@ enum Role {
 }
 
 export const ContextPanel = () => {
-  // TODO(burdon): Collapse search unless focused?
   return (
-    <div className='flex flex-col h-full overflow-hidden'>
+    <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
       <div className='flex shrink-0 overflow-hidden'>
         <Surface role={Role.SEARCH} />
       </div>
