@@ -7,53 +7,55 @@ import '@dxosTheme';
 import { deepSignal } from 'deepsignal/react';
 import React, { useState } from 'react';
 
+import { TextObject } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { Outliner } from './Outliner';
+import { type Item } from './types';
 
 const Story = () => {
   const [root] = useState(
-    deepSignal({
+    deepSignal<Item>({
       id: 'root',
       items: [
         {
           id: 'item-1',
-          text: 'London',
+          text: new TextObject('London'),
         },
         {
           id: 'item-2',
-          text: 'New York',
+          text: new TextObject('New York'),
           items: [
             {
               id: 'item-2a',
-              text: 'Brooklyn',
+              text: new TextObject('Brooklyn'),
             },
             {
               id: 'item-2b',
-              text: 'Manhattan',
+              text: new TextObject('Manhattan'),
               items: [
                 {
                   id: 'item-2b1',
-                  text: 'East Village',
+                  text: new TextObject('East Village'),
                 },
                 {
                   id: 'item-2b2',
-                  text: 'West Village',
+                  text: new TextObject('West Village'),
                 },
                 {
                   id: 'item-2b3',
-                  text: 'SoHo',
+                  text: new TextObject('SoHo'),
                 },
               ],
             },
             {
               id: 'item-2c',
-              text: 'Queens',
+              text: new TextObject('Queens'),
               items: [
                 {
                   id: 'item-2c1',
-                  text: 'Astoria',
+                  text: new TextObject('Astoria'),
                 },
               ],
             },
@@ -61,11 +63,11 @@ const Story = () => {
         },
         {
           id: 'item-3',
-          text: 'Tokyo',
+          text: new TextObject('Tokyo'),
         },
         {
           id: 'item-4',
-          text: 'Paris',
+          text: new TextObject('Paris'),
         },
       ],
     }),

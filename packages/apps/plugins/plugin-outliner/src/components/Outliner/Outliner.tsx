@@ -3,11 +3,12 @@
 //
 
 import { Square, DotsThreeVertical, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, type KeyboardEvent, useEffect, useRef, useState } from 'react';
+import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
 
 import { Button, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
+import { ItemBlock } from './ItemBlock';
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
 
@@ -58,6 +59,7 @@ const Item = ({
     }
   }, [active]);
 
+  /*
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
       // TODO(burdon): Maintain caret position.
@@ -95,6 +97,7 @@ const Item = ({
         break;
     }
   };
+  */
 
   return (
     <div className='flex items-center px-2 gap-3'>
@@ -113,27 +116,32 @@ const Item = ({
           className={mx('shrink-0', getSize(2), active && 'text-primary-500')}
         />
       )}
-      <Input.Root>
-        <Input.TextInput
-          ref={inputRef}
-          // autoFocus={active}
-          autoComplete='off'
-          spellCheck={spellCheck}
-          placeholder={focused ? placeholder : undefined}
-          classNames='w-full'
-          variant='subdued'
-          value={item.text ?? ''}
-          onFocus={() => {
-            setFocused(true);
-            onFocus?.();
-          }}
-          onBlur={() => setFocused(false)}
-          onKeyDown={handleKeyDown}
-          onChange={({ target: { value } }) => {
-            item.text = value;
-          }}
-        />
-      </Input.Root>
+
+      {item.text && <ItemBlock id={item.id} text={item.text} />}
+
+      {false && (
+        <Input.Root>
+          <Input.TextInput
+            ref={inputRef}
+            // autoFocus={active}
+            autoComplete='off'
+            spellCheck={spellCheck}
+            placeholder={focused ? placeholder : undefined}
+            classNames='w-full'
+            variant='subdued'
+            // value={item.text ?? ''}
+            onFocus={() => {
+              setFocused(true);
+              onFocus?.();
+            }}
+            onBlur={() => setFocused(false)}
+            // onKeyDown={handleKeyDown}
+            // onChange={({ target: { value } }) => {
+            //   item.text = value;
+            // }}
+          />
+        </Input.Root>
+      )}
       {active && (
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>

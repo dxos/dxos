@@ -5,23 +5,29 @@
 import React, { type FC } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
-import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import { MarkdownEditor, type MarkdownEditorProps, useTextModel } from '@dxos/react-ui-editor';
 
-export const ItemBlock: FC<{ item: { id: string; text: TextObject } }> = ({ item }) => {
-  const model = useTextModel({ text: item.text });
+export const ItemBlock: FC<{ id: string; text: TextObject }> = ({ id, text }) => {
+  const model = useTextModel({ text });
+
+  const handleCursor: MarkdownEditorProps['onCursor'] = ({ event: { key }, line, lines }) => {
+    console.log({ key, line, lines });
+  };
+
+  if (!model) {
+    return null;
+  }
 
   return (
-    <div className='flex p-2'>
-      {model && (
-        <MarkdownEditor
-          model={model}
-          slots={{
-            root: {
-              className: 'w-full',
-            },
-          }}
-        />
-      )}
-    </div>
+    <MarkdownEditor
+      key={id}
+      model={model}
+      slots={{
+        root: {
+          className: 'w-full',
+        },
+      }}
+      onCursor={handleCursor}
+    />
   );
 };

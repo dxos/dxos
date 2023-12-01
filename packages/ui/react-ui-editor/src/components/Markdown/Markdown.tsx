@@ -54,11 +54,18 @@ import { type EditorModel, type EditorSlots } from '../../model';
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
+export type CursorEvent = {
+  event: KeyboardEvent;
+  line: number;
+  lines: number;
+};
+
 export type MarkdownEditorProps = {
   model?: EditorModel;
   slots?: EditorSlots;
   editorMode?: EditorMode;
   onChange?: (content: string | Text) => void;
+  onCursor?: (event: CursorEvent) => void;
 };
 
 export type MarkdownEditorRef = {
@@ -68,7 +75,7 @@ export type MarkdownEditorRef = {
 };
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
-  ({ model, slots = {}, onChange, editorMode }, forwardedRef) => {
+  ({ model, slots = {}, editorMode, onChange, onCursor }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -148,6 +155,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             indentWithTab,
           ]),
           EditorView.lineWrapping,
+
           // Theme
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
           EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
@@ -178,15 +186,28 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }, [parent, content, provider?.awareness, themeMode, editorMode]);
 
     const handleKeyUp = useCallback(
-      ({ key, altKey, shiftKey, metaKey, ctrlKey }: KeyboardEvent) => {
+      (event: KeyboardEvent) => {
+        const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          case 'Enter':
+          case 'Enter': {
             view?.contentDOM.focus();
             break;
+          }
 
-          case 'Escape':
+          case 'Escape': {
             editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && parent?.focus();
             break;
+          }
+
+          case 'ArrowUp':
+          case 'ArrowDown': {
+            if (view) {
+              const head = view.state.selection.ranges[0].head;
+              const current = view.state.doc.lineAt(head);
+              onCursor?.({ event, line: current.number, lines: view.state.doc.lines });
+            }
+            break;
+          }
         }
       },
       [view, editorMode],
