@@ -20,7 +20,7 @@ export type TriggerSubscription = {
   type: string;
   spaceKey: string;
   props?: Record<string, any>;
-  deep?: boolean;
+  deep?: boolean; // Watch changes to object (not just creation).
   delay?: number;
 };
 
@@ -30,7 +30,7 @@ export type TriggerSubscription = {
 export type FunctionTrigger = {
   function: string;
   schedule?: string;
-  subscription?: TriggerSubscription;
+  subscriptions?: TriggerSubscription[];
 };
 
 /**

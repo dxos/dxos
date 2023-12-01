@@ -34,7 +34,7 @@ import { type BlockProperties, MessageCard } from './MessageCard';
 export type ThreadChannelProps = {
   thread: ThreadType;
   identityKey: PublicKey;
-  propertiesProvider: (identityKey: PublicKey) => BlockProperties;
+  propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
   fullWidth?: boolean;
   onSubmit?: (text: string) => boolean | void;
   onDelete?: (blockId: string, idx: number) => void;
@@ -68,7 +68,10 @@ export const ThreadChannel = ({
           .map((message) => (
             <div
               key={message.id}
-              className={mx('flex my-1', !fullWidth && identityKey.toHex() === message.identityKey && 'justify-end')}
+              className={mx(
+                'flex my-1',
+                !fullWidth && identityKey.toHex() === message.from?.identityKey && 'justify-end',
+              )}
             >
               <div className={mx('flex flex-col', fullWidth ? 'w-full' : 'md:min-w-[400px] max-w-[600px]')}>
                 <MessageCard

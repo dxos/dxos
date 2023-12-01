@@ -1321,6 +1321,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -1424,6 +1427,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -1656,6 +1662,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -2150,6 +2159,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -2629,6 +2641,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -2672,6 +2687,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -6174,6 +6192,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@octokit/rest':
         specifier: ^19.0.5
         version: 19.0.5
@@ -8057,6 +8078,58 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
 
+  packages/ui/react-ui-card:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@radix-ui/react-primitive':
+        specifier: ^1.0.2
+        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@dnd-kit/core':
+        specifier: ^6.0.5
+        version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@dnd-kit/sortable':
+        specifier: ^7.0.1
+        version: 7.0.1(@dnd-kit/core@6.0.5)(react@18.2.0)
+      '@dnd-kit/utilities':
+        specifier: ^3.2.0
+        version: 3.2.0(react@18.2.0)
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.3.1
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      chromatic:
+        specifier: ^7.5.0
+        version: 7.6.0
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+      vite-plugin-turbosnap:
+        specifier: ^1.0.2
+        version: 1.0.2
+
   packages/ui/react-ui-editor:
     dependencies:
       '@codemirror/autocomplete':
@@ -8252,6 +8325,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../react-ui-card
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme

@@ -2,31 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Document } from 'langchain/document';
 import { PromptTemplate } from 'langchain/prompts';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
-// import { formatDocumentsAsString } from 'langchain/util/document';
+import { formatDocumentsAsString } from 'langchain/util/document';
 
 import { str } from '../../../util';
 import { type SequenceGenerator, type SequenceTest } from '../request';
 
 export const test: SequenceTest = () => true;
 
-export const formatDocumentsAsString = (documents: Document[], separator = '\n\n'): string => {
-  return documents?.map((doc) => doc.pageContent).join(separator);
-};
+// export const formatDocumentsAsString = (documents: Document[], separator = '\n\n'): string => {
+//   return documents?.map((doc) => doc.pageContent).join(separator);
+// };
 
 export const generator: SequenceGenerator = (resources, _, options) => {
-  const retriever = resources.store.vectorStore.asRetriever({
-    // filter: (x: any) => {
-    //   console.log('::', x);
-    // },
-  });
+  const retriever = resources.store.vectorStore.asRetriever({});
 
   return RunnableSequence.from([
     {
-      context: () => retriever.pipe(formatDocumentsAsString),
+      context: retriever.pipe(formatDocumentsAsString),
       question: new RunnablePassthrough(),
     },
     PromptTemplate.fromTemplate(

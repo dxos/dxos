@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Density, type Theme } from '@dxos/react-ui-types';
-
-import { mx } from '../../util';
-import { getSize, inputSurface } from '../fragments';
+import { type ComponentFunction, type Density, type Theme } from '@dxos/react-ui';
+import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 const defaults = {
   width: 'min-w-[256px]',

@@ -3,24 +3,25 @@
 //
 
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { Document as DocumentType, File as FileType } from '@braneframe/types';
-import { Trigger } from '@dxos/async';
-import { type TypedObject } from '@dxos/echo-schema';
-import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
+import { hasType, type TypedObject } from '@dxos/echo-schema';
+import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
-import { getKey, isTypedObject, nonNullable } from '../../util';
+import { getKey } from '../../util';
 
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
-  event,
-  context: { client, dataDir },
-  response,
-}) => {
+export const handler = subscriptionHandler(async ({ event, context, response }) => {
+  const { client, dataDir } = context;
+  const { space, objects } = event;
+  if (!space || !objects?.length) {
+    return response.status(400);
+  }
   invariant(dataDir);
 
   const docs: ChainDocument[] = [];
@@ -29,6 +30,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     async (objects: TypedObject[]) => {
       for (const object of objects) {
         let pageContent: string | undefined;
+        log.info('processing', { object: { id: object.id, type: object.__typename } });
         switch (object.__typename) {
           case DocumentType.schema.typename: {
             pageContent = object.content?.text.trim();
@@ -42,14 +44,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
               log.info('fetching', { url });
               const res = await fetch(url);
               const buffer = await res.arrayBuffer();
-              const processing = new Trigger<string>();
-              textract.fromBufferWithMime(res.headers.get('content-type')!, Buffer.from(buffer), (error, text) => {
-                if (error) {
-                  processing.throw(error);
-                }
-                processing.wake(text);
-              });
-              pageContent = await processing.wait();
+              const pageContent = (await promisify(textract.fromBufferWithMime)(
+                res.headers.get('content-type')!,
+                Buffer.from(buffer),
+              )) as string;
               log.info('parsed', { cid: object.cid, text: pageContent?.length });
             }
             break;
@@ -69,23 +67,15 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
     };
 
   const spaces = client.spaces.get();
-  if (event.space) {
-    const space = client.spaces.get(PublicKey.from(event.space))!;
-    if (space) {
-      if (event.objects?.length) {
-        // TODO(burdon): Update API to make this simpler.
-        const objects = event.objects
-          ?.map<TypedObject | undefined>((id) => space.db.getObjectById(id))
-          .filter(nonNullable)
-          .filter(isTypedObject);
-
-        await addDocuments(space.key)(objects);
-      } else {
-        const { objects: documents } = space.db.query(DocumentType.filter());
-        await addDocuments(space.key)(documents);
-        const { objects: files } = space.db.query(FileType.filter());
-        await addDocuments(space.key)(files);
-      }
+  if (space) {
+    const add = addDocuments(space.key);
+    if (event.objects?.length) {
+      await add(objects.filter(hasType(DocumentType.schema)));
+    } else {
+      const { objects: documents } = space.db.query(DocumentType.filter());
+      await add(documents);
+      const { objects: files } = space.db.query(FileType.filter());
+      await add(files);
     }
   } else {
     for (const space of spaces) {
@@ -113,4 +103,4 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   }
 
   return response.status(200);
-};
+});
