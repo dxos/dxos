@@ -605,6 +605,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/migrations':
+        specifier: workspace:*
+        version: link:../../sdk/migrations
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -2289,6 +2292,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/migrations':
+        specifier: workspace:*
+        version: link:../../../sdk/migrations
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -4803,7 +4809,7 @@ importers:
         specifier: ^3.0.0
         version: 3.2.0
       node-datachannel:
-        specifier: ^0.5.1
+        specifier: ^0.5.2
         version: 0.5.2
       p-defer:
         specifier: ^3.0.0
@@ -7399,6 +7405,18 @@ importers:
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
+
+  packages/sdk/migrations:
+    dependencies:
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
 
   packages/sdk/react-client:
     dependencies:
