@@ -35,6 +35,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/migrations"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
