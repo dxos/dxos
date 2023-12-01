@@ -70,7 +70,7 @@ export const ThreadChannel = ({
               key={message.id}
               className={mx(
                 'flex my-1',
-                !fullWidth && identityKey.toHex() === message.from.identityKey && 'justify-end',
+                !fullWidth && identityKey.toHex() === message.from?.identityKey && 'justify-end',
               )}
             >
               <div className={mx('flex flex-col', fullWidth ? 'w-full' : 'md:min-w-[400px] max-w-[600px]')}>
