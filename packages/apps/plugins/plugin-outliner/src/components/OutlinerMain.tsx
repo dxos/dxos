@@ -21,7 +21,7 @@ export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
     // TODO(burdon): Factor out style (same for markdown, stack plugin).
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, inputSurface, 'pli-2')}>
-        <div role='none' className={mx('plb-6 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
+        <div role='none' className={mx('plb-4 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
           <Outliner.Root
             isTasklist={tree.checkbox}
             root={tree.root}
@@ -44,7 +44,7 @@ export const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
   }
 
   return (
-    <div role='none' className='flex flex-col w-full plb-6'>
+    <div role='none' className='flex flex-col w-full plb-4'>
       <Outliner.Root
         isTasklist={tree.checkbox}
         root={tree.root}
