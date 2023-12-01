@@ -31,7 +31,6 @@ export default template.define.text({
                 ThemePlugin({
                   content: [
                     resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-                    resolve(__dirname, '../node_modules/@dxos/react-*/dist/**/*.mjs'),
                   ]
                 })
               ]

@@ -5,7 +5,8 @@
 import React, { forwardRef } from 'react';
 
 import type { TypedObject } from '@dxos/react-client/echo';
-import { Card, DropdownMenu, Input } from '@dxos/react-ui';
+import { DropdownMenu, Input } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 

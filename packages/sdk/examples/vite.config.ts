@@ -41,11 +41,6 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-theme/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-client/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-shell/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269

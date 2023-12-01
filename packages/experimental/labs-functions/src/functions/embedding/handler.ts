@@ -3,62 +3,104 @@
 //
 
 import { join } from 'node:path';
+import { promisify } from 'node:util';
+import textract from 'textract';
 
-import { Document as DocumentType } from '@braneframe/types';
-import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
+import { Document as DocumentType, File as FileType } from '@braneframe/types';
+import { hasType, type TypedObject } from '@dxos/echo-schema';
+import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ChainDocument, createOpenAIChainResources } from '../../chain';
+import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
 
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
-  event,
-  context: { client, dataDir },
-  response,
-}) => {
+export const handler = subscriptionHandler(async ({ event, context, response }) => {
+  const { client, dataDir } = context;
+  const { space, objects } = event;
+  if (!space || !objects?.length) {
+    return response.status(400);
+  }
   invariant(dataDir);
 
   const docs: ChainDocument[] = [];
-  const addDocument =
+  const addDocuments =
     (space: PublicKey | undefined = undefined) =>
-    (object: DocumentType) =>
-      object.content.text.trim().length > 0 &&
-      docs.push({
-        metadata: { space: space?.toHex(), id: object.id },
-        pageContent: object.content.text,
-      });
+    async (objects: TypedObject[]) => {
+      for (const object of objects) {
+        let pageContent: string | undefined;
+        log.info('processing', { object: { id: object.id, type: object.__typename } });
+        switch (object.__typename) {
+          case DocumentType.schema.typename: {
+            pageContent = object.content?.text.trim();
+            break;
+          }
+
+          case FileType.schema.typename: {
+            const endpoint = client.config.values.runtime?.services?.ipfs?.gateway;
+            if (endpoint && object.cid) {
+              const url = join(endpoint, object.cid);
+              log.info('fetching', { url });
+              const res = await fetch(url);
+              const buffer = await res.arrayBuffer();
+              const pageContent = (await promisify(textract.fromBufferWithMime)(
+                res.headers.get('content-type')!,
+                Buffer.from(buffer),
+              )) as string;
+              log.info('parsed', { cid: object.cid, text: pageContent?.length });
+            }
+            break;
+          }
+        }
+
+        if (pageContent?.length) {
+          docs.push({
+            metadata: {
+              space: space?.toHex(),
+              id: object.id,
+            },
+            pageContent,
+          });
+        }
+      }
+    };
 
   const spaces = client.spaces.get();
-  if (event.space && event.objects.length > 0) {
-    const space = client.spaces.get(PublicKey.from(event.space))!;
-    const add = addDocument(space.key);
-    if (space) {
-      event.objects.forEach((id) => add(space.db.getObjectById(id)!));
+  if (space) {
+    const add = addDocuments(space.key);
+    if (event.objects?.length) {
+      await add(objects.filter(hasType(DocumentType.schema)));
+    } else {
+      const { objects: documents } = space.db.query(DocumentType.filter());
+      await add(documents);
+      const { objects: files } = space.db.query(FileType.filter());
+      await add(files);
     }
   } else {
     for (const space of spaces) {
-      const { objects } = space.db.query(DocumentType.filter());
-      objects.forEach(addDocument(space.key));
+      const { objects: documents } = space.db.query(DocumentType.filter());
+      await addDocuments(space.key)(documents);
+      const { objects: files } = space.db.query(FileType.filter());
+      await addDocuments(space.key)(files);
     }
   }
 
   if (docs.length) {
     const config = client.config;
-    const { store } = createOpenAIChainResources({
-      baseDir: join(dataDir, 'agent/functions/embedding'),
-      apiKey: getKey(config, 'openai.com/api_key')!,
+    const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
+      baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
+      apiKey: getKey(config, 'openai.com/api_key'),
     });
 
-    await store.initialize();
+    await resources.store.initialize();
 
     // TODO(burdon): Remove deleted docs.
-    await store.addDocuments(docs);
-    await store.save();
+    await resources.store.addDocuments(docs);
+    await resources.store.save();
 
-    log.info('embedding', { resources: store.stats });
+    log.info('embedding', resources.info);
   }
 
   return response.status(200);
-};
+});

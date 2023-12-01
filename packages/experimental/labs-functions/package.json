@@ -33,6 +33,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@octokit/rest": "^19.0.5",
     "amadeus": "^8.0.0",
     "assert": "^2.0.0",
@@ -54,6 +55,7 @@
     "node-fetch": "^2.6.0",
     "openai": "^3.2.1",
     "split2": "^4.1.0",
+    "textract": "^2.5.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.0"
   },
@@ -69,7 +71,8 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.startcase": "^4.4.7",
     "@types/mailparser": "^3.4.0",
-    "@types/split2": "^3.2.1"
+    "@types/split2": "^3.2.1",
+    "@types/textract": "^2.4.5"
   },
   "optionalDependencies": {
     "@faker-js/faker": "^8.0.2"
