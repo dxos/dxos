@@ -10,6 +10,7 @@ export default [
       [SEARCH_PLUGIN]: {
         'plugin name': 'Search',
         'search action label': 'Search',
+        'search placeholder': 'Search...',
       },
     },
   },
