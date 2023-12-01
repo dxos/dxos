@@ -18,19 +18,18 @@ import {
   fineDimensions,
   placeholderText,
   focusRing,
-  hoverColors,
   subduedFocus,
   fineBlockSize,
   coarseBlockSize,
   staticFocusRing,
   descriptionText,
   valenceColorText,
-  contentElevation,
   getSize,
   computeSize,
   sizeValue,
   getSizeHeight,
   getSizeWidth,
+  contentElevation,
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -53,6 +52,12 @@ export const successInputValence = 'shadow-success-500/50 dark:shadow-success-60
 export const infoInputValence = 'shadow-info-500/50 dark:shadow-info-600/50';
 export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-600/50';
 export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
+
+const inputSurfaceFocus =
+  'transition-colors bg-neutral-white/20 dark:bg-neutral-925/40 focus:bg-white dark:focus:bg-neutral-925 border-transparent focus:border-transparent';
+
+const inputSurfaceHover =
+  'hover:bg-neutral-75/20 dark:hover:bg-neutral-925/60 focus:hover:bg-white dark:focus:hover:bg-neutral-925';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -79,15 +84,18 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-neutral-900 dark:text-white',
+  'is-full text-base rounded text-neutral-900 dark:text-white',
+  inputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
-  props.disabled && staticDisabled,
+  props.disabled ? staticDisabled : inputSurfaceHover,
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
+  'is-full text-base rounded text-neutral-900 dark:text-white',
+  inputSurfaceFocus,
+  props.focused && 'bg-white dark:bg-neutral-925',
   placeholderText,
-  'text-base rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
   inputValence(props.validationValence),
   props.disabled && staticDisabled,
   props.focused && staticFocusRing,
@@ -97,22 +105,21 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation(props), ...etc)
+    ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation({ elevation: props.elevation }), ...etc)
     : mx(
-        'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50 border-transparent focus:border-transparent',
-        !props.disabled && focusRing,
-        !props.disabled && hoverColors,
-        inputValence(props.validationValence) || neutralInputValence,
-        !props.disabled && contentElevation(props),
         ...sharedDefaultInputStyles(props),
+        !props.disabled && focusRing,
+        inputValence(props.validationValence) || neutralInputValence,
+        !props.disabled && contentElevation({ elevation: props.elevation }),
         ...etc,
       );
 
-export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
     getSize(size),
-    'shrink-0 flex items-center justify-center rounded text-white',
+    'shrink-0 flex items-center justify-center rounded text-white shadow-inner',
     'bg-neutral-100 dark:bg-neutral-700 aria-checked:bg-primary-600 dark:aria-checked:bg-primary-600 aria-[checked=mixed]:bg-primary-600 dark:aria-[checked=mixed]:bg-primary-600',
+    !disabled && inputSurfaceHover,
     focusRing,
     ...etc,
   );
