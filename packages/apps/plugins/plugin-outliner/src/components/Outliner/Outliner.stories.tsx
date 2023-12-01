@@ -3,87 +3,56 @@
 //
 
 import '@dxosTheme';
-
-import { deepSignal } from 'deepsignal/react';
+import { deepSignal, type RevertDeepSignal } from 'deepsignal';
 import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider } from '@dxos/react-ui';
+import { inputSurface } from '@dxos/react-ui-theme';
 
-import { Outliner } from './Outliner';
+import { Outliner, type OutlinerRootProps } from './Outliner';
 import { type Item } from './types';
 
-const Story = () => {
-  const [root] = useState(
+(globalThis as any)[TextObject.name] = TextObject;
+
+const Story = ({ isTasklist }: Pick<OutlinerRootProps, 'isTasklist'>) => {
+  const [root] = useState<Item>(
     deepSignal<Item>({
       id: 'root',
       items: [
         {
-          id: 'item-1',
-          text: new TextObject('London'),
+          id: PublicKey.random().toHex(),
+          text: new TextObject('Item 1'),
         },
         {
-          id: 'item-2',
-          text: new TextObject('New York'),
-          items: [
-            {
-              id: 'item-2a',
-              text: new TextObject('Brooklyn'),
-            },
-            {
-              id: 'item-2b',
-              text: new TextObject('Manhattan'),
-              items: [
-                {
-                  id: 'item-2b1',
-                  text: new TextObject('East Village'),
-                },
-                {
-                  id: 'item-2b2',
-                  text: new TextObject('West Village'),
-                },
-                {
-                  id: 'item-2b3',
-                  text: new TextObject('SoHo'),
-                },
-              ],
-            },
-            {
-              id: 'item-2c',
-              text: new TextObject('Queens'),
-              items: [
-                {
-                  id: 'item-2c1',
-                  text: new TextObject('Astoria'),
-                },
-              ],
-            },
-          ],
+          id: PublicKey.random().toHex(),
+          text: new TextObject('Item 2'),
         },
         {
-          id: 'item-3',
-          text: new TextObject('Tokyo'),
-        },
-        {
-          id: 'item-4',
-          text: new TextObject('Paris'),
+          id: PublicKey.random().toHex(),
+          text: new TextObject('Item 3'),
         },
       ],
-    }),
+    }) as RevertDeepSignal<Item>,
   );
 
-  const handleCreate = () => {
-    return deepSignal({
-      id: PublicKey.random().toHex(),
-    });
-  };
+  const handleCreate = () => ({
+    id: PublicKey.random().toHex(),
+    text: new TextObject(),
+  });
 
   const handleDelete = () => {};
 
   return (
     <DensityProvider density='fine'>
-      <Outliner.Root root={root} onCreate={handleCreate} onDelete={handleDelete} />
+      <Outliner.Root
+        className={inputSurface}
+        root={root}
+        onCreate={handleCreate}
+        onDelete={handleDelete}
+        isTasklist={isTasklist}
+      />
     </DensityProvider>
   );
 };
@@ -97,3 +66,8 @@ export default {
 };
 
 export const Default = {};
+export const Checkbox = {
+  args: {
+    isTasklist: true,
+  },
+};
