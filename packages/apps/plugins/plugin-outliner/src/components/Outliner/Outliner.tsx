@@ -6,11 +6,12 @@ import { Square, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
 
 import { Button, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
+import { useTextModel } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { ItemBlock } from './ItemBlock';
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
+import { TextEditor, type TextEditorProps } from '../TextEditor';
 
 // TODO(burdon): Break/join lines.
 // TODO(burdon): TextObject/MarkdownEditor
@@ -26,7 +27,7 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
 // Item
 //
 
-type ItemProps = {
+type OutlinerItemProps = {
   item: Item;
   active?: boolean;
   onFocus?: () => void;
@@ -37,7 +38,7 @@ type ItemProps = {
   onNav?: (item: Item, direction?: 'home' | 'end' | 'up' | 'down') => void;
 } & OutlinerOptions;
 
-const Item = ({
+const OutlinerItem = ({
   item,
   active,
   isTasklist,
@@ -49,7 +50,7 @@ const Item = ({
   onIndent,
   onShift,
   onNav,
-}: ItemProps) => {
+}: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,25 +100,82 @@ const Item = ({
   };
   */
 
+  const model = useTextModel({ text: item.text });
+
+  // TODO(burdon): Use different editor.
+  // TODO(burdon): Mentions (e.g., /foo).
+  const handleKeyDown: TextEditorProps['onKeyDown'] = (event, { line, lines }) => {
+    const { key, shiftKey } = event;
+    switch (key) {
+      case 'ArrowUp':
+        event.preventDefault();
+        if (event.shiftKey) {
+          onShift?.('up');
+        } else {
+          if (line === 1) {
+            onNav?.(item, event.metaKey ? 'home' : 'up');
+          }
+        }
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        if (event.shiftKey) {
+          onShift?.('down');
+        } else {
+          if (line === lines) {
+            onNav?.(item, event.metaKey ? 'end' : 'down');
+          }
+        }
+        break;
+      case 'Tab': {
+        event.preventDefault();
+        onIndent?.(event.shiftKey ? 'left' : 'right');
+        break;
+      }
+      case 'Enter': {
+        // TODO(burdon): Split line (shift to create new).
+        if (!shiftKey) {
+          event.preventDefault();
+          onEnter?.();
+        }
+        break;
+      }
+    }
+  };
+
   return (
-    <div className='flex items-center px-2 gap-3'>
+    <div className='flex px-2 gap-3'>
       {(isTasklist && (
-        <Input.Root>
-          <Input.Checkbox
-            checked={item.done}
-            onCheckedChange={(checked) => {
-              item.done = !!checked;
-            }}
-          />
-        </Input.Root>
+        <div className='py-[7px]'>
+          <Input.Root>
+            <Input.Checkbox
+              checked={item.done}
+              onCheckedChange={(checked) => {
+                item.done = !!checked;
+              }}
+            />
+          </Input.Root>
+        </div>
       )) || (
-        <Square
-          weight={active ? 'fill' : undefined}
-          className={mx('shrink-0', getSize(2), active && 'text-primary-500')}
-        />
+        <div className='px-1 py-3'>
+          <Square
+            weight={active ? 'fill' : undefined}
+            className={mx('shrink-0', getSize(2), active && 'text-primary-500')}
+          />
+        </div>
       )}
 
-      {item.text && <ItemBlock id={item.id} text={item.text} />}
+      {model && (
+        <TextEditor
+          model={model}
+          slots={{
+            root: {
+              className: 'w-full',
+            },
+          }}
+          onKeyDown={handleKeyDown}
+        />
+      )}
 
       {false && (
         <Input.Root>
@@ -142,6 +200,9 @@ const Item = ({
           />
         </Input.Root>
       )}
+
+      {/* TODO(burdon): Active or hover. */}
+      {/* TODO(burdon): Undo delete. */}
       {active && (
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -171,7 +232,7 @@ const Item = ({
 // Branch
 //
 
-type BranchProps = OutlinerOptions & {
+type OutlinerBranchProps = OutlinerOptions & {
   className?: string;
   root: Item;
   active?: string;
@@ -180,9 +241,9 @@ type BranchProps = OutlinerOptions & {
   onItemDelete?: (parent: Item, item: Item) => void;
   onItemIndent?: (parent: Item, item: Item, direction?: string) => void;
   onItemShift?: (parent: Item, item: Item, direction?: string) => void;
-} & Pick<ItemProps, 'onNav'>;
+} & Pick<OutlinerItemProps, 'onNav'>;
 
-const Branch = ({
+const OutlinerBranch = ({
   className,
   root,
   active,
@@ -193,12 +254,12 @@ const Branch = ({
   onItemShift,
   onNav,
   ...props
-}: BranchProps) => {
+}: OutlinerBranchProps) => {
   return (
     <div className={className}>
       {root.items?.map((item) => (
         <div key={item.id}>
-          <Item
+          <OutlinerItem
             item={item}
             active={active === item.id}
             placeholder='Enter text'
@@ -211,7 +272,7 @@ const Branch = ({
             {...props}
           />
           {(item.items?.length ?? 0) > 0 && (
-            <Branch
+            <OutlinerBranch
               className='pl-4'
               root={item}
               active={active}
@@ -234,16 +295,17 @@ const Branch = ({
 // Root
 //
 
-type RootProps = {
+type OutlinerRootProps = {
+  className?: string;
   root: Item;
   onCreate?: () => Item;
   onDelete?: (item: Item) => void;
 } & OutlinerOptions;
 
-const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
+const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: OutlinerRootProps) => {
   const [active, setActive] = useState<string>();
 
-  const handleCreate: BranchProps['onItemCreate'] = (parent, current, before) => {
+  const handleCreate: OutlinerBranchProps['onItemCreate'] = (parent, current, before) => {
     const item = onCreate!();
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => current.id === id);
@@ -261,7 +323,7 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
     return item;
   };
 
-  const handleDelete: BranchProps['onItemDelete'] = (parent, item) => {
+  const handleDelete: OutlinerBranchProps['onItemDelete'] = (parent, item) => {
     if (parent === root && parent.items?.length === 1) {
       return;
     }
@@ -280,7 +342,7 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
     }
   };
 
-  const handleIndent: BranchProps['onItemIndent'] = (parent, item, direction) => {
+  const handleIndent: OutlinerBranchProps['onItemIndent'] = (parent, item, direction) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
     switch (direction) {
@@ -304,15 +366,13 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
           const siblingItems = getItems(items[idx - 1]);
           siblingItems.splice(siblingItems.length, 0, item);
           items.splice(idx, 1);
-          // TODO(burdon): [Bug]: last item is sometimes lost (doesn't show up in tree). Mutation race condition?
-          // console.log(item.id === siblingItems[siblingItems.length - 1].id, siblingItems.length);
         }
         break;
       }
     }
   };
 
-  const handleShift: BranchProps['onItemShift'] = (parent, item, direction) => {
+  const handleShift: OutlinerBranchProps['onItemShift'] = (parent, item, direction) => {
     const idx = parent.items!.findIndex(({ id }) => id === item.id) ?? -1;
     switch (direction) {
       case 'up': {
@@ -331,7 +391,7 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
     }
   };
 
-  const handleNav: BranchProps['onNav'] = (item, direction) => {
+  const handleNav: OutlinerBranchProps['onNav'] = (item, direction) => {
     switch (direction) {
       case 'home':
         setActive(root.items![0].id);
@@ -359,8 +419,8 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
   };
 
   return (
-    <div role='tree'>
-      <Branch
+    <div role='tree' className={className}>
+      <OutlinerBranch
         root={root}
         active={active}
         onItemFocus={(item) => setActive(item.id)}
@@ -376,7 +436,9 @@ const Root = ({ root, onCreate, onDelete, ...props }: RootProps) => {
 };
 
 export const Outliner = {
-  Root,
-  Branch,
-  Item,
+  Root: OutlinerRoot,
+  Branch: OutlinerBranch,
+  Item: OutlinerItem,
 };
+
+export type { OutlinerRootProps };

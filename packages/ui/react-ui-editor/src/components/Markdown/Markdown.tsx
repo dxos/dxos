@@ -138,7 +138,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
           bracketMatching(),
           closeBrackets(),
-          autocompletion(),
+          autocompletion({
+            // activateOnTyping: true,
+          }),
           rectangularSelection(),
           crosshairCursor(),
           highlightActiveLine(),
