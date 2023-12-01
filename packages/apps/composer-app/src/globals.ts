@@ -3,8 +3,17 @@
 //
 
 import { Document, Folder, File, Grid, Kanban, Table, Sketch, Stack } from '@braneframe/types';
+import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
-import { SpaceState } from '@dxos/react-client/echo';
+import { EchoDatabase, SpaceProxy, SpaceState, TypedObject } from '@dxos/react-client/echo';
+
+export const appKey = 'composer.dxos.org';
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[TypedObject.name] = TypedObject;
+(globalThis as any)[EchoDatabase.name] = EchoDatabase;
+(globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 const dxosTypes = {
   Document,
@@ -73,3 +82,41 @@ const upgrade035 = () => {
 (window as any).composer = {
   upgrade035,
 };
+
+Migrations.define(appKey, [
+  {
+    version: 1,
+    up: ({ space }) => {
+      const rootFolder = space.properties[Folder.schema.typename];
+      if (rootFolder instanceof Folder) {
+        return;
+      }
+
+      const { objects } = space.db.query(Folder.filter({ name: space.key.toHex() }));
+      if (objects.length > 0) {
+        space.properties[Folder.schema.typename] = objects[0];
+      } else {
+        space.properties[Folder.schema.typename] = new Folder({ name: space.key.toHex() });
+      }
+    },
+    down: () => {},
+  },
+  // TODO(wittjosiah): Include this migration once https://github.com/dxos/dxos/pull/4757 is fixed.
+  // {
+  //   version: ,
+  //   up: ({ space }) => {
+  //     const rootFolder = space.properties[Folder.schema.typename] as Folder;
+  //     const { objects } = space.db.query(Folder.filter({ name: space.key.toHex() }));
+  //     if (objects.length <= 1) {
+  //       return;
+  //     }
+  //     rootFolder.objects = objects.flatMap(({ objects }) => objects);
+  //     objects.forEach((object) => {
+  //       if (object !== rootFolder) {
+  //         space.db.remove(object);
+  //       }
+  //     });
+  //   },
+  //   down: () => {},
+  // },
+]);
