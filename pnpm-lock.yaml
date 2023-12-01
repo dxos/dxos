@@ -4809,8 +4809,8 @@ importers:
         specifier: ^3.0.0
         version: 3.2.0
       node-datachannel:
-        specifier: ^0.4.3
-        version: 0.4.3
+        specifier: ^0.5.2
+        version: 0.5.2
       p-defer:
         specifier: ^3.0.0
         version: 3.0.0
@@ -35986,14 +35986,14 @@ packages:
       yargs: 7.1.2
     dev: false
 
-  /node-datachannel@0.4.3:
-    resolution: {integrity: sha512-I2SYzgqNd5gX8B+hQcff0qpGGwNiHZnXJNgsFyW0UXk1A3fbC/4L1PhSKGSuc7z0+Bk3raMN939E0KroJ5CJhA==}
+  /node-datachannel@0.5.2:
+    resolution: {integrity: sha512-COuQtVSZc80jt7TV2/BlksOiqZyNFbitDENy8MensezoA7pEGB+lmd9Qk3dnmSZ1nr1vyhF44FL7IkKsQ52Mvw==}
+    engines: {node: '>=16.0.0'}
     requiresBuild: true
     dependencies:
+      node-domexception: 2.0.1
       prebuild-install: 7.1.1
     dev: false
-    bundledDependencies:
-      - prebuild-install
 
   /node-dir@0.1.17:
     resolution: {integrity: sha512-tmPX422rYgofd4epzrNoOXiE8XFZYOcCq1vD7MAXCDO+O+zndlA2ztdKKMa+EeuBG5tHETpr4ml4RGgpqDCCAg==}
@@ -36004,6 +36004,11 @@ packages:
   /node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+
+  /node-domexception@2.0.1:
+    resolution: {integrity: sha512-M85rnSC7WQ7wnfQTARPT4LrK7nwCHLdDFOCcItZMhTQjyCebJH8GciKqYJNgaOFZs9nFmTmd/VMyi3OW5jA47w==}
+    engines: {node: '>=16'}
+    dev: false
 
   /node-fetch@2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
