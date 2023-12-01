@@ -10,13 +10,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
 import React, { type FC, type PropsWithChildren, useState } from 'react';
 
+import { DensityProvider, DropdownMenu, Input, ScrollArea } from '@dxos/react-ui';
 import { chromeSurface, mx } from '@dxos/react-ui-theme';
 
 import { Card } from './Card';
-import { DensityProvider } from '../DensityProvider';
-import { DropdownMenu } from '../DropdownMenu';
-import { Input } from '../Input';
-import { ScrollArea } from '../ScrollArea';
 
 faker.seed(1);
 

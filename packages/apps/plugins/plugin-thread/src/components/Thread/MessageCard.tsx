@@ -9,7 +9,8 @@ import React, { forwardRef, useId } from 'react';
 import { type Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, TextObject } from '@dxos/react-client/echo';
-import { Card, DensityProvider } from '@dxos/react-ui';
+import { DensityProvider } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
