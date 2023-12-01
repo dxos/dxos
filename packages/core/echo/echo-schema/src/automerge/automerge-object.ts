@@ -4,13 +4,14 @@
 
 import { Event } from '@dxos/async';
 import { next as automerge, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
-import { type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
+import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { type TypedObjectOptions } from '../object';
 import { AbstractEchoObject } from '../object/object';
@@ -34,31 +35,10 @@ export type BindOptions = {
   path: string[];
 };
 
-/**
- * Automerge object system properties.
- * (Is automerge specific.)
- */
-export type ObjectSystem = {
-  /**
-   * Deletion marker.
-   */
-  deleted: boolean;
-
-  /**
-   * Object type. Reference to the schema.
-   */
-  schema: Schema;
-
-  /**
-   * Object reference ('protobuf' protocol) type.
-   */
-  type: Reference;
-};
-
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb;
   private _doc?: Doc<any>;
-  private _docHandle?: DocHandle<any>;
+  private _docHandle?: DocHandle<DocStructure>;
   private _schema?: Schema;
 
   /**
@@ -153,11 +133,16 @@ export class AutomergeObject implements TypedObjectProperties {
     return 'automerge';
   }
 
-  [subscribe](callback: (value: any) => void): () => void {
-    this[base]._docHandle?.on('change', callback);
+  [subscribe](callback: (value: AutomergeObject) => void): () => void {
+    const listener = (event: DocHandleChangePayload<DocStructure>) => {
+      if (objectIsUpdated(this._id, event)) {
+        callback(this);
+      }
+    };
+    this[base]._docHandle?.on('change', listener);
     this[base]._updates.on(callback);
     return () => {
-      this[base]._docHandle?.off('change', callback);
+      this[base]._docHandle?.off('change', listener);
       this[base]._updates.off(callback);
     };
   }
@@ -256,6 +241,8 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _get(path: string[]) {
+    this._signal.notifyRead();
+
     const fullPath = [...this._path, ...path];
     let value = this._getDoc();
     for (const key of fullPath) {
@@ -298,6 +285,7 @@ export class AutomergeObject implements TypedObjectProperties {
     } else {
       failedInvariant();
     }
+    this._notifyUpdate();
   }
 
   /**
@@ -396,7 +384,13 @@ export class AutomergeObject implements TypedObjectProperties {
     }
   }
 
+  // TODO(mykola): Do we need this?
   private _onLinkResolved = () => {
+    this._signal.notifyWrite();
+    this._updates.emit();
+  };
+
+  private _notifyUpdate = () => {
     this._signal.notifyWrite();
     this._updates.emit();
   };
@@ -448,3 +442,10 @@ const decodeReference = (value: any) =>
   new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
 
 const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
+  if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
+    return true;
+  }
+  return false;
+};
