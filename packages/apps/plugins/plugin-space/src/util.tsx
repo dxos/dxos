@@ -160,6 +160,11 @@ export const spaceToGraphNode = ({
 
     const isPersonalSpace = parent.id === 'root';
     const folder = space.properties[Folder.schema.typename];
+    log.info('spaceToGraphNode', {
+      properties: space.properties.toJSON(),
+      folder,
+      isFolder: folder instanceof Folder,
+    });
     const partials =
       space.state.get() === SpaceState.READY && folder instanceof Folder
         ? getFolderGraphNodePartials({ folder, space, dispatch })
