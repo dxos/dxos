@@ -4,19 +4,20 @@
 
 import { scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
-import { PublicKey } from '@dxos/keys';
+import { subscriptionHandler } from '@dxos/functions';
 
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context }) => {
-  const space = context.client.spaces.get(PublicKey.from(event.space))!;
+export const handler = subscriptionHandler(async ({ event }) => {
+  const { space, objects } = event;
+  if (!space || !objects?.length) {
+    return;
+  }
 
   // Wait until done otherwise could be shut down prematurely.
   const done = new Trigger();
   scheduleTask(new Context(), async () => {
     const { Chess } = await import('chess.js');
-    for (const objectId of event.objects) {
-      const game = space.db.query({ id: objectId }).objects[0];
-      if (game && game.pgn) {
+    for (const game of objects) {
+      if (game.pgn) {
         // TODO(burdon): Impl simple engine: https://github.com/josefjadrny/js-chess-engine
         const chess = new Chess();
         // TODO(burdon): Rename history (isn't pgn).
@@ -39,4 +40,4 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
   });
 
   await done.wait();
-};
+});

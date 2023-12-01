@@ -34,7 +34,9 @@ const Story = () => {
           messages: Array.from({ length: 8 }).map(
             () =>
               new MessageType({
-                identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
+                from: {
+                  identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
+                },
                 blocks: faker.helpers.multiple(
                   () =>
                     faker.datatype.boolean({ probability: 0.8 })
@@ -84,7 +86,9 @@ const Story = () => {
   const handleSubmit = (text: string) => {
     thread.messages.push(
       new MessageType({
-        identityKey: identity.identityKey.toHex(),
+        from: {
+          identityKey: identity.identityKey.toHex(),
+        },
         blocks: [
           {
             timestamp: new Date().toISOString(),
