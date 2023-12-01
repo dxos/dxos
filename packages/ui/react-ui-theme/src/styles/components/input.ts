@@ -53,11 +53,17 @@ export const infoInputValence = 'shadow-info-500/50 dark:shadow-info-600/50';
 export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-600/50';
 export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
 
-const inputSurfaceFocus =
+const textInputSurfaceFocus =
   'transition-colors bg-neutral-white/20 dark:bg-neutral-925/40 focus:bg-white dark:focus:bg-neutral-925 border-transparent focus:border-transparent';
 
-const inputSurfaceHover =
-  'hover:bg-neutral-75/20 dark:hover:bg-neutral-925/60 focus:hover:bg-white dark:focus:hover:bg-neutral-925';
+const textInputSurfaceHover =
+  'hover:bg-neutral-37/80 dark:hover:bg-neutral-925/60 focus:hover:bg-white dark:focus:hover:bg-neutral-925';
+
+const booleanInputSurface =
+  'shadow-inner transition-colors bg-neutral-125 dark:bg-neutral-700 aria-checked:bg-primary-600 dark:aria-checked:bg-primary-600 aria-[checked=mixed]:bg-primary-600 dark:aria-[checked=mixed]:bg-primary-600';
+
+const booleanInputSurfaceHover =
+  'hover:bg-neutral-150 dark:hover:bg-neutral-650 hover:aria-checked:bg-primary-650 dark:hover:aria-checked:bg-primary-650 hover:aria-[checked=mixed]:bg-primary-650 dark:hover:aria-[checked=mixed]:bg-primary-650';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -85,15 +91,15 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-base rounded text-neutral-900 dark:text-white',
-  inputSurfaceFocus,
+  textInputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
-  props.disabled ? staticDisabled : inputSurfaceHover,
+  props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-base rounded text-neutral-900 dark:text-white',
-  inputSurfaceFocus,
+  textInputSurfaceFocus,
   props.focused && 'bg-white dark:bg-neutral-925',
   placeholderText,
   inputValence(props.validationValence),
@@ -117,9 +123,9 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
     getSize(size),
-    'shrink-0 flex items-center justify-center rounded text-white shadow-inner',
-    'bg-neutral-100 dark:bg-neutral-700 aria-checked:bg-primary-600 dark:aria-checked:bg-primary-600 aria-[checked=mixed]:bg-primary-600 dark:aria-[checked=mixed]:bg-primary-600',
-    !disabled && inputSurfaceHover,
+    booleanInputSurface,
+    !disabled && booleanInputSurfaceHover,
+    'shrink-0 flex items-center justify-center rounded text-white',
     focusRing,
     ...etc,
   );
