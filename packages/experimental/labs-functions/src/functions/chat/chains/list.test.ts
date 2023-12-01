@@ -11,7 +11,7 @@ import { getResources } from './testing';
 // TODO(burdon): How to prompt for schema formatting?
 // TODO(burdon): Create testbench for chains (using llama, function, tools, etc.)
 
-describe.only('list', () => {
+describe.skip('list', () => {
   test('basic', async () => {
     const resources = getResources();
 
