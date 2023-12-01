@@ -29,7 +29,6 @@ import {
   sizeValue,
   getSizeHeight,
   getSizeWidth,
-  contentElevation,
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -54,16 +53,16 @@ export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-60
 export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-neutral-white/20 dark:bg-neutral-925/40 focus:bg-white dark:focus:bg-neutral-925 border-transparent focus:border-transparent';
+  'transition-colors bg-[--input-bg] focus:bg-white dark:focus:bg-neutral-925 border-transparent focus:border-transparent';
 
 const textInputSurfaceHover =
-  'hover:bg-neutral-37/80 dark:hover:bg-neutral-925/60 focus:hover:bg-white dark:focus:hover:bg-neutral-925';
+  'hover:bg-[--input-bg-hover] dark:hover:bg-[--input-bg-hover] focus:hover:bg-white dark:focus:hover:bg-neutral-925';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors bg-neutral-125 dark:bg-neutral-700 aria-checked:bg-primary-600 dark:aria-checked:bg-primary-600 aria-[checked=mixed]:bg-primary-600 dark:aria-[checked=mixed]:bg-primary-600';
+  'shadow-inner transition-colors bg-neutral-125 dark:bg-neutral-700 aria-checked:bg-primary-550 dark:aria-checked:bg-primary-550 aria-[checked=mixed]:bg-primary-550 dark:aria-[checked=mixed]:bg-primary-550';
 
 const booleanInputSurfaceHover =
-  'hover:bg-neutral-150 dark:hover:bg-neutral-650 hover:aria-checked:bg-primary-650 dark:hover:aria-checked:bg-primary-650 hover:aria-[checked=mixed]:bg-primary-650 dark:hover:aria-[checked=mixed]:bg-primary-650';
+  'hover:bg-neutral-150 dark:hover:bg-neutral-650 hover:aria-checked:bg-primary-600 dark:hover:aria-checked:bg-primary-600 hover:aria-[checked=mixed]:bg-primary-600 dark:hover:aria-[checked=mixed]:bg-primary-600';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -100,6 +99,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-base rounded text-neutral-900 dark:text-white',
   textInputSurfaceFocus,
+  textInputSurfaceHover,
   props.focused && 'bg-white dark:bg-neutral-925',
   placeholderText,
   inputValence(props.validationValence),
@@ -111,12 +111,11 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation({ elevation: props.elevation }), ...etc)
+    ? mx(...sharedStaticInputStyles(props), ...etc)
     : mx(
         ...sharedDefaultInputStyles(props),
         !props.disabled && focusRing,
         inputValence(props.validationValence) || neutralInputValence,
-        !props.disabled && contentElevation({ elevation: props.elevation }),
         ...etc,
       );
 
