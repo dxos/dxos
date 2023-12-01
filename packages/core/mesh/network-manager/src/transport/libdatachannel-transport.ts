@@ -42,9 +42,18 @@ export class LibDataChannelTransport implements Transport {
 
   constructor(private readonly params: LibDataChannelTransportParams) {
     this._peer = (async () => {
-      const { RTCPeerConnection } = (await import('node-datachannel/polyfill')).default;
+      /* eslint-disable @typescript-eslint/consistent-type-imports */
+      const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
+        .default as typeof import('node-datachannel/polyfill');
+      /* eslint-enable @typescript-eslint/consistent-type-imports */
       if (this._closed) {
         this.errors.raise(new Error('connection already closed'));
+      }
+      // workaround https://github.com/murat-dogan/node-datachannel/pull/207
+      if (params.webrtcConfig) {
+        params.webrtcConfig.iceServers = params.webrtcConfig.iceServers ?? [];
+      } else {
+        params.webrtcConfig = { iceServers: [] };
       }
       const peer = new RTCPeerConnection(params.webrtcConfig);
 
@@ -310,3 +319,6 @@ export const createLibDataChannelTransportFactory = (webrtcConfig?: any): Transp
       webrtcConfig,
     }),
 });
+
+// eslint-disable-next-line no-new-func
+const importESM = Function('path', 'return import(path)');
