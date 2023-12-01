@@ -25,18 +25,20 @@ export type BlockProperties = {
 export type ThreadMessageProps = {
   message: MessageType;
   identityKey: PublicKey;
-  propertiesProvider: (identityKey: PublicKey) => BlockProperties;
+  propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
   onDelete?: (blockId: string, idx: number) => void;
 };
 
 export const MessageCard = ({ message, propertiesProvider, onDelete }: ThreadMessageProps) => {
   useSubscription(message.blocks); // TODO(burdon): Not updated.
-  if (!message.blocks.length || !message.identityKey) {
+  if (!message.blocks.length || !message.from?.identityKey) {
     return null;
   }
 
   const message2 = message.blocks[0]!;
-  const { classes, displayName } = propertiesProvider(PublicKey.from(message.identityKey!));
+  const { classes, displayName } = propertiesProvider(
+    message.from?.identityKey ? PublicKey.from(message.from?.identityKey) : undefined,
+  );
   const date = message2.timestamp ? new Date(message2.timestamp) : undefined;
 
   // TODO(burdon): Use aurora cards.

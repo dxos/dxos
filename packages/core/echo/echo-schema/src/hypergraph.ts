@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
-import { type AutomergeDb } from './automerge/automerge-db';
+import { type AutomergeDb } from './automerge';
 import { type EchoDatabase } from './database';
 import { type EchoObject, type TypedObject } from './object';
 import {

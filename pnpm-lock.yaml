@@ -6186,6 +6186,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@octokit/rest':
         specifier: ^19.0.5
         version: 19.0.5
@@ -17159,7 +17162,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.21.0
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6

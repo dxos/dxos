@@ -10,7 +10,7 @@ import { getResources } from './testing';
 import { type PromptContext } from '../request';
 
 describe.skip('chess', () => {
-  test('chess', async () => {
+  test('basic', async () => {
     const resources = getResources();
     const context: PromptContext = {
       object: {
