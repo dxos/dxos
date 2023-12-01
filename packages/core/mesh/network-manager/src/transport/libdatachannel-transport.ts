@@ -92,10 +92,14 @@ export class LibDataChannelTransport implements Transport {
           }
         }
       };
+
       if (params.initiator) {
         peer
           .createOffer()
           .then(async (offer) => {
+            if (this._closed) {
+              return;
+            }
             if (peer.connectionState !== 'connecting') {
               log.error('i am initiator but peer not in state connecting', { peer });
               this.errors.raise(new Error('invalid state: peer is initiator, but other peer not in state connecting'));
@@ -192,6 +196,12 @@ export class LibDataChannelTransport implements Transport {
       return;
     }
     await this._disconnectStreams();
+    const peer = await this._peer;
+    try {
+      peer.close();
+    } catch (err: any) {
+      this.errors.raise(err);
+    }
     this._closed = true;
     this.closed.emit();
   }
