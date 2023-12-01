@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
+import { type DocStructure } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject, base, getGlobalAutomergePreference, TypedObject } from '../object';
@@ -22,7 +23,7 @@ export type SpaceState = {
 };
 
 export class AutomergeDb {
-  private _docHandle!: DocHandle<any>;
+  private _docHandle!: DocHandle<DocStructure>;
 
   /**
    * @internal
@@ -61,6 +62,7 @@ export class AutomergeDb {
     this._docHandle.on('change', (event) => {
       this._updateEvent.emit({
         spaceKey: this._echoDatabase._backend.spaceKey,
+        // TODO(mykola): Use event.patches to determine which items were updated.
         itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
       });
     });
