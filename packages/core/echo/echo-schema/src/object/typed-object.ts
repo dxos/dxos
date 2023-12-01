@@ -25,7 +25,7 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
-import { AutomergeObject } from '../automerge/automerge-object';
+import { AutomergeObject } from '../automerge';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 

@@ -37,14 +37,16 @@ const colorHash = (key: PublicKey) => {
 };
 
 export const messagePropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
-  return (identityKey: PublicKey) => {
-    const author = PublicKey.equals(identityKey, identity.identityKey)
-      ? identity
-      : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
+  return (identityKey: PublicKey | undefined) => {
+    const author =
+      identityKey && PublicKey.equals(identityKey, identity.identityKey)
+        ? identity
+        : members.find((member) => identityKey && PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
 
+    const key = author?.identityKey ?? identityKey;
     return {
-      displayName: author?.profile?.displayName ?? generateName(identityKey.toHex()),
-      classes: colorHash(author?.identityKey ?? identityKey),
+      displayName: author?.profile?.displayName ?? (identityKey ? generateName(identityKey.toHex()) : ''),
+      classes: key ? colorHash(key) : undefined,
     } satisfies BlockProperties;
   };
 };
@@ -69,18 +71,18 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
 
     // Update current block if same user and time > 3m.
     const period = 3 * 60; // TODO(burdon): Config.
-    const m = thread.messages[thread.messages.length - 1];
-    if (m?.identityKey && PublicKey.equals(m.identityKey, identity.identityKey)) {
-      const previous = m.blocks[m.blocks.length - 1];
+    const message = thread.messages[thread.messages.length - 1];
+    if (message?.from?.identityKey && PublicKey.equals(message.from.identityKey, identity.identityKey)) {
+      const previous = message.blocks[message.blocks.length - 1];
       if (previous.timestamp && differenceInSeconds(new Date(block.timestamp), new Date(previous.timestamp)) < period) {
-        m.blocks.push(block);
+        message.blocks.push(block);
         return true;
       }
     }
 
     thread.messages.push(
       new MessageType({
-        identityKey: identity.identityKey.toHex(),
+        from: { identityKey: identity.identityKey.toHex() },
         context: { object: activeObjectId },
         blocks: [block],
       }),
