@@ -42,11 +42,11 @@ export class LibDataChannelTransport implements Transport {
 
   constructor(private readonly params: LibDataChannelTransportParams) {
     this._peer = (async () => {
-      const nodeDatachannelPolyfill = await import('node-datachannel/polyfill');
+      const { RTCPeerConnection } = (await import('node-datachannel/polyfill')).default;
       if (this._closed) {
         this.errors.raise(new Error('connection already closed'));
       }
-      const peer = new nodeDatachannelPolyfill.default.RTCPeerConnection(params.webrtcConfig);
+      const peer = new RTCPeerConnection(params.webrtcConfig);
 
       peer.onicecandidateerror = (event) => {
         log.error('peer.onicecandidateerror', { event });
