@@ -34,7 +34,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
           'is-[95vw] md:is-full max-is-[20rem] rounded-xl p-4',
           dialogMotion,
           surfaceElevation({ elevation }),
-          'bg-neutral-75/95 dark:bg-neutral-850/95 backdrop-blur',
+          'group-surface bg-neutral-75/95 dark:bg-neutral-850/95 backdrop-blur',
           ...etc,
         ),
     },
