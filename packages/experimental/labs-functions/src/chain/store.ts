@@ -12,8 +12,7 @@ import { join } from 'node:path';
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-
-import { nonNullable } from '../util';
+import { nonNullable } from '@dxos/util';
 
 const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
 

@@ -12,7 +12,7 @@ import React, { type Ref, forwardRef, useState } from 'react';
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { type TestObjectGenerator, TestSchemaType, createTestObjectGenerator } from '@dxos/echo-generator';
 import { TypedObject } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import {
   Mosaic,
   type MosaicTileComponent,

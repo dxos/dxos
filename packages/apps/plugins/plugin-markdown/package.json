@@ -27,6 +27,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/text-model": "workspace:*",

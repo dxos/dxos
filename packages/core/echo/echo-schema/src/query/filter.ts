@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { AutomergeObject } from '../automerge/automerge-object';
+import { AutomergeObject } from '../automerge';
 import {
   base,
   getDatabaseFromObject,
@@ -19,6 +19,11 @@ import {
 } from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
+
+export const hasType =
+  <T extends TypedObject>(schema: Schema) =>
+  (object: TypedObject | undefined): object is T =>
+    object?.__typename === schema.typename;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;

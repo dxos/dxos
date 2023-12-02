@@ -639,6 +639,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/migrations/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/react-client/package.json",
           "jsonpath": "$.version"
         },
@@ -680,6 +685,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-card/package.json",
           "jsonpath": "$.version"
         },
         {
