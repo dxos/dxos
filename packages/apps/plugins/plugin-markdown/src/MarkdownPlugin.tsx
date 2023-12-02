@@ -214,6 +214,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
+        // TODO(burdon): Deprecated? Remove?
         choosers: [
           {
             id: 'choose-stack-section-doc',

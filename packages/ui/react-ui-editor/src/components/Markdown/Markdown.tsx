@@ -54,18 +54,11 @@ import { type EditorModel, type EditorSlots } from '../../model';
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
-export type CursorEvent = {
-  event: KeyboardEvent;
-  line: number;
-  lines: number;
-};
-
 export type MarkdownEditorProps = {
   model?: EditorModel;
   slots?: EditorSlots;
   editorMode?: EditorMode;
   onChange?: (content: string | Text) => void;
-  onCursor?: (event: CursorEvent) => void;
 };
 
 export type MarkdownEditorRef = {
@@ -75,7 +68,7 @@ export type MarkdownEditorRef = {
 };
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
-  ({ model, slots = {}, editorMode, onChange, onCursor }, forwardedRef) => {
+  ({ model, slots = {}, editorMode, onChange }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -97,6 +90,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           update: (_value, transaction) => {
             if (transaction.docChanged && onChange) {
               onChange(transaction.newDoc);
+              console.log(':::', transaction.newDoc);
             }
             return null;
           },
@@ -196,16 +190,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
           case 'Escape': {
             editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && parent?.focus();
-            break;
-          }
-
-          case 'ArrowUp':
-          case 'ArrowDown': {
-            if (view) {
-              const head = view.state.selection.ranges[0].head;
-              const current = view.state.doc.lineAt(head);
-              onCursor?.({ event, line: current.number, lines: view.state.doc.lines });
-            }
             break;
           }
         }
