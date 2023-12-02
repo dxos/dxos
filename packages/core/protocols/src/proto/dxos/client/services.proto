@@ -129,7 +129,7 @@ enum DeviceKind {
 message Device {
   dxos.keys.PublicKey device_key = 1;
   DeviceKind kind = 2;
-  optional halo.credentials.ProfileDocument profile = 3;
+  optional halo.credentials.DeviceProfileDocument profile = 3;
 }
 
 message QueryDevicesResponse {
@@ -137,7 +137,7 @@ message QueryDevicesResponse {
 }
 
 service DevicesService {
-  rpc UpdateDevice(halo.credentials.ProfileDocument) returns (Device);
+  rpc UpdateDevice(halo.credentials.DeviceProfileDocument) returns (Device);
   rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }
 
@@ -306,7 +306,16 @@ message QueryCredentialsRequest {
 }
 
 message CreateEpochRequest {
+  enum Migration {
+    NONE = 0;
+
+    /// Init empty automerge document as the space root. Disables legacy ECHO snapshot creation.
+    INIT_AUTOMERGE = 1;
+  }
+
   dxos.keys.PublicKey space_key = 1;
+
+  optional Migration migration = 2;
 }
 
 service SpacesService {

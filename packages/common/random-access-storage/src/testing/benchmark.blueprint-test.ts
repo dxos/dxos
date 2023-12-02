@@ -8,7 +8,7 @@ import { latch } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { Storage, StorageType } from '../common';
+import { type Storage, type StorageType } from '../common';
 
 export const randomText = () => Math.random().toString(36).substring(2);
 
@@ -90,13 +90,6 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
           avgWriteTime: writes.reduce((a, b) => a + b, 0) / writes.length,
         },
       });
-
-      // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
-      // console.log(JSON.stringify({
-      //   reads,
-      //   writes
-      // }))
-      // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
     });
   });
 };

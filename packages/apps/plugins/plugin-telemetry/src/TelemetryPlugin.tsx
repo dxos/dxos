@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/app-framework';
 
-import { AppTelemetryOptions, initializeAppTelemetry } from './telemetry';
+import meta from './meta';
+import { type AppTelemetryOptions, initializeAppTelemetry } from './telemetry';
 import { useTelemetry } from './useTelemetry';
 
 export const TelemetryPlugin = (options: AppTelemetryOptions): PluginDefinition => {
@@ -13,16 +14,12 @@ export const TelemetryPlugin = (options: AppTelemetryOptions): PluginDefinition 
   void initializeAppTelemetry(options);
 
   return {
-    meta: {
-      id: 'dxos.org/plugin/telemetry',
-    },
+    meta,
     provides: {
-      components: {
-        default: () => {
-          useTelemetry({ namespace: options.namespace });
+      root: () => {
+        useTelemetry({ namespace: options.namespace });
 
-          return null;
-        },
+        return null;
       },
     },
   };

@@ -6,12 +6,12 @@ import { Plus, Rocket } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { useClient } from '@dxos/react-client';
-import { Space, useSpaces } from '@dxos/react-client/echo';
-import { Invitation, InvitationResult } from '@dxos/react-client/invitations';
-import { MaybePromise } from '@dxos/util';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { type Invitation, type InvitationResult } from '@dxos/react-client/invitations';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
+import { type MaybePromise } from '@dxos/util';
 
 import { HeadingWithActions } from '../HeadingWithActions';
 import { JoinDialog } from '../Join';

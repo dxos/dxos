@@ -5,16 +5,15 @@
 import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { type PluginDefinition } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { PluginDefinition } from '@dxos/react-surface';
 import { captureException } from '@dxos/sentry';
 
 import { ServiceWorkerToast } from './components';
+import meta from './meta';
 
 export const PwaPlugin = (): PluginDefinition => ({
-  meta: {
-    id: 'dxos.org/plugin/pwa',
-  },
+  meta,
   provides: {
     context: ({ children }) => {
       const {

@@ -3,14 +3,19 @@
 //
 
 import { expect } from 'earljs';
+import expectJest from 'expect';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { SystemError, schema } from '@dxos/protocols';
-import { TestStreamService, TestRpcResponse, TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import {
+  type TestStreamService,
+  type TestRpcResponse,
+  type TestService,
+} from '@dxos/protocols/proto/example/testing/rpc';
 import { describe, test } from '@dxos/test';
 
-import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
+import { createProtoRpcPeer, type ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testing';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
@@ -542,5 +547,43 @@ describe('Protobuf service', () => {
       expect(response.payload.type_url).toEqual('example.testing.Example');
       expect(response.payload.value).toEqual(Buffer.from('world'));
     });
+  });
+
+  test('timeouts on methods', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
+    const server = createProtoRpcPeer({
+      exposed: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      handlers: {
+        TestService: {
+          testCall: async (req) => {
+            await sleep(10);
+            return { data: 'responseData' };
+          },
+          voidCall: async () => {},
+        },
+      },
+      port: alicePort,
+    });
+
+    const client = createProtoRpcPeer({
+      requested: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      port: bobPort,
+      timeout: 10_000,
+    });
+
+    await Promise.all([server.open(), client.open()]);
+
+    const promise = client.rpc.TestService.testCall(
+      {
+        data: 'requestData',
+      },
+      { timeout: 1 },
+    );
+    await expectJest(promise).rejects.toThrow(/Timeout/);
   });
 });

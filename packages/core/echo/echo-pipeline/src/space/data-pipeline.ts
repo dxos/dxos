@@ -4,25 +4,31 @@
 
 import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
+import {
+  type CredentialProcessor,
+  type FeedInfo,
+  type SpecificCredential,
+  checkCredentialType,
+} from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
-import { FeedWriter } from '@dxos/feed-store';
+import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log, omit } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { CancelledError, DataPipelineProcessed } from '@dxos/protocols';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ModelFactory } from '@dxos/model-factory';
+import { CancelledError, type DataPipelineProcessed } from '@dxos/protocols';
+import { type CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { tracer } from '@dxos/util';
 
-import { DatabaseHost, SnapshotManager } from '../db-host';
-import { MetadataStore } from '../metadata';
+import { DatabaseHost, type SnapshotManager } from '../db-host';
+import { type MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
 export interface PipelineFactory {
@@ -58,6 +64,10 @@ const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5_000;
  * Minimum time in MS between recording latest timeframe in metadata.
  */
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 5_000;
+
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
+};
 
 /**
  * Controls data pipeline in the space.
@@ -212,6 +222,7 @@ export class DataPipeline implements CredentialProcessor {
       await waitForOneEpoch;
     }
 
+    // CPU bottleneck control.
     let messageCounter = 0;
 
     invariant(this._pipeline, 'Pipeline is not initialized.');
@@ -258,10 +269,10 @@ export class DataPipeline implements CredentialProcessor {
 
       span.end();
 
-      if (++messageCounter > 1_000) {
+      if (++messageCounter > 100) {
         messageCounter = 0;
         // Allow other tasks to process.
-        await sleep(1);
+        await idle(1_000);
       }
     }
   }
@@ -346,6 +357,11 @@ export class DataPipeline implements CredentialProcessor {
       }
       await this._processEpoch(ctx, epoch.subject.assertion);
 
+      // Carry over the snapshot CID from the previous epoch.
+      if (epoch.subject.assertion.snapshotCid === undefined) {
+        epoch.subject.assertion.snapshotCid = this.appliedEpoch?.subject.assertion.snapshotCid;
+      }
+
       this.appliedEpoch = epoch;
       this.onNewEpoch.emit(epoch);
     });
@@ -413,3 +429,39 @@ export class DataPipeline implements CredentialProcessor {
     await this._params.metadataStore.flush();
   }
 }
+
+/**
+ * Waits up to `timeout` ms for the browser to be idle.
+ */
+const idle = async (timeout?: number) => {
+  if (!('scheduler' in globalThis && typeof (globalThis as any).scheduler.postTask === 'function')) {
+    await sleep(1);
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    // const beginTime = performance.now();
+    const cleanup = () => {
+      clearTimeout(timer);
+      controller.abort();
+      // log.warn('yielded for', { ms: performance.now() - beginTime });
+    };
+
+    const controller = new AbortController();
+
+    void (globalThis as any).scheduler
+      .postTask(
+        () => {
+          cleanup();
+          resolve();
+        },
+        { priority: 'background', signal: controller.signal },
+      )
+      .catch(() => {});
+
+    const timer = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, timeout);
+  });
+};

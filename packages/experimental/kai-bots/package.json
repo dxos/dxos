@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-bots",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "private": true,
   "description": "Bot experiments incubator.",
   "homepage": "https://dxos.org",
@@ -32,7 +32,7 @@
     "@types/express": "^4.17.17",
     "@types/http-proxy": "^1.17.10",
     "cors": "^2.8.5",
-    "esbuild": "^0.19.2",
+    "esbuild": "^0.19.6",
     "express": "^4.17.1",
     "http-proxy": "^1.18.1",
     "node-http-proxy": "^0.2.4",

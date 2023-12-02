@@ -36,13 +36,13 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../sdk/react-surface"
-    },
-    {
-      "path": "../plugin-treeview"
+      "path": "../plugin-layout"
     }
   ]
 }

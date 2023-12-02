@@ -3,40 +3,38 @@
 //
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
-// TODO(burdon): Export form `@dxos/echo-db`.
 export { type ItemID, DocumentModel } from '@dxos/document-model';
+// TODO(burdon): Remove/Rename Item.
+export { Item } from '@dxos/echo-db';
 export {
-  TYPE_SCHEMA,
-  Item,
-  Schema,
-  ShowDeletedOption,
-  type QueryOptions,
-  type SchemaDef,
-  type SchemaField,
-  type SchemaRef,
-} from '@dxos/echo-db';
-export {
-  createSubscription,
-  isTypedObject,
   base,
+  debug,
   subscribe,
+  createSubscription,
+  hasType,
+  isTypedObject,
   EchoDatabase,
-  EchoObject,
-  type ObjectMeta,
-  EchoSchema,
   Expando,
+  Filter,
   Query,
-  Text,
+  Schema,
+  Text, // TODO(burdon): Deprecated.
+  TypeCollection,
+  TextObject,
   TypedObject,
-  type Filter,
+  type EchoObject, // TODO(burdon): Remove from API?
+  type FilterSource,
+  type ObjectMeta,
   type Selection,
+  type Subscription,
   type SubscriptionHandle,
-  type TypeFilter,
 } from '@dxos/echo-schema';
+
+export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { TextModel } from '@dxos/text-model';
 
 export { SpaceList } from './space-list';
-export { SpaceProxy } from './space-proxy';
-export { createDefaultModelFactory } from './util';
+export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
+export { createDefaultModelFactory, getSpaceForObject } from './util';

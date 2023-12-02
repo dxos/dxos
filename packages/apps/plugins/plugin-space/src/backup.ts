@@ -7,8 +7,8 @@ import JSZip from 'jszip';
 // TODO(wittjosiah): Factor Document functionality out to markdown plugin.
 import { Document } from '@braneframe/types';
 import { log } from '@dxos/log';
-import { Space } from '@dxos/react-client/echo';
-import { YText } from '@dxos/text-model';
+import { type Space } from '@dxos/react-client/echo';
+import { type YText } from '@dxos/text-model';
 
 export type ComposerDocumentBackup = {
   origin?: Partial<{
@@ -26,7 +26,8 @@ export type SpaceBackup = {
   items: ComposerDocumentBackup[];
 };
 
-export const getSpaceBackup = async (space: Space, defaultDocumentTitle: string): Promise<SpaceBackup> => {
+export const createBackup = async (space: Space, defaultDocumentTitle: string): Promise<SpaceBackup> => {
+  // TODO(burdon): Not just documents.
   const itemsQuery = space.db.query(Document.filter());
   const namesCount = new Map<string, number>();
   const getFileName = (title: string) => {
@@ -40,6 +41,7 @@ export const getSpaceBackup = async (space: Space, defaultDocumentTitle: string)
       return displayTitle;
     }
   };
+
   return {
     origin: {
       key: space.key.toHex(),
@@ -52,21 +54,25 @@ export const getSpaceBackup = async (space: Space, defaultDocumentTitle: string)
   };
 };
 
-export const backupSpace = async (space: Space, defaultDocumentTitle: string): Promise<Blob> => {
-  const backup = await getSpaceBackup(space, defaultDocumentTitle);
+// TODO(burdon): Factor out to ECHO (need common functions for data import/export, with composer-specific additions).
+//  E.g., Enable creation of chained function to augment objects that were saved for schema migration.
+
+export const exportData = async (space: Space, title: string): Promise<Blob> => {
+  const backup = await createBackup(space, title);
   const backupPackage = new JSZip();
-  backupPackage.file('composer-space-backup.json', JSON.stringify(backup));
+  backupPackage.file('space.json', JSON.stringify(backup));
   const items = backupPackage.folder('items');
   backup.items.forEach((docBackup) => {
     const document = space.db.getObjectById(docBackup.origin!.id!) as Document;
     items!.file(docBackup.fileName, document?.content.content?.toString() ?? '');
   });
+
   return backupPackage.generateAsync({ type: 'blob' });
 };
 
-export const restoreSpace = async (space: Space, backupBlob: Blob) => {
+export const importData = async (space: Space, backupBlob: Blob) => {
   const backupPackage = await JSZip.loadAsync(backupBlob);
-  const backupString = await backupPackage.file('composer-space-backup.json')?.async('string');
+  const backupString = await backupPackage.file('space.json')?.async('string');
   try {
     const backup = JSON.parse(backupString!) as SpaceBackup;
     await Promise.all(

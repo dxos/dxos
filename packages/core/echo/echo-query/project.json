@@ -1,0 +1,25 @@
+{
+  "sourceRoot": "packages/core/echo/echo-query/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-query/src/index.ts"
+        ],
+        "injectGlobals": true
+      }
+    },
+    "lint": {},
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

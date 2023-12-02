@@ -2,31 +2,38 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { X, Plus, DotsSixVertical } from '@phosphor-icons/react';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
+import React, {
+  type ChangeEvent,
+  type ComponentPropsWithoutRef,
+  forwardRef,
+  type KeyboardEvent,
+  type ReactNode,
+  useCallback,
+} from 'react';
 
 import {
   Button,
   Input as NaturalInput,
   useTranslation,
-  ButtonProps,
-  Density,
+  type ButtonProps,
+  type Density,
   DensityProvider,
   List,
   ListItem,
-  ListItemRootProps,
-  ListScopedProps,
+  type ListItemRootProps,
+  type ListScopedProps,
   useListContext,
   LIST_NAME,
   useDensityContext,
-} from '@dxos/aurora';
-import { mx, getSize, descriptionText } from '@dxos/aurora-theme';
+} from '@dxos/react-ui';
+import { mx, getSize, descriptionText } from '@dxos/react-ui-theme';
 
-import { Input, InputProps } from '../Input';
+import { Input, type InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {

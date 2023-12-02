@@ -2,75 +2,66 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool, Plus } from '@phosphor-icons/react';
+import { CompassTool, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Sketch as SketchType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Sketch as SketchType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
-import { SketchMain, SketchSection } from './components';
+import { SketchMain, SketchComponent } from './components';
+import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { isSketch, SKETCH_PLUGIN, SketchPluginProvides, SketchAction } from './types';
-import { objectToGraphNode } from './util';
+import { SketchAction, type SketchPluginProvides, isSketch } from './types';
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[SketchType.name] = SketchType;
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: SketchType.filter(), adapter: objectToGraphNode });
-
   return {
-    meta: {
-      id: SKETCH_PLUGIN,
-    },
-    ready: async (plugins) => {
-      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
-        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
-          if (isSketch(node.data)) {
-            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
-          }
-          return tile;
-        });
-      }
-    },
-    unload: async () => {
-      adapter.clear();
-    },
+    meta,
     provides: {
+      metadata: {
+        records: {
+          [SketchType.schema.typename]: {
+            placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
+            icon: (props: IconProps) => <CompassTool {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
-          const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${SKETCH_PLUGIN}/create`,
             label: ['create object label', { ns: SKETCH_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: SKETCH_PLUGIN,
-                action: SketchAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: TreeViewAction.ACTIVATE,
-              },
-            ],
+            icon: (props) => <CompassTool {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: SKETCH_PLUGIN,
+                  action: SketchAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
-              testId: 'sketchPlugin.createSketch',
+              testId: 'sketchPlugin.createObject',
             },
           });
-
-          return adapter.createNodes(space, parent);
         },
       },
       stack: {
@@ -86,31 +77,24 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             },
           },
         ],
-        choosers: [
-          {
-            id: 'choose-stack-section-sketch', // TODO(burdon): Standardize.
-            testId: 'sketchPlugin.createSectionSpaceSketch',
-            label: ['choose stack section label', { ns: SKETCH_PLUGIN }],
-            icon: (props: any) => <CompassTool {...props} />,
-            filter: isSketch,
-          },
-        ],
       },
-      component: (data, role) => {
-        // TODO(burdon): SurfaceResolver error if component not defined.
-        if (!data || typeof data !== 'object' || !isSketch(data)) {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return SketchMain;
-          case 'section':
-            return SketchSection;
-        }
-      },
-      components: {
-        SketchMain,
+      surface: {
+        component: ({ data, role }) => {
+          switch (role) {
+            case 'main':
+              return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
+            case 'slide':
+              return isSketch(data.slide) ? (
+                <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
+              ) : null;
+            case 'section':
+              return isSketch(data.object) ? (
+                <SketchComponent sketch={data.object} readonly={true} autoZoom={true} className={'h-[400px]'} />
+              ) : null;
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

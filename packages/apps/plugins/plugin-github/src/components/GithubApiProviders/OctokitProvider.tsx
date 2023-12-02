@@ -3,13 +3,13 @@
 //
 
 import { Octokit } from 'octokit';
-import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import React, { type Context, createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 
+import { usePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { usePlugin } from '@dxos/react-surface';
 
-import { GithubPluginProvides } from '../../GithubPlugin';
-import { GITHUB_PLUGIN } from '../../props';
+import { type GithubPluginProvides } from '../../GithubPlugin';
+import { GITHUB_PLUGIN } from '../../meta';
 
 export type OctokitContextValue = {
   pat: string;

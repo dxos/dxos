@@ -16,6 +16,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -46,6 +49,15 @@
       "path": "../../sdk/client-services"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-generator"
+    },
+    {
       "path": "../echo/echo-schema"
     },
     {
@@ -53,6 +65,9 @@
     },
     {
       "path": "../mesh/network-manager"
+    },
+    {
+      "path": "../mesh/rpc"
     },
     {
       "path": "../mesh/websocket-rpc"

@@ -57,7 +57,6 @@ export type ListenerOptions = {
  *   }
  * }
  *
- *
  * model.update.on(data => {
  *   ...
  * });
@@ -112,6 +111,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * If provided callback was already registered as once-listener, it is made permanent.
    *
    * @param callback
+   * @param options.weak If true, the callback will be weakly referenced and will be garbage collected if no other references to it exist.
    * @returns function that unsubscribes this event listener
    */
   on(callback: (data: T) => void): UnsubscribeCallback;
@@ -396,7 +396,7 @@ export interface ReadOnlyEvent<T = void> {
 class EventListener<T> {
   public readonly callback: ((data: T) => void) | WeakRef<(data: T) => void>;
 
-  private readonly _clearDispose: () => void;
+  private readonly _clearDispose?: () => void = undefined;
 
   constructor(
     event: Event<T>,
@@ -405,6 +405,10 @@ class EventListener<T> {
     public readonly once: boolean,
     public readonly weak: boolean,
   ) {
+    this._clearDispose = ctx.onDispose(() => {
+      event._removeListener(this);
+    });
+
     if (weak) {
       this.callback = new WeakRef(listener);
       weakListeners().registry.register(
@@ -418,10 +422,6 @@ class EventListener<T> {
     } else {
       this.callback = listener;
     }
-
-    this._clearDispose = ctx.onDispose(() => {
-      event._removeListener(this);
-    });
   }
 
   derefCallback(): ((data: T) => void) | undefined {
@@ -438,7 +438,7 @@ class EventListener<T> {
   }
 
   remove() {
-    this._clearDispose();
+    this._clearDispose?.();
     weakListeners().registry.unregister(this);
   }
 }

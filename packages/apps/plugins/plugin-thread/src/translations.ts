@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { THREAD_PLUGIN } from './types';
+import { THREAD_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
       [THREAD_PLUGIN]: {
-        'plugin name': 'Thread',
+        'plugin name': 'Threads',
         'thread title placeholder': 'New thread',
         'thread title label': 'Title',
         'column title label': 'Column title',

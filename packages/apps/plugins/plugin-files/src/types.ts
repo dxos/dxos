@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 
-export const FILES_PLUGIN = 'dxos.org/plugin/files';
-
-export const FILES_PLUGIN_SHORT_ID = 'fs';
+import { FILES_PLUGIN } from './meta';
 
 const FILES_ACTION = `${FILES_PLUGIN}/action`;
 export enum LocalFilesAction {
@@ -41,4 +42,7 @@ export type LocalDirectory = {
   children: LocalEntity[];
 };
 
-export type LocalFilesPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type LocalFilesPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides;

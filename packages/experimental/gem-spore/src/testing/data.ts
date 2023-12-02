@@ -4,8 +4,8 @@
 
 import { faker } from '@faker-js/faker';
 
-import { TestNode } from './types';
-import { GraphData, GraphLink } from '../graph';
+import { type TestNode } from './types';
+import { type GraphData, type GraphLink } from '../graph';
 
 // https://www.npmjs.com/package/faker#setting-a-randomness-seed
 export const seed = (seed: number) => faker.seed(seed);

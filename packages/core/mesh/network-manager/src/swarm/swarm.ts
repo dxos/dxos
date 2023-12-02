@@ -8,20 +8,20 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { ListeningHandle, Messenger } from '@dxos/messaging';
+import { type ListeningHandle, type Messenger } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { Connection, ConnectionState } from './connection';
-import { ConnectionLimiter } from './connection-limiter';
+import { type Connection, ConnectionState } from './connection';
+import { type ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';
-import { SwarmMessenger, OfferMessage, SignalMessage } from '../signal';
-import { SwarmController, Topology } from '../topology';
-import { TransportFactory } from '../transport';
-import { Topic } from '../types';
-import { WireProtocolProvider } from '../wire-protocol';
+import { SwarmMessenger, type OfferMessage, type SignalMessage } from '../signal';
+import { type SwarmController, type Topology } from '../topology';
+import { type TransportFactory } from '../transport';
+import { type Topic } from '../types';
+import { type WireProtocolProvider } from '../wire-protocol';
 
 const INITIATION_DELAY = 100;
 
@@ -132,7 +132,8 @@ export class Swarm {
       onMessage: async (message) => {
         await this._swarmMessenger
           .receiveMessage(message)
-          .catch((err) => log.warn('Error while receiving message', { err }));
+          // TODO(nf): discriminate between errors
+          .catch((err) => log.info('Error while receiving message', { err }));
       },
     });
   }
@@ -144,7 +145,7 @@ export class Swarm {
 
     await this._ctx.dispose();
     await this._topology.destroy();
-    await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));
+    await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key, 'swarm destroyed')));
     log('destroyed');
   }
 
@@ -186,8 +187,10 @@ export class Swarm {
         peer.advertizing = false;
         if (peer.connection?.state !== ConnectionState.CONNECTED) {
           // Destroy peer only if there is no p2p-connection established
-          void this._destroyPeer(peer.id).catch((err) => log.catch(err));
+          void this._destroyPeer(peer.id, 'peer left').catch((err) => log.catch(err));
         }
+      } else {
+        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer });
       }
     }
 
@@ -240,7 +243,7 @@ export class Swarm {
   @synchronized
   async goOffline() {
     await this._ctx.dispose();
-    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId)));
+    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId, 'goOffline')));
   }
 
   // For debug purposes
@@ -269,7 +272,7 @@ export class Swarm {
           },
           onDisconnected: async () => {
             if (!peer!.advertizing) {
-              await this._destroyPeer(peer!.id);
+              await this._destroyPeer(peer!.id, 'peer disconnected');
             }
 
             this.disconnected.emit(peerId);
@@ -279,7 +282,8 @@ export class Swarm {
             // If the peer rejected our connection remove it from the set of candidates.
             // TODO(dmaretskyi): Set flag instead.
             if (this._peers.has(peerId)) {
-              void this._destroyPeer(peerId);
+              log('peer rejected connection', { peerId });
+              void this._destroyPeer(peerId, 'peer rejected connection');
             }
           },
           onAccepted: () => {
@@ -299,9 +303,9 @@ export class Swarm {
     return peer;
   }
 
-  private async _destroyPeer(peerId: PublicKey) {
+  private async _destroyPeer(peerId: PublicKey, reason?: string) {
     invariant(this._peers.has(peerId));
-    await this._peers.get(peerId)!.destroy();
+    await this._peers.get(peerId)!.destroy(new Error(reason));
     this._peers.delete(peerId);
   }
 

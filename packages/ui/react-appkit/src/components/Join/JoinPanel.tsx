@@ -2,17 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
 import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
+  type CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
-  InvitationResult,
+  type InvitationResult,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
+import { useTranslation } from '@dxos/react-ui';
 
 import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';

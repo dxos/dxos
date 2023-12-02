@@ -3,17 +3,18 @@
 //
 
 import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
-import { Any, Stream } from '@dxos/codec-protobuf';
+import { type Any, Stream, type RequestOptions } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { encodeError, RpcClosedError, RpcNotOpenError, schema } from '@dxos/protocols';
-import { Request, Response, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { type Request, type Response, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
 
-const DEFAULT_TIMEOUT = 3000;
+const DEFAULT_TIMEOUT = 3_000;
+const BYE_SEND_TIMEOUT = 2_000;
 
 type MaybePromise<T> = Promise<T> | T;
 
@@ -34,7 +35,7 @@ export interface RpcPeerOptions {
  * Interface for a transport-agnostic port to send/receive binary messages.
  */
 export interface RpcPort {
-  send: (msg: Uint8Array) => MaybePromise<void>;
+  send: (msg: Uint8Array, timeout?: number) => MaybePromise<void>;
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
 
@@ -194,8 +195,12 @@ export class RpcPeer {
     if (this._state === RpcState.OPENED && !this._params.noHandshake) {
       try {
         this._state = RpcState.CLOSING;
-        await this._sendMessage({ bye: {} });
-
+        await this._sendMessage({ bye: {} }, BYE_SEND_TIMEOUT);
+      } catch (err: any) {
+        log('error closing peer, sending bye', { err });
+      }
+      try {
+        log('closing waiting on bye');
         await this._byeTrigger.wait({ timeout });
       } catch (err: any) {
         log('error closing peer', { err });
@@ -354,7 +359,7 @@ export class RpcPeer {
    * Make RPC call. Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  async call(method: string, request: Any): Promise<Any> {
+  async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
     log('calling', { method });
     throwIfNotOpen(this._state);
 
@@ -377,7 +382,7 @@ export class RpcPeer {
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
-      const waiting = asyncTimeout<any>(responseReceived, this._params.timeout ?? DEFAULT_TIMEOUT);
+      const waiting = asyncTimeout<any>(responseReceived, options?.timeout ?? this._params.timeout ?? DEFAULT_TIMEOUT);
       await Promise.race([sending, waiting]);
       response = await waiting;
       invariant(response.id === id);
@@ -406,7 +411,7 @@ export class RpcPeer {
    * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  callStream(method: string, request: Any): Stream<Any> {
+  callStream(method: string, request: Any, options?: RequestOptions): Stream<Any> {
     throwIfNotOpen(this._state);
     const id = this._nextId++;
 
@@ -459,9 +464,9 @@ export class RpcPeer {
     });
   }
 
-  private async _sendMessage(message: RpcMessage) {
+  private async _sendMessage(message: RpcMessage, timeout?: number) {
     log('sending message', { type: Object.keys(message)[0] });
-    await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }));
+    await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }), timeout);
   }
 
   private async _callHandler(req: Request): Promise<Response> {

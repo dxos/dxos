@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import { mx, getSize } from '@dxos/aurora-theme';
+import { mx, getSize } from '@dxos/react-ui-theme';
 
 export const Emoji = ({ text, className }: { text?: string; className?: string }) => {
   const size = 14;
@@ -29,7 +29,7 @@ export const Emoji = ({ text, className }: { text?: string; className?: string }
 export const Centered = (props: PropsWithChildren) => {
   const { children } = props;
   return (
-    <div role='none' className='absolute inset-0 flex items-center justify-center mbe-8'>
+    <div role='none' className='absolute inset-0 flex items-center justify-center'>
       {children}
     </div>
   );

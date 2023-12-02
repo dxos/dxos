@@ -6,7 +6,7 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -41,11 +41,6 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/aurora/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-client/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-shell/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269

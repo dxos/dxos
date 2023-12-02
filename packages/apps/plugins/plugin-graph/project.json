@@ -2,65 +2,29 @@
   "sourceRoot": "packages/apps/plugins/plugin-graph/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-graph/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-graph/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-graph/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/plugins/plugin-graph/src/index.ts",
-          "packages/apps/plugins/plugin-graph/src/testing.ts"
-        ],
-        "outputPath": "packages/apps/plugins/plugin-graph/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-graph",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-graph",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-graph",
-        "testPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*"
+          "packages/apps/plugins/plugin-graph/src/meta.ts"
         ]
+      }
+    },
+    "lint": {},
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
       },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-graph/.storybook"
+      }
     }
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

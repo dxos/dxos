@@ -2,14 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { PublicKey } from '@dxos/react-client';
-import { Space } from '@dxos/react-client/echo';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import type { PublicKey } from '@dxos/react-client';
+import type { ItemID } from '@dxos/react-client/echo';
 
-export const SPACE_PLUGIN = 'dxos.org/plugin/space';
-export const SPACE_PLUGIN_SHORT_ID = 'space';
+import { SPACE_PLUGIN } from './meta';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -19,11 +22,14 @@ export enum SpaceAction {
   RENAME = `${SPACE_ACTION}/rename`,
   OPEN = `${SPACE_ACTION}/open`,
   CLOSE = `${SPACE_ACTION}/close`,
-  BACKUP = `${SPACE_ACTION}/backup`,
-  RESTORE = `${SPACE_ACTION}/restore`,
+  MIGRATE = `${SPACE_ACTION}/migrate`,
+  EXPORT = `${SPACE_ACTION}/export`,
+  IMPORT = `${SPACE_ACTION}/import`,
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
+  WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
+  TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
 }
 
 export type ObjectViewer = {
@@ -33,28 +39,25 @@ export type ObjectViewer = {
   lastSeen: number;
 };
 
-/**
- * The state of the space plugin.
- */
-export type SpaceState = {
-  /**
-   * The space that is associated with the currently active graph node.
-   * If the current graph node does not itself represent a space, then it is the space of the nearest ancestor.
-   * If no ancestor represents a space, then it is undefined.
-   */
-  active: Space | undefined;
-
+export type PluginState = {
   /**
    * Which objects peers are currently viewing.
    */
   viewers: ObjectViewer[];
+
+  /**
+   * Object that was linked to directly but not found and is being awaited.
+   */
+  awaiting: ItemID | undefined;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };
 
-export type SpacePluginProvides = GraphProvides &
-  IntentProvides &
+export type SpacePluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides & {
-    settings: SpaceSettingsProps;
-    space: SpaceState;
+    settings: Readonly<SpaceSettingsProps>;
+    space: Readonly<PluginState>;
   };

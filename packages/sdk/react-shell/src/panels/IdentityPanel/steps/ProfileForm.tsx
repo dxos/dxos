@@ -3,15 +3,15 @@
 //
 
 import React, { useState } from 'react';
-import { Event, SingleOrArray } from 'xstate';
+import { type Event, type SingleOrArray } from 'xstate';
 
-import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { Identity } from '@dxos/react-client/halo';
+import { type Identity } from '@dxos/react-client/halo';
+import { useTranslation } from '@dxos/react-ui';
 
 import { Action, Actions, StepHeading, Input } from '../../../components';
-import { IdentityPanelStepProps } from '../IdentityPanelProps';
-import { IdentityEvent } from '../identityMachine';
+import { type IdentityPanelStepProps } from '../IdentityPanelProps';
+import { type IdentityEvent } from '../identityMachine';
 
 export interface ProfileFormProps extends Omit<IdentityPanelStepProps, 'send'> {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;

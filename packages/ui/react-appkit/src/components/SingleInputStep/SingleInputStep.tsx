@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, KeyboardEvent, useMemo, ChangeEvent } from 'react';
+import React, { useCallback, type KeyboardEvent, useMemo, type ChangeEvent } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { GroupProps } from '../Group';
-import { Input, InputProps } from '../Input';
+import { type GroupProps } from '../Group';
+import { Input, type InputProps } from '../Input';
 import { Loading } from '../Loading';
 
 export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChange'> {

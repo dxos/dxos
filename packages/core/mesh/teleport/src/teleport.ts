@@ -2,26 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
+import { type Duplex } from 'node:stream';
 
-import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask, Event } from '@dxos/async';
+import { runInContextAsync, synchronized, scheduleTask, type Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { schema, RpcClosedError, TimeoutError } from '@dxos/protocols';
-import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { Callback } from '@dxos/util';
+import { log, logInfo } from '@dxos/log';
+import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 
-import { CreateChannelOpts, Muxer, MuxerStats, RpcPort } from './muxing';
+import { ControlExtension } from './control-extension';
+import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing';
 
 export type TeleportParams = {
   initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
 };
+
+const CONTROL_HEARTBEAT_INTERVAL = 10_000;
+const CONTROL_HEARTBEAT_TIMEOUT = 60_000;
 
 /**
  * TODO(burdon): Comment: what is this?
@@ -30,6 +31,7 @@ export class Teleport {
   public readonly initiator: boolean;
   public readonly localPeerId: PublicKey;
   public readonly remotePeerId: PublicKey;
+  public _sessionId?: PublicKey;
 
   private readonly _ctx = new Context({
     onError: (err) => {
@@ -41,18 +43,7 @@ export class Teleport {
 
   private readonly _muxer = new Muxer();
 
-  private readonly _control = new ControlExtension({
-    heartbeatInterval: 10_000,
-    heartbeatTimeout: 10_000,
-    onTimeout: () => {
-      if (this._destroying || this._aborting) {
-        return;
-      }
-      // TODO(egorgripasov): Evaluate use of abort instead of destroy.
-      log('destroy teleport due to onTimeout in ControlExtension');
-      this.destroy(new TimeoutError('control extension')).catch((err) => log.catch(err));
-    },
-  });
+  private readonly _control;
 
   private readonly _extensions = new Map<string, TeleportExtension>();
   private readonly _remoteExtensions = new Set<string>();
@@ -68,6 +59,22 @@ export class Teleport {
     this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;
+
+    this._control = new ControlExtension(
+      {
+        heartbeatInterval: CONTROL_HEARTBEAT_INTERVAL,
+        heartbeatTimeout: CONTROL_HEARTBEAT_TIMEOUT,
+        onTimeout: () => {
+          if (this._destroying || this._aborting) {
+            return;
+          }
+          log.info('abort teleport due to onTimeout in ControlExtension');
+          this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
+        },
+      },
+      this.localPeerId,
+      this.remotePeerId,
+    );
 
     this._control.onExtensionRegistered.set(async (name) => {
       log('remote extension', { name });
@@ -114,6 +121,11 @@ export class Teleport {
     });
   }
 
+  @logInfo
+  get sessionIdString(): string {
+    return this._sessionId ? this._sessionId.truncate() : 'none';
+  }
+
   get stream(): Duplex {
     return this._muxer.stream;
   }
@@ -125,10 +137,15 @@ export class Teleport {
   /**
    * Blocks until the handshake is complete.
    */
-  async open() {
+
+  async open(sessionId: PublicKey = PublicKey.random()) {
+    // invariant(sessionId);
+    this._sessionId = sessionId;
+    log('open');
     this._setExtension('dxos.mesh.teleport.control', this._control);
     await this._openExtension('dxos.mesh.teleport.control');
     this._open = true;
+    this._muxer.setSessionId(sessionId);
   }
 
   async close(err?: Error) {
@@ -181,7 +198,7 @@ export class Teleport {
       }
     }
 
-    await this._muxer.destroy(err);
+    await this._muxer.close();
   }
 
   addExtension(name: string, extension: TeleportExtension) {
@@ -262,85 +279,4 @@ export interface TeleportExtension {
   onOpen(context: ExtensionContext): Promise<void>;
   onClose(err?: Error): Promise<void>;
   onAbort(err?: Error): Promise<void>;
-}
-
-type ControlRpcBundle = {
-  Control: ControlService;
-};
-
-type ControlExtensionOpts = {
-  heartbeatInterval: number;
-  heartbeatTimeout: number;
-  onTimeout: () => void;
-};
-
-class ControlExtension implements TeleportExtension {
-  private readonly _ctx = new Context({
-    onError: (err) => {
-      this._extensionContext.close(err);
-    },
-  });
-
-  public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
-
-  private _extensionContext!: ExtensionContext;
-  private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
-
-  constructor(private readonly opts: ControlExtensionOpts) {}
-
-  async registerExtension(name: string) {
-    await this._rpc.rpc.Control.registerExtension({ name });
-  }
-
-  async onOpen(extensionContext: ExtensionContext): Promise<void> {
-    this._extensionContext = extensionContext;
-
-    // NOTE: Make sure that RPC timeout is greater than the heartbeat timeout.
-    // TODO(dmaretskyi): Allow overwriting the timeout on individual RPC calls?
-    this._rpc = createProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
-      requested: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
-      },
-      exposed: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
-      },
-      handlers: {
-        Control: {
-          registerExtension: async (request) => {
-            this.onExtensionRegistered.call(request.name);
-          },
-          heartbeat: async (request) => {
-            // Ok.
-          },
-        },
-      },
-      port: await extensionContext.createPort('rpc', {
-        contentType: 'application/x-protobuf; messagType="dxos.rpc.Message"',
-      }),
-    });
-
-    await this._rpc.open();
-
-    scheduleTaskInterval(
-      this._ctx,
-      async () => {
-        try {
-          await asyncTimeout(this._rpc.rpc.Control.heartbeat(), this.opts.heartbeatTimeout);
-        } catch (err: any) {
-          this.opts.onTimeout();
-        }
-      },
-      this.opts.heartbeatInterval,
-    );
-  }
-
-  async onClose(err?: Error): Promise<void> {
-    await this._ctx.dispose();
-    await this._rpc.close();
-  }
-
-  async onAbort(err?: Error | undefined): Promise<void> {
-    await this._ctx.dispose();
-    await this._rpc.abort();
-  }
 }

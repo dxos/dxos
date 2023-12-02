@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
-import { AxisOptions, Chart } from 'react-charts';
+import React, { type FC, useMemo } from 'react';
+import { type AxisOptions, Chart } from 'react-charts';
 
-import { Metric, Resource } from '@dxos/protocols/proto/dxos/tracing';
+import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 
 import { ResourceName } from './Resource';
 import { JsonTreeView } from '../../../components';
@@ -86,6 +86,20 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
           />
         </div>
       </div>
+    );
+  }
+
+  if (metric.multiCounter) {
+    const records = metric.multiCounter.records ?? [];
+    records.sort((a, b) => a.key.localeCompare(b.key));
+    return (
+      <JsonTreeView
+        data={{
+          [metric.name]: Object.fromEntries(
+            records.map(({ key, value }) => [key, `${value.toString()} ${metric.multiCounter?.units ?? ''}`]),
+          ),
+        }}
+      />
     );
   }
 

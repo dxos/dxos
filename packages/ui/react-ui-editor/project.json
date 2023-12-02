@@ -1,0 +1,60 @@
+{
+  "sourceRoot": "packages/ui/react-ui-editor/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-editor/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {},
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/ui/react-ui-editor/src/testing/proto/gen"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/ui/react-ui-editor/.storybook"
+      }
+    },
+    "storybook:html": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
+      "executor": "@nx/storybook:storybook",
+      "inputs": [
+        "^production",
+        "production"
+      ],
+      "options": {
+        "configDir": "packages/ui/react-ui-editor/.storybook/html"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

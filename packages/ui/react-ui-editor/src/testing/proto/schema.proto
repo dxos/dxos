@@ -1,0 +1,15 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/schema.proto";
+
+package dxos.testing.editor;
+
+message EditorDocument {
+  option (object) = true;
+
+  dxos.schema.Text content = 1;
+}

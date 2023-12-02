@@ -10,7 +10,7 @@ import path from 'node:path';
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { PublishTestSpec, CacheStatus, EvaluationResult } from './spec';
+import { type PublishTestSpec, CacheStatus, type EvaluationResult } from './spec';
 import { run } from './utils';
 
 const cfCacheHeader = 'cf-cache-status';

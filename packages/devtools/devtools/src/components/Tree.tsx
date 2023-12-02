@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, HTMLAttributes, useState } from 'react';
+import React, { type FC, type HTMLAttributes, useState } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
@@ -40,6 +40,10 @@ export const Node: FC<{ data?: any; root?: boolean }> = ({ data, root }) => {
 
 export const KeyValue: FC<{ label: string; data?: any; className?: string }> = ({ label, data, className }) => {
   const [open, setOpen] = useState(true);
+  if (data === undefined) {
+    return null;
+  }
+
   return (
     <div className='flex'>
       <Box

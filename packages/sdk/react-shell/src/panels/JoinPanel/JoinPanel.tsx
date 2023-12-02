@@ -3,13 +3,13 @@
 //
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { useClient } from '@dxos/react-client';
+import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
+import { DensityProvider, useId, useThemeContext } from '@dxos/react-ui';
 
 import { JoinHeading } from './JoinHeading';
-import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
+import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
   AdditionMethodChooser,
@@ -32,6 +32,8 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     mode,
     unredeemedCodes,
     invitationStates,
+    succeededKeys,
+    failReasons,
     onExit,
     onHaloDone,
     onSpaceDone,
@@ -71,6 +73,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               Kind='Halo'
               active={activeView === 'halo invitation input'}
               {...(unredeemedCodes?.Halo && { unredeemedCode: unredeemedCodes.Halo })}
+              {...(succeededKeys?.Halo && { succeededKeys: succeededKeys.Halo })}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='halo invitation rescuer'>
@@ -80,6 +83,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               active={activeView === 'halo invitation rescuer'}
               invitationState={invitationStates?.Halo}
               onInvitationCancel={onHaloInvitationCancel}
+              failReason={failReasons?.Halo}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='halo invitation authenticator'>
@@ -114,6 +118,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               Kind='Space'
               active={activeView === 'space invitation input'}
               {...(unredeemedCodes?.Space && { unredeemedCode: unredeemedCodes.Space })}
+              {...(succeededKeys?.Space && { succeededKeys: succeededKeys.Space })}
               onExit={onExit}
               exitActionParent={exitActionParent}
             />
@@ -125,6 +130,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               active={activeView === 'space invitation rescuer'}
               invitationState={invitationStates?.Space}
               onInvitationCancel={onSpaceInvitationCancel}
+              failReason={failReasons?.Space}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='space invitation authenticator'>
@@ -319,10 +325,27 @@ export const JoinPanel = ({
     [joinState],
   );
 
+  const spaces = useMulticastObservable(client.spaces);
+
+  const succeededKeys = useMemo(
+    () => ({
+      Space: spaces ? new Set(spaces.map(({ key }) => key.toHex())) : undefined,
+    }),
+    [spaces],
+  );
+
   const invitationStates = useMemo(
     () => ({
-      Halo: joinState.context.halo.invitation?.state,
-      Space: joinState.context.space.invitation?.state,
+      Halo: joinState.context.halo.invitationObservable?.get().state,
+      Space: joinState.context.space.invitationObservable?.get().state,
+    }),
+    [joinState],
+  );
+
+  const failReasons = useMemo(
+    () => ({
+      Halo: joinState.context.halo.failReason,
+      Space: joinState.context.space.failReason,
     }),
     [joinState],
   );
@@ -351,9 +374,11 @@ export const JoinPanel = ({
         send: joinSend,
         activeView,
         failed,
+        failReasons,
         pending: ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str)),
         unredeemedCodes,
         invitationStates,
+        succeededKeys,
         identity,
         onExit,
         exitActionParent,

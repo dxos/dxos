@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { initialize, build, BuildResult } from 'esbuild-wasm';
+import { initialize, build, type BuildResult } from 'esbuild-wasm';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 
 import { subtleCrypto } from '@dxos/crypto';
 
-import { Frame, Artifact } from '../proto/gen/schema';
+import { type Frame, type Artifact } from '../proto/gen/schema';
 
 let initializePromise;
 

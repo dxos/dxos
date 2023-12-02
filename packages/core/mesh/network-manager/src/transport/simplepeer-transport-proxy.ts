@@ -4,8 +4,8 @@
 
 import { Writable } from 'node:stream';
 
-import { Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Event, scheduleTask } from '@dxos/async';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -18,11 +18,14 @@ import {
   ConnectivityError,
   UnknownProtocolError,
 } from '@dxos/protocols';
-import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { ConnectionState, type BridgeEvent, type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
-import { Transport, TransportFactory, TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
+
+const RESP_MIN_THRESHOLD = 500;
+const TIMEOUT_THRESHOLD = 10;
 
 export type SimplePeerTransportProxyParams = {
   initiator: boolean;
@@ -35,6 +38,7 @@ export type SimplePeerTransportProxyParams = {
 export class SimplePeerTransportProxy implements Transport {
   private readonly _proxyId = PublicKey.random();
   private readonly _ctx = new Context();
+  private _timeoutCount = 0;
 
   readonly closed = new Event();
   readonly connected = new Event();
@@ -62,23 +66,45 @@ export class SimplePeerTransportProxy implements Transport {
           }
         });
 
-        this._params.stream.pipe(
-          new Writable({
-            write: (chunk, _, callback) => {
-              this._params.bridgeService
-                .sendData({
-                  proxyId: this._proxyId,
-                  payload: chunk,
-                })
-                .then(
-                  () => callback(),
-                  (err: any) => {
+        const proxyStream = new Writable({
+          write: (chunk, _, callback) => {
+            const then = performance.now();
+            this._params.bridgeService
+              .sendData({
+                proxyId: this._proxyId,
+                payload: chunk,
+              })
+              .then(
+                () => {
+                  if (performance.now() - then > RESP_MIN_THRESHOLD) {
+                    log('slow response, delaying callback');
+                    scheduleTask(this._ctx, () => callback(), RESP_MIN_THRESHOLD);
+                  } else {
+                    callback();
+                  }
+                  this._timeoutCount = 0;
+                },
+                (err: any) => {
+                  if (err instanceof TimeoutError || err.constructor.name === 'TimeoutError') {
+                    if (this._timeoutCount++ > TIMEOUT_THRESHOLD) {
+                      throw new TimeoutError(`too many timeoutes (${this._timeoutCount} > ${TIMEOUT_THRESHOLD}`);
+                    } else {
+                      log('timeout error, but still invoking callback');
+                      callback();
+                    }
+                  } else {
                     log.catch(err);
-                  },
-                );
-            },
-          }),
-        );
+                  }
+                },
+              );
+          },
+        });
+
+        proxyStream.on('error', (err) => {
+          log('proxystream error', { err });
+        });
+
+        this._params.stream.pipe(proxyStream);
       },
       (error) => log.catch(error),
     );
@@ -117,6 +143,14 @@ export class SimplePeerTransportProxy implements Transport {
         signal,
       })
       .catch((err) => this.errors.raise(decodeError(err)));
+  }
+
+  async getDetails(): Promise<string> {
+    return (await this._params.bridgeService.getDetails({ proxyId: this._proxyId })).details;
+  }
+
+  async getStats(): Promise<TransportStats> {
+    return (await this._params.bridgeService.getStats({ proxyId: this._proxyId })).stats as TransportStats;
   }
 
   // TODO(burdon): Move open from constructor.

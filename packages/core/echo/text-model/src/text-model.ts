@@ -5,9 +5,9 @@
 import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 
 import { invariant } from '@dxos/invariant';
-import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
-import { ItemID, schema } from '@dxos/protocols';
-import { TextMutation, TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { Model, type ModelMeta, type MutationWriter, type StateMachine } from '@dxos/model-factory';
+import { type ItemID, schema } from '@dxos/protocols';
+import { type TextMutation, type TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 type TextModelState = {
   doc: Doc;

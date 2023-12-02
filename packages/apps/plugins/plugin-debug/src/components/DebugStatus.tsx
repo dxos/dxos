@@ -2,22 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import { Circle, type IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { SpacePluginProvides } from '@braneframe/plugin-space';
+import { getActiveSpace } from '@braneframe/plugin-space';
+import { parseGraphPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
-import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 const styles = {
-  success: 'text-green-500 dark:text-green-600',
-  warning: 'text-orange-500 dark:text-orange-600',
-  error: 'text-red-500 dark:text-red-600',
+  success: 'text-sky-300 dark:text-green-700',
+  warning: 'text-orange-300 dark:text-orange-600',
+  error: 'text-red-300 dark:text-red-600',
 };
 
+// TODO(burdon): Move out of debug plugin.
 // TODO(burdon): Make pluggable (move indicators to relevant plugins).
 // TODO(burdon): Vault heartbeat indicator (global scope)?
 
@@ -138,9 +139,11 @@ const SwarmIndicator: FC<IconProps> = (props) => {
  */
 const SavingIndicator: FC<IconProps> = (props) => {
   const [state, setState] = useState(0);
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides.space.active;
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const graphPlugin = useResolvePlugin(parseGraphPlugin);
+  const layout = layoutPlugin?.provides.layout;
+  const graph = graphPlugin?.provides.graph;
+  const space = layout && graph ? getActiveSpace(graph, layout.active) : undefined;
   useEffect(() => {
     if (!space) {
       return;
@@ -185,12 +188,10 @@ const SavingIndicator: FC<IconProps> = (props) => {
 export const DebugStatus = () => {
   const indicators = [SavingIndicator, ErrorIndicator, SwarmIndicator];
   return (
-    <div className='flex items-center px-1 gap-1 h-6 text-neutral-300 dark:text-neutral-700 border-l border-t'>
+    <div className='flex items-center px-1 gap-1 h-6 text-neutral-200 dark:text-neutral-800'>
       {indicators.map((Indicator) => (
         <Indicator key={Indicator.name} />
       ))}
     </div>
   );
 };
-
-export default DebugStatus;

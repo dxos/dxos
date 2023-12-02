@@ -2,31 +2,39 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import {
   CancelledError,
   ProtocolError,
   ConnectionResetError,
   ConnectivityError,
+  TimeoutError,
   UnknownProtocolError,
   trace,
 } from '@dxos/protocols';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage, SignalMessenger } from '../signal';
-import { Transport, TransportFactory } from '../transport';
-import { WireProtocol } from '../wire-protocol';
+import { type SignalMessage, type SignalMessenger } from '../signal';
+import { type Transport, type TransportFactory, type TransportStats } from '../transport';
+import { type WireProtocol } from '../wire-protocol';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.
  * This value is increased exponentially.
  */
 const STARTING_SIGNALLING_DELAY = 10;
+
+/**
+ * How long to wait for the transport to establish connectivity, i.e. for the connection to move between CONNECTING and CONNECTED.
+ */
+const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
+
+const TRANSPORT_STATS_INTERVAL = 5_000;
 
 /**
  * Maximum delay between signal batches.
@@ -90,6 +98,7 @@ export enum ConnectionState {
  */
 export class Connection {
   private readonly _ctx = new Context();
+  private connectedTimeoutContext = new Context();
 
   private _state: ConnectionState = ConnectionState.CREATED;
   private _transport: Transport | undefined;
@@ -102,6 +111,8 @@ export class Connection {
   readonly errors = new ErrorStream();
 
   public _instanceId = PublicKey.random().toHex();
+
+  public readonly transportStats = new Event<TransportStats>();
 
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
     await this._flushSignalBuffer();
@@ -127,6 +138,11 @@ export class Connection {
       remotePeerId: this.remoteId,
       initiator: this.initiator,
     });
+  }
+
+  @logInfo
+  get sessionIdString(): string {
+    return this.sessionId.truncate();
   }
 
   get state() {
@@ -158,7 +174,7 @@ export class Connection {
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
-    this._protocol.open().catch((err) => {
+    this._protocol.open(this.sessionId).catch((err) => {
       this.errors.raise(err);
     });
 
@@ -168,16 +184,31 @@ export class Connection {
       this.close(new ProtocolError('protocol stream closed')).catch((err) => this.errors.raise(err));
     });
 
+    scheduleTask(
+      this.connectedTimeoutContext,
+      async () => {
+        log.info(`timeout waiting ${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect, aborting`);
+        await this.abort(new TimeoutError(`${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect`)).catch(
+          (err) => this.errors.raise(err),
+        );
+      },
+      TRANSPORT_CONNECTION_TIMEOUT,
+    );
+
     invariant(!this._transport);
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => this._sendSignal(signal),
+      sessionId: this.sessionId,
     });
 
-    this._transport.connected.once(() => {
+    this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
+      await this.connectedTimeoutContext.dispose();
       this._callbacks?.onConnected?.();
+
+      scheduleTaskInterval(this._ctx, async () => this._emitTransportStats(), TRANSPORT_STATS_INTERVAL);
     });
 
     this._transport.closed.once(() => {
@@ -186,7 +217,7 @@ export class Connection {
       this.abort().catch((err) => this.errors.raise(err));
     });
 
-    this._transport.errors.handle((err) => {
+    this._transport.errors.handle(async (err) => {
       log('transport error:', { err });
       if (!this.closeReason) {
         this.closeReason = err?.message;
@@ -194,16 +225,17 @@ export class Connection {
 
       // TODO(nf): fix ErrorStream so instanceof works here
       if (err instanceof ConnectionResetError) {
-        log.warn('aborting due to transport ConnectionResetError');
+        log.info('aborting due to transport ConnectionResetError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err instanceof ConnectivityError) {
-        log.warn('aborting due to transport ConnectivityError');
+        log.info('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err instanceof UnknownProtocolError) {
         log.warn('unsure what to do with UnknownProtocolError, will keep on truckin', { err });
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
+        await this.connectedTimeoutContext.dispose();
         this.errors.raise(err);
       }
     });
@@ -228,6 +260,7 @@ export class Connection {
       return;
     }
 
+    await this.connectedTimeoutContext.dispose();
     this._changeState(ConnectionState.ABORTING);
     if (!this.closeReason) {
       this.closeReason = err?.message;
@@ -237,7 +270,7 @@ export class Connection {
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
-      log('aborting protocol... ', { proto: this._protocol });
+      log('aborting protocol... ');
       await this._protocol.abort();
     } catch (err: any) {
       log.catch(err);
@@ -262,6 +295,8 @@ export class Connection {
   async close(err?: Error) {
     if (!this.closeReason) {
       this.closeReason = err?.message;
+    } else {
+      this.closeReason += `; ${err?.message}`;
     }
     if (
       this._state === ConnectionState.CLOSED ||
@@ -273,6 +308,7 @@ export class Connection {
     const lastState = this._state;
     this._changeState(ConnectionState.CLOSING);
 
+    await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
 
     log('closing...', { peerId: this.ownId });
@@ -287,6 +323,18 @@ export class Connection {
 
       try {
         // After the transport is closed streams are disconnected.
+        await this._transport?.destroy();
+      } catch (err: any) {
+        log.catch(err);
+      }
+    } else {
+      log.info(`graceful close requested when we were in ${lastState} state? aborting`);
+      try {
+        await this._protocol.abort();
+      } catch (err: any) {
+        log.catch(err);
+      }
+      try {
         await this._transport?.destroy();
       } catch (err: any) {
         log.catch(err);
@@ -325,13 +373,14 @@ export class Connection {
         data: { signalBatch: { signals } },
       });
     } catch (err) {
-      if (err instanceof CancelledError) {
+      // TODO(nf): determine why instanceof doesn't work here
+      if (err instanceof CancelledError || (err instanceof Error && err.message?.includes('CANCELLED'))) {
         return;
       }
 
       // If signal fails treat connection as failed
-      log.warn('signal failed', { err });
-      await this.close();
+      log.info('signal message failed to deliver', { err });
+      await this.close(new ConnectivityError('signal message failed to deliver', err));
     }
   }
 
@@ -374,5 +423,12 @@ export class Connection {
     invariant(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
+  }
+
+  private async _emitTransportStats() {
+    const stats = await this.transport?.getStats();
+    if (stats) {
+      this.transportStats.emit(stats);
+    }
   }
 }

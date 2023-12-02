@@ -6,14 +6,14 @@ import { runInContextAsync } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TypedMessage } from '@dxos/protocols';
-import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
+import { type TypedMessage } from '@dxos/protocols';
+import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { FeedInfo, FeedStateMachine } from './feed-state-machine';
-import { MemberStateMachine, MemberInfo } from './member-state-machine';
+import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
+import { MemberStateMachine, type MemberInfo } from './member-state-machine';
 import { getCredentialAssertion, verifyCredential } from '../credentials';
-import { CredentialProcessor } from '../processor/credential-processor';
+import { type CredentialProcessor } from '../processor/credential-processor';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
@@ -191,6 +191,16 @@ export class SpaceStateMachine implements SpaceState {
         }
         if (!this._canInviteNewMembers(credential.issuer)) {
           log.warn(`Space member is not authorized to invite new members: ${credential.issuer}`);
+          return false;
+        }
+
+        await this._members.process(credential);
+        break;
+      }
+
+      case 'dxos.halo.credentials.MemberProfile': {
+        if (!this._genesisCredential) {
+          log.warn('Space must have a genesis credential before adding members.');
           return false;
         }
 

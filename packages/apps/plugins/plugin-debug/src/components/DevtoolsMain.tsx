@@ -4,19 +4,17 @@
 
 import React from 'react';
 
-import { Main } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Devtools } from '@dxos/devtools';
-import { ClientServices, useClient } from '@dxos/react-client';
+import { type ClientServices, useClient } from '@dxos/react-client';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 export const DevtoolsMain = () => {
   const client = useClient();
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <Devtools client={client} services={client.services.services as ClientServices} />
     </Main.Content>
   );
 };
-
-export default DevtoolsMain;

@@ -27,6 +27,7 @@ message ConnectionInfo {
     uint32 bytesReceived = 4;
     optional uint32 bytesSentRate = 6; // bytes per second.
     optional uint32 bytesReceivedRate = 7;
+    optional uint32 writeBufferSize = 8;
   }
 
   string state = 1;
@@ -38,6 +39,15 @@ message ConnectionInfo {
   repeated StreamStats streams = 7;
   optional string close_reason = 8;
   optional string identity = 9;
+  optional uint32 readBufferSize = 10;
+  optional uint32 writeBufferSize = 11;
+  optional google.protobuf.Timestamp last_update = 12;
+  optional string transport_details = 13;
+  // TODO(nf): uint64?
+  optional uint32 transport_bytes_sent = 14;
+  optional uint32 transport_bytes_received = 15;
+  optional uint32 transport_packets_sent = 16;
+  optional uint32 transport_packets_received = 17;
 }
 
 message ConnectionEvent {

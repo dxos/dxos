@@ -1,0 +1,67 @@
+{
+  "sourceRoot": "packages/ui/react-ui-theme/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-theme/src/index.ts"
+        ],
+        "outputPath": "packages/ui/react-ui-theme/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-theme/src/esbuild-plugin.ts",
+          "packages/ui/react-ui-theme/src/plugin.ts",
+          "packages/ui/react-ui-theme/src/theme.css"
+        ],
+        "outputPath": "packages/ui/react-ui-theme/dist/plugin",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "packages/ui/react-ui-theme/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

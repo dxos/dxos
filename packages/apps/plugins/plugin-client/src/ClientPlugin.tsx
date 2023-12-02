@@ -4,63 +4,59 @@
 
 import React, { useEffect, useState } from 'react';
 
+import type { Plugin, PluginDefinition } from '@dxos/app-framework';
+import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { Client, ClientContext, ClientOptions, SystemStatus } from '@dxos/react-client';
-import { PluginDefinition } from '@dxos/react-surface';
+import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
-import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
+import meta from './meta';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean };
+const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
 
-export const ClientPlugin = (
-  options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
-): PluginDefinition<{}, ClientPluginProvides> => {
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
+
+export type ClientPluginProvides = {
+  client: Client;
+
+  /**
+   * True if this is the first time the current app has been used by this identity.
+   */
+  firstRun: boolean;
+};
+
+export const parseClientPlugin = (plugin?: Plugin) =>
+  (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
+
+export const ClientPlugin = ({
+  debugIdentity,
+  types,
+  appKey,
+  ...options
+}: ClientPluginOptions): PluginDefinition<{}, ClientPluginProvides> => {
+  // TODO(burdon): Document.
   registerSignalFactory();
-  const client = new Client(options);
 
-  // Open devtools on keypress.
-  // TODO(burdon): Move to DebugPlugin and add key binding to action.
-  const onKeypress = async (event: KeyboardEvent) => {
-    // Cmd + Shift + X.
-    if (event.metaKey && event.shiftKey && event.key === 'x') {
-      event.preventDefault();
-
-      const vault = options.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
-
-      // Check if we're serving devtools locally on the usual port.
-      let hasLocalDevtools = false;
-      try {
-        await fetch('http://localhost:5174/');
-        hasLocalDevtools = true;
-      } catch {}
-
-      const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-      const devtoolsApp = hasLocalDevtools
-        ? 'http://localhost:5174/'
-        : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
-      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
-      window.open(devtoolsUrl, '_blank');
-    }
-  };
+  const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
 
   return {
-    meta: {
-      id: CLIENT_PLUGIN,
-    },
+    meta,
     initialize: async () => {
-      let firstRun = false;
       let error: unknown = null;
 
       try {
         await client.initialize();
 
+        if (types) {
+          client.addTypes(types);
+        }
+
+        // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
-          firstRun = true;
           await client.halo.createIdentity();
         } else if (client.halo.identity.get() && deviceInvitationCode) {
           // Ignore device invitation if identity already exists.
@@ -75,7 +71,7 @@ export const ClientPlugin = (
       }
 
       // Debugging (e.g., for monolithic mode).
-      if (options.debugIdentity) {
+      if (debugIdentity) {
         if (!client.halo.identity.get()) {
           await client.halo.createIdentity();
         }
@@ -94,8 +90,11 @@ export const ClientPlugin = (
         }
       }
 
+      let firstRun = false;
       if (client.halo.identity.get()) {
-        await client.spaces.isReady.wait();
+        await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+        firstRun = !client.spaces.default.properties[appKey];
+        client.spaces.default.properties[appKey] = true;
       }
 
       return {
@@ -103,35 +102,27 @@ export const ClientPlugin = (
         firstRun,
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
-
           useEffect(() => {
             if (!client) {
               return;
             }
 
             const subscription = client.status.subscribe((status) => setStatus(status));
-
             return () => subscription.unsubscribe();
           }, [client, setStatus]);
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        components: {
-          default: () => {
-            if (error) {
-              throw error;
-            }
+        root: () => {
+          if (error) {
+            throw error;
+          }
 
-            return null;
-          },
+          return null;
         },
       };
     },
-    ready: async () => {
-      document.addEventListener('keydown', onKeypress);
-    },
     unload: async () => {
-      document.removeEventListener('keydown', onKeypress);
       await client.destroy();
     },
   };

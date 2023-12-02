@@ -3,97 +3,130 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import { getIndexAbove } from '@tldraw/indices';
-import { DeepSignal } from 'deepsignal';
-import React, { FC, forwardRef, Ref, useCallback, useEffect } from 'react';
+import React, { useCallback, type FC } from 'react';
 
-import { useIntent } from '@braneframe/plugin-intent';
-import { File as FileType } from '@braneframe/types';
-import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { Mosaic, DelegatorProps, MosaicState, getDndId, Tile, useMosaic } from '@dxos/aurora-grid';
-import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
+import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
+import {
+  LayoutAction,
+  Surface,
+  parseMetadataResolverPlugin,
+  useIntent,
+  usePlugin,
+  useResolvePlugin,
+} from '@dxos/app-framework';
+import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
+import { Stack, type StackProps } from '@dxos/react-ui-stack';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  getSize,
+  surfaceElevation,
+  staticDefaultButtonColors,
+} from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
-import { StackSection } from './StackSection';
-import { StackSections } from './StackSections';
 import { defaultFileTypes } from '../hooks';
-import { stackState } from '../stores';
-import { STACK_PLUGIN, StackModel, StackProperties } from '../types';
+import { STACK_PLUGIN } from '../meta';
+import { type StackPluginProvides, isStack } from '../types';
 
-export const StackSectionDelegator = forwardRef<HTMLElement, { data: DelegatorProps }>(
-  ({ data: props }, forwardedRef) => {
-    switch (props.tile.variant) {
-      case 'stack':
-        return <StackSections {...props} ref={forwardedRef as Ref<HTMLDivElement>} />;
-      case 'card':
-        return <StackSection {...props} ref={forwardedRef as Ref<HTMLLIElement>} />;
-      default:
-        return null;
-    }
-  },
-);
+const SectionContent: StackProps['SectionContent'] = ({ data }) => <Surface role='section' data={{ object: data }} />;
 
-export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
+export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
-  const { sendIntent } = useIntent();
-  const { mosaic } = useMosaic();
+  const { dispatch } = useIntent();
+  const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
+  const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
+
+  const id = `stack-${stack.id}`;
+  const items = stack.sections
+    // TODO(wittjosiah): Should the database handle this differently?
+    // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
+    .filter(({ object }) => Boolean(object));
+  const space = getSpaceForObject(stack);
+  const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
+
+  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+    const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
+    const data = parseData ? parseData(active.item, 'object') : active.item;
+
+    // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
+    //  Perhaps stack plugin should just provide a fallback section renderer.
+    if (!isTypedObject(data) || isStack(data)) {
+      return 'reject';
+    }
+
+    const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
+    if (!exists) {
+      return 'copy';
+    } else {
+      return 'reject';
+    }
+  };
+
+  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
+    if (
+      (active.path === Path.create(id, active.item.id) || active.path === id) &&
+      (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
+    ) {
+      stack.sections.splice(active.position!, 1);
+    }
+
+    const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
+    const object = parseData?.(active.item, 'object');
+    // TODO(wittjosiah): Stop creating new section objects for each drop.
+    if (object && over.path === Path.create(id, over.item.id)) {
+      stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
+    } else if (object && over.path === id) {
+      stack.sections.push(new StackType.Section({ object }));
+    }
+  };
+
+  const handleRemove = (path: string) => {
+    const index = stack.sections.findIndex((section) => section.id === Path.last(path));
+    if (index >= 0) {
+      stack.sections.splice(index, 1);
+    }
+  };
+
   const handleAdd = useCallback(
-    (sectionObject: StackModel['sections'][0]['object']) => {
-      stack.sections.splice(stack.sections.length, 0, {
-        id: sectionObject.id,
-        index: stack.sections.length > 0 ? getIndexAbove(stack.sections[stack.sections.length - 1].index) : 'a0',
-        object: sectionObject,
-      });
+    (sectionObject: StackType['sections'][0]['object']) => {
+      stack.sections.push(new StackType.Section({ object: sectionObject }));
+      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
+      folder?.objects.push(sectionObject);
     },
     [stack, stack.sections],
   );
 
-  const rootTile: Tile = {
-    id: getDndId(STACK_PLUGIN, stack.id),
-    sortable: true,
-    acceptCopyClass: 'stack-section',
-    index: 'a0',
-    variant: 'stack',
+  const handleNavigate = async (id: string) => {
+    await dispatch({
+      action: LayoutAction.ACTIVATE,
+      data: { id },
+    });
   };
 
-  useEffect(() => {
-    const tiles = stack.sections.reduce(
-      (acc: MosaicState['tiles'], section) => {
-        const id = getDndId(STACK_PLUGIN, stack.id, section.id);
-        acc[id] = {
-          id,
-          variant: 'card',
-          index: section.index,
-        };
-        return acc;
-      },
-      { [rootTile.id]: rootTile },
-    );
-    const relations = Object.keys(tiles).reduce((acc: MosaicState['relations'], id) => {
-      acc[id] = { child: new Set(), parent: new Set() };
-      if (id === rootTile.id) {
-        Object.keys(tiles)
-          .filter((id) => id !== rootTile.id)
-          .forEach((childId) => {
-            acc[id].child.add(childId);
-          });
-      } else {
-        acc[id].parent.add(rootTile.id);
-      }
-      return acc;
-    }, {});
-    mosaic.tiles = { ...mosaic.tiles, ...tiles } as DeepSignal<MosaicState['tiles']>;
-    mosaic.relations = { ...mosaic.relations, ...relations } as DeepSignal<MosaicState['relations']>;
-  }, [stack, stack.sections]);
+  const handleTransform = (item: MosaicDataItem, type?: string) => {
+    const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
+    return parseData ? parseData(item, 'view-object') : item;
+  };
 
   return (
-    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
-      <Mosaic.Root id={STACK_PLUGIN}>
-        <Mosaic.Tile {...rootTile} />
-      </Mosaic.Root>
+    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
+      <Stack
+        id={id}
+        SectionContent={SectionContent}
+        type={StackType.Section.schema.typename}
+        items={items}
+        transform={handleTransform}
+        onOver={handleOver}
+        onDrop={handleDrop}
+        onRemoveSection={handleRemove}
+        onNavigateToSection={handleNavigate}
+      />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
+        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
               <Button variant='ghost'>
@@ -103,7 +136,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
               <DropdownMenu.Viewport>
-                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
+                {stackPlugin?.provides?.stack.creators?.map(({ id, testId, intent, icon, label }) => {
                   const Icon = icon ?? Placeholder;
                   return (
                     <DropdownMenu.Item
@@ -111,7 +144,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
                       id={id}
                       data-testid={testId}
                       onClick={async () => {
-                        const { object: nextSection } = await sendIntent(intent);
+                        const { object: nextSection } = await dispatch(intent);
                         handleAdd(nextSection);
                       }}
                     >

@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Series } from 'danfojs-node';
+import type { Series } from 'danfojs-node';
 
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
 
-import { LogReader, TraceEvent, zapPreprocessor } from './logging';
-import { PlanResults, TestParams } from '../plan';
-import { SignalTestSpec } from '../spec';
+import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
+import { type PlanResults, type TestParams } from '../plan';
+import { type SignalTestSpec } from '../spec';
 
 const seriesToJson = (s: Series) => {
   const indexes = s.index;
@@ -21,6 +21,8 @@ const seriesToJson = (s: Series) => {
 };
 
 const getStats = (series: number[], additionalMetrics: Record<string, number> = {}) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Series } = require('danfojs-node');
   const stats = new Series(series).describe() as Series;
 
   const values: number[] = [];
@@ -96,6 +98,9 @@ export const analyzeMessages = async (results: PlanResults) => {
 };
 
 export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: PlanResults) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Series } = require('danfojs-node');
+
   const start = Date.now();
   /**
    * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}

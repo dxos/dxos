@@ -1,0 +1,32 @@
+{
+  "sourceRoot": "packages/sdk/app-graph/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/sdk/app-graph/src/index.ts",
+          "packages/sdk/app-graph/src/testing.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/sdk/app-graph/.storybook"
+      }
+    },
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

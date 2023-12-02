@@ -8,8 +8,8 @@ import { randomBytes } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';
-import { ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';
+import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
 

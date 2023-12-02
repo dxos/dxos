@@ -5,17 +5,17 @@
 import { asyncTimeout, Trigger } from '@dxos/async';
 import {
   iframeServiceBundle,
-  IframeServiceBundle,
+  type IframeServiceBundle,
   PROXY_CONNECTION_TIMEOUT,
   workerServiceBundle,
 } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { Callback, MaybePromise } from '@dxos/util';
+import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { Callback, type MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost, ClientRpcServer, ClientRpcServerParams } from '../services';
+import { type ClientServicesHost, ClientRpcServer, type ClientRpcServerParams } from '../services';
 
 export type WorkerSessionParams = {
   serviceHost: ClientServicesHost;

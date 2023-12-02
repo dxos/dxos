@@ -4,12 +4,12 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
-import { Bounds, Item } from '../../layout';
-import { GridLensModel } from '../Grid';
+import { type Bounds, type Item } from '../../layout';
+import { type GridLensModel } from '../Grid';
 
 export type TileContentProps<T extends {} = {}> = {
   item: Item<T>;

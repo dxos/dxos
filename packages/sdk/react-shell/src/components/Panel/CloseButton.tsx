@@ -5,8 +5,8 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, ButtonProps, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, type ButtonProps, useTranslation } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> & { onDone?: () => void }) => {
   const { t } = useTranslation('os');

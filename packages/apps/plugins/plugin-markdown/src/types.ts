@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { Document } from '@braneframe/types';
-import { EditorMode, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { ObjectMeta } from '@dxos/react-client/echo';
+import type { Document } from '@braneframe/types';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import type { ObjectMeta } from '@dxos/react-client/echo';
+import type { EditorMode, MarkdownEditorProps } from '@dxos/react-ui-editor';
 
-export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
+import { MARKDOWN_PLUGIN } from './meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
@@ -19,15 +23,16 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = {
   title: string;
-  // TODO(burdon): Factor out (type system).
-  meta: ObjectMeta;
+
+  // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
+  __meta: ObjectMeta;
   readOnly?: boolean;
 };
 
 export type MarkdownProvides = {
   markdown: {
-    onChange?: MarkdownComposerProps['onChange'];
     filter?: (document: Document) => boolean;
+    onChange?: MarkdownEditorProps['onChange'];
   };
 };
 
@@ -47,8 +52,10 @@ type StackProvides = {
 
 export type MarkdownSettingsProps = { editorMode?: EditorMode };
 
-export type MarkdownPluginProvides = GraphProvides &
-  IntentProvides &
+export type MarkdownPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides &
   StackProvides & {
     settings: MarkdownSettingsProps;

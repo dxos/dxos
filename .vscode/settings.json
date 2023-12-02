@@ -6,11 +6,14 @@
     }
   ],
   "cSpell.words": [
+    "Automerge",
     "bitfield",
     "burdon",
     "dxos",
     "DXOS",
+    "Expando",
     "Faas",
+    "Hypergraph",
     "protobuf",
     "testutils"
   ],
@@ -46,7 +49,9 @@
       "<node_internals>/**",
       "internal/*",
       "**/stream.ts",
-      "**/events.ts"
+      "**/events.ts",
+      "**/wtfnode.js",
+      "**/context.ts"
     ]
 }
 }

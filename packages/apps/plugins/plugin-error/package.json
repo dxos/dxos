@@ -1,15 +1,23 @@
 {
   "name": "@braneframe/plugin-error",
-  "version": "0.2.3",
+  "version": "0.3.8",
   "description": "DXOS Surface plugin for providing an error boundary.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
@@ -21,9 +29,9 @@
   },
   "devDependencies": {
     "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "react": "^18.2.0",
@@ -32,9 +40,9 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0"
   },

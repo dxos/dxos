@@ -5,8 +5,8 @@
 import { CaretLeft, Planet } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { Tooltip } from '../Tooltip';
 

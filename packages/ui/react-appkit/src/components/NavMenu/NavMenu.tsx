@@ -3,18 +3,18 @@
 //
 
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
-import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
+import React, { type ComponentProps, type ForwardedRef, forwardRef, type ReactNode } from 'react';
 
-import { Tooltip, TooltipContentProps } from '@dxos/aurora';
+import { Tooltip, type TooltipContentProps } from '@dxos/react-ui';
 import {
   focusRing,
-  hoverColors,
   inlineSeparator,
   mx,
-  defaultAppButtonColors,
-  primaryAppButtonColors,
+  defaultButtonColors,
+  primaryButtonColors,
   surfaceElevation,
-} from '@dxos/aurora-theme';
+  ghostHover,
+} from '@dxos/react-ui-theme';
 
 interface NavMenuItemSharedProps {
   children: ReactNode;
@@ -67,9 +67,9 @@ const NavMenuInvokerItem = forwardRef(
         <NavigationMenuPrimitive.Trigger
           className={mx(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
-            active ? primaryAppButtonColors : defaultAppButtonColors,
+            active ? primaryButtonColors : defaultButtonColors,
             focusRing,
-            hoverColors,
+            ghostHover,
           )}
         >
           {children}
@@ -98,10 +98,10 @@ const NavMenuLinkItem = forwardRef(
         active={active}
         className={mx(
           'px-3 py-2 text-sm rounded-md transition-color',
-          active ? primaryAppButtonColors : defaultAppButtonColors,
+          active ? primaryButtonColors : defaultButtonColors,
           active ? 'font-medium' : 'font-normal',
           focusRing,
-          hoverColors,
+          ghostHover,
           triggerLinkProps.className,
         )}
       >
@@ -123,10 +123,10 @@ const NavMenuTooltipLinkItem = forwardRef(
             active={active}
             className={mx(
               'px-3 py-2 text-sm rounded-md transition-color',
-              active ? primaryAppButtonColors : defaultAppButtonColors,
+              active ? primaryButtonColors : defaultButtonColors,
               active ? 'font-medium' : 'font-normal',
               focusRing,
-              hoverColors,
+              ghostHover,
               triggerLinkProps.className,
             )}
           >

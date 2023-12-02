@@ -1,26 +1,32 @@
 {
   "name": "@braneframe/plugin-debug",
-  "version": "0.2.3",
+  "version": "0.3.8",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/devtools": "workspace:*",
+    "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -29,23 +35,27 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",
+    "@preact/signals-react": "^1.3.6",
     "date-fns": "^2.29.3",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
@@ -56,10 +66,16 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

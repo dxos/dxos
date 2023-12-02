@@ -1,0 +1,30 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-metadata/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-metadata/src/index.ts",
+          "packages/apps/plugins/plugin-metadata/src/meta.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-metadata/.storybook"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

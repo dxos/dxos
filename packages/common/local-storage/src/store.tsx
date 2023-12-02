@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Signal } from '@preact/signals-core';
-import { DeepSignal, deepSignal } from 'deepsignal';
+import { type Signal } from '@preact/signals-core';
+import { type DeepSignal, deepSignal } from 'deepsignal';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 
@@ -60,11 +60,25 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
+  static json: PropType<object> = {
+    get: (key) => {
+      const value = localStorage.getItem(key);
+      return value ? JSON.parse(value) : undefined;
+    },
+    set: (key, value) => {
+      if (value === undefined) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+    },
+  };
+
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
   public readonly values: DeepSignal<T>;
 
-  constructor(private readonly _prefix?: string, defaults?: T) {
+  constructor(private readonly _prefix: string, defaults?: T) {
     this.values = deepSignal<T>(defaults ?? ({} as T));
   }
 
@@ -74,7 +88,7 @@ export class LocalStorageStore<T extends object> {
    * Binds signal property to local storage key.
    */
   prop<T>(prop: Signal<T | undefined>, lkey: string, type: PropType<T>) {
-    const key = this._prefix + '.' + lkey;
+    const key = this._prefix + '/' + lkey;
     if (this._subscriptions.has(key)) {
       return this;
     }

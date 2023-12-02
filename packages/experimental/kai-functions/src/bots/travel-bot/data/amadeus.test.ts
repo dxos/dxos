@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FlightOffer, FlightQuery } from 'amadeus';
+import { type FlightOffer, type FlightQuery } from 'amadeus';
 import { expect } from 'chai';
 import { add, formatISO9075 } from 'date-fns';
 

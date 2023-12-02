@@ -1,14 +1,15 @@
-// TODO(wittjosiah): State can be a GraphNode.
 //
 // Copyright 2023 DXOS.org
 //
 
-import { Context, createContext, useContext } from 'react';
+// TODO(wittjosiah): State can be a GraphNode.
+import { type Context, createContext, useContext } from 'react';
 
+import { type Graph } from '@dxos/app-graph';
 import { raise } from '@dxos/debug';
 
-import { GraphContextValue } from './types';
+export type GraphContext = { graph: Graph };
 
-export const GraphContext: Context<GraphContextValue | null> = createContext<GraphContextValue | null>(null);
+export const GraphContext: Context<GraphContext | null> = createContext<GraphContext | null>(null);
 
-export const useGraph = (): GraphContextValue => useContext(GraphContext) ?? raise(new Error('GraphContext not found'));
+export const useGraph = (): GraphContext => useContext(GraphContext) ?? raise(new Error('Missing GraphContext'));

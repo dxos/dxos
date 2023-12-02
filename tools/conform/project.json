@@ -2,7 +2,6 @@
   "sourceRoot": "tools/conform/src",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/conform/src/index.ts",
         "outputPath": "tools/conform/dist",
@@ -10,10 +9,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/conform/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "dev": {
       "dependsOn": [
@@ -24,18 +20,6 @@
         "script": "dev"
       }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "tools/conform/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   }
 }

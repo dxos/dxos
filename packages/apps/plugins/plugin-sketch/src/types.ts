@@ -2,16 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TLStore } from '@tldraw/tlschema';
+import { type TLStore } from '@tldraw/tlschema';
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { StackProvides } from '@braneframe/plugin-stack';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { StackProvides } from '@braneframe/plugin-stack';
 import { Sketch as SketchType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client/echo';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import { isTypedObject } from '@dxos/react-client/echo';
 
-export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
+import { SKETCH_PLUGIN } from './meta';
 
 const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;
 
@@ -19,7 +23,12 @@ export enum SketchAction {
   CREATE = `${SKETCH_ACTION}/create`,
 }
 
-export type SketchPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & StackProvides;
+export type SketchPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides &
+  StackProvides;
 
 export interface SketchModel {
   store: TLStore;
@@ -30,5 +39,5 @@ export interface SketchModel {
 (globalThis as any)[SketchType.name] = SketchType;
 
 export const isSketch = (data: unknown): data is SketchType => {
-  return isTypedObject(data) && SketchType.type.name === data.__typename;
+  return isTypedObject(data) && SketchType.schema.typename === data.__typename;
 };

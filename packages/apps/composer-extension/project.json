@@ -2,17 +2,7 @@
   "sourceRoot": "packages/apps/composer-extension/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/composer-extension/src/index.ts",
-        "outputPath": "packages/apps/composer-extension/dist/types",
-        "tsConfig": "packages/apps/composer-extension/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "bundle": {
       "executor": "nx:run-script",
       "inputs": [
@@ -56,19 +46,7 @@
         "packages/apps/composer-extension/out/composer-extension"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/composer-extension/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "serve": {
       "dependsOn": [
         "^build"

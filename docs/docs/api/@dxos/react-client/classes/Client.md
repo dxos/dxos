@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:27]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:28]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.2.3"</code>
+Type: <code>"0.3.8"</code>
 
 The version of this client API.
 
@@ -28,6 +28,11 @@ The version of this client API.
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 Current configuration object.
+
+### [experimental]()
+Type: <code>object</code>
+
+
 
 ### [halo]()
 Type: <code>HaloProxy</code>
@@ -76,6 +81,30 @@ Returns: <code>string</code>
 Arguments: none
 
 
+
+
+### [addSchema(types)]()
+
+
+
+
+Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+
+Arguments: 
+
+`types`: <code>TypeCollection</code>
+
+
+### [addTypes(types)]()
+
+
+
+
+Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+
+Arguments: 
+
+`types`: <code>TypeCollection</code>
 
 
 ### [destroy()]()

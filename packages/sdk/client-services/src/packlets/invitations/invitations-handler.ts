@@ -14,7 +14,12 @@ import { generatePasscode } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import {
+  createTeleportProtocolFactory,
+  type NetworkManager,
+  StarTopology,
+  type SwarmConnection,
+} from '@dxos/network-manager';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -25,7 +30,7 @@ import {
   isAuthenticationRequired,
   MAX_OTP_ATTEMPTS,
 } from './invitation-extension';
-import { InvitationProtocol } from './invitation-protocol';
+import { type InvitationProtocol } from './invitation-protocol';
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -274,9 +279,6 @@ export class InvitationsHandler {
               );
               log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
-              if (introductionResponse.spaceKey) {
-                invitation.spaceKey = introductionResponse.spaceKey;
-              }
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {

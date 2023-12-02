@@ -9,9 +9,11 @@ import { createModelMutation, DatabaseProxy, encodeModelMutation, genesisMutatio
 import { TestBuilder as FeedTestBuilder } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { test } from '@dxos/test';
 
+import { AutomergeHost } from '../automerge';
 import { createMappedFeedWriter } from '../common';
 import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
@@ -41,7 +43,8 @@ const createDatabaseWithFeeds = async () => {
   await host.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
 
   const dataServiceSubscriptions = new DataServiceSubscriptions();
-  const dataService = new DataServiceImpl(dataServiceSubscriptions);
+  const automergeHost = new AutomergeHost(createStorage({ type: StorageType.RAM }).createDirectory());
+  const dataService = new DataServiceImpl(dataServiceSubscriptions, automergeHost);
 
   const spaceKey = PublicKey.random();
   await dataServiceSubscriptions.registerSpace(spaceKey, host.createDataServiceHost());
@@ -58,12 +61,12 @@ describe('database', () => {
       const database = await createDatabase();
 
       const result = database.backend.mutate(genesisMutation(PublicKey.random().toHex(), DocumentModel.meta.type));
-      expect(result.objectsUpdated.length).toEqual(1);
-      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
+      expect(result.updateEvent.itemsUpdated.length).toEqual(1);
+      expect(database.itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
       database.backend.commitBatch();
 
       await result.batch.waitToBeProcessed();
-      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
+      expect(database.itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
     });
 
     test('mutate document', async () => {

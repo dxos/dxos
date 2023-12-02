@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext, DragEndEvent, MouseSensor, pointerWithin, useSensor } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, MouseSensor, pointerWithin, useSensor } from '@dnd-kit/core';
 import isEqual from 'lodash.isequal';
-import React, { FC, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Event } from '@dxos/async';
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
-import { Layout, Item, Point, Location, serializeLocation, parseLocation } from '../../layout';
-import { Cell, CellSlots } from '../Cell';
-import { Tile, TileContentProps, TileSlots } from '../Tile';
+import { type Layout, type Item, type Point, type Location, serializeLocation, parseLocation } from '../../layout';
+import { Cell, type CellSlots } from '../Cell';
+import { Tile, type TileContentProps, type TileSlots } from '../Tile';
 
 const options = {
   transitionDelay: 500,

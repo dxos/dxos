@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { AlertDialog, AlertDialogContentProps, useId, useVisualViewport } from '@dxos/aurora';
+import { AlertDialog, type AlertDialogContentProps, useId, useVisualViewport } from '@dxos/react-ui';
 
-import { JoinPanel, JoinPanelProps } from '../../panels';
+import { JoinPanel, type JoinPanelProps } from '../../panels';
 
 export interface JoinDialogProps
   extends Omit<AlertDialogContentProps, 'children'>,

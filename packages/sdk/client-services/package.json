@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.2.3",
+  "version": "0.3.8",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -53,10 +53,12 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/websocket-rpc": "workspace:*"
+    "@dxos/websocket-rpc": "workspace:*",
+    "platform": "^1.3.6"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
+    "@types/platform": "^1.3.4",
     "@types/readable-stream": "^2.3.9"
   },
   "publishConfig": {

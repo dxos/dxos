@@ -3,16 +3,16 @@
 //
 
 import { randomBytes } from 'node:crypto';
-import { Duplex } from 'node:stream';
+import { type Duplex } from 'node:stream';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
-import { ExtensionContext, TeleportExtension } from '../teleport';
+import { type ExtensionContext, type TeleportExtension } from '../teleport';
 
 interface TestExtensionWithStreamsCallbacks {
   onOpen?: () => Promise<void>;

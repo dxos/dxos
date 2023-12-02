@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext } from '@nx/devkit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -45,6 +45,7 @@ export type NodeOptions = {
   executorResult?: object;
   reporter?: string;
   inspect?: boolean;
+  inspectBrk?: boolean;
   trackLeakedResources: boolean;
   grep?: string;
   bail?: boolean;
@@ -119,6 +120,7 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
       '--checkLeaks': options.checkLeaks,
       '--exit': options.forceExit,
       '--inspect': options.inspect,
+      '--inspect-brk': options.inspectBrk,
       '--bail': options.bail,
     },
     options.grep && ['--grep', options.grep],

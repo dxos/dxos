@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './types';
-export * from './util';
+import { TemplatePlugin } from './TemplatePlugin';
+
+export default TemplatePlugin;
 
 export * from './TemplatePlugin';

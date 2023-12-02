@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { Contacts } from './Contacts';
 import { CreateProfile } from './CreateProfile';
@@ -14,7 +14,7 @@ import { Keychain } from './Keychain';
 import { RecoverProfile } from './RecoverProfile';
 import { useModule } from '../../hooks';
 import { Join, Share } from '../invitations';
-import { MenuItem, Module, Panel } from '../util';
+import { type MenuItem, Module, Panel } from '../util';
 
 export const createHaloMenu = (client: Client): MenuItem => {
   return {

@@ -2,27 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, ReadOnlyEvent } from '@dxos/async';
-import { DocumentModel } from '@dxos/document-model';
-import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
+import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { DocumentModel, type Reference, type DocumentModelState } from '@dxos/document-model';
+import { type BatchUpdate, type DatabaseProxy, type Item, type ItemManager, UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { base, db } from './defs';
-import { EchoObject } from './object';
-import { Filter, Query, TypeFilter } from './query';
-import { DatabaseRouter } from './router';
-import { Text } from './text-object';
-import { TypedObject } from './typed-object';
+import { type AutomergeContext, AutomergeDb, AutomergeObject } from './automerge';
+import { type Hypergraph } from './hypergraph';
+import { type EchoObject, base, db, TextObject } from './object';
+import { TypedObject } from './object';
+import { type Schema } from './proto';
+import { type FilterSource, type Query } from './query';
 
 /**
  * Database wrapper.
  */
+// TODO(dmaretskyi): Extract interface.
 export class EchoDatabase {
-  private readonly _objects = new Map<string, EchoObject>();
+  /**
+   * @internal
+   */
+  readonly _objects = new Map<string, EchoObject>();
 
   /**
    * Objects that have been removed from the database.
@@ -32,36 +37,40 @@ export class EchoDatabase {
   /**
    * @internal
    */
-  public readonly _updateEvent = new Event<Item[]>();
+  readonly _updateEvent = new Event<UpdateEvent>();
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
+
+  public readonly automerge: AutomergeDb;
 
   constructor(
     /**
      * @internal
      */
-    public readonly _itemManager: ItemManager,
+    readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
-    private readonly _router: DatabaseRouter,
+    private readonly _graph: Hypergraph,
+    automergeContext: AutomergeContext,
   ) {
+    this.automerge = new AutomergeDb(this._graph, automergeContext, this);
+
     this._backend.itemUpdate.on(this._update.bind(this));
-    this._update([]);
+
+    // Load all existing objects.
+    this._update(new UpdateEvent(this._backend.spaceKey)); // TODO: Seems hacky.
   }
 
-  get objects() {
+  get objects(): EchoObject[] {
     return Array.from(this._objects.values());
   }
 
-  /**
-   * @deprecated
-   */
-  get router() {
-    return this._router;
+  get graph() {
+    return this._graph;
   }
 
-  // TODO(burdon): Return type via generic?
-  getObjectById<T extends TypedObject>(id: string): T | undefined {
-    const obj = this._objects.get(id);
+  getObjectById<T extends EchoObject>(id: string): T | undefined {
+    const obj = this._objects.get(id) ?? this.automerge._objects.get(id);
+
     if (!obj) {
       return undefined;
     }
@@ -77,6 +86,10 @@ export class EchoDatabase {
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {
+    if (obj[base] instanceof AutomergeObject) {
+      return this.automerge.add(obj);
+    }
+
     log('add', { id: obj.id, type: (obj as any).__typename });
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
@@ -129,9 +142,9 @@ export class EchoDatabase {
           },
         ],
       });
-      invariant(result.objectsUpdated.length === 1);
+      invariant(result.updateEvent.itemsUpdated.length === 1);
 
-      obj[base]._bind(result.objectsUpdated[0]);
+      obj[base]._bind(result.updateEvent.itemsUpdated[0]);
     } finally {
       if (batchCreated) {
         this._backend.commitBatch();
@@ -144,7 +157,12 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
+  // TODO(burdon): Rename delete.
   remove<T extends EchoObject>(obj: T) {
+    if (obj[base] instanceof AutomergeObject) {
+      return this.automerge.remove(obj);
+    }
+
     log('remove', { id: obj.id, type: (obj as any).__typename });
 
     this._backend.mutate({
@@ -185,14 +203,15 @@ export class EchoDatabase {
   /**
    * Filter by type.
    */
-  // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
-  query(filter?: Filter<any>, options?: QueryOptions): Query;
-  query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(this._objects, this._updateEvent, filter, options);
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    options ??= {};
+    options.spaces = [this._backend.spaceKey];
+
+    return this._graph.query(filter, options);
   }
 
-  private _update(changed: Item[]) {
+  private _update(updateEvent: UpdateEvent) {
+    // TODO(dmaretskyi): Optimize to not iterate the entire item set.
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
         let obj = this._removed.get(object.id);
@@ -209,6 +228,7 @@ export class EchoDatabase {
         invariant(!this._objects.has(object.id));
         this._objects.set(object.id, obj);
         obj[base]._database = this;
+        obj[base]._beforeBind();
         obj[base]._bind(object);
       }
     }
@@ -227,14 +247,14 @@ export class EchoDatabase {
     }
 
     // Dispatch update events.
-    for (const item of changed) {
+    for (const item of updateEvent.itemsUpdated) {
       const obj = this._objects.get(item.id);
       if (obj) {
         obj[base]._itemUpdate();
       }
     }
 
-    this._updateEvent.emit(changed);
+    this._updateEvent.emit(updateEvent);
   }
 
   /**
@@ -242,23 +262,29 @@ export class EchoDatabase {
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
     if (item.modelType === DocumentModel.meta.type) {
-      const type = item.state['@type'];
-      if (!type) {
+      const state = item.state as DocumentModelState;
+      if (!state.type) {
         return new TypedObject();
-      }
-
-      const Proto = this._router.schema?.getPrototype(type);
-      if (!Proto) {
-        log.warn('Unknown schema type', { type });
-        return new TypedObject(); // TODO(burdon): Expando?
       } else {
-        return new Proto();
+        return new TypedObject(undefined, { type: state.type });
       }
     } else if (item.modelType === TextModel.meta.type) {
-      return new Text();
+      return new TextObject();
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;
+    }
+  }
+
+  /**
+   * @internal
+   */
+  _resolveSchema(type: Reference): Schema | undefined {
+    if (type.protocol === 'protobuf') {
+      return this._graph.types.getSchema(type.itemId);
+    } else {
+      // TODO(dmaretskyi): Cross-space references.
+      return this.getObjectById(type.itemId) as Schema | undefined;
     }
   }
 }

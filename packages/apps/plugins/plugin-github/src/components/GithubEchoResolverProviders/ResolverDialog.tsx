@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/react-ui';
 
 import { ResolverTree } from './ResolverTree';
-import { GITHUB_PLUGIN } from '../../props';
+import { GITHUB_PLUGIN } from '../../meta';
 
 export const ResolverDialog = ({
   handleJoinSpace,

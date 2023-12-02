@@ -4,8 +4,8 @@
 
 import { inspect } from 'node:util';
 
-import { Space } from '@dxos/client/echo';
-import { Config } from '@dxos/config';
+import { type Space } from '@dxos/client/echo';
+import { type Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

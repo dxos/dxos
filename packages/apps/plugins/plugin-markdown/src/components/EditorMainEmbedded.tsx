@@ -4,16 +4,17 @@
 
 import React from 'react';
 
-import { ComposerModel } from '@dxos/aurora-composer';
+import { type EditorModel } from '@dxos/react-ui-editor';
 
 import { EditorMain } from './EditorMain';
-import { MarkdownProperties } from '../types';
+import { type MarkdownProperties } from '../types';
 
 export const EditorMainEmbedded = ({
-  data: { composer, properties },
+  composer,
+  properties,
 }: {
-  data: { composer: ComposerModel; properties: MarkdownProperties; view: 'embedded' };
-  role?: string;
+  composer: EditorModel;
+  properties: MarkdownProperties;
 }) => {
   return <EditorMain model={composer} properties={properties} layout='embedded' editorRefCb={() => {}} />;
 };

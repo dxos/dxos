@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plugin } from 'rollup';
+import { type Plugin } from 'rollup';
 
 import { definitions } from './definitions';
-import { ConfigPluginOpts } from './types';
+import { type ConfigPluginOpts } from './types';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
   const contents = Object.entries(definitions({ ...options, mode: process.env.NODE_ENV }))

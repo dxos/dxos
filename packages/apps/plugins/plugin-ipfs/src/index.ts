@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './types';
-export * from './util';
+import { IpfsPlugin } from './IpfsPlugin';
+
+export default IpfsPlugin;
 
 export * from './IpfsPlugin';

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
 import { BaseCommand } from '../../base-command';
-import { TunnelRpcPeer, printTunnels } from '../../util';
+import { type TunnelRpcPeer, printTunnels } from '../../util';
 
 export default class Tunnel extends BaseCommand<typeof Tunnel> {
   static override enableJsonFlag = true;

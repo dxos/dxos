@@ -20,6 +20,9 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/debug"
     },
     {
@@ -41,6 +44,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../automerge"
+    },
+    {
       "path": "../document-model"
     },
     {
@@ -51,6 +57,9 @@
     },
     {
       "path": "../echo-pipeline"
+    },
+    {
+      "path": "../echo-typegen"
     },
     {
       "path": "../model-factory"

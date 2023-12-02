@@ -15,6 +15,7 @@
     ],
     "module": "CommonJS",
     "moduleResolution": "node",
+    "isolatedModules": true,
     "noImplicitOverride": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -33,6 +34,7 @@
   "exclude": [
     "dist",
     "node_modules",
-    "out"
+    "out",
+    "**/*.mts"
   ]
 }

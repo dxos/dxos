@@ -2,83 +2,80 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Compass, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { Expando, SpaceProxy } from '@dxos/react-client/echo';
 
 import { MapMain } from './components';
+import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
-import { isObject, MAP_PLUGIN, MapAction, MapPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { MapAction, type MapPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
 
-export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
-  const adapter = new GraphNodeAdapter({
-    filter: (object: TypedObject) => isObject(object),
-    adapter: objectToGraphNode,
-  });
+const typename = 'map';
 
+export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
-    meta: {
-      id: MAP_PLUGIN,
-    },
-    unload: async () => {
-      adapter.clear();
-    },
+    meta,
     provides: {
+      metadata: {
+        records: {
+          [typename]: {
+            placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
+            icon: (props: IconProps) => <Compass {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
-          const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${MAP_PLUGIN}/create`,
             label: ['create object label', { ns: MAP_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: MAP_PLUGIN,
-                action: MapAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: TreeViewAction.ACTIVATE,
-              },
-            ],
+            icon: (props) => <Compass {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: MAP_PLUGIN,
+                  action: MapAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
-              testId: 'mapPlugin.createMap',
+              testId: 'mapPlugin.createObject',
             },
           });
-
-          return adapter.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            return isObject(data) ? MapMain : null;
+      surface: {
+        component: ({ data, role }) => {
+          switch (role) {
+            case 'main': {
+              return isObject(data.active) ? <MapMain map={data.active} /> : null;
+            }
           }
-        }
 
-        return null;
+          return null;
+        },
       },
       intent: {
         resolver: (intent) => {

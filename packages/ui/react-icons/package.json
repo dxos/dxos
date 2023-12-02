@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-icons",
-  "version": "0.2.3",
+  "version": "0.3.8",
   "private": true,
   "description": "DXOS assets.",
   "homepage": "https://dxos.org",
@@ -13,8 +13,8 @@
     "assets"
   ],
   "devDependencies": {
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@storybook/addons": "^7.0.6",
     "@storybook/api": "^7.0.6",

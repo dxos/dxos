@@ -1,0 +1,66 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/automerge"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../core/echo/text-model"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-theme"
+    }
+  ]
+}

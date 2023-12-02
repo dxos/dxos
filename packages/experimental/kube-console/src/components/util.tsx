@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
-import { ListItem, ListItemRootProps } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { ListItem, type ListItemRootProps } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Move to react-appkit?
 // Removes need for class overrides in console.

@@ -4,16 +4,15 @@
 
 import React, { useState } from 'react';
 
-import { MarkdownProperties } from '@braneframe/plugin-markdown';
-import { Dialog, Button, useTranslation, Input } from '@dxos/aurora';
+import { type MarkdownProperties } from '@braneframe/plugin-markdown';
+import { Dialog, Button, useTranslation, Input } from '@dxos/react-ui';
 
-import { useGhIdFromUrl } from '../hooks/useGhIdFromUrl';
-import { GITHUB_PLUGIN } from '../props';
+import { useGhIdFromUrl } from '../hooks';
+import { GITHUB_PLUGIN } from '../meta';
 
-export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownProperties] }) => {
+export const UrlDialog = ({ properties }: { properties: MarkdownProperties }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const [ghUrlValue, setGhUrlValue] = useState('');
-
   const ghId = useGhIdFromUrl(ghUrlValue);
 
   return (
@@ -39,7 +38,8 @@ export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownPr
             classNames='mbs-2'
             onClick={() => {
               if (ghId && document) {
-                properties.meta.keys.push({ source: 'com.github', id: ghId });
+                // TODO(burdon): Meta should be immutable.
+                properties.__meta.keys.push({ source: 'github.com', id: ghId });
               }
             }}
           >

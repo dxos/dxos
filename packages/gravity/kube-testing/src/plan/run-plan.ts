@@ -3,31 +3,23 @@
 //
 
 import yaml from 'js-yaml';
-import { ChildProcess, fork } from 'node:child_process';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import seedrandom from 'seedrandom';
 
-import { Event, sleep } from '@dxos/async';
+import { sleep, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { LogLevel, createFileProcessor, log } from '@dxos/log';
+import { log } from '@dxos/log';
 
-import { AgentEnv } from './env';
-import { AgentParams, PlanResults, TestPlan } from './spec';
+import { buildBrowserBundle } from './browser/browser-bundle';
+import { WebSocketRedisProxy } from './env/websocket-redis-proxy';
+import { runNode, runBrowser } from './run-process';
+import { type PlanOptions, type AgentParams, type PlanResults, type TestPlan } from './spec';
+import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
 
-const AGENT_LOG_FILE = 'agent.log';
-const DEBUG_PORT_START = 9229;
 const SUMMARY_FILENAME = 'test.json';
-
-export type PlanOptions = {
-  staggerAgents?: number;
-  repeatAnalysis?: string;
-  randomSeed?: string;
-  profile?: boolean;
-  debug?: boolean;
-};
 
 type TestSummary = {
   options: PlanOptions;
@@ -37,6 +29,10 @@ type TestSummary = {
   params: {
     testId: string;
     outDir: string;
+    planName: string;
+  };
+  diagnostics: {
+    resourceUsage: ResourceUsageStats;
   };
   agents: Record<string, any>;
 };
@@ -47,9 +43,23 @@ export type RunPlanParams<S, C> = {
   options: PlanOptions;
 };
 
-export const runAgentForPlan = async <S, C>(planName: string, agentParamsJSON: string, plan: TestPlan<S, C>) => {
-  const params: AgentParams<S, C> = JSON.parse(agentParamsJSON);
-  await runAgent(plan, params);
+// fixup env in browser
+if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
+  process.env = (globalThis as any).dxgravity_env;
+}
+
+// TODO(nf): merge with defaults
+export const readYAMLSpecFile = async <S, C>(
+  path: string,
+  plan: TestPlan<S, C>,
+  options: PlanOptions,
+): Promise<() => RunPlanParams<any, any>> => {
+  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
+  return () => ({
+    plan,
+    spec: yamlSpec,
+    options,
+  });
 };
 
 // TODO(mykola): Introduce Executor class.
@@ -68,20 +78,6 @@ export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPl
   await runPlanner(name, { plan, spec, options });
 };
 
-// TODO(nf): merge with defaults
-export const readYAMLSpecFile = async <S, C>(
-  path: string,
-  plan: TestPlan<S, C>,
-  options: PlanOptions,
-): Promise<() => RunPlanParams<any, any>> => {
-  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
-  return () => ({
-    plan,
-    spec: yamlSpec,
-    options,
-  });
-};
-
 const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   const testId = createTestPathname();
   const outDirBase = process.env.GRAVITY_OUT_BASE || process.cwd();
@@ -93,30 +89,64 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
 
   const agentsArray = await plan.init({ spec, outDir, testId });
   const agents = Object.fromEntries(agentsArray.map((config) => [PublicKey.random().toHex(), config]));
+
+  if (
+    Object.values(agents).some((agent) => agent.runtime?.platform !== 'nodejs' && agent.runtime?.platform !== undefined)
+  ) {
+    const begin = Date.now();
+    await buildBrowserBundle(join(outDir, 'browser.js'));
+    log.info('browser bundle built', {
+      time: Date.now() - begin,
+      size: fs.statSync(join(outDir, 'browser.js')).size,
+    });
+  }
+
   log.info('starting agents', {
     count: agentsArray.length,
   });
 
-  const children: ChildProcess[] = [];
+  const killCallbacks: (() => void)[] = [];
   const planResults: PlanResults = { agents: {} };
   const promises: Promise<void>[] = [];
 
+  // Start websocket REDIS proxy for browser tests.
+  const server = new WebSocketRedisProxy();
+
   {
+    // stop the test when the plan fails (e.g. signal server dies)
+    // TODO(nf): add timeout for plan completion
+    const [allAgentsComplete, agentComplete] = latch({ count: agentsArray.length });
+
+    promises.push(
+      Promise.race([
+        new Promise<void>((resolve, reject) => {
+          plan.onError = (err) => {
+            log.info('got plan error, stopping agents', { err });
+            reject(err);
+          };
+        }),
+        allAgentsComplete().then(() => {}),
+      ]),
+    );
+
     //
     // Start agents
     //
 
-    for (const [agentIdx, [agentId, agentConfig]] of Object.entries(agents).entries()) {
+    for (const [agentIdx, [agentId, agentRunOptions]] of Object.entries(agents).entries()) {
       log.debug('runPlanner starting agent', { agentIdx });
       const agentParams: AgentParams<S, C> = {
         agentIdx,
         agentId,
         spec,
         agents,
+        runtime: agentRunOptions.runtime ?? {},
         testId,
         outDir: join(outDir, agentId),
-        config: agentConfig,
+        planRunDir: outDir,
+        config: agentRunOptions.config,
       };
+      agentParams.runtime.platform ??= 'nodejs';
 
       if (options.staggerAgents !== undefined && options.staggerAgents > 0) {
         await sleep(options.staggerAgents);
@@ -124,51 +154,42 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
 
       fs.mkdirSync(agentParams.outDir, { recursive: true });
 
-      const execArgv = process.execArgv;
-
-      if (options.profile) {
-        execArgv.push(
-          '--cpu-prof', //
-          '--cpu-prof-dir',
-          agentParams.outDir,
-          '--cpu-prof-name',
-          'agent.cpuprofile',
-        );
-      }
-
-      const childProcess = fork(process.argv[1], {
-        execArgv: options.debug
-          ? [
-              '--inspect=:' + (DEBUG_PORT_START + agentIdx), //
-              ...execArgv,
-            ]
-          : execArgv,
-        env: {
-          ...process.env,
-          GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
-          GRAVITY_SPEC: name,
-        },
-      });
-
-      children.push(childProcess);
+      const { result, kill } =
+        agentParams.runtime.platform === 'nodejs'
+          ? runNode(name, agentParams, options)
+          : runBrowser(name, agentParams, options);
+      killCallbacks.push(kill);
       promises.push(
-        Event.wrap<number>(childProcess, 'exit')
-          .waitForCount(1)
-          .then((exitCode) => {
-            planResults.agents[agentId] = {
-              exitCode,
-              outDir: agentParams.outDir,
-              logFile: join(agentParams.outDir, AGENT_LOG_FILE),
-            };
-          }),
+        result.then((result) => {
+          planResults.agents[agentId] = result;
+
+          agentComplete();
+          log.info('agent process exited successfully', { agentId });
+        }),
       );
     }
 
-    await Promise.all(promises);
+    await Promise.all(promises).catch((err) => {
+      log.warn('test plan or agent failed, killing remaining test agents', err);
+      for (const kill of killCallbacks) {
+        log.warn('killing agent');
+        kill();
+      }
+      throw new Error('plan failed');
+    });
 
     log.info('test complete', {
       summary: join(outDir, SUMMARY_FILENAME),
     });
+  }
+
+  void server.destroy();
+
+  let resourceUsageStats: ResourceUsageStats | undefined;
+  try {
+    resourceUsageStats = await analyzeResourceUsage(planResults);
+  } catch (err) {
+    log.warn('error analyzing resource usage', err);
   }
 
   let stats: any;
@@ -185,35 +206,18 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     params: {
       testId,
       outDir,
+      planName: Object.getPrototypeOf(plan).constructor.name,
     },
     results: planResults,
+    diagnostics: {
+      resourceUsage: resourceUsageStats ?? {},
+    },
     agents,
   };
 
   writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
   log.info('plan complete');
   process.exit(0);
-};
-
-const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
-  try {
-    log.addProcessor(
-      createFileProcessor({
-        path: join(params.outDir, AGENT_LOG_FILE),
-        levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
-      }),
-    );
-
-    const env = new AgentEnv<S, C>(params);
-    await env.open();
-    await plan.run(env);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  } finally {
-    log.info('agent complete', { agentId: params.agentId });
-    process.exit(0);
-  }
 };
 
 const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');

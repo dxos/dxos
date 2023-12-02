@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { isTypedObject, Expando, TypedObject } from '@dxos/client/echo';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  TranslationsProvides,
+  SurfaceProvides,
+  MetadataRecordsProvides,
+} from '@dxos/app-framework';
+import { isTypedObject, type Expando, type TypedObject } from '@dxos/react-client/echo';
 
-export const MAP_PLUGIN = 'dxos.org/plugin/map';
+import { MAP_PLUGIN } from './meta';
 
 const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
@@ -17,7 +21,11 @@ export enum MapAction {
 
 export type MapProvides = {};
 
-export type MapPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type MapPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides;
 
 export const isObject = (object: unknown): object is TypedObject => {
   return isTypedObject(object) && (object as Expando).type === 'map';

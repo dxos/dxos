@@ -2,10 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentProps, ForwardedRef, forwardRef, PropsWithChildren, ReactHTMLElement, ReactNode } from 'react';
+import React, {
+  type ComponentProps,
+  type ForwardedRef,
+  forwardRef,
+  type PropsWithChildren,
+  type ReactHTMLElement,
+  type ReactNode,
+} from 'react';
 
-import { AvatarFallbackProps, Size, Avatar as NaturalAvatar, useJdenticonHref, AvatarFrameProps } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import {
+  type AvatarFallbackProps,
+  type Size,
+  Avatar as NaturalAvatar,
+  useJdenticonHref,
+  type AvatarFrameProps,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export interface AvatarSlots {
   root?: Omit<AvatarFrameProps, 'children'>;
@@ -40,7 +53,7 @@ interface IdLabeledAvatarProps extends Omit<SharedAvatarProps, 'labelId'> {
 export type AvatarProps = DirectlyLabeledAvatarProps | IdLabeledAvatarProps;
 
 /**
- * @deprecated please use `Avatar` from ui/aurora.
+ * @deprecated please use `Avatar` from ui/react-ui.
  */
 export const Avatar = forwardRef(
   (

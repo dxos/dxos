@@ -6,11 +6,11 @@ import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 import bytes from 'bytes';
 import React, { useMemo, useState } from 'react';
 
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
-import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
+import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionInfoView } from './ConnectionInfoView';
@@ -29,7 +29,10 @@ const columns: TableColumnDef<SwarmConnection, any>[] = [
       getGroupingValue: (value) => value.topic.truncate(),
     }),
   ),
-  helper.accessor('label', { header: 'label' }), // TODO(burdon): Has promise string.
+  helper.accessor('label', {
+    header: 'label',
+    meta: { cell: { classNames: textPadding } },
+  }), // TODO(burdon): Has promise string.
   helper.accessor('isActive', { ...builder.icon({ header: 'active' }), size: 80 }),
   helper.accessor((connection) => connection.connection?.sessionId, {
     id: 'session',
@@ -43,15 +46,28 @@ const columns: TableColumnDef<SwarmConnection, any>[] = [
   }),
   helper.accessor((connection) => connection.connection?.identity, {
     id: 'identity',
+    meta: { cell: { classNames: textPadding } },
     size: 160,
   }),
   helper.accessor((connection) => connection.connection?.state, {
     id: 'state',
     getGroupingValue: (value) => value.connection?.state,
+    meta: { cell: { classNames: textPadding } },
     cell: (cell) => <span className={stateFormat[cell.getValue()]?.className}>{cell.getValue()}</span>,
+  }),
+  helper.accessor(
+    (connection) =>
+      (connection.connection?.readBufferSize ?? 0) + ' / ' + (connection.connection?.writeBufferSize ?? 0),
+    {
+      id: 'buffer (r/w)',
+    },
+  ),
+  helper.accessor((connection) => connection.connection?.transportDetails, {
+    id: 'details',
   }),
   helper.accessor((connection) => connection.connection && getStats(connection.connection), {
     id: 'stats',
+    meta: { cell: { classNames: textPadding } },
     cell: (cell) =>
       cell.getValue() && (
         <span className='flex flex-row items-baseline gap-1'>
@@ -64,6 +80,7 @@ const columns: TableColumnDef<SwarmConnection, any>[] = [
   }),
   helper.accessor((connection) => connection.connection?.closeReason, {
     id: 'close reason',
+    meta: { cell: { classNames: textPadding } },
     size: 400,
   }),
 ];
@@ -115,17 +132,35 @@ export const SwarmPanel = () => {
   items.sort(comparer((row) => (row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity)));
 
   return (
-    <PanelContainer>
+    <PanelContainer classNames='divide-y'>
       <div className='h-1/2 overflow-hidden'>
         <Table<SwarmConnection>
           columns={columns}
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
-          onSelectedChange={handleSelect}
+          onDatumClick={(datum) => handleSelect([datum])}
         />
       </div>
-      <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
+      <div className='h-1/2 overflow-auto'>
+        {sessionId ? (
+          connection ? (
+            <ConnectionInfoView connection={connection} />
+          ) : (
+            <div className='bs-full flex items-center justify-center'>
+              <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
+                No connection for session
+              </p>
+            </div>
+          )
+        ) : (
+          <div className='bs-full flex items-center justify-center'>
+            <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
+              Select a session
+            </p>
+          </div>
+        )}
+      </div>
     </PanelContainer>
   );
 };

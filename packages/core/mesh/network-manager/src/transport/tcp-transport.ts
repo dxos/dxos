@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import { AddressInfo, Socket, type Server } from 'node:net';
+import { type AddressInfo, Socket, type Server } from 'node:net';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Transport, TransportFactory, TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
 export const TcpTransportFactory: TransportFactory = {
   createTransport: (params) => new TcpTransport(params),
@@ -85,6 +85,24 @@ export class TcpTransport implements Transport {
     const socket = new Socket();
     this._handleSocket(socket);
     socket.connect({ port: payload.port, host: 'localhost' });
+  }
+
+  async getDetails(): Promise<string> {
+    if (this.options.initiator) {
+      const { port, address } = this._server?.address() as AddressInfo;
+      return `LISTEN ${address}:${port}`;
+    }
+    const { port, address } = this._socket?.address() as AddressInfo;
+    return `ACCEPT ${address}:${port}`;
+  }
+
+  async getStats(): Promise<TransportStats> {
+    return {
+      bytesSent: 0,
+      bytesReceived: 0,
+      packetsSent: 0,
+      packetsReceived: 0,
+    };
   }
 
   private _handleSocket(socket: Socket) {

@@ -38,9 +38,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/kai-framework"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -59,10 +56,10 @@
       "path": "../../sdk/react-shell"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../devtools"

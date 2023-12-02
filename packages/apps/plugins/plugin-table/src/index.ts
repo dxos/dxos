@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './types';
-export * from './util';
+import { TablePlugin } from './TablePlugin';
+
+export default TablePlugin;
 
 export * from './TablePlugin';

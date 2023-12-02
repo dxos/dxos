@@ -24,6 +24,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/keys"
     },
     {
@@ -42,22 +45,25 @@
       "path": "../../../core/echo/text-model"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/migrations"
     },
     {
       "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui-editor"
     },
     {
-      "path": "../../../ui/aurora-composer"
-    },
-    {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../types"
@@ -69,16 +75,10 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
     },
     {
-      "path": "../plugin-splitview"
-    },
-    {
-      "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
+      "path": "../plugin-metadata"
     }
   ]
 }

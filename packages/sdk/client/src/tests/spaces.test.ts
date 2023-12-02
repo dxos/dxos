@@ -5,25 +5,24 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Document as DocumentType } from '@braneframe/types';
+import { Document as DocumentType, types } from '@braneframe/types';
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
+import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Expando, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState } from '../echo';
-import { SpaceProxy } from '../echo/space-proxy';
+import { type SpaceProxy, SpaceState, getSpaceForObject } from '../echo';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -44,7 +43,7 @@ describe('Spaces', () => {
     await testSpace(space.internal.db);
 
     expect(space.members.get()).to.be.length(1);
-  });
+  }).tag('flaky');
 
   test('creates a space', async () => {
     const testBuilder = new TestBuilder();
@@ -99,7 +98,9 @@ describe('Spaces', () => {
       await client.spaces.isReady.wait();
       const space = client.spaces.default;
       const {
-        objectsUpdated: [item],
+        updateEvent: {
+          itemsUpdated: [item],
+        },
       } = await testSpace(space.internal.db);
       itemId = item.id;
       expect(space.members.get()).to.be.length(1);
@@ -388,7 +389,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById(id)!.data = 'test2';
+    space.db.getObjectById<Expando>(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -435,7 +436,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById(id)!.data = 'test2';
+    space2.db.getObjectById<Expando>(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -444,6 +445,9 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
+
+    host.addTypes(types);
+    guest.addTypes(types);
 
     await host.initialize();
     await guest.initialize();
@@ -468,7 +472,7 @@ describe('Spaces', () => {
     hostDocument.content.model?.insert('Hello, world!', 0);
 
     await waitForExpect(() => {
-      expect(guestSpace.db.getObjectById(hostDocument.id)!.content.text).to.equal('Hello, world!');
+      expect(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content.text).to.equal('Hello, world!');
     });
   });
 
@@ -492,5 +496,21 @@ describe('Spaces', () => {
     space.properties.name = 'example';
     await trigger.wait({ timeout: 500 });
     expect(space.properties.name).to.equal('example');
+  });
+
+  test('objects are owned by spaces', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const space = await client.spaces.create();
+
+    const obj = space.db.add(new Expando({ data: 'test' }));
+    expect(getSpaceForObject(obj)).to.equal(space);
   });
 });

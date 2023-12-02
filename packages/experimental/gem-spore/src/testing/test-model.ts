@@ -5,8 +5,8 @@
 import { faker } from '@faker-js/faker';
 
 import { createLink, createNode } from './data';
-import { TestNode } from './types';
-import { emptyGraph, GraphData, GraphModel } from '../graph';
+import { type TestNode } from './types';
+import { emptyGraph, type GraphData, GraphModel } from '../graph';
 
 /**
  * Test graph.

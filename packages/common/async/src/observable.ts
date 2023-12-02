@@ -6,10 +6,10 @@ import Observable from 'zen-observable';
 import type { ObservableLike, Observer, Subscriber } from 'zen-observable/esm';
 import PushStream from 'zen-push';
 
-import { Event } from './events';
+import { type Event } from './events';
 import { Trigger } from './trigger';
 
-export { Observable, PushStream, Subscriber };
+export { Observable, PushStream, type Subscriber };
 
 /**
  * Observable which supports multiple subscribers and stores the current value.
@@ -78,8 +78,8 @@ export class MulticastObservable<T> extends Observable<T> {
    *
    * @returns Promise that resolves to the value of the observable at the time of completion.
    */
-  async wait(): Promise<T> {
-    await this._completed.wait();
+  async wait({ timeout }: { timeout?: number } = {}): Promise<T> {
+    await this._completed.wait({ timeout });
     return this.get();
   }
 

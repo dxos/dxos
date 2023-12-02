@@ -20,7 +20,7 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     }
   ]
 }

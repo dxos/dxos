@@ -7,10 +7,10 @@ import './Editor.css';
 import React, { useEffect } from 'react';
 
 import { Document } from '@braneframe/types';
-import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 
 const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const identity = useIdentity();
@@ -29,9 +29,13 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
 
   return (
     <main className={`client client-${id}`}>
-      <MarkdownComposer
+      <MarkdownEditor
         model={model}
         slots={{
+          root: {
+            role: 'none',
+            className: 'pli-4',
+          },
           editor: {
             // TODO(wittjosiah): Copied from plugin-markdown.
             //   Without this the cursors are cut off at the edges.
@@ -44,7 +48,6 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
                 inlineSize: '100%',
               },
               '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-              '& .cm-line': { paddingInline: '1rem' },
             },
           },
         }}

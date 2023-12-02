@@ -21,55 +21,31 @@
   ],
   "references": [
     {
-      "path": "../../../common/keys"
-    },
-    {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../core/echo/text-model"
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora-composer"
+      "path": "../../../ui/react-ui-editor"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../types"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-intent"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
-    },
-    {
-      "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
     }
   ]
 }

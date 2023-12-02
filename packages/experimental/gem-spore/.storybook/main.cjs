@@ -5,7 +5,7 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
+const { ThemePlugin } = require('@dxos/react-ui-theme/plugin');
 
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -25,8 +25,6 @@ module.exports = {
           root: __dirname,
           content: [
             resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
-            resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs')
           ]
         })
       ]

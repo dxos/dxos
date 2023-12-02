@@ -5,7 +5,7 @@
 import stableStringify from 'json-stable-stringify';
 
 import { PublicKey } from '@dxos/keys';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -40,6 +40,10 @@ export const canonicalStringify = (obj: any) =>
     // TODO(dmaretskyi): Should we actually skip the @type field?
     replacer: function (this: any, key: any, value: any) {
       if (key.toString().startsWith('__') || key.toString() === '@type') {
+        return undefined;
+      }
+
+      if (value === null) {
         return undefined;
       }
 

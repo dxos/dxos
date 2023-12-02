@@ -36,44 +36,39 @@ export class AppManager {
   }
 
   isAuthenticated() {
-    return this.page.getByTestId('splitViewPlugin.firstRunMessage').isVisible();
+    return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
   }
 
   async createSpace() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').nth(1).click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
-    return this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').last().click();
+    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
 
   async joinSpace() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').nth(1).click();
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
   // TODO(wittjosiah): This is not always a space.
   expandSpace() {
-    return this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').last().click();
+    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
 
   async createDocument() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel1').last().click();
-    return this.page.getByTestId('spacePlugin.createDocument').last().click();
+    await this.page.getByTestId('spacePlugin.createObject').last().click();
+    return this.page.getByTestId('markdownPlugin.createDocument').last().click();
   }
 
   async getSpaceItemsCount() {
     const [openCount, closedCount] = await Promise.all([
-      this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').count(),
-      this.page.getByTestId('spacePlugin.spaceTreeItemCloseTrigger').count(),
+      this.page.getByTestId('spacePlugin.personalSpace').count(),
+      this.page.getByTestId('spacePlugin.space').count(),
     ]);
     return openCount + closedCount;
   }
 
-  getDocumentItemsCount() {
-    return this.page.getByTestId('spacePlugin.documentTreeItemLink').count();
-  }
-
-  clickLastDocumentLink() {
-    return this.page.getByTestId('spacePlugin.documentTreeItemLink').last().click();
+  getObjectsCount() {
+    return this.page.getByTestId('spacePlugin.object').count();
   }
 
   getMarkdownTextbox() {
@@ -95,8 +90,8 @@ export class AppManager {
     return this.page.getByTestId('composer.documentTitle');
   }
 
-  getDocumentLinks() {
-    return this.page.getByTestId('spacePlugin.documentTreeItemLink');
+  getObjectLinks() {
+    return this.page.getByTestId('spacePlugin.object');
   }
 
   getCollaboratorCursors() {

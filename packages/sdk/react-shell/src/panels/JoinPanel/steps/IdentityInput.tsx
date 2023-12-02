@@ -4,12 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
+import { useTranslation } from '@dxos/react-ui';
 
 import { Action, Actions, StepHeading, Input } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {
   method: 'recover identity' | 'create identity';

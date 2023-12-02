@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex, pipeline } from 'node:stream';
+import { type Duplex, pipeline } from 'node:stream';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -82,7 +82,7 @@ export class TestPeer {
 
   async openConnection(connection: TestConnection) {
     invariant(this.connections.has(connection));
-    await connection.teleport.open();
+    await connection.teleport.open(PublicKey.random());
     await this.onOpen(connection);
   }
 

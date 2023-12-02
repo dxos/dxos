@@ -3,24 +3,24 @@
 //
 
 import type { CheckboxProps } from '@radix-ui/react-checkbox';
-import { CollapsibleContentProps, CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
+import { type CollapsibleContentProps, type CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { createContextScope, Scope } from '@radix-ui/react-context';
+import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
-  ComponentProps,
-  ComponentPropsWithRef,
-  Dispatch,
+  type ComponentProps,
+  type ComponentPropsWithRef,
+  type Dispatch,
   forwardRef,
-  ForwardRefExoticComponent,
-  SetStateAction,
+  type ForwardRefExoticComponent,
+  type SetStateAction,
 } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
-import { LIST_NAME, ListScopedProps, useListContext } from './List';
+import { LIST_NAME, type ListScopedProps, useListContext } from './List';
 
 const LIST_ITEM_NAME = 'ListItem';
 
@@ -60,10 +60,10 @@ type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithRef<typeo
   asChild?: boolean;
 };
 
-const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
+const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
     const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-    const Root = asChild ? Slot : Primitive.p;
+    const Root = asChild ? Slot : Primitive.div;
     return (
       <Root {...props} id={headingId} ref={forwardedRef}>
         {children}

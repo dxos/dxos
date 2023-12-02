@@ -2,24 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { schema } from '@dxos/protocols';
-import { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
+import { type FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import {
-  DevicesService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  SpacesService,
-  SystemService,
+  type DevicesService,
+  type IdentityService,
+  type InvitationsService,
+  type LoggingService,
+  type NetworkService,
+  type SpacesService,
+  type SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
-import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { TracingService } from '@dxos/protocols/proto/dxos/tracing';
-import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
+import { type TracingService } from '@dxos/protocols/proto/dxos/tracing';
+import { createServiceBundle, type ServiceBundle } from '@dxos/rpc';
 
 //
 // NOTE: Should contain client/proxy dependencies only.

@@ -2,19 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
+import { Event, sleep, synchronized } from '@dxos/async';
+import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { SignalManager } from './signal-manager';
-import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
+import { type SignalManager } from './signal-manager';
+import { type CommandTrace, SignalClient, type SignalStatus } from '../signal-client';
 
+const MAX_SERVER_FAILURES = 5;
+const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
 /**
  * Manages connection to multiple Signal Servers over WebSocket
  */
@@ -24,6 +26,7 @@ export class WebsocketSignalManager implements SignalManager {
   private _ctx!: Context;
   private _opened = false;
 
+  readonly failureCount = new Map<string, number>();
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
@@ -53,6 +56,7 @@ export class WebsocketSignalManager implements SignalManager {
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
       this._servers.set(host.server, server);
+      this.failureCount.set(host.server, 0);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
     }
   }
@@ -73,6 +77,7 @@ export class WebsocketSignalManager implements SignalManager {
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
   }
 
+  @synchronized
   async close() {
     if (!this._opened) {
       return;
@@ -82,6 +87,18 @@ export class WebsocketSignalManager implements SignalManager {
     await this._ctx.dispose();
 
     await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
+  }
+
+  async restartServer(serverName: string) {
+    log('Restarting server', { serverName });
+    invariant(this._opened, 'server already closed');
+
+    const server = this._servers.get(serverName);
+    invariant(server, 'server not found');
+
+    await server.close();
+    await sleep(WSS_SIGNAL_SERVER_REBOOT_DELAY);
+    await server.open();
   }
 
   getStatus(): SignalStatus[] {
@@ -112,12 +129,34 @@ export class WebsocketSignalManager implements SignalManager {
     recipient: PublicKey;
     payload: Any;
   }): Promise<void> {
-    log(`Signal ${recipient}`);
+    log(`Signal ${recipient.truncate()}`);
     invariant(this._opened, 'Closed');
 
-    void this._forEachServer(async (server) => {
-      void server.sendMessage({ author, recipient, payload }).catch((err) => log(err));
+    void this._forEachServer(async (server, serverName) => {
+      void server.sendMessage({ author, recipient, payload }).catch((err) => {
+        if (err instanceof RateLimitExceededError) {
+          log.info('WSS rate limit exceeded', { err });
+        } else if (err instanceof TimeoutError || err.constructor.name === 'TimeoutError') {
+          log.info('WSS sendMessage timeout', { err });
+          void this.checkServerFailure(serverName);
+        } else {
+          log.info(`error sending to ${serverName}`, { err });
+          void this.checkServerFailure(serverName);
+        }
+      });
     });
+  }
+
+  @synchronized
+  async checkServerFailure(serverName: string) {
+    const failureCount = this.failureCount.get(serverName!) ?? 0;
+    if (failureCount > MAX_SERVER_FAILURES) {
+      log.warn(`Too many failures sending to ${serverName} (${failureCount} > ${MAX_SERVER_FAILURES}), restarting`);
+      await this.restartServer(serverName!);
+      this.failureCount.set(serverName!, 0);
+      return;
+    }
+    this.failureCount.set(serverName!, (this.failureCount.get(serverName!) ?? 0) + 1);
   }
 
   async subscribeMessages(peerId: PublicKey) {
@@ -140,7 +179,9 @@ export class WebsocketSignalManager implements SignalManager {
     });
   }
 
-  private async _forEachServer<ReturnType>(fn: (server: SignalClient) => Promise<ReturnType>): Promise<ReturnType[]> {
-    return Promise.all(Array.from(this._servers.values()).map(fn));
+  private async _forEachServer<ReturnType>(
+    fn: (server: SignalClient, serverName: string) => Promise<ReturnType>,
+  ): Promise<ReturnType[]> {
+    return Promise.all(Array.from(this._servers.entries()).map(([serverName, server]) => fn(server, serverName)));
   }
 }

@@ -1,0 +1,47 @@
+{
+  "sourceRoot": "packages/ui/react-ui-card/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-card/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {},
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/ui/react-ui-card/.storybook"
+      }
+    },
+    "storybook-build": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "packages/ui/react-ui-card/.storybook",
+        "outputDir": "packages/ui/react-ui-card/out/react-ui"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

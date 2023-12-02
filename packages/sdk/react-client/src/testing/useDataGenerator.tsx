@@ -6,9 +6,9 @@ import { faker } from '@faker-js/faker';
 import { useEffect } from 'react';
 import { XmlElement, XmlText } from 'yjs';
 
-import { UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 import type { Space } from '@dxos/client/echo';
-import { YText, YXmlFragment } from '@dxos/text-model';
+import { YText, type YXmlFragment } from '@dxos/text-model';
 
 // TODO(wittjosiah): Replace with gravity agent?
 type DataGenerator<T = { space: Space }> = (options: T) => UnsubscribeCallback;
@@ -33,7 +33,7 @@ export const textGenerator: DataGenerator<LoremOptions> = ({ text, period = 1000
       const startPosition = Math.floor(Math.random() * text.toArray().length);
       const paragraph = new XmlElement('paragraph');
       paragraph.insert(0, [new XmlText(lorem)]);
-      text.insert(startPosition, [paragraph]);
+      text.insert(startPosition, [paragraph] as any); // TODO(burdon): Type error.
     }
   }, period);
 

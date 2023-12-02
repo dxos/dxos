@@ -11,7 +11,7 @@ import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -150,5 +150,17 @@ describe('identity/identity-manager', () => {
     expect(identity1.space.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)).to.exist;
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+  });
+
+  test('sets device profile', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
+    const peer = await setupPeer({ signalContext });
+    const identity = await peer.identityManager.createIdentity();
+
+    // Note: Waiting for device profile credential to be processed.
+    await identity.stateUpdate.waitForCount(1);
+
+    expect(!!identity.authorizedDeviceKeys.get(identity.deviceKey)?.platform).is.true;
   });
 });

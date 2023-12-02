@@ -4,8 +4,8 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { LogConfig, LogFilter, LogLevel, LogOptions, LogProcessorType, levels } from './config';
-import { LogProcessor } from './context';
+import { type LogConfig, type LogFilter, LogLevel, type LogOptions, LogProcessorType, levels } from './config';
+import { type LogProcessor } from './context';
 import { loadOptions } from './platform';
 import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR, BROWSER_PROCESSOR } from './processors';
 
@@ -56,6 +56,7 @@ export const getConfig = (options?: LogOptions): LogConfig => {
   return {
     options: mergedOptions,
     filters: parseFilter(mergedOptions.filter ?? LogLevel.INFO),
+    captureFilters: parseFilter(mergedOptions.captureFilter ?? LogLevel.WARN),
     processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : DEFAULT_PROCESSORS,
     prefix: mergedOptions.prefix,
   };

@@ -18,6 +18,10 @@ export default class Reset extends BaseCommand<typeof Reset> {
       description: 'Force delete.',
       default: false,
     }),
+    'default-config': Flags.boolean({
+      description: 'Replace config with defaults.',
+      default: false,
+    }),
   };
 
   async run(): Promise<any> {
@@ -30,7 +34,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
           getProfilePath(DX_DATA, profile),
           getProfilePath(DX_STATE, profile),
           getProfilePath(DX_RUNTIME, profile),
-          getProfilePath(DX_CONFIG, profile) + '.yml', // TODO(mykola): remove?
+          this.flags['default-config'] && getProfilePath(DX_CONFIG, profile) + '.yml',
           storage,
         ]
           .sort()
@@ -52,12 +56,15 @@ export default class Reset extends BaseCommand<typeof Reset> {
       !(this.flags.force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
 
     if (!dryRun) {
-      // TODO(burdon): Problem if running manually.
+      await this.execWithDaemon(async (daemon) => {
+        await daemon.stop(this.flags.profile, { force: this.flags.force });
+      }, true);
+
       await this.execWithDaemon(async (daemon) => {
         if (await daemon.isRunning(this.flags.profile)) {
           await daemon.stop(this.flags.profile, { force: this.flags.force });
         }
-      });
+      }, false);
       if (this.flags.verbose) {
         this.log(chalk`{red Deleting files...}`);
         paths.forEach((path) => this.log(`- ${path}`));

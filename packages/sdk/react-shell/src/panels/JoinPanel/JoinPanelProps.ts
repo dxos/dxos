@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement } from 'react';
+import { type cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
 import type { Invitation, AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
-import { JoinSend } from './joinMachine';
-import { IdentityInputProps } from './steps';
-import { StepProps } from '../../steps';
+import { type JoinSend } from './joinMachine';
+import { type IdentityInputProps } from './steps';
+import { type StepProps } from '../../steps';
+import { type FailReason } from '../../types';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
@@ -45,6 +46,14 @@ export type JoinPanelImplProps = Pick<
   invitationStates?: Partial<{
     Halo: Invitation.State;
     Space: Invitation.State;
+  }>;
+  succeededKeys?: Partial<{
+    Halo: Set<string>;
+    Space: Set<string>;
+  }>;
+  failReasons?: Partial<{
+    Halo: FailReason | null;
+    Space: FailReason | null;
   }>;
   onHaloDone?: () => void;
   onSpaceDone?: () => void;

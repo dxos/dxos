@@ -4,10 +4,17 @@
 
 syntax = "proto3";
 
+// TODO(burdon): dxos.agent.plugin.functions
 package dxos.agent.functions;
 
 import "google/protobuf/empty.proto";
 
+message FunctionsConfig {
+  optional int32 port = 1;
+  optional string manifest = 2;
+}
+
+// TODO(burdon): Reconcile with typedefs.
 message Function {
   string name = 1;
 }
@@ -19,6 +26,7 @@ message RegisterRequest {
 
 message RegisterResponse {
   string registration_id = 1;
+  string endpoint = 2;
 }
 
 message UnregisterRequest {

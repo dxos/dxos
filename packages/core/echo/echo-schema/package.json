@@ -1,26 +1,49 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.2.3",
+  "version": "0.3.8",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "import": "./dist/lib/browser/testing/index.mjs",
+      "require": "./dist/lib/node/testing/index.cjs",
+      "node": "./dist/lib/node/testing/index.cjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "testing.d.ts",
     "testing.js",
     "dist",
     "src"
   ],
+  "scripts": {
+    "gen-schema": "dxtype --schema-package ../reexports ./src/proto/schema.proto ./src/proto/gen/schema.ts",
+    "gen-test": "dxtype --schema-package ../../.. ./src/tests/proto/test.proto ./src/tests/proto/gen/test.ts",
+    "prebuild": "pnpm gen-schema && pnpm gen-test"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -33,11 +56,14 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "lodash.get": "^4.4.2",
-    "protobufjs": "^7.2.2"
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.get": "^4.4.2"
   },
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.get": "^4.4.7",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

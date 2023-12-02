@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './types';
-export * from './util';
+import { MapPlugin } from './MapPlugin';
+
+export default MapPlugin;
 
 export * from './MapPlugin';

@@ -7,11 +7,11 @@ import chaiAsPromised from 'chai-as-promised';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, asyncTimeout } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
-import { DataSpace, InvitationsServiceImpl, ServiceContext } from '@dxos/client-services';
+import { type Space } from '@dxos/client-protocol';
+import { type DataSpace, InvitationsServiceImpl, type ServiceContext } from '@dxos/client-services';
 import {
-  PerformInvitationParams,
-  Result,
+  type PerformInvitationParams,
+  type Result,
   createIdentity,
   createPeers,
   performInvitation,

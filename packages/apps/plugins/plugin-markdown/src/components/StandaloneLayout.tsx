@@ -2,43 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { MutableRefObject, PropsWithChildren } from 'react';
+import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
-import { Main } from '@dxos/aurora';
-import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import {
-  baseSurface,
-  coarseBlockPaddingStart,
-  inputSurface,
-  mx,
-  surfaceElevation,
-  textBlockWidth,
-} from '@dxos/aurora-theme';
+import { Main } from '@dxos/react-ui';
+import { type EditorModel, type MarkdownEditorRef } from '@dxos/react-ui-editor';
+import { baseSurface, topbarBlockPaddingStart, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
-import { MarkdownProperties } from '../types';
+import { type MarkdownProperties } from '../types';
 
 export const StandaloneLayout = ({
   children,
 }: PropsWithChildren<{
-  model: ComposerModel;
+  model: EditorModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
-  editorRef?: MutableRefObject<MarkdownComposerRef>;
+  editorRef?: MutableRefObject<MarkdownEditorRef>;
 }>) => {
   return (
-    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div
-          role='none'
-          className={mx(
-            inputSurface,
-            surfaceElevation({ elevation: 'group' }),
-            'mbs-2 mbe-6 pli-6 rounded',
-            'min-bs-[calc(100dvh-5rem)] flex flex-col',
-          )}
-        >
+        <div role='none' className={mx('plb-4 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
           {children}
         </div>
+        <div role='none' className='bs-[50dvh]' />
       </div>
     </Main.Content>
   );

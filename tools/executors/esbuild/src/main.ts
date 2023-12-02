@@ -3,13 +3,14 @@
 //
 
 import type { ExecutorContext } from '@nx/devkit';
-import { build, Format, Platform } from 'esbuild';
+import { build, type Format, type Platform } from 'esbuild';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { bundleDepsPlugin } from './bundle-deps-plugin';
+import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
 import { LogTransformer } from './log-transform-plugin';
 
@@ -56,9 +57,9 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         entryPoints: options.entryPoints,
         outdir,
         outExtension: { '.js': extension },
-        format,
+        format: 'esm', // Output is later transpiled to CJS via plugin.
         write: true,
-        splitting: format === 'esm',
+        splitting: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,
         bundle: options.bundle,
@@ -124,6 +125,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             },
           },
           yamlPlugin({}),
+          ...(format === 'cjs' ? [esmOutputToCjs()] : []),
         ],
       });
 

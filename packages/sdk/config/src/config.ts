@@ -8,9 +8,9 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { InvalidConfigError, schema } from '@dxos/protocols';
-import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
-import { ConfigKey, DeepIndex, ParseKey } from './types';
+import { type ConfigKey, type DeepIndex, type ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string; type?: string }>;
 const configRootType = schema.getCodecForType('dxos.config.Config');

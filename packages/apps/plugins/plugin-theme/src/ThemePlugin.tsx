@@ -6,12 +6,12 @@ import { deepSignal } from 'deepsignal/react';
 import type { Resource } from 'i18next';
 import React from 'react';
 
-import { ThemeFunction, ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
-import { auroraTx } from '@dxos/aurora-theme';
-import { PluginDefinition } from '@dxos/react-surface';
+import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
+import meta from './meta';
 import compositeEnUs from './translations/en-US';
-import { translationsPlugins } from './util';
 
 export type ThemePluginOptions = {
   appName?: string;
@@ -29,14 +29,12 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
   };
 
   return {
-    meta: {
-      id: 'dxos.org/plugin/theme',
-    },
+    meta,
     ready: async (plugins) => {
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setTheme({ matches: modeQuery.matches });
       modeQuery.addEventListener('change', setTheme);
-      for (const plugin of translationsPlugins(plugins)) {
+      for (const plugin of filterPlugins(plugins, parseTranslationsPlugin)) {
         resources.push(...plugin.provides.translations);
       }
     },
@@ -46,7 +44,7 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
     provides: {
       context: ({ children }) => {
         return (
-          <ThemeProvider {...{ tx: propsTx ?? auroraTx, themeMode: state.themeMode, resourceExtensions: resources }}>
+          <ThemeProvider {...{ tx: propsTx ?? defaultTx, themeMode: state.themeMode, resourceExtensions: resources }}>
             <Toast.Provider>
               <Tooltip.Provider>{children}</Tooltip.Provider>
               <Toast.Viewport />

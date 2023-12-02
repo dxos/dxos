@@ -2,7 +2,15 @@ packages:
   - docs
   - packages/**/*
   - tools/**/*
+  - '!packages/experimental/labs-functions/functions/**'
   - '!packages/experimental/kai-functions/functions/**'
+  - '!packages/experimental/kai-types'
+  - '!packages/experimental/kai'
+  - '!packages/experimental/kai-frames'
+  - '!packages/experimental/kai-functions'
+  - '!packages/experimental/kai-bots'
+  - '!packages/experimental/kai-framework'
+  - '!packages/experimental/kube-console'
   - '!packages/sdk/examples/src/template'
   - '!tools/monitors/**'
   # TODO(wittjosiah): Stop builds from copying package.json into dist (i.e., kodama).

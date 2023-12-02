@@ -46,10 +46,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../aurora"
+      "path": "../react-ui"
     },
     {
-      "path": "../aurora-theme"
+      "path": "../react-ui-theme"
     }
   ]
 }

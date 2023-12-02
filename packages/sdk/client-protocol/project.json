@@ -2,42 +2,15 @@
   "sourceRoot": "packages/sdk/client-protocol/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/client-protocol/src/index.ts",
-        "outputPath": "packages/sdk/client-protocol/dist/types",
-        "tsConfig": "packages/sdk/client-protocol/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/client-protocol/src/index.ts"
-        ],
-        "outputPath": "packages/sdk/client-protocol/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/sdk/client-protocol/**/*.{ts,tsx,js,jsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {
@@ -46,9 +19,11 @@
       "outputs": [
         "packages/sdk/client-protocol/src/proto/gen"
       ]
-    }
+    },
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ]
 }

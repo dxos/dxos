@@ -4,7 +4,7 @@
 
 import { Args } from '@oclif/core';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { schema } from '@dxos/protocols';
 
@@ -19,7 +19,7 @@ export default class Add extends BaseCommand<typeof Add> {
   async run(): Promise<any> {
     let { credential: credentialHex } = this.args;
     if (!credentialHex) {
-      credentialHex = await this.stdin;
+      credentialHex = await this.readStdin();
     }
 
     invariant(credentialHex, 'Invalid credential.');

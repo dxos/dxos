@@ -4,20 +4,20 @@
 
 import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArchive } from '@phosphor-icons/react';
 import bytes from 'bytes';
-import React, { FC, ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { Tree, TreeItem, Toolbar } from '@dxos/aurora';
 import {
-  GetBlobsResponse,
-  GetSnapshotsResponse,
-  StorageInfo,
-  StoredSnapshotInfo,
-  SubscribeToFeedsResponse,
+  type GetBlobsResponse,
+  type GetSnapshotsResponse,
+  type StorageInfo,
+  type StoredSnapshotInfo,
+  type SubscribeToFeedsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { Tree, TreeItem, Toolbar } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
@@ -210,11 +210,7 @@ export const StoragePanel = () => {
           const { id, Icon, Element, items } = item;
           return (
             <TreeItem.Root key={id} collapsible={!!items?.length} open>
-              <div
-                role='none'
-                className='flex grow items-center gap-2 font-mono cursor-pointer'
-                onClick={() => setSelected(item)}
-              >
+              <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => setSelected(item)}>
                 <Icon />
                 {Element}
               </div>
@@ -238,7 +234,7 @@ export const StoragePanel = () => {
 
   return (
     <PanelContainer
-      className='flex-row divide-x'
+      classNames='flex-row divide-x'
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>

@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { levels, LogLevel } from '@dxos/log';
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 // Deliberately not using the common components export to aid in code-splitting.
 
@@ -33,15 +33,20 @@ const logColumns = (() => {
       {
         id: 'level',
         size: 60,
+        meta: { cell: { classNames: textPadding } },
         cell: (cell) => <div className={colors[cell.row.original.level]}>{cell.getValue()}</div>,
       },
     ),
-    helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, { id: 'file', size: 160 }),
-    helper.accessor('message', {}),
+    helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, {
+      id: 'file',
+      meta: { cell: { classNames: textPadding } },
+      size: 160,
+    }),
+    helper.accessor('message', { meta: { cell: { classNames: textPadding } } }),
   ];
   return columns;
 })();
 
 export const LogView: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
-  return <Table<LogEntry> columns={logColumns} data={logs} />;
+  return <Table<LogEntry> columns={logColumns} data={logs} fullWidth />;
 };

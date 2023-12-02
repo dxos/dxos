@@ -1,6 +1,6 @@
 {
   "name": "@dxos/proto-guard",
-  "version": "0.2.3",
+  "version": "0.3.8",
   "private": true,
   "description": "Test to detect breaking change in DXOS protocols and version them.",
   "homepage": "https://dxos.org",
@@ -21,11 +21,9 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "fs-extra": "^8.1.0"
+    "@dxos/protocols": "workspace:*"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.4",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
     "typescript": "^5.2.2"

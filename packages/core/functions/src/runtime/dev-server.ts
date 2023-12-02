@@ -3,32 +3,38 @@
 //
 
 import express from 'express';
-import http from 'http';
+import { getPort } from 'get-port-please';
+import type http from 'http';
 import { join } from 'node:path';
-import { getPortPromise } from 'portfinder';
 
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { FunctionContext, FunctionHandler, FunctionsManifest, Response } from '../function';
-
-const DEFAULT_PORT = 7000;
+import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
+import { type FunctionDef, type FunctionManifest } from '../manifest';
 
 export type DevServerOptions = {
+  port?: number;
   directory: string;
-  manifest: FunctionsManifest;
+  manifest: FunctionManifest;
+  reload?: boolean;
+  dataDir?: string;
 };
 
 /**
  * Functions dev server provides a local HTTP server for testing functions.
  */
 export class DevServer {
-  private readonly _functionHandlers: Record<string, FunctionHandler> = {};
+  // Function handlers indexed by name (URL path).
+  private readonly _handlers: Record<string, { def: FunctionDef; handler: FunctionHandler<any> }> = {};
 
   private _server?: http.Server;
   private _port?: number;
   private _registrationId?: string;
+  private _proxy?: string;
+  private _seq = 0;
 
   // prettier-ignore
   constructor(
@@ -36,31 +42,25 @@ export class DevServer {
     private readonly _options: DevServerOptions,
   ) {}
 
-  get port() {
-    return this._port;
+  get endpoint() {
+    invariant(this._port);
+    return `http://localhost:${this._port}`;
   }
 
-  get endpoint() {
-    return this._port ? `http://localhost:${this._port}` : undefined;
+  get proxy() {
+    return this._proxy;
   }
 
   get functions() {
-    return Object.keys(this._functionHandlers);
+    return Object.values(this._handlers);
   }
 
   async initialize() {
-    for (const [name, _] of Object.entries(this._options.manifest.functions)) {
+    for (const def of this._options.manifest.functions) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const module = require(join(this._options.directory, name));
-        const handler = module.default;
-        if (typeof handler !== 'function') {
-          throw new Error(`Handler must export default function: ${name}`);
-        }
-
-        this._functionHandlers[name] = handler;
+        await this._load(def);
       } catch (err) {
-        log.error('parsing function (check functions.yml manifest)', err);
+        log.error('parsing function (check manifest)', err);
       }
     }
   }
@@ -69,50 +69,39 @@ export class DevServer {
     const app = express();
     app.use(express.json());
 
-    app.post('/:functionName', async (req, res) => {
-      const functionName = req.params.functionName;
-      log('invoke', { function: functionName, data: req.body });
-
-      const builder: Response = {
-        status: (code: number) => {
-          res.statusCode = code;
-          return builder;
-        },
-        succeed: (result = {}) => {
-          res.end(JSON.stringify(result));
-          return builder;
-        },
-      };
-
-      const context: FunctionContext = {
-        client: this._client,
-        status: builder.status.bind(builder),
-      };
-
-      void (async () => {
-        try {
-          await this._functionHandlers[functionName](req.body, context);
-        } catch (err: any) {
-          res.statusCode = 500;
-          res.end(err.message);
+    app.post('/:name', async (req, res) => {
+      const { name } = req.params;
+      try {
+        if (this._options.reload) {
+          const { def } = this._handlers[name];
+          await this._load(def, true);
         }
-      })();
+
+        res.statusCode = await this._invoke(name, req.body);
+        res.end();
+      } catch (err: any) {
+        log.catch(err);
+        res.statusCode = 500;
+        res.end();
+      }
     });
 
-    this._port = await getPortPromise({ startPort: DEFAULT_PORT });
+    this._port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
     this._server = app.listen(this._port);
 
-    // TODO(burdon): Check plugin is registered.
-    //  TypeError: Cannot read properties of undefined (reading 'register')
     try {
-      const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
-        endpoint: this.endpoint!,
-        functions: this.functions.map((name) => ({ name })),
+      // Register functions.
+      const { registrationId, endpoint } = await this._client.services.services.FunctionRegistryService!.register({
+        endpoint: this.endpoint,
+        functions: this.functions.map(({ def: { name } }) => ({ name })),
       });
+
+      log.info('registered', { registrationId, endpoint });
       this._registrationId = registrationId;
+      this._proxy = endpoint;
     } catch (err: any) {
       await this.stop();
-      throw new Error('FunctionRegistryService not available; check config (agent.plugins.functions).');
+      throw new Error('FunctionRegistryService not available (check plugin is configured).');
     }
   }
 
@@ -123,14 +112,70 @@ export class DevServer {
         await this._client.services.services.FunctionRegistryService!.unregister({
           registrationId: this._registrationId,
         });
+
+        log.info('unregistered', { registrationId: this._registrationId });
         this._registrationId = undefined;
+        this._proxy = undefined;
       }
 
       trigger.wake();
     });
 
     await trigger.wait();
-    this._server = undefined;
     this._port = undefined;
+    this._server = undefined;
+  }
+
+  /**
+   * Load function.
+   */
+  private async _load(def: FunctionDef, flush = false) {
+    const { id, name, handler } = def;
+    const path = join(this._options.directory, handler);
+    log.info('loading', { id });
+
+    // Remove from cache.
+    if (flush) {
+      Object.keys(require.cache)
+        .filter((key) => key.startsWith(path))
+        .forEach((key) => delete require.cache[key]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const module = require(path);
+    if (typeof module.default !== 'function') {
+      throw new Error(`Handler must export default function: ${id}`);
+    }
+
+    this._handlers[name] = { def, handler: module.default };
+  }
+
+  /**
+   * Invoke function handler.
+   */
+  private async _invoke(name: string, event: any) {
+    const seq = ++this._seq;
+    const now = Date.now();
+
+    log.info('req', { seq, name });
+    const { handler } = this._handlers[name];
+
+    const context: FunctionContext = {
+      client: this._client,
+      dataDir: this._options.dataDir,
+    };
+
+    let statusCode = 200;
+    const response: Response = {
+      status: (code: number) => {
+        statusCode = code;
+        return response;
+      },
+    };
+
+    await handler({ context, event, response });
+    log.info('res', { seq, name, statusCode, duration: Date.now() - now });
+
+    return statusCode;
   }
 }

@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Table, TableColumnDef, createColumnBuilder } from '@dxos/aurora-table';
-import { PublicKey } from '@dxos/keys';
-import { Space, useSpaces } from '@dxos/react-client/echo';
+import { type PublicKey } from '@dxos/keys';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
@@ -17,8 +17,8 @@ export const SpaceListPanel: FC = () => {
   const navigate = useNavigate();
   const setState = useDevtoolsDispatch();
 
-  const handleSelect = (selection: Space[] | undefined) => {
-    setState((state) => ({ ...state, space: selection?.[0] }));
+  const handleSelect = (selection: Space | undefined) => {
+    setState((state) => ({ ...state, space: selection }));
     navigate('/echo/space');
   };
 
@@ -32,12 +32,20 @@ export const SpaceListPanel: FC = () => {
   };
 
   // TODO(burdon): Get builder from hook.
-  const { helper, builder } = createColumnBuilder<Space>();
+  // TODO(dmaretskyi): Fix the types.
+  const { helper, builder } = createColumnBuilder<any>();
   const columns: TableColumnDef<Space, any>[] = [
     helper.accessor('key', builder.key({ tooltip: true })),
-    helper.accessor((space) => space.properties.name, { id: 'name' }),
+    helper.accessor((space) => space.properties.name, {
+      id: 'name',
+      meta: { cell: { classNames: textPadding } },
+    }) as any,
     helper.accessor((space) => space.db.objects.length, {
       id: 'objects',
+      ...builder.number(),
+    }),
+    helper.accessor((space) => space.members.get().length, {
+      id: 'members',
       ...builder.number(),
     }),
     helper.accessor(
@@ -66,11 +74,9 @@ export const SpaceListPanel: FC = () => {
     }),
   ];
 
-  console.log(spaces);
-
   return (
-    <PanelContainer className='overflow-auto'>
-      <Table<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} />
+    <PanelContainer classNames='overflow-auto'>
+      <Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
     </PanelContainer>
   );
 };

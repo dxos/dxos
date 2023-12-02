@@ -4,10 +4,11 @@
 
 import React from 'react';
 
-import { Input, useTranslation } from '@dxos/aurora';
-import { usePlugin } from '@dxos/react-surface';
+import { usePlugin } from '@dxos/app-framework';
+import { Input, useTranslation } from '@dxos/react-ui';
 
-import { DEBUG_PLUGIN, DebugPluginProvides } from '../props';
+import { DEBUG_PLUGIN } from '../meta';
+import type { DebugPluginProvides } from '../props';
 
 export const DebugSettings = () => {
   const { t } = useTranslation(DEBUG_PLUGIN);
@@ -19,7 +20,8 @@ export const DebugSettings = () => {
   const settings = debugPlugin.provides.settings;
 
   return (
-    <div role='none' className='space-y-2'>
+    <div role='none' className='space-b-2'>
+      <h3 className='text-base font-system-medium'>{t('plugin settings heading')}</h3>
       <div role='none' className='flex items-center gap-2'>
         <Input.Root>
           <Input.Checkbox checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
@@ -35,5 +37,3 @@ export const DebugSettings = () => {
     </div>
   );
 };
-
-export default DebugSettings;

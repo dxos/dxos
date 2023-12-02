@@ -13,6 +13,11 @@ export type MaybePromise<T> = T | Promise<T>;
 export const isNotNullOrUndefined = <T>(x: T): x is Exclude<T, null | undefined> => x != null;
 
 /**
+ * Use with filter chaining instead of filter(Boolean) to preserve type.
+ */
+export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
+
+/**
  * All types that evaluate to false when cast to a boolean.
  */
 export type Falsy = false | 0 | '' | null | undefined;
@@ -56,8 +61,9 @@ export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T)
 /**
  * Swap position of element within array.
  */
-export const arrayMove = <T>(array: Array<T>, from: number, to: number) => {
-  return array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
+export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
+  array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
+  return array;
 };
 
 export const safeParseInt = (value: string | undefined, defaultValue?: number) => {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test, Page } from '@playwright/test';
+import { test, type Page } from '@playwright/test';
 import { expect } from 'chai';
 
 import { setupPage } from '@dxos/test/playwright';
@@ -13,14 +13,14 @@ test.describe('Smoke test', () => {
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
       url: 'http://localhost:3967',
-      waitFor: async (page) => page.isVisible(':has-text("HALO")'),
+      waitFor: async (page) => page.isVisible(':has-text("Open Vault")'),
     });
 
     page = result.page;
   });
 
   test('connects to shared worker', async () => {
-    const isVisible = await page.isVisible(':has-text("HALO")');
+    const isVisible = await page.isVisible(':has-text("Open Vault")');
     expect(isVisible).to.be.true;
   });
 });

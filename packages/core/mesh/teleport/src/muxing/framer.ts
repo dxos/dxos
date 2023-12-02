@@ -4,9 +4,11 @@
 
 import { Duplex } from 'node:stream';
 
+import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
-import { RpcPort } from './rpc-port';
+import { type RpcPort } from './rpc-port';
 
 const FRAME_LENGTH_SIZE = 2;
 
@@ -24,6 +26,11 @@ export class Framer {
   private _bytesSent = 0;
   private _bytesReceived = 0;
 
+  private _writable = true;
+
+  readonly drain = new Event();
+
+  // TODO(egorgripasov): Consider using a Transform stream if it provides better backpressure handling.
   private readonly _stream = new Duplex({
     objectMode: false,
     read: () => {
@@ -60,8 +67,8 @@ export class Framer {
       return new Promise<void>((resolve) => {
         const frame = encodeFrame(message);
         this._bytesSent += frame.length;
-        const canContinue = this._stream.push(frame);
-        if (!canContinue) {
+        this._writable = this._stream.push(frame);
+        if (!this._writable) {
           this._sendCallbacks.push(resolve);
         } else {
           resolve();
@@ -90,9 +97,15 @@ export class Framer {
     return this._bytesReceived;
   }
 
+  get writable() {
+    return this._writable;
+  }
+
   private _processResponseQueue() {
     const responseQueue = this._sendCallbacks;
     this._sendCallbacks = [];
+    this._writable = true;
+    this.drain.emit();
     responseQueue.forEach((cb) => cb());
   }
 
@@ -123,6 +136,12 @@ export class Framer {
 
   destroy() {
     // TODO(dmaretskyi): Call stream.end() instead?
+    if (this._stream.readableLength > 0) {
+      log.info('framer destroyed while there are still read bytes in the buffer.');
+    }
+    if (this._stream.writableLength > 0) {
+      log.warn('framer destroyed while there are still write bytes in the buffer.');
+    }
     this._stream.destroy();
   }
 }

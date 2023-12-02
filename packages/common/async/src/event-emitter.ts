@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { EventEmitter } from 'node:events';
+import { type EventEmitter } from 'node:events';
 
 import { asyncTimeout } from './timeout';
 

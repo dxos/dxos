@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import { Avatar, useJdenticonHref } from '@dxos/aurora';
-import { Identity as IdentityType } from '@dxos/react-client/halo';
+import { type Identity as IdentityType } from '@dxos/react-client/halo';
+import { Avatar, useJdenticonHref } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 import { Popover } from '../Popover';

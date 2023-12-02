@@ -24,28 +24,25 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
     }
   ]
 }

@@ -6,12 +6,12 @@ import { formatDistance } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { Context } from '@dxos/context';
-import { SignalStatus } from '@dxos/messaging';
-import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SignalStatus } from '@dxos/messaging';
+import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 const states = {
   [SignalState.CONNECTING]: {
@@ -83,11 +83,13 @@ export const SignalStatusTable = () => {
     helper.accessor((status) => new URL(status.host).origin, {
       id: 'host',
       cell: (props) => <div className='font-mono'>{props.getValue()}</div>,
+      meta: { cell: { classNames: textPadding } },
       size: 240,
     }),
     helper.accessor((status) => states[status.state].label, {
       id: 'status',
-      size: 120,
+      meta: { cell: { classNames: textPadding } },
+      size: 140,
       cell: (cell) => <div className={states[cell.row.original.state]?.className}>{cell.getValue().toUpperCase()}</div>,
     }),
     // TODO(burdon): Date format helper.
@@ -95,18 +97,19 @@ export const SignalStatusTable = () => {
       (status) => {
         return status.state === SignalState.CONNECTED
           ? formatDistance(status.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
-          : `Reconnecting ${formatDistance(status.lastStateChange.getTime() + status.reconnectIn, time.getTime(), {
+          : `Reconnecting ${formatDistance(time.getTime(), status.lastStateChange.getTime() + status.reconnectIn, {
               addSuffix: true,
             })}`;
       },
-      { id: 'connected', size: 160 },
+      {
+        id: 'connected',
+        size: 240,
+        meta: { cell: { classNames: textPadding } },
+        cell: (props) => <div className='text-xs'>{props.getValue()}</div>,
+      },
     ),
     helper.accessor('error', {}),
   ];
 
-  return (
-    <div>
-      <Table<SignalStatus> columns={columns} data={status} />
-    </div>
-  );
+  return <Table<SignalStatus> columns={columns} data={status} />;
 };

@@ -2,43 +2,16 @@
   "sourceRoot": "packages/apps/types/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/types/src/index.ts",
-        "outputPath": "packages/apps/types/dist/types",
-        "tsConfig": "packages/apps/types/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/apps/types/src/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/apps/types/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        "injectGlobals": true
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/types/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {

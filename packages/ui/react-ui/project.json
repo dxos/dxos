@@ -1,0 +1,53 @@
+{
+  "sourceRoot": "packages/ui/react-ui/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "packages/ui/react-ui/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/ui/react-ui/.storybook"
+      }
+    },
+    "storybook-build": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "packages/ui/react-ui/.storybook",
+        "outputDir": "packages/ui/react-ui/out/react-ui"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

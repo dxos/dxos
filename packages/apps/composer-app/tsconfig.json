@@ -15,6 +15,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "script-frame",
     "src"
   ],
   "references": [
@@ -22,7 +23,19 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/migrations"
     },
     {
       "path": "../../sdk/react-client"
@@ -31,28 +44,37 @@
       "path": "../../sdk/react-shell"
     },
     {
-      "path": "../../sdk/react-surface"
-    },
-    {
       "path": "../../sdk/vault"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-composer"
+      "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-navtree"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugins/plugin-chess"
     },
     {
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-dnd"
+      "path": "../plugins/plugin-debug"
     },
     {
       "path": "../plugins/plugin-error"
+    },
+    {
+      "path": "../plugins/plugin-explorer"
     },
     {
       "path": "../plugins/plugin-files"
@@ -64,34 +86,79 @@
       "path": "../plugins/plugin-graph"
     },
     {
-      "path": "../plugins/plugin-intent"
+      "path": "../plugins/plugin-grid"
+    },
+    {
+      "path": "../plugins/plugin-inbox"
+    },
+    {
+      "path": "../plugins/plugin-ipfs"
+    },
+    {
+      "path": "../plugins/plugin-kanban"
+    },
+    {
+      "path": "../plugins/plugin-layout"
+    },
+    {
+      "path": "../plugins/plugin-map"
     },
     {
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-metadata"
+    },
+    {
+      "path": "../plugins/plugin-navtree"
+    },
+    {
+      "path": "../plugins/plugin-outliner"
+    },
+    {
+      "path": "../plugins/plugin-presenter"
+    },
+    {
       "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-registry"
+    },
+    {
+      "path": "../plugins/plugin-script"
+    },
+    {
+      "path": "../plugins/plugin-search"
+    },
+    {
+      "path": "../plugins/plugin-sketch"
     },
     {
       "path": "../plugins/plugin-space"
     },
     {
-      "path": "../plugins/plugin-splitview"
+      "path": "../plugins/plugin-stack"
     },
     {
-      "path": "../plugins/plugin-stack"
+      "path": "../plugins/plugin-table"
     },
     {
       "path": "../plugins/plugin-telemetry"
     },
     {
+      "path": "../plugins/plugin-template"
+    },
+    {
       "path": "../plugins/plugin-theme"
     },
     {
-      "path": "../plugins/plugin-treeview"
+      "path": "../plugins/plugin-thread"
     },
     {
-      "path": "../plugins/plugin-url-sync"
+      "path": "../plugins/plugin-wildcard"
+    },
+    {
+      "path": "../types"
     }
   ]
 }

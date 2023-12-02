@@ -4,9 +4,8 @@
 
 import { useEffect } from 'react';
 
-import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { usePlugin } from '@dxos/react-surface';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, setupTelemetryListeners, withTelemetry } from './telemetry';
 
@@ -18,7 +17,7 @@ export type UseTelemetryOptions = {
  * Hooks up navigation and click events to telemetry.
  */
 export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
-  const treeViewPlugin = usePlugin<TreeViewPluginProvides>('dxos.org/plugin/treeview');
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const client = useClient();
 
   useEffect(() => {
@@ -44,5 +43,5 @@ export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
         properties: BASE_TELEMETRY_PROPERTIES,
       });
     });
-  }, [treeViewPlugin?.provides.treeView.active]);
+  }, [layoutPlugin?.provides.layout.active]);
 };

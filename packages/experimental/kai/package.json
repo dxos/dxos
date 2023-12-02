@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "private": true,
   "description": "Kai App.",
   "homepage": "https://dxos.org",
@@ -9,8 +9,8 @@
   "author": "DXOS.org",
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-composer": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@remix-run/router": "^1.0.2",
     "@sentry/vite-plugin": "^0.7.2",

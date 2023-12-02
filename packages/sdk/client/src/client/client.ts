@@ -5,21 +5,26 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { types as clientSchema, type ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
+import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
-import { GetDiagnosticsRequest, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
+import {
+  GetDiagnosticsRequest,
+  type QueryStatusResponse,
+  SystemStatus,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { isNode, type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import type { SpaceList } from '../echo';
+import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
@@ -36,6 +41,8 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
   /** Custom model factory. */
   modelFactory?: ModelFactory;
+  /** Types. */
+  types?: TypeCollection;
 };
 
 /**
@@ -61,6 +68,8 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
+  private readonly _graph = new Hypergraph();
+
   /**
    * Unique id of the Client, local to the current peer.
    */
@@ -83,6 +92,12 @@ export class Client {
     if (filter) {
       const prefix = options.config?.get('runtime.client.log.prefix');
       log.config({ filter, prefix });
+    }
+
+    this.addTypes(schemaBuiltin);
+    this.addTypes(clientSchema);
+    if (this._options.types) {
+      this.addTypes(this._options.types);
     }
   }
 
@@ -151,10 +166,40 @@ export class Client {
     return this._runtime.mesh;
   }
 
+  /**
+   *
+   */
   get shell(): Shell {
     invariant(this._runtime, 'Client not initialized.');
     invariant(this._runtime.shell, 'Shell not available.');
     return this._runtime.shell;
+  }
+
+  /**
+   * @deprecated Temporary.
+   */
+  get experimental() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    return {
+      get graph() {
+        return self._graph;
+      },
+    };
+  }
+
+  // TODO(dmaretskyi): Expose `graph` directly?
+  // TODO(burdon): Make idempotent.
+  addTypes(types: TypeCollection) {
+    this._graph.addTypes(types);
+    return this;
+  }
+
+  /**
+   * @deprecated Replaced by addTypes.
+   */
+  addSchema(types: TypeCollection) {
+    return this.addTypes(types);
   }
 
   /**
@@ -191,7 +236,7 @@ export class Client {
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    await this._services.open(new Context());
+    await this._services!.open(new Context());
 
     const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
@@ -204,6 +249,7 @@ export class Client {
     const spaces = new SpaceList(
       this._services,
       modelFactory,
+      this._graph,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -228,7 +274,7 @@ export class Client {
     }
 
     const trigger = new Trigger<Error | undefined>();
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {

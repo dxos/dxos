@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { staticDisabled, mx } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { useTranslation } from '@dxos/react-ui';
+import { staticDisabled, mx } from '@dxos/react-ui-theme';
 
-import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
+import { PendingInvitation, type PendingInvitationProps } from './PendingInvitation';
 import { Group } from '../Group';
 
 export interface InvitationListProps {

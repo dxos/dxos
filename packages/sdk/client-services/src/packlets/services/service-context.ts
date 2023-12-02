@@ -4,7 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   valueEncoding,
@@ -12,32 +12,33 @@ import {
   SpaceManager,
   DataServiceSubscriptions,
   SnapshotStore,
+  AutomergeHost,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
+import { type SignalManager } from '@dxos/messaging';
+import { type ModelFactory } from '@dxos/model-factory';
+import { type NetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Storage } from '@dxos/random-access-storage';
+import { type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
-import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
+import { type CreateIdentityOptions, IdentityManager, type JoinIdentityParams } from '../identity';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
-  InvitationProtocol,
+  type InvitationProtocol,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager, SigningContext } from '../spaces';
+import { DataSpaceManager, type SigningContext } from '../spaces';
 
 /**
  * Shared backend for all client services.
@@ -60,6 +61,7 @@ export class ServiceContext {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
+  public readonly automergeHost: AutomergeHost;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -106,6 +108,8 @@ export class ServiceContext {
     });
 
     this.identityManager = new IdentityManager(this.metadataStore, this.keyring, this.feedStore, this.spaceManager);
+
+    this.automergeHost = new AutomergeHost(storage.createDirectory('automerge'));
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
@@ -169,6 +173,16 @@ export class ServiceContext {
     return factory(invitation);
   }
 
+  async broadcastProfileUpdate(profile: ProfileDocument | undefined) {
+    if (!profile || !this.dataSpaceManager) {
+      return;
+    }
+
+    for (const space of this.dataSpaceManager.spaces.values()) {
+      await space.updateOwnProfile(profile);
+    }
+  }
+
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
     await this._initialize(new Context());
@@ -192,7 +206,7 @@ export class ServiceContext {
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,
-      profile: identity.profileDocument,
+      getProfile: () => identity.profileDocument,
       recordCredential: async (credential) => {
         await identity.controlPipeline.writer.write({ credential: { credential } });
       },
@@ -205,6 +219,7 @@ export class ServiceContext {
       this.keyring,
       signingContext,
       this.feedStore,
+      this.automergeHost,
     );
     await this.dataSpaceManager.open();
 

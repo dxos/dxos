@@ -2,22 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  DataService,
-  MutationReceipt,
-  SubscribeRequest,
-  EchoEvent,
-  WriteRequest,
-  FlushRequest,
+  type DataService,
+  type MutationReceipt,
+  type SubscribeRequest,
+  type EchoEvent,
+  type WriteRequest,
+  type FlushRequest,
+  type SyncRepoRequest,
+  type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
-import { DataServiceHost } from './data-service-host';
+import { type DataServiceHost } from './data-service-host';
+import { type AutomergeHost } from '../automerge';
 
 // TODO(burdon): Clear on close.
 export class DataServiceSubscriptions {
@@ -51,7 +54,10 @@ export class DataServiceSubscriptions {
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
+  constructor(
+    private readonly _subscriptions: DataServiceSubscriptions,
+    private readonly _automergeHost: AutomergeHost,
+  ) {}
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     invariant(request.spaceKey);
@@ -73,5 +79,13 @@ export class DataServiceImpl implements DataService {
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.flush();
+  }
+
+  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
+    throw new Error('Method not implemented.');
   }
 }

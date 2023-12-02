@@ -1,5 +1,6 @@
 import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/aurora';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { osTranslations } from '../src';
 
 export const parameters = {
@@ -40,6 +41,7 @@ const withTheme = (StoryFn, context) => {
 
   return createElement(ThemeProvider, {
     resourceExtensions: [osTranslations],
+    tx: defaultTx,
     children: StoryFn()
   });
 };

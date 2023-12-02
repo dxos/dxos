@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ForwardedRef, forwardRef } from 'react';
+import React, { type ForwardedRef, forwardRef } from 'react';
 
-import { Avatar, useId, useJdenticonHref } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
 import type { Space } from '@dxos/react-client/echo';
+import { Avatar, useId, useJdenticonHref } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { humanize } from '@dxos/util';
 
 export const SpaceListItem = forwardRef(

@@ -4,27 +4,36 @@
 
 import { inspect } from 'node:util';
 
-import { Event, scheduleTask, Trigger, MulticastObservable, PushStream } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
-  ClientServicesProvider,
-  defaultKey,
-  Echo,
-  Space,
   Properties,
-  PropertiesProps,
+  defaultKey,
+  type ClientServicesProvider,
+  type Echo,
+  type PropertiesProps,
+  type Space,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
+import {
+  type FilterSource,
+  type Hypergraph,
+  type Query,
+  type TypeCollection,
+  type TypedObject,
+} from '@dxos/echo-schema';
+import { AutomergeContext } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 
@@ -36,12 +45,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
-  // TODO(burdon): Rethink API (just db?)
-  private readonly dbRouter = new DatabaseRouter();
+
+  private readonly _automergeContext: AutomergeContext;
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
+    private readonly _graph: Hypergraph,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
      * @internal
@@ -51,6 +61,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
+    this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService);
   }
 
   [inspect.custom]() {
@@ -100,7 +111,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
+          spaceProxy = new SpaceProxy(
+            this._serviceProvider,
+            this._modelFactory,
+            space,
+            this._graph,
+            this._automergeContext,
+          );
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
@@ -132,6 +149,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       }
     });
     this._ctx.onDispose(() => spacesStream.close());
+
+    const subscription = this._isReady.subscribe(async (ready) => {
+      if (!ready) {
+        return;
+      }
+
+      const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
+      await agentQuerySourceProvider.open();
+      this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
+      this._ctx.onDispose(() => agentQuerySourceProvider.close());
+    });
+    this._ctx.onDispose(() => subscription.unsubscribe());
 
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));
@@ -165,9 +194,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   get default(): Space {
     const identityKey = this._getIdentityKey();
-    invariant(identityKey, 'Identity not found.');
+    invariant(identityKey, 'No identity. Default space is created with an identity.');
     const space = this.get().find((space) => space.properties[defaultKey] === identityKey.toHex());
-    invariant(space, 'Default space not found.');
+    invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;
   }
 
@@ -221,7 +250,19 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._invitationProxy.join(invitation);
   }
 
-  addSchema(schema: EchoSchema) {
-    this.dbRouter.addSchema(schema);
+  /**
+   * @deprecated use client.addSchema
+   */
+  addSchema(schema: TypeCollection) {
+    this._graph.addTypes(schema);
+  }
+
+  /**
+   * Query all spaces.
+   * @param filter
+   * @param options
+   */
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    return this._graph.query(filter, options);
   }
 }

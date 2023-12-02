@@ -5,10 +5,13 @@
 import distance from 'xor-distance';
 
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SwarmController, Topology } from './topology';
+import { type SwarmController, type Topology } from './topology';
+
+const MIN_UPDATE_INTERVAL = 1000 * 10;
+const MAX_CHANGES_PER_UPDATE = 1;
 
 export interface MMSTTopologyOptions {
   /**
@@ -35,6 +38,8 @@ export class MMSTTopology implements Topology {
   private _controller?: SwarmController;
 
   private _sampleCollected = false;
+
+  private _lastAction = new Date(0);
 
   constructor({ originateConnections = 2, maxPeers = 4, sampleSize = 10 }: MMSTTopologyOptions = {}) {
     this._originateConnections = originateConnections;
@@ -74,22 +79,45 @@ export class MMSTTopology implements Topology {
     invariant(this._controller, 'Not initialized');
     const { connected, candidates, ownPeerId } = this._controller.getState();
 
+    // TODO(nf): does this rate limiting/flap dampening logic belong here or in the SwarmController?
     if (connected.length > this._maxPeers) {
       // Disconnect extra peers.
+      log(`disconnect ${connected.length - this._maxPeers} peers.`);
       const sorted = sortByXorDistance(connected, ownPeerId)
         .reverse()
         .slice(0, this._maxPeers - connected.length);
-      for (const peer of sorted) {
-        log(`Disconnect ${peer}.`);
-        this._controller.disconnect(peer);
+      invariant(sorted.length === 0);
+
+      if (sorted.length > MAX_CHANGES_PER_UPDATE) {
+        log(`want to disconnect ${sorted.length} peers but limited to ${MAX_CHANGES_PER_UPDATE}`);
+      }
+
+      if (Date.now() - this._lastAction.getTime() > MIN_UPDATE_INTERVAL) {
+        for (const peer of sorted.slice(0, MAX_CHANGES_PER_UPDATE)) {
+          log(`Disconnect ${peer}.`);
+          this._controller.disconnect(peer);
+        }
+        this._lastAction = new Date();
+      } else {
+        log('rate limited discconnect');
       }
     } else if (connected.length < this._originateConnections) {
       // Connect new peers to reach desired quota.
+      log(`connect ${this._originateConnections - connected.length} peers.`);
       const sample = candidates.sort(() => Math.random() - 0.5).slice(0, this._sampleSize);
       const sorted = sortByXorDistance(sample, ownPeerId).slice(0, this._originateConnections - connected.length);
-      for (const peer of sorted) {
-        log(`Connect ${peer}.`);
-        this._controller.connect(peer);
+
+      if (sorted.length > MAX_CHANGES_PER_UPDATE) {
+        log(`want to connect ${sorted.length} peers but limited to ${MAX_CHANGES_PER_UPDATE}`);
+      }
+      if (Date.now() - this._lastAction.getTime() > MIN_UPDATE_INTERVAL) {
+        for (const peer of sorted.slice(0, MAX_CHANGES_PER_UPDATE)) {
+          log(`Connect ${peer}.`);
+          this._controller.connect(peer);
+        }
+        this._lastAction = new Date();
+      } else {
+        log('rate limited connect');
       }
     }
   }

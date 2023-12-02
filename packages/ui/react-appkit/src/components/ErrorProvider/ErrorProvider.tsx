@@ -3,13 +3,13 @@
 //
 
 import { Circle, Warning } from '@phosphor-icons/react';
-import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
-import { useTranslation, Button, DensityProvider } from '@dxos/aurora';
-import { valenceColorText, getSize } from '@dxos/aurora-theme';
-import { SystemStatus, ClientContext, Config } from '@dxos/react-client';
+import { SystemStatus, ClientContext, type Config } from '@dxos/react-client';
+import { useTranslation, Button, DensityProvider } from '@dxos/react-ui';
+import { valenceColorText, getSize } from '@dxos/react-ui-theme';
 import { captureException } from '@dxos/sentry';
-import { Provider } from '@dxos/util';
+import { type Provider } from '@dxos/util';
 
 import { ResetDialog } from '../ResetDialog';
 import { Tooltip } from '../Tooltip';

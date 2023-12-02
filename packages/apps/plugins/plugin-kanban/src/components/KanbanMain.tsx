@@ -2,37 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { getSpaceForObject } from '@dxos/react-client/echo';
+import { Main } from '@dxos/react-ui';
+import { topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { KanbanBoard } from './KanbanBoard';
 import { type KanbanModel } from '../types';
 
-export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
+export const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // const { t } = useTranslation(KANBAN_PLUGIN);
-
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
+  const space = getSpaceForObject(kanban);
   if (!space) {
     return null;
   }
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
-    root: object, // TODO(burdon): How to keep pure?
+    root: kanban, // TODO(burdon): How to keep pure?
     createColumn: () => space.db.add(new KanbanType.Column()),
     // TODO(burdon): Add metadata from column in the case of projections.
     createItem: (column) => space.db.add(new KanbanType.Item()),
   };
 
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <KanbanBoard model={model} />
     </Main.Content>
   );

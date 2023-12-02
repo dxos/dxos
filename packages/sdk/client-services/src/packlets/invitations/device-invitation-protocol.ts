@@ -3,12 +3,16 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { Keyring } from '@dxos/keyring';
+import { type Keyring } from '@dxos/keyring';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import {
+  type AdmissionRequest,
+  type AdmissionResponse,
+  type IntroductionRequest,
+} from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvitationProtocol } from './invitation-protocol';
-import { Identity, JoinIdentityParams } from '../identity';
+import { type InvitationProtocol } from './invitation-protocol';
+import { type Identity, type JoinIdentityParams } from '../identity';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(

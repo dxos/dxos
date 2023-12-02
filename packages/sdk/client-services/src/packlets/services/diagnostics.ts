@@ -2,30 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServices } from '@dxos/client-protocol';
+import { type ClientServices } from '@dxos/client-protocol';
 import { getFirstStreamValue } from '@dxos/codec-protobuf';
-import { Config, ConfigProto } from '@dxos/config';
+import { type Config, type ConfigProto } from '@dxos/config';
 import { credentialTypeFilter } from '@dxos/credentials';
-import { DocumentModel, DocumentModelState } from '@dxos/document-model';
+import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
-  Device,
-  Identity,
-  Metrics,
-  Space as SpaceProto,
+  type Device,
+  type Identity,
+  type Metrics,
+  type NetworkStatus,
+  type Space as SpaceProto,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getPlatform, Platform } from './platform';
-import { ServiceContext } from './service-context';
+import { getPlatform, type Platform } from './platform';
+import { type ServiceContext } from './service-context';
 import { DXOS_VERSION } from '../../version';
-import { DataSpace } from '../spaces';
+import { type DataSpace } from '../spaces';
 
 const DEFAULT_TIMEOUT = 1_000;
 
@@ -42,6 +44,8 @@ export type Diagnostics = {
   identity?: Identity;
   devices?: Device[];
   spaces?: SpaceStats[];
+  networkStatus?: NetworkStatus;
+  swarms?: SwarmInfo[];
   feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
   metrics?: Metrics;
 };
@@ -122,6 +126,17 @@ export const createDiagnostics = async (
         timeout: DEFAULT_TIMEOUT,
       }).catch(() => undefined)) ?? {};
     diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
+
+    // Signal servers.
+
+    const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
+      timeout: DEFAULT_TIMEOUT,
+    }).catch(() => undefined);
+    diagnostics.networkStatus = status;
+
+    // Networking.
+
+    diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
   }
 
   diagnostics.config = config.values;
@@ -136,7 +151,7 @@ const getProperties = (space: DataSpace) => {
     const propertiesItem = space.dataPipeline.itemManager.items.find(
       (item) =>
         item.modelMeta?.type === DocumentModel.meta.type &&
-        (item.state as DocumentModelState)?.type === TYPE_PROPERTIES,
+        (item.state as DocumentModelState)?.type?.itemId === TYPE_PROPERTIES,
     );
 
     const state = propertiesItem?.state as DocumentModelState;

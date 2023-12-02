@@ -4,10 +4,10 @@
 
 import { Flags } from '@oclif/core';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { DEFAULT_PROVIDER, DigitalOceanProvider, MachineryProvider, printKubes } from '../../util/provider';
+import { DEFAULT_PROVIDER, DigitalOceanProvider, type MachineryProvider, printKubes } from '../../util/provider';
 
 export default class Deploy extends BaseCommand<typeof Deploy> {
   static override description = 'Deploy KUBE.';

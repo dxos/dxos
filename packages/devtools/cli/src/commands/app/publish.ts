@@ -8,7 +8,7 @@ import os from 'os';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
-import { PublisherRpcPeer, build, loadConfig, publish } from '../../util';
+import { type PublisherRpcPeer, build, loadConfig, publish } from '../../util';
 
 export default class Publish extends BaseCommand<typeof Publish> {
   static override description = 'Publish apps.';

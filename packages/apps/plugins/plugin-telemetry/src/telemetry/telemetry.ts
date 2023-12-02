@@ -7,8 +7,8 @@ import * as localForage from 'localforage';
 
 import { log } from '@dxos/log';
 import type { Client, Config } from '@dxos/react-client';
-import { InitOptions as SentryInitOptions } from '@dxos/sentry';
-import { InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
+import { type InitOptions as SentryInitOptions } from '@dxos/sentry';
+import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
 export const BASE_TELEMETRY_PROPERTIES: any = {};
@@ -129,10 +129,11 @@ export const initializeAppTelemetry = async ({
     const telemetryDisabled = await isTelemetryDisabled(namespace);
 
     // Add telemetry tags.
-    const tags = await Telemetry.getLocalTelemetryTags();
-    if (tags) {
-      BASE_TELEMETRY_PROPERTIES.tags = tags.toString();
-    }
+    // TODO(wittjosiah): This causes a network error in the browser of everyone who isn't running a KUBE.
+    // const tags = await Telemetry.getLocalTelemetryTags();
+    // if (tags) {
+    //   BASE_TELEMETRY_PROPERTIES.tags = tags.toString();
+    // }
 
     const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
     Sentry.init({

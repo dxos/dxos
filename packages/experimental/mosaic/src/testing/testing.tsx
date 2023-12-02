@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { Item, Location } from '../layout';
+import { type Item, type Location } from '../layout';
 
 export type TestData = {
   title: string;

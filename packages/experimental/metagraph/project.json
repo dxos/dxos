@@ -2,17 +2,7 @@
   "sourceRoot": "packages/experimental/metagraph/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/metagraph/src/index.ts",
-        "outputPath": "packages/experimental/metagraph/dist/types",
-        "tsConfig": "packages/experimental/metagraph/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
       "dependsOn": [
         "compile-lib",
@@ -58,38 +48,8 @@
         "{options.outputPath}"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/metagraph/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/experimental/metagraph",
-        "outputPath": "tmp/mocha/packages/experimental/metagraph",
-        "resultsPath": "test-results/packages/experimental/metagraph",
-        "testPatterns": [
-          "packages/experimental/metagraph/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/metagraph/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

@@ -8,11 +8,13 @@ import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { DatabaseHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
-import { DataPipeline } from '../space';
+import { AutomergeHost } from '../automerge';
+import { DatabaseHost, type DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
+import { type DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
@@ -44,7 +46,8 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   dataServiceHost: DataServiceHost,
 ) => {
   const dataServiceSubscriptions = new DataServiceSubscriptions();
-  const dataService = new DataServiceImpl(dataServiceSubscriptions);
+  const automergeHost = new AutomergeHost(createStorage({ type: StorageType.RAM }).createDirectory());
+  const dataService = new DataServiceImpl(dataServiceSubscriptions, automergeHost);
 
   const spaceKey = PublicKey.random();
   await dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);

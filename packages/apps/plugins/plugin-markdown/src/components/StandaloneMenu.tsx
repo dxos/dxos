@@ -3,24 +3,24 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { PropsWithChildren, RefObject } from 'react';
+import React, { type PropsWithChildren, type RefObject } from 'react';
 
-import { Button, DropdownMenu } from '@dxos/aurora';
-import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { fineButtonDimensions, getSize } from '@dxos/aurora-theme';
-import { Surface } from '@dxos/react-surface';
+import { Surface } from '@dxos/app-framework';
+import { Button, DropdownMenu } from '@dxos/react-ui';
+import { type EditorModel, type MarkdownEditorRef } from '@dxos/react-ui-editor';
+import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
-import { MarkdownProperties } from '../types';
+import { type MarkdownProperties } from '../types';
 
 export const StandaloneMenu = ({
   model,
   properties,
   editorRef,
 }: PropsWithChildren<{
-  model: ComposerModel;
+  model: EditorModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
-  editorRef?: RefObject<MarkdownComposerRef>;
+  editorRef?: RefObject<MarkdownEditorRef>;
 }>) => {
   return (
     <DropdownMenu.Root modal={false}>
@@ -32,7 +32,7 @@ export const StandaloneMenu = ({
       <DropdownMenu.Portal>
         <DropdownMenu.Content sideOffset={8} classNames='z-10'>
           <DropdownMenu.Viewport>
-            <Surface data={[model, properties, editorRef]} role='menuitem' />
+            <Surface data={{ model, properties, editorRef }} role='menuitem' />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>

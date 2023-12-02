@@ -6,23 +6,24 @@ import { Stream } from '@dxos/codec-protobuf';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { Keyring } from '@dxos/keyring';
+import { type Keyring } from '@dxos/keyring';
 import {
-  Identity,
-  IdentityService,
-  QueryIdentityResponse,
-  RecoverIdentityRequest,
-  SignPresentationRequest,
+  type Identity,
+  type IdentityService,
+  type QueryIdentityResponse,
+  type RecoverIdentityRequest,
+  type SignPresentationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { CreateIdentityOptions, IdentityManager } from './identity-manager';
+import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 
 export class IdentityServiceImpl implements IdentityService {
   constructor(
     private readonly _createIdentity: (params?: CreateIdentityOptions) => Promise<Identity>,
     private readonly _identityManager: IdentityManager,
     private readonly _keyring: Keyring,
+    private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {}
 
   async createIdentity(request: ProfileDocument): Promise<Identity> {
@@ -58,6 +59,7 @@ export class IdentityServiceImpl implements IdentityService {
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
     await this._identityManager.updateProfile(profile);
+    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
     return this._getIdentity()!;
   }
 

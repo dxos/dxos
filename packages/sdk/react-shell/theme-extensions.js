@@ -5,7 +5,7 @@
 module.exports = {
   osThemeExtension: {
     spacing: {
-      sidebar: '272px'
-    }
-  }
+      sidebar: '272px',
+    },
+  },
 };

@@ -2,83 +2,116 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Chat, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Thread as ThreadType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/react-client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Thread as ThreadType } from '@braneframe/types';
+import {
+  LayoutAction,
+  type GraphProvides,
+  type LayoutProvides,
+  type Plugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  parseLayoutPlugin,
+  parseGraphPlugin,
+  resolvePlugin,
+} from '@dxos/app-framework';
+import { type TypedObject, SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
+import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: ThreadType.filter(), adapter: objectToGraphNode });
+  let graphPlugin: Plugin<GraphProvides> | undefined;
+  let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
   return {
-    meta: {
-      id: THREAD_PLUGIN,
-    },
-    unload: async () => {
-      adapter.clear();
+    meta,
+    ready: async (plugins) => {
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
     },
     provides: {
+      metadata: {
+        records: {
+          [ThreadType.schema.typename]: {
+            placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
+            icon: (props: IconProps) => <Chat {...props} />,
+          },
+          [THREAD_ITEM]: {
+            parse: (item: TypedObject, type: string) => {
+              switch (type) {
+                case 'node':
+                  return { id: item.id, label: item.title, data: item };
+                case 'object':
+                  return item;
+                case 'view-object':
+                  return { id: `${item.id}-view`, object: item };
+              }
+            },
+          },
+        },
+      },
       translations,
       graph: {
-        nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
-          const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${THREAD_PLUGIN}/create`,
             label: ['create thread label', { ns: THREAD_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: THREAD_PLUGIN,
-                action: ThreadAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: TreeViewAction.ACTIVATE,
-              },
-            ],
+            icon: (props) => <Chat {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: THREAD_PLUGIN,
+                  action: ThreadAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
-              testId: 'threadPlugin.createThread',
+              testId: 'threadPlugin.createObject',
             },
           });
-          return adapter.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        switch (role) {
-          case 'main': {
-            if (!data || typeof data !== 'object' || !isThread(data)) {
-              return null;
+      surface: {
+        component: ({ data, role }) => {
+          switch (role) {
+            case 'main': {
+              return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
             }
-            return ThreadMain;
-          }
 
-          case 'complementary':
-            return ThreadSidebar;
-        }
-      },
-      components: {
-        ThreadMain,
+            // TODO(burdon): Better way to get this?
+            case 'context-thread': {
+              const graph = graphPlugin?.provides.graph;
+              const layout = layoutPlugin?.provides.layout;
+              const space = getActiveSpace(graph!, layout!.active);
+              return <ThreadSidebar space={space} />;
+            }
+
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

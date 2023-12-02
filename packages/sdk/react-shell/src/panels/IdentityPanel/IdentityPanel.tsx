@@ -3,15 +3,19 @@
 //
 import React, { useEffect, useMemo } from 'react';
 
-import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Identity, useIdentity } from '@dxos/react-client/halo';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
 
-import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
+import {
+  type IdentityPanelHeadingProps,
+  type IdentityPanelImplProps,
+  type IdentityPanelProps,
+} from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser, ProfileForm } from './steps';
 import { Viewport, Heading, CloseButton } from '../../components';
@@ -23,7 +27,7 @@ const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHead
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={12} variant='circle'>
+      <Avatar.Root size={12} variant='circle' status='active'>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
         </Avatar.Frame>

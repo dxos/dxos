@@ -2,19 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
+import platform from 'platform';
+
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
-import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-pipeline';
-import { FeedStore } from '@dxos/feed-store';
+import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
+import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { Keyring } from '@dxos/keyring';
+import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { IdentityRecord, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { AdmittedFeed, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction } from '@dxos/util';
@@ -134,6 +136,16 @@ export class IdentityManager {
       // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
       credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
+      // Write device metadata to profile.
+      credentials.push(
+        await generator.createDeviceProfile({
+          platform: platform.name,
+          platformVersion: platform.version,
+          architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
+          os: platform.os?.family,
+          osVersion: platform.os?.version,
+        }),
+      );
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
           credential: { credential },

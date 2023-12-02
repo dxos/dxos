@@ -9,10 +9,10 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
-import { Transport, TransportFactory, TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
 // TODO(burdon): Make configurable.
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
@@ -138,8 +138,11 @@ export class MemoryTransport implements Transport {
       // code   .unpipe(this._incomingDelay)
       // code   .unpipe(this._stream);
 
-      this._outgoingDelay.unpipe();
-      this._incomingDelay.unpipe();
+      this.options.stream.unpipe(this._incomingDelay);
+      this._incomingDelay.unpipe(this._remoteConnection.options.stream);
+      this._remoteConnection.options.stream.unpipe(this._outgoingDelay);
+      this._outgoingDelay.unpipe(this.options.stream);
+      this.options.stream.unpipe(this._outgoingDelay);
 
       this._remoteConnection.closed.emit();
       this._remoteConnection._remoteConnection = undefined;
@@ -162,5 +165,18 @@ export class MemoryTransport implements Transport {
       const remoteId = PublicKey.fromHex(transportId);
       this._remote.wake(remoteId);
     }
+  }
+
+  async getDetails(): Promise<string> {
+    return this._instanceId.toHex();
+  }
+
+  async getStats(): Promise<TransportStats> {
+    return {
+      bytesSent: 0,
+      bytesReceived: 0,
+      packetsSent: 0,
+      packetsReceived: 0,
+    };
   }
 }

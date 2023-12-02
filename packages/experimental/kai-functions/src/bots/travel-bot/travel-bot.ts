@@ -5,9 +5,9 @@
 import { formatISO9075 } from 'date-fns';
 
 import { debounce } from '@dxos/async';
-import { Subscription } from '@dxos/echo-schema';
+import { type Subscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Booking, Ticket, Trip } from '@dxos/kai-types';
+import { Booking, type Ticket, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
 import { Amadeus, createFlightQuery } from './data';

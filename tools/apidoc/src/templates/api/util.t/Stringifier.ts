@@ -3,7 +3,7 @@
 //
 
 import os from 'os';
-import { Reflection, ReflectionKind, JSONOutput as Schema } from 'typedoc';
+import { type Reflection, ReflectionKind, type JSONOutput as Schema } from 'typedoc';
 
 import { plate } from '@dxos/plate';
 
