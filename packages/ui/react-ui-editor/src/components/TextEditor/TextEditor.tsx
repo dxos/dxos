@@ -18,10 +18,10 @@ import React, {
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { type EditorModel, type EditorSlots } from '@dxos/react-ui-editor';
 import { YText } from '@dxos/text-model';
 
 import { theme } from './theme';
+import { type EditorModel, type EditorSlots } from '../../model';
 
 export type CursorInfo = {
   from: number;
@@ -43,7 +43,9 @@ export type TextEditorRef = {
   view?: EditorView;
 };
 
-// TODO(burdon): Factor out simple editor and reconcile with react-ui-editor.
+/**
+ * Simple text editor.
+ */
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ model, slots = {}, onKeyDown, ...props }, forwardedRef) => {
     const { id, content } = model ?? {};

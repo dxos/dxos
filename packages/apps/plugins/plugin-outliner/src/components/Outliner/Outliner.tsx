@@ -11,7 +11,8 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type CursorInfo, TextEditor, type TextEditorProps, type TextEditorRef } from '../TextEditor';
+
+import { type CursorInfo, TextEditor, type TextEditorProps, type TextEditorRef } from '@dxos/react-ui-editor';
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
