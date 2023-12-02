@@ -89,7 +89,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-base rounded text-neutral-900 dark:text-white',
+  'is-full text-base rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
@@ -97,7 +97,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-base rounded text-neutral-900 dark:text-white',
+  'is-full text-base rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-white dark:bg-neutral-925',
@@ -132,18 +132,21 @@ export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5, di
 export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(getSize(computeSize(sizeValue(size) * 0.7, 4)), ...etc);
 
-export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
     getSizeHeight(size),
     getSizeWidth(computeSize(sizeValue(size) * 1.75, 9)),
-    'cursor-pointer shrink-0 bg-transparent rounded-full pli-0.5 border-2 border-neutral-500 relative aria-checked:border-primary-500 aria-checked:bg-primary-500 outline-none cursor-default',
+    booleanInputSurface,
+    !disabled && booleanInputSurfaceHover,
+    'cursor-pointer shrink-0 rounded-full pli-1 relative',
+    focusRing,
     ...etc,
   );
 
 export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-neutral-500 rounded-full border-neutral-100 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%] data-[state=checked]:bg-white',
+    'block bg-white rounded-full border-neutral-100 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 
