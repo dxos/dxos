@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../core/chain"
+    },
+    {
       "path": "../../../core/echo/text-model"
     },
     {

@@ -25,6 +25,7 @@
   "dependencies": {
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
+    "@dxos/chain": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/text-model": "workspace:*",
