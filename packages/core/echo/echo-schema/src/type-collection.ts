@@ -47,10 +47,13 @@ export class TypeCollection {
   registerPrototype(proto: Prototype, schema: SchemaProps) {
     this._prototypes.set(schema.typename, proto);
     this._schemaDefs.set(schema.typename, schema);
-
+    
     Object.defineProperty(proto, Symbol.hasInstance, {
-      value: (instance: any) =>
-        !!instance?.[base] && instance[base] instanceof TypedObject && instance.__typename === schema.typename,
+      value: (instance: any) => {
+        const { AutomergeObject } = require('./automerge/automerge-object');
+        
+        return !!instance?.[base] && (instance[base] instanceof TypedObject || instance[base] instanceof AutomergeObject) && instance.__typename === schema.typename;
+      },
       enumerable: false,
       writable: false,
     });
