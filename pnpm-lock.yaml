@@ -499,7 +499,7 @@ importers:
     dependencies:
       '@braneframe/plugin-chain':
         specifier: workspace:*
-        version: link:../plugins/plugin-chain/plugin-outliner
+        version: link:../plugins/plugin-chain
       '@braneframe/plugin-chess':
         specifier: workspace:*
         version: link:../plugins/plugin-chess
@@ -776,23 +776,23 @@ importers:
         specifier: ^6.5.4
         version: 6.5.4
 
-  packages/apps/plugins/plugin-chain/plugin-outliner:
+  packages/apps/plugins/plugin-chain:
     dependencies:
       '@braneframe/plugin-stack':
         specifier: workspace:*
-        version: link:../../plugin-stack
+        version: link:../plugin-stack
       '@braneframe/types':
         specifier: workspace:*
-        version: link:../../../types
+        version: link:../../types
       '@dxos/react-client':
         specifier: workspace:*
-        version: link:../../../../sdk/react-client
+        version: link:../../../sdk/react-client
       '@dxos/react-ui-editor':
         specifier: workspace:*
-        version: link:../../../../ui/react-ui-editor
+        version: link:../../../ui/react-ui-editor
       '@dxos/text-model':
         specifier: workspace:*
-        version: link:../../../../core/echo/text-model
+        version: link:../../../core/echo/text-model
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -802,16 +802,16 @@ importers:
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
-        version: link:../../plugin-space
+        version: link:../plugin-space
       '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../../sdk/app-framework
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
-        version: link:../../../../ui/react-ui
+        version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
-        version: link:../../../../ui/react-ui-theme
+        version: link:../../../ui/react-ui-theme
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.3.1

@@ -1,6 +1,6 @@
 # @braneframe/plugin-chain
 
-Chain (hierarchical list) plugin.
+Prompt Chain.
 
 ## DXOS Resources
 

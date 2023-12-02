@@ -62,7 +62,7 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../plugins/plugin-chain/plugin-outliner"
+      "path": "../plugins/plugin-chain"
     },
     {
       "path": "../plugins/plugin-chess"
