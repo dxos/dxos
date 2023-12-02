@@ -266,3 +266,9 @@ message Message {
 
   Context context = 100;
 }
+
+message Chain {
+  option (object) = true;
+
+  string title = 1;
+}
