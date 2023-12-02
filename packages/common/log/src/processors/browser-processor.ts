@@ -69,6 +69,7 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     const scope = entry.meta?.S;
     const prototype = Object.getPrototypeOf(scope);
     const id = getPrototypeSpecificInstanceId(scope);
+    // TODO(dmaretskyi): Those can be made clickable with a custom formatter.
     args.push(`%c${prototype.constructor.name}#${id}`, 'color:#C026D3;font-weight:bold');
   }
 
