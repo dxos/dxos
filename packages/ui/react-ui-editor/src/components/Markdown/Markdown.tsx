@@ -116,7 +116,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         doc: content?.toString(),
         extensions: [
           // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
-          // listenChangesExtension,
+          listenChangesExtension,
 
           ...(editorMode === 'vim' ? [vim()] : []),
 
@@ -158,7 +158,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           // TODO(thure): All but one rule here apply to both themes; rename or refactor.
           syntaxHighlighting(markdownDarkHighlighting),
 
-          // Collaboration (awareness and remote selection).
+          // Replication and awareness (incl. remote selection).
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
         ],
       });

@@ -6,12 +6,12 @@ import { DotsThreeVertical, Square, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, useState } from 'react';
 
 import { Button, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { useTextModel, MarkdownEditor } from '@dxos/react-ui-editor';
+import { useTextModel } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type TextEditorProps } from '../TextEditor';
+import { TextEditor, type TextEditorProps } from '../TextEditor';
 
 // TODO(burdon): Break/join lines.
 // TODO(burdon): Cut-and-Paste.
@@ -48,7 +48,6 @@ const OutlinerItem = ({
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
-  console.log(item.id.slice(0, 8), item.text, model);
 
   const handleKeyDown: TextEditorProps['onKeyDown'] = (event, { line, lines }) => {
     const { key, shiftKey } = event;
@@ -120,9 +119,9 @@ const OutlinerItem = ({
       )}
 
       {model && (
-        <MarkdownEditor
+        <TextEditor
           model={model}
-          // focus={active}
+          focus={active}
           slots={{
             root: {
               className: 'w-full',
@@ -131,7 +130,7 @@ const OutlinerItem = ({
               placeholder: active ? placeholder : '',
             },
           }}
-          // onKeyDown={handleKeyDown}
+          onKeyDown={handleKeyDown}
         />
       )}
 
