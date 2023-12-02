@@ -113,8 +113,7 @@ message Tree {
   message Item {
     option (object) = true;
 
-    string text = 1;
-    // dxos.schema.Text text = 1;
+    dxos.schema.Text text = 1;
     repeated Item items = 2;
     bool done = 3;
   }

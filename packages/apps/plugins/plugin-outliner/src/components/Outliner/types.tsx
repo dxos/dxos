@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type TextObject } from '@dxos/client/echo';
+
 export type Item = {
   id: string;
   done?: boolean;
-  text?: string; // TODO(burdon): Change to TextObject.
+  text?: TextObject;
   items?: Item[];
 };
 

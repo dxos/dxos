@@ -58,7 +58,7 @@
     "y-codemirror.next": "^0.3.2",
     "y-prosemirror": "~1.0.20",
     "y-protocols": "^1.0.5",
-    "yjs": "^13.6.8"
+    "yjs": "^13.6.10"
   },
   "devDependencies": {
     "@codemirror/basic-setup": "^0.20.0",
