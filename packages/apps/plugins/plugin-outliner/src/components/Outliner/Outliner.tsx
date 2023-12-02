@@ -35,7 +35,7 @@ type OutlinerItemProps = {
   onDelete?: (state?: CursorInfo) => void;
   onIndent?: (direction?: 'left' | 'right') => void;
   onShift?: (direction?: 'up' | 'down') => void;
-  onNav?: (item: Item, direction?: 'home' | 'end' | 'up' | 'down') => void;
+  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', pos?: number) => void;
 } & OutlinerOptions;
 
 const OutlinerItem = ({
@@ -48,7 +48,7 @@ const OutlinerItem = ({
   onDelete,
   onIndent,
   onShift,
-  onNav,
+  onCursor,
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
@@ -66,8 +66,9 @@ const OutlinerItem = ({
       //  NOTE: This happens with the line is split and a new line is created and set as the active line.
       setTimeout(() => {
         ref.current?.view?.focus();
-        if (active.from !== undefined) {
-          ref.current?.view?.dispatch({ selection: { anchor: active.from, head: active.to ?? active.from } });
+        const from = active.from === -1 ? ref.current?.view?.state.doc.length : active.from;
+        if (from !== undefined) {
+          ref.current?.view?.dispatch({ selection: { anchor: from, head: active.to ?? from } });
         }
       });
     }
@@ -75,7 +76,7 @@ const OutlinerItem = ({
 
   const handleKeyDown: TextEditorProps['onKeyDown'] = (event, state) => {
     const { key, shiftKey } = event;
-    const { from, line, lines } = state;
+    const { from, to, line, lines, after } = state;
     switch (key) {
       // TODO(burdon): Only move lines if at start/end of line.
       case 'ArrowUp':
@@ -85,7 +86,7 @@ const OutlinerItem = ({
         } else {
           if (line === 1) {
             event.preventDefault();
-            onNav?.(item, event.metaKey ? 'home' : 'up');
+            onCursor?.(event.metaKey ? 'home' : 'up');
           }
         }
         break;
@@ -96,10 +97,25 @@ const OutlinerItem = ({
         } else {
           if (line === lines) {
             event.preventDefault();
-            onNav?.(item, event.metaKey ? 'end' : 'down');
+            onCursor?.(event.metaKey ? 'end' : 'down');
           }
         }
         break;
+      case 'ArrowLeft': {
+        if (from === 0) {
+          event.preventDefault();
+          onCursor?.('up', -1);
+        }
+        break;
+      }
+      case 'ArrowRight': {
+        console.log(from, to);
+        if (!after?.length) {
+          event.preventDefault();
+          onCursor?.('down', 0);
+        }
+        break;
+      }
       case 'Tab': {
         event.preventDefault();
         onIndent?.(event.shiftKey ? 'left' : 'right');
@@ -195,23 +211,24 @@ type OutlinerBranchProps = OutlinerOptions & {
   className?: string;
   root: Item;
   active?: CursorSelection;
+  onItemCursor?: (parent: Item, item: Item, direction?: string, pos?: number) => void;
   onItemSelect?: (parent: Item, item: Item) => void;
   onItemCreate?: (parent: Item, item: Item, state?: CursorInfo, after?: boolean) => Item;
   onItemDelete?: (parent: Item, item: Item, state?: CursorInfo) => void;
   onItemIndent?: (parent: Item, item: Item, direction?: string) => void;
   onItemShift?: (parent: Item, item: Item, direction?: string) => void;
-} & Pick<OutlinerItemProps, 'onNav'>;
+};
 
 const OutlinerBranch = ({
   className,
   root,
   active,
+  onItemCursor,
   onItemSelect,
   onItemCreate,
   onItemDelete,
   onItemIndent,
   onItemShift,
-  onNav,
   ...props
 }: OutlinerBranchProps) => {
   return (
@@ -222,12 +239,12 @@ const OutlinerBranch = ({
             item={item}
             active={active?.itemId === item.id ? active : undefined}
             placeholder='Enter text'
+            onCursor={(...args) => onItemCursor?.(root, item, ...args)}
             onSelect={() => onItemSelect?.(root, item)}
-            onEnter={(state) => onItemCreate?.(root, item, state)}
-            onDelete={(state) => onItemDelete?.(root, item, state)}
-            onIndent={(direction) => onItemIndent?.(root, item, direction)}
-            onShift={(direction) => onItemShift?.(root, item, direction)}
-            onNav={onNav}
+            onEnter={(...args) => onItemCreate?.(root, item, ...args)}
+            onDelete={(...args) => onItemDelete?.(root, item, ...args)}
+            onIndent={(...args) => onItemIndent?.(root, item, ...args)}
+            onShift={(...args) => onItemShift?.(root, item, ...args)}
             {...props}
           />
           {(item.items?.length ?? 0) > 0 && (
@@ -235,12 +252,12 @@ const OutlinerBranch = ({
               className='pl-4'
               root={item}
               active={active}
+              onItemCursor={onItemCursor}
               onItemSelect={onItemSelect}
               onItemCreate={onItemCreate}
               onItemDelete={onItemDelete}
               onItemIndent={onItemIndent}
               onItemShift={onItemShift}
-              onNav={onNav}
               {...props}
             />
           )}
@@ -383,30 +400,30 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
-  const handleNav: OutlinerBranchProps['onNav'] = (item, direction) => {
+  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, pos) => {
     switch (direction) {
       case 'home': {
-        setActive({ itemId: root.items![0].id });
+        setActive({ itemId: root.items![0].id, from: 0 });
         break;
       }
       case 'end': {
         const last = getLastDescendent(root.items![root.items!.length - 1]);
         if (last) {
-          setActive({ itemId: last.id });
+          setActive({ itemId: last.id, from: 0 });
         }
         break;
       }
       case 'up': {
         const previous = getPrevious(root, item);
         if (previous) {
-          setActive({ itemId: previous.id });
+          setActive({ itemId: previous.id, from: pos });
         }
         break;
       }
       case 'down': {
         const next = getNext(root, item);
         if (next) {
-          setActive({ itemId: next.id });
+          setActive({ itemId: next.id, from: pos });
         }
         break;
       }
@@ -419,12 +436,12 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         <OutlinerBranch
           root={root}
           active={active}
+          onItemCursor={handleCursor}
           onItemSelect={(root, item) => setActive({ itemId: item.id })}
           onItemCreate={onCreate && handleCreate}
           onItemDelete={onDelete && handleDelete}
           onItemIndent={handleIndent}
           onItemShift={handleShift}
-          onNav={handleNav}
           {...props}
         />
       </DensityProvider>
