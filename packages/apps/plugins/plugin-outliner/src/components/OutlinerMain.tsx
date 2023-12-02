@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { Tree as TreeType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { TextObject, getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, textBlockWidth, mx, inputSurface } from '@dxos/react-ui-theme';
 
@@ -25,7 +25,7 @@ export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
           <Outliner.Root
             isTasklist={tree.checkbox}
             root={tree.root}
-            onCreate={() => new TreeType.Item()}
+            onCreate={(text?: string) => new TreeType.Item({ text: new TextObject(text) })}
             onDelete={({ id }) => {
               const item = space.db.getObjectById(id);
               item && space.db.remove(item);
@@ -44,16 +44,15 @@ export const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
   }
 
   return (
-    <div role='none' className='flex flex-col w-full plb-4'>
-      <Outliner.Root
-        isTasklist={tree.checkbox}
-        root={tree.root}
-        onCreate={() => new TreeType.Item()}
-        onDelete={({ id }) => {
-          const item = space.db.getObjectById(id);
-          item && space.db.remove(item);
-        }}
-      />
-    </div>
+    <Outliner.Root
+      className='w-full plb-4'
+      isTasklist={tree.checkbox}
+      root={tree.root}
+      onCreate={() => new TreeType.Item()}
+      onDelete={({ id }) => {
+        const item = space.db.getObjectById(id);
+        item && space.db.remove(item);
+      }}
+    />
   );
 };

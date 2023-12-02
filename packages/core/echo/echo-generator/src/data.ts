@@ -63,6 +63,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         id: 'name',
         type: Schema.PropType.STRING,
       },
+      // TODO(burdon): Support multiple.
       {
         id: 'email',
         type: Schema.PropType.STRING,

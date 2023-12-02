@@ -28,6 +28,7 @@ export const Default = {
 };
 
 const replicator = new Replicator(TextKind.PLAIN);
+
 export const WithYjs = {
   render: () => {
     const [generate, setGenerate] = useState(false);
