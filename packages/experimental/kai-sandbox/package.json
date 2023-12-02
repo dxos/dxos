@@ -40,7 +40,7 @@
     "monaco-editor": "^0.25.0",
     "use-subscription": "^1.8.0",
     "y-monaco": "^0.1.0",
-    "yjs": "^13.6.8"
+    "yjs": "^13.6.10"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

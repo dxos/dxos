@@ -1882,7 +1882,7 @@ importers:
         specifier: ^0.3.2
         version: 0.3.2(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)(yjs@13.6.10)
       yjs:
-        specifier: ^13.6.8
+        specifier: ^13.6.10
         version: 13.6.10
     devDependencies:
       '@braneframe/plugin-space':
@@ -2123,10 +2123,10 @@ importers:
         version: 0.25.2
       y-monaco:
         specifier: ^0.1.0
-        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.8)
+        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.10)
       yjs:
-        specifier: ^13.6.8
-        version: 13.6.8
+        specifier: ^13.6.10
+        version: 13.6.10
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -2262,8 +2262,8 @@ importers:
         specifier: ^0.1.4
         version: 0.1.4(react@18.2.0)
       yjs:
-        specifier: ^13.6.8
-        version: 13.6.8
+        specifier: ^13.6.10
+        version: 13.6.10
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -4083,8 +4083,8 @@ importers:
         specifier: ^3.0.2
         version: 3.3.0
       yjs:
-        specifier: ^13.6.8
-        version: 13.6.8
+        specifier: ^13.6.10
+        version: 13.6.10
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
@@ -4157,8 +4157,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/typings
       yjs:
-        specifier: ^13.6.8
-        version: 13.6.8
+        specifier: ^13.6.10
+        version: 13.6.10
 
   packages/core/echo/echo-generator:
     dependencies:
@@ -4525,8 +4525,8 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       yjs:
-        specifier: ^13.6.8
-        version: 13.6.8
+        specifier: ^13.6.10
+        version: 13.6.10
     devDependencies:
       '@dxos/document-model':
         specifier: workspace:*
@@ -6039,10 +6039,10 @@ importers:
         version: 1.8.0(react@18.2.0)
       y-monaco:
         specifier: ^0.1.0
-        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.8)
+        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.10)
       yjs:
-        specifier: ^13.6.8
-        version: 13.6.8
+        specifier: ^13.6.10
+        version: 13.6.10
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -7503,7 +7503,7 @@ importers:
         specifier: ^8.0.2
         version: 8.3.1
       yjs:
-        specifier: ^13.6.8
+        specifier: ^13.6.10
         version: 13.6.10
     devDependencies:
       '@dxos/react-ui-theme':
@@ -8290,16 +8290,16 @@ importers:
         version: 1.30.1
       y-codemirror.next:
         specifier: ^0.3.2
-        version: 0.3.2(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)(yjs@13.6.8)
+        version: 0.3.2(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)(yjs@13.6.10)
       y-prosemirror:
         specifier: ~1.0.20
-        version: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
+        version: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.10)
       y-protocols:
         specifier: ^1.0.5
         version: 1.0.5
       yjs:
-        specifier: ^13.6.8
-        version: 13.6.8
+        specifier: ^13.6.10
+        version: 13.6.10
     devDependencies:
       '@codemirror/basic-setup':
         specifier: ^0.20.0
@@ -19969,7 +19969,7 @@ packages:
       y-prosemirror: 1.0.20
     dependencies:
       '@tiptap/core': 2.0.0-beta.220(@tiptap/pm@2.0.0-beta.220)
-      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
+      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.10)
     dev: false
 
   /@tiptap/extension-collaboration@2.0.0-beta.220(@tiptap/core@2.0.0-beta.220)(@tiptap/pm@2.0.0-beta.220)(y-prosemirror@1.0.20):
@@ -19981,7 +19981,7 @@ packages:
     dependencies:
       '@tiptap/core': 2.0.0-beta.220(@tiptap/pm@2.0.0-beta.220)
       '@tiptap/pm': 2.0.0-beta.220(@tiptap/core@2.0.0-beta.220)
-      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
+      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.10)
     dev: false
 
   /@tiptap/extension-document@2.0.0-beta.220(@tiptap/core@2.0.0-beta.220):
@@ -33884,6 +33884,7 @@ packages:
     hasBin: true
     dependencies:
       isomorphic.js: 0.2.5
+    dev: false
 
   /lib0@0.2.87:
     resolution: {integrity: sha512-TbB63XJixvNToW2IHWAFsCJj9tVnajmwjE14p69i51Rx8byOQd2IP4ourE8v4d7vhyO++nVm1sQk3ePslfbucg==}
@@ -33892,7 +33893,6 @@ packages:
     requiresBuild: true
     dependencies:
       isomorphic.js: 0.2.5
-    dev: false
 
   /libbase64@1.2.1:
     resolution: {integrity: sha512-l+nePcPbIG1fNlqMzrh68MLkX/gTxk/+vdvAb388Ssi7UuUN31MI44w4Yf33mM3Cm4xDfw48mdf3rkdHszLNew==}
@@ -45046,20 +45046,7 @@ packages:
       yjs: 13.6.10
     dev: false
 
-  /y-codemirror.next@0.3.2(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)(yjs@13.6.8):
-    resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
-    peerDependencies:
-      '@codemirror/state': ^6.0.0
-      '@codemirror/view': ^6.0.0
-      yjs: ^13.5.6
-    dependencies:
-      '@codemirror/state': 6.3.1
-      '@codemirror/view': 6.22.0
-      lib0: 0.2.87
-      yjs: 13.6.8
-    dev: false
-
-  /y-monaco@0.1.4(monaco-editor@0.25.2)(yjs@13.6.8):
+  /y-monaco@0.1.4(monaco-editor@0.25.2)(yjs@13.6.10):
     resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
     peerDependencies:
       monaco-editor: '>=0.20.0'
@@ -45067,10 +45054,10 @@ packages:
     dependencies:
       lib0: 0.2.78
       monaco-editor: 0.25.2
-      yjs: 13.6.8
+      yjs: 13.6.10
     dev: false
 
-  /y-prosemirror@1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8):
+  /y-prosemirror@1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.10):
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -45084,7 +45071,7 @@ packages:
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
-      yjs: 13.6.8
+      yjs: 13.6.10
     dev: false
 
   /y-protocols@1.0.5:
@@ -45316,13 +45303,6 @@ packages:
     requiresBuild: true
     dependencies:
       lib0: 0.2.87
-    dev: false
-
-  /yjs@13.6.8:
-    resolution: {integrity: sha512-ZPq0hpJQb6f59B++Ngg4cKexDJTvfOgeiv0sBc4sUm8CaBWH7OQC4kcCgrqbjJ/B2+6vO49exvTmYfdlPtcjbg==}
-    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
-    dependencies:
-      lib0: 0.2.78
 
   /yn@3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
