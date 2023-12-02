@@ -19,7 +19,7 @@ export default {
   component: Editor,
 };
 
-const Story = ({ spaceKey, ...args }: Pick<EditorProps, 'slots'> & { spaceKey: PublicKey }) => {
+const Story = ({ spaceKey, ...params }: Pick<EditorProps, 'slots'> & { spaceKey: PublicKey }) => {
   const [generate, setGenerate] = useState(false);
   const generateId = useId('generate');
 
@@ -39,7 +39,7 @@ const Story = ({ spaceKey, ...args }: Pick<EditorProps, 'slots'> & { spaceKey: P
         Generate Data
       </div>
       {document?.content.toString().length}
-      <Editor identity={identity} space={space} text={document?.content} {...args} />
+      <Editor identity={identity} space={space} text={document?.content} {...params} />
     </main>
   );
 };
