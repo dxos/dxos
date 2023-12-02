@@ -93,7 +93,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
             : [syntaxHighlighting(defaultHighlightStyle)]),
           // syntaxHighlighting(markdownDarkHighlighting),
 
-          ...(content instanceof YText ? [yCollab(content)] : []),
+          ...(content instanceof YText ? [yCollab(content, undefined)] : []),
         ],
       });
 
