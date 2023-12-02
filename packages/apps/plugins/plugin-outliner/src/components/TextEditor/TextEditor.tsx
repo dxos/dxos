@@ -3,10 +3,18 @@
 //
 
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { EditorState, type Text } from '@codemirror/state';
+import { EditorState } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { placeholder, EditorView } from '@codemirror/view';
-import React, { type KeyboardEvent, forwardRef, useEffect, useImperativeHandle, useState, useCallback } from 'react';
+import React, {
+  type KeyboardEvent,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  useCallback,
+  type HTMLAttributes,
+} from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -24,9 +32,8 @@ export type TextEditorProps = {
   model?: EditorModel;
   focus?: boolean;
   slots?: EditorSlots;
-  onChange?: (content: string | Text) => void;
   onKeyDown?: (event: KeyboardEvent, info: CursorInfo) => void;
-};
+} & Pick<HTMLAttributes<HTMLDivElement>, 'onFocus' | 'onBlur'>;
 
 export type TextEditorRef = {
   editor: HTMLDivElement | null;
@@ -35,7 +42,7 @@ export type TextEditorRef = {
 };
 
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, focus, slots = {}, onChange, onKeyDown }, forwardedRef) => {
+  ({ model, focus, slots = {}, onKeyDown, ...props }, forwardedRef) => {
     const { id, content } = model ?? {};
     const { themeMode } = useThemeContext();
 
@@ -54,21 +61,6 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       }
     }, [view, focus]);
 
-    // const listenChangesExtension = useMemo(
-    //   () =>
-    //     StateField.define({
-    //       create: () => null,
-    //       update: (_value, transaction) => {
-    //         if (transaction.docChanged && onChange) {
-    //           onChange(transaction.newDoc);
-    //           console.log('???', transaction);
-    //         }
-    //         return null;
-    //       },
-    //     }),
-    //   [onChange],
-    // );
-
     useEffect(() => {
       if (!parent) {
         return;
@@ -79,9 +71,6 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
-          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
-          // listenChangesExtension,
-
           placeholder(slots.editor?.placeholder ?? ''),
           EditorView.lineWrapping,
 
@@ -119,6 +108,6 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       [view],
     );
 
-    return <div key={id} ref={setParent} {...slots.root} onKeyDown={handleKeyDown} />;
+    return <div key={id} ref={setParent} {...slots.root} onKeyDown={handleKeyDown} {...props} />;
   },
 );

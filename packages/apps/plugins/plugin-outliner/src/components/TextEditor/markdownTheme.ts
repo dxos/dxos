@@ -38,44 +38,6 @@ export const cursor = '#ffffff';
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
 export const markdownTheme = {
-  // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated.
-  // '&': {
-  //   color: ivory,
-  //   backgroundColor: background
-  // },
-  // '.cm-cursor, .cm-dropCursor': { borderLeftColor: cursor },
-  // '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-  //   backgroundColor: selection
-  // },
-  // '.cm-panels': { backgroundColor: darkBackground, color: ivory },
-  // '.cm-panels.cm-panels-top': { borderBottom: '2px solid black' },
-  // '.cm-panels.cm-panels-bottom': { borderTop: '2px solid black' },
-  // '.cm-searchMatch': {
-  //   backgroundColor: '#72a1ff59',
-  //   outline: '1px solid #457dff'
-  // },
-  // '.cm-searchMatch.cm-searchMatch-selected': {
-  //   backgroundColor: '#6199ff2f'
-  // },
-  // '.cm-activeLine': { backgroundColor: '#6699ff0b' },
-  // '.cm-selectionMatch': { backgroundColor: '#aafe661a' },
-  // '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
-  //   backgroundColor: '#bad0f847'
-  // },
-  // '.cm-gutters': {
-  //   backgroundColor: background,
-  //   color: stone,
-  //   border: 'none'
-  // },
-  // '.cm-activeLineGutter': {
-  //   backgroundColor: highlightBackground
-  // },
-  // '.cm-foldPlaceholder': {
-  //   backgroundColor: 'transparent',
-  //   border: 'none',
-  //   color: '#ddd'
-  // },
-
   '.dark & .cm-tooltip': {
     border: 'none',
     backgroundColor: tooltipBackground,
@@ -146,21 +108,12 @@ export const markdownTheme = {
     padding: '2px 4px',
     marginBlockStart: '-4px',
   },
-  '& .cm-ySelection, & .cm-selectionMatch': {
-    // paddingBlockStart: '.15em',
-    // paddingBlockEnd: '.15em',
-  },
+  '& .cm-ySelection, & .cm-selectionMatch': {},
   '& .cm-ySelection, & .cm-yLineSelection': {
     mixBlendMode: 'multiply',
   },
   '.dark & .cm-ySelection, .dark & .cm-yLineSelection': {
     mixBlendMode: 'screen',
-  },
-  '& .cm-ySelectionCaret': {
-    // display: 'inline-block',
-    // insetBlockStart: '.1em',
-    // blockSize: '1.4em',
-    // verticalAlign: 'top',
   },
   '& .cm-yLineSelection': {
     margin: '0',

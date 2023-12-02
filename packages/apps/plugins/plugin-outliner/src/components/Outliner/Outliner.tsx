@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, Square, X } from '@phosphor-icons/react';
+import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, useState } from 'react';
 
-import { Button, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
+import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -48,6 +48,7 @@ const OutlinerItem = ({
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
+  const [focus, setFocus] = useState(active);
 
   const handleKeyDown: TextEditorProps['onKeyDown'] = (event, { line, lines }) => {
     const { key, shiftKey } = event;
@@ -97,9 +98,9 @@ const OutlinerItem = ({
   };
 
   return (
-    <div className='flex px-2 gap-3'>
+    <div className='flex px-2 gap-3 group'>
       {(isTasklist && (
-        <div className='py-[7px]'>
+        <div className='py-1'>
           <Input.Root>
             <Input.Checkbox
               checked={item.done}
@@ -110,10 +111,10 @@ const OutlinerItem = ({
           </Input.Root>
         </div>
       )) || (
-        <div className='px-1 py-3'>
-          <Square
-            weight={active ? 'fill' : undefined}
-            className={mx('shrink-0', getSize(2), active && 'text-primary-500')}
+        <div className='px-1 py-1'>
+          <DotOutline
+            weight={active || focus ? 'fill' : undefined}
+            className={mx('shrink-0', getSize(6), active && 'text-primary-500')}
           />
         </div>
       )}
@@ -131,12 +132,12 @@ const OutlinerItem = ({
             },
           }}
           onKeyDown={handleKeyDown}
+          onFocus={() => setFocus(true)}
+          onBlur={() => setFocus(false)}
         />
       )}
 
-      {/* TODO(burdon): Show if active or hover. */}
-      {/* TODO(burdon): Undo delete. */}
-      {active && (
+      <div>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <Button variant='ghost'>
@@ -156,7 +157,7 @@ const OutlinerItem = ({
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
-      )}
+      </div>
     </div>
   );
 };
@@ -349,16 +350,18 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
 
   return (
     <div role='tree' className={className}>
-      <OutlinerBranch
-        root={root}
-        active={active}
-        onItemCreate={onCreate && handleCreate}
-        onItemDelete={onDelete && handleDelete}
-        onItemIndent={handleIndent}
-        onItemShift={handleShift}
-        onNav={handleNav}
-        {...props}
-      />
+      <DensityProvider density='fine'>
+        <OutlinerBranch
+          root={root}
+          active={active}
+          onItemCreate={onCreate && handleCreate}
+          onItemDelete={onDelete && handleDelete}
+          onItemIndent={handleIndent}
+          onItemShift={handleShift}
+          onNav={handleNav}
+          {...props}
+        />
+      </DensityProvider>
     </div>
   );
 };
