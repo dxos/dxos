@@ -28,6 +28,7 @@ import {
 } from '../object/types';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
+import { TextModel } from '@dxos/text-model';
 
 export type BindOptions = {
   db: AutomergeDb;
@@ -148,11 +149,22 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   private _initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
-    this._doc = automerge.from({
-      // TODO(dmaretskyi): type: ???.
+    initialProps ??= {};
 
-      // TODO(dmaretskyi): Initial values for data.
-      data: this._encode(initialProps ?? {}),
+    if (opts?.schema) {
+      for (const field of opts.schema.props) {
+        if (field.repeated) {
+          (initialProps as Record<string, any>)[field.id!] ??= [];
+        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
+          (initialProps as Record<string, any>)[field.id!] ??= '';
+        }
+      }
+    }
+
+
+    this._doc = automerge.from({
+      data: this._encode(initialProps),
       meta: this._encode({
         keys: [],
         ...opts?.meta,
@@ -448,4 +460,17 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Doc
     return true;
   }
   return false;
+};
+
+
+// Deferred import to avoid circular dependency.
+let schemaProto: typeof Schema;
+const getSchemaProto = (): typeof Schema => {
+  if (!schemaProto) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { Schema } = require('../proto');
+    schemaProto = Schema;
+  }
+
+  return schemaProto;
 };
