@@ -22,8 +22,8 @@ export type EditorProps = UseTextModelOptions & {
 // NOTE: Without `memo`, if parent component uses `observer` the editor re-renders excessively.
 // TODO(wittjosiah): Factor out?
 export const Editor = memo(
-  forwardRef<TipTapEditor | MarkdownEditorRef, EditorProps>(({ slots, ...options }, forwardedRef) => {
-    const model = useTextModel(options);
+  forwardRef<TipTapEditor | MarkdownEditorRef, EditorProps>(({ slots, ...params }, forwardedRef) => {
+    const model = useTextModel(params);
     if (model?.content instanceof YXmlFragment) {
       return <RichTextEditor ref={forwardedRef as Ref<TipTapEditor>} model={model} slots={slots} />;
     } else {

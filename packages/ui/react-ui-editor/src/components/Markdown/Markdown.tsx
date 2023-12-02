@@ -90,7 +90,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           update: (_value, transaction) => {
             if (transaction.docChanged && onChange) {
               onChange(transaction.newDoc);
-              console.log(':::', transaction.newDoc);
             }
             return null;
           },
@@ -117,7 +116,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         doc: content?.toString(),
         extensions: [
           // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
-          listenChangesExtension,
+          // listenChangesExtension,
 
           ...(editorMode === 'vim' ? [vim()] : []),
 
@@ -200,11 +199,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return (
       <div
         tabIndex={0}
+        ref={setParent}
         key={id}
         {...slots.root}
-        onKeyUp={handleKeyUp}
         {...(editorMode !== 'vim' ? tabsterDOMAttribute : {})}
-        ref={setParent}
+        onKeyUp={handleKeyUp}
       />
     );
   },

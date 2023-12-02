@@ -44,16 +44,15 @@ export const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
   }
 
   return (
-    <div role='none' className='flex flex-col w-full plb-4'>
-      <Outliner.Root
-        isTasklist={tree.checkbox}
-        root={tree.root}
-        onCreate={() => new TreeType.Item()}
-        onDelete={({ id }) => {
-          const item = space.db.getObjectById(id);
-          item && space.db.remove(item);
-        }}
-      />
-    </div>
+    <Outliner.Root
+      className='w-full plb-4'
+      isTasklist={tree.checkbox}
+      root={tree.root}
+      onCreate={() => new TreeType.Item()}
+      onDelete={({ id }) => {
+        const item = space.db.getObjectById(id);
+        item && space.db.remove(item);
+      }}
+    />
   );
 };

@@ -3,21 +3,15 @@
 //
 
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { EditorState, StateField, type Text } from '@codemirror/state';
+import { EditorState, type Text } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { placeholder, EditorView } from '@codemirror/view';
-import React, {
-  type KeyboardEvent,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { type KeyboardEvent, forwardRef, useEffect, useImperativeHandle, useState, useCallback } from 'react';
+import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { type EditorModel, type EditorSlots } from '@dxos/react-ui-editor';
+import { YText } from '@dxos/text-model';
 
 import { markdownTheme } from './markdownTheme';
 
@@ -60,19 +54,20 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       }
     }, [view, focus]);
 
-    const listenChangesExtension = useMemo(
-      () =>
-        StateField.define({
-          create: () => null,
-          update: (_value, transaction) => {
-            if (transaction.docChanged && onChange) {
-              onChange(transaction.newDoc);
-            }
-            return null;
-          },
-        }),
-      [onChange],
-    );
+    // const listenChangesExtension = useMemo(
+    //   () =>
+    //     StateField.define({
+    //       create: () => null,
+    //       update: (_value, transaction) => {
+    //         if (transaction.docChanged && onChange) {
+    //           onChange(transaction.newDoc);
+    //           console.log('???', transaction);
+    //         }
+    //         return null;
+    //       },
+    //     }),
+    //   [onChange],
+    // );
 
     useEffect(() => {
       if (!parent) {
@@ -85,7 +80,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         doc: content?.toString(),
         extensions: [
           // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
-          listenChangesExtension,
+          // listenChangesExtension,
 
           placeholder(slots.editor?.placeholder ?? ''),
           EditorView.lineWrapping,
@@ -97,6 +92,8 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
             ? [syntaxHighlighting(oneDarkHighlightStyle)]
             : [syntaxHighlighting(defaultHighlightStyle)]),
           // syntaxHighlighting(markdownDarkHighlighting),
+
+          ...(content instanceof YText ? [yCollab(content)] : []),
         ],
       });
 

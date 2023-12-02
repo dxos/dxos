@@ -94,15 +94,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
     const textModel = useTextModel({
-      identity,
-      space,
+      // identity,
+      // space,
       text: document?.content,
     });
 
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
-      (content) => state.onChange.forEach((onChange) => onChange(content)),
-      [state.onChange],
-    );
+    // TODO(burdon): ???
+    // const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    //   (content) => state.onChange.forEach((onChange) => onChange(content)),
+    //   [state.onChange],
+    // );
 
     if (!textModel) {
       return null;
@@ -114,7 +115,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         properties={document}
         layout='standalone'
         editorMode={settings.values.editorMode}
-        onChange={onChange}
+        // onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
     );

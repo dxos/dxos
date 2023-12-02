@@ -37,9 +37,12 @@
     "@codemirror/view": "^6.22.0",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@lezer/highlight": "^1.2.0",
     "deepsignal": "1.4.0-shallow.0",
-    "lodash.get": "^4.4.2"
+    "lodash.get": "^4.4.2",
+    "y-codemirror.next": "^0.3.2",
+    "yjs": "^13.6.8"
   },
   "devDependencies": {
     "@braneframe/plugin-space": "workspace:*",
