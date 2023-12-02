@@ -87,7 +87,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
           listenChangesExtension,
 
-          placeholder(slots.editor?.placeholder ?? 'Enter text...'), // TODO(burdon): Needs consistent styling.
+          placeholder(slots.editor?.placeholder ?? ''),
           EditorView.lineWrapping,
 
           // Theme

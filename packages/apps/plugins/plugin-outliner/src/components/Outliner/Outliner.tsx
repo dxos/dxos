@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Square, DotsThreeVertical, X } from '@phosphor-icons/react';
+import { DotsThreeVertical, Square, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, useState } from 'react';
 
 import { Button, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
@@ -14,10 +14,8 @@ import { OUTLINER_PLUGIN } from '../../meta';
 import { TextEditor, type TextEditorProps } from '../TextEditor';
 
 // TODO(burdon): Break/join lines.
-// TODO(burdon): TextObject/MarkdownEditor
 // TODO(burdon): Cut-and-Paste.
 // TODO(burdon): Drag-and-drop.
-// TODO(burdon): Better key nav.
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
@@ -51,67 +49,27 @@ const OutlinerItem = ({
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
 
-  /*
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    switch (event.key) {
-      // TODO(burdon): Maintain caret position.
-      // TODO(burdon): Go to first/last child of group.
-      case 'ArrowUp':
-        event.preventDefault();
-        if (event.shiftKey) {
-          onShift?.('up');
-        } else {
-          onNav?.(item, event.metaKey ? 'home' : 'up');
-        }
-        break;
-      case 'ArrowDown':
-        event.preventDefault();
-        if (event.shiftKey) {
-          onShift?.('down');
-        } else {
-          onNav?.(item, event.metaKey ? 'end' : 'down');
-        }
-        break;
-      case 'Tab':
-        event.preventDefault();
-        onIndent?.(event.shiftKey ? 'left' : 'right');
-        break;
-      // TODO(burdon): Split line (shift to create new).
-      case 'Enter':
-        onEnter?.(!!item.text?.length && inputRef.current?.selectionStart === 0);
-        break;
-      // TODO(burdon): Merge with previous if caret at start.
-      case 'Backspace':
-        if (!item.text?.length) {
-          event.preventDefault();
-          onDelete?.();
-        }
-        break;
-    }
-  };
-  */
-
-  // TODO(burdon): Use different editor.
-  // TODO(burdon): Mentions (e.g., /foo).
   const handleKeyDown: TextEditorProps['onKeyDown'] = (event, { line, lines }) => {
     const { key, shiftKey } = event;
     switch (key) {
       case 'ArrowUp':
-        event.preventDefault();
         if (event.shiftKey) {
+          event.preventDefault();
           onShift?.('up');
         } else {
           if (line === 1) {
+            event.preventDefault();
             onNav?.(item, event.metaKey ? 'home' : 'up');
           }
         }
         break;
       case 'ArrowDown':
-        event.preventDefault();
         if (event.shiftKey) {
+          event.preventDefault();
           onShift?.('down');
         } else {
           if (line === lines) {
+            event.preventDefault();
             onNav?.(item, event.metaKey ? 'end' : 'down');
           }
         }
@@ -127,6 +85,12 @@ const OutlinerItem = ({
           event.preventDefault();
           onEnter?.();
         }
+        break;
+      }
+      case 'Backspace': {
+        // TODO(burdon): Delete if empty. If first character merge with previous.
+        // event.preventDefault();
+        // onDelete?.();
         break;
       }
     }
@@ -162,36 +126,15 @@ const OutlinerItem = ({
             root: {
               className: 'w-full',
             },
+            editor: {
+              placeholder: active ? placeholder : '',
+            },
           }}
           onKeyDown={handleKeyDown}
         />
       )}
 
-      {/* {false && ( */}
-      {/*  <Input.Root> */}
-      {/*    <Input.TextInput */}
-      {/*      ref={inputRef} */}
-      {/*      // autoFocus={active} */}
-      {/*      autoComplete='off' */}
-      {/*      spellCheck={spellCheck} */}
-      {/*      placeholder={focused ? placeholder : undefined} */}
-      {/*      classNames='w-full' */}
-      {/*      variant='subdued' */}
-      {/*      // value={item.text ?? ''} */}
-      {/*      onFocus={() => { */}
-      {/*        setFocused(true); */}
-      {/*        onFocus?.(); */}
-      {/*      }} */}
-      {/*      onBlur={() => setFocused(false)} */}
-      {/*      // onKeyDown={handleKeyDown} */}
-      {/*      // onChange={({ target: { value } }) => { */}
-      {/*      //   item.text = value; */}
-      {/*      // }} */}
-      {/*    /> */}
-      {/*  </Input.Root> */}
-      {/* )} */}
-
-      {/* TODO(burdon): Active or hover. */}
+      {/* TODO(burdon): Show if active or hover. */}
       {/* TODO(burdon): Undo delete. */}
       {active && (
         <DropdownMenu.Root>

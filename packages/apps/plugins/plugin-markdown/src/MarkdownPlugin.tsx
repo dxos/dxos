@@ -92,9 +92,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
-
     const textModel = useTextModel({
       identity,
       space,
