@@ -3,7 +3,7 @@
 //
 
 import { Square, DotsThreeVertical, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
+import React, { type HTMLAttributes, useState } from 'react';
 
 import { Button, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-editor';
@@ -30,7 +30,6 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
 type OutlinerItemProps = {
   item: Item;
   active?: boolean;
-  onFocus?: () => void;
   onEnter?: (before?: boolean) => void;
   onDelete?: () => void;
   onIndent?: (direction?: 'left' | 'right') => void;
@@ -43,8 +42,6 @@ const OutlinerItem = ({
   active,
   isTasklist,
   placeholder,
-  spellCheck = false,
-  onFocus,
   onEnter,
   onDelete,
   onIndent,
@@ -53,13 +50,6 @@ const OutlinerItem = ({
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
-  const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (active) {
-      inputRef.current?.focus();
-    }
-  }, [active]);
 
   /*
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -167,6 +157,7 @@ const OutlinerItem = ({
       {model && (
         <TextEditor
           model={model}
+          focus={active}
           slots={{
             root: {
               className: 'w-full',
@@ -176,29 +167,29 @@ const OutlinerItem = ({
         />
       )}
 
-      {false && (
-        <Input.Root>
-          <Input.TextInput
-            ref={inputRef}
-            // autoFocus={active}
-            autoComplete='off'
-            spellCheck={spellCheck}
-            placeholder={focused ? placeholder : undefined}
-            classNames='w-full'
-            variant='subdued'
-            // value={item.text ?? ''}
-            onFocus={() => {
-              setFocused(true);
-              onFocus?.();
-            }}
-            onBlur={() => setFocused(false)}
-            // onKeyDown={handleKeyDown}
-            // onChange={({ target: { value } }) => {
-            //   item.text = value;
-            // }}
-          />
-        </Input.Root>
-      )}
+      {/* {false && ( */}
+      {/*  <Input.Root> */}
+      {/*    <Input.TextInput */}
+      {/*      ref={inputRef} */}
+      {/*      // autoFocus={active} */}
+      {/*      autoComplete='off' */}
+      {/*      spellCheck={spellCheck} */}
+      {/*      placeholder={focused ? placeholder : undefined} */}
+      {/*      classNames='w-full' */}
+      {/*      variant='subdued' */}
+      {/*      // value={item.text ?? ''} */}
+      {/*      onFocus={() => { */}
+      {/*        setFocused(true); */}
+      {/*        onFocus?.(); */}
+      {/*      }} */}
+      {/*      onBlur={() => setFocused(false)} */}
+      {/*      // onKeyDown={handleKeyDown} */}
+      {/*      // onChange={({ target: { value } }) => { */}
+      {/*      //   item.text = value; */}
+      {/*      // }} */}
+      {/*    /> */}
+      {/*  </Input.Root> */}
+      {/* )} */}
 
       {/* TODO(burdon): Active or hover. */}
       {/* TODO(burdon): Undo delete. */}
@@ -235,7 +226,6 @@ type OutlinerBranchProps = OutlinerOptions & {
   className?: string;
   root: Item;
   active?: string;
-  onItemFocus?: (item: Item) => void;
   onItemCreate?: (parent: Item, item: Item, after?: boolean) => Item;
   onItemDelete?: (parent: Item, item: Item) => void;
   onItemIndent?: (parent: Item, item: Item, direction?: string) => void;
@@ -246,7 +236,6 @@ const OutlinerBranch = ({
   className,
   root,
   active,
-  onItemFocus,
   onItemCreate,
   onItemDelete,
   onItemIndent,
@@ -262,7 +251,6 @@ const OutlinerBranch = ({
             item={item}
             active={active === item.id}
             placeholder='Enter text'
-            onFocus={() => onItemFocus?.(item)}
             onEnter={(before) => onItemCreate?.(root, item, before)}
             onDelete={() => onItemDelete?.(root, item)}
             onIndent={(direction) => onItemIndent?.(root, item, direction)}
@@ -275,7 +263,6 @@ const OutlinerBranch = ({
               className='pl-4'
               root={item}
               active={active}
-              onItemFocus={onItemFocus}
               onItemCreate={onItemCreate}
               onItemDelete={onItemDelete}
               onItemIndent={onItemIndent}
@@ -422,7 +409,6 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       <OutlinerBranch
         root={root}
         active={active}
-        onItemFocus={(item) => setActive(item.id)}
         onItemCreate={onCreate && handleCreate}
         onItemDelete={onDelete && handleDelete}
         onItemIndent={handleIndent}

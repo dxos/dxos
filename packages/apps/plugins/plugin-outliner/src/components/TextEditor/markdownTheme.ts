@@ -128,12 +128,11 @@ export const markdownTheme = {
   '.dark & .cm-cursor': {
     borderLeftColor: cursor,
   },
-  // TODO(burdon): Padding is wrong.
   '.cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
   '& .cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     overflow: 'visible',
   },
   '& .cm-activeLine': {
@@ -148,8 +147,8 @@ export const markdownTheme = {
     marginBlockStart: '-4px',
   },
   '& .cm-ySelection, & .cm-selectionMatch': {
-    paddingBlockStart: '.15em',
-    paddingBlockEnd: '.15em',
+    // paddingBlockStart: '.15em',
+    // paddingBlockEnd: '.15em',
   },
   '& .cm-ySelection, & .cm-yLineSelection': {
     mixBlendMode: 'multiply',
@@ -158,10 +157,10 @@ export const markdownTheme = {
     mixBlendMode: 'screen',
   },
   '& .cm-ySelectionCaret': {
-    display: 'inline-block',
-    insetBlockStart: '.1em',
-    blockSize: '1.4em',
-    verticalAlign: 'top',
+    // display: 'inline-block',
+    // insetBlockStart: '.1em',
+    // blockSize: '1.4em',
+    // verticalAlign: 'top',
   },
   '& .cm-yLineSelection': {
     margin: '0',

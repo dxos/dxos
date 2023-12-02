@@ -186,6 +186,5 @@ export type UseYjsModelOptions = {
 
 export const useYjsModel = ({ replicator, id, doc }: UseYjsModelOptions): EditorModel => {
   const peer = useMemo(() => replicator.createPeer(id, doc), [doc]);
-
   return peer;
 };

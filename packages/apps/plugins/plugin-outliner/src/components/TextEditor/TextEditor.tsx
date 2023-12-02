@@ -28,6 +28,7 @@ export type CursorInfo = {
 
 export type TextEditorProps = {
   model?: EditorModel;
+  focus?: boolean;
   slots?: EditorSlots;
   onChange?: (content: string | Text) => void;
   onKeyDown?: (event: KeyboardEvent, info: CursorInfo) => void;
@@ -40,7 +41,7 @@ export type TextEditorRef = {
 };
 
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, slots = {}, onChange, onKeyDown }, forwardedRef) => {
+  ({ model, focus, slots = {}, onChange, onKeyDown }, forwardedRef) => {
     const { id, content } = model ?? {};
     const { themeMode } = useThemeContext();
 
@@ -52,6 +53,12 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       state,
       view,
     }));
+
+    useEffect(() => {
+      if (focus) {
+        view?.focus();
+      }
+    }, [view, focus]);
 
     const listenChangesExtension = useMemo(
       () =>
