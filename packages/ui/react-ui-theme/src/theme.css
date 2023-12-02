@@ -79,6 +79,8 @@
 
 .dark {
   --surface-bg: theme(colors.neutral.900);
+  --input-bg: theme(colors.neutral.850);
+  --input-bg-hover: theme(colors.neutral.850 / 60%);
   --surface-text: theme(colors.neutral.50);
   --description-text: theme(colors.neutral.300);
 }
