@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { base, TypedObject, dangerouslyMutateImmutableObject } from './object';
+import { base, TypedObject, dangerouslyMutateImmutableObject, isActualTypedObject } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 
 type Prototype = {
@@ -50,9 +50,7 @@ export class TypeCollection {
     
     Object.defineProperty(proto, Symbol.hasInstance, {
       value: (instance: any) => {
-        const { AutomergeObject } = require('./automerge/automerge-object');
-        
-        return !!instance?.[base] && (instance[base] instanceof TypedObject || instance[base] instanceof AutomergeObject) && instance.__typename === schema.typename;
+        return instance instanceof TypedObject && instance.__typename === schema.typename;
       },
       enumerable: false,
       writable: false,

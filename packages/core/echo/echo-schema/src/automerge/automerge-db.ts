@@ -14,7 +14,7 @@ import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base, getGlobalAutomergePreference, TypedObject } from '../object';
+import { type EchoObject, base, getGlobalAutomergePreference, TypedObject, isActualTypedObject, isActualAutomergeObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -89,7 +89,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (obj[base] instanceof TypedObject) {
+    if (isActualTypedObject(obj)) {
       return this._echoDatabase.add(obj);
     }
 
@@ -97,7 +97,7 @@ export class AutomergeDb {
       return obj;
     }
 
-    invariant(obj[base] instanceof AutomergeObject);
+    invariant(isActualAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
@@ -109,7 +109,7 @@ export class AutomergeDb {
   }
 
   remove<T extends EchoObject>(obj: T) {
-    invariant(obj[base] instanceof AutomergeObject);
+    invariant(isActualAutomergeObject(obj));
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }
