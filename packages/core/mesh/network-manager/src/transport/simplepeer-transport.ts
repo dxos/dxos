@@ -145,8 +145,8 @@ export class SimplePeerTransport implements Transport {
     return {
       bytesSent: stats.transport.bytesSent,
       bytesReceived: stats.transport.bytesReceived,
-      packetsSent: stats.transport.messagesSent,
-      packetsReceived: stats.transport.messagesReceived,
+      packetsSent: stats.transport.packetsSent,
+      packetsReceived: stats.transport.packetsReceived,
       rawStats: stats.raw,
     };
   }

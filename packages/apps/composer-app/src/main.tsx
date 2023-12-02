@@ -41,21 +41,12 @@ import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
 import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
-import { EchoDatabase, SpaceProxy, TextObject, TypedObject } from '@dxos/react-client/echo';
+import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import './globals';
-
+import { appKey } from './globals';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TypedObject.name] = TypedObject;
-(globalThis as any)[EchoDatabase.name] = EchoDatabase;
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-
-const appKey = 'composer.dxos.org';
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -154,6 +145,7 @@ const main = async () => {
       [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
+        version: '1',
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
           const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);
