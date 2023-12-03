@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { closeBrackets } from '@codemirror/autocomplete';
+import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { EditorView, placeholder } from '@codemirror/view';
@@ -20,6 +21,7 @@ import { yCollab } from 'y-codemirror.next';
 import { useThemeContext } from '@dxos/react-ui';
 import { YText } from '@dxos/text-model';
 
+import { customPlugin } from './CustomDectorator';
 import { theme } from './theme';
 import { type EditorModel, type EditorSlots } from '../../model';
 
@@ -78,8 +80,12 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
+          bracketMatching(),
+          closeBrackets(),
           placeholder(slots.editor?.placeholder ?? ''),
           EditorView.lineWrapping,
+
+          customPlugin, // TODO(burdon): ???
 
           // Theme
           // markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
