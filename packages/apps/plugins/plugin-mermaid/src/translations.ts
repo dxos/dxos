@@ -11,7 +11,7 @@ export default [
         'plugin name': 'Mermaid',
         'object placeholder': 'New diagram',
         'create object label': 'Create diagram',
-        'delete object label': 'Delete',
+        'create stack section label': 'Create diagram',
       },
     },
   },

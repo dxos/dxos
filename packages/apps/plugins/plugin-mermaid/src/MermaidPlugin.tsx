@@ -103,7 +103,7 @@ export const MermaidPlugin = (): PluginDefinition<MermaidPluginProvides> => {
             case 'section':
               return isObject(data.object) ? (
                 <MermaidEditor
-                  id={(data.active as any).id}
+                  id={(data.object as any).id}
                   source={(data.object as MermaidType).source}
                   classes={{ root: 'h-[400px] py-2' }}
                 />
