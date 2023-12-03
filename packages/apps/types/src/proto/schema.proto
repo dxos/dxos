@@ -90,6 +90,17 @@ message Script {
 /**
  *
  */
+// TODO(burdon): Generalize to script?
+message Mermaid {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text source = 2;
+}
+
+/**
+ *
+ */
 message Stack {
   option (object) = true;
 

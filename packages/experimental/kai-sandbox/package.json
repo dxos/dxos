@@ -37,7 +37,7 @@
     "@dxos/util": "workspace:*",
     "@monaco-editor/react": "^4.4.6",
     "esbuild-wasm": "^0.16.14",
-    "monaco-editor": "^0.25.0",
+    "monaco-editor": "^0.44.0",
     "use-subscription": "^1.8.0",
     "y-monaco": "^0.1.0",
     "yjs": "^13.6.10"
