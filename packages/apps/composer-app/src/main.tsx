@@ -22,6 +22,7 @@ import KanbanMeta from '@braneframe/plugin-kanban/meta';
 import LayoutMeta from '@braneframe/plugin-layout/meta';
 import MapMeta from '@braneframe/plugin-map/meta';
 import MarkdownMeta from '@braneframe/plugin-markdown/meta';
+import MermaidMeta from '@braneframe/plugin-mermaid/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
 import OutlinerMeta from '@braneframe/plugin-outliner/meta';
@@ -96,6 +97,7 @@ const main = async () => {
       StackMeta,
       PresenterMeta,
       MarkdownMeta,
+      MermaidMeta,
       SketchMeta,
       GridMeta,
       InboxMeta,
@@ -133,6 +135,7 @@ const main = async () => {
       [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout')),
       [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
+      [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
