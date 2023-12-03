@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type TextObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
@@ -13,12 +13,12 @@ import { groupBorder, mx } from '@dxos/react-ui-theme';
 import { CHAIN_PLUGIN } from '../../meta';
 
 type PromptTemplateProps = {
-  prompt: TextObject;
+  source?: TextObject;
 };
 
-export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
+export const PromptTemplate = ({ source }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: prompt });
+  const model = useTextModel({ text: source });
 
   const variables = ['history', 'question'];
 
@@ -27,11 +27,8 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   //  https://codemirror.net/docs/ref/#view.MatchDecorator
   return (
     <DensityProvider density='fine'>
-      <div className={mx('border divide-y gap-2 m-4', groupBorder)}>
-        <div>
-          <div className='flex h-[32px] items-center bg-neutral-50'>
-            <h2 className='px-2 text-xs'>Prompt</h2>
-          </div>
+      <div className={mx('flex flex-col w-full gap-4 m-4', groupBorder)}>
+        <Section title='Prompt'>
           <TextEditor
             model={model}
             slots={{
@@ -43,25 +40,45 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
               },
             }}
           />
-        </div>
+        </Section>
 
-        <div>
-          <div className='flex h-[32px] items-center bg-neutral-50'>
-            <h2 className='px-2 text-xs'>Variables</h2>
-            <div className='grow' />
+        <Section
+          title='Variables'
+          actions={
             <Button variant='ghost'>
               <Plus />
             </Button>
+          }
+        >
+          <div className='flex flex-col divide-y'>
+            <table className='table-fixed border-collapse'>
+              <tbody className='divide-y'>
+                {variables.map((variable) => (
+                  <tr key={variable} className=''>
+                    <td className='p-2 w-[200px] border-r font-mono text-sm'>{'{' + variable + '}'}</td>
+                    <td className='p-2'>x</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className='flex flex-col py-2 gap-4'>
-            {variables.map((variable) => (
-              <div key={variable} className='px-4'>
-                {variable}
-              </div>
-            ))}
-          </div>
-        </div>
+        </Section>
+
+        <div>{model?.content.length}</div>
       </div>
     </DensityProvider>
+  );
+};
+
+const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
+  return (
+    <div className='border border-neutral-100 rounded-md'>
+      <div className='flex h-[32px] items-center bg-neutral-50 rounded-t'>
+        <h2 className='px-2 text-xs'>{title}</h2>
+        <div className='grow' />
+        {actions}
+      </div>
+      {children}
+    </div>
   );
 };

@@ -12,18 +12,20 @@ import { PromptTemplate } from './PromptTemplate';
 
 const text = [
   'You are a machine that is an expert chess player.',
-  'The move history of the current game: {history}',
+  'The move history of the current game is: {history}',
   'If asked to suggest a move explain why it is a good move.',
   '---',
   '{question}',
 ].join('\n');
 
 const Story = () => {
-  const [prompt] = useState(new TextObject(text));
+  const [source] = useState(new TextObject(text));
 
   return (
-    <div className='m-4'>
-      <PromptTemplate prompt={prompt} />
+    <div className='flex justify-center'>
+      <div className='flex w-full max-w-[800px] overflow-hidden overflow-y-scroll'>
+        <PromptTemplate source={source} />
+      </div>
     </div>
   );
 };

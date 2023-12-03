@@ -91,7 +91,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                object: new ChainType(),
+                object: new ChainType(), // { prompts: [{ source: new TextModel() }] }),
               };
             }
           }

@@ -281,5 +281,10 @@ message Message {
 message Chain {
   option (object) = true;
 
+  message Prompt {
+    dxos.schema.Text source = 1;
+  }
+
   string title = 1;
+  repeated Prompt prompts = 2;
 }

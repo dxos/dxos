@@ -9,6 +9,8 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
+import { PromptTemplate } from './PromptTemplate/PromptTemplate';
+
 export const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
   const space = getSpaceForObject(chain);
   if (!space) {
@@ -17,9 +19,9 @@ export const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   return (
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
-      <pre>
-        <code>{JSON.stringify(chain)}</code>
-      </pre>
+      {chain.prompts.map((prompt, i) => (
+        <PromptTemplate key={i} source={prompt.source} />
+      ))}
     </Main.Content>
   );
 };
