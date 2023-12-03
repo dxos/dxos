@@ -104,7 +104,7 @@
     "@types/simple-peer": "9.11.3",
     "@types/string-hash": "^1.1.1",
     "@vitejs/plugin-react": "^3.0.1",
-    "monaco-editor": "^0.25.0",
+    "monaco-editor": "^0.44.0",
     "postcss": "^8.4.21",
     "tailwindcss": "~3.3.2",
     "typescript": "^5.2.2",
