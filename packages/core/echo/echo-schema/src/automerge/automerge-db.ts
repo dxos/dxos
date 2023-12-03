@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { type DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -50,9 +50,9 @@ export class AutomergeDb {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        await this._docHandle.whenReady();
+        await asyncTimeout(this._docHandle.whenReady(), 1_000);
       } catch (err) {
-        log.catch('Error opening document', err);
+        log.error('Error opening document', err);
         await this._fallbackToNewDoc();
       }
     } else {
