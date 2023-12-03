@@ -2,18 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Code, Play, SquareSplitHorizontal, Eye } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
-import { Main, Button, DensityProvider, ToggleGroup, ToggleGroupItem, Toolbar, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
+import { Main, DensityProvider, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
 import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
+import { SplitterSelector } from './Splitter';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
 type View = 'editor' | 'preview' | 'split' | 'preview-only';
@@ -87,23 +87,7 @@ export const ScriptSection = ({ id, view: controlledView, source, containerUrl, 
     <div className={mx('flex flex-col grow overflow-hidden', className)}>
       {view !== 'preview-only' && (
         <DensityProvider density={'fine'}>
-          <Toolbar.Root classNames='p-2'>
-            <ToggleGroup type='single' value={view} onValueChange={(value) => handleSetView(value as View)}>
-              <ToggleGroupItem value='editor'>
-                <Code className={getSize(5)} />
-              </ToggleGroupItem>
-              <ToggleGroupItem value='split'>
-                <SquareSplitHorizontal className={getSize(5)} />
-              </ToggleGroupItem>
-              <ToggleGroupItem value='preview'>
-                <Eye className={getSize(5)} />
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <div className='grow' />
-            <Button variant={'ghost'} onClick={() => handleExec()}>
-              <Play className={getSize(5)} />
-            </Button>
-          </Toolbar.Root>
+          <SplitterSelector view={view} onChange={handleSetView} />
         </DensityProvider>
       )}
 
