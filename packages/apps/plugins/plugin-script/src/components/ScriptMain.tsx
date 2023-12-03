@@ -16,7 +16,7 @@ import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
-export type View = 'editor' | 'preview' | 'split' | 'preview-only';
+type View = 'editor' | 'preview' | 'split' | 'preview-only';
 
 export type ScriptMainProps = {
   id: string;
