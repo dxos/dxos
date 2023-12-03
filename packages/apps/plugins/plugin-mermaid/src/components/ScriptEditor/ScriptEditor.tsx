@@ -19,7 +19,6 @@ import ThemeLight from './themes/GitHubLight.json?json';
 export type ScriptEditorProps = {
   id: string;
   content: YText;
-  language?: string;
   themeMode?: ThemeMode;
   className?: string;
 };
@@ -29,12 +28,12 @@ export type ScriptEditorProps = {
  * https://www.npmjs.com/package/@monaco-editor
  * https://microsoft.github.io/monaco-editor/playground.html
  */
-export const ScriptEditor = ({ id, content, language = 'typescript', themeMode, className }: ScriptEditorProps) => {
+export const ScriptEditor = ({ id, content, themeMode, className }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
     fontSize: 14,
-    language,
+    language: 'typescript',
     minimap: {
       enabled: false,
     },
@@ -66,17 +65,15 @@ export const ScriptEditor = ({ id, content, language = 'typescript', themeMode, 
     });
 
     // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
-    if (language === 'typescript') {
-      monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        // module: monaco.languages.typescript.ModuleKind.CommonJS,
-        // moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-        // noEmit: true,
-        // noLib: true,
-        // target: monaco.languages.typescript.ScriptTarget.ESNext,
-        // typeRoots: ['node_modules/@types'],
-        jsx: monaco.languages.typescript.JsxEmit.React,
-      });
-    }
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      // module: monaco.languages.typescript.ModuleKind.CommonJS,
+      // moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      // noEmit: true,
+      // noLib: true,
+      // target: monaco.languages.typescript.ScriptTarget.ESNext,
+      // typeRoots: ['node_modules/@types'],
+      jsx: monaco.languages.typescript.JsxEmit.React,
+    });
   };
 
   const handleMount = (editor: IStandaloneCodeEditor, _: Monaco) => {
@@ -94,7 +91,7 @@ export const ScriptEditor = ({ id, content, language = 'typescript', themeMode, 
         theme={themeMode === 'dark' ? 'vs-dark' : 'light'}
         loading={<div />}
         options={options}
-        language={language}
+        language='typescript'
         value={String(content)}
         path={`${id}.tsx`} // Required to support JSX.
         beforeMount={handleWillMount}
