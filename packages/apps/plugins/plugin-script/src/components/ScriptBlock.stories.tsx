@@ -14,7 +14,7 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 // @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
-import { ScriptMain, ScriptSection } from './ScriptMain';
+import { ScriptBlock } from './ScriptBlock';
 
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
@@ -49,13 +49,13 @@ const Story = () => {
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptSection id='test' source={source} containerUrl={mainUrl} />
+      <ScriptBlock id='test' source={source} containerUrl={mainUrl} />
     </div>
   );
 };
 
 export default {
-  component: ScriptMain,
+  component: ScriptBlock,
   render: Story,
   decorators: [ClientSpaceDecorator()],
   parameters: {

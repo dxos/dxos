@@ -9,9 +9,9 @@ export default [
     'en-US': {
       [MERMAID_PLUGIN]: {
         'plugin name': 'Mermaid',
-        'object placeholder': 'New object',
-        'create object label': 'Create object',
-        'delete object label': 'Delete', // TODO(burdon): Standard for actions menu.
+        'object placeholder': 'New diagram',
+        'create object label': 'Create diagram',
+        'delete object label': 'Delete',
       },
     },
   },

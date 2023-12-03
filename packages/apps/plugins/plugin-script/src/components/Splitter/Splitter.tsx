@@ -13,14 +13,16 @@ export type View = 'editor' | 'preview' | 'split';
 export type SplitterProps = {
   view?: View;
   className?: string;
+  children?: React.ReactNode[];
 };
 
 // TODO(burdon): Surfaces?
-export const Splitter = ({ view, className }: SplitterProps) => {
+export const Splitter = ({ view = 'split', className, children = [] }: SplitterProps) => {
+  const [left, right] = children;
   return (
     <div className={mx('flex overflow-hidden grow', className)}>
-      {view !== 'preview' && <div className='flex flex-1 shrink-0 overflow-x-auto'>A</div>}
-      {view !== 'editor' && <div className='flex flex-1 shrink-0 overflow-hidden'>B</div>}
+      {left && view !== 'preview' && <div className='flex flex-1 shrink-0 overflow-hidden'>{left}</div>}
+      {right && view !== 'editor' && <div className='flex flex-1 shrink-0 overflow-hidden'>{right}</div>}
     </div>
   );
 };

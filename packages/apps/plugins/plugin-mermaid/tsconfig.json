@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../core/echo/text-model"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -43,6 +46,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-stack"
     }
   ]
 }

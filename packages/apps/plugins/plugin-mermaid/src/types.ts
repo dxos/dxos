@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { StackProvides } from '@braneframe/plugin-stack';
+import { Mermaid as MermaidType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -9,7 +11,7 @@ import type {
   SurfaceProvides,
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject, type Expando, type TypedObject } from '@dxos/react-client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 import { MERMAID_PLUGIN } from './meta';
 
@@ -23,10 +25,9 @@ export type MermaidPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
-  TranslationsProvides;
+  TranslationsProvides &
+  StackProvides;
 
-// TODO(burdon): Warning: Encountered two children with the same key, `dxos.org/plugin/mermaid`.
-// TODO(burdon): Better way to detect?
-export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && (object as Expando).type === 'mermaid';
+export const isObject = (object: unknown): object is MermaidType => {
+  return isTypedObject(object) && object.__typename === MermaidType.schema.typename;
 };

@@ -4,15 +4,15 @@
 
 import '@dxosTheme';
 
-import { Diagram } from './Diagram';
+import { MermaidDiagram } from './MermaidDiagram';
 
 export default {
-  component: Diagram,
+  component: MermaidDiagram,
 };
 
 export const Graph = {
   args: {
-    content: 'graph TD; A-->B; A-->C; B-->D; C-->D;',
+    source: 'graph TD; A-->B; A-->C; B-->D; C-->D;',
   },
 };
 
