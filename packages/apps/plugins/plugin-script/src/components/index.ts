@@ -3,5 +3,6 @@
 //
 
 export * from './FrameContainer';
+export * from './ScriptBlock';
 export * from './ScriptEditor';
-export * from './ScriptMain';
+export * from './Splitter';
