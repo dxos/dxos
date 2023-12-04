@@ -44,7 +44,7 @@ describe('DashboardPlugin', () => {
     await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
 
     await asyncTimeout(client2.spaces.isReady.wait(), 1000);
-    await asyncTimeout(client1.spaces.default.waitUntilReady(), 1000);
+    await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
     const dashboardProxy = createProtoRpcPeer({
       requested: {
         DashboardService: schema.getService('dxos.agent.dashboard.DashboardService'),

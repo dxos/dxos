@@ -4,6 +4,7 @@
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { createProtoRpcPeer, type RpcPort, type ProtoRpcPeer } from '@dxos/rpc';
