@@ -4,13 +4,12 @@
 
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { type AbstractEchoObject } from './object';
-import { base, db, type EchoObject, type ForeignKey } from './types';
-import { AutomergeObject } from '../automerge';
+import { isActualAutomergeObject } from './typed-object';
+import { base, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
 
 export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot | TextSnapshot) => {
@@ -23,8 +22,8 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
 };
 
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
-  if (obj instanceof AutomergeObject) {
-    return obj[db];
+  if (isActualAutomergeObject(obj)) {
+    return obj[base]._database._echoDatabase;
   }
   return obj[base]._database;
 };
