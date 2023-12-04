@@ -8,8 +8,6 @@
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
 
-globalThis.global = globalThis;
-
 /* eslint-disable */
 
 function nextTick (fun, ...args) {
@@ -94,7 +92,7 @@ function uptime () {
   return dif / 1000;
 }
 
-export var process = (globalThis.process ??= {
+export var process = {
   nextTick: nextTick,
   title: title,
   browser: browser,
@@ -118,7 +116,7 @@ export var process = (globalThis.process ??= {
   release: release,
   config: config,
   uptime: uptime,
-});
+};
 
 // replace process.env.VAR with define
 

@@ -29,6 +29,9 @@ export interface EsbuildExecutorOptions {
   watch: boolean;
 }
 
+// Keep in sync with packages/common/node-std/src/inject-globals.js
+const GLOBALS = ['global', 'Buffer', 'process'];
+
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing esbuild...');
   if (context.isVerbose) {
@@ -75,15 +78,34 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
           {
             name: 'node-external',
-            setup: ({ initialOptions, onResolve }) => {
+            setup: ({ initialOptions, onResolve, onLoad }) => {
               if (options.injectGlobals && platform === 'browser') {
                 if (!packageJson.dependencies['@dxos/node-std']) {
                   throw new Error('Missing @dxos/node-std dependency.');
                 }
 
+                initialOptions.inject = ['@inject-globals'];
                 initialOptions.banner ||= {};
                 initialOptions.banner.js = 'import "@dxos/node-std/globals";';
               }
+
+              onResolve({ filter: /^@inject-globals*/ }, (args) => {
+                return { path: '@inject-globals', namespace: 'inject-globals' };
+              });
+
+              onLoad({ filter: /^@inject-globals/, namespace: 'inject-globals' }, async (args) => {
+                return {
+                  contents: `
+                    export {
+                      ${GLOBALS.join(',\n')}
+                    } from '@dxos/node-std/inject-globals';
+                  `,
+                };
+              });
+
+              onResolve({ filter: /^@dxos\/node-std\/inject-globals$/ }, (args) => {
+                return { external: true, path: '@dxos/node-std/inject-globals' };
+              });
 
               onResolve({ filter: /^node:.*/ }, (args) => {
                 if (platform !== 'browser') {
