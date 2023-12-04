@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { type Chain as ChainType } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { baseSurface, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { PromptTemplate } from './PromptTemplate/PromptTemplate';
 
@@ -19,9 +19,13 @@ export const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   return (
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
-      {chain.prompts.map((prompt, i) => (
-        <PromptTemplate key={i} source={prompt.source} />
-      ))}
+      <div role='none' className={mx(textBlockWidth, 'pli-2')}>
+        <div className='flex flex-col'>
+          {chain.prompts.map((prompt, i) => (
+            <PromptTemplate key={i} prompt={prompt} />
+          ))}
+        </div>
+      </div>
     </Main.Content>
   );
 };

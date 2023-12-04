@@ -281,8 +281,14 @@ message Message {
 message Chain {
   option (object) = true;
 
+  message Variable {
+    string name = 1;
+    dxos.schema.Text value = 2;
+  }
+
   message Prompt {
     dxos.schema.Text source = 1;
+    repeated Variable variables = 2;
   }
 
   string title = 1;

@@ -19,12 +19,12 @@ const text = [
 ].join('\n');
 
 const Story = () => {
-  const [source] = useState(new TextObject(text));
+  const [prompt] = useState({ source: new TextObject(text) });
 
   return (
     <div className='flex justify-center'>
       <div className='flex w-full max-w-[800px] overflow-hidden overflow-y-scroll'>
-        <PromptTemplate source={source} />
+        <PromptTemplate prompt={prompt} />
       </div>
     </div>
   );

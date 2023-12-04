@@ -3,34 +3,37 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useRef } from 'react';
 
-import { type TextObject } from '@dxos/react-client/echo';
+import { type Chain as ChainType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
-import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
+import { TextEditor, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
+import { promptLanguage } from './language';
 import { CHAIN_PLUGIN } from '../../meta';
 
 type PromptTemplateProps = {
-  source?: TextObject;
+  prompt?: ChainType.Prompt;
 };
 
-export const PromptTemplate = ({ source }: PromptTemplateProps) => {
+export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: source });
+  const model = useTextModel({ text: prompt?.source });
+  const editorRef = useRef<TextEditorRef>(null);
 
-  const variables = ['history', 'question'];
+  const regex = /\{([a-zA-Z_]+)\}/g;
+  const text = prompt?.source?.text ?? '';
+  const variables = [...text.matchAll(regex)].map((m) => m[1]);
 
-  // TODO(burdon): Basic syntax highlighting for variables.
-  //  https://codemirror.net/examples/zebra
-  //  https://codemirror.net/docs/ref/#view.MatchDecorator
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full gap-4 m-4', groupBorder)}>
+      <div className={mx('flex flex-col gap-4 m-4', groupBorder)}>
         <Section title='Prompt'>
           <TextEditor
+            ref={editorRef}
             model={model}
+            extensions={[promptLanguage]}
             slots={{
               root: {
                 className: 'w-full p-2',
@@ -42,29 +45,29 @@ export const PromptTemplate = ({ source }: PromptTemplateProps) => {
           />
         </Section>
 
-        <Section
-          title='Variables'
-          actions={
-            <Button variant='ghost'>
-              <Plus />
-            </Button>
-          }
-        >
-          <div className='flex flex-col divide-y'>
-            <table className='table-fixed border-collapse'>
-              <tbody className='divide-y'>
-                {variables.map((variable) => (
-                  <tr key={variable} className=''>
-                    <td className='p-2 w-[200px] border-r font-mono text-sm'>{'{' + variable + '}'}</td>
-                    <td className='p-2'>x</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-        <div>{model?.content.length}</div>
+        {variables.length > 0 && (
+          <Section
+            title='Variables'
+            actions={
+              <Button variant='ghost'>
+                <Plus />
+              </Button>
+            }
+          >
+            <div className='flex flex-col divide-y font-mono text-sm'>
+              <table className='table-fixed border-collapse'>
+                <tbody className='divide-y'>
+                  {variables.map((variable) => (
+                    <tr key={variable} className=''>
+                      <td className='p-2 w-[200px] border-r'>{'{' + variable + '}'}</td>
+                      <td className='p-2'>$context.object.pgn</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
       </div>
     </DensityProvider>
   );

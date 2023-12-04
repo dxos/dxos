@@ -787,6 +787,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@codemirror/language':
+        specifier: ^6.9.2
+        version: 6.9.2
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
