@@ -1,7 +1,6 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { default: pluginWasm } = require('vite-plugin-wasm');
 const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 const { ThemePlugin } = require('@dxos/react-ui-theme/plugin');
 
@@ -17,7 +16,6 @@ module.exports = {
   viteFinal: async (config) =>
     mergeConfig(config, {
       plugins: [
-        pluginWasm(),
         ConfigPlugin(),
         ThemePlugin({
           root: __dirname,
