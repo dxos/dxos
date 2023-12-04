@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { File } from '@phosphor-icons/react';
+import { File, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
@@ -15,5 +15,5 @@ export default pluginMeta({
   shortId: FILES_PLUGIN_SHORT_ID,
   name: 'Files',
   description: 'Open files from the local file system.',
-  iconComponent: (props) => <File {...props} />,
+  iconComponent: (props: IconProps) => <File {...props} />,
 });

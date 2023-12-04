@@ -4,7 +4,7 @@
 
 import { closeBrackets } from '@codemirror/autocomplete';
 import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { EditorState } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { EditorView, placeholder } from '@codemirror/view';
 import React, {
@@ -21,7 +21,6 @@ import { yCollab } from 'y-codemirror.next';
 import { useThemeContext } from '@dxos/react-ui';
 import { YText } from '@dxos/text-model';
 
-import { customPlugin } from './CustomDectorator';
 import { theme } from './theme';
 import { type EditorModel, type EditorSlots } from '../../model';
 
@@ -35,6 +34,7 @@ export type CursorInfo = {
 
 export type TextEditorProps = {
   model?: EditorModel;
+  extensions?: Extension[];
   slots?: EditorSlots;
   onKeyDown?: (event: KeyboardEvent, info: CursorInfo) => void;
 } & Pick<HTMLAttributes<HTMLDivElement>, 'onBlur' | 'onFocus'>;
@@ -49,7 +49,7 @@ export type TextEditorRef = {
  * Simple text editor.
  */
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, slots = {}, onKeyDown, ...props }, forwardedRef) => {
+  ({ model, extensions = [], slots = {}, onKeyDown, ...props }, forwardedRef) => {
     const { id, content } = model ?? {};
     const { themeMode } = useThemeContext();
 
@@ -85,10 +85,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           placeholder(slots.editor?.placeholder ?? ''),
           EditorView.lineWrapping,
 
-          customPlugin, // TODO(burdon): ???
-
-          // Theme
-          // markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
+          // Themes.
           EditorView.theme(theme),
           ...(themeMode === 'dark'
             ? [syntaxHighlighting(oneDarkHighlightStyle)]
@@ -96,6 +93,9 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 
           // Replication.
           ...(content instanceof YText ? [yCollab(content, undefined)] : []),
+
+          // Custom.
+          ...extensions,
         ],
       });
 

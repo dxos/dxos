@@ -8,7 +8,7 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Chain as ChainType, Folder } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { SpaceProxy, TextObject } from '@dxos/react-client/echo';
 
 import { ChainMain } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
@@ -91,7 +91,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                object: new ChainType(),
+                object: new ChainType({ prompts: [{ source: new TextObject(example) }] }),
               };
             }
           }
@@ -100,3 +100,14 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
     },
   };
 };
+
+const example = [
+  '# Sample',
+  'Objective',
+  '',
+  "Your objective is to create a sequential workflow based on the user's query.",
+  '',
+  'Use the following context:',
+  '',
+  '{context}',
+].join('\n');

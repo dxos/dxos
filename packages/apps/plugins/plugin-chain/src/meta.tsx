@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Brain } from '@phosphor-icons/react';
+import { Brain, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
@@ -14,5 +14,5 @@ export default pluginMeta({
   name: 'Chain',
   description: 'AI prompt configuration.',
   tags: ['experimental'],
-  iconComponent: (props) => <Brain {...props} />,
+  iconComponent: (props: IconProps) => <Brain {...props} />,
 });

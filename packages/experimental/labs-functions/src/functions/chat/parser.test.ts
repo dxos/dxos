@@ -27,4 +27,12 @@ describe('Parser', () => {
     const result = parseMessage(content, 'json');
     expect(result?.data).to.have.length(data.length);
   });
+
+  test('block', () => {
+    const content = ['```mermaid', 'graph LR', 'A[Square Rect] -- Link text --> B((Circle))', '```'];
+
+    const result = parseMessage(content.join('\n'));
+    expect(result).to.exist;
+    expect(result?.content).to.deep.eq([...content.slice(1, 3), ''].join('\n'));
+  });
 });

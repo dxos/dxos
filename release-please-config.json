@@ -114,6 +114,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-mermaid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-metadata/package.json",
           "jsonpath": "$.version"
         },
