@@ -8,6 +8,7 @@ import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/docum
 import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { type AbstractEchoObject } from './object';
+import { isActualAutomergeObject } from './typed-object';
 import { base, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
 
@@ -21,6 +22,9 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
 };
 
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
+  if (isActualAutomergeObject(obj)) {
+    return obj[base]._database._echoDatabase;
+  }
   return obj[base]._database;
 };
 
