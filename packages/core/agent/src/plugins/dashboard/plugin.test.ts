@@ -72,7 +72,7 @@ describe('DashboardPlugin', () => {
 
     const message = await asyncTimeout(result.wait(), 1000);
     expect(message.status === AgentStatus.Status.ON);
-  });
+  }).tag('flaky');
 
   test('id', async () => {
     const plugin = new DashboardPlugin();

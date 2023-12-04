@@ -3,6 +3,7 @@
 //
 
 import { Document, Folder, File, Grid, Kanban, Table, Sketch, Stack } from '@braneframe/types';
+import { AutomergeArray, AutomergeObject } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
 import { EchoDatabase, SpaceProxy, SpaceState, TypedObject } from '@dxos/react-client/echo';
@@ -14,6 +15,8 @@ export const appKey = 'composer.dxos.org';
 (globalThis as any)[TypedObject.name] = TypedObject;
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
+(globalThis as any)[AutomergeObject.name] = AutomergeObject;
+(globalThis as any)[AutomergeArray.name] = AutomergeArray;
 
 const dxosTypes = {
   Document,
