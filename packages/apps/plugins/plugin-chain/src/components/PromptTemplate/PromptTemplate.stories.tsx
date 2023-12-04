@@ -10,13 +10,6 @@ import { TextObject } from '@dxos/react-client/echo';
 
 import { PromptTemplate } from './PromptTemplate';
 
-// TODO(burdon): Chess example.
-//  - Path to access context.
-//  - Literal.
-//  - Query/schema.
-//  - Retriever.
-//  - Command token (e.g., /foo).
-
 const text = [
   '# Comment',
   '',
@@ -29,6 +22,7 @@ const text = [
 ].join('\n');
 
 const Story = () => {
+  // TODO(burdon): How to test reactivity?
   const [prompt] = useState({ source: new TextObject(text) });
 
   return (
