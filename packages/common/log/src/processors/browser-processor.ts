@@ -63,7 +63,6 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   let args = [];
-  
 
   if (entry.meta?.S) {
     const scope = entry.meta?.S;

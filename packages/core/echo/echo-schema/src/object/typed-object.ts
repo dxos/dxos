@@ -615,7 +615,7 @@ export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
  * Runtime object.
  */
 type ExpandoConstructor = {
-  new(initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
+  new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;

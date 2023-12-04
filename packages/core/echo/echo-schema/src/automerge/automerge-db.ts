@@ -10,11 +10,17 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { AutomergeObject } from './automerge-object';
+import { type AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base, getGlobalAutomergePreference, TypedObject, isActualTypedObject, isActualAutomergeObject } from '../object';
+import {
+  type EchoObject,
+  base,
+  getGlobalAutomergePreference,
+  isActualTypedObject,
+  isActualAutomergeObject,
+} from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {

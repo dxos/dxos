@@ -45,12 +45,12 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       peerId: SERVER_ID,
     });
 
-    log.info('construct')
+    log.info('construct');
   }
 
   // TODO(dmaretskyi): Called with OUR peer id at start. Needs changing.
   override connect(peerId: PeerId): void {
-    log.info('connect', {peerId});
+    log.info('connect', { peerId });
     if (peerId !== SERVER_ID) {
       return;
     }
@@ -61,7 +61,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
     });
     this._stream.subscribe(
       (msg) => {
-        log.info('received message', {msg});
+        log.info('received message', { msg });
         this.emit('message', cbor.decode(msg.syncMessage!));
       },
       (err) => {
@@ -76,7 +76,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-    log.info('send', { message })
+    log.info('send', { message });
     void this._dataService
       .sendSyncMessage({
         id: this._clientId,
@@ -88,7 +88,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override disconnect(): void {
-    log.info('disconnect')
+    log.info('disconnect');
     void this._stream?.close().catch((err) => {
       log.catch(err);
     });

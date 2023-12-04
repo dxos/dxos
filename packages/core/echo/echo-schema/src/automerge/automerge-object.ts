@@ -8,6 +8,7 @@ import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/aut
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
@@ -28,7 +29,6 @@ import {
 } from '../object/types';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
-import { TextModel } from '@dxos/text-model';
 
 export type BindOptions = {
   db: AutomergeDb;
@@ -161,7 +161,6 @@ export class AutomergeObject implements TypedObjectProperties {
         }
       }
     }
-
 
     this._doc = automerge.from({
       data: this._encode(initialProps),
@@ -461,7 +460,6 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Doc
   }
   return false;
 };
-
 
 // Deferred import to avoid circular dependency.
 let schemaProto: typeof Schema;
