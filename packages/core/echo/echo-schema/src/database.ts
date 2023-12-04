@@ -264,9 +264,9 @@ export class EchoDatabase {
     if (item.modelType === DocumentModel.meta.type) {
       const state = item.state as DocumentModelState;
       if (!state.type) {
-        return new TypedObject();
+        return new TypedObject(undefined, { useAutomergeBackend: false });
       } else {
-        return new TypedObject(undefined, { type: state.type });
+        return new TypedObject(undefined, { type: state.type, useAutomergeBackend: false });
       }
     } else if (item.modelType === TextModel.meta.type) {
       return new TextObject();

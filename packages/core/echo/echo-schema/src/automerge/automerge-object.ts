@@ -4,13 +4,15 @@
 
 import { Event } from '@dxos/async';
 import { next as automerge, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
-import { type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
+import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import { type TypedObjectOptions } from '../object';
 import { AbstractEchoObject } from '../object/object';
@@ -34,31 +36,10 @@ export type BindOptions = {
   path: string[];
 };
 
-/**
- * Automerge object system properties.
- * (Is automerge specific.)
- */
-export type ObjectSystem = {
-  /**
-   * Deletion marker.
-   */
-  deleted: boolean;
-
-  /**
-   * Object type. Reference to the schema.
-   */
-  schema: Schema;
-
-  /**
-   * Object reference ('protobuf' protocol) type.
-   */
-  type: Reference;
-};
-
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb;
   private _doc?: Doc<any>;
-  private _docHandle?: DocHandle<any>;
+  private _docHandle?: DocHandle<DocStructure>;
   private _schema?: Schema;
 
   /**
@@ -85,8 +66,8 @@ export class AutomergeObject implements TypedObjectProperties {
 
     if (opts?.schema) {
       this._schema = opts.schema;
-      this.__system.schema = opts.schema;
     }
+
     // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types. References should not leak outside of the AutomergeObject, It should be internal concept.
     const type =
       opts?.type ??
@@ -146,28 +127,43 @@ export class AutomergeObject implements TypedObjectProperties {
   [base] = this as any;
 
   get [db](): EchoDatabase | undefined {
-    return undefined;
+    return this[base]._database._echoDatabase;
   }
 
   get [debug](): string {
     return 'automerge';
   }
 
-  [subscribe](callback: (value: any) => void): () => void {
-    this._docHandle?.on('change', callback);
-    this._updates.on(callback);
+  [subscribe](callback: (value: AutomergeObject) => void): () => void {
+    const listener = (event: DocHandleChangePayload<DocStructure>) => {
+      if (objectIsUpdated(this._id, event)) {
+        callback(this);
+      }
+    };
+    this[base]._docHandle?.on('change', listener);
+    this[base]._updates.on(callback);
     return () => {
-      this._docHandle?.off('change', callback);
-      this._updates.off(callback);
+      this[base]._docHandle?.off('change', listener);
+      this[base]._updates.off(callback);
     };
   }
 
   private _initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
-    this._doc = automerge.from({
-      // TODO(dmaretskyi): type: ???.
+    initialProps ??= {};
 
-      // TODO(dmaretskyi): Initial values for data.
-      data: this._encode(initialProps ?? {}),
+    if (opts?.schema) {
+      for (const field of opts.schema.props) {
+        if (field.repeated) {
+          (initialProps as Record<string, any>)[field.id!] ??= [];
+        } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
+          (initialProps as Record<string, any>)[field.id!] ??= '';
+        }
+      }
+    }
+
+    this._doc = automerge.from({
+      data: this._encode(initialProps),
       meta: this._encode({
         keys: [],
         ...opts?.meta,
@@ -256,6 +252,8 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _get(path: string[]) {
+    this._signal.notifyRead();
+
     const fullPath = [...this._path, ...path];
     let value = this._getDoc();
     for (const key of fullPath) {
@@ -298,6 +296,7 @@ export class AutomergeObject implements TypedObjectProperties {
     } else {
       failedInvariant();
     }
+    this._notifyUpdate();
   }
 
   /**
@@ -396,7 +395,13 @@ export class AutomergeObject implements TypedObjectProperties {
     }
   }
 
+  // TODO(mykola): Do we need this?
   private _onLinkResolved = () => {
+    this._signal.notifyWrite();
+    this._updates.emit();
+  };
+
+  private _notifyUpdate = () => {
     this._signal.notifyWrite();
     this._updates.emit();
   };
@@ -448,3 +453,22 @@ const decodeReference = (value: any) =>
   new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
 
 const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
+  if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
+    return true;
+  }
+  return false;
+};
+
+// Deferred import to avoid circular dependency.
+let schemaProto: typeof Schema;
+const getSchemaProto = (): typeof Schema => {
+  if (!schemaProto) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { Schema } = require('../proto');
+    schemaProto = Schema;
+  }
+
+  return schemaProto;
+};
