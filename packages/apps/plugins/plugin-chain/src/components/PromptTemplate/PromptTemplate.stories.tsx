@@ -10,6 +10,13 @@ import { TextObject } from '@dxos/react-client/echo';
 
 import { PromptTemplate } from './PromptTemplate';
 
+// TODO(burdon): Chess example.
+//  - Path to access context.
+//  - Literal.
+//  - Query/schema.
+//  - Retriever.
+//  - Command token (e.g., /foo).
+
 const text = [
   'You are a machine that is an expert chess player.',
   'The move history of the current game is: {history}',

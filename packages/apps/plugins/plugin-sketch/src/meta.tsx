@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool } from '@phosphor-icons/react';
+import { CompassTool, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
@@ -13,5 +13,5 @@ export default pluginMeta({
   id: SKETCH_PLUGIN,
   name: 'Sketch',
   tags: ['stable'],
-  iconComponent: (props) => <CompassTool {...props} />,
+  iconComponent: (props: IconProps) => <CompassTool {...props} />,
 });

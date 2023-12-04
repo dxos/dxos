@@ -105,7 +105,7 @@ const example = [
   '# Sample',
   'Objective',
   '',
-  'Your objective is to create a sequential workflow based on the users query.',
+  "Your objective is to create a sequential workflow based on the user's query.",
   '',
   'Use the following context:',
   '',
