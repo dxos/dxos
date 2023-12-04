@@ -49,9 +49,7 @@ export class TypeCollection {
     this._schemaDefs.set(schema.typename, schema);
 
     Object.defineProperty(proto, Symbol.hasInstance, {
-      value: (instance: any) => {
-        return instance instanceof TypedObject && instance.__typename === schema.typename;
-      },
+      value: (instance: any) => instance instanceof TypedObject && instance.__typename === schema.typename,
       enumerable: false,
       writable: false,
     });
