@@ -4,12 +4,10 @@
 
 import { expect } from 'chai';
 
-import { asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -154,7 +152,7 @@ describe('identity/identity-manager', () => {
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
   });
 
-  test('sets device profile on identity creation', async () => {
+  test('sets device profile', async () => {
     const signalContext = new MemorySignalManagerContext();
 
     const peer = await setupPeer({ signalContext });
@@ -164,52 +162,5 @@ describe('identity/identity-manager', () => {
     await identity.stateUpdate.waitForCount(1);
 
     expect(!!identity.authorizedDeviceKeys.get(identity.deviceKey)?.platform).is.true;
-  });
-
-  test.only('sets device profile on identity accept', async () => {
-    const signalContext = new MemorySignalManagerContext();
-
-    const peer1 = await setupPeer({ signalContext });
-    const identity1 = await peer1.identityManager.createIdentity();
-
-    const peer2 = await setupPeer({ signalContext });
-
-    const deviceKey = await peer2.keyring.createKey();
-    const controlFeedKey = await peer2.keyring.createKey();
-    const dataFeedKey = await peer2.keyring.createKey();
-
-    await identity1.controlPipeline.writer.write({
-      credential: {
-        credential: await identity1.getIdentityCredentialSigner().createCredential({
-          subject: deviceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey: identity1.identityKey,
-            deviceKey,
-          },
-        }),
-      },
-    });
-    // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
-    const identity2 = await peer2.identityManager.acceptIdentity({
-      identityKey: identity1.identityKey,
-      deviceKey,
-      haloSpaceKey: identity1.haloSpaceKey,
-      haloGenesisFeedKey: identity1.haloGenesisFeedKey,
-      controlFeedKey,
-      dataFeedKey,
-    });
-
-    log.info('devices', { device1: identity1.deviceKey, device2: identity2.deviceKey });
-
-    await asyncTimeout(identity2.ready(), 1000);
-    const feed = peer2.feedStore.getFeed(identity2.haloGenesisFeedKey);
-    feed?.createReadableStream().on('data', (data) => {
-      log.info('data', { data });
-    });
-
-    await sleep(500);
-
-    expect(!!identity2.authorizedDeviceKeys.get(identity2.deviceKey)?.platform).is.true;
   });
 });
