@@ -13,6 +13,7 @@ import {
   SpaceManager,
   valueEncoding,
   DataServiceSubscriptions,
+  AutomergeHost,
 } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
@@ -108,6 +109,7 @@ export type TestPeerProps = {
   snapshotStore?: SnapshotStore;
   signingContext?: SigningContext;
   blobStore?: BlobStore;
+  automergeHost?: AutomergeHost;
 };
 
 export class TestPeer {
@@ -176,6 +178,10 @@ export class TestPeer {
     return this._props.signingContext ?? failUndefined();
   }
 
+  get automergeHost() {
+    return (this._props.automergeHost ??= new AutomergeHost(this.storage.createDirectory('automerge')));
+  }
+
   get dataSpaceManager() {
     return (this._props.dataSpaceManager ??= new DataSpaceManager(
       this.spaceManager,
@@ -184,6 +190,7 @@ export class TestPeer {
       this.keyring,
       this.identity,
       this.feedStore,
+      this.automergeHost,
     ));
   }
 

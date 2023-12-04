@@ -77,9 +77,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
-
-    // TODO(dmaretskyi): Make required.
-    private readonly _automergeHost?: AutomergeHost,
+    private readonly _automergeHost: AutomergeHost,
   ) {}
 
   // TODO(burdon): Remove.
