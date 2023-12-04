@@ -14,6 +14,9 @@ export const promptLanguage = StreamLanguage.define({
     if (stream.match(/^#.*/)) {
       return 'lineComment';
     }
+    if (stream.match(/^-+$/)) {
+      return 'lineComment';
+    }
     if (stream.match(/^\{[a-zA-Z_]+}/)) {
       return 'number';
     }

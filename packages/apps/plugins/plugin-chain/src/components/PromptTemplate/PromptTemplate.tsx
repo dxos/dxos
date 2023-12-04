@@ -24,11 +24,11 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 
   const regex = /\{([a-zA-Z_]+)\}/g;
   const text = prompt?.source?.text ?? '';
-  const variables = [...text.matchAll(regex)].map((m) => m[1]);
+  const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col gap-4 m-4', groupBorder)}>
+      <div className={mx('flex flex-col w-full overflow-hidden gap-4 m-4', groupBorder)}>
         <Section title='Prompt'>
           <TextEditor
             ref={editorRef}
@@ -45,7 +45,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
           />
         </Section>
 
-        {variables.length > 0 && (
+        {variables.size > 0 && (
           <Section
             title='Variables'
             actions={
@@ -57,7 +57,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
             <div className='flex flex-col divide-y font-mono text-sm'>
               <table className='table-fixed border-collapse'>
                 <tbody className='divide-y'>
-                  {variables.map((variable) => (
+                  {Array.from(variables.values()).map((variable) => (
                     <tr key={variable} className=''>
                       <td className='p-2 w-[200px] border-r'>{'{' + variable + '}'}</td>
                       <td className='p-2'>$context.object.pgn</td>
