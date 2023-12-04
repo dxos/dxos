@@ -28,13 +28,13 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const model = useTextModel({ text: prompt?.source });
   const editorRef = useRef<TextEditorRef>(null);
 
-  const regex = /\{([a-zA-Z_]+)\}/g;
+  const regex = /\{([a-zA-Z_]+)}/g;
   const text = prompt?.source?.text ?? '';
   const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full overflow-hidden gap-4 m-4', groupBorder)}>
+      <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
         <Section title='Prompt'>
           <TextEditor
             ref={editorRef}

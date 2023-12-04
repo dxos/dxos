@@ -20,7 +20,7 @@ export const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
   return (
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div className='flex flex-col'>
+        <div className='flex flex-col my-2'>
           {chain.prompts.map((prompt, i) => (
             <PromptTemplate key={i} prompt={prompt} />
           ))}

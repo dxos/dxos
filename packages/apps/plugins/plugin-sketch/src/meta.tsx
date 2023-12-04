@@ -13,5 +13,6 @@ export default pluginMeta({
   id: SKETCH_PLUGIN,
   name: 'Sketch',
   tags: ['stable'],
+  description: 'Digital whiteboard and diagramming tool.',
   iconComponent: (props: IconProps) => <CompassTool {...props} />,
 });

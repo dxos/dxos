@@ -12,5 +12,6 @@ export const MERMAID_PLUGIN = 'dxos.org/plugin/mermaid';
 export default pluginMeta({
   id: MERMAID_PLUGIN,
   name: 'Mermaid',
+  description: 'Tool that renders text definitions to create diagrams.',
   iconComponent: (props: IconProps) => <AnchorSimple {...props} />,
 });
