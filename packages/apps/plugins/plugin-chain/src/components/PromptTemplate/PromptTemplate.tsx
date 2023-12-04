@@ -22,9 +22,6 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 
   const variables = ['history', 'question'];
 
-  // TODO(burdon): Basic syntax highlighting for variables.
-  //  https://codemirror.net/examples/zebra
-  //  https://codemirror.net/docs/ref/#view.MatchDecorator
   return (
     <DensityProvider density='fine'>
       <div className={mx('border divide-y gap-2 m-4', groupBorder)}>
