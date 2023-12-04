@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { type DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -10,10 +10,17 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { AutomergeObject } from './automerge-object';
+import { type AutomergeObject } from './automerge-object';
+import { type DocStructure } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base, getGlobalAutomergePreference, TypedObject } from '../object';
+import {
+  type EchoObject,
+  base,
+  getGlobalAutomergePreference,
+  isActualTypedObject,
+  isActualAutomergeObject,
+} from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -22,33 +29,36 @@ export type SpaceState = {
 };
 
 export class AutomergeDb {
-  private _docHandle!: DocHandle<any>;
+  private _docHandle!: DocHandle<DocStructure>;
 
   /**
    * @internal
    */
-  _objects = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, EchoObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
 
-  readonly #echoDatabase: EchoDatabase;
+  /**
+   * @internal
+   */
+  readonly _echoDatabase: EchoDatabase;
 
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     echoDatabase: EchoDatabase,
   ) {
-    this.#echoDatabase = echoDatabase;
+    this._echoDatabase = echoDatabase;
   }
 
   async open(spaceState: SpaceState) {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        await this._docHandle.whenReady();
+        await asyncTimeout(this._docHandle.whenReady(), 1_000);
       } catch (err) {
-        log.catch('Error opening document', err);
+        log.error('Error opening document', err);
         await this._fallbackToNewDoc();
       }
     } else {
@@ -57,7 +67,8 @@ export class AutomergeDb {
 
     this._docHandle.on('change', (event) => {
       this._updateEvent.emit({
-        spaceKey: this.#echoDatabase._backend.spaceKey,
+        spaceKey: this._echoDatabase._backend.spaceKey,
+        // TODO(mykola): Use event.patches to determine which items were updated.
         itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
       });
     });
@@ -71,7 +82,7 @@ export class AutomergeDb {
   }
 
   getObjectById(id: string): EchoObject | undefined {
-    const obj = this._objects.get(id) ?? this.#echoDatabase._objects.get(id);
+    const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
 
     if (!obj) {
       return undefined;
@@ -84,15 +95,15 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (obj[base] instanceof TypedObject) {
-      return this.#echoDatabase.add(obj);
+    if (isActualTypedObject(obj)) {
+      return this._echoDatabase.add(obj);
     }
 
     if (obj[base]._database) {
       return obj;
     }
 
-    invariant(obj[base] instanceof AutomergeObject);
+    invariant(isActualAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
@@ -104,7 +115,7 @@ export class AutomergeDb {
   }
 
   remove<T extends EchoObject>(obj: T) {
-    invariant(obj[base] instanceof AutomergeObject);
+    invariant(isActualAutomergeObject(obj));
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }
