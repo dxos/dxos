@@ -31,7 +31,7 @@ describe('DashboardPlugin', () => {
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-dashboard-plugin' });
 
-    const dashboardPlugin = new DashboardPlugin({ configPath: '' });
+    const dashboardPlugin = new DashboardPlugin();
     await dashboardPlugin.initialize({ client: client1, clientServices: services1, plugins: [] });
     await dashboardPlugin.open();
     afterTest(() => dashboardPlugin.close());
@@ -44,7 +44,7 @@ describe('DashboardPlugin', () => {
     await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
 
     await asyncTimeout(client2.spaces.isReady.wait(), 1000);
-    await asyncTimeout(client1.spaces.default.waitUntilReady(), 1000);
+    await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
     const dashboardProxy = createProtoRpcPeer({
       requested: {
         DashboardService: schema.getService('dxos.agent.dashboard.DashboardService'),
@@ -75,7 +75,7 @@ describe('DashboardPlugin', () => {
   });
 
   test('id', async () => {
-    const plugin = new DashboardPlugin({ configPath: '' });
+    const plugin = new DashboardPlugin();
     expect(plugin.id).to.equal('dxos.org/agent/plugin/dashboard');
   });
 
