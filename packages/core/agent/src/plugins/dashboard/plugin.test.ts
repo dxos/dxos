@@ -31,7 +31,7 @@ describe('DashboardPlugin', () => {
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-dashboard-plugin' });
 
-    const dashboardPlugin = new DashboardPlugin({ configPath: '' });
+    const dashboardPlugin = new DashboardPlugin();
     await dashboardPlugin.initialize({ client: client1, clientServices: services1, plugins: [] });
     await dashboardPlugin.open();
     afterTest(() => dashboardPlugin.close());
@@ -75,7 +75,7 @@ describe('DashboardPlugin', () => {
   });
 
   test('id', async () => {
-    const plugin = new DashboardPlugin({ configPath: '' });
+    const plugin = new DashboardPlugin();
     expect(plugin.id).to.equal('dxos.org/agent/plugin/dashboard');
   });
 

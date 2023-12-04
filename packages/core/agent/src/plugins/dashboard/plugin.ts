@@ -21,21 +21,10 @@ export const UPDATE_INTERVAL = 5_000;
 export type ServiceBundle = {
   DashboardService: DashboardService;
 };
-
-export type DashboardPluginParams = {
-  configPath: string;
-};
-
 export class DashboardPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/dashboard';
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
-
-  // TODO(burdon): Push config to base class.
-  constructor(private readonly _params: DashboardPluginParams) {
-    super();
-  }
-
   override async onOpen() {
     const subscription = this.context.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
