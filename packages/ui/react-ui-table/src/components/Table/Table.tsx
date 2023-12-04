@@ -14,7 +14,8 @@ import {
   type RowSelectionState,
   type OnChangeFn,
 } from '@tanstack/react-table';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { useVirtual } from 'react-virtual';
 
 import { debounce } from '@dxos/async';
 
@@ -39,7 +40,10 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debug,
     onDataSelectionChange,
     classNames,
+    containerRef,
   } = props;
+
+  const defaultContainerRef = useRef(null);
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
@@ -122,6 +126,20 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debugTable: debug,
   });
 
+  const rows = table.getRowModel().rows;
+
+  const rowVirtualizer = useVirtual({
+    parentRef: containerRef ?? defaultContainerRef,
+    size: rows.length,
+    overscan: 10,
+  });
+  const { virtualItems: virtualRows, totalSize } = rowVirtualizer;
+
+  const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
+  const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
+
+  console.log('[p]', paddingTop, paddingBottom, virtualRows.length, rows.length);
+
   useEffect(() => {
     if (onDataSelectionChange) {
       onDataSelectionChange(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
@@ -146,7 +164,21 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       >
         <TableHead />
 
-        {grouping.length === 0 && <TableBody rows={table.getRowModel().rows} />}
+        {grouping.length === 0 && (
+          <>
+            {paddingTop > 0 && (
+              <tr>
+                <td style={{ height: `${paddingTop}px` }} />
+              </tr>
+            )}
+            <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
+            {paddingBottom > 0 && (
+              <tr>
+                <td style={{ height: `${paddingBottom}px` }} />
+              </tr>
+            )}
+          </>
+        )}
 
         {grouping.length !== 0 &&
           table.getGroupedRowModel().rows.map((row, i) => {
@@ -165,8 +197,18 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
                     </th>
                   </tr>
                 </thead>
-
-                <TableBody rows={row.subRows} />
+                {/* TODO(thure): Virtualization is probably breaking this case. */}
+                {paddingTop > 0 && (
+                  <tr>
+                    <td style={{ height: `${paddingTop}px` }} />
+                  </tr>
+                )}
+                <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
+                {paddingBottom > 0 && (
+                  <tr>
+                    <td style={{ height: `${paddingBottom}px` }} />
+                  </tr>
+                )}
               </Fragment>
             );
           })}

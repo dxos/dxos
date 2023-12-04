@@ -32,7 +32,8 @@
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "@tanstack/react-table": "^8.9.3",
     "date-fns": "^2.29.3",
-    "lodash.defaultsdeep": "^4.6.1"
+    "lodash.defaultsdeep": "^4.6.1",
+    "react-virtual": "^2.10.4"
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",

@@ -3,6 +3,7 @@
 //
 
 import { type RowData, type RowSelectionState, type Table, type VisibilityState } from '@tanstack/react-table';
+import { type RefObject } from 'react';
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
@@ -46,6 +47,7 @@ export type TableProps<TData extends RowData> = TableFlags &
     onDataSelectionChange: (dataSelection: TData[]) => void;
     // `table` element props
     classNames: ClassNameValue;
+    containerRef: RefObject<HTMLElement | null>;
   }>;
 
 export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };
