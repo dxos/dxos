@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
-import { type DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { Event, asyncTimeout, synchronized } from '@dxos/async';
+import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { Context } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -39,6 +40,8 @@ export class AutomergeDb {
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
 
+  private _ctx?: Context;
+
   /**
    * @internal
    */
@@ -52,7 +55,14 @@ export class AutomergeDb {
     this._echoDatabase = echoDatabase;
   }
 
+  @synchronized
   async open(spaceState: SpaceState) {
+    if (this._ctx) {
+      log.info('Already open');
+      return;
+    }
+    this._ctx = new Context();
+
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
@@ -65,13 +75,27 @@ export class AutomergeDb {
       await this._fallbackToNewDoc();
     }
 
-    this._docHandle.on('change', (event) => {
+    const update = (event: DocHandleChangePayload<DocStructure>) => {
       this._updateEvent.emit({
         spaceKey: this._echoDatabase._backend.spaceKey,
         // TODO(mykola): Use event.patches to determine which items were updated.
         itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
       });
+    };
+
+    this._docHandle.on('change', update);
+    this._ctx.onDispose(() => {
+      this._docHandle.off('change', update);
     });
+  }
+
+  @synchronized
+  async close() {
+    if (!this._ctx) {
+      return;
+    }
+    void this._ctx.dispose();
+    this._ctx = undefined;
   }
 
   private async _fallbackToNewDoc() {
@@ -79,6 +103,9 @@ export class AutomergeDb {
       log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
     }
     this._docHandle = this.automerge.repo.create();
+    this._ctx!.onDispose(() => {
+      this._docHandle.delete();
+    });
   }
 
   getObjectById(id: string): EchoObject | undefined {
