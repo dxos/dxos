@@ -18,7 +18,7 @@ import { CHAIN_PLUGIN } from './meta';
 const CHAIN_ACTION = `${CHAIN_PLUGIN}/action`;
 
 export enum ChainAction {
-  CREATE = `${CHAIN_ACTION}/create`
+  CREATE = `${CHAIN_ACTION}/create`,
 }
 
 export type ChainPluginProvides = SurfaceProvides &
