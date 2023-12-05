@@ -39,16 +39,16 @@ const types = [
 ];
 
 type PromptTemplateProps = {
-  prompt?: ChainType.Prompt;
+  prompt: ChainType.Prompt;
 };
 
 export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: prompt?.source });
+  const model = useTextModel({ text: prompt.source });
   const editorRef = useRef<TextEditorRef>(null);
 
   const regex = /\{([a-zA-Z_]+)}/g;
-  const text = prompt?.source?.text ?? '';
+  const text = prompt.source?.text ?? '';
   const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
 
   return (
@@ -56,7 +56,14 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
         <Section title='Prompt'>
           <Input.Root>
-            <Input.TextInput placeholder='Enter shortcut...' classNames={mx('is-full bg-transparent m-2')} />
+            <Input.TextInput
+              placeholder={t('command placeholder')}
+              classNames={mx('is-full bg-transparent m-2')}
+              value={prompt.command ?? ''}
+              onChange={(event) => {
+                prompt!.command = event.target.value;
+              }}
+            />
           </Input.Root>
         </Section>
 
@@ -70,7 +77,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                 className: 'w-full p-2',
               },
               editor: {
-                placeholder: t('prompt placeholder'),
+                placeholder: t('template placeholder'),
               },
             }}
           />

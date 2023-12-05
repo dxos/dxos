@@ -278,17 +278,29 @@ message Message {
   Context context = 100;
 }
 
+/**
+ * AI Chain.
+ */
 message Chain {
   option (object) = true;
 
   message Variable {
+    enum Type {
+      VALUE = 0;
+      RESOLVER = 1;
+      FUNCTION = 2;
+      QUERY = 3;
+    }
+
     string name = 1;
-    dxos.schema.Text value = 2;
+    Type type = 2;
+    dxos.schema.Text value = 3;
   }
 
   message Prompt {
-    dxos.schema.Text source = 1;
-    repeated Variable variables = 2;
+    string command = 1;
+    dxos.schema.Text source = 2;
+    repeated Variable inputs = 3;
   }
 
   string title = 1;

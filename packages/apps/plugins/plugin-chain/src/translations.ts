@@ -13,6 +13,8 @@ export default [
         'create object label': 'Create chain',
         'delete object label': 'Delete item',
         'create stack section label': 'Create chain',
+        'command placeholder': 'Enter slash command...',
+        'template placeholder': 'Enter template...',
       },
     },
   },
