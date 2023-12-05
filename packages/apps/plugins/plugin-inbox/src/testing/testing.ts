@@ -17,7 +17,9 @@ export const createInbox = (count = 10) => {
     messages: faker.helpers.multiple(
       () =>
         new MessageType({
-          identityKey: PublicKey.random().toHex(),
+          from: {
+            identityKey: PublicKey.random().toHex(),
+          },
           subject: faker.lorem.sentence(),
         }),
       { count },

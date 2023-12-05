@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { arrow, blockSeparator, chromeSurface, surfaceElevation } from '../fragments';
+import { arrow, blockSeparator, chromeSurface, ghostHighlighted, surfaceElevation } from '../fragments';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;
@@ -19,7 +19,7 @@ export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) 
   mx(
     'relative flex items-center pis-6 pie-3 plb-1',
     'text-base leading-none rounded-sm select-none outline-none',
-    'data-[highlighted]:bg-primary-500 dark:data-[highlighted]:bg-primary-500 data-[highlighted]:text-primary-100',
+    ghostHighlighted,
     ...etc,
   );
 

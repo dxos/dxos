@@ -20,6 +20,7 @@ import {
 import { ComplexMap } from '@dxos/util';
 
 import { type DataServiceHost } from './data-service-host';
+import { type AutomergeHost } from '../automerge';
 
 // TODO(burdon): Clear on close.
 export class DataServiceSubscriptions {
@@ -53,7 +54,10 @@ export class DataServiceSubscriptions {
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
+  constructor(
+    private readonly _subscriptions: DataServiceSubscriptions,
+    private readonly _automergeHost: AutomergeHost,
+  ) {}
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     invariant(request.spaceKey);

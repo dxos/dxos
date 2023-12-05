@@ -68,7 +68,7 @@ export type MarkdownEditorRef = {
 };
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
-  ({ model, slots = {}, onChange, editorMode }, forwardedRef) => {
+  ({ model, slots = {}, editorMode, onChange }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -148,7 +148,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             indentWithTab,
           ]),
           EditorView.lineWrapping,
-          // Theme
+
+          // Themes.
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
           EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
           ...(themeMode === 'dark'
@@ -157,7 +158,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           // TODO(thure): All but one rule here apply to both themes; rename or refactor.
           syntaxHighlighting(markdownDarkHighlighting),
 
-          // Collaboration
+          // Replication and awareness (incl. remote selection).
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
         ],
       });
@@ -178,15 +179,18 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }, [parent, content, provider?.awareness, themeMode, editorMode]);
 
     const handleKeyUp = useCallback(
-      ({ key, altKey, shiftKey, metaKey, ctrlKey }: KeyboardEvent) => {
+      (event: KeyboardEvent) => {
+        const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          case 'Enter':
+          case 'Enter': {
             view?.contentDOM.focus();
             break;
+          }
 
-          case 'Escape':
+          case 'Escape': {
             editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && parent?.focus();
             break;
+          }
         }
       },
       [view, editorMode],
@@ -195,11 +199,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return (
       <div
         tabIndex={0}
+        ref={setParent}
         key={id}
         {...slots.root}
-        onKeyUp={handleKeyUp}
         {...(editorMode !== 'vim' ? tabsterDOMAttribute : {})}
-        ref={setParent}
+        onKeyUp={handleKeyUp}
       />
     );
   },

@@ -2,44 +2,111 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { Repo as AutomergeRepo, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { Event, asyncTimeout, synchronized } from '@dxos/async';
+import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { Context } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
-import { AutomergeObject } from './automerge-object';
+import { type AutomergeContext } from './automerge-context';
+import { type AutomergeObject } from './automerge-object';
+import { type DocStructure } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, base, TypedObject } from '../object';
+import {
+  type EchoObject,
+  base,
+  getGlobalAutomergePreference,
+  isActualTypedObject,
+  isActualAutomergeObject,
+} from '../object';
 import { type Schema } from '../proto';
 
+export type SpaceState = {
+  // Url of the root automerge document.
+  rootUrl?: string;
+};
+
 export class AutomergeDb {
-  private _repo!: AutomergeRepo;
-  private _docHandle!: DocHandle<any>;
-
-  readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
-
-  constructor(public readonly graph: Hypergraph, private readonly _echoDatabase: EchoDatabase) {}
-
-  async open() {
-    this._repo = new AutomergeRepo({
-      network: [],
-    });
-    this._docHandle = this._repo.create();
-    this._docHandle.on('change', (event) => {
-      this._updateEvent.emit({
-        spaceKey: this._echoDatabase._backend.spaceKey,
-        itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
-      });
-    });
-  }
+  private _docHandle!: DocHandle<DocStructure>;
 
   /**
    * @internal
    */
-  _objects = new Map<string, EchoObject>();
+  readonly _objects = new Map<string, EchoObject>();
   readonly _objectsSystem = new Map<string, EchoObject>();
+
+  readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
+
+  private _ctx?: Context;
+
+  /**
+   * @internal
+   */
+  readonly _echoDatabase: EchoDatabase;
+
+  constructor(
+    public readonly graph: Hypergraph,
+    public readonly automerge: AutomergeContext,
+    echoDatabase: EchoDatabase,
+  ) {
+    this._echoDatabase = echoDatabase;
+  }
+
+  @synchronized
+  async open(spaceState: SpaceState) {
+    if (this._ctx) {
+      log.info('Already open');
+      return;
+    }
+    this._ctx = new Context();
+
+    if (spaceState.rootUrl) {
+      try {
+        this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
+        await asyncTimeout(this._docHandle.whenReady(), 1_000);
+      } catch (err) {
+        log.error('Error opening document', err);
+        await this._fallbackToNewDoc();
+      }
+    } else {
+      await this._fallbackToNewDoc();
+    }
+
+    const update = (event: DocHandleChangePayload<DocStructure>) => {
+      this._updateEvent.emit({
+        spaceKey: this._echoDatabase._backend.spaceKey,
+        // TODO(mykola): Use event.patches to determine which items were updated.
+        itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
+      });
+    };
+
+    this._docHandle.on('change', update);
+    this._ctx.onDispose(() => {
+      this._docHandle.off('change', update);
+    });
+  }
+
+  @synchronized
+  async close() {
+    if (!this._ctx) {
+      return;
+    }
+    void this._ctx.dispose();
+    this._ctx = undefined;
+  }
+
+  private async _fallbackToNewDoc() {
+    if (getGlobalAutomergePreference()) {
+      log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
+    }
+    this._docHandle = this.automerge.repo.create();
+    this._ctx!.onDispose(() => {
+      this._docHandle.delete();
+    });
+  }
 
   getObjectById(id: string): EchoObject | undefined {
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
@@ -55,7 +122,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (obj[base] instanceof TypedObject) {
+    if (isActualTypedObject(obj)) {
       return this._echoDatabase.add(obj);
     }
 
@@ -63,7 +130,7 @@ export class AutomergeDb {
       return obj;
     }
 
-    invariant(obj[base] instanceof AutomergeObject);
+    invariant(isActualAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
@@ -75,7 +142,7 @@ export class AutomergeDb {
   }
 
   remove<T extends EchoObject>(obj: T) {
-    invariant(obj[base] instanceof AutomergeObject);
+    invariant(isActualAutomergeObject(obj));
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }

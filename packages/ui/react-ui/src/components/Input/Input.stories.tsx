@@ -6,6 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { baseSurface, chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import { Input } from './Input';
@@ -22,7 +23,7 @@ type StoryInputProps = Partial<{
   validationValence: MessageValence;
 }>;
 
-const StoryInput = ({
+const StoryInputContent = ({
   type = 'default',
   label,
   description,
@@ -32,7 +33,6 @@ const StoryInput = ({
   validationMessage,
   ...props
 }: StoryInputProps) => {
-  // TODO(thure): Implement
   return (
     <Input.Root {...{ validationValence }}>
       <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
@@ -50,6 +50,23 @@ const StoryInput = ({
         <Input.Description>{description}</Input.Description>
       </Input.DescriptionAndValidation>
     </Input.Root>
+  );
+};
+
+const StoryInput = (props: StoryInputProps) => {
+  // TODO(thure): Implement
+  return (
+    <div className='space-b-4'>
+      <div className={mx(baseSurface, 'p-4')}>
+        <StoryInputContent {...props} />
+      </div>
+      <div className={mx(groupSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'group' }))}>
+        <StoryInputContent {...props} />
+      </div>
+      <div className={mx(chromeSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'chrome' }))}>
+        <StoryInputContent {...props} />
+      </div>
+    </div>
   );
 };
 

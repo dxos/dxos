@@ -35,6 +35,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/migrations"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -102,6 +105,9 @@
     },
     {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-mermaid"
     },
     {
       "path": "../plugins/plugin-metadata"
