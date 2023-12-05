@@ -51,12 +51,22 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
         if (message.__meta.keys.length === 0) {
           let blocks: MessageType.Block[];
           try {
-            const context = createContext(space, message.context);
-            const sequence = createSequence(resources, context);
-            const text = message.blocks
+            let text = message.blocks
               .map((message) => message.text)
               .filter(Boolean)
               .join('\n');
+
+            // Check for command.
+            let command: string | undefined;
+            const match = text.match(/\/(\w+)\s*(.+)/);
+            if (match) {
+              command = match[1];
+              text = match[2];
+            }
+
+            const context = createContext(space, message.context);
+            const sequence = createSequence(space, resources, context, { command });
+
             const response = await sequence.invoke(text);
             blocks = createResponse(space, context, response);
           } catch (error) {

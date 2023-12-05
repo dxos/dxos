@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type RunnableSequence } from 'langchain/schema/runnable';
+import { PromptTemplate } from 'langchain/prompts';
+import { StringOutputParser } from 'langchain/schema/output_parser';
+import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
 
+import { Chain as ChainType } from '@braneframe/types';
 import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { Schema, type TypedObject } from '@dxos/echo-schema';
@@ -40,6 +43,7 @@ export const createContext = (space: Space, messageContext: MessageType.Context 
 export type SequenceTest = (context: PromptContext) => boolean;
 
 type SequenceOptions = {
+  command?: string;
   noVectorStore?: boolean;
   noTrainingData?: boolean;
 };
@@ -52,6 +56,7 @@ export type SequenceGenerator = (
 
 // TODO(burdon): Create registry class.
 export const createSequence = (
+  space: Space,
   resources: ChainResources,
   context: PromptContext,
   options: SequenceOptions = {},
@@ -63,6 +68,38 @@ export const createSequence = (
     },
   });
 
+  // Create chain from command.
+  if (options.command) {
+    const { objects: chains = [] } = space.db.query(ChainType.filter());
+    const prompt = chains.flatMap((chains) => chains.prompts).find((prompt) => prompt.command === options.command);
+    if (prompt) {
+      return createSequenceFromPrompt(resources, prompt);
+    }
+  }
+
   const { generator } = sequences.find(({ test }) => test(context))!;
   return generator(resources, () => context, options);
+};
+
+const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.Prompt) => {
+  const inputs = prompt.inputs.reduce<{ [name: string]: any }>((inputs, { type, name, value }) => {
+    switch (type) {
+      case ChainType.Input.Type.VALUE:
+        inputs[name] = value.text;
+        break;
+      case ChainType.Input.Type.PASS_THROUGH:
+        inputs[name] = new RunnablePassthrough();
+        break;
+    }
+
+    return inputs;
+  }, {});
+
+  console.log(inputs);
+  return RunnableSequence.from([
+    inputs,
+    PromptTemplate.fromTemplate(prompt.source.text),
+    resources.chat,
+    new StringOutputParser(),
+  ]);
 };
