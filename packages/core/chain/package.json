@@ -1,0 +1,37 @@
+{
+  "name": "@dxos/chain",
+  "version": "0.3.8",
+  "private": false,
+  "description": "AI chain.",
+  "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@types/node": "^18.11.9"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "typedoc": {
+    "entryPoint": "src/index.ts"
+  }
+}

@@ -32,7 +32,8 @@ export class ChainResources<
   private readonly _store: ChainStore;
 
   // TODO(burdon): Get ID from device key. Must be stable.
-  identityKey = PublicKey.random().toHex();
+  static _identityKey = PublicKey.random().toHex();
+  identityKey = ChainResources._identityKey;
 
   constructor(
     private readonly _id: string,
