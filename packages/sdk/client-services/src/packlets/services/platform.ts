@@ -2,20 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export type Platform = {
-  type: 'browser' | 'shared-worker' | 'node';
-  userAgent?: string;
-  platform?: string;
-  runtime?: string;
-  uptime?: number;
-  memory?: {
-    rss: number;
-    heapTotal: number;
-    heapUsed: number;
-    external: number;
-    arrayBuffers: number;
-  };
-};
+import { Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 export const getPlatform = (): Platform => {
   if ((process as any).browser) {
@@ -23,14 +10,14 @@ export const getPlatform = (): Platform => {
       // Browser.
       const { userAgent } = window.navigator;
       return {
-        type: 'browser',
+        type: Platform.PLATFORM_TYPE.BROWSER,
         userAgent,
         uptime: Math.floor((Date.now() - window.performance.timeOrigin) / 1_000),
       };
     } else {
       // Shared worker.
       return {
-        type: 'shared-worker',
+        type: Platform.PLATFORM_TYPE.SHARED_WORKER,
         uptime: Math.floor((Date.now() - performance.timeOrigin) / 1_000),
       };
     }
@@ -38,7 +25,7 @@ export const getPlatform = (): Platform => {
     // Node.
     const { platform, version, arch } = process;
     return {
-      type: 'node',
+      type: Platform.PLATFORM_TYPE.NODE,
       platform: `${platform} ${version} ${arch}`,
       runtime: process.version,
       uptime: Math.floor(process.uptime()),
