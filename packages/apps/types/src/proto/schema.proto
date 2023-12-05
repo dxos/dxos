@@ -284,12 +284,15 @@ message Message {
 message Chain {
   option (object) = true;
 
-  message Variable {
+  message Input {
+    option (object) = true;
+
     enum Type {
       VALUE = 0;
-      RESOLVER = 1;
-      FUNCTION = 2;
-      QUERY = 3;
+      PASS_THROUGH = 1;
+      RETRIEVER = 2;
+      FUNCTION = 3;
+      QUERY = 4;
     }
 
     string name = 1;
@@ -297,10 +300,13 @@ message Chain {
     dxos.schema.Text value = 3;
   }
 
+  // TODO(burdon): Not reactive unless object?
   message Prompt {
+    option (object) = true;
+
     string command = 1;
     dxos.schema.Text source = 2;
-    repeated Variable inputs = 3;
+    repeated Input inputs = 3;
   }
 
   string title = 1;

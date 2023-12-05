@@ -91,7 +91,9 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                object: new ChainType({ prompts: [{ source: new TextObject(example) }] }),
+                object: new ChainType({
+                  prompts: [new ChainType.Prompt({ command: 'test', source: new TextObject(example) })],
+                }),
               };
             }
           }
@@ -102,12 +104,11 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
 };
 
 const example = [
-  '# Sample',
-  'Objective',
+  '# Example',
   '',
   "Your objective is to create a sequential workflow based on the user's query.",
   '',
   'Use the following context:',
-  '',
+  '---',
   '{context}',
 ].join('\n');

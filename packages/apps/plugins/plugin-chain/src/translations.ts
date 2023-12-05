@@ -15,6 +15,7 @@ export default [
         'create stack section label': 'Create chain',
         'command placeholder': 'Enter slash command...',
         'template placeholder': 'Enter template...',
+        'value placeholder': 'Enter value...',
       },
     },
   },
