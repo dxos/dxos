@@ -40,7 +40,6 @@ export const Wildcard: MosaicTileComponent<any> = forwardRef(
     };
 
     const content = object.description?.text ?? object.content?.text;
-    console.log(JSON.stringify(object, null, 2));
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>

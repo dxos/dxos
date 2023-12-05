@@ -8,8 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type Prop, next as automerge } from '@dxos/automerge/automerge';
 
-import { plugin as amgPlugin } from './automerge-plugin';
-import { reconcile } from './automerge-plugin/plugin';
+import { plugin as amgPlugin, reconcile } from './automerge-plugin';
 import { Peer } from './demo';
 
 type EditorProps = {

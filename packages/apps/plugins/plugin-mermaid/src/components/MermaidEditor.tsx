@@ -18,13 +18,14 @@ export type MermaidEditorProps = {
   id: string;
   source: TextObject;
   view?: View;
+  hideSelector?: boolean;
   classes?: {
     root?: string;
     toolbar?: string;
   };
 };
 
-export const MermaidEditor = ({ id, source, view: controlledView, classes }: MermaidEditorProps) => {
+export const MermaidEditor = ({ id, source, view: controlledView, hideSelector, classes }: MermaidEditorProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<View>(controlledView ?? 'editor');
   useEffect(() => setView(controlledView ?? 'editor'), [controlledView]);
@@ -36,7 +37,7 @@ export const MermaidEditor = ({ id, source, view: controlledView, classes }: Mer
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
-      {!controlledView && (
+      {!hideSelector && (
         <DensityProvider density={'fine'}>
           <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
             <SplitterSelector view={view} onChange={setView} />

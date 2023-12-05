@@ -98,6 +98,8 @@ export const MermaidPlugin = (): PluginDefinition<MermaidPluginProvides> => {
                   id={(data.active as any).id}
                   source={(data.slide as MermaidType).source}
                   classes={{ root: 'p-24' }}
+                  view='preview'
+                  hideSelector
                 />
               ) : null;
             case 'section':
@@ -106,6 +108,7 @@ export const MermaidPlugin = (): PluginDefinition<MermaidPluginProvides> => {
                   id={(data.object as any).id}
                   source={(data.object as MermaidType).source}
                   classes={{ root: 'h-[400px] py-2' }}
+                  view='preview'
                 />
               ) : null;
           }

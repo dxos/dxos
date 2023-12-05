@@ -6,12 +6,18 @@ import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { useTextModel, type YText } from '@dxos/react-ui-editor';
+import {
+  TextEditor,
+  useTextModel,
+  type CursorInfo,
+  type TextEditorProps,
+  type TextEditorRef,
+  type YText,
+} from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type CursorInfo, TextEditor, type TextEditorProps, type TextEditorRef } from '../TextEditor';
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
@@ -59,20 +65,20 @@ const OutlinerItem = ({
     }
   }, [focus]);
 
-  const ref = useRef<TextEditorRef>(null);
+  const editorRef = useRef<TextEditorRef>(null);
   useEffect(() => {
-    if (ref.current && active && !focus) {
+    if (editorRef.current && active && !focus) {
       // TODO(burdon): Hack since ref isn't instantiated yet.
       //  NOTE: This happens with the line is split and a new line is created and set as the active line.
       setTimeout(() => {
-        ref.current?.view?.focus();
-        const from = active.from === -1 ? ref.current?.view?.state.doc.length : active.from;
+        editorRef.current?.view?.focus();
+        const from = active.from === -1 ? editorRef.current?.view?.state.doc.length : active.from;
         if (from !== undefined) {
-          ref.current?.view?.dispatch({ selection: { anchor: from, head: active.to ?? from } });
+          editorRef.current?.view?.dispatch({ selection: { anchor: from, head: active.to ?? from } });
         }
       });
     }
-  }, [ref.current?.view, active]);
+  }, [editorRef.current?.view, active]);
 
   const handleKeyDown: TextEditorProps['onKeyDown'] = (event, state) => {
     const { key, shiftKey } = event;
@@ -162,7 +168,7 @@ const OutlinerItem = ({
 
       {model && (
         <TextEditor
-          ref={ref}
+          ref={editorRef}
           model={model}
           slots={{
             root: {
