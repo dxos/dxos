@@ -15,16 +15,86 @@ import {
   type OnChangeFn,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { Fragment, type RefObject, useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 
 import { TableBody } from './TableBody';
-import { TableProvider as UntypedTableProvider, type TypedTableProvider } from './TableContext';
+import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
 import { groupTh, tableRoot } from '../../theme';
+
+const VirtualizedTableContent = ({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) => {
+  const {
+    table: { getRowModel },
+  } = useTableContext('VirtualizedTableContent');
+  const rows = getRowModel().rows;
+
+  const { getTotalSize, getVirtualItems } = useVirtualizer({
+    getScrollElement: () => containerRef.current,
+    count: rows.length,
+    overscan: 16,
+    estimateSize: () => 33,
+  });
+  const virtualRows = getVirtualItems();
+  const totalSize = getTotalSize();
+
+  const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
+  const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
+
+  return (
+    <>
+      {paddingTop > 0 && (
+        <tbody role='none'>
+          <tr role='none'>
+            <td style={{ height: `${paddingTop}px` }} role='none' />
+          </tr>
+        </tbody>
+      )}
+      <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
+      {paddingBottom > 0 && (
+        <tbody role='none'>
+          <tr role='none'>
+            <td style={{ height: `${paddingBottom}px` }} role='none' />
+          </tr>
+        </tbody>
+      )}
+    </>
+  );
+};
+
+const GroupedTableContent = () => {
+  const {
+    table: { getGroupedRowModel, getHeaderGroups, getState },
+    debug,
+  } = useTableContext('GroupedTableContent');
+  return (
+    <>
+      {getGroupedRowModel().rows.map((row, i) => {
+        return (
+          <Fragment key={i}>
+            {/* TODO(burdon): Customize group header renderer. */}
+            <thead>
+              <tr>
+                {debug && <th />}
+                <th
+                  // TODO(burdon): Calculate row span.
+                  colSpan={getHeaderGroups()[0].headers.length}
+                  className={groupTh({})}
+                >
+                  {getState().grouping[0]}[{String(row.getGroupingValue(getState().grouping[0]))}]
+                </th>
+              </tr>
+            </thead>
+            <TableBody rows={row.subRows} />
+          </Fragment>
+        );
+      })}
+    </>
+  );
+};
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const {
@@ -126,18 +196,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const rows = table.getRowModel().rows;
 
-  const { getTotalSize, getVirtualItems } = useVirtualizer({
-    getScrollElement: () => containerRef?.current ?? document.body,
-    count: rows.length,
-    overscan: 16,
-    estimateSize: () => 33,
-  });
-  const virtualRows = getVirtualItems();
-  const totalSize = getTotalSize();
-
-  const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
-  const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
-
   useEffect(() => {
     if (onDataSelectionChange) {
       onDataSelectionChange(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
@@ -162,47 +220,15 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       >
         <TableHead />
 
-        {grouping.length === 0 && (
-          <>
-            {paddingTop > 0 && (
-              <tbody role='none'>
-                <tr role='none'>
-                  <td style={{ height: `${paddingTop}px` }} role='none' />
-                </tr>
-              </tbody>
-            )}
-            <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
-            {paddingBottom > 0 && (
-              <tbody role='none'>
-                <tr role='none'>
-                  <td style={{ height: `${paddingBottom}px` }} role='none' />
-                </tr>
-              </tbody>
-            )}
-          </>
+        {grouping.length === 0 ? (
+          containerRef ? (
+            <VirtualizedTableContent containerRef={containerRef} />
+          ) : (
+            <TableBody rows={rows} />
+          )
+        ) : (
+          <GroupedTableContent />
         )}
-
-        {grouping.length !== 0 &&
-          table.getGroupedRowModel().rows.map((row, i) => {
-            return (
-              <Fragment key={i}>
-                {/* TODO(burdon): Customize group header renderer. */}
-                <thead>
-                  <tr>
-                    {debug && <th />}
-                    <th
-                      // TODO(burdon): Calculate row span.
-                      colSpan={table.getHeaderGroups()[0].headers.length}
-                      className={groupTh(props)}
-                    >
-                      {table.getState().grouping[0]}[{String(row.getGroupingValue(table.getState().grouping[0]))}]
-                    </th>
-                  </tr>
-                </thead>
-                <TableBody rows={row.subRows} />
-              </Fragment>
-            );
-          })}
 
         {footer && <TableFooter />}
       </table>
