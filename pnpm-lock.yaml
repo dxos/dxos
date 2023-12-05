@@ -793,6 +793,9 @@ importers:
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

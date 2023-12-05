@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
+import { invariant } from '@dxos/invariant';
 import { TextObject } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
@@ -45,20 +46,39 @@ type PromptTemplateProps = {
 export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: prompt.source });
+  const [inputs] = useState(new Map<string, ChainType.Input>());
 
-  const regex = /\{([a-zA-Z_]+)}/g;
   const text = prompt.source?.text ?? '';
-  const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
-  Array.from(variables.values()).forEach((name) => {
-    if (!prompt.inputs) {
-      prompt.inputs = [];
+  useEffect(() => {
+    const regex = /\{([a-zA-Z_]+)}/g;
+    const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
+
+    // Set initial values.
+    if (!prompt.inputs.length) {
+      prompt.inputs = Array.from(variables.values()).map(
+        (name) => new ChainType.Input({ name, value: new TextObject() }),
+      );
+      return;
     }
-    const input = prompt.inputs.find((input) => input.name === name);
-    // TODO(burdon): Don't create new input if editing existing name.
-    if (!input) {
-      prompt.inputs.push(new ChainType.Input({ name, value: new TextObject() }));
+
+    // Remove matches.
+    const existing = new Map<string, ChainType.Input>(inputs);
+    Array.from(variables.values()).forEach((name) => {
+      existing.delete(name);
+    });
+
+    // Find missing.
+    const name = Array.from(variables.values()).find((name) => !existing.has(name));
+    if (name) {
+      if (existing.size === 0) {
+        inputs.set(name, new ChainType.Input({ name, value: new TextObject() }));
+      } else {
+        invariant(existing.size === 1);
+        const previous = existing.keys().next().value;
+        inputs.set(name, existing.get(previous.value)!);
+      }
     }
-  });
+  }, [text]);
 
   return (
     <DensityProvider density='fine'>
