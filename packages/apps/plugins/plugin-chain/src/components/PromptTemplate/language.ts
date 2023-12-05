@@ -4,6 +4,8 @@
 
 import { StreamLanguage } from '@codemirror/language';
 
+export const VAR_NAME = /\{([\w_]+)}/;
+
 // Simple Monaco language extension.
 // https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
 export const promptLanguage = StreamLanguage.define({
@@ -17,7 +19,7 @@ export const promptLanguage = StreamLanguage.define({
     if (stream.match(/^-+$/)) {
       return 'lineComment';
     }
-    if (stream.match(/\{[a-zA-Z_]+}/)) {
+    if (stream.match(VAR_NAME)) {
       return 'number';
     }
     stream.next();

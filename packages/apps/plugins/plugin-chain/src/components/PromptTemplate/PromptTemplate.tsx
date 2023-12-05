@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
-import { invariant } from '@dxos/invariant';
 import { TextObject } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { promptLanguage } from './language';
+import { VAR_NAME, promptLanguage } from './language';
 import { CHAIN_PLUGIN } from '../../meta';
 
 const inputTypes = [
@@ -46,37 +45,42 @@ type PromptTemplateProps = {
 export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: prompt.source });
-  const [inputs] = useState(new Map<string, ChainType.Input>());
 
   const text = prompt.source?.text ?? '';
   useEffect(() => {
-    const regex = /\{([a-zA-Z_]+)}/g;
-    const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
-
-    // Set initial values.
-    if (!prompt.inputs.length) {
-      prompt.inputs = Array.from(variables.values()).map(
-        (name) => new ChainType.Input({ name, value: new TextObject() }),
-      );
-      return;
+    if (!prompt.inputs) {
+      prompt.inputs = []; // TODO(burdon): Required?
     }
 
-    // Remove matches.
-    const existing = new Map<string, ChainType.Input>(inputs);
+    const regex = new RegExp(VAR_NAME, 'g');
+    const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
+
+    // Create map of unclaimed inputs.
+    const unclaimed = new Map<string, ChainType.Input>(prompt.inputs?.map((input) => [input.name, input]));
+    const missing: string[] = [];
     Array.from(variables.values()).forEach((name) => {
-      existing.delete(name);
+      if (unclaimed.has(name)) {
+        unclaimed.delete(name);
+      } else {
+        missing.push(name);
+      }
     });
 
-    // Find missing.
-    const name = Array.from(variables.values()).find((name) => !existing.has(name));
-    if (name) {
-      if (existing.size === 0) {
-        inputs.set(name, new ChainType.Input({ name, value: new TextObject() }));
+    // Match or create new inputs.
+    const values = unclaimed.values();
+    missing.forEach((name) => {
+      const next = values.next().value;
+      if (next) {
+        next.name = name;
       } else {
-        invariant(existing.size === 1);
-        const previous = existing.keys().next().value;
-        inputs.set(name, existing.get(previous.value)!);
+        prompt.inputs.push(new ChainType.Input({ name, value: new TextObject() }));
       }
+    });
+
+    // Remove unclaimed (deleted) inputs.
+    // TODO(burdon): If user types incorrect name value, it will be deleted. Garbage collect?
+    for (const input of values) {
+      prompt.inputs.splice(prompt.inputs.indexOf(input), 1);
     }
   }, [text]);
 
@@ -146,7 +150,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='p-2'>
-                        <ValueEditor input={input} />
+                        {input.type === ChainType.Input.Type.VALUE && <ValueEditor input={input} />}
                       </td>
                     </tr>
                   ))}

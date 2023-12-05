@@ -92,7 +92,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
             case ChainAction.CREATE: {
               return {
                 object: new ChainType({
-                  prompts: [new ChainType.Prompt({ command: 'test', source: new TextObject(example) })],
+                  prompts: [createPrompt()],
                 }),
               };
             }
@@ -103,12 +103,18 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
   };
 };
 
-const example = [
-  '# Example',
-  '',
-  "Your objective is to create a sequential workflow based on the user's query.",
-  '',
-  'Use the following context:',
-  '---',
-  '{context}',
-].join('\n');
+const createPrompt = () =>
+  new ChainType.Prompt({
+    command: 'test',
+    source: new TextObject(
+      ['# Translator', '', 'Translate the following into {language}.', '---', '{input}'].join('\n'),
+    ),
+    inputs: [
+      new ChainType.Input({
+        type: ChainType.Input.Type.VALUE,
+        name: 'language',
+        value: new TextObject('japanese'),
+      }),
+      new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'input' }),
+    ],
+  });
