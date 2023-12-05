@@ -58,7 +58,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
             // Check for command.
             let command: string | undefined;
-            const match = text.match(/\/(\w+)\s*(.+)/);
+            const match = text.match(/\/(\w+)\s*(.+)?/);
             if (match) {
               command = match[1];
               text = match[2];

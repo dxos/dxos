@@ -58,7 +58,6 @@ export const createResponse = (space: Space, context: PromptContext, content: st
       }
 
       case 'mermaid': {
-        console.log('###', context.object?.__typename, content);
         if (context.object?.__typename === StackType.schema.typename) {
           const section = new StackType.Section({
             object: new MermaidType({ source: new TextObject(content.trim()) }),

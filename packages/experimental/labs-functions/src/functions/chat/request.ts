@@ -5,6 +5,7 @@
 import { PromptTemplate } from 'langchain/prompts';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
+import { formatDocumentsAsString } from 'langchain/util/document';
 
 import { Chain as ChainType } from '@braneframe/types';
 import { type Message as MessageType } from '@braneframe/types';
@@ -89,19 +90,24 @@ export const createSequence = (
 const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.Prompt) => {
   const inputs = prompt.inputs.reduce<{ [name: string]: any }>((inputs, { type, name, value }) => {
     switch (type) {
-      case ChainType.Input.Type.VALUE:
+      case ChainType.Input.Type.VALUE: {
         inputs[name] = () => value.text;
         break;
-      case ChainType.Input.Type.PASS_THROUGH:
+      }
+      case ChainType.Input.Type.PASS_THROUGH: {
         inputs[name] = new RunnablePassthrough();
         break;
+      }
+      case ChainType.Input.Type.RETRIEVER: {
+        const retriever = resources.store.vectorStore.asRetriever({});
+        inputs[name] = retriever.pipe(formatDocumentsAsString);
+        break;
+      }
     }
 
     return inputs;
   }, {});
 
-  console.log('##', prompt.source.text);
-  console.log('##', inputs);
   return RunnableSequence.from([
     inputs,
     PromptTemplate.fromTemplate(prompt.source.text),

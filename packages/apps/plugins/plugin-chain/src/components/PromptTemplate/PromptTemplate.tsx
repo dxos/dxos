@@ -13,6 +13,8 @@ import { groupBorder, mx } from '@dxos/react-ui-theme';
 import { VAR_NAME, promptLanguage } from './language';
 import { CHAIN_PLUGIN } from '../../meta';
 
+// TODO(burdon): Schema.
+
 const inputTypes = [
   {
     value: ChainType.Input.Type.VALUE,
@@ -26,14 +28,14 @@ const inputTypes = [
     value: ChainType.Input.Type.RETRIEVER,
     label: 'Retriever',
   },
-  {
-    value: ChainType.Input.Type.FUNCTION,
-    label: 'Function',
-  },
-  {
-    value: ChainType.Input.Type.QUERY,
-    label: 'Query',
-  },
+  // {
+  //   value: ChainType.Input.Type.FUNCTION,
+  //   label: 'Function',
+  // },
+  // {
+  //   value: ChainType.Input.Type.QUERY,
+  //   label: 'Query',
+  // },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
@@ -109,7 +111,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
             extensions={[promptLanguage]}
             slots={{
               root: {
-                className: 'w-full',
+                className: 'w-full p-2',
               },
               editor: {
                 placeholder: t('template placeholder'),
