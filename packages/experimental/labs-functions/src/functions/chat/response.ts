@@ -26,6 +26,8 @@ export const createResponse = (space: Space, context: PromptContext, content: st
     const { pre, data, content, post } = result;
     pre && blocks.push({ timestamp, text: pre });
 
+    console.log(context.object?.__typename, result);
+
     switch (result.type) {
       case 'json': {
         const dataArray = Array.isArray(data) ? data : [data];
@@ -58,11 +60,13 @@ export const createResponse = (space: Space, context: PromptContext, content: st
       }
 
       case 'mermaid': {
+        // TODO(burdon): Insert based on prompt config.
         if (context.object?.__typename === StackType.schema.typename) {
-          const section = new StackType.Section({
-            object: new MermaidType({ source: new TextObject(content.trim()) }),
-          });
-          context.object!.sections.push(section);
+          context.object!.sections.push(
+            new StackType.Section({
+              object: new MermaidType({ source: new TextObject(content.trim()) }),
+            }),
+          );
         }
         break;
       }
