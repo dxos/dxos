@@ -14,8 +14,8 @@ import {
   type RowSelectionState,
   type OnChangeFn,
 } from '@tanstack/react-table';
-import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { useVirtual } from 'react-virtual';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 
@@ -42,8 +42,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     classNames,
     containerRef,
   } = props;
-
-  const defaultContainerRef = useRef(null);
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
@@ -128,17 +126,17 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const rows = table.getRowModel().rows;
 
-  const rowVirtualizer = useVirtual({
-    parentRef: containerRef ?? defaultContainerRef,
-    size: rows.length,
-    overscan: 10,
+  const { getTotalSize, getVirtualItems } = useVirtualizer({
+    getScrollElement: () => containerRef?.current ?? document.body,
+    count: rows.length,
+    overscan: 16,
+    estimateSize: () => 33,
   });
-  const { virtualItems: virtualRows, totalSize } = rowVirtualizer;
+  const virtualRows = getVirtualItems();
+  const totalSize = getTotalSize();
 
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
   const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
-
-  console.log('[p]', paddingTop, paddingBottom, virtualRows.length, rows.length);
 
   useEffect(() => {
     if (onDataSelectionChange) {
@@ -167,15 +165,19 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
         {grouping.length === 0 && (
           <>
             {paddingTop > 0 && (
-              <tr>
-                <td style={{ height: `${paddingTop}px` }} />
-              </tr>
+              <tbody role='none'>
+                <tr role='none'>
+                  <td style={{ height: `${paddingTop}px` }} role='none' />
+                </tr>
+              </tbody>
             )}
             <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
             {paddingBottom > 0 && (
-              <tr>
-                <td style={{ height: `${paddingBottom}px` }} />
-              </tr>
+              <tbody role='none'>
+                <tr role='none'>
+                  <td style={{ height: `${paddingBottom}px` }} role='none' />
+                </tr>
+              </tbody>
             )}
           </>
         )}
@@ -197,18 +199,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
                     </th>
                   </tr>
                 </thead>
-                {/* TODO(thure): Virtualization is probably breaking this case. */}
-                {paddingTop > 0 && (
-                  <tr>
-                    <td style={{ height: `${paddingTop}px` }} />
-                  </tr>
-                )}
-                <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
-                {paddingBottom > 0 && (
-                  <tr>
-                    <td style={{ height: `${paddingBottom}px` }} />
-                  </tr>
-                )}
+                <TableBody rows={row.subRows} />
               </Fragment>
             );
           })}

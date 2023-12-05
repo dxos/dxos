@@ -206,6 +206,7 @@ export const Empty = {
 
 export const Dynamic = {
   render: () => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(50));
     useEffect(() => {
       const interval = setInterval(() => {
@@ -219,7 +220,7 @@ export const Dynamic = {
       return () => clearInterval(interval);
     }, []);
     return (
-      <AnchoredOverflow.Root classNames='max-bs-[80dvh]'>
+      <AnchoredOverflow.Root classNames='max-bs-[80dvh]' ref={containerRef}>
         <Table<Item>
           rowsSelectable='multi'
           keyAccessor={(row) => row.publicKey.toHex()}
@@ -227,6 +228,8 @@ export const Dynamic = {
           data={items}
           fullWidth
           footer
+          stickyHeader
+          containerRef={containerRef}
         />
         <AnchoredOverflow.Anchor />
       </AnchoredOverflow.Root>
@@ -243,7 +246,7 @@ export const Editable = {
     };
 
     return (
-      <div ref={containerRef} className='max-bs-[100dvh] overflow-auto'>
+      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
         <Table<Item>
           role='grid'
           rowsSelectable='multi'
@@ -251,6 +254,7 @@ export const Editable = {
           columns={columns(onUpdate)}
           data={items}
           fullWidth
+          stickyHeader
           border
           containerRef={containerRef}
         />
@@ -277,6 +281,7 @@ export const Resizable = {
         columns={columns(onUpdate)}
         data={items}
         fullWidth
+        stickyHeader
         // onColumnResize={handleColumnResize}
       />
     );
