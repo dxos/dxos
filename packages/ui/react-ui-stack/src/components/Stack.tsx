@@ -82,7 +82,7 @@ export const Stack = ({
             draggableProps={draggableProps}
             draggableStyle={draggableStyle}
             onRemove={() => onRemoveSection?.(path)}
-            onNavigate={() => onNavigateToSection?.(transformedItem.id)}
+            onNavigate={() => onNavigateToSection?.(transformedItem.object.id)}
           >
             <SectionContent data={transformedItem.object} />
           </Section>
