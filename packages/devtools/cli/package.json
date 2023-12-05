@@ -23,7 +23,6 @@
     "/oclif.manifest.json"
   ],
   "scripts": {
-    "api-keys": "node ./scripts/inject_api_keys.js",
     "bin": "./bin/run",
     "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",

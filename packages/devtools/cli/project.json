@@ -22,34 +22,6 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "inputs": [
-        {
-          "env": "NODE_ENV"
-        },
-        {
-          "env": "DX_ENVIRONMENT"
-        },
-        {
-          "env": "DX_IPDATA_API_KEY"
-        },
-        {
-          "env": "DX_SENTRY_DESTINATION"
-        },
-        {
-          "env": "DX_TELEMETRY_API_KEY"
-        },
-        "^production",
-        "default"
-      ],
-      "options": {
-        "script": "api-keys"
-      },
-      "outputs": [
-        "packages/devtools/cli/src/util/telemetryrc.json"
-      ]
-    },
     "test": {
       "options": {
         "checkLeaks": false,

@@ -6,10 +6,10 @@ const { writeFile } = require('node:fs/promises');
 
 const packageJson = require('../package.json');
 
-const TELEMETRY_PATH = './src/util/telemetryrc.json';
+const OBSERVABILITY_PATH = './src/cli-observability-secrets.json';
 
 const injectApiKeys = async () => {
-  const telemetryrc = {
+  const secrets = {
     DX_ENVIRONMENT: process.env.DX_ENVIRONMENT ?? null,
     DX_RELEASE: process.env.NODE_ENV === 'production' ? `cli@${packageJson.version}` : null,
     SENTRY_DESTINATION: process.env.DX_SENTRY_DESTINATION ?? null,
@@ -19,7 +19,7 @@ const injectApiKeys = async () => {
     DATADOG_APP_KEY: process.env.DX_DATADOG_APP_KEY ?? null,
   };
 
-  await writeFile(TELEMETRY_PATH, JSON.stringify(telemetryrc, null, 2), 'utf-8');
+  await writeFile(OBSERVABILITY_PATH, JSON.stringify(secrets, null, 2), 'utf-8');
 };
 
 void injectApiKeys();

@@ -8,3 +8,5 @@ packages/experimental/kai-functions/**
 packages/experimental/kai-bots/**
 packages/experimental/kai-framework/**
 packages/experimental/kube-console/**
+
+packages/common/observability/src/cli-observability-secrets.json
