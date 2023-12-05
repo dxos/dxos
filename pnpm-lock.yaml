@@ -2765,12 +2765,21 @@ importers:
 
   packages/apps/plugins/plugin-thread:
     dependencies:
+      '@codemirror/language':
+        specifier: ^6.9.2
+        version: 6.9.2
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2799,9 +2808,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -8426,6 +8432,9 @@ importers:
       prosemirror-view:
         specifier: ^1.30.1
         version: 1.30.1
+      style-mod:
+        specifier: ^4.1.0
+        version: 4.1.0
       y-codemirror.next:
         specifier: ^0.3.2
         version: 0.3.2(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)(yjs@13.6.10)

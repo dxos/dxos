@@ -16,12 +16,13 @@ import React, {
   useCallback,
   type HTMLAttributes,
 } from 'react';
+import { type StyleSpec } from 'style-mod';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { YText } from '@dxos/text-model';
 
-import { theme } from './theme';
+import { defaultStyles } from './theme';
 import { type EditorModel, type EditorSlots } from '../../model';
 
 export type CursorInfo = {
@@ -32,24 +33,27 @@ export type CursorInfo = {
   after?: string;
 };
 
-export type TextEditorProps = {
-  model?: EditorModel;
-  extensions?: Extension[];
-  slots?: EditorSlots;
-  onKeyDown?: (event: KeyboardEvent, info: CursorInfo) => void;
-} & Pick<HTMLAttributes<HTMLDivElement>, 'onBlur' | 'onFocus'>;
-
 export type TextEditorRef = {
   editor: HTMLDivElement | null;
   state?: EditorState;
   view?: EditorView;
 };
 
+export type TextEditorProps = {
+  model?: EditorModel;
+  extensions?: Extension[];
+  theme?: {
+    [selector: string]: StyleSpec;
+  };
+  slots?: EditorSlots;
+  onKeyDown?: (event: KeyboardEvent, info: CursorInfo) => void;
+} & Pick<HTMLAttributes<HTMLDivElement>, 'onBlur' | 'onFocus'>;
+
 /**
  * Simple text editor.
  */
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, extensions = [], slots = {}, onKeyDown, ...props }, forwardedRef) => {
+  ({ model, extensions = [], theme = defaultStyles, slots = {}, onKeyDown, ...props }, forwardedRef) => {
     const { id, content } = model ?? {};
     const { themeMode } = useThemeContext();
 

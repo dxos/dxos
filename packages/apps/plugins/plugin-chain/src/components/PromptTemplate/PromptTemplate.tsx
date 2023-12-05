@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { syntaxHighlighting } from '@codemirror/language';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
@@ -10,7 +11,7 @@ import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { VAR_NAME, promptLanguage } from './language';
+import { nameRegex, promptLanguage, promptHighlightStyles } from './syntax';
 import { CHAIN_PLUGIN } from '../../meta';
 
 // TODO(burdon): Schema.
@@ -54,7 +55,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       prompt.inputs = []; // TODO(burdon): Required?
     }
 
-    const regex = new RegExp(VAR_NAME, 'g');
+    const regex = new RegExp(nameRegex, 'g');
     const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
 
     // Create map of unclaimed inputs.
@@ -98,7 +99,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                 classNames={mx('is-full bg-transparent m-2')}
                 value={prompt.command ?? ''}
                 onChange={(event) => {
-                  prompt.command = event.target.value;
+                  prompt.command = event.target.value.replace(/\W/g, '');
                 }}
               />
             </Input.Root>
@@ -108,7 +109,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         <Section title='Template'>
           <TextEditor
             model={model}
-            extensions={[promptLanguage]}
+            extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}
             slots={{
               root: {
                 className: 'w-full p-2',
@@ -127,8 +128,8 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                 <tbody>
                   {prompt.inputs.map((input) => (
                     <tr key={input.name}>
-                      <td className='p-2 w-[200px] font-mono text-sm'>{'{' + input.name + '}'}</td>
-                      <td className='p-2 w-[160px]'>
+                      <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{'{' + input.name + '}'}</td>
+                      <td className='px-3 py-1.5 w-[160px]'>
                         <Input.Root>
                           <Select.Root
                             value={String(input.type)}
@@ -151,7 +152,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           </Select.Root>
                         </Input.Root>
                       </td>
-                      <td className='p-2'>
+                      <td className='px-3 py-1.5'>
                         {input.type === ChainType.Input.Type.VALUE && <ValueEditor input={input} />}
                       </td>
                     </tr>
