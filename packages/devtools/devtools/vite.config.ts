@@ -52,7 +52,6 @@ export default defineConfig({
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/**/*.mjs'),
       ],
       extensions: []
     }),

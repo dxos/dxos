@@ -32,13 +32,14 @@ export const SpaceListPanel: FC = () => {
   };
 
   // TODO(burdon): Get builder from hook.
-  const { helper, builder } = createColumnBuilder<Space>();
+  // TODO(dmaretskyi): Fix the types.
+  const { helper, builder } = createColumnBuilder<any>();
   const columns: TableColumnDef<Space, any>[] = [
     helper.accessor('key', builder.key({ tooltip: true })),
     helper.accessor((space) => space.properties.name, {
       id: 'name',
       meta: { cell: { classNames: textPadding } },
-    }),
+    }) as any,
     helper.accessor((space) => space.db.objects.length, {
       id: 'objects',
       ...builder.number(),

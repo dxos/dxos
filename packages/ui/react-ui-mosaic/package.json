@@ -26,6 +26,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",

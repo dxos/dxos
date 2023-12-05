@@ -66,7 +66,13 @@ export const Stack = ({
     () =>
       forwardRef(({ path, type, active, draggableStyle, draggableProps, item }, forwardRef) => {
         const { t } = useTranslation(translationKey);
-        const transformedItem = transform ? transform(item, active ? activeItem?.type : type) : item;
+        const transformedItem = transform
+          ? transform(
+              item,
+              // TODO(wittjosiah): `active` doesn't always seem to be accurate here.
+              activeItem?.item.id === item.id ? activeItem?.type : type,
+            )
+          : item;
         const section = (
           <Section
             ref={forwardRef}
@@ -113,7 +119,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'm-1 p-2', isOver && dropRing)}>
+      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'm-2 p-2', isOver && dropRing)}>
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (

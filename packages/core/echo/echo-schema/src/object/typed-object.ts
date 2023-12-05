@@ -25,7 +25,7 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
-import { AutomergeObject } from '../automerge/automerge-object';
+import { AutomergeObject } from '../automerge';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -85,6 +85,10 @@ export type AutomergeOptions = {
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
+  static [Symbol.hasInstance](instance: any) {
+    return !!instance?.[base] && (isActualTypedObject(instance) || isActualAutomergeObject(instance));
+  }
+
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
@@ -657,4 +661,12 @@ export const getGlobalAutomergePreference = () => {
     (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
     false
   );
+};
+
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

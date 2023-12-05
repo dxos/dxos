@@ -232,6 +232,7 @@ describe.skip('LangChain', () => {
   // Structured output
   // https://js.langchain.com/docs/modules/chains/popular/structured_output
   // TODO(burdon): How to make prompt satisfy all fields?
+  // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
   test('functions', async () => {
     const schema = z.object({

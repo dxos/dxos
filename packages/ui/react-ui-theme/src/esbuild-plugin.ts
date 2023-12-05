@@ -12,13 +12,13 @@ import type { ThemeConfig } from 'tailwindcss/types/config';
 
 import { resolveKnownPeers, tailwindConfig } from './config';
 
-export const ThemePlugins = (options: {
+export const ThemePlugins = async (options: {
   content: string[];
   root?: string;
   outdir: string;
   extensions?: Partial<ThemeConfig>[];
-}): Plugin[] => {
-  const resolvedContent = options.root ? resolveKnownPeers(options.content, options.root) : options.content;
+}): Promise<Plugin[]> => {
+  const resolvedContent = options.root ? await resolveKnownPeers(options.content, options.root) : options.content;
   return [
     // TODO(thure): This really shouldn’t be this way, but after hours of searching for a reasonable way to do this I came up empty. The prior art I found was mainly this thread, though it’s only tangentially related: https://github.com/evanw/esbuild/issues/800#issuecomment-786151076
     {

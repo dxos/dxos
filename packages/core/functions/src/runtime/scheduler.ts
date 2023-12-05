@@ -13,10 +13,14 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../manifest';
+import { type FunctionSubscriptionEvent } from '../handler';
+import { type FunctionDef, type FunctionManifest, type FunctionTrigger, type TriggerSubscription } from '../manifest';
+
+type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
 
 type SchedulerOptions = {
-  endpoint: string;
+  endpoint?: string;
+  callback?: Callback;
 };
 
 /**
@@ -33,7 +37,7 @@ export class Scheduler {
   constructor(
     private readonly _client: Client,
     private readonly _manifest: FunctionManifest,
-    private readonly _options: SchedulerOptions,
+    private readonly _options: SchedulerOptions = {},
   ) {}
 
   async start() {
@@ -58,6 +62,7 @@ export class Scheduler {
     const def = this._manifest.functions.find((config) => config.id === trigger.function);
     invariant(def, `Function not found: ${trigger.function}`);
 
+    // Currently supports only one trigger declaration per function.
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
@@ -66,69 +71,14 @@ export class Scheduler {
         return;
       }
 
-      // Cron schedule.
+      // Timer.
       if (trigger.schedule) {
-        const task = new DeferredTask(ctx, async () => {
-          await this.execFunction(def, {
-            space: space.key,
-          });
-        });
-
-        // TODO(burdon): Check greater than 30s min (use cron-parser).
-        const job = new CronJob(trigger.schedule, () => task.schedule());
-
-        job.start();
-        ctx.onDispose(() => job.stop());
+        this._createTimer(ctx, space, def, trigger);
       }
 
-      // ECHO subscription.
-      if (trigger.subscription) {
-        const objectIds = new Set<string>();
-        const task = new DeferredTask(ctx, async () => {
-          await this.execFunction(def, {
-            space: space.key,
-            objects: Array.from(objectIds),
-          });
-        });
-
-        // TODO(burdon): Standardize subscription handles.
-        const subscriptions: (() => void)[] = [];
-        const subscription = createSubscription(({ added, updated }) => {
-          for (const object of added) {
-            objectIds.add(object.id);
-          }
-          for (const object of updated) {
-            objectIds.add(object.id);
-          }
-
-          task.schedule();
-        });
-        subscriptions.push(() => subscription.unsubscribe());
-
-        const { type, props, deep, delay } = trigger.subscription;
-        const update = ({ objects }: Query) => {
-          subscription.update(objects);
-
-          // TODO(burdon): Hack to monitor changes to Document's text object.
-          if (deep) {
-            log.info('update', { type, deep, objects: objects.length });
-            for (const object of objects) {
-              const content = object.content;
-              if (content instanceof TextObject) {
-                subscriptions.push(content[subscribe](debounce(() => subscription.update([object]), 1_000)));
-              }
-            }
-          }
-        };
-
-        // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
-        // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
-        const query = space.db.query(Filter.typename(type, props));
-        subscriptions.push(query.subscribe(delay ? debounce(update, delay * 1_000) : update));
-
-        ctx.onDispose(() => {
-          subscriptions.forEach((unsubscribe) => unsubscribe());
-        });
+      // Subscription.
+      for (const triggerSubscription of trigger.subscriptions ?? []) {
+        this._createSubscription(ctx, space, def, triggerSubscription);
       }
     }
   }
@@ -142,19 +92,92 @@ export class Scheduler {
     }
   }
 
-  private async execFunction(def: FunctionDef, data: any) {
+  private _createTimer(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
+    const task = new DeferredTask(ctx, async () => {
+      await this._execFunction(def, {
+        space: space.key,
+      });
+    });
+
+    // TODO(burdon): Check greater than 30s min (use cron-parser).
+    invariant(trigger.schedule);
+    const job = new CronJob(trigger.schedule, () => task.schedule());
+
+    job.start();
+    ctx.onDispose(() => job.stop());
+  }
+
+  private _createSubscription(ctx: Context, space: Space, def: FunctionDef, triggerSubscription: TriggerSubscription) {
+    const objectIds = new Set<string>();
+    const task = new DeferredTask(ctx, async () => {
+      await this._execFunction(def, {
+        space: space.key,
+        objects: Array.from(objectIds),
+      });
+    });
+
+    // TODO(burdon): Standardize subscription handles.
+    const subscriptions: (() => void)[] = [];
+    const subscription = createSubscription(({ added, updated }) => {
+      for (const object of added) {
+        objectIds.add(object.id);
+      }
+      for (const object of updated) {
+        objectIds.add(object.id);
+      }
+
+      task.schedule();
+    });
+    subscriptions.push(() => subscription.unsubscribe());
+
+    const { type, props, deep, delay } = triggerSubscription;
+    const update = ({ objects }: Query) => {
+      subscription.update(objects);
+
+      // TODO(burdon): Hack to monitor changes to Document's text object.
+      if (deep) {
+        log.info('update', { type, deep, objects: objects.length });
+        for (const object of objects) {
+          const content = object.content;
+          if (content instanceof TextObject) {
+            subscriptions.push(content[subscribe](debounce(() => subscription.update([object]), 1_000)));
+          }
+        }
+      }
+    };
+
+    // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
+    // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
+    const query = space.db.query(Filter.typename(type, props));
+    subscriptions.push(query.subscribe(delay ? debounce(update, delay * 1_000) : update));
+
+    ctx.onDispose(() => {
+      subscriptions.forEach((unsubscribe) => unsubscribe());
+    });
+  }
+
+  private async _execFunction(def: FunctionDef, data: any) {
     try {
       log('request', { function: def.id });
-      const response = await fetch(`${this._options.endpoint}/${def.name}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const { endpoint, callback } = this._options;
+      let status = 0;
+      if (endpoint) {
+        // TODO(burdon): Move out of scheduler (generalize as callback).
+        const response = await fetch(`${this._options.endpoint}/${def.name}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        status = response.status;
+      } else if (callback) {
+        status = await callback(data);
+      }
 
       // const result = await response.json();
-      log('result', { function: def.id, result: response.status });
+      log('result', { function: def.id, result: status });
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
     }

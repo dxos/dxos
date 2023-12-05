@@ -4,3 +4,4 @@
 
 export * from './Outliner';
 export * from './OutlinerMain';
+export * from './TextEditor';
