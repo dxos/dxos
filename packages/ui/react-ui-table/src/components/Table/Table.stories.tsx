@@ -229,7 +229,7 @@ export const Dynamic = {
           fullWidth
           footer
           stickyHeader
-          containerRef={containerRef}
+          getScrollElement={() => containerRef.current}
         />
         <AnchoredOverflow.Anchor />
       </AnchoredOverflow.Root>
@@ -256,7 +256,7 @@ export const Editable = {
           fullWidth
           stickyHeader
           border
-          containerRef={containerRef}
+          getScrollElement={() => containerRef.current}
         />
       </div>
     );

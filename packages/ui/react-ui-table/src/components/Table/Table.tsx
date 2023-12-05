@@ -14,8 +14,8 @@ import {
   type RowSelectionState,
   type OnChangeFn,
 } from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { Fragment, type RefObject, useCallback, useEffect, useState } from 'react';
+import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 
@@ -26,14 +26,16 @@ import { TableHead } from './TableHead';
 import { type TableProps } from './props';
 import { groupTh, tableRoot } from '../../theme';
 
-const VirtualizedTableContent = ({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) => {
+const VirtualizedTableContent = ({
+  getScrollElement,
+}: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
   const {
     table: { getRowModel },
   } = useTableContext('VirtualizedTableContent');
   const rows = getRowModel().rows;
 
   const { getTotalSize, getVirtualItems } = useVirtualizer({
-    getScrollElement: () => containerRef.current,
+    getScrollElement,
     count: rows.length,
     overscan: 16,
     estimateSize: () => 33,
@@ -110,7 +112,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debug,
     onDataSelectionChange,
     classNames,
-    containerRef,
+    getScrollElement,
   } = props;
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
@@ -221,8 +223,8 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
         <TableHead />
 
         {grouping.length === 0 ? (
-          containerRef ? (
-            <VirtualizedTableContent containerRef={containerRef} />
+          getScrollElement ? (
+            <VirtualizedTableContent getScrollElement={getScrollElement} />
           ) : (
             <TableBody rows={rows} />
           )
