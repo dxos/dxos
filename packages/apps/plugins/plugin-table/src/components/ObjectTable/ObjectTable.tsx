@@ -20,11 +20,11 @@ const reactDeps = (...obj: TypedObject[]) => {
   return JSON.stringify(obj);
 };
 
-export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role'> & {
+export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
   table: TableType;
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
+export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const [, forceUpdate] = useState({});
   const space = getSpaceForObject(table);
   const objects = useQuery<TypedObject>(
@@ -165,6 +165,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader })
         onColumnResize={handleColumnResize}
         role={role ?? 'grid'}
         stickyHeader={stickyHeader}
+        getScrollElement={getScrollElement}
       />
       {debug && (
         <div className='flex text-xs'>
