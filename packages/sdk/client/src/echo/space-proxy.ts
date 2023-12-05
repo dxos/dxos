@@ -329,6 +329,7 @@ export class SpaceProxy implements Space {
     log('destroying...');
     await this._ctx.dispose();
     await this._invitationsProxy.close();
+    await this._db.automerge.close();
     await this._dbBackend?.close();
     await this._itemManager?.destroy();
     log('destroyed');
