@@ -105,10 +105,8 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
 
 const createPrompt = () =>
   new ChainType.Prompt({
-    command: 'test',
-    source: new TextObject(
-      ['# Translator', '', 'Translate the following into {language}.', '---', '{input}'].join('\n'),
-    ),
+    command: 'say',
+    source: new TextObject(['Translate the following into {language}.', '---', '{input}'].join('\n')),
     inputs: [
       new ChainType.Input({
         type: ChainType.Input.Type.VALUE,

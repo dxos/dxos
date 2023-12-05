@@ -66,17 +66,22 @@ export const createSequence = (
       object: { id: context.object?.id, schema: context.object?.__typename },
       schema: context.schema?.typename,
     },
+    options,
   });
 
-  // Create chain from command.
+  // Create sequence from command.
   if (options.command) {
     const { objects: chains = [] } = space.db.query(ChainType.filter());
-    const prompt = chains.flatMap((chains) => chains.prompts).find((prompt) => prompt.command === options.command);
-    if (prompt) {
-      return createSequenceFromPrompt(resources, prompt);
+    for (const chain of chains) {
+      for (const prompt of chain.prompts) {
+        if (prompt.command === options.command) {
+          return createSequenceFromPrompt(resources, prompt);
+        }
+      }
     }
   }
 
+  // Create sequence from predicates.
   const { generator } = sequences.find(({ test }) => test(context))!;
   return generator(resources, () => context, options);
 };
@@ -85,7 +90,7 @@ const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.P
   const inputs = prompt.inputs.reduce<{ [name: string]: any }>((inputs, { type, name, value }) => {
     switch (type) {
       case ChainType.Input.Type.VALUE:
-        inputs[name] = value.text;
+        inputs[name] = () => value.text;
         break;
       case ChainType.Input.Type.PASS_THROUGH:
         inputs[name] = new RunnablePassthrough();
@@ -95,7 +100,8 @@ const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.P
     return inputs;
   }, {});
 
-  console.log(inputs);
+  console.log('##', prompt.source.text);
+  console.log('##', inputs);
   return RunnableSequence.from([
     inputs,
     PromptTemplate.fromTemplate(prompt.source.text),
