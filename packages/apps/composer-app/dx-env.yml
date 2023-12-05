@@ -9,3 +9,7 @@ LOG_PREFIX:
 REMOTE_SOURCE:
   path: runtime.client.remoteSource
   type: string
+
+DATADOG_API_KEY:
+  path: runtime.app.env.DX_DATADOG_API_KEY
+  type: string

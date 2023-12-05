@@ -37,7 +37,7 @@ import { type ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
-import { addTag } from '@dxos/observability';
+import { Observability } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -46,7 +46,6 @@ import * as Telemetry from '@dxos/telemetry';
 import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
-  SENTRY_DESTINATION,
   TELEMETRY_API_KEY,
   disableTelemetry,
   getTelemetryContext,
@@ -62,6 +61,7 @@ import {
 const STDIN_TIMEOUT = 100;
 
 // Set config if not overridden by env.
+// TODO(nf): how to avoid abusive or unintentional spamming of Sentry?
 log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
@@ -150,6 +150,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   private _failing = false;
 
   protected _telemetryContext?: TelemetryContext;
+  protected _observability?: Observability;
 
   protected flags!: Flags<T>;
   protected args!: Args<T>;
@@ -221,21 +222,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await showTelemetryBanner(DX_DATA);
     }
 
-    if (SENTRY_DESTINATION && mode !== 'disabled') {
-      Sentry.init({
-        installationId,
-        destination: SENTRY_DESTINATION,
-        environment,
-        release,
-        // TODO(wittjosiah): Configure this.
-        sampleRate: 1.0,
-        scrubFilenames: mode !== 'full',
-        properties: {
-          group,
-        },
-      });
-      Sentry.enableSentryLogProcessor();
-    }
+    this._observability = new Observability({ namespace: 'agent', group, mode: this._telemetryContext.mode });
+
+    this._observability.initSentry({
+      installationId,
+      environment,
+      release,
+      // TODO(wittjosiah): Configure this.
+      sampleRate: 1.0,
+    });
 
     if (TELEMETRY_API_KEY) {
       mode === 'disabled' && (await disableTelemetry(DX_DATA));
@@ -246,9 +241,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       });
     }
 
-    if (this._telemetryContext?.mode === 'full') {
-      addTag('hostname', os.hostname());
-    }
     this.addToTelemetryContext({ command: this.id });
 
     try {

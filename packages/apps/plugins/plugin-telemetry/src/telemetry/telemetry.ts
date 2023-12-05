@@ -6,6 +6,7 @@
 import * as localForage from 'localforage';
 
 import { log } from '@dxos/log';
+import { Observability } from '@dxos/observability';
 import type { Client, Config } from '@dxos/react-client';
 import { type InitOptions as SentryInitOptions } from '@dxos/sentry';
 import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
@@ -83,6 +84,7 @@ export const initializeAppTelemetry = async ({
   sentryOptions,
   telemetryOptions,
 }: AppTelemetryOptions) => {
+  // TODO(nf): refactor to use Observability
   try {
     const Telemetry = await import('@dxos/telemetry');
     const Sentry = await import('@dxos/sentry');
@@ -135,22 +137,6 @@ export const initializeAppTelemetry = async ({
     //   BASE_TELEMETRY_PROPERTIES.tags = tags.toString();
     // }
 
-    const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
-    Sentry.init({
-      enable: Boolean(SENTRY_DESTINATION) && !telemetryDisabled,
-      destination: SENTRY_DESTINATION,
-      environment,
-      release,
-      tracing: true,
-      replay: true,
-      // TODO(wittjosiah): Configure these.
-      sampleRate: 1.0,
-      replaySampleRate: 0.1,
-      replaySampleRateOnError: 1.0,
-      ...sentryOptions,
-    });
-
-    Sentry.configureTracing();
 
     const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
     Telemetry.init({
@@ -169,5 +155,51 @@ export const initializeAppTelemetry = async ({
     }
   } catch (err) {
     log.error('Failed to initialize app telemetry', err);
+  }
+};
+
+export const initializeAppObservability = async (
+  { namespace, config, sentryOptions, telemetryOptions }: AppTelemetryOptions,
+  client: Client,
+): Promise<Observability | undefined> => {
+  log.info('initializeAppObservability', { config });
+  try {
+    const group = (await getTelemetryGroup(namespace)) ?? undefined;
+    const release = `${namespace}@${config.get('runtime.app.build.version')}`;
+    const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
+    BASE_TELEMETRY_PROPERTIES.group = group;
+    BASE_TELEMETRY_PROPERTIES.release = release;
+    BASE_TELEMETRY_PROPERTIES.environment = environment;
+    const telemetryDisabled = await isTelemetryDisabled(namespace);
+
+    if (telemetryDisabled) {
+      log.info('telemetry disabled');
+      return undefined;
+    }
+    const observability = new Observability({ namespace, group, mode: 'full', config });
+    // TODO(nf): plugin state?
+    // TODO: should init Sentry earlier in booting process to capture errors during initialization.
+
+    observability.initSentry({
+      environment,
+      release,
+      tracing: true,
+      replay: true,
+      // TODO(wittjosiah): Configure these.
+      sampleRate: 1.0,
+      replaySampleRate: 0.1,
+      replaySampleRateOnError: 1.0,
+      ...sentryOptions,
+    });
+
+    await observability.startNetwork(client);
+    await observability.startSpaces(client);
+    await observability.startRuntime(client);
+    await observability.startIdentity(client);
+    await observability.startDevice(client);
+    return observability;
+  } catch (err: any) {
+    log.error('Failed to initialize app observability', err);
+    return undefined;
   }
 };

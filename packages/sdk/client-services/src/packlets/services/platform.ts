@@ -26,8 +26,9 @@ export const getPlatform = (): Platform => {
     const { platform, version, arch } = process;
     return {
       type: Platform.PLATFORM_TYPE.NODE,
-      platform: `${platform} ${version} ${arch}`,
-      runtime: process.version,
+      platform,
+      arch,
+      runtime: version,
       uptime: Math.floor(process.uptime()),
       memory: process.memoryUsage(),
     };

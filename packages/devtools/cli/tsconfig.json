@@ -86,6 +86,9 @@
       "path": "../../sdk/client-protocol"
     },
     {
+      "path": "../../sdk/client-services"
+    },
+    {
       "path": "../../sdk/config"
     }
   ],

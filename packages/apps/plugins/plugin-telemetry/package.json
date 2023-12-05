@@ -27,8 +27,12 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",

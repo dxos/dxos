@@ -20,6 +20,9 @@
       "node": "./dist/lib/node/datadog/index.cjs"
     }
   },
+  "browser": {
+    "./src/datadog/node.ts": "./src/datadog/browser.ts"
+  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
@@ -32,16 +35,29 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "api-keys": "node ./scripts/inject_api_keys.js"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
-    "datadog-metrics": "^0.11.1"
+    "datadog-metrics": "^0.11.1",
+    "debug": "^4.3.4"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.10"
   },
   "publishConfig": {
     "access": "public"

@@ -1,18 +1,43 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
+    "emitDeclarationOnly": false,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/src",
+    "rootDirs": [
+      // Noli me tangere
+      "./src"
+    ],
     "types": [
-      "@dxos/test",
+      "@dxos/typings",
       "node"
     ]
   },
   "include": [
-    "src"
+    "src",
+    "src/cli-observability-secrets.json"
   ],
   "references": [
     {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/client-services"
+    },
+    {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../async"
@@ -31,6 +56,9 @@
     },
     {
       "path": "../node-std"
+    },
+    {
+      "path": "../sentry"
     },
     {
       "path": "../util"

@@ -24,7 +24,13 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/observability"
     },
     {
       "path": "../../../common/sentry"
@@ -36,10 +42,16 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/protocols"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-layout"

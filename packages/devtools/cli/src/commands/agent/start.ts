@@ -20,10 +20,10 @@ import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
-import { initMetrics, initAgentMetrics, initClientMetrics } from '../../util';
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
@@ -101,10 +101,22 @@ export default class Start extends BaseCommand<typeof Start> {
 
     await this._sendTelemetry();
     invariant(this._telemetryContext);
-    if (initMetrics(this._telemetryContext)) {
-      this.log('Metrics initialized.');
-      initAgentMetrics(this._ctx, this._startTime);
-      initClientMetrics(this._ctx, this._agent!);
+    const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
+    if (!platform) {
+      this.log('failed to get platform, could not initialize observability');
+      return undefined;
+    }
+
+    if (this._observability?.enabled) {
+      this.log('Metrics initialized!');
+
+      await this._observability.startIdentity(this._agent.client!);
+      await this._observability.startDevice(this._agent.client!);
+      await this._observability.startNetwork(this._agent.client!);
+      await this._observability.startSpaces(this._agent.client!);
+      await this._observability.startRuntime(this._agent.client!);
+      // initAgentMetrics(this._ctx, this._observability, this._startTime);
+      //  initClientMetrics(this._ctx, this._observability, this._agent!);
     }
 
     if (this.flags.ws) {

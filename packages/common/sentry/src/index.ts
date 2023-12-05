@@ -3,7 +3,6 @@
 //
 
 export * from './node';
-export * from './user';
 export * from './types';
 
 // TODO(mykola): Tracing does not work in the node. Delete this export.

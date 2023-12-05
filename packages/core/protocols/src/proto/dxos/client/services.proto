@@ -19,6 +19,7 @@ import "dxos/mesh/signal.proto";
 import "dxos/mesh/teleport/gossip.proto";
 import "dxos/mesh/presence.proto";
 import "dxos/value.proto";
+import "dxos/devtools/swarm.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -63,6 +64,28 @@ message GetDiagnosticsResponse {
   google.protobuf.Struct diagnostics = 2;
 }
 
+message Platform {
+  enum PLATFORM_TYPE {
+    BROWSER = 0;
+    SHARED_WORKER = 1;
+    NODE = 2;
+  }
+
+  PLATFORM_TYPE type = 1;
+  /// The User-Agent string from a browser
+  optional string user_agent = 2;
+  /// e.g process.platform from node, e.g. 'darwin', 'linux', 'win32'
+  optional string platform = 3;
+  /// the Node.JS arch string, e.g. 'arm64', 'x64'
+  optional string arch = 4;
+  /// the node.js version string
+  optional string runtime = 5;
+  // TODO(nf): uint64? :)
+  /// the number of seconds the client has been up
+  optional uint32 uptime = 6;
+  /// e.g. NodeJS.MemoryUsage, subject to change
+  optional google.protobuf.Struct memory = 7;
+}
 //
 // System
 //
@@ -82,6 +105,9 @@ service SystemService {
 
   /// Reset the client.
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  /// Get platform Information
+  rpc GetPlatform(google.protobuf.Empty) returns (Platform);
 }
 
 //
@@ -468,6 +494,7 @@ message NetworkStatus {
 
   ConnectionState swarm = 1;
   repeated Signal signaling = 2;
+  repeated dxos.devtools.swarm.SwarmInfo connection_info = 3;
 }
 
 message UpdateConfigRequest {
