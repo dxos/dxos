@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
@@ -94,6 +95,7 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
+      ChainMeta,
       StackMeta,
       PresenterMeta,
       MarkdownMeta,
@@ -114,6 +116,7 @@ const main = async () => {
       SearchMeta,
     ],
     plugins: {
+      [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
         appKey,

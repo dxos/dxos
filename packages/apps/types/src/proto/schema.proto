@@ -277,3 +277,38 @@ message Message {
 
   Context context = 100;
 }
+
+/**
+ * AI Chain.
+ */
+message Chain {
+  option (object) = true;
+
+  message Input {
+    option (object) = true;
+
+    enum Type {
+      VALUE = 0;
+      PASS_THROUGH = 1;
+      RETRIEVER = 2;
+      FUNCTION = 3;
+      QUERY = 4;
+    }
+
+    string name = 1;
+    Type type = 2;
+    dxos.schema.Text value = 3;
+  }
+
+  // TODO(burdon): Not reactive unless object?
+  message Prompt {
+    option (object) = true;
+
+    string command = 1;
+    dxos.schema.Text source = 2;
+    repeated Input inputs = 3;
+  }
+
+  string title = 1;
+  repeated Prompt prompts = 2;
+}

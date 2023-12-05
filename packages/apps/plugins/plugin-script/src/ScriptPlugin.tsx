@@ -114,8 +114,9 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                   id={(data.slide as any).id}
                   source={(data.slide as ScriptType).source}
                   classes={{ root: 'p-24' }}
-                  containerUrl={containerUrl}
                   view='preview'
+                  hideSelector
+                  containerUrl={containerUrl}
                 />
               ) : null;
             case 'section':

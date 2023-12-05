@@ -22,6 +22,7 @@ export type ScriptBlockProps = {
   id: string;
   source: TextObject;
   view?: View;
+  hideSelector?: boolean;
   classes?: {
     root?: string;
     toolbar?: string;
@@ -32,7 +33,14 @@ export type ScriptBlockProps = {
 };
 
 // TODO(burdon): Cache compiled results in context.
-export const ScriptBlock = ({ id, source, view: controlledView, classes, containerUrl }: ScriptBlockProps) => {
+export const ScriptBlock = ({
+  id,
+  source,
+  view: controlledView,
+  hideSelector,
+  classes,
+  containerUrl,
+}: ScriptBlockProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<View>(controlledView ?? 'editor');
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
@@ -99,7 +107,7 @@ export const ScriptBlock = ({ id, source, view: controlledView, classes, contain
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
-      {!controlledView && (
+      {!hideSelector && (
         <DensityProvider density={'fine'}>
           <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
             <SplitterSelector view={view} onChange={handleSetView} />
