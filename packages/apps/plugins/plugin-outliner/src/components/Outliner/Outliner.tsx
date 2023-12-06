@@ -145,7 +145,7 @@ const OutlinerItem = ({
   };
 
   return (
-    <div className='flex px-2 group'>
+    <div className='flex group'>
       {(isTasklist && (
         <div className='py-1 mr-1'>
           <Input.Root>
