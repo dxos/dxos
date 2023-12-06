@@ -253,10 +253,9 @@ message Message {
   }
 
   enum State {
-    UNREAD = 0;
-    READ = 1;
+    NONE = 0;
     ARCHIVED = 2;
-    DELETED = 3; // Need to tombstone.
+    DELETED = 3; // TODO(burdon): Actually delete (need sync range so that doesn't return).
     SPAM = 4;
   }
 
@@ -273,7 +272,9 @@ message Message {
   // TODO(burdon): Email attachments and computed references.
   repeated dxos.schema.Expando links = 30;
 
-  State visibility = 40;
+  // TODO(burdon): Tags.
+  optional State state = 40;
+  optional bool read = 41;
 
   Context context = 100;
 }
@@ -300,7 +301,8 @@ message Chain {
     dxos.schema.Text value = 3;
   }
 
-  // TODO(burdon): Not reactive unless object?
+  // TODO(burdon): Bug: Not reactive unless object?
+  //  https://github.com/dxos/dxos/issues/4882
   message Prompt {
     option (object) = true;
 

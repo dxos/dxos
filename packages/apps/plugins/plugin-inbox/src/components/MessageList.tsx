@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle } from '@phosphor-icons/react';
-import React, { type FC } from 'react';
+import { ArrowClockwise, Archive, Circle, Trash } from '@phosphor-icons/react';
+import React from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
-import { useTranslation } from '@dxos/react-ui';
+import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
 import { fixedBorder, getSize, ghostHover, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { formatDate } from './util';
@@ -17,13 +17,16 @@ export const styles = {
   selected: '!bg-primary-100 dark:!bg-primary-700',
 };
 
+export type ActionType = 'archive' | 'delete' | 'unread';
+
 export type MessageListProps = {
   messages?: MessageType[];
   selected?: string;
-  onSelect?: (selected: MessageType) => void;
+  onSelect?: (message: MessageType) => void;
+  onAction?: (message: MessageType, action: ActionType) => void;
 };
 
-export const MessageList = ({ messages = [], selected, onSelect }: MessageListProps) => {
+export const MessageList = ({ messages = [], selected, onSelect, onAction }: MessageListProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
 
   // TODO(burdon): Use List component for keyboard navigation.
@@ -32,36 +35,71 @@ export const MessageList = ({ messages = [], selected, onSelect }: MessageListPr
       <div className='flex flex-col overflow-y-auto'>
         {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
         {messages?.map((message) => (
-          <MessageItem key={message.id} message={message} selected={message.id === selected} onSelect={onSelect} />
+          <MessageItem
+            key={message.id}
+            message={message}
+            selected={message.id === selected}
+            onSelect={onSelect ? () => onSelect(message) : undefined}
+            onAction={onAction ? (action) => onAction(message, action) : undefined}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-export const MessageItem: FC<{ message: MessageType; selected?: boolean; onSelect: MessageListProps['onSelect'] }> = ({
-  message,
-  selected,
-  onSelect,
-}) => {
+export type MessageItemProps = {
+  message: MessageType;
+  selected?: boolean;
+  onSelect?: () => void;
+  onAction?: (action: ActionType) => void;
+};
+
+export const MessageItem = ({ message, selected, onSelect, onAction }: MessageItemProps) => {
+  const { t } = useTranslation(INBOX_PLUGIN);
+
   const date = message.date;
   const from = message.from?.name ?? message.from?.email;
   const subject = message.subject ?? message.blocks[0].text;
   return (
-    <div
-      className={mx('flex p-2 cursor-pointer border-b', fixedBorder, ghostHover, selected && styles.selected)}
-      onClick={() => onSelect?.(message)}
-    >
-      <div className='flex pr-2 pt-[2px]'>
-        <Circle className={getSize(4)} weight={selected ? 'duotone' : 'regular'} />
-      </div>
-      <div className='flex flex-col w-full'>
-        <div className={mx('flex text-sm justify-between text-neutral-500 pb-1', !selected && 'font-thin')}>
-          <div>{from}</div>
-          <div>{formatDate(new Date(), new Date(date))}</div>
+    <DensityProvider density='fine'>
+      <div
+        className={mx('group flex cursor-pointer border-b', fixedBorder, ghostHover, selected && styles.selected)}
+        onClick={() => onSelect?.()}
+      >
+        <div>
+          <Button variant='ghost' onClick={() => onSelect?.()}>
+            <Circle className={getSize(4)} weight={selected ? 'duotone' : 'regular'} />
+          </Button>
         </div>
-        <div>{subject}</div>
+
+        <div className='flex flex-col w-full overflow-hidden'>
+          <div className={mx('flex text-sm justify-between text-neutral-500 pb-1', !selected && 'font-thin')}>
+            <div className='grow overflow-hidden truncate py-2'>{from}</div>
+            {onAction && (
+              <div className='hidden group-hover:flex flex shrink-0'>
+                {message.read && (
+                  <Button variant='ghost' title={t('action read')} onClick={() => onAction('unread')}>
+                    <ArrowClockwise className={getSize(4)} />
+                  </Button>
+                )}
+                <Button variant='ghost' title={t('action archive')} onClick={() => onAction('archive')}>
+                  <Archive className={getSize(4)} />
+                </Button>
+                <Button variant='ghost' title={t('action delete')} onClick={() => onAction('delete')}>
+                  <Trash className={getSize(4)} />
+                </Button>
+              </div>
+            )}
+            <div className={mx('shrink-0 whitespace-nowrap p-2', onAction && 'group-hover:hidden')}>
+              {formatDate(new Date(), new Date(date))}
+            </div>
+          </div>
+          <div className={mx('mb-1 mr-2 overflow-hidden line-clamp-3', message.read && 'text-neutral-500')}>
+            {subject}
+          </div>
+        </div>
       </div>
-    </div>
+    </DensityProvider>
   );
 };
