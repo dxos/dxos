@@ -14,7 +14,8 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
-import { type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { log } from '@dxos/log';
+import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { type Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
@@ -34,7 +35,7 @@ export class AutomergeHost {
         this._clientNetwork,
       ],
 
-      storage: this._storage,
+      // storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
       sharePolicy: async (peerId, documentId) => true, // Share everything.
@@ -52,6 +53,10 @@ export class AutomergeHost {
   sendSyncMessage(request: SyncRepoRequest): Promise<void> {
     return this._clientNetwork.sendSyncMessage(request);
   }
+
+  getHostInfo(): HostInfo {
+    return this._clientNetwork.getHostInfo();
+  }
 }
 
 type ClientSyncState = {
@@ -68,17 +73,19 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
 
   constructor() {
     super();
-
     this.emit('ready', {
       network: this,
     });
   }
 
   override connect(peerId: PeerId): void {
+    log.info('connect', { peerId });
+    this.peerId = peerId;
     // No-op. Client always connects first
   }
 
   override send(message: Message): void {
+    log.info('send', { message });
     const peer = this._peers.get(message.targetId);
     invariant(peer, 'Peer not found.');
     peer.send(message);
@@ -92,6 +99,7 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
     const peerId = this._getPeerId(id);
 
     return new Stream(({ next, close }) => {
+      log.info('syncRepo', { peerId });
       invariant(!this._peers.has(peerId), 'Peer already connected.');
       this._peers.set(peerId, {
         connected: true,
@@ -109,6 +117,7 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
         },
       });
 
+      log.info('peer candidate', { peerId });
       this.emit('peer-candidate', {
         peerId,
       });
@@ -117,7 +126,16 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
 
   async sendSyncMessage({ id, syncMessage }: SyncRepoRequest): Promise<void> {
     const message = cbor.decode(syncMessage!) as Message;
+    log.info('sendSyncMessage', { id, message });
     this.emit('message', message);
+  }
+
+  getHostInfo(): HostInfo {
+    log.info('getHostInfo', { peerId: this.peerId });
+    invariant(this.peerId, 'Peer id not set.');
+    return {
+      peerId: this.peerId,
+    };
   }
 
   private _getPeerId(id: string): PeerId {
