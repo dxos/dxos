@@ -68,7 +68,7 @@ export class AutomergeDb {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
         await asyncTimeout(this._docHandle.whenReady(), 1_000);
       } catch (err) {
-        log.error('Error opening document', err);
+        log('Error opening document', err);
         await this._fallbackToNewDoc();
       }
     } else {
