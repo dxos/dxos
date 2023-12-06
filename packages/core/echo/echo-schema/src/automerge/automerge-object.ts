@@ -37,10 +37,10 @@ export type BindOptions = {
 };
 
 export class AutomergeObject implements TypedObjectProperties {
-  private _database?: AutomergeDb;
-  private _doc?: Doc<any>;
-  private _docHandle?: DocHandle<DocStructure>;
-  private _schema?: Schema;
+  private _database?: AutomergeDb = undefined;
+  private _doc?: Doc<any> = undefined;
+  private _docHandle?: DocHandle<DocStructure> = undefined;
+  private _schema?: Schema = undefined;
 
   /**
    * @internal

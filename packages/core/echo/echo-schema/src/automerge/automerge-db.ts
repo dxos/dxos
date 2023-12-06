@@ -40,7 +40,7 @@ export class AutomergeDb {
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
 
-  private _ctx?: Context;
+  private _ctx?: Context = undefined;
 
   /**
    * @internal
