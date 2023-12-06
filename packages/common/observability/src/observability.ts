@@ -13,6 +13,7 @@ import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/
 import type { Config } from '@dxos/react-client';
 import {
   captureException,
+  enableSentryLogProcessor,
   configureTracing as sentryConfigureTracing,
   init as sentryInit,
   type InitOptions,
@@ -309,7 +310,7 @@ export class Observability {
 
   // Error Logs
 
-  public initSentry(options: Partial<InitOptions>) {
+  public initSentry(options: Partial<InitOptions>, enableLogProcessor = false) {
     if (this.config.SENTRY_DESTINATION && this._mode !== 'disabled') {
       // TODO(nf): refactor package into this one?
       log.info('Initializing Sentry', {
@@ -324,8 +325,10 @@ export class Observability {
       if (options.tracing) {
         sentryConfigureTracing();
       }
-      // TODO(nf): needed for node?
-      // enableSentryLogProcessor();
+      // TODO(nf): set platform at instantiation? needed for node.
+      if (enableLogProcessor) {
+        enableSentryLogProcessor();
+      }
 
       captureException(new Error('Test error'));
 

@@ -95,3 +95,6 @@ export const captureException: typeof naturalCaptureException = (exception, capt
     return 'unknown';
   }
 };
+
+// Not needed for browser.
+export const enableSentryLogProcessor = () => {};

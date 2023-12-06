@@ -224,13 +224,16 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     this._observability = new Observability({ namespace: 'agent', group, mode: this._telemetryContext.mode });
 
-    this._observability.initSentry({
-      installationId,
-      environment,
-      release,
-      // TODO(wittjosiah): Configure this.
-      sampleRate: 1.0,
-    });
+    this._observability.initSentry(
+      {
+        installationId,
+        environment,
+        release,
+        // TODO(wittjosiah): Configure this.
+        sampleRate: 1.0,
+      },
+      true,
+    );
 
     if (TELEMETRY_API_KEY) {
       mode === 'disabled' && (await disableTelemetry(DX_DATA));
