@@ -137,7 +137,6 @@ export const initializeAppTelemetry = async ({
     //   BASE_TELEMETRY_PROPERTIES.tags = tags.toString();
     // }
 
-
     const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
     Telemetry.init({
       apiKey: TELEMETRY_API_KEY,
