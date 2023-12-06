@@ -53,11 +53,11 @@ triggers:
     subscriptions:
      - type: 'braneframe.Mailbox'
 
-#  - function: 'dxos.org/function/email-extractor'
-#    subscriptions:
-#      - type: 'braneframe.Message'
-#        props:
-#          type: 'email'
+  - function: 'dxos.org/function/email-extractor'
+    subscriptions:
+      - type: 'braneframe.Message'
+        props:
+          type: 'email'
 
   - function: 'dxos.org/function/embedding'
     subscriptions:
