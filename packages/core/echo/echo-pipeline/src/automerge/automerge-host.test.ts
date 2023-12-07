@@ -55,7 +55,8 @@ describe('AutomergeHost', () => {
         super();
       }
 
-      // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes race condition because `Repo` waits for `ready` event before it starts using the adapter.
+      // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
+      //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
       ready() {
         this.emit('ready', { network: this });
       }
@@ -102,21 +103,17 @@ describe('AutomergeHost', () => {
     const host = new Repo({
       network: [hostAdapter],
     });
-
     const client = new Repo({
       network: [clientAdapter],
     });
+    hostAdapter.ready();
+    clientAdapter.ready();
 
     const handle = host.create();
     const text = 'Hello world';
     handle.change((doc: any) => {
       doc.text = text;
     });
-
-    hostAdapter.ready();
-    clientAdapter.ready();
-
-    await sleep(100);
 
     const docOnClient = client.find(handle.url);
     await asyncTimeout(docOnClient.whenReady(), 3_000);
