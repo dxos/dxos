@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { asyncTimeout, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl, type DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { AutomergeContext } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 
-describe.only('AutomergeHost', () => {
-  test('automerge context is being synced with host', async () => {
+describe('AutomergeHost', () => {
+  test.only('automerge context is being synced with host', async () => {
     //
     // Setup:
     // client-services           | <-------------> | client
@@ -29,17 +30,24 @@ describe.only('AutomergeHost', () => {
 
     // Create document in repo.
     const handle = host.repo.create();
-    await asyncTimeout(handle.whenReady(), 3_000);
+    const text = 'Hello World!';
     handle.change((doc: any) => {
-      doc.text = 'Hello World!';
+      doc.text = text;
     });
-
-    await sleep(1000);
 
     // Find document in repo.
     const doc = client.repo.find(handle.url);
-    log.info('doc', { doc: doc.url, ready: doc.state });
+    await asyncTimeout(doc.whenReady(), 1_000);
+    expect(doc.docSync().text).to.equal(text);
 
-    await asyncTimeout(doc.whenReady(), 3_000);
+    // Changes from client are replicated to host.
+    const newText = 'Goodbye World!!!';
+    doc.change((doc: any) => {
+      doc.text = newText;
+    });
+
+    await sleep(100);
+    await asyncTimeout(handle.whenReady(), 1_000);
+    expect(handle.docSync().text).to.equal(newText);
   });
 });

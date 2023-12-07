@@ -16,9 +16,13 @@ export class AutomergeContext {
   private _repo: Repo;
 
   constructor(dataService: DataService | null = null) {
+    const adapter = dataService && new LocalClientNetworkAdapter(dataService);
     this._repo = new Repo({
-      network: dataService ? [new LocalClientNetworkAdapter(dataService)] : [],
+      network: adapter ? [adapter] : [],
     });
+    if (adapter) {
+      adapter.ready();
+    }
   }
 
   get repo(): Repo {
@@ -38,6 +42,14 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
 
   constructor(private readonly _dataService: DataService) {
     super();
+  }
+
+  /**
+   * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
+   */
+  ready() {
+    // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
+    //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
     this.emit('ready', {
       network: this,
     });
@@ -46,14 +58,12 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   override connect(peerId: PeerId): void {
     invariant(!this._stream);
 
-    log.info('connect', { peerId });
     this.peerId = peerId;
     this._stream = this._dataService.syncRepo({
       id: peerId,
     });
     this._stream.subscribe(
       (msg) => {
-        log.info('received message', { msg: cbor.decode(msg.syncMessage!) });
         this.emit('message', cbor.decode(msg.syncMessage!));
       },
       (err) => {
@@ -72,7 +82,6 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       .getHostInfo()
       .then((hostInfo) => {
         this._hostInfo = hostInfo;
-        log.info('peer candidate', { hostInfo });
         this.emit('peer-candidate', {
           peerId: this._hostInfo.peerId as PeerId,
         });
@@ -83,7 +92,6 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-    log.info('send', { message, peerId: this.peerId });
     invariant(this.peerId);
     void this._dataService
       .sendSyncMessage({
@@ -96,7 +104,6 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override disconnect(): void {
-    log.info('disconnect');
     void this._stream?.close().catch((err) => {
       log.catch(err);
     });
