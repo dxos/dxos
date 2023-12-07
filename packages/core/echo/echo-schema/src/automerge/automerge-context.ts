@@ -56,6 +56,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override connect(peerId: PeerId): void {
+    // NOTE: Expects that `AutomergeHost` host already running and listening for connections.
     invariant(!this._stream);
 
     this.peerId = peerId;
