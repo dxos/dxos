@@ -301,7 +301,7 @@ message AddressBook {
 message Event {
   option (object) = true;
 
-  string name = 1;
+  string title = 1;
   Message.Recipient owner = 2;
   repeated Message.Recipient attendees = 3;
 

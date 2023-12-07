@@ -45,7 +45,7 @@ export const EventsMain = ({ calendar }: EventsMainProps) => {
         <div className={mx('flex flex-col overflow-y-scroll gap-1 px-2', styles.columnWidth)}>
           {objects.map((object) => (
             <div key={object.id} className='flex flex-col p-1 px-2 border border-neutral-100 rounded-md'>
-              <div>{object.name}</div>
+              <div>{object.title}</div>
               <div>{object.owner.email}</div>
               <div className='flex flex-col'>
                 {object.attendees.map(({ email }, i) => (

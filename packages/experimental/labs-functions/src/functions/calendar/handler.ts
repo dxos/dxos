@@ -6,13 +6,19 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
+import { Event as EventType } from '@braneframe/types';
 import { subscriptionHandler } from '@dxos/functions';
 
+import { ObjectSyncer } from '../../sync';
 import { getYaml } from '../../util';
 
 // TODO(burdon): Evolve syncer.
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
-  // const { space, objects } = event;
+  const { space, objects } = event;
+  if (!space) {
+    return;
+  }
+
   // const { client } = context;
   // TODO(burdon): Generalize util for getting properties from config/env.
   // const config = client.config;
@@ -41,11 +47,46 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   const events = await calendar.events.list({
     auth: oauth2Client,
     calendarId: 'primary',
-    // timeMin: (new Date()).toISOString(),
-    maxResults: 10,
+    timeMin: new Date().toISOString(),
+    maxResults: 40,
     // singleEvents: true,
     // orderBy: 'startTime',
   });
 
-  console.log(events.data);
+  const sourceId = 'google.com/calendar';
+  const syncer = new ObjectSyncer<EventType>(EventType.filter(), (object) => {
+    for (const { id, source } of object.__meta?.keys ?? []) {
+      if (source === sourceId) {
+        return id;
+      }
+    }
+
+    return undefined;
+  });
+
+  await syncer.open(space);
+
+  // Etag represents specific version of a resource (like content addressing for caching).
+  // NOTE: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
+  const { kind, etag, summary, updated, nextPageToken } = events.data;
+  console.log({ kind, etag, summary, updated, nextPageToken });
+  for (const event of events.data.items ?? []) {
+    const { kind, id, created, updated, summary, creator, start, end, recurrence, attendees } = event;
+    if (id) {
+      const existing = syncer.getObject(id);
+      // TODO(burdon): Upsert.
+      if (!existing) {
+        space.db.add(
+          new EventType(
+            {
+              title: summary || '',
+            },
+            { meta: { keys: [{ source: sourceId, id }] } },
+          ),
+        );
+      }
+    }
+  }
+
+  await syncer.close();
 });
