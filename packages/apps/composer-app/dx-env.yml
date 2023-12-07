@@ -13,3 +13,7 @@ REMOTE_SOURCE:
 DATADOG_API_KEY:
   path: runtime.app.env.DX_DATADOG_API_KEY
   type: string
+
+DATADOG_PROXY:
+  path: runtime.app.env.DX_DATADOG_PROXY
+  type: string

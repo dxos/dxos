@@ -5,6 +5,7 @@
 import * as Datadog from 'datadog-metrics';
 import debug from 'debug';
 
+import { type Config } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -16,6 +17,8 @@ export type DatadogOptions = {
   host?: string;
   site?: String;
   getTags: () => Map<string, string>;
+  // needed to read CORS proxy
+  config: Config;
 };
 
 debug.enable('metrics');

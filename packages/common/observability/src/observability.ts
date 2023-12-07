@@ -3,14 +3,13 @@
 //
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
-import { type Client } from '@dxos/client';
+import { type Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/network-manager';
 import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
-import type { Config } from '@dxos/react-client';
 import {
   captureException,
   enableSentryLogProcessor,
@@ -87,6 +86,7 @@ export class Observability {
         apiKey: this.config.DATADOG_API_KEY,
         getTags: () => this._tags,
         // TODO(nf): move/refactor from telementryContext
+        config: this._runtimeConfig!,
       });
     } else {
       log('datadog disabled');
