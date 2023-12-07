@@ -102,7 +102,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     super(DocumentModel);
 
     if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
-      return new AutomergeObject(initialProps, opts) as any;
+      return new AutomergeObject(initialProps as Record<string, any>, opts) as any;
     }
 
     invariant(!(opts?.schema && opts?.type), 'Cannot specify both schema and type.');
