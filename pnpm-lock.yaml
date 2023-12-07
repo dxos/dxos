@@ -8233,6 +8233,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/storybook-config':
+        specifier: workspace:*
+        version: link:../../../tools/storybook-config
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -9452,13 +9455,14 @@ importers:
         version: 5.2.2
 
   tools/storybook-config:
-    devDependencies:
+    dependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-theme
+    devDependencies:
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21

@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/storybook-config"
+    },
+    {
       "path": "../primitives/react-hooks"
     },
     {

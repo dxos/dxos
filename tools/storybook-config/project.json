@@ -2,7 +2,14 @@
   "sourceRoot": "tools/storybook-config/src",
   "projectType": "library",
   "targets": {
-    "lint": {},
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "tools/storybook-config/src/**/*.{ts,tsx,js,jsx}",
+          "tools/storybook-config/.storybook/*.{cjs,html}"
+        ]
+      }
+    },
     "storybook": {
       "configurations": {
         "ci": {
