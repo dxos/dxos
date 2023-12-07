@@ -57,7 +57,7 @@ export const ContactsMain = ({ contacts }: ContactsMainProps) => {
             </div>
           ))}
         </div>
-        <div>{objects?.length}</div>
+        <div className='p-1 text-xs'>{objects?.length}</div>
       </div>
     </Main.Content>
   );
