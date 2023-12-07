@@ -62,9 +62,11 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     switch (action) {
       case 'archive':
         message.state = MessageType.State.ARCHIVED;
+        setSelected(undefined);
         break;
       case 'delete':
         message.state = MessageType.State.DELETED;
+        setSelected(undefined);
         break;
       case 'unread':
         message.read = false;

@@ -3,7 +3,7 @@
 //
 
 import { ArrowClockwise, Archive, Circle, Trash } from '@phosphor-icons/react';
-import React from 'react';
+import React, { type MouseEvent } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
@@ -59,6 +59,11 @@ export type MessageItemProps = {
 export const MessageItem = ({ message, selected, onSelect, onAction }: MessageItemProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
 
+  const handleAction = (event: MouseEvent<HTMLButtonElement>, action: ActionType) => {
+    event.stopPropagation();
+    onAction?.(action);
+  };
+
   const date = message.date;
   const from = message.from?.name ?? message.from?.email;
   const subject = message.subject ?? message.blocks[0].text;
@@ -80,14 +85,14 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
             {onAction && (
               <div className='hidden group-hover:flex flex shrink-0'>
                 {message.read && (
-                  <Button variant='ghost' title={t('action read')} onClick={() => onAction('unread')}>
+                  <Button variant='ghost' title={t('action read')} onClick={(event) => handleAction(event, 'unread')}>
                     <ArrowClockwise className={getSize(4)} />
                   </Button>
                 )}
-                <Button variant='ghost' title={t('action archive')} onClick={() => onAction('archive')}>
+                <Button variant='ghost' title={t('action archive')} onClick={(event) => handleAction(event, 'archive')}>
                   <Archive className={getSize(4)} />
                 </Button>
-                <Button variant='ghost' title={t('action delete')} onClick={() => onAction('delete')}>
+                <Button variant='ghost' title={t('action delete')} onClick={(event) => handleAction(event, 'delete')}>
                   <Trash className={getSize(4)} />
                 </Button>
               </div>
