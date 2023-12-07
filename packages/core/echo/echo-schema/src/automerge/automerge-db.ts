@@ -66,11 +66,11 @@ export class AutomergeDb {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        await asyncTimeout(this._docHandle.whenReady(), 1_000);
+        await asyncTimeout(this._docHandle.whenReady(), 500);
         const ojectIds = Object.keys((await this._docHandle.doc()).objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
-        log.error('Error opening document', err);
+        log('Error opening document', err);
         await this._fallbackToNewDoc();
       }
     } else {
