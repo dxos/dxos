@@ -25,6 +25,6 @@ export type ContactsPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides;
 
-export const isAddressBook = (data: unknown): data is AddressBookType => {
+export const isObject = (data: unknown): data is AddressBookType => {
   return isTypedObject(data) && AddressBookType.schema.typename === data.__typename;
 };

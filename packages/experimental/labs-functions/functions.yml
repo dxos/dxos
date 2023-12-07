@@ -4,6 +4,11 @@
 ##
 
 functions:
+  - id: 'dxos.org/function/calendar'
+    name: 'calendar'
+    handler: 'calendar'
+    description: 'Calendar Sync'
+
   - id: 'dxos.org/function/chat'
     name: 'chat'
     handler: 'chat'
@@ -40,6 +45,11 @@ functions:
     description: 'Github Sync'
 
 triggers:
+  - function: 'dxos.org/function/calendar'
+    schedule: '*/30 * * * * *'
+    subscriptions:
+     - type: 'braneframe.Calendar'
+
   - function: 'dxos.org/function/chat'
     subscriptions:
       - type: 'braneframe.Message'

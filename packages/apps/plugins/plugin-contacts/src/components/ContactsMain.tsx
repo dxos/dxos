@@ -9,12 +9,14 @@ import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, mx } from '@dxos/react-ui-theme';
 
+// TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation, scrolling.
+// TODO(burdon): Nav from inbox.
+// TODO(burdon): Show messages for selection.
+
 // TODO(burdon): Create outliner task list re selection.
 
-// TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation.
 // TODO(burdon): Select/merge.
 // TODO(burdon): Click to research, get image, etc. Scrape LinkedIn?
-// TODO(burdon): Show messages for selection.
 // TODO(burdon): Tags.
 
 // TODO(burdon): Factor out.
@@ -47,11 +49,11 @@ export const ContactsMain = ({ contacts }: ContactsMainProps) => {
           {objects.map((object) => (
             <div key={object.id} className='flex flex-col p-1 px-2 border border-neutral-100 rounded-md'>
               <div>{object.name}</div>
-              <div>
+              <div className='flex flex-col'>
                 {object.identifiers.map(({ value }, i) => (
-                  <span key={i} className='text-xs text-neutral-500'>
+                  <div key={i} className='text-xs text-neutral-500'>
                     {value}
-                  </span>
+                  </div>
                 ))}
               </div>
             </div>

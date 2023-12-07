@@ -13,6 +13,7 @@ import ClientMeta from '@braneframe/plugin-client/meta';
 import ContactsMeta from '@braneframe/plugin-contacts/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
 import ErrorMeta from '@braneframe/plugin-error/meta';
+import EventsMeta from '@braneframe/plugin-events/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
@@ -98,6 +99,7 @@ const main = async () => {
       // Presentation
       ChainMeta,
       ContactsMeta,
+      EventsMeta,
       StackMeta,
       PresenterMeta,
       MarkdownMeta,
@@ -131,6 +133,7 @@ const main = async () => {
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
+      [EventsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-events')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),

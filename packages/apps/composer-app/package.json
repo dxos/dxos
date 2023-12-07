@@ -15,6 +15,7 @@
     "@braneframe/plugin-contacts": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-error": "workspace:*",
+    "@braneframe/plugin-events": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",

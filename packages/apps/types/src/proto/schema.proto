@@ -243,6 +243,7 @@ message Message {
     dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 
+  // TODO(burdon): Promote to top-level (shared with Event).
   message Recipient {
     // TODO(burdon): Add reference to Contact object.
     // TODO(burdon): Import key definition.
@@ -292,7 +293,26 @@ message Contact {
   repeated Identifier identifiers = 2;
 }
 
+// TODO(burdon): Rename? Singleton with queries?
 message AddressBook {
+  option (object) = true;
+}
+
+message Event {
+  option (object) = true;
+
+  string name = 1;
+  Message.Recipient owner = 2;
+  repeated Message.Recipient attendees = 3;
+
+  string start_date = 10;
+
+  // TODO(burdon): Model links separately?
+  repeated dxos.schema.Expando links = 20;
+}
+
+// TODO(burdon): Rename?
+message Calendar {
   option (object) = true;
 }
 

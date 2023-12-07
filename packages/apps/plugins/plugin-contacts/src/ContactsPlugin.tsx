@@ -13,7 +13,7 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 import { ContactsMain } from './components';
 import meta, { CONTACTS_PLUGIN } from './meta';
 import translations from './translations';
-import { ContactsAction, type ContactsPluginProvides, isAddressBook } from './types';
+import { ContactsAction, type ContactsPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -69,7 +69,7 @@ export const ContactsPlugin = (): PluginDefinition<ContactsPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isAddressBook(data.active) ? <ContactsMain contacts={data.active} /> : null;
+              return isObject(data.active) ? <ContactsMain contacts={data.active} /> : null;
             default:
               return null;
           }
