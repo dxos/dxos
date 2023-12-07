@@ -9,8 +9,13 @@ import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, mx } from '@dxos/react-ui-theme';
 
+// TODO(burdon): Create outliner task list re selection.
+
 // TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation.
-// TODO(burdon): Merge contacts.
+// TODO(burdon): Select/merge.
+// TODO(burdon): Click to research, get image, etc. Scrape LinkedIn?
+// TODO(burdon): Show messages for selection.
+// TODO(burdon): Tags.
 
 // TODO(burdon): Factor out.
 export const styles = {

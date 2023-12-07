@@ -15,7 +15,7 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
 
   const getOrCreateContact = (recipient: MessageType.Recipient): ContactType | undefined => {
     invariant(recipient.email);
-    const contact =
+    let contact =
       objectsByEmail.get(recipient.email.toLowerCase()) ??
       contacts.find((contact) =>
         contact.identifiers.find(
@@ -23,15 +23,11 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
         ),
       );
 
-    if (contact) {
-      space.db.remove(contact);
+    if (!contact) {
+      contact = new ContactType({ name: recipient.name, identifiers: [{ type: 'email', value: recipient.email }] });
+      objectsByEmail.set(recipient.email.toLowerCase(), contact);
+      space.db.add(contact);
     }
-
-    // if (!contact) {
-    //   contact = new ContactType({ name: recipient.name, identifiers: [{ type: 'email', value: recipient.email }] });
-    //   objectsByEmail.set(recipient.email.toLowerCase(), contact);
-    //   space.db.add(contact);
-    // }
 
     i++;
     return contact;
@@ -55,8 +51,9 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
     });
   }
 
-  // TODO(burdon): Causes recursion.
+  // TODO(burdon): Auto-flush (in wrapper).
+  // TODO(burdon): Causes recursion. Scheduler must check. Also check that there are NO mutations if nothing changed.
   console.log('>>>', i);
   await space.db.flush();
-  console.log('???');
+  console.log('<<<', i);
 });
