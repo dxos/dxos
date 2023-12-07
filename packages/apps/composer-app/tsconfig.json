@@ -71,6 +71,9 @@
       "path": "../plugins/plugin-client"
     },
     {
+      "path": "../plugins/plugin-contacts"
+    },
+    {
       "path": "../plugins/plugin-debug"
     },
     {

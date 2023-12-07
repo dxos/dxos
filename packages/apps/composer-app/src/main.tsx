@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
+import ContactsMeta from '@braneframe/plugin-contacts/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
 import ErrorMeta from '@braneframe/plugin-error/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
@@ -96,6 +97,7 @@ const main = async () => {
 
       // Presentation
       ChainMeta,
+      ContactsMeta,
       StackMeta,
       PresenterMeta,
       MarkdownMeta,
@@ -125,6 +127,7 @@ const main = async () => {
         types,
         debugIdentity,
       }),
+      [ContactsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-contacts')),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),

@@ -12,6 +12,7 @@
     "@braneframe/plugin-chain": "workspace:*",
     "@braneframe/plugin-chess": "workspace:*",
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-contacts": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-error": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",

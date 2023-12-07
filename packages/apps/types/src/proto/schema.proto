@@ -292,6 +292,10 @@ message Contact {
   repeated Identifier identifiers = 2;
 }
 
+message AddressBook {
+  option (object) = true;
+}
+
 /**
  * AI Chain.
  */
