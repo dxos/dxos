@@ -390,7 +390,7 @@ export class DataSpace {
           previousId: this._automergeSpaceState.lastEpoch?.id,
           number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
           timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-          automergeRoot: document?.url,
+          automergeRoot: document.url,
         };
       }
     }
