@@ -28,8 +28,11 @@ export type MailboxOptions = {
   readTimout?: number;
 };
 
+// TODO(burdon): Extract contacts/orgs.
 // TODO(burdon): Split message body into parts and allow trim (e.g., remove forwarded part). Message as light stack?
-//
+// TODO(burdon): Highlight message/chunks for action (e.g., follow-up, triggers embedding).
+// TODO(burdon): Create outline/kanban.
+// TODO(burdon): Address book/cards.
 
 export type MailboxProps = {
   mailbox: MailboxType;

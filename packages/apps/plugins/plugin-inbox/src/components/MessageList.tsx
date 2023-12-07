@@ -15,6 +15,7 @@ import { INBOX_PLUGIN } from '../meta';
 // TODO(burdon): Factor out.
 export const styles = {
   selected: '!bg-primary-100 dark:!bg-primary-700',
+  columnWidth: 'max-w-[400px]',
 };
 
 export type ActionType = 'archive' | 'delete' | 'unread';
@@ -31,7 +32,7 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
 
   // TODO(burdon): Use List component for keyboard navigation.
   return (
-    <div className={mx('flex flex-col grow max-w-[400px] overflow-hidden', inputSurface)}>
+    <div className={mx('flex flex-col grow overflow-hidden', styles.columnWidth, inputSurface)}>
       <div className='flex flex-col overflow-y-auto'>
         {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
         {messages?.map((message) => (

@@ -247,9 +247,10 @@ message Message {
     // TODO(burdon): Add reference to Contact object.
     // TODO(burdon): Import key definition.
     // dxos.keys.PublicKey identity_key = 2;
-    string identity_key = 1;
+    optional string identity_key = 1;
     string email = 2;
-    string name = 3;
+    optional string name = 3;
+    optional Contact contact = 4;
   }
 
   enum State {
@@ -277,6 +278,18 @@ message Message {
   optional bool read = 41;
 
   Context context = 100;
+}
+
+message Contact {
+  option (object) = true;
+
+  message Identifier {
+    string type = 1;
+    string value = 2;
+  }
+
+  string name = 1;
+  repeated Identifier identifiers = 2;
 }
 
 /**
