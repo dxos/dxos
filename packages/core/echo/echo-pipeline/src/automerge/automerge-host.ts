@@ -34,7 +34,7 @@ export class AutomergeHost {
         this._clientNetwork,
       ],
 
-      // storage: this._storage,
+      storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
       sharePolicy: async (peerId, documentId) => true, // Share everything.
@@ -45,6 +45,10 @@ export class AutomergeHost {
   get repo(): Repo {
     return this._repo;
   }
+
+  //
+  // Methods for client-services.
+  //
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
     return this._clientNetwork.syncRepo(request);
