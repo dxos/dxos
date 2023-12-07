@@ -11,7 +11,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { type AutomergeObject } from './automerge-object';
+import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
@@ -40,7 +40,7 @@ export class AutomergeDb {
 
   readonly _updateEvent = new Event<{ spaceKey: PublicKey; itemsUpdated: { id: string }[] }>();
 
-  private _ctx?: Context;
+  private _ctx?: Context = undefined;
 
   /**
    * @internal
@@ -66,7 +66,9 @@ export class AutomergeDb {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        await asyncTimeout(this._docHandle.whenReady(), 1_000);
+        await asyncTimeout(this._docHandle.whenReady(), 500);
+        const ojectIds = Object.keys((await this._docHandle.doc()).objects ?? {});
+        this._createObjects(ojectIds);
       } catch (err) {
         log('Error opening document', err);
         await this._fallbackToNewDoc();
@@ -76,11 +78,9 @@ export class AutomergeDb {
     }
 
     const update = (event: DocHandleChangePayload<DocStructure>) => {
-      this._updateEvent.emit({
-        spaceKey: this._echoDatabase._backend.spaceKey,
-        // TODO(mykola): Use event.patches to determine which items were updated.
-        itemsUpdated: Object.keys(event.patchInfo.after.objects).map((id) => ({ id })),
-      });
+      const updatedObjects = getUpdatedObjects(event);
+      this._createObjects(updatedObjects.filter((id) => !this._objects.has(id)));
+      this._emitUpdateEvent(updatedObjects);
     };
 
     this._docHandle.on('change', update);
@@ -147,6 +147,13 @@ export class AutomergeDb {
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }
 
+  private _emitUpdateEvent(itemsUpdated: string[]) {
+    this._updateEvent.emit({
+      spaceKey: this._echoDatabase._backend.spaceKey,
+      itemsUpdated: itemsUpdated.map((id) => ({ id })),
+    });
+  }
+
   /**
    * @internal
    */
@@ -158,4 +165,36 @@ export class AutomergeDb {
       return this.getObjectById(type.itemId) as Schema | undefined;
     }
   }
+
+  /**
+   * Loads all objects on open and handles objects that are being created not by this client.
+   */
+  private _createObjects(objectIds: string[]) {
+    invariant(this._docHandle);
+    for (const id of objectIds) {
+      invariant(!this._objects.has(id));
+      const obj = new AutomergeObject({ id });
+      this._objects.set(obj.id, obj);
+      (obj[base] as AutomergeObject)._bind({
+        db: this,
+        docHandle: this._docHandle,
+        path: ['objects', obj.id],
+        ignoreCache: true,
+      });
+    }
+  }
 }
+
+const getUpdatedObjects = (event: DocHandleChangePayload<DocStructure>): string[] => {
+  const updatedObjects = event.patches
+    .map(({ path }: { path: string[] }) => {
+      if (path.length >= 2 && path[0] === 'objects') {
+        return path[1];
+      }
+      return undefined;
+    })
+    .filter(Boolean);
+
+  // Remove duplicates.
+  return Array.from(new Set(updatedObjects)) as string[];
+};

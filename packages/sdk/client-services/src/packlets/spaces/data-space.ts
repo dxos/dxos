@@ -67,9 +67,7 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
-
-  // TODO(dmaretskyi): Make required.
-  automergeHost?: AutomergeHost;
+  automergeHost: AutomergeHost;
 };
 
 /**
@@ -91,7 +89,7 @@ export class DataSpace {
   private readonly _notarizationPlugin = new NotarizationPlugin();
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache = undefined;
-  private readonly _automergeHost?: AutomergeHost = undefined;
+  private readonly _automergeHost: AutomergeHost;
 
   // TODO(dmaretskyi): Move into Space?
   private readonly _automergeSpaceState = new AutomergeSpaceState();
@@ -119,6 +117,7 @@ export class DataSpace {
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
     this._callbacks = params.callbacks ?? {};
+    this._automergeHost = params.automergeHost;
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () =>
@@ -386,12 +385,12 @@ export class DataSpace {
         }
         break;
       case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
-        const document = this._automergeHost?.repo.create();
+        const document = this._automergeHost.repo.create();
         epoch = {
           previousId: this._automergeSpaceState.lastEpoch?.id,
           number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
           timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-          automergeRoot: document?.url,
+          automergeRoot: document.url,
         };
       }
     }
