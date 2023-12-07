@@ -43,9 +43,9 @@ export const ContactsMain = ({ contacts }: ContactsMainProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <div className={mx('flex flex-col grow overflow-hidden')}>
-        <div className={mx('flex flex-col overflow-y-scroll gap-1', styles.columnWidth)}>
+        <div className={mx('flex flex-col overflow-y-scroll gap-1 px-2', styles.columnWidth)}>
           {objects.map((object) => (
-            <div key={object.id} className='flex flex-col p-1 px-2 border border-neutral-300 rounded-md'>
+            <div key={object.id} className='flex flex-col p-1 px-2 border border-neutral-100 rounded-md'>
               <div>{object.name}</div>
               <div>
                 {object.identifiers.map(({ value }, i) => (
@@ -57,7 +57,7 @@ export const ContactsMain = ({ contacts }: ContactsMainProps) => {
             </div>
           ))}
         </div>
-        <div className='p-1 text-xs'>{objects?.length}</div>
+        <div className='p-2 text-xs'>{objects?.length}</div>
       </div>
     </Main.Content>
   );
