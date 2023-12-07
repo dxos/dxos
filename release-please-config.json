@@ -824,6 +824,11 @@
         },
         {
           "type": "json",
+          "path": "tools/storybook-config/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/swc-log-plugin/package.json",
           "jsonpath": "$.version"
         },

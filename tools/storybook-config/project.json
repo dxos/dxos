@@ -1,0 +1,33 @@
+{
+  "sourceRoot": "tools/storybook-config/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/storybook-config/.storybook"
+      }
+    },
+    "storybook-build": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/storybook-config/.storybook",
+        "outputDir": "out"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    }
+  }
+}

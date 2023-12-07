@@ -9451,6 +9451,36 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
+  tools/storybook-config:
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-theme
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      chromatic:
+        specifier: ^7.5.0
+        version: 7.6.0
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+      vite-plugin-turbosnap:
+        specifier: ^1.0.2
+        version: 1.0.2
+
   tools/swc-log-plugin: {}
 
   tools/x:

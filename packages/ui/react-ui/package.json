@@ -14,9 +14,6 @@
     "plugin.js",
     "plugin.d.ts"
   ],
-  "scripts": {
-    "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir out/react-ui --exit-zero-on-changes"
-  },
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-input": "workspace:*",

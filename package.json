@@ -13,6 +13,7 @@
     "build": "nx run-many --target=build",
     "changed-packages": "scripts/changed",
     "check-dependencies": "syncpack list-mismatches",
+    "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir out/react-ui --exit-zero-on-changes",
     "conform": "conform",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
