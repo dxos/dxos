@@ -4,7 +4,10 @@
 
 import expect from 'expect';
 
-import { sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 
@@ -38,5 +41,82 @@ describe('AutomergeHost', () => {
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
+  });
+
+  test('basic networking', async () => {
+    type Context = { client: Trigger<TestAdapter>; host: Trigger<TestAdapter> };
+    const context: Context = {
+      client: new Trigger<TestAdapter>(),
+      host: new Trigger<TestAdapter>(),
+    };
+
+    class TestAdapter extends NetworkAdapter {
+      constructor(public readonly context: Context, public readonly role: 'host' | 'client') {
+        super();
+      }
+
+      // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
+      //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
+      ready() {
+        this.emit('ready', { network: this });
+      }
+
+      override connect(peerId: PeerId) {
+        this.peerId = peerId;
+        context[this.role].wake(this);
+        context[this.role === 'host' ? 'client' : 'host']
+          .wait()
+          .then((adapter) => {
+            invariant(adapter.peerId, 'Peer id is not set');
+            this.emit('peer-candidate', { peerId: adapter.peerId });
+          })
+          .catch((error) => {
+            log.catch(error);
+          });
+      }
+
+      override send(message: Message) {
+        context[this.role === 'host' ? 'client' : 'host']
+          .wait()
+          .then((adapter) => {
+            adapter.receive(message);
+          })
+          .catch((error) => {
+            log.catch(error);
+          });
+      }
+
+      override disconnect() {
+        this.peerId = undefined;
+        this.context[this.role].reset();
+      }
+
+      receive(message: Message) {
+        invariant(this.peerId, 'Peer id is not set');
+        this.emit('message', message);
+      }
+    }
+
+    const hostAdapter = new TestAdapter(context, 'host');
+    const clientAdapter = new TestAdapter(context, 'client');
+
+    const host = new Repo({
+      network: [hostAdapter],
+    });
+    const client = new Repo({
+      network: [clientAdapter],
+    });
+    hostAdapter.ready();
+    clientAdapter.ready();
+
+    const handle = host.create();
+    const text = 'Hello world';
+    handle.change((doc: any) => {
+      doc.text = text;
+    });
+
+    const docOnClient = client.find(handle.url);
+    await asyncTimeout(docOnClient.whenReady(), 3_000);
+    expect(docOnClient.docSync().text).toEqual(text);
   });
 });
