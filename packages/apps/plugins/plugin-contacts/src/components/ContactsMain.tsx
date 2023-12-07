@@ -23,6 +23,14 @@ export const styles = {
   columnWidth: 'max-w-[400px]',
 };
 
+const byName =
+  (direction = 1) =>
+  ({ name: _a }: ContactType, { name: _b }: ContactType) => {
+    const a = _a?.toLowerCase().replace(/\W/g, '');
+    const b = _b?.toLowerCase().replace(/\W/g, '');
+    return a === undefined || a < b ? -direction : b === undefined || a > b ? direction : 0;
+  };
+
 export type ContactsMainProps = {
   contacts: AddressBookType;
 };
@@ -30,6 +38,7 @@ export type ContactsMainProps = {
 export const ContactsMain = ({ contacts }: ContactsMainProps) => {
   const space = getSpaceForObject(contacts);
   const objects = useQuery(space, ContactType.filter());
+  objects.sort(byName());
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
