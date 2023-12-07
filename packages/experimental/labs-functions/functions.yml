@@ -56,6 +56,7 @@ triggers:
   - function: 'dxos.org/function/email-extractor'
     subscriptions:
       - type: 'braneframe.Message'
+        delay: 5
         props:
           type: 'email'
 

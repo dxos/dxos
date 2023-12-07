@@ -8,17 +8,32 @@ import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 export const handler = subscriptionHandler(async ({ event: { space, objects } }) => {
+  let i = 0;
   invariant(space);
   const { objects: contacts } = space.db.query(ContactType.filter());
+  const objectsByEmail = new Map<string, ContactType>();
+
   const getOrCreateContact = (recipient: MessageType.Recipient): ContactType | undefined => {
-    let contact = contacts.find((contact) =>
-      contact.identifiers.find((identifier) => identifier.value === recipient.email),
-    );
-    if (!contact) {
-      contact = new ContactType({ name: recipient.name, identifiers: [{ type: 'email', value: recipient.email }] });
-      space.db.add(contact);
+    invariant(recipient.email);
+    const contact =
+      objectsByEmail.get(recipient.email.toLowerCase()) ??
+      contacts.find((contact) =>
+        contact.identifiers.find(
+          ({ type, value }) => type === 'email' && value && value.toLowerCase() === recipient.email?.toLowerCase(),
+        ),
+      );
+
+    if (contact) {
+      space.db.remove(contact);
     }
 
+    // if (!contact) {
+    //   contact = new ContactType({ name: recipient.name, identifiers: [{ type: 'email', value: recipient.email }] });
+    //   objectsByEmail.set(recipient.email.toLowerCase(), contact);
+    //   space.db.add(contact);
+    // }
+
+    i++;
     return contact;
   };
 
@@ -39,4 +54,9 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
       cc.contact = getOrCreateContact(cc);
     });
   }
+
+  // TODO(burdon): Causes recursion.
+  console.log('>>>', i);
+  await space.db.flush();
+  console.log('???');
 });
