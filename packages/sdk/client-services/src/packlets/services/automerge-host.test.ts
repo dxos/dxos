@@ -46,6 +46,7 @@ describe('AutomergeHost', () => {
       doc.text = newText;
     });
 
+    // TODO(mykola): Is there a way to know when automerge has started replication?
     await sleep(100);
     await asyncTimeout(handle.whenReady(), 1_000);
     expect(handle.docSync().text).to.equal(newText);
