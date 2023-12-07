@@ -33,11 +33,12 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
     return contact;
   };
 
-  let messages: MessageType[];
-  if (objects) {
-    messages = objects.filter(hasType<MessageType>(MessageType.schema));
-  } else {
+  let messages: MessageType[] = [];
+  if (objects === undefined) {
     messages = space.db.query(MessageType.filter({ type: 'email' })).objects;
+  } else if (objects.length) {
+    // Only if undefined.
+    messages = objects.filter(hasType<MessageType>(MessageType.schema));
   }
 
   // Lookup contacts.
