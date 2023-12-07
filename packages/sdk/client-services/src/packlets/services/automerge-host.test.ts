@@ -11,7 +11,7 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {
-  test.only('automerge context is being synced with host', async () => {
+  test('automerge context is being synced with host', async () => {
     //
     // Setup:
     // client-services           | <-------------> | client

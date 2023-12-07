@@ -171,6 +171,9 @@ class AutomergeStorageAdapter extends StorageAdapter {
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
     const { size } = await file.stat();
+    if (!size || size === 0) {
+      return undefined;
+    }
     const buffer = await file.read(0, size);
     return bufferToArray(buffer);
   }
