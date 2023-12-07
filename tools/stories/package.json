@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/storybook-config",
+  "name": "@dxos/stories",
   "version": "0.3.8",
   "private": true,
   "description": "Storybook config package for the DXOS monorepo.",

@@ -1,12 +1,12 @@
 {
-  "sourceRoot": "tools/storybook-config/src",
+  "sourceRoot": "tools/stories/src",
   "projectType": "library",
   "targets": {
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "tools/storybook-config/src/**/*.{ts,tsx,js,jsx}",
-          "tools/storybook-config/.storybook/*.{cjs,html}"
+          "tools/stories/src/**/*.{ts,tsx,js,jsx}",
+          "tools/stories/.storybook/*.{cjs,html}"
         ]
       }
     },
@@ -18,7 +18,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/storybook-config/.storybook"
+        "configDir": "tools/stories/.storybook"
       }
     },
     "storybook-build": {
@@ -29,8 +29,8 @@
       },
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/storybook-config/.storybook",
-        "outputDir": "out"
+        "configDir": "tools/stories/.storybook",
+        "outputDir": "tools/stories/out"
       },
       "outputs": [
         "{options.outputDir}"
