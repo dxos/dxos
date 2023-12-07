@@ -34,6 +34,7 @@ export type BindOptions = {
   db: AutomergeDb;
   docHandle: DocHandle<any>;
   path: string[];
+  ignoreCache?: boolean;
 };
 
 export class AutomergeObject implements TypedObjectProperties {
@@ -59,9 +60,10 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _id = PublicKey.random().toHex();
+  _id: string;
 
-  constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
+  constructor(initialProps?: Record<string, any>, opts?: TypedObjectOptions) {
+    this._id = initialProps?.id ?? PublicKey.random().toHex();
     this._initNewObject(initialProps, opts);
 
     if (opts?.schema) {
@@ -185,6 +187,10 @@ export class AutomergeObject implements TypedObjectProperties {
       }
 
       this._linkCache = undefined;
+    }
+
+    if (options.ignoreCache) {
+      this._doc = undefined;
     }
 
     if (this._doc) {
@@ -335,6 +341,9 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _decode(value: any): any {
+    if (value === null) {
+      return undefined;
+    }
     if (Array.isArray(value)) {
       return value.map((val) => this._decode(val));
     }
