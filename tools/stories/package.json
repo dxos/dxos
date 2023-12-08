@@ -8,7 +8,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "chromatic:ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_1169f9460ccde08\" --storybook-build-dir out/ui --exit-zero-on-changes"
+    "chromatic:ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_1169f9460ccde08\" --storybook-build-dir out/ui --exit-zero-on-changes",
+    "chromatic:examples": "chromatic --only-changed --storybook-base-dir packages/sdk/examples --project-token=\"chpt_e6606565edfbfbe\" --storybook-build-dir out/examples --exit-zero-on-changes"
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
