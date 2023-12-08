@@ -7,13 +7,16 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "scripts": {
+    "chromatic": "chromatic --only-changed --project-token=\"chpt_d8286ece50b71da\" --storybook-build-dir out --exit-zero-on-changes"
+  },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
     "@types/lodash.flatten": "^4.4.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
-    "chromatic": "^7.5.0",
+    "chromatic": "^10.1.0",
     "lodash.flatten": "^4.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

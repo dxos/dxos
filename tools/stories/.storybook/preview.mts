@@ -10,6 +10,8 @@ export const parameters = {
       date: /Date$/,
     },
   },
+  // Disables Chromatic's snapshotting on a global level
+  chromatic: { disableSnapshot: true },
 };
 
 export const globalTypes = {
