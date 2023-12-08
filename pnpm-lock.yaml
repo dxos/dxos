@@ -6616,6 +6616,9 @@ importers:
       '@types/mailparser':
         specifier: ^3.4.0
         version: 3.4.3
+      '@types/server-destroy':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@types/split2':
         specifier: ^3.2.1
         version: 3.2.1
@@ -21721,6 +21724,12 @@ packages:
     resolution: {integrity: sha512-z5xyF6uh8CbjAu9760KDKsH2FcDxZ2tFCsA4HIMWE6IkiYMXfVoa+4f9KX+FN0ZLsaMw1WNG2ETLA6N+/YA+cg==}
     dependencies:
       '@types/mime': 3.0.1
+      '@types/node': 18.18.9
+    dev: true
+
+  /@types/server-destroy@1.0.3:
+    resolution: {integrity: sha512-Qq0fn70C7TLDG1W9FCblKufNWW1OckQ41dVKV2Dku5KdZF7bexezG4e2WBaBKhdwL3HZ+cYCEIKwg2BRgzrWmA==}
+    dependencies:
       '@types/node': 18.18.9
     dev: true
 

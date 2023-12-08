@@ -75,6 +75,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.startcase": "^4.4.7",
     "@types/mailparser": "^3.4.0",
+    "@types/server-destroy": "^1.0.3",
     "@types/split2": "^3.2.1",
     "@types/textract": "^2.4.5"
   },
