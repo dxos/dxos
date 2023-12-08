@@ -25,6 +25,7 @@ const config: StorybookConfig = {
       configType === 'PRODUCTION'
         ? {
             ...config,
+            // TODO(thure): build fails for @preact/signals-react: https://github.com/preactjs/signals/issues/269
             plugins: flatten(config.plugins).map((plugin: any) => {
               return plugin.name === 'vite:react-babel'
                 ? ReactPlugin({
@@ -37,6 +38,7 @@ const config: StorybookConfig = {
           }
         : config,
       {
+        // When `jsxRuntime` is set to 'classic', top-level awaits are rejected unless build.target is 'esnext'
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
         plugins: [
           ThemePlugin({
