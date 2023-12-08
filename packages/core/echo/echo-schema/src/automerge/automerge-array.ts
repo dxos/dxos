@@ -19,8 +19,8 @@ export class AutomergeArray<T> implements Array<T> {
    */
   private _uninitialized?: T[] = [];
 
-  private _object?: AutomergeObject;
-  private _path?: string[];
+  private _object?: AutomergeObject = undefined;
+  private _path?: string[] = undefined;
 
   [base]: AutomergeArray<T> = this;
 

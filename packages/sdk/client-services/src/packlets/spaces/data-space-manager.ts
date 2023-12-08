@@ -142,7 +142,7 @@ export class DataSpaceManager {
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
 
-    const automergeRoot = this._automergeHost!.repo.create();
+    const automergeRoot = this._automergeHost.repo.create();
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, automergeRoot.url);
     await this._metadataStore.addSpace(metadata);

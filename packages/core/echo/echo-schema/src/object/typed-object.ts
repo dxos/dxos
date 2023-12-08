@@ -622,7 +622,7 @@ export const Expando: ExpandoConstructor = TypedObject;
 
 export type Expando = TypedObject;
 
-let mutationOverride = false;
+export let mutationOverride = false;
 
 // TODO(burdon): Document.
 export const dangerouslyMutateImmutableObject = (cb: () => void) => {
