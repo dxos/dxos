@@ -11,8 +11,9 @@ import turbosnap from 'vite-plugin-turbosnap';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
-const config: StorybookConfig = {
-  stories: ['../../../packages/*/*/src/**/*.stories.{mdx,tsx}'],
+export const config = (
+  specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
+): StorybookConfig => ({
   addons: ['@storybook/addon-links', '@storybook/addon-essentials', '@storybook/addon-interactions'],
   // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories
   typescript: { reactDocgen: false },
@@ -50,6 +51,5 @@ const config: StorybookConfig = {
       },
     );
   },
-};
-
-export default config;
+  ...specificConfig,
+});

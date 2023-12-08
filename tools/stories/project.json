@@ -5,7 +5,8 @@
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "tools/stories/.storybook/*.mts",
+          "tools/stories/.storybook-shared/*.ts",
+          "tools/stories/*-stories/*.mts",
           "tools/stories/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
@@ -18,7 +19,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/.storybook"
+        "configDir": "tools/stories/all-stories"
       }
     },
     "storybook-build": {
