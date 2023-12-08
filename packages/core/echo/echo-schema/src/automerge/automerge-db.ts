@@ -173,7 +173,8 @@ export class AutomergeDb {
     invariant(this._docHandle);
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
-      const obj = new AutomergeObject({ id });
+      const obj = new AutomergeObject();
+      obj[base]._id = id;
       this._objects.set(obj.id, obj);
       (obj[base] as AutomergeObject)._bind({
         db: this,

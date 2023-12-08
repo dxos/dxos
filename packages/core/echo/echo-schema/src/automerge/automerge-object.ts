@@ -62,10 +62,9 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _id: string;
+  _id = PublicKey.random().toHex();
 
-  constructor(initialProps?: Record<string, any>, opts?: TypedObjectOptions) {
-    this._id = initialProps?.id ?? PublicKey.random().toHex();
+  constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
 
     if (opts?.schema) {
