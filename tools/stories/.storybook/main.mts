@@ -3,6 +3,8 @@
 //
 
 import { type StorybookConfig } from '@storybook/react-vite';
+import ReactPlugin from '@vitejs/plugin-react';
+import flatten from 'lodash.flatten';
 import { resolve } from 'path';
 import { mergeConfig } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
@@ -18,16 +20,33 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {},
   },
-  viteFinal: async (config) => {
-    return mergeConfig(config, {
-      plugins: [
-        ThemePlugin({
-          root: __dirname,
-          content: [resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}'],
-        }),
-        turbosnap({ rootDir: config.root ?? __dirname }),
-      ],
-    });
+  viteFinal: async (config, { configType }) => {
+    return mergeConfig(
+      configType === 'PRODUCTION'
+        ? {
+            ...config,
+            plugins: flatten(config.plugins).map((plugin: any) => {
+              return plugin.name === 'vite:react-babel'
+                ? ReactPlugin({
+                    jsxRuntime: 'classic',
+                  })
+                : plugin.name === 'vite:react-jsx'
+                ? undefined
+                : plugin;
+            }),
+          }
+        : config,
+      {
+        ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
+        plugins: [
+          ThemePlugin({
+            root: __dirname,
+            content: [resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}'],
+          }),
+          turbosnap({ rootDir: config.root ?? __dirname }),
+        ],
+      },
+    );
   },
 };
 

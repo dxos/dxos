@@ -9456,6 +9456,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-theme
+      '@types/lodash.flatten':
+        specifier: ^4.4.6
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -9468,6 +9471,9 @@ importers:
       chromatic:
         specifier: ^7.5.0
         version: 7.6.0
+      lodash.flatten:
+        specifier: ^4.4.0
+        version: 4.4.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
