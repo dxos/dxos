@@ -203,7 +203,21 @@
         "prebuild"
       ]
     },
-    "storybook-build": {
+    "storybook-e2e": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ]
+    },
+    "storybook-build-ui": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ]
+    },
+    "storybook-build-shell": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",

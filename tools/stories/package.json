@@ -10,7 +10,8 @@
   "scripts": {
     "chromatic:ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_1169f9460ccde08\" --storybook-build-dir out/ui --exit-zero-on-changes",
     "chromatic:examples": "chromatic --only-changed --storybook-base-dir packages/sdk/examples --project-token=\"chpt_e6606565edfbfbe\" --storybook-build-dir out/examples --exit-zero-on-changes",
-    "chromatic:shell": "chromatic --only-changed --storybook-base-dir packages/sdk/react-shell --project-token=\"chpt_c4421639d5edcc4\" --storybook-build-dir out/shell --exit-zero-on-changes"
+    "chromatic:shell": "chromatic --only-changed --storybook-base-dir packages/sdk/react-shell --project-token=\"chpt_c4421639d5edcc4\" --storybook-build-dir out/shell --exit-zero-on-changes",
+    "chromatic": "npm run chromatic:ui; npm run chromatic:shell"
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
