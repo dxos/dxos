@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/network-manager';
 import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 import {
-  captureException,
+  captureException as sentryCaptureException,
   enableSentryLogProcessor,
   configureTracing as sentryConfigureTracing,
   init as sentryInit,
@@ -20,14 +20,16 @@ import {
 } from '@dxos/sentry';
 import { isNode } from '@dxos/util';
 
-import secrets from './cli-observability-secrets.json';
+import buildSecrets from './cli-observability-secrets.json';
 import { DatadogMetrics } from './datadog';
+import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import { mapSpaces } from './util';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
 const DATADOG_IDLE_INTERVAL = 1000 * 60 * 1;
 
+// TODO(nf): add allowlist for telemetry tags?
 const SENTRY_TAGS = ['identityKey', 'username', 'deviceKey', 'group'];
 
 // Secrets? EnvironmentConfig?
@@ -43,21 +45,24 @@ export type ObservabilityConfig = {
 };
 
 export type ObservabilityRuntimeConfig = {
+  /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
   namespace: string;
   // TODO(nf): make platform a required extension?
   // platform: Platform;
   config?: Config;
+  secrets?: Map<string, string>;
   group?: string;
   mode?: 'basic' | 'full' | 'disabled';
 };
 
 /*
  * Observability provides a common interface for error logging, metrics, and telemetry.
- * It currently implements Sentry, Datadog, and Segment.
+ * It currently provides these capabilities using Sentry, Datadog, and Segment.
  */
 
 export class Observability {
   private _datadogmetrics?: DatadogMetrics;
+  private _segmentTelemetry?: SegmentTelemetry;
   private config: ObservabilityConfig;
   private _namespace: string;
   private _runtimeConfig?: Config;
@@ -67,39 +72,40 @@ export class Observability {
   private _ctx = new Context();
   private _tags = new Map<string, string>();
   private _sentryEnabled = false;
+  private _telemetryEnabled = false;
+  private _metricsEnabled = false;
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, group, mode }: ObservabilityRuntimeConfig) {
+  constructor({ namespace, config, secrets, group, mode }: ObservabilityRuntimeConfig) {
     this._namespace = namespace;
     this._runtimeConfig = config;
     this._mode = mode ?? 'disabled';
     this._group = group;
-    this.config = this._loadSecrets(config);
+    this.config = this._loadSecrets(config, secrets);
 
     if (this._group) {
       this.setTag('group', this._group);
     }
     this.setTag('namespace', this._namespace);
 
-    if (this.config.DATADOG_API_KEY && this._mode !== 'disabled') {
-      this._datadogmetrics = new DatadogMetrics({
-        apiKey: this.config.DATADOG_API_KEY,
-        getTags: () => this._tags,
-        // TODO(nf): move/refactor from telementryContext
-        config: this._runtimeConfig!,
-      });
-    } else {
-      log('datadog disabled');
-    }
-
     if (this._mode === 'full') {
       // TODO(nf): set group and hostname?
     }
   }
 
-  private _loadSecrets(config: Config | undefined) {
-    if (isNode()) {
-      return secrets as ObservabilityConfig;
+  private _loadSecrets(config: Config | undefined, secrets?: Map<string, string>) {
+    if (secrets) {
+      return {
+        DX_ENVIRONMENT: secrets.get('DX_ENVIRONMENT') ?? null,
+        DX_RELEASE: secrets.get('DX_RELEASE') ?? null,
+        SENTRY_DESTINATION: secrets.get('SENTRY_DESTINATION') ?? null,
+        TELEMETRY_API_KEY: secrets.get('TELEMETRY_API_KEY') ?? null,
+        IPDATA_API_KEY: secrets.get('IPDATA_API_KEY') ?? null,
+        DATADOG_API_KEY: secrets.get('DATADOG_API_KEY') ?? null,
+        DATADOG_APP_KEY: secrets.get('DATADOG_APP_KEY') ?? null,
+      };
+    } else if (isNode()) {
+      return buildSecrets as ObservabilityConfig;
     } else {
       invariant(config, 'runtime config is required');
       return {
@@ -115,6 +121,18 @@ export class Observability {
     }
   }
 
+  /**
+   * global kill switch
+   */
+  public disable() {
+    this._mode = 'disabled';
+    // TODO(nf): use attributes to indicate enablement?
+    this._sentryEnabled = false;
+    this._telemetryEnabled = false;
+    // TODO(nf): fix?
+    this._datadogmetrics = undefined;
+  }
+
   get enabled() {
     return this._mode !== 'disabled';
   }
@@ -123,6 +141,12 @@ export class Observability {
     await this._ctx.dispose();
   }
 
+  /******
+   * Tags
+   ******/
+  /**
+   * Set a tag for all observability services.
+   */
   public setTag(k: string, v: string) {
     if (this._sentryEnabled && SENTRY_TAGS.includes(k)) {
       sentrySetTag(k, v);
@@ -130,18 +154,76 @@ export class Observability {
     this._tags.set(k, v);
   }
 
-  // Metrics
+  // TODO(nf): combine with setDeviceTags?
+  public async setIdentityTags(client: Client) {
+    client.services.services.IdentityService!.queryIdentity().subscribe((idqr) => {
+      if (!idqr?.identity?.identityKey) {
+        log('empty response from identity service', { idqr });
+        return;
+      }
 
+      // TODO(nf): check mode
+      // TODO(nf): cardinality
+      this.setTag('identityKey', idqr?.identity?.identityKey.truncate());
+      if (idqr?.identity?.profile?.displayName) {
+        this.setTag('username', idqr?.identity?.profile?.displayName);
+      }
+    });
+  }
+
+  public async setDeviceTags(client: Client) {
+    client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
+
+      if (!dqr || !dqr.devices || dqr.devices.length === 0) {
+        log('empty response from device service', { device: dqr });
+        return;
+      }
+      invariant(dqr, 'empty response from device service');
+
+      const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
+      if (!thisDevice) {
+        log('no current device', { device: dqr });
+        return;
+      }
+      this.setTag('deviceKey', thisDevice.deviceKey.truncate());
+      if (thisDevice.profile?.label) {
+        this.setTag('deviceProfile', thisDevice.profile.label);
+      }
+    });
+  }
+
+  /*******
+   Metrics
+   *******/
+
+  public initMetrics() {
+    if (this.config.DATADOG_API_KEY && this._mode !== 'disabled') {
+      this._datadogmetrics = new DatadogMetrics({
+        apiKey: this.config.DATADOG_API_KEY,
+        getTags: () => this._tags,
+        // TODO(nf): move/refactor from telementryContext, needed to read CORS proxy
+        config: this._runtimeConfig!,
+      });
+      this._metricsEnabled = true;
+    } else {
+      log('datadog disabled');
+    }
+  }
+
+  get metricsEnabled() {
+    return this._metricsEnabled;
+  }
+
+  /**
+   * Gauge metric
+   */
   gauge(name: string, value: number | any, extraTags?: any) {
-    // log('gauge', { name, value, extraTags });
     this._datadogmetrics?.gauge(name, value, extraTags);
   }
 
-  // Telemetry
-
   // TODO(nf): refactor into ObservabilityExtensions?
 
-  public startNetwork(client: Client) {
+  public startNetworkMetrics(client: Client) {
     const updateSignalMetrics = new Event<NetworkStatus>();
 
     // const lcsh = (csp as LocalClientServices).host;
@@ -191,7 +273,7 @@ export class Observability {
     // scheduleTaskInterval(ctx, async () => updateSignalMetrics.emit(), DATADOG_IDLE_INTERVAL);
   }
 
-  public startSpaces(client: Client) {
+  public startSpacesMetrics(client: Client) {
     let spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
@@ -233,7 +315,7 @@ export class Observability {
     scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), DATADOG_IDLE_INTERVAL);
   }
 
-  public async startRuntime(client: Client, frequency: number = DATADOG_IDLE_INTERVAL) {
+  public async startRuntimeMetrics(client: Client, frequency: number = DATADOG_IDLE_INTERVAL) {
     const platform = await client.services.services.SystemService?.getPlatform();
     invariant(platform, 'platform is required');
 
@@ -269,46 +351,40 @@ export class Observability {
     );
   }
 
-  public async startIdentity(client: Client) {
-    client.services.services.IdentityService!.queryIdentity().subscribe((idqr) => {
-      log('identity', { idqr });
-      if (!idqr?.identity?.identityKey) {
-        log('empty response from identity service', { idqr });
-        return;
-      }
+  /*********
+   Telemetry
+   *********/
 
-      // TODO(nf): check mode
-      // TODO(nf): cardinality
-      this.setTag('identityKey', idqr?.identity?.identityKey.truncate());
-      if (idqr?.identity?.profile?.displayName) {
-        this.setTag('username', idqr?.identity?.profile?.displayName);
-      }
-    });
+  public initTelemetry(batchSize = 30) {
+    if (this.config.TELEMETRY_API_KEY && this._mode !== 'disabled') {
+      this._segmentTelemetry = new SegmentTelemetry({
+        apiKey: this.config.TELEMETRY_API_KEY,
+        batchSize,
+        getTags: () => this._tags,
+      });
+      this._telemetryEnabled = true;
+    } else {
+      log('segment disabled');
+    }
   }
 
-  public async startDevice(client: Client) {
-    client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
-      log('device', { device: dqr });
-
-      if (!dqr || !dqr.devices || dqr.devices.length === 0) {
-        log('empty response from device service', { device: dqr });
-        return;
-      }
-      invariant(dqr, 'empty response from device service');
-
-      const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
-      if (!thisDevice) {
-        log('no current device', { device: dqr });
-        return;
-      }
-      this.setTag('deviceKey', thisDevice.deviceKey.truncate());
-      if (thisDevice.profile?.label) {
-        this.setTag('deviceProfile', thisDevice.profile.label);
-      }
-    });
+  get telemetryEnabled() {
+    return this._telemetryEnabled;
   }
 
-  // Error Logs
+  public telemetryEvent(eo: EventOptions) {
+    this._segmentTelemetry?.event(eo);
+  }
+
+  public telemetryPage(po: PageOptions) {
+    this._segmentTelemetry?.page(po);
+  }
+
+  /**********
+   Error Logs
+   **********/
+
+  // TODO(nf): rename?
 
   public initSentry(options: Partial<InitOptions>, enableLogProcessor = false) {
     if (this.config.SENTRY_DESTINATION && this._mode !== 'disabled') {
@@ -330,7 +406,6 @@ export class Observability {
         enableSentryLogProcessor();
       }
 
-      captureException(new Error('Test error'));
 
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
@@ -341,6 +416,19 @@ export class Observability {
       this._sentryEnabled = true;
     } else {
       log('sentry disabled');
+    }
+  }
+
+  get sentryEnabled() {
+    return this._telemetryEnabled;
+  }
+
+  /**
+   * Manually capture an exception.
+   */
+  public captureException(err: any) {
+    if (this._sentryEnabled) {
+      sentryCaptureException(err);
     }
   }
 }

@@ -18,10 +18,17 @@
       "import": "./dist/lib/browser/datadog/index.mjs",
       "require": "./dist/lib/node/datadog/index.cjs",
       "node": "./dist/lib/node/datadog/index.cjs"
+    },
+    "./segment": {
+      "browser": "./dist/lib/browser/segment/index.mjs",
+      "import": "./dist/lib/browser/segment/index.mjs",
+      "require": "./dist/lib/node/segment/index.cjs",
+      "node": "./dist/lib/node/segment/index.cjs"
     }
   },
   "browser": {
-    "./src/datadog/node.ts": "./src/datadog/browser.ts"
+    "./src/datadog/node.ts": "./src/datadog/browser.ts",
+    "./src/segment/node.ts": "./src/segment/browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -53,10 +60,13 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@segment/snippet": "^4.15.3",
+    "analytics-node": "^6.2.0",
     "datadog-metrics": "^0.11.1",
     "debug": "^4.3.4"
   },
   "devDependencies": {
+    "@types/analytics-node": "^3.1.9",
     "@types/debug": "^4.1.10"
   },
   "publishConfig": {

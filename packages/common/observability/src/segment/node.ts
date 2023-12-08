@@ -6,82 +6,83 @@ import Analytics from 'analytics-node';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { tags } from '@dxos/observability';
 import { captureException } from '@dxos/sentry';
 
-import { type EventOptions, type InitOptions, type PageOptions } from './types';
+import { type EventOptions, type SegmentTelemetryOptions, type PageOptions } from './types';
 
-let analytics: Analytics | undefined;
+export class SegmentTelemetry {
+  private _analytics?: Analytics;
+  private _getTags: () => Map<string, string>;
 
-/**
- *
- */
-export const init = ({ apiKey, batchSize, enable }: InitOptions) => {
-  try {
-    invariant(apiKey, 'Key required to send telemetry');
+  constructor({ apiKey, batchSize, getTags }: SegmentTelemetryOptions) {
+    this._getTags = getTags;
+    try {
+      invariant(apiKey, 'Key required to send telemetry');
 
-    analytics = new Analytics(apiKey, {
-      flushAt: batchSize,
-      enable,
-    });
-  } catch (err) {
-    log.catch('Failed to initialize telemetry', err);
-  }
-};
-
-/**
- *
- */
-export const page = ({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) => {
-  if (!analytics) {
-    log('Analytics not initialized', { action: 'page' });
+      this._analytics = new Analytics(apiKey, {
+        flushAt: batchSize,
+        enable: true,
+      });
+    } catch (err) {
+      log.catch('Failed to initialize telemetry', err);
+    }
   }
 
-  try {
-    analytics?.page({
-      ...options,
-      userId,
-      anonymousId: anonymousId!,
-    });
-  } catch (err) {
-    log.catch('Failed to track page', err);
-  }
-};
+  /**
+   *
+   */
+  public page({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) {
+    if (!this._analytics) {
+      log('Analytics not initialized', { action: 'page' });
+    }
 
-/**
- *
- */
-export const event = ({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) => {
-  if (!analytics) {
-    log('Analytics not initialized', { action: 'event' });
-  }
-
-  try {
-    analytics?.track({
-      ...options,
-      context: tags,
-      userId,
-      anonymousId: anonymousId!,
-      event,
-    });
-  } catch (err) {
-    log.catch('Failed to track event', err);
-  }
-};
-
-/**
- *
- */
-export const flush = async () => {
-  if (!analytics) {
-    log('Analytics not initialized', { action: 'flush' });
+    try {
+      this._analytics?.page({
+        ...options,
+        userId,
+        anonymousId: anonymousId!,
+      });
+    } catch (err) {
+      log.catch('Failed to track page', err);
+    }
   }
 
-  try {
-    await analytics?.flush((err) => {
-      captureException(err);
-    });
-  } catch (err) {
-    log.catch('Failed to flush', err);
+  /**
+   *
+   */
+  public event({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) {
+    log('sending event to telemetry', { event, options, tags: Object.fromEntries(this._getTags().entries()) });
+    if (!this._analytics) {
+      log('Analytics not initialized', { action: 'event' });
+    }
+
+    try {
+      this._analytics?.track({
+        ...options,
+        context: Object.fromEntries(this._getTags().entries()),
+        userId,
+        anonymousId: anonymousId!,
+        event,
+      });
+    } catch (err) {
+      log.catch('Failed to track event', err);
+    }
   }
-};
+
+  /**
+   *
+   */
+  public async flush() {
+    if (!this._analytics) {
+      log('Analytics not initialized', { action: 'flush' });
+    }
+
+    try {
+      await this._analytics?.flush((err) => {
+        captureException(err);
+      });
+    } catch (err) {
+      log.catch('Failed to flush', err);
+    }
+  }
+}
