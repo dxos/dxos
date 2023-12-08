@@ -13,5 +13,6 @@ export const INBOX_PLUGIN = 'dxos.org/plugin/inbox';
 export default pluginMeta({
   id: INBOX_PLUGIN,
   name: 'Mailbox',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Envelope {...props} />,
 });

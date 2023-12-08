@@ -12,5 +12,6 @@ export const EVENTS_PLUGIN = 'dxos.org/plugin/events';
 export default pluginMeta({
   id: EVENTS_PLUGIN,
   name: 'Events',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Calendar {...props} />,
 });

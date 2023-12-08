@@ -45,10 +45,10 @@ functions:
     description: 'Github Sync'
 
 triggers:
-  - function: 'dxos.org/function/calendar'
-    schedule: '*/30 * * * * *'
-    subscriptions:
-     - type: 'braneframe.Calendar'
+#  - function: 'dxos.org/function/calendar'
+#    schedule: '*/30 * * * * *'
+#    subscriptions:
+#     - type: 'braneframe.Calendar'
 
   - function: 'dxos.org/function/chat'
     subscriptions:
@@ -58,17 +58,17 @@ triggers:
     subscriptions:
       - type: 'dxos.experimental.chess.Game'
 
-  - function: 'dxos.org/function/email'
-    schedule: '*/30 * * * * *'
-    subscriptions:
-     - type: 'braneframe.Mailbox'
+#  - function: 'dxos.org/function/email'
+#    schedule: '*/30 * * * * *'
+#    subscriptions:
+#     - type: 'braneframe.Mailbox'
 
-  - function: 'dxos.org/function/email-extractor'
-    subscriptions:
-      - type: 'braneframe.Message'
-        delay: 5
-        props:
-          type: 'email'
+#  - function: 'dxos.org/function/email-extractor'
+#    subscriptions:
+#      - type: 'braneframe.Message'
+#        delay: 5
+#        props:
+#          type: 'email'
 
   - function: 'dxos.org/function/embedding'
     subscriptions:

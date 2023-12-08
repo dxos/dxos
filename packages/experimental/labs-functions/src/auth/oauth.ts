@@ -4,22 +4,14 @@
 // https://github.com/googleapis/nodejs-local-auth/blob/main/src/index.ts
 //
 
+import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
 import * as http from 'http';
+import yaml from 'js-yaml';
 import { type AddressInfo } from 'net';
-import * as opn from 'open';
+import { spawn } from 'node:child_process';
 import destroyer from 'server-destroy';
 import { URL } from 'url';
-
-const invalidRedirectUri = `The provided keyfile does not define a valid
-redirect URI. There must be at least one redirect URI defined, and this sample
-assumes it redirects to 'http://localhost:3000/oauth2callback'.  Please edit
-your keyfile, and add a 'redirect_uris' section.  For example:
-
-"redirect_uris": [
-  "http://localhost:3000/oauth2callback"
-]
-`;
 
 const isAddressInfo = (addr: string | AddressInfo | null): addr is AddressInfo =>
   (addr as AddressInfo).port !== undefined;
@@ -29,22 +21,27 @@ export interface LocalAuthOptions {
   scopes: string[] | string;
 }
 
-// Oauth callback: /oauth2callback?code=<code>
+/**
+ * Opens browser to perform OAuth flow.
+ * @param options
+ */
 export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Client> => {
   if (!options || !options.keyfilePath || typeof options.keyfilePath !== 'string') {
     throw new Error('keyfilePath must be set to the fully qualified path to a GCP credential keyfile.');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const keyFile = require(options.keyfilePath);
-  const keys = keyFilse.installed || keyFile.web;
+  // "redirect_uris": [
+  //   "http://localhost:3000/oauth2callback"
+  // ]
+  const keyFile = yaml.load(String(fs.readFileSync(options.keyfilePath))) as any;
+  const keys = keyFile.installed || keyFile.web;
   if (!keys.redirect_uris || keys.redirect_uris.length === 0) {
-    throw new Error(invalidRedirectUri);
+    throw new Error('set redirect_uris');
   }
 
   const redirectUri = new URL(keys.redirect_uris[0] ?? 'http://localhost');
   if (redirectUri.hostname !== 'localhost') {
-    throw new Error(invalidRedirectUri);
+    throw new Error('set redirect_uris');
   }
 
   // create an oAuth client to authorize the API call
@@ -54,6 +51,7 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
   });
 
   return new Promise((resolve, reject) => {
+    // TODO(burdon): Configure get handler.
     const server = http.createServer(async (req, res) => {
       try {
         const url = new URL(req.url!, 'http://localhost:3000');
@@ -74,13 +72,16 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
         }
 
         const code = searchParams.get('code');
+
         const { tokens } = await client.getToken({
           code: code!,
           redirect_uri: redirectUri.toString(),
         });
+
         client.credentials = tokens;
         resolve(client);
-        res.end('Authentication successful! Please return to the console.');
+
+        res.end('Authentication successful. Return to the console.');
       } catch (err) {
         reject(err);
       } finally {
@@ -96,22 +97,26 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
       listenPort = Number(redirectUri.port);
     }
 
-    server.listen(listenPort, () => {
+    server.listen(listenPort, async () => {
       const address = server.address();
       if (isAddressInfo(address)) {
         redirectUri.port = String(address.port);
       }
 
       const scopes = options.scopes ? (Array.isArray(options.scopes) ? options.scopes : [options.scopes]) : [];
-      // Open the auth url to start the workflow.
       const authorizeUrl = client.generateAuthUrl({
         redirect_uri: redirectUri.toString(),
         access_type: 'offline',
         scope: scopes.join(' '),
       });
 
-      opn(authorizeUrl, { wait: false }).then((cp) => cp.unref());
+      // TODO(burdon): 'open' has ESM issue.
+      // Open the auth url to start the workflow.
+      // const open = await import('open');
+      // open(authorizeUrl, { wait: false }).then((cp) => cp.unref());
+      spawn('open', [authorizeUrl]);
     });
+
     destroyer(server);
   });
 };
