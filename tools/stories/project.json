@@ -33,7 +33,7 @@
         "configDir": "tools/stories/e2e-stories"
       }
     },
-    "storybook-build": {
+    "storybook-build-ui": {
       "configurations": {
         "ci": {
           "quiet": true
@@ -41,8 +41,8 @@
       },
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/.storybook",
-        "outputDir": "tools/stories/out"
+        "configDir": "tools/stories/ui-stories",
+        "outputDir": "tools/stories/out/react-ui"
       },
       "outputs": [
         "{options.outputDir}"
