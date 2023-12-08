@@ -8,14 +8,14 @@
   "author": "DXOS.org",
   "exports": {
     ".": "./dist/lib/browser/index.mjs",
-    "./headless": "./dist/lib/browser/telemetry/index.mjs",
+    "./headless": "./dist/lib/browser/observability/index.mjs",
     "./meta": "./dist/lib/browser/meta.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "headless": [
-        "dist/types/src/telemetry/index.d.ts"
+        "dist/types/src/observability/index.d.ts"
       ],
       "meta": [
         "dist/types/src/meta.d.ts"
@@ -35,7 +35,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/sentry": "workspace:*",
-    "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
     "localforage": "^1.10.0"
   },

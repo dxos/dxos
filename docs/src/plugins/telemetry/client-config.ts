@@ -16,12 +16,16 @@ export default defineClientConfig({
       return;
     }
 
-    const { init, page } = await import('@dxos/telemetry');
-    init({ apiKey: TELEMETRY_API_KEY });
+    const { Observability } = await import('@dxos/observability');
+    const observability = new Observability({
+      namespace: 'docs',
+      secrets: new Map<string, string>([['TELEMETRY_API_KEY', TELEMETRY_API_KEY]]),
+    });
+    observability.initTelemetry();
 
     router.afterEach((to, from, failure) => {
       if (!isNavigationFailure(failure)) {
-        page({
+        observability.telemetryPage({
           properties: {
             environment: DX_ENVIRONMENT,
             release: DX_RELEASE,

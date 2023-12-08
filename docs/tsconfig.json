@@ -30,7 +30,7 @@
       "path": "../packages/common/log"
     },
     {
-      "path": "../packages/common/telemetry"
+      "path": "../packages/common/observability"
     },
     {
       "path": "../packages/core/echo/echo-schema"

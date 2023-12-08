@@ -6,12 +6,14 @@
 import * as localForage from 'localforage';
 
 import { log } from '@dxos/log';
+import { Observability } from '@dxos/observability';
 import type { Client, Config } from '@dxos/react-client';
-import { type InitOptions as SentryInitOptions } from '@dxos/sentry';
-import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
 export const BASE_TELEMETRY_PROPERTIES: any = {};
+// item name is 'telemetry' for backwards compatibility
+export const OBSERVABILITY_DISABLED_KEY = 'telemetry-disabled';
+export const OBSERVABILITY_GROUP_KEY = 'telemetry-group';
 
 if (navigator.storage?.estimate) {
   setInterval(async () => {
@@ -40,36 +42,40 @@ export const getTelemetryIdentifier = (client: Client) => {
   return undefined;
 };
 
-export const isTelemetryDisabled = async (namespace: string): Promise<boolean> => {
+export const isObservabilityDisabled = async (namespace: string): Promise<boolean> => {
   try {
-    return (await localForage.getItem(`${namespace}:telemetry-disabled`)) === 'true';
+    // item name is `telemetry-disabled` for backwards compatibility
+    return (await localForage.getItem(`${namespace}:${OBSERVABILITY_DISABLED_KEY}`)) === 'true';
   } catch (err) {
     log.catch('Failed to check if telemetry disabled, assuming it is', err);
     return true;
   }
 };
 
-export const storeTelemetryDisabled = async (namespace: string, value: string) => {
+export const storeObservabilityDisabled = async (namespace: string, value: string) => {
   try {
-    await localForage.setItem(`${namespace}:telemetry-disabled`, value);
+    await localForage.setItem(`${namespace}:${OBSERVABILITY_DISABLED_KEY}`, value);
   } catch (err) {
-    log.catch('Failed to store telemetry disabled', err);
+    log.catch('Failed to store observability disabled', err);
   }
 };
 
-export const getTelemetryGroup = async (namespace: string): Promise<string | null | undefined> => {
+export const getObservabilityGroup = async (namespace: string): Promise<string | null | undefined> => {
   try {
-    return localForage.getItem(`${namespace}:telemetry-group`);
+    return localForage.getItem(`${namespace}:${OBSERVABILITY_GROUP_KEY}`);
   } catch (err) {
-    log.catch('Failed to get telemetry group', err);
+    log.catch('Failed to get observability group', err);
   }
 };
 
-export type AppTelemetryOptions = {
+export type AppObservabilityOptions = {
   namespace: string;
   config: Config;
-  sentryOptions?: SentryInitOptions;
-  telemetryOptions?: TelemetryInitOptions;
+  tracingEnable?: boolean;
+  replayEnable?: boolean;
+  // enable Segment Telemetry
+  telemetryEnable?: boolean;
+  // TODO(nf): options for providers?
 };
 
 type IPData = { city: string; region: string; country: string; latitude: number; longitude: number };
@@ -77,16 +83,29 @@ type IPData = { city: string; region: string; country: string; latitude: number;
 // TODO(wittjosiah): Store preference for disabling telemetry.
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
-export const initializeAppTelemetry = async ({
-  namespace,
-  config,
-  sentryOptions,
-  telemetryOptions,
-}: AppTelemetryOptions) => {
-  try {
-    const Telemetry = await import('@dxos/telemetry');
-    const Sentry = await import('@dxos/sentry');
+export const initializeAppObservability = async (
+  { namespace, config, tracingEnable = true, replayEnable = true, telemetryEnable = true }: AppObservabilityOptions,
+  client?: Client,
+): Promise<Observability> => {
+  const group = (await getObservabilityGroup(namespace)) ?? undefined;
+  const release = `${namespace}@${config.get('runtime.app.build.version')}`;
+  const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
+  BASE_TELEMETRY_PROPERTIES.group = group;
+  BASE_TELEMETRY_PROPERTIES.release = release;
+  BASE_TELEMETRY_PROPERTIES.environment = environment;
+  const observabilityDisabled = await isObservabilityDisabled(namespace);
 
+  // TODO(nf): configure mode
+  const observability = new Observability({ namespace, group, mode: 'full', config });
+
+  // global kill switch
+  if (observabilityDisabled) {
+    observability.disable();
+    log.info('observability disabled');
+    return observability;
+  }
+
+  try {
     const getIPData = async (config: Config): Promise<IPData | void> => {
       const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
       type CachedIPData = {
@@ -100,6 +119,7 @@ export const initializeAppTelemetry = async ({
         return cachedData.data;
       }
 
+      // TODO(nf): move into observability
       // Fetch data if not cached.
       const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
       if (IPDATA_API_KEY) {
@@ -112,45 +132,28 @@ export const initializeAppTelemetry = async ({
                 data,
                 timestamp: Date.now(),
               })
-              .catch((err) => Sentry.captureException(err));
+              .catch((err) => observability.captureException(err));
 
             return data;
           })
-          .catch((err) => Sentry.captureException(err));
+          .catch((err) => observability.captureException(err));
       }
     };
 
-    const group = await getTelemetryGroup(namespace);
-    const release = `${namespace}@${config.get('runtime.app.build.version')}`;
-    const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
-    BASE_TELEMETRY_PROPERTIES.group = group;
-    BASE_TELEMETRY_PROPERTIES.release = release;
-    BASE_TELEMETRY_PROPERTIES.environment = environment;
-    const telemetryDisabled = await isTelemetryDisabled(namespace);
-
-    const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
-    Sentry.init({
-      enable: Boolean(SENTRY_DESTINATION) && !telemetryDisabled,
-      destination: SENTRY_DESTINATION,
+    observability.initSentry({
       environment,
       release,
-      tracing: true,
-      replay: true,
+      tracing: tracingEnable,
+      replay: replayEnable,
       // TODO(wittjosiah): Configure these.
       sampleRate: 1.0,
       replaySampleRate: 0.1,
       replaySampleRateOnError: 1.0,
-      ...sentryOptions,
     });
 
-    Sentry.configureTracing();
-
-    const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
-    Telemetry.init({
-      apiKey: TELEMETRY_API_KEY,
-      enable: Boolean(TELEMETRY_API_KEY) && !telemetryDisabled,
-      ...telemetryOptions,
-    });
+    if (telemetryEnable) {
+      observability.initTelemetry();
+    }
 
     const ipData = await getIPData(config);
     if (ipData && ipData.city) {
@@ -161,6 +164,7 @@ export const initializeAppTelemetry = async ({
       BASE_TELEMETRY_PROPERTIES.longitude = ipData.longitude;
     }
   } catch (err) {
-    log.error('Failed to initialize app telemetry', err);
+    log.error('Failed to initialize app observability', err);
   }
+  return observability;
 };

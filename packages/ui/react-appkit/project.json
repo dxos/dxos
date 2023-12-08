@@ -7,7 +7,7 @@
       "options": {
         "entryPoints": [
           "packages/ui/react-appkit/src/index.ts",
-          "packages/ui/react-appkit/src/telemetry/index.ts"
+          "packages/ui/react-appkit/src/observability/index.ts"
         ],
         "platforms": [
           "browser"

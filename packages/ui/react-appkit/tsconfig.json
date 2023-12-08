@@ -28,10 +28,10 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/sentry"
+      "path": "../../common/observability"
     },
     {
-      "path": "../../common/telemetry"
+      "path": "../../common/sentry"
     },
     {
       "path": "../../common/util"

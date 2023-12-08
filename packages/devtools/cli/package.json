@@ -50,7 +50,6 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
-    "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^2.9.4",
     "@oclif/plugin-help": "^5.2.14",

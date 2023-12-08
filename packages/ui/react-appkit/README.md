@@ -10,13 +10,15 @@ pnpm i @dxos/react-appkit
 
 ## Usage
 
-### Sentry & Telemetry
+### Observability
+
+To enable Sentry & Telemetry
 
 Put the following in the entrypoint of an app:
 
 ```ts
-import { initializeAppTelemetry } from "@dxos/react-appkit/telemetry";
-initializeAppTelemetry(namespace, new Config(Defaults()));
+import { initializeAppObservability } from "@dxos/react-appkit/observability";
+initializeAppObservability(namespace, new Config(Defaults()));
 ```
 
 Config is required to provide environment variables to the initialization.

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
+import { initializeAppObservability } from '@braneframe/plugin-telemetry/headless';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
@@ -14,11 +14,12 @@ import { namespace } from './util';
 // TODO(burdon): Make configurable (NOTE: levels lower than info affect performance).
 const LOG_FILTER = 'info';
 
-void initializeAppTelemetry({
+void initializeAppObservability({
   namespace,
   config: new Config(Defaults()),
-  sentryOptions: { tracing: false, replay: false },
-  telemetryOptions: { enable: false },
+  tracingEnable: false,
+  replayEnable: false,
+  telemetryEnable: false,
 });
 
 const workerRuntime = new WorkerRuntime(async () => {

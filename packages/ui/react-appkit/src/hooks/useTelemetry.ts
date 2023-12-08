@@ -5,17 +5,14 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { type Observability } from '@dxos/observability';
 import { useClient } from '@dxos/react-client';
 
-import {
-  BASE_TELEMETRY_PROPERTIES,
-  getTelemetryIdentifier,
-  setupTelemetryListeners,
-  withTelemetry,
-} from '../telemetry';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, setupTelemetryListeners } from '../observability';
 
 export type UseTelemetryOptions = {
   namespace: string;
+  observability: Observability;
   router?: boolean;
 };
 
@@ -24,32 +21,28 @@ export type UseTelemetryOptions = {
  *
  * Must be called inside a react router context.
  */
-export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) => {
+export const useTelemetry = ({ namespace, observability, router = true }: UseTelemetryOptions) => {
   const location = router ? useLocation() : null;
   const client = useClient();
 
   useEffect(() => {
-    void withTelemetry((Telemetry) => {
-      Telemetry.event({
-        identityId: getTelemetryIdentifier(client),
-        name: `${namespace}.page.load`,
-        properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
-          href: window.location.href,
-          loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
-        },
-      });
+    observability.telemetryEvent({
+      identityId: getTelemetryIdentifier(client),
+      name: `${namespace}.page.load`,
+      properties: {
+        ...BASE_TELEMETRY_PROPERTIES,
+        href: window.location.href,
+        loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+      },
     });
 
-    return setupTelemetryListeners(namespace, client);
+    return setupTelemetryListeners(namespace, client, observability);
   }, []);
 
   useEffect(() => {
-    void withTelemetry((Telemetry) => {
-      Telemetry.page({
-        identityId: getTelemetryIdentifier(client),
-        properties: BASE_TELEMETRY_PROPERTIES,
-      });
+    observability.telemetryPage({
+      identityId: getTelemetryIdentifier(client),
+      properties: BASE_TELEMETRY_PROPERTIES,
     });
   }, [location]);
 };

@@ -8,4 +8,4 @@
 //   This is mostly here so that it's not in appkit.
 
 export * from './listeners';
-export * from './telemetry';
+export * from './observability';

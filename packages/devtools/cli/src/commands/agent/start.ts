@@ -21,7 +21,6 @@ import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
-import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
 
@@ -110,11 +109,12 @@ export default class Start extends BaseCommand<typeof Start> {
     if (this._observability?.enabled) {
       this.log('Metrics initialized!');
 
-      await this._observability.startIdentity(this._agent.client!);
-      await this._observability.startDevice(this._agent.client!);
-      await this._observability.startNetwork(this._agent.client!);
-      await this._observability.startSpaces(this._agent.client!);
-      await this._observability.startRuntime(this._agent.client!);
+      this._observability.initMetrics();
+      await this._observability.setIdentityTags(this._agent.client!);
+      await this._observability.setDeviceTags(this._agent.client!);
+      await this._observability.startNetworkMetrics(this._agent.client!);
+      await this._observability.startSpacesMetrics(this._agent.client!);
+      await this._observability.startRuntimeMetrics(this._agent.client!);
       // initAgentMetrics(this._ctx, this._observability, this._startTime);
       //  initClientMetrics(this._ctx, this._observability, this._agent!);
     }
@@ -149,7 +149,7 @@ export default class Start extends BaseCommand<typeof Start> {
 
   private async _sendTelemetry() {
     const sendTelemetry = async () => {
-      Telemetry.event({
+      this._observability?.telemetryEvent({
         installationId: this._telemetryContext?.installationId,
         name: 'cli.command.run.agent',
         properties: {

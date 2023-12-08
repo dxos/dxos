@@ -9,9 +9,6 @@ import os from 'node:os';
 import { join } from 'node:path';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
-import { captureException } from '@dxos/sentry';
-import { init, event } from '@dxos/telemetry';
-
 import config from './telemetryrc.json';
 
 // read API keys from file generated on publish or deploy
@@ -51,24 +48,9 @@ const DEFAULTS: TelemetryContext = {
   ci: process.env.CI === 'true',
 };
 
-export const disableTelemetry = async (configDir: string) => {
-  if (!TELEMETRY_API_KEY) {
-    return;
-  }
+// TODO(nf): presence of file not checked
 
-  const { installationId } = await getTelemetryContext(configDir);
-  const path = join(configDir, '.telemetry-disabled');
-  if (await exists(path)) {
-    return;
-  }
 
-  init({ apiKey: TELEMETRY_API_KEY, batchSize: 1, enable: true });
-  event({
-    installationId,
-    name: 'cli.telemetry.disable',
-  });
-  await writeFile(path, '', 'utf-8');
-};
 
 /**
  * Print telemetry banner once per installation.
@@ -125,17 +107,13 @@ const createContext = async (idPath: string) => {
 };
 
 const validate = (contextString: string) => {
-  try {
-    const context = yaml.load(contextString) as TelemetryContext;
-    if (Boolean(context.installationId) && validateUuid(context.installationId!)) {
-      return {
-        ...DEFAULTS,
-        ...context,
-        mode: DX_DISABLE_TELEMETRY ? 'disabled' : context.mode ?? DEFAULTS.mode,
-      };
-    }
-  } catch (err: any) {
-    captureException(err);
+  const context = yaml.load(contextString) as TelemetryContext;
+  if (Boolean(context.installationId) && validateUuid(context.installationId!)) {
+    return {
+      ...DEFAULTS,
+      ...context,
+      mode: DX_DISABLE_TELEMETRY ? 'disabled' : context.mode ?? DEFAULTS.mode,
+    };
   }
 };
 

@@ -4,17 +4,17 @@
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { getPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
 
 import meta from './meta';
-import { type AppTelemetryOptions, initializeAppTelemetry, initializeAppObservability } from './telemetry';
+import { type AppObservabilityOptions, initializeAppObservability } from './observability';
 import { useTelemetry } from './useTelemetry';
 
-export const TelemetryPlugin = (options: AppTelemetryOptions): PluginDefinition => {
+export const TelemetryPlugin = (options: AppObservabilityOptions): PluginDefinition => {
   let observability: Observability | undefined;
   // Initialize asynchronously in the background, not in plugin initialization.
   // Should not block application startup.
-  void initializeAppTelemetry(options);
 
   return {
     meta,
@@ -28,7 +28,11 @@ export const TelemetryPlugin = (options: AppTelemetryOptions): PluginDefinition 
     },
     provides: {
       root: () => {
-        useTelemetry({ namespace: options.namespace });
+        if (!observability) {
+          log.error('Observability not initialized');
+          return null;
+        }
+        useTelemetry({ namespace: options.namespace, observability });
 
         return null;
       },

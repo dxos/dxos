@@ -39,15 +39,10 @@ import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
 import { Observability } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import * as Sentry from '@dxos/sentry';
-import { captureException } from '@dxos/sentry';
-import * as Telemetry from '@dxos/telemetry';
 
 import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
-  TELEMETRY_API_KEY,
-  disableTelemetry,
   getTelemetryContext,
   showTelemetryBanner,
   PublisherRpcPeer,
@@ -214,6 +209,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     this._telemetryContext = await getTelemetryContext(DX_DATA);
     const { mode, installationId, group, environment, release } = this._telemetryContext;
 
+    if (mode === 'disabled') {
+      this.log('telemetry disabled by config');
+      return;
+    }
     {
       if (group === 'dxos') {
         this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
@@ -222,7 +221,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await showTelemetryBanner(DX_DATA);
     }
 
-    this._observability = new Observability({ namespace: 'agent', group, mode: this._telemetryContext.mode });
+    // TODO(nf): handle cases where the cli starts the agent for the user
+    let namespace = 'cli';
+    if (this.id === 'agent:start') {
+      namespace = 'agent';
+    }
+    this._observability = new Observability({ namespace, group, mode });
 
     this._observability.initSentry(
       {
@@ -235,14 +239,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       true,
     );
 
-    if (TELEMETRY_API_KEY) {
-      mode === 'disabled' && (await disableTelemetry(DX_DATA));
-      Telemetry.init({
-        apiKey: TELEMETRY_API_KEY,
-        batchSize: 20,
-        enable: Boolean(TELEMETRY_API_KEY) && mode !== 'disabled',
-      });
-    }
+    this._observability.initTelemetry();
 
     this.addToTelemetryContext({ command: this.id });
 
@@ -252,7 +249,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       const { city, region, country, latitude, longitude } = data;
       this.addToTelemetryContext({ city, region, country, latitude, longitude });
     } catch (err) {
-      captureException(err);
+      this._observability?.captureException(err);
     }
   }
 
@@ -319,7 +316,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
     // Will only submit if API key exists (i.e., prod).
-    Sentry.captureException(err);
+    this._observability?.captureException(err);
 
     this._failing = true;
 
@@ -356,7 +353,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async finally() {
     const endTime = new Date();
-    Telemetry.event({
+    this._observability?.telemetryEvent({
       installationId: this._telemetryContext?.installationId,
       name: 'cli.command.run',
       properties: {

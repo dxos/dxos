@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import { registerSW } from 'virtual:pwa-register';
 
-import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
+import { initializeAppObservability } from '@braneframe/plugin-telemetry/headless';
 import { Config, Defaults } from '@dxos/config';
 import { log } from '@dxos/log';
 import { startIFrameRuntime } from '@dxos/vault';
@@ -39,7 +39,7 @@ import { namespace } from './namespace';
   }),
 };
 
-void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
+void initializeAppObservability({ namespace, config: new Config(Defaults()) });
 void startIFrameRuntime(
   () =>
     // NOTE: Url must be within SharedWorker instantiation for bundling to work as expected.

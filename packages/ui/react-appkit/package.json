@@ -8,13 +8,13 @@
   "author": "DXOS.org",
   "exports": {
     ".": "./dist/lib/browser/index.mjs",
-    "./telemetry": "./dist/lib/browser/telemetry/index.mjs"
+    "./observability": "./dist/lib/browser/observability/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "telemetry": [
-        "dist/types/src/telemetry/index.d.ts"
+      "observability": [
+        "dist/types/src/observability/index.d.ts"
       ]
     }
   },
@@ -32,11 +32,11 @@
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/sentry": "workspace:*",
-    "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@radix-ui/react-compose-refs": "^1.0.0",
     "@radix-ui/react-navigation-menu": "^1.1.2",
