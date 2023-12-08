@@ -37,7 +37,7 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const keyFile = require(options.keyfilePath);
-  const keys = keyFile.installed || keyFile.web;
+  const keys = keyFilse.installed || keyFile.web;
   if (!keys.redirect_uris || keys.redirect_uris.length === 0) {
     throw new Error(invalidRedirectUri);
   }
