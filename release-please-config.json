@@ -824,7 +824,7 @@
         },
         {
           "type": "json",
-          "path": "tools/storybook-config/package.json",
+          "path": "tools/stories/package.json",
           "jsonpath": "$.version"
         },
         {

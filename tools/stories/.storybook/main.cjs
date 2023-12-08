@@ -8,6 +8,7 @@ const { mergeConfig } = require('vite');
 const turbosnap = require('vite-plugin-turbosnap');
 
 const { ThemePlugin } = require('packages/ui/react-ui-theme/plugin');
+const ReactPlugin = require("@vitejs/plugin-react");
 
 module.exports = {
   stories: [
@@ -15,14 +16,14 @@ module.exports = {
   ],
   addons: [
     '@storybook/addon-links',
-    '@storybook/addon-essentials',
     '@storybook/addon-interactions',
   ],
   framework: {
     name: '@storybook/react-vite',
-    options: {}
+    options: { builder: { useSWC: true } }
   },
-  viteFinal: async (config) => mergeConfig(config, {
+  viteFinal: async (config) => {
+    return mergeConfig(config, {
     plugins: [
       ThemePlugin({
         root: __dirname,
@@ -32,5 +33,5 @@ module.exports = {
       }),
       turbosnap({ rootDir: config.root }),
     ],
-  })
+  })}
 };

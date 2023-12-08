@@ -5,8 +5,8 @@
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "tools/stories/src/**/*.{ts,tsx,js,jsx}",
-          "tools/stories/.storybook/*.{cjs,html}"
+          "tools/stories/.storybook/*.{cjs,html}",
+          "tools/stories/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
