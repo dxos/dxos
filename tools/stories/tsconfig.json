@@ -7,5 +7,10 @@
   ],
   "include": [
     ".storybook/*.mts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/ui/react-ui-theme"
+    }
   ]
 }

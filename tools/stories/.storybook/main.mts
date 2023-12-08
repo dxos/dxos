@@ -11,7 +11,9 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 const config: StorybookConfig = {
   stories: ['../../../packages/*/*/src/**/*.stories.{mdx,tsx}'],
-  addons: ['@storybook/addon-links', '@storybook/addon-interactions'],
+  addons: ['@storybook/addon-links', '@storybook/addon-essentials', '@storybook/addon-interactions'],
+  // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories
+  typescript: { reactDocgen: false },
   framework: {
     name: '@storybook/react-vite',
     options: {},
