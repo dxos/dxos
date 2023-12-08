@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "chromatic:react-ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_1169f9460ccde08\" --storybook-build-dir out/react-ui --exit-zero-on-changes"
+    "chromatic:ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_1169f9460ccde08\" --storybook-build-dir out/ui --exit-zero-on-changes"
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",

@@ -42,7 +42,7 @@
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/ui-stories",
-        "outputDir": "tools/stories/out/react-ui"
+        "outputDir": "tools/stories/out/ui"
       },
       "outputs": [
         "{options.outputDir}"
