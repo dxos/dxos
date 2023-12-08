@@ -12,8 +12,6 @@ import { subscriptionHandler } from '@dxos/functions';
 import { ObjectSyncer } from '../../sync';
 import { getYaml } from '../../util';
 
-const { authenticate } = require('@google-cloud/local-auth');
-
 // TODO(burdon): Evolve syncer.
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space, objects } = event;

@@ -10,7 +10,6 @@ import * as http from 'http';
 import yaml from 'js-yaml';
 import { type AddressInfo } from 'net';
 import { spawn } from 'node:child_process';
-import { join } from 'node:path';
 import destroyer from 'server-destroy';
 import { URL } from 'url';
 
@@ -26,12 +25,7 @@ export interface LocalAuthOptions {
  * Opens browser to perform OAuth flow.
  * @param options
  */
-export const authenticate = async (
-  options: LocalAuthOptions = {
-    keyfilePath: join(process.env.HOME!, '.config/dx/credentials/google.json'),
-    scopes: ['https://www.googleapis.com/auth/calendar.events.readonly'],
-  },
-): Promise<OAuth2Client> => {
+export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Client> => {
   if (!options || !options.keyfilePath || typeof options.keyfilePath !== 'string') {
     throw new Error('keyfilePath must be set to the fully qualified path to a GCP credential keyfile.');
   }

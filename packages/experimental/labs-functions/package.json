@@ -15,7 +15,7 @@
     "dist"
   ],
   "scripts": {
-    "auth": "ts-node --esm ./src/auth/oauth.ts"
+    "auth": "ts-node --esm ./src/auth/test.ts"
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",
