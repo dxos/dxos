@@ -62,6 +62,21 @@
       "outputs": [
         "{options.outputDir}"
       ]
+    },
+    "storybook-build-shell": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/shell-stories",
+        "outputDir": "tools/stories/out/shell"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
     }
   }
 }
