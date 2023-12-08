@@ -9450,6 +9450,9 @@ importers:
 
   tools/stories:
     devDependencies:
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-theme
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21

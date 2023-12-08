@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "exclude": [
+    "dist",
+    "node_modules",
+    "out"
+  ],
+  "include": [
+    ".storybook/*.mts"
+  ]
+}
