@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { type AddressBook as AddressBookType, Contact as ContactType } from '@braneframe/types';
 import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, mx } from '@dxos/react-ui-theme';
+import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+
+import { ContactList } from './ContactList';
+import { MasterDetail } from './MasterDetail';
 
 // TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation, scrolling.
 // TODO(burdon): Nav from inbox.
@@ -38,29 +41,16 @@ export type ContactsMainProps = {
 };
 
 export const ContactsMain = ({ contacts }: ContactsMainProps) => {
+  const [selected, setSelected] = useState<ContactType>();
   const space = getSpaceForObject(contacts);
   const objects = useQuery(space, ContactType.filter());
   objects.sort(byName());
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <div className={mx('flex flex-col grow overflow-hidden')}>
-        <div className={mx('flex flex-col overflow-y-scroll gap-1 px-2', styles.columnWidth)}>
-          {objects.map((object) => (
-            <div key={object.id} className='flex flex-col p-1 px-2 border border-neutral-100 rounded-md'>
-              <div>{object.name}</div>
-              <div className='flex flex-col'>
-                {object.identifiers.map(({ value }, i) => (
-                  <div key={i} className='text-xs text-neutral-500'>
-                    {value}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className='p-2 text-xs'>{objects?.length}</div>
-      </div>
+      <MasterDetail>
+        <ContactList contacts={objects} selected={selected?.id} onSelect={setSelected} />
+      </MasterDetail>
     </Main.Content>
   );
 };

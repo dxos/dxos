@@ -27,6 +27,7 @@ export type MessageListProps = {
   onAction?: (message: MessageType, action: ActionType) => void;
 };
 
+// TODO(burdon): Use List.
 export const MessageList = ({ messages = [], selected, onSelect, onAction }: MessageListProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
 

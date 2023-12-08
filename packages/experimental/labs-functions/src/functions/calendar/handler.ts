@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import sub from 'date-fns/sub';
 import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { Event as EventType } from '@braneframe/types';
+import { Event as EventType, type Message as MessageType } from '@braneframe/types';
 import { subscriptionHandler } from '@dxos/functions';
 
 import { ObjectSyncer } from '../../sync';
@@ -40,13 +41,16 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
+  // Test using Google Calendar API docs:
+  // https://developers.google.com/calendar/api/v3/reference/events/list
   const events = await calendar.events.list({
     auth: oauth2Client,
     calendarId: 'primary',
-    maxResults: 10,
-    // timeMin: new Date().toISOString(),
-    // singleEvents: true,
-    // orderBy: 'startTime',
+    maxResults: 50,
+    timeMin: sub(Date.now(), { days: 7 }).toISOString(),
+    timeMax: new Date().toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
   });
 
   const sourceId = 'google.com/calendar';
@@ -70,12 +74,16 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     const { kind, id, created, updated, summary, creator, start, end, recurrence, attendees } = event;
     if (id) {
       const existing = syncer.getObject(id);
+      console.log(summary, attendees);
       // TODO(burdon): Upsert.
       if (!existing) {
         space.db.add(
           new EventType(
             {
               title: summary || '',
+              attendees: attendees?.map(
+                ({ email, displayName }) => ({ email: email!, name: displayName } as MessageType.Recipient),
+              ),
             },
             { meta: { keys: [{ source: sourceId, id }] } },
           ),
