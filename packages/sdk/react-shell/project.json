@@ -17,7 +17,7 @@
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/sdk/react-shell/src/playwright/playwright.config.ts",
-        "serve": "react-shell:storybook",
+        "serve": "stories:storybook-e2e",
         "testPatterns": [
           "packages/sdk/react-shell/src/playwright/**/*.spec.{ts,js}"
         ],
