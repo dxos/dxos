@@ -46,7 +46,7 @@ export const EventsMain = ({ calendar }: EventsMainProps) => {
           {objects.map((object) => (
             <div key={object.id} className='flex flex-col p-1 px-2 border border-neutral-100 rounded-md'>
               <div>{object.title}</div>
-              <div>{object.owner.email}</div>
+              {object.owner && <div>{object.owner.email}</div>}
               <div className='flex flex-col'>
                 {object.attendees.map(({ email }, i) => (
                   <div key={i} className='text-xs text-neutral-500'>

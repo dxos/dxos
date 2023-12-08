@@ -12,22 +12,15 @@ import { subscriptionHandler } from '@dxos/functions';
 import { ObjectSyncer } from '../../sync';
 import { getYaml } from '../../util';
 
-// TODO(burdon): Evolve syncer.
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
-  const { space, objects } = event;
+  const { space } = event;
   if (!space) {
     return;
   }
 
   // TODO(burdon): Prevent multiple calls from scheduler.
 
-  // const { client } = context;
-  // TODO(burdon): Generalize util for getting properties from config/env.
-  // const config = client.config;
-
-  // TODO(burdon): Grab refresh token before expires.
-  // Retrieve access token from OAuth Playground (expires in 1hr).
-  // https://developers.google.com/oauthplayground/#step2&apisSelect=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events.readonly&url=https%3A%2F%2F&content_type=application%2Fjson&http_method=GET&useDefaultOauthCred=unchecked&oauthEndpointSelect=Google&oauthAuthEndpointValue=https%3A%2F%2Faccounts.google.com%2Fo%2Foauth2%2Fv2%2Fauth&oauthTokenEndpointValue=https%3A%2F%2Foauth2.googleapis.com%2Ftoken&includeCredentials=unchecked&accessTokenType=bearer&autoRefreshToken=unchecked&accessType=offline&prompt=consent&response_type=code&wrapLines=on
+  // Run `npm run auth` to create credentials file for testing.
   const { access_token: accessToken, refresh_token: refreshToken } =
     getYaml<{
       access_token: string;
@@ -47,20 +40,14 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-  let events;
-  try {
-    events = await calendar.events.list({
-      auth: oauth2Client,
-      calendarId: 'primary',
-      maxResults: 10,
-      // timeMin: new Date().toISOString(),
-      // singleEvents: true,
-      // orderBy: 'startTime',
-    });
-  } catch (err: any) {
-    // TODO(burdon): Could not determine client ID from request. For use with playground only?
-    console.log(err);
-  }
+  const events = await calendar.events.list({
+    auth: oauth2Client,
+    calendarId: 'primary',
+    maxResults: 10,
+    // timeMin: new Date().toISOString(),
+    // singleEvents: true,
+    // orderBy: 'startTime',
+  });
 
   const sourceId = 'google.com/calendar';
   const syncer = new ObjectSyncer<EventType>(EventType.filter(), (object) => {
