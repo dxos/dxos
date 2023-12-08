@@ -26,7 +26,7 @@ export const EventList = ({ events = [], selected, onSelect }: EventListProps) =
         {events.map((event) => (
           <ListItem.Root
             key={event.id}
-            classNames={mx('flex flex-col', ghostHover, selected === event.id && styles.selected)}
+            classNames={mx('flex flex-col cursor-pointer', ghostHover, selected === event.id && styles.selected)}
             onClick={() => onSelect?.(event)}
           >
             {event.title && <ListItem.Heading classNames='p-2'>{event.title}</ListItem.Heading>}
