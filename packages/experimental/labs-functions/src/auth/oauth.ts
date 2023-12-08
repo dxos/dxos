@@ -29,9 +29,7 @@ export interface LocalAuthOptions {
   scopes: string[] | string;
 }
 
-// Open an http server to accept the oauth callback. In this
-// simple example, the only request to our webserver is to
-// /oauth2callback?code=<code>
+// Oauth callback: /oauth2callback?code=<code>
 export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Client> => {
   if (!options || !options.keyfilePath || typeof options.keyfilePath !== 'string') {
     throw new Error('keyfilePath must be set to the fully qualified path to a GCP credential keyfile.');
@@ -43,6 +41,7 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
   if (!keys.redirect_uris || keys.redirect_uris.length === 0) {
     throw new Error(invalidRedirectUri);
   }
+
   const redirectUri = new URL(keys.redirect_uris[0] ?? 'http://localhost');
   if (redirectUri.hostname !== 'localhost') {
     throw new Error(invalidRedirectUri);
@@ -82,17 +81,16 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
         client.credentials = tokens;
         resolve(client);
         res.end('Authentication successful! Please return to the console.');
-      } catch (e) {
-        reject(e);
+      } catch (err) {
+        reject(err);
       } finally {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (server as any).destroy();
       }
     });
 
     let listenPort = 3000;
     if (keyFile.installed) {
-      // Use emphemeral port if not a web client
+      // Use ephemeral port if not a web client.
       listenPort = 0;
     } else if (redirectUri.port !== '') {
       listenPort = Number(redirectUri.port);
@@ -105,7 +103,7 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
       }
 
       const scopes = options.scopes ? (Array.isArray(options.scopes) ? options.scopes : [options.scopes]) : [];
-      // open the browser to the authorize url to start the workflow
+      // Open the auth url to start the workflow.
       const authorizeUrl = client.generateAuthUrl({
         redirect_uri: redirectUri.toString(),
         access_type: 'offline',
