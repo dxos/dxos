@@ -8,14 +8,14 @@ import { tooltipContent } from '@dxos/react-ui-theme';
 
 const markdownLinkRegexp = /\[([^\]]+)]\(([^)]+)\)/;
 
-type OnHover = (el: Element, url: string) => void;
+export type OnHyperlinkHover = (el: Element, url: string) => void;
 
 /**
  * https://codemirror.net/examples/tooltip
  * https://codemirror.net/docs/ref/#view.hoverTooltip
  * https://github.com/codemirror/view/blob/main/src/tooltip.ts
  */
-export const createHyperlinkTooltip = (onHover: OnHover, regexp = markdownLinkRegexp) =>
+export const createHyperlinkTooltip = (onHover: OnHyperlinkHover, regexp = markdownLinkRegexp) =>
   hoverTooltip((view, pos) => {
     const { from, text } = view.state.doc.lineAt(pos);
     const p = pos - from;

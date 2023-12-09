@@ -6,6 +6,7 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import {
+  createHyperlinkTooltip,
   type EditorModel,
   MarkdownEditor,
   type MarkdownEditorProps,
@@ -15,6 +16,7 @@ import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-th
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
+import { onTooltip } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
@@ -42,7 +44,7 @@ export const EditorMain = ({
         ref={editorRefCb}
         model={model}
         editorMode={editorMode}
-        onChange={onChange}
+        extensions={[createHyperlinkTooltip(onTooltip)]}
         slots={{
           root: {
             role: 'none',
@@ -68,6 +70,7 @@ export const EditorMain = ({
             placeholder: t('editor placeholder'),
           },
         }}
+        onChange={onChange}
       />
     </Root>
   );
