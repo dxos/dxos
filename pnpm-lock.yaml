@@ -8466,6 +8466,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/codemirror':
         specifier: ^5.60.14
         version: 5.60.14
