@@ -8,12 +8,14 @@ import React from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
 import { Tooltip } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { InvitationList } from './InvitationList';
-import { inviteWithState } from '../../testing/fixtures/invitations';
+import { inviteWithState } from '../../testing';
 
 export default {
   component: InvitationList,
+  decorators: [withTheme],
   actions: { argTypesRegex: '^on.*' },
 };
 

@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { fixedInsetFlexLayout, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
 import { useTextModel } from '../../model';
@@ -25,6 +26,7 @@ const Story = () => {
 
 export default {
   component: TextEditor,
+  decorators: [withTheme],
   render: Story,
 };
 

@@ -9,6 +9,7 @@ import React from 'react';
 import { PublicKey } from '@dxos/keys';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SpacePanelImpl } from './SpacePanel';
 import { type SpacePanelImplProps } from './SpacePanelProps';
@@ -28,6 +29,7 @@ const noOpProps: SpacePanelImplProps = {
 
 export default {
   component: SpacePanelImpl,
+  decorators: [withTheme],
 };
 
 export const SpaceManager = () => {

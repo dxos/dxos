@@ -9,6 +9,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
@@ -33,6 +34,7 @@ const noOpProps: IdentityPanelImplProps = {
 
 export default {
   title: 'Panels/Identity',
+  decorators: [withTheme],
 };
 
 export const IdentityActionChooser = () => {

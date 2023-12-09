@@ -6,6 +6,8 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { FullscreenDecorator } from '../testing';
 
 const org = '@dxos-mosaic';
@@ -78,7 +80,7 @@ const Home = () => {
 
 export default {
   component: Home,
-  decorators: [FullscreenDecorator('flex justify-center bg-[url(/images/bg-mosaic.png)]')],
+  decorators: [withTheme, FullscreenDecorator('flex justify-center bg-[url(/images/bg-mosaic.png)]')],
   parameters: {
     layout: 'fullscreen',
   },
