@@ -27,7 +27,7 @@ const Story: FC<{ objects: any[] }> = ({ objects }) => {
     <DensityProvider density='fine'>
       <div className='flex grow justify-center overflow-hidden'>
         <div className='flex flex-col w-[300px] m-4 overflow-hidden'>
-          <Searchbar className='pl-3' variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
+          <Searchbar variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
           <SearchResults items={filteredItems} selected={selected} onSelect={setSelected} />
         </div>
       </div>
