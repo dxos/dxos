@@ -57,7 +57,7 @@ export const promptHighlightStyles = HighlightStyle.define([
 const Story = () => {
   const [item] = useState({
     text: new TextObject(
-      '\n\n\nThis is all about [DXOS](https://dxos.org); read more [here](https://blog.dxos.org).\n\n\n',
+      '\n\n\nThis is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).\n\n\n',
     ),
   });
 
@@ -71,11 +71,12 @@ const Story = () => {
         extensions={[
           hyperlink,
           createHyperlinkTooltip((el, url) => {
+            const web = new URL(url);
             createRoot(el).render(
               <StrictMode>
                 <div className='flex gap-1 items-center'>
                   <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
-                  <p className='pr-1'>{url}</p>
+                  <p className='pr-1'>{web.origin}</p>
                 </div>
               </StrictMode>,
             );
