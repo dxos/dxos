@@ -8,13 +8,14 @@ import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/aut
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
-import { type TypedObjectOptions } from '../object';
+import { mutationOverride, type TypedObjectOptions } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import {
   type EchoObject,
@@ -42,6 +43,7 @@ export class AutomergeObject implements TypedObjectProperties {
   private _doc?: Doc<any> = undefined;
   private _docHandle?: DocHandle<DocStructure> = undefined;
   private _schema?: Schema = undefined;
+  private readonly _immutable: boolean;
 
   /**
    * @internal
@@ -60,10 +62,9 @@ export class AutomergeObject implements TypedObjectProperties {
   /**
    * @internal
    */
-  _id: string;
+  _id = PublicKey.random().toHex();
 
-  constructor(initialProps?: Record<string, any>, opts?: TypedObjectOptions) {
-    this._id = initialProps?.id ?? PublicKey.random().toHex();
+  constructor(initialProps?: unknown, opts?: TypedObjectOptions) {
     this._initNewObject(initialProps, opts);
 
     if (opts?.schema) {
@@ -81,6 +82,7 @@ export class AutomergeObject implements TypedObjectProperties {
     if (type) {
       this.__system.type = type;
     }
+    this._immutable = opts?.immutable ?? false;
 
     return this._createProxy(['data']);
   }
@@ -134,6 +136,10 @@ export class AutomergeObject implements TypedObjectProperties {
 
   get [debug](): string {
     return 'automerge';
+  }
+
+  get [immutable](): boolean {
+    return !!this[base]?._immutable;
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
@@ -248,6 +254,10 @@ export class AutomergeObject implements TypedObjectProperties {
       },
 
       set: (_, key, value) => {
+        if (this[base]._immutable && !mutationOverride) {
+          log.warn('Read only access');
+          return false;
+        }
         this._set([...path, key as string], value);
         return true;
       },
