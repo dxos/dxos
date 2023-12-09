@@ -5,8 +5,8 @@
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "tools/stories/.storybook-shared/*.ts",
           "tools/stories/*-stories/*.mts",
+          "tools/stories/.storybook-shared/*.ts",
           "tools/stories/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
@@ -21,32 +21,6 @@
       "options": {
         "configDir": "tools/stories/all-stories"
       }
-    },
-    "storybook-e2e": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "tools/stories/e2e-stories"
-      }
-    },
-    "storybook-build-ui": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:build",
-      "options": {
-        "configDir": "tools/stories/ui-stories",
-        "outputDir": "tools/stories/out/ui"
-      },
-      "outputs": [
-        "{options.outputDir}"
-      ]
     },
     "storybook-build-examples": {
       "configurations": {
@@ -77,6 +51,32 @@
       "outputs": [
         "{options.outputDir}"
       ]
+    },
+    "storybook-build-ui": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/ui-stories",
+        "outputDir": "tools/stories/out/ui"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
+    "storybook-e2e": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/stories/e2e-stories"
+      }
     }
   }
 }

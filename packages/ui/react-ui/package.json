@@ -1,7 +1,7 @@
 {
   "name": "@dxos/react-ui",
   "version": "0.3.8",
-  "description": "Opinionated, styled, low-level React components for DXOS.",
+  "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -10,9 +10,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src",
-    "plugin.js",
-    "plugin.d.ts"
+    "src"
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",

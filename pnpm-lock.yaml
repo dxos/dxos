@@ -651,6 +651,9 @@ importers:
       '@dxos/react-ui-navtree':
         specifier: workspace:*
         version: link:../../ui/react-ui-navtree
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@dxos/vault':
         specifier: workspace:*
         version: link:../../sdk/vault
@@ -751,6 +754,9 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
     devDependencies:
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@sentry/vite-plugin':
         specifier: ^0.7.2
         version: 0.7.2
@@ -5671,6 +5677,9 @@ importers:
       '@dxos/react-shell':
         specifier: workspace:*
         version: link:../../sdk/react-shell
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -5977,6 +5986,9 @@ importers:
       '@dxos/react-appkit':
         specifier: workspace:*
         version: link:../../ui/react-appkit
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/chess.js':
         specifier: ^0.13.4
         version: 0.13.4
@@ -6029,6 +6041,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
@@ -6582,6 +6597,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -6676,6 +6694,9 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.21.3
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -7176,6 +7197,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -7552,6 +7576,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7647,6 +7674,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@testing-library/dom':
         specifier: ^8.17.1
         version: 8.19.0
@@ -7738,6 +7768,9 @@ importers:
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../common/react-async
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -8064,6 +8097,9 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8100,6 +8136,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8270,6 +8309,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.0
         version: 3.2.0(react@18.2.0)
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8451,6 +8493,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@types/codemirror':
         specifier: ^5.60.14
         version: 5.60.14
@@ -8505,6 +8550,9 @@ importers:
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8597,6 +8645,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8643,6 +8694,9 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.2.0
@@ -8686,6 +8740,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -8756,6 +8813,9 @@ importers:
         specifier: ^2.29.3
         version: 2.29.3
     devDependencies:
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -8852,6 +8912,28 @@ importers:
         version: 4.3.9(@types/node@18.11.9)
 
   packages/ui/react-ui-types: {}
+
+  packages/ui/storybook-utils:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+    devDependencies:
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
 
   tools/apidoc:
     devDependencies:

@@ -5,9 +5,8 @@
 import { type Decorator } from '@storybook/react';
 import { useEffect, createElement } from 'react';
 
+import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-
-import { ThemeProvider } from '../../components';
 
 export const withTheme: Decorator = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;

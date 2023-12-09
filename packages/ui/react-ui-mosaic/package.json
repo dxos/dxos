@@ -26,6 +26,7 @@
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.0",
     "@radix-ui/react-compose-refs": "^1.0.0",

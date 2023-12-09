@@ -30,6 +30,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.2",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
