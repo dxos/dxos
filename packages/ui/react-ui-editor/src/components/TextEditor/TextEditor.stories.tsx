@@ -14,7 +14,7 @@ import { TextObject } from '@dxos/echo-schema';
 import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { TextEditor } from './TextEditor';
-import { wordHover } from './extensions';
+import { createHyperlinkTooltip, hyperlink } from './extensions';
 import { useTextModel } from '../../model';
 
 export const nameRegex = /\{([\w_]+)}/;
@@ -69,8 +69,8 @@ const Story = () => {
         model={model}
         slots={{ root: { className: mx(inputSurface, 'p-2') } }}
         extensions={[
-          // hyperLink,
-          wordHover((el, url) => {
+          hyperlink,
+          createHyperlinkTooltip((el, url) => {
             createRoot(el).render(
               <StrictMode>
                 <div className='flex gap-1 items-center'>

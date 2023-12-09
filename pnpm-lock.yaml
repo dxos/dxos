@@ -8572,9 +8572,6 @@ importers:
       prosemirror-view:
         specifier: ^1.30.1
         version: 1.30.1
-      react-portal:
-        specifier: ^4.2.2
-        version: 4.2.2(react-dom@18.2.0)(react@18.2.0)
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
@@ -39451,17 +39448,6 @@ packages:
     resolution: {integrity: sha512-GOA8tc1EVYLnHvma/TU9VTgLOyralO7eATRuCDchQveXW9Fr9vXygyq9iwqmM7YRZ8qRJfEt9xOS7OYMdJvRFw==}
     dependencies:
       p-defer: 3.0.0
-    dev: false
-
-  /react-portal@4.2.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-vS18idTmevQxyQpnde0Td6ZcUlv+pD8GTyR42n3CHUQq9OHi1C4jDE4ZWEbEsrbrLRhSECYiao58cvocwMtP7Q==}
-    peerDependencies:
-      react: ^16.0.0-0 || ^17.0.0-0 || ^18.0.0-0
-      react-dom: ^16.0.0-0 || ^17.0.0-0 || ^18.0.0-0
-    dependencies:
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /react-qr-rounded@1.0.0(react@18.2.0):

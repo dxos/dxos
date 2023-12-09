@@ -8,13 +8,11 @@ import {
   Decoration,
   type DecorationSet,
   EditorView,
-  hoverTooltip,
   MatchDecorator,
   ViewPlugin,
   type ViewUpdate,
 } from '@codemirror/view';
 
-import { tooltipContent } from '@dxos/react-ui-theme';
 // import { Bug } from '@phosphor-icons/react';
 
 // TODO(burdon): Hide URL if cursor is outside.
@@ -168,55 +166,4 @@ export const hyperLinkStyle = EditorView.baseTheme({
   },
 });
 
-export const hyperLink: Extension = [hyperLinkExtension(), hyperLinkStyle];
-
-const markdownLinkRegexp2 = /\[([^\]]+)]\(([^)]+)\)/;
-
-type OnHover = (el: Element, url: string) => void;
-
-// https://codemirror.net/docs/ref/#view.hoverTooltip
-// https://codemirror.net/examples/tooltip
-// https://github.com/codemirror/view/blob/main/src/tooltip.ts
-export const wordHover = (onHover: OnHover) =>
-  hoverTooltip((view, pos, side) => {
-    const { from, text } = view.state.doc.lineAt(pos);
-    const p = pos - from;
-
-    let idx = 0;
-    let match;
-    do {
-      match = text.substring(idx).match(markdownLinkRegexp2);
-      if (!match) {
-        match = undefined;
-        break;
-      }
-
-      idx = text.indexOf(match[0]);
-      if (p >= idx && p < idx + match[0].length) {
-        break;
-      }
-
-      idx += match[0].length;
-    } while (true);
-
-    if (!match) {
-      return null;
-    }
-
-    const [, , url] = match ?? [];
-
-    return {
-      pos: idx + from,
-      end: idx + from + match[0].length,
-      above: true,
-      create: (view) => {
-        const el = document.createElement('a');
-        el.innerText = '_'; // Required so doesn't collapse.
-        el.className = tooltipContent({}, 'mb-2 p-1');
-        el.setAttribute('target', '_blank');
-        el.setAttribute('href', url);
-        onHover(el, url);
-        return { dom: el };
-      },
-    };
-  });
+export const hyperlink: Extension = [hyperLinkExtension(), hyperLinkStyle];

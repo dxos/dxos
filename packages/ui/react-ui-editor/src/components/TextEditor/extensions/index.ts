@@ -3,3 +3,4 @@
 //
 
 export * from './hyperlink';
+export * from './hyperlinkTooltip';
