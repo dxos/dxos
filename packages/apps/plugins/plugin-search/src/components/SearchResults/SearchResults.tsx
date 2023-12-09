@@ -101,7 +101,7 @@ export type SearchResultsProps = {
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   const path = 'search';
   return (
-    <ScrollArea.Root classNames={['grow']}>
+    <ScrollArea.Root classNames='grow'>
       <ScrollArea.Viewport>
         <Mosaic.Container id={path} Component={SearchItem}>
           {items.map((item) => (
