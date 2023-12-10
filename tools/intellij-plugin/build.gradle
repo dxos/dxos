@@ -1,0 +1,58 @@
+plugins {
+  id 'org.jetbrains.intellij' version '1.16.0'
+  id 'org.jetbrains.kotlin.jvm' version "1.9.10"
+}
+
+group = 'org.dxos'
+version = '0.0.1'
+
+repositories {
+  mavenCentral()
+  jcenter()
+}
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+configure([compileKotlin, compileTestKotlin]) {
+  kotlinOptions {
+    jvmTarget = "17"
+  }
+}
+
+runIde {
+  systemProperty("idea.platform.prefix", "PhpStorm")
+  minHeapSize = "512m"
+  maxHeapSize = "3g"
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+  type = 'IU'
+  pluginName = 'DxosDeveloperTools'
+  plugins = ['JavaScript', 'NodeJS']
+  version = '2023.2'
+  type = "PS"
+  sandboxDir = "${project.gradle.gradleHomeDir}/caches/intellij"
+  updateSinceUntilBuild = false
+}
+
+buildSearchableOptions {
+  enabled = false
+}
+
+patchPluginXml {
+  version = project.version
+}
+
+
+runPluginVerifier {
+  //earliest major version from sinceBuild
+  ideVersions = ["IU-2022.3"]
+}
+
+tasks {
+  instrumentCode {
+    compilerVersion = "223.8836.41"
+  }
+}

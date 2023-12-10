@@ -1,0 +1,15 @@
+<idea-plugin>
+  <id>org.dxos.developertools</id>
+  <name>Dxos Developer Tools</name>
+  <vendor email="info@dxos.org" url="https://dxos.org/">Dxos</vendor>
+  <idea-version since-build="222"/>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>JavaScript</depends>
+  <depends>NodeJS</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <configurationType implementation="org.dxos.test.DxosMochaRunConfigFactory"/>
+    <runConfigurationProducer implementation="org.dxos.test.DxosMochaRunConfigProducer"/>
+  </extensions>
+</idea-plugin>
