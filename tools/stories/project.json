@@ -2,6 +2,51 @@
   "sourceRoot": "tools/stories/src",
   "projectType": "library",
   "targets": {
+    "chromatic": {
+      "dependsOn": [
+        "chromatic-shell",
+        "chromatic-ui"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "chromatic-examples": {
+      "executor": "nx:run-script",
+      "options": {"script":  "chromatic-examples"},
+      "dependsOn": [
+        "storybook-build-examples"
+      ],
+      "inputs": [
+        "^production",
+        "production"
+      ]
+    },
+    "chromatic-shell": {
+      "executor": "nx:run-script",
+      "options": {"script":  "chromatic-shell"},
+      "dependsOn": [
+        "storybook-build-shell"
+      ],
+      "inputs": [
+        "^production",
+        "production"
+      ]
+    },
+    "chromatic-ui": {
+      "executor": "nx:run-script",
+      "options": {"script":  "chromatic-ui"},
+      "dependsOn": [
+        "storybook-build-ui"
+      ],
+      "inputs": [
+        "^production",
+        "production"
+      ]
+    },
     "lint": {
       "options": {
         "lintFilePatterns": [

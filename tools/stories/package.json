@@ -8,13 +8,22 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "chromatic": "npm run chromatic:ui; npm run chromatic:shell",
-    "chromatic:examples": "chromatic --only-changed --storybook-base-dir packages/sdk/examples --project-token=\"chpt_e6606565edfbfbe\" --storybook-build-dir out/examples --exit-zero-on-changes",
-    "chromatic:shell": "chromatic --only-changed --storybook-base-dir packages/sdk/react-shell --project-token=\"chpt_c4421639d5edcc4\" --storybook-build-dir out/shell --exit-zero-on-changes",
-    "chromatic:ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_1169f9460ccde08\" --storybook-build-dir out/ui --exit-zero-on-changes"
+    "chromatic-examples": "chromatic --only-changed --storybook-base-dir packages/sdk/examples --project-token=\"chpt_e6606565edfbfbe\" --storybook-build-dir out/examples --exit-zero-on-changes",
+    "chromatic-shell": "chromatic --only-changed --storybook-base-dir packages/sdk/react-shell --project-token=\"chpt_c4421639d5edcc4\" --storybook-build-dir out/shell --exit-zero-on-changes",
+    "chromatic-ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_1169f9460ccde08\" --storybook-build-dir out/ui --exit-zero-on-changes"
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
+    "@storybook/addon-essentials": "^7.6.4",
+    "@storybook/addon-interactions": "^7.6.4",
+    "@storybook/addon-links": "^7.6.4",
+    "@storybook/builder-vite": "^7.6.4",
+    "@storybook/core-server": "^7.6.4",
+    "@storybook/html": "^7.6.4",
+    "@storybook/html-vite": "^7.6.4",
+    "@storybook/mdx2-csf": "^1.1.0",
+    "@storybook/react": "^7.6.4",
+    "@storybook/react-vite": "^7.6.4",
     "@types/lodash.flatten": "^4.4.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
