@@ -15,37 +15,43 @@
       }
     },
     "chromatic-examples": {
-      "executor": "nx:run-script",
-      "options": {"script":  "chromatic-examples"},
       "dependsOn": [
         "storybook-build-examples"
       ],
+      "executor": "nx:run-script",
       "inputs": [
         "^production",
         "production"
-      ]
+      ],
+      "options": {
+        "script": "chromatic-examples"
+      }
     },
     "chromatic-shell": {
-      "executor": "nx:run-script",
-      "options": {"script":  "chromatic-shell"},
       "dependsOn": [
         "storybook-build-shell"
       ],
+      "executor": "nx:run-script",
       "inputs": [
         "^production",
         "production"
-      ]
+      ],
+      "options": {
+        "script": "chromatic-shell"
+      }
     },
     "chromatic-ui": {
-      "executor": "nx:run-script",
-      "options": {"script":  "chromatic-ui"},
       "dependsOn": [
         "storybook-build-ui"
       ],
+      "executor": "nx:run-script",
       "inputs": [
         "^production",
         "production"
-      ]
+      ],
+      "options": {
+        "script": "chromatic-ui"
+      }
     },
     "lint": {
       "options": {
