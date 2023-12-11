@@ -749,6 +749,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
@@ -820,6 +825,11 @@
         {
           "type": "json",
           "path": "tools/ridoculous/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/stories/package.json",
           "jsonpath": "$.version"
         },
         {

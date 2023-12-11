@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useMemo, useState } from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { Grid } from './Grid';
@@ -86,6 +87,7 @@ const Test = () => {
 export default {
   component: Grid,
   decorators: [
+    withTheme,
     SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col h-screen w-full'>

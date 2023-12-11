@@ -10,6 +10,7 @@ import { baseSurface, chromeSurface, groupSurface, mx, surfaceElevation } from '
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import { Input } from './Input';
+import { withTheme } from '../../testing';
 
 type StoryInputProps = Partial<{
   label: string;
@@ -86,6 +87,7 @@ export default {
       options: ['default', 'textarea', 'pin'],
     },
   },
+  decorators: [withTheme],
 };
 
 export const Default = {

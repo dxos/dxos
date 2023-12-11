@@ -33,13 +33,13 @@ module.exports = {
   ],
   overrides: [
     {
-      files: '**/*.{ts,tsx,js,jsx}',
+      files: '**/*.{ts,mts,tsx,js,jsx}',
       extends: [
         'plugin:@dxos/recommended'
       ]
     },
     {
-      files: '**/*.{ts,tsx}',
+      files: '**/*.{ts,mts,tsx}',
       extends: [
         'plugin:@dxos/typescript'
       ]

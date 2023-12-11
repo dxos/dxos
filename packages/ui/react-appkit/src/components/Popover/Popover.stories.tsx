@@ -8,12 +8,14 @@ import React from 'react';
 
 import { Button } from '@dxos/react-ui';
 import { focusRing, hoverColors } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Popover } from './Popover';
 import { Avatar } from '../Avatar';
 
 export default {
   component: Popover,
+  decorators: [withTheme],
 };
 
 export const Default = {
