@@ -6,16 +6,14 @@ import '@dxosTheme';
 
 import { HighlightStyle, StreamLanguage } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import { ArrowCircleUp } from '@phosphor-icons/react';
-import React, { StrictMode, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
-import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedInsetFlexLayout, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
-import { createHyperlinkTooltip, hyperlink } from './extensions';
+import { defaultHyperLinkTooltip, hyperlink } from './extensions';
 import { useTextModel } from '../../model';
 
 export const nameRegex = /\{([\w_]+)}/;
@@ -69,20 +67,7 @@ const Story = () => {
       <TextEditor
         model={model}
         slots={{ root: { className: mx(inputSurface, 'p-2') } }}
-        extensions={[
-          hyperlink,
-          createHyperlinkTooltip((el, url) => {
-            const web = new URL(url);
-            createRoot(el).render(
-              <StrictMode>
-                <div className='flex gap-1 items-center'>
-                  <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
-                  <p className='pr-1'>{web.origin}</p>
-                </div>
-              </StrictMode>,
-            );
-          }),
-        ]}
+        extensions={[hyperlink, defaultHyperLinkTooltip]}
       />
       <pre>{JSON.stringify(model?.content?.toString(), null, 2)}</pre>
     </div>
