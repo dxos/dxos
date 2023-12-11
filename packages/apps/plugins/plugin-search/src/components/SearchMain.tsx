@@ -8,7 +8,7 @@ import { getActiveSpace } from '@braneframe/plugin-space';
 import { parseGraphPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { DensityProvider, useTranslation } from '@dxos/react-ui';
-import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
+import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
@@ -46,14 +46,19 @@ export const SearchMain = () => {
 
   return (
     <div className='flex flex-col grow h-full overflow-hidden'>
-      <DensityProvider density='coarse'>
-        <div className={mx('flex bs-[--topbar-size] border-b mb-2', groupBorder)}>
-          <Searchbar className='pl-3' variant='subdued' placeholder={t('search placeholder')} onChange={setMatch} />
+      <DensityProvider density='fine'>
+        <div className={mx('flex bs-[--topbar-size] px-2 py-2')}>
+          <Searchbar
+            classes={{ root: 'rounded shadow' }}
+            variant='subdued'
+            placeholder={t('search placeholder')}
+            onChange={setMatch}
+          />
         </div>
       </DensityProvider>
       {results.length > 0 && (
-        <div className='absolute top-[--topbar-size] bottom-0'>
-          {/* TODO(burdon): Change to popover. */}
+        <div className='absolute top-[--topbar-size] bottom-0 z-[1]'>
+          {/* TODO(burdon): Change to Portal? */}
           <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
             <DensityProvider density='fine'>
               <SearchResults items={results} selected={selected} onSelect={handleSelect} />
