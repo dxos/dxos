@@ -11,12 +11,8 @@ import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
-<<<<<<< HEAD
 import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
-=======
-import { fixedInsetFlexLayout, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
->>>>>>> origin/main
 
 import { TextEditor } from './TextEditor';
 import { createHyperlinkTooltip, hyperlink } from './extensions';
