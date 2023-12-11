@@ -10,7 +10,7 @@ import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { ContactList } from './ContactList';
-import { MasterDetail } from './MasterDetail';
+import { MasterDetail } from '../MasterDetail';
 
 // TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation, scrolling.
 // TODO(burdon): Nav from inbox.
@@ -21,12 +21,6 @@ import { MasterDetail } from './MasterDetail';
 // TODO(burdon): Select/merge.
 // TODO(burdon): Click to research, get image, etc. Scrape LinkedIn?
 // TODO(burdon): Tags.
-
-// TODO(burdon): Factor out.
-export const styles = {
-  selected: '!bg-primary-100 dark:!bg-primary-700',
-  columnWidth: 'max-w-[400px]',
-};
 
 const byName =
   (direction = 1) =>

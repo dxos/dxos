@@ -10,17 +10,7 @@ import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { EventList } from './EventtList';
-import { MasterDetail } from './MasterDetail';
-
-// TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation, scrolling.
-// TODO(burdon): Nav from inbox.
-// TODO(burdon): Show messages for selection.
-
-// TODO(burdon): Create outliner task list re selection.
-
-// TODO(burdon): Select/merge.
-// TODO(burdon): Click to research, get image, etc. Scrape LinkedIn?
-// TODO(burdon): Tags.
+import { MasterDetail } from '../MasterDetail';
 
 // TODO(burdon): Factor out.
 export const styles = {

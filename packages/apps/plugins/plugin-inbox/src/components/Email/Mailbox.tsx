@@ -8,8 +8,8 @@ import { type Mailbox as MailboxType, Message as MessageType } from '@braneframe
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedBorder, fixedInsetFlexLayout, topbarBlockPaddingStart, mx } from '@dxos/react-ui-theme';
 
-import { MasterDetail } from './MasterDetail';
 import { type ActionType, MessageList } from './MessageList';
+import { MasterDetail } from '../MasterDetail';
 
 const DEFAULT_READ_TIMEOUT = 3_000;
 

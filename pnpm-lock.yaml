@@ -506,18 +506,12 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugins/plugin-client
-      '@braneframe/plugin-contacts':
-        specifier: workspace:*
-        version: link:../plugins/plugin-contacts
       '@braneframe/plugin-debug':
         specifier: workspace:*
         version: link:../plugins/plugin-debug
       '@braneframe/plugin-error':
         specifier: workspace:*
         version: link:../plugins/plugin-error
-      '@braneframe/plugin-events':
-        specifier: workspace:*
-        version: link:../plugins/plugin-events
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugins/plugin-explorer
@@ -947,64 +941,6 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-contacts:
-    dependencies:
-      '@dxos/display-name':
-        specifier: workspace:*
-        version: link:../../../common/display-name
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.3.1
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
   packages/apps/plugins/plugin-debug:
     dependencies:
       '@dxos/async':
@@ -1156,64 +1092,6 @@ importers:
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-events:
-    dependencies:
-      '@dxos/display-name':
-        specifier: workspace:*
-        version: link:../../../common/display-name
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.3.1
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -1558,6 +1436,9 @@ importers:
 
   packages/apps/plugins/plugin-inbox:
     dependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name

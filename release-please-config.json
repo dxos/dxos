@@ -49,22 +49,12 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-contacts/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-debug/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-error/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/plugins/plugin-events/package.json",
           "jsonpath": "$.version"
         },
         {

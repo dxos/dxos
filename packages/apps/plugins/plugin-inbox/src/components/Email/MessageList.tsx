@@ -9,14 +9,9 @@ import { type Message as MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
 import { fixedBorder, getSize, ghostHover, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { formatDate } from './util';
-import { INBOX_PLUGIN } from '../meta';
-
-// TODO(burdon): Factor out.
-export const styles = {
-  selected: '!bg-primary-100 dark:!bg-primary-700',
-  columnWidth: 'max-w-[400px]',
-};
+import { INBOX_PLUGIN } from '../../meta';
+import { styles } from '../styles';
+import { formatDate } from '../util';
 
 export type ActionType = 'archive' | 'delete' | 'unread';
 
@@ -86,7 +81,11 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
             {onAction && (
               <div className='hidden group-hover:flex flex shrink-0'>
                 {message.read && (
-                  <Button variant='ghost' title={t('action read')} onClick={(event) => handleAction(event, 'unread')}>
+                  <Button
+                    variant='ghost'
+                    title={t('action mark read')}
+                    onClick={(event) => handleAction(event, 'unread')}
+                  >
                     <ArrowClockwise className={getSize(4)} />
                   </Button>
                 )}

@@ -8,10 +8,7 @@ import { type Contact as ContactType } from '@braneframe/types';
 import { List, ListItem } from '@dxos/react-ui';
 import { ghostHover, groupBorder, inputSurface, mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Factor out.
-export const styles = {
-  selected: '!bg-primary-100 dark:!bg-primary-700',
-};
+import { styles } from '../styles';
 
 export type ContactListProps = {
   contacts?: ContactType[];
