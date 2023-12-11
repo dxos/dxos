@@ -26,4 +26,8 @@ export const defaultStyles: {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     overflow: 'visible',
   },
+  '.cm-tooltip': {
+    backgroundColor: 'transparent',
+    border: 'none',
+  },
 };
