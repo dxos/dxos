@@ -2,21 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback } from 'react';
+import { ArrowCircleUp } from '@phosphor-icons/react';
+import React, { type HTMLAttributes, type RefCallback, StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 
 import { useTranslation } from '@dxos/react-ui';
 import {
+  createHyperlinkTooltip,
   type EditorModel,
   MarkdownEditor,
   type MarkdownEditorProps,
   type MarkdownEditorRef,
 } from '@dxos/react-ui-editor';
-import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { focusRing, getSize, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
+
+// TODO(burdon): Factor out.
+const defaultHyperLinkTooltip = createHyperlinkTooltip((el, url) => {
+  const web = new URL(url);
+  createRoot(el).render(
+    <StrictMode>
+      <div className='flex gap-1 items-center'>
+        <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
+        <p className='pr-1'>{web.origin}</p>
+      </div>
+    </StrictMode>,
+  );
+});
 
 export const EditorMain = ({
   model,
@@ -41,6 +57,7 @@ export const EditorMain = ({
       <MarkdownEditor
         ref={editorRefCb}
         model={model}
+        extensions={[defaultHyperLinkTooltip]}
         editorMode={editorMode}
         onChange={onChange}
         slots={{

@@ -55,6 +55,18 @@ export const promptHighlightStyles = HighlightStyle.define([
   },
 ]);
 
+export const defaultHyperLinkTooltip = createHyperlinkTooltip((el, url) => {
+  const web = new URL(url);
+  createRoot(el).render(
+    <StrictMode>
+      <div className='flex gap-1 items-center'>
+        <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
+        <p className='pr-1'>{web.origin}</p>
+      </div>
+    </StrictMode>,
+  );
+});
+
 const Story = () => {
   const [item] = useState({
     text: new TextObject(
@@ -69,20 +81,7 @@ const Story = () => {
       <TextEditor
         model={model}
         slots={{ root: { className: mx(inputSurface, 'p-2') } }}
-        extensions={[
-          hyperlink,
-          createHyperlinkTooltip((el, url) => {
-            const web = new URL(url);
-            createRoot(el).render(
-              <StrictMode>
-                <div className='flex gap-1 items-center'>
-                  <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
-                  <p className='pr-1'>{web.origin}</p>
-                </div>
-              </StrictMode>,
-            );
-          }),
-        ]}
+        extensions={[hyperlink, defaultHyperLinkTooltip]}
       />
       <pre>{JSON.stringify(model?.content?.toString(), null, 2)}</pre>
     </div>
