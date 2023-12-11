@@ -65,6 +65,7 @@ export class ChainStore {
   }
 
   async initialize() {
+    log.info('initializing...', this.info);
     try {
       if (this.baseDir && fs.existsSync(this.baseDir)) {
         this._vectorStore = await FaissStore.load(this.baseDir, this._embeddings);
