@@ -27,6 +27,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",

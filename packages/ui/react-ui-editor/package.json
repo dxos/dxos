@@ -68,6 +68,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/codemirror": "^5.60.14",
     "@types/lodash.get": "^4.4.7",

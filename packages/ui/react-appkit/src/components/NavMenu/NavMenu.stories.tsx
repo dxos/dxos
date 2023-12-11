@@ -6,10 +6,13 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { NavMenu } from './NavMenu';
 
 export default {
   component: NavMenu,
+  decorators: [withTheme],
 };
 
 export const Default = {

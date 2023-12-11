@@ -14,18 +14,6 @@
       }
     },
     "lint": {},
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/experimental/kodama/.storybook",
-        "uiFramework": "@storybook/react"
-      }
-    },
     "test": {
       "options": {
         "ciEnvironments": [

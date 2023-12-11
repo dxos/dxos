@@ -7,12 +7,14 @@ import '@dxosTheme';
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SingleInputStep, type SingleInputStepProps } from './SingleInputStep';
 import { Group } from '../Group';
 
 export default {
   component: SingleInputStep,
+  decorators: [withTheme],
   argTypes: {
     onClickBack: { action: 'back' },
     onClickNext: { action: 'next' },

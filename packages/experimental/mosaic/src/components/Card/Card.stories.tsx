@@ -14,6 +14,7 @@ import React from 'react';
 
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Card } from './Card';
 import { CardActions } from './CardActions';
@@ -98,6 +99,7 @@ const Test = () => {
 export default {
   component: Card,
   decorators: [
+    withTheme,
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full bg-zinc-100'>
         <Story />

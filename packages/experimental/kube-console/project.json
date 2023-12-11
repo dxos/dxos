@@ -67,18 +67,6 @@
         "buildTarget": "kube-console:bundle"
       }
     },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/experimental/kube-console/.storybook",
-        "uiFramework": "@storybook/react"
-      }
-    },
     "test": {
       "executor": "@dxos/test:run",
       "options": {

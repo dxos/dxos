@@ -10,12 +10,14 @@ import { PublicKey } from '@dxos/react-client';
 import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor } from './Markdown';
 import { Replicator, useYjsModel } from '../../testing';
 
 export default {
   component: MarkdownEditor,
+  decorators: [withTheme],
 };
 
 export const Default = {
