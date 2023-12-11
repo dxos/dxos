@@ -7,12 +7,14 @@ import '@dxosTheme';
 import React from 'react';
 
 import { TypedObject } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { BaseTile, DefaultTile, GenericTile, TaskTile, TaskListTile } from './Tile';
 import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
 
 export default {
   component: BaseTile,
+  decorators: [withTheme],
 } as any;
 
 const props = {

@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Stack } from './Stack';
 import { DemoStack, type DemoStackProps } from './testing';
 import { Mosaic } from '../../mosaic';
@@ -30,7 +32,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

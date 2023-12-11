@@ -91,6 +91,7 @@
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",

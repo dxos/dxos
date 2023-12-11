@@ -8,6 +8,7 @@ import { faker } from '@faker-js/faker';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { Popover } from './Popover';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 faker.seed(1234);
@@ -28,6 +29,8 @@ const StorybookPopover = ({ openTrigger, children }: PropsWithChildren<{ openTri
 
 export default {
   component: StorybookPopover,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {
