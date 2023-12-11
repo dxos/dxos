@@ -44,18 +44,17 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
               log.info('fetching', { url });
               const res = await fetch(url);
               const buffer = await res.arrayBuffer();
-              const pageContent = (await promisify(textract.fromBufferWithMime)(
+              pageContent = (await promisify(textract.fromBufferWithMime)(
                 res.headers.get('content-type')!,
                 Buffer.from(buffer),
               )) as string;
-              log.info('parsed', { cid: object.cid, text: pageContent?.length });
+              log.info('parsed', { cid: object.cid, pageContent: pageContent?.length });
             }
             break;
           }
         }
 
         if (pageContent?.length) {
-          console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', pageContent);
           docs.push({
             metadata: {
               space: space?.toHex(),
@@ -88,8 +87,6 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     }
   }
 
-  console.log('>>>>>>>>>>>>>>', docs.length, space, objects?.length);
-
   if (docs.length) {
     const config = client.config;
     const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
@@ -97,13 +94,17 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       apiKey: getKey(config, 'openai.com/api_key'),
     });
 
-    await resources.store.initialize();
+    try {
+      await resources.store.initialize();
 
-    // TODO(burdon): Remove deleted docs.
-    await resources.store.addDocuments(docs);
-    await resources.store.save();
+      // TODO(burdon): Remove deleted docs.
+      await resources.store.addDocuments(docs);
+      await resources.store.save();
 
-    log.info('embedding', resources.info);
+      log.info('embedding', resources.info);
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   return response.status(200);

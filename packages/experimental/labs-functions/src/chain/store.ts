@@ -84,7 +84,16 @@ export class ChainStore {
     }
 
     if (!this._vectorStore) {
-      this._vectorStore = await FaissStore.fromDocuments([], this._embeddings);
+      // TODO(burdon): Store isn't initialized properly unless adding at least one document?
+      this._vectorStore = await FaissStore.fromDocuments(
+        [
+          {
+            metadata: { space: 'dxos', id: '0' },
+            pageContent: 'hello world',
+          },
+        ],
+        this._embeddings,
+      );
       await this.save();
     }
 
