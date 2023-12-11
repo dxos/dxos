@@ -17,6 +17,7 @@ export default {
   component: InvitationList,
   decorators: [withTheme],
   actions: { argTypesRegex: '^on.*' },
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Normal = () => {

@@ -30,6 +30,7 @@ const noOpProps: SpacePanelImplProps = {
 export default {
   component: SpacePanelImpl,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const SpaceManager = () => {

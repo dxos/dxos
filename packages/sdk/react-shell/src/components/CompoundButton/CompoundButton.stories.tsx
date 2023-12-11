@@ -14,6 +14,7 @@ import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
 export default {
   component: CompoundButton,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => <div className='flex gap-4'>{children}</div>;

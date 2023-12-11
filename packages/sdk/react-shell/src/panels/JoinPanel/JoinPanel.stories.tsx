@@ -30,6 +30,7 @@ const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
 export default {
   component: JoinDialog,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const AdditionMethodChooser = () => {

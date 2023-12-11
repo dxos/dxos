@@ -57,4 +57,5 @@ export default {
   title: 'Panels/All',
   decorators: [withTheme],
   component: StoryRow,
+  parameters: { chromatic: { disableSnapshot: false } },
 };

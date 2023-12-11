@@ -15,6 +15,7 @@ export default {
   component: SpaceMemberListImpl,
   actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Normal = (props: any) => {

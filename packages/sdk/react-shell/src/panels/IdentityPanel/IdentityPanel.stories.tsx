@@ -35,6 +35,7 @@ const noOpProps: IdentityPanelImplProps = {
 export default {
   title: 'Panels/Identity',
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const IdentityActionChooser = () => {
