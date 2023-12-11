@@ -22,11 +22,10 @@ export type MessageListProps = {
   onAction?: (message: MessageType, action: ActionType) => void;
 };
 
-// TODO(burdon): Use List.
+// TODO(burdon): Factor out list (and implement navigation).
 export const MessageList = ({ messages = [], selected, onSelect, onAction }: MessageListProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
 
-  // TODO(burdon): Use List component for keyboard navigation.
   return (
     <div className={mx('flex flex-col grow overflow-hidden', styles.columnWidth, inputSurface)}>
       <div className='flex flex-col overflow-y-auto'>

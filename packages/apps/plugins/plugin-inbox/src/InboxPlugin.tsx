@@ -57,9 +57,8 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          // TODO(burdon): Use same IDs?
-          const createObject = (id: string, action: string, props: Pick<Action, 'id' | 'label' | 'icon'>) => {
-            parent.actionsMap[id]?.addAction({
+          const createObject = (action: string, props: Pick<Action, 'id' | 'label' | 'icon'>) => {
+            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
               ...props,
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch([
@@ -78,17 +77,18 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
             });
           };
 
-          createObject(`${SPACE_PLUGIN}/create-mailbox`, InboxAction.CREATE_MAILBOX, {
+          // TODO(burdon): Use same id as action?
+          createObject(InboxAction.CREATE_MAILBOX, {
             id: `${INBOX_PLUGIN}/create-mailbox`,
             label: ['create mailbox label', { ns: INBOX_PLUGIN }],
             icon: (props) => <Envelope {...props} />,
           });
-          createObject(`${SPACE_PLUGIN}/create-addressbook`, InboxAction.CREATE_ADDRESSBOOK, {
+          createObject(InboxAction.CREATE_ADDRESSBOOK, {
             id: `${INBOX_PLUGIN}/create-addressbook`,
             label: ['create addressbook label', { ns: INBOX_PLUGIN }],
             icon: (props) => <AddressBook {...props} />,
           });
-          createObject(`${SPACE_PLUGIN}/create-calendar`, InboxAction.CREATE_CALENDAR, {
+          createObject(InboxAction.CREATE_CALENDAR, {
             id: `${INBOX_PLUGIN}/create-calendar`,
             label: ['create calendar label', { ns: INBOX_PLUGIN }],
             icon: (props) => <Calendar {...props} />,

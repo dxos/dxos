@@ -293,11 +293,6 @@ message Contact {
   repeated Identifier identifiers = 2;
 }
 
-// TODO(burdon): Rename? Singleton with queries?
-message AddressBook {
-  option (object) = true;
-}
-
 message Event {
   option (object) = true;
 
@@ -309,6 +304,11 @@ message Event {
 
   // TODO(burdon): Model links separately?
   repeated dxos.schema.Expando links = 20;
+}
+
+// TODO(burdon): Rename? Singleton with queries?
+message AddressBook {
+  option (object) = true;
 }
 
 // TODO(burdon): Rename?
