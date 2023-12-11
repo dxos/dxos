@@ -56,6 +56,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.53.0",
+    "effect": "2.0.0-next.60",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2"
   },
@@ -64,6 +66,7 @@
     "@dxos/echo-typegen": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
+    "fast-check": "~3.3.0",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
