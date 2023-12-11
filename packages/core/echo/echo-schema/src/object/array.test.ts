@@ -11,6 +11,7 @@ import { Expando, TypedObject } from './typed-object';
 import { AutomergeArray } from '../automerge';
 import { getGlobalAutomergePreference } from '../automerge-preference';
 import { createDatabase, testWithAutomerge } from '../testing';
+import { log } from '@dxos/log';
 
 describe('Arrays', () => {
   testWithAutomerge(() => {
@@ -148,8 +149,46 @@ describe('Arrays', () => {
       root.records.push({ title: 'two' });
       expect(root.records).toHaveLength(1);
 
-      await db.flush();
-      expect(root.records).toHaveLength(1);
-    });
+    await db.flush();
+    expect(root.records).toHaveLength(1);
   });
+
+  test.only('Array.isArray', async () => {
+    console.log(Array.isArray(new Proxy([], {
+      get(target, prop, receiver) {
+        log.info('get', { target, prop, receiver });
+        return Reflect.get(target, prop, receiver);
+      },
+      getOwnPropertyDescriptor(target, p) {
+        log.info('getOwnPropertyDescriptor', { target, p });
+        return Reflect.getOwnPropertyDescriptor(target, p);
+      },
+      getPrototypeOf(target) {
+        log.info('getPrototypeOf', { target });
+        return Reflect.getPrototypeOf(target);
+      },
+      apply(target, thisArg, argArray) {
+        log.info('apply', { target, thisArg, argArray });
+        return Reflect.apply(target as any, thisArg, argArray);
+      },
+      has(target, p) {
+        log.info('has', { target, p });
+        return Reflect.has(target, p);
+      },
+      ownKeys(target) {
+        log.info('ownKeys', { target });
+        return Reflect.ownKeys(target);
+      },
+      isExtensible(target) {
+        log.info('isExtensible', { target });
+        return Reflect.isExtensible(target);
+      },
+    })))
+
+
+    // const root = new TypedObject();
+    // root.array = [];
+
+    // expect(Array.isArray(root.array)).toEqual(true);
+  })
 });
