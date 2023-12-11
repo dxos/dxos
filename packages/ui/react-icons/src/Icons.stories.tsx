@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { DXNS, DXOS, ECHO, HALO, KUBE, MESH } from './icons';
 
@@ -14,6 +15,7 @@ const Icon = () => null;
 
 export default {
   component: Icon,
+  decorators: [withTheme],
 };
 
 export const Default = {

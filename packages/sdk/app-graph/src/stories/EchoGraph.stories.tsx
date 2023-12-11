@@ -14,6 +14,7 @@ import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/
 import { ClientDecorator, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
@@ -22,6 +23,7 @@ import { type Node } from '../node';
 
 export default {
   title: 'Echo Graph',
+  decorators: [withTheme],
 };
 
 const DEFAULT_PERIOD = 500;

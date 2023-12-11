@@ -1,0 +1,127 @@
+{
+  "sourceRoot": "tools/stories/src",
+  "projectType": "library",
+  "targets": {
+    "chromatic": {
+      "dependsOn": [
+        "chromatic-shell",
+        "chromatic-ui"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "chromatic-examples": {
+      "executor": "nx:run-script",
+      "options": {"script":  "chromatic-examples"},
+      "dependsOn": [
+        "storybook-build-examples"
+      ],
+      "inputs": [
+        "^production",
+        "production"
+      ]
+    },
+    "chromatic-shell": {
+      "executor": "nx:run-script",
+      "options": {"script":  "chromatic-shell"},
+      "dependsOn": [
+        "storybook-build-shell"
+      ],
+      "inputs": [
+        "^production",
+        "production"
+      ]
+    },
+    "chromatic-ui": {
+      "executor": "nx:run-script",
+      "options": {"script":  "chromatic-ui"},
+      "dependsOn": [
+        "storybook-build-ui"
+      ],
+      "inputs": [
+        "^production",
+        "production"
+      ]
+    },
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "tools/stories/*-stories/*.mts",
+          "tools/stories/.storybook-shared/*.ts",
+          "tools/stories/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/stories/all-stories"
+      }
+    },
+    "storybook-build-examples": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/examples-stories",
+        "outputDir": "tools/stories/out/examples"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
+    "storybook-build-shell": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/shell-stories",
+        "outputDir": "tools/stories/out/shell"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
+    "storybook-build-ui": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/ui-stories",
+        "outputDir": "tools/stories/out/ui"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
+    "storybook-e2e": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/stories/e2e-stories"
+      }
+    }
+  }
+}

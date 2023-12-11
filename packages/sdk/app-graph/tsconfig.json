@@ -40,6 +40,9 @@
       "path": "../../ui/react-ui-theme"
     },
     {
+      "path": "../../ui/storybook-utils"
+    },
+    {
       "path": "../react-client"
     }
   ]

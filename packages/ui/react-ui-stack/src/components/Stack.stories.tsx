@@ -8,6 +8,7 @@ import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack, type StackSectionContent, type StackProps, type StackSectionItem } from './Stack';
 import { FullscreenDecorator, TestObjectGenerator } from '../testing';
@@ -28,6 +29,7 @@ const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string;
 
 export default {
   component: Stack,
+  decorators: [withTheme],
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
       <Mosaic.Root debug={debug}>

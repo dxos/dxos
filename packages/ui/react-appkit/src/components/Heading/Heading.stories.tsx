@@ -4,10 +4,13 @@
 
 import '@dxosTheme';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Heading } from './Heading';
 
 export default {
   component: Heading,
+  decorators: [withTheme],
 };
 
 export const Default = { args: { level: 1, children: 'Hello' } };

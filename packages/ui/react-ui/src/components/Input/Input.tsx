@@ -175,10 +175,14 @@ type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
   ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
-    const { tx } = useThemeContext();
+    const themeContextValue = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+    const { tx } = themeContextValue;
+
+    console.log('[theme context value]', themeContextValue);
 
     return (
       <TextInputPrimitive
