@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Main, useSidebars } from './Main';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 type StoryMainArgs = {};
@@ -44,7 +45,10 @@ const StoryMain = (_args: StoryMainArgs) => {
   );
 };
 
-export default { component: StoryMain };
+export default {
+  component: StoryMain,
+  decorators: [withTheme],
+};
 
 export const Default = {
   args: {},

@@ -8,11 +8,13 @@ import React from 'react';
 
 import { List } from '@dxos/react-ui';
 import { groupSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Section, type SectionProps } from './Section';
 
 export default {
   component: Section as any,
+  decorators: [withTheme],
   args: {
     id: 'section',
     title: 'Section',
