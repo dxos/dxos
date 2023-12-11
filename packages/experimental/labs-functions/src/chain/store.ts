@@ -84,6 +84,7 @@ export class ChainStore {
 
     if (!this._vectorStore) {
       this._vectorStore = await FaissStore.fromDocuments([], this._embeddings);
+      await this.save();
     }
 
     log.info('initialized', this.info);
