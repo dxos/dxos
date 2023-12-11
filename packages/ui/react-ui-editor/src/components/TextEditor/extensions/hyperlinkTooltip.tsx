@@ -50,7 +50,7 @@ export const createHyperlinkTooltip = (onHover: OnHyperlinkHover, regexp = markd
       pos: idx + from,
       end: idx + from + match[0].length,
       above: true,
-      create: (view) => {
+      create: () => {
         const el = document.createElement('a');
         el.innerText = '_'; // Required so doesn't collapse.
         el.className = tooltipContent({}, 'mb-2 p-1');
