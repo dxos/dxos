@@ -55,6 +55,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
         }
 
         if (pageContent?.length) {
+          console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', pageContent);
           docs.push({
             metadata: {
               space: space?.toHex(),
@@ -69,8 +70,9 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   const spaces = client.spaces.get();
   if (space) {
     const add = addDocuments(space.key);
-    if (event.objects?.length) {
+    if (objects?.length) {
       await add(objects.filter(hasType(DocumentType.schema)));
+      await add(objects.filter(hasType(FileType.schema)));
     } else {
       const { objects: documents } = space.db.query(DocumentType.filter());
       await add(documents);
@@ -85,6 +87,8 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       await addDocuments(space.key)(files);
     }
   }
+
+  console.log('>>>>>>>>>>>>>>', docs.length, space, objects?.length);
 
   if (docs.length) {
     const config = client.config;

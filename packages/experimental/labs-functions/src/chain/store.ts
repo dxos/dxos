@@ -94,6 +94,8 @@ export class ChainStore {
   async save() {
     invariant(this.baseDir);
     invariant(this._vectorStore);
+    log.info('saving...', this.info);
+    fs.mkdirSync(this.baseDir, { recursive: true });
     await this._vectorStore.save(this.baseDir);
 
     fs.writeFileSync(
@@ -110,6 +112,7 @@ export class ChainStore {
 
   async delete() {
     invariant(this.baseDir);
+    log.info('deleting...', this.info);
     fs.rmSync(this.baseDir, { recursive: true, force: true });
     return this;
   }
