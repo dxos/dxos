@@ -7,6 +7,7 @@ import React from 'react';
 import { type PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Kanban } from './Kanban';
 import { EchoKanban, columnValues } from './testing';
@@ -36,6 +37,7 @@ export default {
     );
   },
   decorators: [
+    withTheme,
     FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {

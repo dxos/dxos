@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Tree, TreeItem } from './Tree';
+import { withTheme } from '../../testing';
 
 type StorybookTreeProps = {
   data: any;
@@ -56,6 +57,7 @@ const StorybookTree = ({ data }: StorybookTreeProps) => {
 
 export default {
   component: StorybookTree,
+  decorators: [withTheme],
 };
 
 export const Default = {

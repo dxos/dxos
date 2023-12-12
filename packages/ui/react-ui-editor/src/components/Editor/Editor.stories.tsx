@@ -11,12 +11,14 @@ import { TextObject, TextKind, useQuery, useSpace } from '@dxos/react-client/ech
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorProps } from './Editor';
 import { EditorDocument, types as schema } from '../../testing';
 
 export default {
   component: Editor,
+  decorators: [withTheme],
 };
 
 const Story = ({ spaceKey, ...params }: Pick<EditorProps, 'slots'> & { spaceKey: PublicKey }) => {

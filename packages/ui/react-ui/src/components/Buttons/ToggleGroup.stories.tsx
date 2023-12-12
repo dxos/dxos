@@ -8,6 +8,7 @@ import { TextB, TextItalic } from '@phosphor-icons/react';
 import React from 'react';
 
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
+import { withTheme } from '../../testing';
 
 type StorybookToggleGroupProps = {
   type: ToggleGroupProps['type'];
@@ -29,6 +30,7 @@ const StorybookToggleGroup = (props: StorybookToggleGroupProps) => {
 
 export default {
   component: StorybookToggleGroup,
+  decorators: [withTheme],
 };
 
 export const Default = {

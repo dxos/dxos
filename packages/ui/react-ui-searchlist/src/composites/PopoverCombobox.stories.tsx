@@ -6,6 +6,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { PopoverCombobox } from './PopoverCombobox';
 
 faker.seed(1234);
@@ -31,6 +33,7 @@ const ComboboxStory = () => {
 
 export default {
   component: ComboboxStory,
+  decorators: [withTheme],
 };
 
 export const Default = {
