@@ -46,6 +46,10 @@ export class AutomergeHost {
     return this._repo;
   }
 
+  async close() {
+    await this._clientNetwork.close();
+  }
+
   //
   // Methods for client-services.
   //
@@ -97,8 +101,14 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
     peer.send(message);
   }
 
-  override disconnect(): void {
+  async close() {
     this._peers.forEach((peer) => peer.disconnect());
+    this.emit('close');
+  }
+
+  override disconnect(): void {
+    // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
+    // No-op
   }
 
   syncRepo({ id, syncMessage }: SyncRepoRequest): Stream<SyncRepoResponse> {
