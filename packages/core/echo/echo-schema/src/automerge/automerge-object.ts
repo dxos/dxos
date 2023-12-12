@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { next as automerge, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
+import { next as automerge, ChangeOptions, type ChangeFn, type Doc, Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -15,7 +15,7 @@ import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
-import { mutationOverride, TextObject, type TypedObjectOptions } from '../object';
+import { isActualAutomergeObject, mutationOverride, TextObject, type TypedObjectOptions } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import {
   type EchoObject,
@@ -447,6 +447,65 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     return this._schema;
   }
+
+  /**
+   * @internal
+   */
+  _getRawDoc(path?: string[]): DocAccessor {
+    const self = this;
+    return {
+      docSync: () => this._getDoc(),
+      change: (callback, options) => {
+        if(this._doc) {
+          if (options) {
+            this._doc = automerge.change(this._doc!, options, callback);
+          } else {
+            this._doc = automerge.change(this._doc!, callback);
+          }
+        } else {
+          invariant(this._docHandle);
+          this._docHandle.change(callback, options);
+          
+        }
+        this._notifyUpdate();
+      },
+      changeAt: (heads, callback, options) => {
+        let result: Heads | undefined;
+        if(this._doc) {
+          if (options) {
+            const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
+            this._doc = newDoc;
+            result = newHeads ?? undefined;
+          } else {
+            const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, callback);
+            this._doc = newDoc;
+            result = newHeads ?? undefined;
+          }
+        } else {
+          invariant(this._docHandle);
+          result = this._docHandle.changeAt(heads, callback, options);
+        }
+
+        this._notifyUpdate();
+        return result;
+      },
+      addListener: (event, listener) => {
+        if (event === 'change') {
+          this[base]._docHandle?.on('change', listener);
+          this._updates.on(listener);
+        }
+      },
+      removeListener: (event, listener) => {
+        if (event === 'change') {
+          this[base]._docHandle?.off('change', listener);
+          this._updates.off(listener);
+        }
+      },
+      get path() {
+        return [...self._path, 'data', ...(path ?? [])];
+      },
+    };
+  }
 }
 
 const isValidKey = (key: string | symbol) => {
@@ -495,4 +554,21 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
+};
+
+export type DocAccessor<T = any> = {
+  docSync(): Doc<T> | undefined;
+  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
+  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
+  
+  addListener(event: 'change', listener: () => void): void;
+  removeListener(event: 'change', listener: () => void): void;
+
+  path?: string[];
+};
+
+export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
+  invariant(isActualAutomergeObject(obj));
+
+  return obj[base]._getRawDoc(path);
 };
