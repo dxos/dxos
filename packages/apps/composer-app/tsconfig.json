@@ -6,6 +6,7 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist",
     "types": [
       "node"
@@ -41,10 +42,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-shell"
+      "path": "../../sdk/shell"
     },
     {
-      "path": "../../sdk/vault"
+      "path": "../../sdk/shell"
     },
     {
       "path": "../../ui/react-ui"
@@ -57,6 +58,9 @@
     },
     {
       "path": "../../ui/react-ui-navtree"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../../ui/react-ui-theme"

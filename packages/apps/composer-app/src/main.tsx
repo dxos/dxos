@@ -42,18 +42,17 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
+import { createClientServices, Config, Defaults } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import { setupConfig } from './config';
 import { appKey } from './globals';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 
 const main = async () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
-  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
+  const config = await setupConfig();
   const services = await createClientServices(config);
   const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
 
@@ -167,7 +166,9 @@ const main = async () => {
         config: new Config(Defaults()),
       }),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
-      [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme')),
+      [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
+        appName: 'Composer',
+      }),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },

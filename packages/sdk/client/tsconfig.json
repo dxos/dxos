@@ -5,10 +5,12 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types",
     "types": [
       "@dxos/test",
-      "node"
+      "node",
+      "sharedworker"
     ]
   },
   "include": [

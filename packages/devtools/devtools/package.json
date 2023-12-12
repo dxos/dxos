@@ -63,8 +63,8 @@
   "devDependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
-    "@dxos/react-shell": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",

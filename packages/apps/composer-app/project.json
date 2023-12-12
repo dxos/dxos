@@ -24,10 +24,7 @@
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
-        "serve": "composer-app:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
+        "serve": "composer-app:preview",
         "testPatterns": [
           "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
         ],
@@ -50,11 +47,16 @@
         "buildTarget": "composer-app:bundle"
       }
     },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/composer-app/.storybook"
+      }
     }
-  },
-  "implicitDependencies": [
-    "serve-with-vault"
-  ]
+  }
 }

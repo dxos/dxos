@@ -47,7 +47,11 @@ export const definitions = ({
 
         if (key === '__CONFIG_DEFAULTS__') {
           // Load app environment variables into default config.
-          env?.map((key) => set(content, ['runtime', 'app', 'env', key], process.env[key]));
+          Object.entries(process.env).forEach(([key, value]) => {
+            if (key.startsWith('DX_') || env?.includes(key)) {
+              set(content, ['runtime', 'app', 'env', key], value);
+            }
+          });
 
           // Set build info automatically if available.
           try {

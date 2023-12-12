@@ -33,7 +33,7 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/react-shell"
+      "path": "../../sdk/shell"
     },
     {
       "path": "../../ui/react-appkit"

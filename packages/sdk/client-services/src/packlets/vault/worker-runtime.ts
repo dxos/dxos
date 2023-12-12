@@ -18,7 +18,7 @@ import { ClientServicesHost } from '../services';
 export type CreateSessionParams = {
   appPort: RpcPort;
   systemPort: RpcPort;
-  shellPort: RpcPort;
+  shellPort?: RpcPort;
 };
 
 /**
