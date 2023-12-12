@@ -13,7 +13,7 @@ import { buildGraph } from '@dxos/app-graph/testing';
 import { PublicKey } from '@dxos/keys';
 import { Tooltip } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
-import { NavTree, type TreeNode } from '@dxos/react-ui-navtree';
+import { NavTree, translations, type TreeNode } from '@dxos/react-ui-navtree';
 import { fineBlockSize } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -33,7 +33,7 @@ const renderPresence = (node: TreeNode) => {
 const defaultActions: ActionArg[] = [
   {
     id: 'remove',
-    label: 'remove',
+    label: 'Remove',
     invoke: () => {},
     icon: () => <Minus />,
   },
@@ -95,7 +95,7 @@ export const Demo = {
             value={{
               components: {
                 // @ts-ignore
-                presence: ({ object }: { object: any }) => {
+                presence: ({ data: { object } }: { data: { object: any } }) => {
                   return (
                     <ObjectPresence size={2} viewers={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
                   );
@@ -114,4 +114,5 @@ export const Demo = {
 export default {
   component: StorybookNavtreePresence,
   decorators: [withTheme],
+  parameters: { translations },
 };
