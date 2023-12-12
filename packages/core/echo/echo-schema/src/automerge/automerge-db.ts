@@ -21,6 +21,7 @@ import {
   getGlobalAutomergePreference,
   isActualTypedObject,
   isActualAutomergeObject,
+  TextObject,
 } from '../object';
 import { type Schema } from '../proto';
 
@@ -122,7 +123,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj)) {
+    if (isActualTypedObject(obj) || obj instanceof TextObject) {
       return this._echoDatabase.add(obj);
     }
 
