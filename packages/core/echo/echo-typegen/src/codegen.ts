@@ -42,10 +42,6 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
-      // TODO(mykola): Remove once TextObject is removed. Automerge implementation uses `string` and YJs uses `TextObject`.
-      if (field.resolvedType.fullName === '.dxos.schema.Text') {
-        return `${importNamespace}.${field.resolvedType.name} | string`;
-      }
       if (injectedTypes.includes(field.resolvedType.fullName)) {
         return `${importNamespace}.${field.resolvedType.name}`;
       }

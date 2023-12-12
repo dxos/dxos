@@ -8,9 +8,6 @@ import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-m
 
 import { AbstractEchoObject } from './object';
 
-/**
- * @deprecated Will be deleted as ECHO transition to automerge CRDTs will be completed.
- */
 export class TextObject extends AbstractEchoObject<TextModel> {
   // TODO(mykola): Add immutable option.
   constructor(text?: string, kind?: TextKind, field?: string) {

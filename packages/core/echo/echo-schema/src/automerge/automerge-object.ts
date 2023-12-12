@@ -15,7 +15,7 @@ import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
-import { TextObject, isActualAutomergeObject, mutationOverride, TextObject, type TypedObjectOptions } from '../object';
+import { isActualAutomergeObject, mutationOverride, TextObject, type TypedObjectOptions } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import {
   type EchoObject,
@@ -288,11 +288,6 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _set(path: string[], value: any) {
-    // TODO(mykola): Remove this once TextObject is removed.
-    if (value instanceof TextObject) {
-      throw new Error('TextObject is not supported');
-    }
-
     const fullPath = [...this._path, ...path];
 
     const changeFn: ChangeFn<any> = (doc) => {
