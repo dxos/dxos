@@ -96,6 +96,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
             : [syntaxHighlighting(defaultHighlightStyle)]),
 
           // Replication.
+          // TODO(burdon): Move to default extensions.
           ...(content instanceof YText ? [yCollab(content, undefined)] : []),
 
           // Custom.

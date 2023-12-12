@@ -56,7 +56,15 @@ export const promptHighlightStyles = HighlightStyle.define([
 const Story = () => {
   const [item] = useState({
     text: new TextObject(
-      '\n\n\nThis is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).\n\n\n',
+      [
+        '',
+        '',
+        '',
+        'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
+        '',
+        '',
+        '',
+      ].join('\n'),
     ),
   });
 
@@ -66,8 +74,8 @@ const Story = () => {
     <div className={mx(fixedInsetFlexLayout, groupSurface, 'p-4 gap-4')}>
       <TextEditor
         model={model}
-        slots={{ root: { className: mx(inputSurface, 'p-2') } }}
         extensions={[hyperlink, defaultHyperLinkTooltip]}
+        slots={{ root: { className: mx(inputSurface, 'p-2') } }}
       />
       <pre>{JSON.stringify(model?.content?.toString(), null, 2)}</pre>
     </div>
