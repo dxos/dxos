@@ -1,6 +1,6 @@
 # @braneframe/plugin-thread
 
-Surface plugin for thread entities.
+Surface plugin for thread email.
 
 ## DXOS Resources
 
