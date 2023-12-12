@@ -24,7 +24,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec, EmptyAgentConfig> 
   defaultSpec(): EmptyTestSpec {
     return {
       agents: 1,
-      platform: 'nodejs',
+      platform: 'chromium',
     };
   }
 
@@ -46,6 +46,8 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec, EmptyAgentConfig> 
     const { agentIdx } = config;
 
     log.info('run', {
+      message: 'Hello from agent',
+      platform: env.params.runtime.platform,
       agentIdx,
       runnerAgentIdx: config.agentIdx,
       agentId: env.params.agentId.substring(0, 8),

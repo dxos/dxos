@@ -39,6 +39,7 @@
     "@lezer/common": "^1.1.1",
     "@lezer/highlight": "^1.2.0",
     "@lezer/markdown": "^1.1.1",
+    "@phosphor-icons/react": "^2.0.5",
     "@replit/codemirror-vim": "^6.0.14",
     "@tiptap/core": "2.0.0-beta.220",
     "@tiptap/extension-collaboration": "2.0.0-beta.220",
@@ -55,10 +56,11 @@
     "prosemirror-model": "^1.19.0",
     "prosemirror-state": "^1.4.2",
     "prosemirror-view": "^1.30.1",
+    "style-mod": "^4.1.0",
     "y-codemirror.next": "^0.3.2",
     "y-prosemirror": "~1.0.20",
     "y-protocols": "^1.0.5",
-    "yjs": "^13.6.8"
+    "yjs": "^13.6.10"
   },
   "devDependencies": {
     "@codemirror/basic-setup": "^0.20.0",
@@ -67,6 +69,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@types/codemirror": "^5.60.14",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
@@ -76,6 +79,7 @@
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

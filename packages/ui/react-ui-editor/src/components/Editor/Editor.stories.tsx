@@ -11,15 +11,17 @@ import { TextObject, TextKind, useQuery, useSpace } from '@dxos/react-client/ech
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorProps } from './Editor';
 import { EditorDocument, types as schema } from '../../testing';
 
 export default {
   component: Editor,
+  decorators: [withTheme],
 };
 
-const Story = ({ spaceKey, ...args }: Pick<EditorProps, 'slots'> & { spaceKey: PublicKey }) => {
+const Story = ({ spaceKey, ...params }: Pick<EditorProps, 'slots'> & { spaceKey: PublicKey }) => {
   const [generate, setGenerate] = useState(false);
   const generateId = useId('generate');
 
@@ -39,7 +41,7 @@ const Story = ({ spaceKey, ...args }: Pick<EditorProps, 'slots'> & { spaceKey: P
         Generate Data
       </div>
       {document?.content.toString().length}
-      <Editor identity={identity} space={space} text={document?.content} {...args} />
+      <Editor identity={identity} space={space} text={document?.content} {...params} />
     </main>
   );
 };

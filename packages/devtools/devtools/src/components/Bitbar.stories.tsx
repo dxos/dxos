@@ -6,6 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
 import { BitField } from '@dxos/util';
 
 import { Bitbar } from './Bitbar';
@@ -61,6 +62,7 @@ const TestStory = () => {
 
 export default {
   component: TestStory,
+  decorators: [withTheme],
 };
 
 export const Default = {

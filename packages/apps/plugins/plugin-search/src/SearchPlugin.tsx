@@ -26,20 +26,12 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
           [SEARCH_RESULT]: {
             parse: (item: SearchResult, type: string) => {
               switch (type) {
-                case 'node': {
+                case 'node':
                   return { id: item.id, label: item.label, data: item.object };
-                }
-
-                case 'object': {
+                case 'object':
                   return item.object;
-                }
-
-                case 'view-object': {
+                case 'view-object':
                   return item;
-                }
-
-                default:
-                  return undefined;
               }
             },
           },

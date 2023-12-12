@@ -11,6 +11,7 @@ export {
   debug,
   subscribe,
   createSubscription,
+  hasType,
   isTypedObject,
   EchoDatabase,
   Expando,

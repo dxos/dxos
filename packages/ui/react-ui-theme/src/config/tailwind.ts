@@ -179,7 +179,7 @@ export const configColors = Object.keys(paletteConfigs).reduce(
       }
     };
     acc[palette] = (isBroad ? broadShadeNumbers : shadeNumbers).reduce((acc: Record<string, string>, shadeNumber) => {
-      acc[`${shadeNumber}`] = renderCssValue(shadeNumber);
+      acc[shadeNumber] = renderCssValue(shadeNumber);
       return acc;
     }, {});
 

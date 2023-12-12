@@ -71,24 +71,28 @@ export const markdownTheme = {
   //   color: '#ddd'
   // },
 
-  '.dark & .cm-tooltip': {
+  '.cm-tooltip': {
+    backgroundColor: 'transparent',
     border: 'none',
-    backgroundColor: tooltipBackground,
   },
-  '.dark & .cm-tooltip .cm-tooltip-arrow:before': {
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-  },
-  '.dark & .cm-tooltip .cm-tooltip-arrow:after': {
-    borderTopColor: tooltipBackground,
-    borderBottomColor: tooltipBackground,
-  },
-  '.dark & .cm-tooltip-autocomplete': {
-    '& > ul > li[aria-selected]': {
-      backgroundColor: highlightBackground,
-      color: ivory,
-    },
-  },
+  // '.dark & .cm-tooltip': {
+  //   border: 'none',
+  //   backgroundColor: tooltipBackground,
+  // },
+  // '.dark & .cm-tooltip .cm-tooltip-arrow:before': {
+  //   borderTopColor: 'transparent',
+  //   borderBottomColor: 'transparent',
+  // },
+  // '.dark & .cm-tooltip .cm-tooltip-arrow:after': {
+  //   borderTopColor: tooltipBackground,
+  //   borderBottomColor: tooltipBackground,
+  // },
+  // '.dark & .cm-tooltip-autocomplete': {
+  //   '& > ul > li[aria-selected]': {
+  //     backgroundColor: highlightBackground,
+  //     color: ivory,
+  //   },
+  // },
   '&.cm-focused': {
     outline: 'none',
   },

@@ -1,49 +1,62 @@
-import { build } from "esbuild";
-import { copyFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { build } from 'esbuild';
+import { copyFile, rm } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import path, { dirname, join } from 'node:path';
+import { esbuildPlugin } from './wasm-esbuild-plugin.mjs'
+
+const require = createRequire(import.meta.url);
 
 for (const platform of ['node', 'browser'] as const) {
+  const outdir = `dist/lib/${platform}`;
+
+  try {
+    await rm(outdir, { recursive: true });
+  } catch { }
+
   const result = await build({
-    entryPoints: platform === 'node' ? [
-      'src/automerge.ts',
-      'src/automerge/next.ts',
-      'src/automerge-repo.ts',
-    ] : [
-      'src/automerge-wasm.ts',
-      'src/automerge.ts',
-      'src/automerge/next.ts',
-      'src/automerge-repo.ts',
-    ],
+    entryPoints:
+      platform === 'node'
+        ? ['src/automerge.ts', 'src/automerge/next.ts', 'src/automerge-repo.ts']
+        : {
+          automerge_wasm_bg: join(
+            dirname(await require.resolve('@automerge/automerge-wasm')),
+            '../bundler/automerge_wasm_bg.js',
+          ),
+          'automerge-wasm': 'src/automerge-wasm.ts',
+          automerge: 'src/automerge.ts',
+          'automerge/next': 'src/automerge/next.ts',
+          'automerge-repo': 'src/automerge-repo.ts',
+        },
     bundle: true,
     format: 'esm',
     platform: platform,
-    outdir: `dist/lib/${platform}`,
+    outdir,
     splitting: true,
-    outExtension: { '.js': platform === 'node' ? '.cjs' : '.mjs' },
+    outExtension: { '.js': platform === 'node' ? '.cjs' : '.js' },
     metafile: true,
     plugins: [
+      esbuildPlugin(),
       {
         name: 'external-deps',
-        setup: build => {
-          build.onResolve({ filter: /.*/ }, args => {
-            if (args.path.endsWith('.wasm')) {
-              return {
-                external: true,
-                path: args.path + '?init',
-              }
-            }
-
+        setup: (build) => {
+          build.onResolve({ filter: /.*/ }, (args) => {
             if (args.path.startsWith('@automerge/') && !args.importer.includes(join(process.cwd(), 'src'))) {
               return {
                 external: true,
-                path: args.path.replace('@automerge/', '#')
+                path: args.path.replace('@automerge/', '#'),
+              };
+            }
+
+            if(args.kind !== 'entry-point' && !args.path.startsWith('.') && !args.path.startsWith('@automerge/')) {
+              return {
+                external: true,
+                path: args.path,
               }
             }
-          })
-        }
+          }); 
+        },
       },
-    ]
+    ], 
   });
 
   if (platform === 'node') {
@@ -69,8 +82,6 @@ for (const platform of ['node', 'browser'] as const) {
   }
 }
 
-const require = createRequire(import.meta.url);
-
 // await copyFile(
 //   join(dirname(await require.resolve('@automerge/automerge-wasm')), './automerge_wasm_bg.wasm'),
 //   'dist/lib/node/automerge_wasm_bg.wasm'
@@ -78,5 +89,7 @@ const require = createRequire(import.meta.url);
 
 await copyFile(
   join(dirname(await require.resolve('@automerge/automerge-wasm')), '../bundler/automerge_wasm_bg.wasm'),
-  'dist/lib/browser/automerge_wasm_bg.wasm'
-)
+  'dist/lib/browser/automerge_wasm_bg.wasm',
+);
+
+// bust cache

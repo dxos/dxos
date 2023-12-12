@@ -7,11 +7,14 @@ import '@dxosTheme';
 import { Chess } from 'chess.js';
 import React, { useState } from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Chessboard, type ChessModel, ChessPanel, type ChessMove } from './Chessboard';
 
 export default {
   component: Chessboard,
   argTypes: {},
+  decorators: [withTheme],
 };
 
 const Test = () => {

@@ -4,11 +4,12 @@
 
 import { Duplex } from 'node:stream';
 
-import { scheduleTaskInterval, Event, Trigger } from '@dxos/async';
+import { scheduleTaskInterval, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { type PublicKey } from '@dxos/keys';
+import { log, logInfo } from '@dxos/log';
 import { schema, TimeoutError } from '@dxos/protocols';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
@@ -104,6 +105,7 @@ export class Muxer {
   private readonly _channelsByLocalId = new Map<number, Channel>();
   private readonly _channelsByTag = new Map<string, Channel>();
   private readonly _ctx = new Context();
+  private _sessionId?: PublicKey;
 
   private _nextId = 1;
 
@@ -124,6 +126,15 @@ export class Muxer {
     this._balancer.incomingData.on(async (msg) => {
       await this._handleCommand(Command.decode(msg));
     });
+  }
+
+  setSessionId(sessionId: PublicKey) {
+    this._sessionId = sessionId;
+  }
+
+  @logInfo
+  get sessionIdString(): string {
+    return this._sessionId ? this._sessionId.truncate() : 'none';
   }
 
   /**
@@ -155,7 +166,15 @@ export class Muxer {
     };
     channel.destroy = (err) => {
       // TODO(dmaretskyi): Call stream.end() instead?
-      stream.destroy(err);
+      if (err) {
+        if (stream.listeners('error').length > 0) {
+          stream.destroy(err);
+        } else {
+          stream.destroy();
+        }
+      } else {
+        stream.destroy();
+      }
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
@@ -265,19 +284,11 @@ export class Muxer {
     ).catch(async (err: any) => {
       log('error sending close command', { err });
 
-      await this.dispose(err);
+      await this._dispose(err);
     });
 
-    await Promise.race([
-      new Promise((_resolve, reject) => {
-        setTimeout(() => {
-          reject(new TimeoutError('gracefully closing muxer'));
-        }, GRACEFUL_CLOSE_TIMEOUT);
-      }),
-      (async () => {
-        await this.dispose(err);
-      })(),
-    ]);
+    // don't return until close is complete or timeout
+    await asyncTimeout(this._dispose(err), GRACEFUL_CLOSE_TIMEOUT, new TimeoutError('gracefully closing muxer'));
   }
 
   // force close without confirmation
@@ -307,14 +318,14 @@ export class Muxer {
       });
     }
 
-    this.dispose(err).catch((err) => {
+    this._dispose(err).catch((err) => {
       log('error disposing after destroy', { err });
     });
   }
 
   // complete the termination, graceful or otherwise
 
-  async dispose(err?: Error) {
+  async _dispose(err?: Error) {
     if (this._disposed) {
       log('already destroyed, ignoring dispose request');
       return;
@@ -328,6 +339,7 @@ export class Muxer {
       channel.destroy?.(err);
     }
     this._disposed = true;
+    await this._emitStats();
 
     this.afterClosed.emit(err);
 
@@ -345,7 +357,7 @@ export class Muxer {
     if (cmd.close) {
       if (!this._closing) {
         log('received peer close, initiating my own graceful close');
-        await this.close();
+        await this.close(new Error('received peer close'));
       } else {
         log('received close from peer, already closing');
       }

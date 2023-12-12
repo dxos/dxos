@@ -13,7 +13,7 @@ import { ClientContext } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPeersInSpace } from '@dxos/react-client/testing';
-import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/react-ui';
+import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { EditorExample } from './examples';
@@ -113,9 +113,11 @@ const main = async () => {
 
 const fallback = () => {
   root.render(
-    <Center>
-      <ProgressBar indeterminate />
-    </Center>,
+    <ThemeProvider tx={defaultTx}>
+      <div className='flex bs-[100dvh] justify-center items-center'>
+        <Status indeterminate aria-label='Initializing' />
+      </div>
+    </ThemeProvider>,
   );
 };
 

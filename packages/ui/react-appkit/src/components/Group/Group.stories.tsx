@@ -4,10 +4,13 @@
 
 import '@dxosTheme';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Group } from './Group';
 
 export default {
   component: Group,
+  decorators: [withTheme],
 };
 
 export const Default = {

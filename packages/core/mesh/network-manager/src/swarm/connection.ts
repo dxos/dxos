@@ -2,24 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, scheduleTask, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import {
   CancelledError,
   ProtocolError,
   ConnectionResetError,
   ConnectivityError,
+  TimeoutError,
   UnknownProtocolError,
   trace,
 } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';
-import { type Transport, type TransportFactory } from '../transport';
+import { type Transport, type TransportFactory, type TransportStats } from '../transport';
 import { type WireProtocol } from '../wire-protocol';
 
 /**
@@ -32,6 +33,8 @@ const STARTING_SIGNALLING_DELAY = 10;
  * How long to wait for the transport to establish connectivity, i.e. for the connection to move between CONNECTING and CONNECTED.
  */
 const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
+
+const TRANSPORT_STATS_INTERVAL = 5_000;
 
 /**
  * Maximum delay between signal batches.
@@ -109,6 +112,8 @@ export class Connection {
 
   public _instanceId = PublicKey.random().toHex();
 
+  public readonly transportStats = new Event<TransportStats>();
+
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
     await this._flushSignalBuffer();
   });
@@ -133,6 +138,11 @@ export class Connection {
       remotePeerId: this.remoteId,
       initiator: this.initiator,
     });
+  }
+
+  @logInfo
+  get sessionIdString(): string {
+    return this.sessionId.truncate();
   }
 
   get state() {
@@ -164,7 +174,7 @@ export class Connection {
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
-    this._protocol.open().catch((err) => {
+    this._protocol.open(this.sessionId).catch((err) => {
       this.errors.raise(err);
     });
 
@@ -177,8 +187,10 @@ export class Connection {
     scheduleTask(
       this.connectedTimeoutContext,
       async () => {
-        log.info('timeout waiting for transport to connect, aborting');
-        await this.abort().catch((err) => this.errors.raise(err));
+        log.info(`timeout waiting ${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect, aborting`);
+        await this.abort(new TimeoutError(`${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect`)).catch(
+          (err) => this.errors.raise(err),
+        );
       },
       TRANSPORT_CONNECTION_TIMEOUT,
     );
@@ -188,12 +200,15 @@ export class Connection {
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => this._sendSignal(signal),
+      sessionId: this.sessionId,
     });
 
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
       await this.connectedTimeoutContext.dispose();
       this._callbacks?.onConnected?.();
+
+      scheduleTaskInterval(this._ctx, async () => this._emitTransportStats(), TRANSPORT_STATS_INTERVAL);
     });
 
     this._transport.closed.once(() => {
@@ -312,6 +327,18 @@ export class Connection {
       } catch (err: any) {
         log.catch(err);
       }
+    } else {
+      log.info(`graceful close requested when we were in ${lastState} state? aborting`);
+      try {
+        await this._protocol.abort();
+      } catch (err: any) {
+        log.catch(err);
+      }
+      try {
+        await this._transport?.destroy();
+      } catch (err: any) {
+        log.catch(err);
+      }
     }
 
     log('closed', { peerId: this.ownId });
@@ -396,5 +423,12 @@ export class Connection {
     invariant(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
+  }
+
+  private async _emitTransportStats() {
+    const stats = await this.transport?.getStats();
+    if (stats) {
+      this.transportStats.emit(stats);
+    }
   }
 }

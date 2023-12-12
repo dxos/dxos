@@ -10,6 +10,7 @@ import React, { type PropsWithChildren } from 'react';
 import { groupSurface, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { ScrollArea } from './ScrollArea';
+import { withTheme } from '../../testing';
 
 faker.seed(1234);
 
@@ -34,6 +35,8 @@ const StorybookScrollArea = ({ children }: PropsWithChildren<{}>) => {
 
 export default {
   component: StorybookScrollArea,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

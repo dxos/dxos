@@ -8,6 +8,7 @@ import React, { type FC } from 'react';
 import { type PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
@@ -44,6 +45,7 @@ export default {
   title: 'Views/Demo',
   render: Story,
   decorators: [
+    withTheme,
     FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {

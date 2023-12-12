@@ -10,14 +10,6 @@ export type TableDef = {
 
 export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'ref';
 
-export const columnTypes = new Map<ColumnType, string>([
-  ['string', 'Text'],
-  ['boolean', 'Checkbox'],
-  ['number', 'Number'],
-  ['date', 'Date'],
-  ['ref', 'Reference'],
-]);
-
 export type ColumnProps = {
   id: string;
   prop: string;

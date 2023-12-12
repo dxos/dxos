@@ -42,7 +42,6 @@ export class LockFile {
     try {
       const handle = await LockFile.acquire(filename);
       await LockFile.release(handle);
-      await handle.close();
 
       return false;
     } catch (e) {

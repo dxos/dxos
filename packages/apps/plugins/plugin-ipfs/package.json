@@ -25,6 +25,7 @@
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
     "lodash.get": "^4.4.2",
