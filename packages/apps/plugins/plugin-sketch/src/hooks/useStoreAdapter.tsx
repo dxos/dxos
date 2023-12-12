@@ -7,10 +7,10 @@ import { createTLStore, defaultShapes, type TLRecord } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useState } from 'react';
 import { type Transaction, type YEvent } from 'yjs';
+
 import * as A from '@dxos/automerge/automerge';
 import { log } from '@dxos/log';
-
-import { Expando, TypedObject, type TextObject, getRawDoc, DocAccessor } from '@dxos/react-client/echo';
+import { type Expando, TypedObject, type TextObject, getRawDoc, type DocAccessor } from '@dxos/react-client/echo';
 
 type Unsubscribe = () => void;
 
@@ -200,7 +200,7 @@ export class AutomergeStoreAdapter {
         transact(() => {
           log.info('load initial records', { contentRecords });
           this._store.clear();
-          this._store.put([...Object.values(contentRecords ?? {})].map(record => clone(record)));
+          this._store.put([...Object.values(contentRecords ?? {})].map((record) => clone(record)));
         });
       }
     }
@@ -239,6 +239,7 @@ export class AutomergeStoreAdapter {
               break;
             }
           }
+          // eslint-disable-next-line no-fallthrough
           case 'put':
           case 'insert':
           case 'inc':
@@ -389,4 +390,4 @@ const rebasePath = (path: A.Prop[], base: string[]): A.Prop[] | undefined => {
 
 const clone = (obj: any) => {
   return JSON.parse(JSON.stringify(obj));
-}
+};

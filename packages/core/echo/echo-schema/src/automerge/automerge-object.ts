@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { next as automerge, ChangeOptions, type ChangeFn, type Doc, Heads } from '@dxos/automerge/automerge';
+import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -456,7 +456,7 @@ export class AutomergeObject implements TypedObjectProperties {
     return {
       docSync: () => this._getDoc(),
       change: (callback, options) => {
-        if(this._doc) {
+        if (this._doc) {
           if (options) {
             this._doc = automerge.change(this._doc!, options, callback);
           } else {
@@ -465,13 +465,12 @@ export class AutomergeObject implements TypedObjectProperties {
         } else {
           invariant(this._docHandle);
           this._docHandle.change(callback, options);
-          
         }
         this._notifyUpdate();
       },
       changeAt: (heads, callback, options) => {
         let result: Heads | undefined;
-        if(this._doc) {
+        if (this._doc) {
           if (options) {
             const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
             this._doc = newDoc;
@@ -560,7 +559,7 @@ export type DocAccessor<T = any> = {
   docSync(): Doc<T> | undefined;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
-  
+
   addListener(event: 'change', listener: () => void): void;
   removeListener(event: 'change', listener: () => void): void;
 
