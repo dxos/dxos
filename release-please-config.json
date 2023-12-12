@@ -569,11 +569,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/mosaic/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/plexus/package.json",
           "jsonpath": "$.version"
         },
