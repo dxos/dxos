@@ -159,6 +159,7 @@ export class YjsStoreAdapter {
   }
 }
 
+// TODO(dmaretskyi): Take a look at https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
 export class AutomergeStoreAdapter {
   private readonly _store: TLStore;
   private readonly _subscriptions: Unsubscribe[] = [];
