@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
-import { NavTreeItemActionMenu } from './NavTreeItemAction';
+import { NavTreeItemAction } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
@@ -176,7 +176,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               TODO(wittjosiah): Primary action should come at the end.
               However, currently if it does then the triple dots menus don't line up for nodes without primary actions. */}
               {primaryAction?.properties.disposition === 'toolbar' && (
-                <NavTreeItemActionMenu
+                <NavTreeItemAction
                   id={node.id}
                   label={Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
                   icon={primaryAction.icon ?? Placeholder}
@@ -186,10 +186,11 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   active={active}
                   popoverAnchorId={popoverAnchorId}
                   testId={primaryAction.properties.testId}
+                  menuType={primaryAction.properties.menuType}
                 />
               )}
               {actions.length > 0 && (
-                <NavTreeItemActionMenu
+                <NavTreeItemAction
                   id={node.id}
                   // label={t('tree item actions label')}
                   icon={DotsThreeVertical}
