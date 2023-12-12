@@ -150,7 +150,6 @@ export class ServiceContext {
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
-    await this.automergeHost.close();
     await this.dataSpaceManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();

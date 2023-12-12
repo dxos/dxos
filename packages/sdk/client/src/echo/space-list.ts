@@ -171,9 +171,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    */
   async _close() {
     await this._ctx.dispose();
-    await this._automergeContext.close();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
+
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
   }

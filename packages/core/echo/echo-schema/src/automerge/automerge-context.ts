@@ -14,26 +14,19 @@ import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/pr
  */
 export class AutomergeContext {
   private _repo: Repo;
-  private _adapter?: LocalClientNetworkAdapter = undefined;
 
-  constructor(dataService: DataService | undefined = undefined) {
-    if (dataService) {
-      this._adapter = new LocalClientNetworkAdapter(dataService);
-      this._repo = new Repo({
-        network: [this._adapter],
-      });
-      this._adapter.ready();
-    } else {
-      this._repo = new Repo({ network: [] });
+  constructor(dataService: DataService | null = null) {
+    const adapter = dataService && new LocalClientNetworkAdapter(dataService);
+    this._repo = new Repo({
+      network: adapter ? [adapter] : [],
+    });
+    if (adapter) {
+      adapter.ready();
     }
   }
 
   get repo(): Repo {
     return this._repo;
-  }
-
-  async close() {
-    await this._adapter?.close();
   }
 }
 
@@ -75,7 +68,6 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
         this.emit('message', cbor.decode(msg.syncMessage!));
       },
       (err) => {
-        // TODO(mykola): Add connection retry?
         if (err) {
           log.catch(err);
         }
@@ -84,7 +76,6 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
             peerId: this._hostInfo.peerId as PeerId,
           });
         }
-        void this.close().catch((err) => log.catch(err));
       },
     );
 
@@ -113,14 +104,10 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       });
   }
 
-  async close() {
-    await this._stream?.close();
-    this._stream = undefined;
-    this.emit('close');
-  }
-
   override disconnect(): void {
-    // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
-    // No-op
+    void this._stream?.close().catch((err) => {
+      log.catch(err);
+    });
+    this._stream = undefined;
   }
 }
