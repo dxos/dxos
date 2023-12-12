@@ -5,149 +5,71 @@ order: 5
 ---
 
 # Agents
+The DXOS Agent provides offline backup and synchronization capabilities. It continuously replicates all data from all of your browser sessions. When your browser sessions are offline, it will replicate any changes from your spaces to any peers in the space. This allows changes to a space to be available even if the other peer was offline when the change was made.
 
-- Agents are background processes that implement a DXOS network peer.
-- Agents have an identity and represent a user's device.
-- Agents are managed by a daemon process controlled by the `dx agent` CLI commands.
-- By default, agents will automatically sync all Spaces that the user has access to.
-- Agents may be configured to automatically create epochs for Spaces that were created by the associated user.
+Agents are implemented as a headless network peer device belonging to a DXOS identity. By default, they synchronize all Spaces that the identity has access to. Agents can be used to backup and migrate data from one browser profile to another.
+
+Agents are managed by the `dx` CLI and can run as a daemon or in the foreground. An agent can be started manually or configured to run a system startup using an a service management daemon such as `systemd` or `launchd`.
+
+## Installation
+
+Install the DXOS CLI using Node v18 or higher:
+
+```bash
+npm i -g @dxos/cli
+```
 
 ## Usage
 
-Both the CLI and agents should be configured to use a given profile using either the `--profile` flag or `DX_PROFILE` environment variable.
-The CLI will automatically connect to the agent using the given profile.
+### Startup
+An agent can be run in the foreground or the background as a daemon.
+
+Running an agent in the foreground is useful for troubleshooting or within a init system such as `systemd`.
 
 To run an agent in the foreground:
 
 ```bash
-DX_PROFILE=test dx agent run
+dx agent start -f
 ```
 
-The CLI will then connect automatically to the agent:
+The CLI will automatically use the agent, or start one in the background if one is not running, unless the '--no-agent' flag is used.
+
+`dx agent list` will show the agent status.
+
+### Logging
+Logging verbosity can be controlled with the `LOG_FILTER` environment variable:
 
 ```bash
-DX_PROFILE=test dx halo
+LOG_FILTER=info dx agent start -f
 ```
 
-NOTE: The CLI will automatically start an agent if one is not already running.
-
-To run with logging enabled:
-
-```bash
-LOG_CONFIG=./log-config.yml dx agent start -f --ws=5001
-```
+If the agent is run in background mode, log files will be created in `/tmp/dx/run/profile/<profile name>/logs`
 
 ### Managing HALO Devices
+The agent acts as a HALO device, which can share an identity and ECHO space membership with other devices, such as a web browser.
 
-The CLI can support multiple profiles, each with its own HALO identity.
-Similarly, separate browser profiles can be sued to support multiple HALO identities.
+#### To configure the agent to join an existing HALO identity from a browser:
 
-To configure the agent to join an existing HALO:
+* Open a DXOS app, such as [Composer](https://composer.dxos.org)
+* Click on the avatar icon in the upper left corner.
+* Click on "Add device"
+* Click "Copy URL" to copy the invitation code.
+* Run the CLI command `dx halo join` and paste the invitation code.
 
-- Open https://halo.dxos.org, then get the invitation code by adding a device.
-- Run the following command then enter the invitation code:
+#### To configure a browser profile to join an identity created by the CLI:
 
-```bash
-DX_PROFILE=test dx halo join
-```
-
-To configure a browser profile to join an identity created by the CLI:
-
-- Open https://halo.dxos.org, then join from an existing device.
-- Run the following command then enter the invitation code into the browser:
-
-```bash
-DX_PROFILE=test dx halo create <username>
-DX_PROFILE=test dx halo share
-```
-
-### Epochs
-
-To configure the agent to automatically trigger new epochs set the `epoch` flag:
-
-```bash
-DX_PROFILE=test dx agent run --epoch=auto
-```
-
-## Development
-
-Source the following script to set an alias for `dx` that can be called from any directory:
-
-```bash
-cd packages/devtools/cli
-. ../../devtools/cli/scripts/dev.sh
-```
-
-Example:
-
-```bash
-DX_PROFILE=test dx agent run --socket --web-socket=4567 --http=3000
-```
-
-NOTE: The `agent` will need to be recompiled after any changes.
+* Ensure a HALO identity has been created in the agent, or use the `dx halo create <username>` command to create one.
+* Run `dx halo share` to create a device invitation.
+* Copy the invitation code and open it in a browser.
 
 ### Reset
 
 Run the following command to reset all data for a given profile:
 
 ```bash
-DX_PROFILE=test dx reset --force --no-agent
-```
-
-### Devtools
-
-To connect devtools, set the `target` query parameter to the agent's websocket URL, e.g.,
-
-`https://devtools.dxos.org?target=ws://localhost:4567`
-
-### Debugging
-
-To enable logging, set `LOG_FILTER`:
-
-```bash
-LOG_FILTER="info,agent:debug"
-```
-
-To enable debugging, set `NODE_OPTIONS` then open in VSCode (CMD-SHIFT-P "Attach to Node process").
-
-```bash
-NODE_OPTIONS="--inspect-brk"
-```
-
-## Demo
-
-Use the [DXOS ZSH theme](https://github.com/dxos/dxos/tree/main/tools/zsh/ohmyz/themes/dxos.zsh-theme) to display the current profile in the shell prompt.
-
-```bash
-# Source dx alias.
-. ./packages/devtools/cli/scripts/dev.sh
-
-export DX_PROFILE=test
-
-dx agent stop
-dx agent list
 dx reset --force --no-agent
-dx halo create Tester --no-agent
-dx halo --no-agent
-
-dx agent start --ws=5000 --echo=5001 --monitor
 ```
 
-## Testing
+## Development
 
-To test the ECHO REST API endpoint use `curl`:
-
-```bash
-# Query spaces.
-curl -s http://localhost:3000/spaces | jq
-```
-
-Or a `python` script:
-
-```bash
-# One-time setup.
-python3 -m pip install -r ./scripts/requirements.txt
-
-# Run the test.
-python3 ./scripts/test.py | jq
-```
+See [Development](https://github.com/dxos/dxos/tree/main/packages/devtools/cli#development)
