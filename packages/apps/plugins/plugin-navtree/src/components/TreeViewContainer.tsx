@@ -31,8 +31,10 @@ import { arrayMove } from '@dxos/util';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
-import { NAVTREE_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
+
+export const NODE_TYPE = 'dxos/app-graph/node';
 
 const getMosaicPath = (graph: Graph, id: string) => {
   const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
@@ -180,7 +182,7 @@ export const TreeViewContainer = ({
         <DensityProvider density='coarse'>
           {identity && (
             <>
-              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1'>
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
                 <HaloButton
                   size={6}
                   identityKey={identity?.identityKey.toHex()}
@@ -245,6 +247,7 @@ export const TreeViewContainer = ({
             <NavTree
               node={graph.root}
               current={currentPath}
+              type={NODE_TYPE}
               onSelect={handleSelect}
               isOver={isOver}
               onOver={handleOver}

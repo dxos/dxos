@@ -25,6 +25,9 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -40,7 +43,16 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/agent"
+    },
+    {
+      "path": "../../core/echo/document-model"
+    },
+    {
+      "path": "../../core/echo/echo-generator"
     },
     {
       "path": "../../core/echo/echo-generator"

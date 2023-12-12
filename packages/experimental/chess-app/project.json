@@ -2,43 +2,16 @@
   "sourceRoot": "packages/experimental/chess-app/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/chess-app/src/index.ts",
-        "outputPath": "packages/experimental/chess-app/dist/types",
-        "tsConfig": "packages/experimental/chess-app/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/chess-app/src/index.ts",
           "packages/experimental/chess-app/src/proto/index.ts"
-        ],
-        "outputPath": "packages/experimental/chess-app/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/chess-app/**/*.{ts,tsx,js,jsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {
@@ -54,39 +27,12 @@
         "buildTarget": "kai:bundle"
       }
     },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/experimental/chess-app/.storybook",
-        "uiFramework": "@storybook/react"
-      }
-    },
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "coveragePath": "coverage/packages/experimental/chess-app",
-        "outputPath": "tmp/mocha/packages/experimental/chess-app",
-        "resultsPath": "test-results/packages/experimental/chess-app",
-        "testPatterns": [
-          "packages/experimental/chess-app/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/chess-app/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     }
   },
   "implicitDependencies": [

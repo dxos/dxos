@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FC, type PropsWithChildren } from 'react';
+import type { IconProps } from '@phosphor-icons/react';
+import type { FC, PropsWithChildren } from 'react';
 
 /**
  * Capabilities provided by a plugin.
@@ -42,6 +43,27 @@ export type Plugin<TProvides = {}> = {
      */
     // TODO(wittjosiah): How should these be managed?
     shortId?: string;
+
+    /**
+     * Human-readable name.
+     */
+    name?: string;
+
+    /**
+     * Short description of plugin functionality.
+     */
+    description?: string;
+
+    /**
+     * Tags to help categorize the plugin.
+     */
+    tags?: string[];
+
+    /**
+     * Component to render icon for the plugin when displayed in a list.
+     */
+    // TODO(wittjosiah): Convert to `icon` and make serializable.
+    iconComponent?: FC<IconProps>;
   };
 
   /**
@@ -80,3 +102,16 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    */
   unload?: () => Promise<void>;
 };
+
+export const pluginMeta = (meta: Plugin['meta']) => meta;
+
+type LazyPlugin<T> = () => Promise<{ default: (props: T) => PluginDefinition }>;
+
+export namespace Plugin {
+  export const lazy = <T>(p: LazyPlugin<T>, props?: T) => {
+    return () =>
+      p().then(({ default: definition }) => {
+        return definition(props as T);
+      });
+  };
+}

@@ -34,7 +34,7 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/labs-app/package.json",
+          "path": "packages/apps/plugins/plugin-chain/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -84,6 +84,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-ipfs/package.json",
           "jsonpath": "$.version"
         },
@@ -109,12 +114,22 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-mermaid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-metadata/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-outliner/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -180,6 +195,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-wildcard/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -350,6 +370,16 @@
         {
           "type": "json",
           "path": "packages/core/agent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/chain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/automerge/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -624,6 +654,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/migrations/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/react-client/package.json",
           "jsonpath": "$.version"
         },
@@ -669,6 +704,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-card/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },
@@ -680,6 +720,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-searchlist/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -700,6 +745,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-types/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/storybook-utils/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -775,6 +825,11 @@
         {
           "type": "json",
           "path": "tools/ridoculous/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/stories/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -8,19 +8,24 @@ export { type ItemID, DocumentModel } from '@dxos/document-model';
 export { Item } from '@dxos/echo-db';
 export {
   base,
-  createSubscription,
-  isTypedObject,
+  debug,
   subscribe,
+  createSubscription,
+  hasType,
+  isTypedObject,
   EchoDatabase,
   Expando,
+  Filter,
   Query,
   Schema,
   Text, // TODO(burdon): Deprecated.
-  TextObject,
   TypeCollection,
+  TextObject,
   TypedObject,
-  Filter,
-  type EchoObject, // TODO(burdon): Remove?
+  getGlobalAutomergePreference, // TODO(dmaretskyi): Remove.
+  getRawDoc,
+  type DocAccessor,
+  type EchoObject, // TODO(burdon): Remove from API?
   type FilterSource,
   type ObjectMeta,
   type Selection,
@@ -34,5 +39,5 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { TextModel } from '@dxos/text-model';
 
 export { SpaceList } from './space-list';
-export { SpaceProxy } from './space-proxy';
+export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
 export { createDefaultModelFactory, getSpaceForObject } from './util';

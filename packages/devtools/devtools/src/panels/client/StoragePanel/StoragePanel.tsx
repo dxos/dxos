@@ -210,11 +210,7 @@ export const StoragePanel = () => {
           const { id, Icon, Element, items } = item;
           return (
             <TreeItem.Root key={id} collapsible={!!items?.length} open>
-              <div
-                role='none'
-                className='flex grow items-center gap-2 font-mono cursor-pointer'
-                onClick={() => setSelected(item)}
-              >
+              <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => setSelected(item)}>
                 <Icon />
                 {Element}
               </div>
@@ -238,7 +234,7 @@ export const StoragePanel = () => {
 
   return (
     <PanelContainer
-      className='flex-row divide-x'
+      classNames='flex-row divide-x'
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>

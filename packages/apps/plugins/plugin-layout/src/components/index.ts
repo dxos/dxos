@@ -4,6 +4,7 @@
 
 export * from './ContentEmpty';
 export * from './ContentFallback';
-export * from './ContextView';
+export * from './ContextPanel';
 export * from './Fallback';
+export * from './LayoutSettings';
 export * from './MainLayout';

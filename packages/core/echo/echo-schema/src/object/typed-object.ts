@@ -13,7 +13,6 @@ import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
 import { AbstractEchoObject } from './object';
-import { TextObject } from './text-object';
 import {
   base,
   data,
@@ -24,12 +23,14 @@ import {
   type EchoObject,
   type ObjectMeta,
   type TypedObjectProperties,
+  debug,
 } from './types';
+import { AutomergeObject } from '../automerge';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
-const isValidKey = (key: string | symbol) =>
-  !(
+const isValidKey = (key: string | symbol) => {
+  return !(
     typeof key === 'symbol' ||
     key.startsWith('@@__') ||
     key === 'constructor' ||
@@ -39,9 +40,10 @@ const isValidKey = (key: string | symbol) =>
     key === 'id' ||
     key === '__meta' ||
     key === '__schema' ||
-    key === '__typename' || // TODO(burdon): Reconcile with schema name (and document).
+    key === '__typename' ||
     key === '__deleted'
   );
+};
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
@@ -70,6 +72,10 @@ export type TypedObjectOptions = {
   type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
+} & AutomergeOptions;
+
+export type AutomergeOptions = {
+  useAutomergeBackend?: boolean;
 };
 
 /**
@@ -79,6 +85,10 @@ export type TypedObjectOptions = {
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
+  static [Symbol.hasInstance](instance: any) {
+    return !!instance?.[base] && (isActualTypedObject(instance) || isActualAutomergeObject(instance));
+  }
+
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
@@ -90,6 +100,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
+
+    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+      return new AutomergeObject(initialProps, opts) as any;
+    }
 
     invariant(!(opts?.schema && opts?.type), 'Cannot specify both schema and type.');
 
@@ -118,8 +132,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     if (this._schema) {
       for (const field of this._schema.props) {
         if (field.repeated) {
-          this._set(field.id!, new EchoArray());
+          this._set(field.id!, new EchoArray([], { useAutomergeBackend: false }));
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { TextObject } = require('./text-object');
           this._set(field.id!, new TextObject());
         }
       }
@@ -155,6 +171,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     return this.__schema?.typename ?? 'Expando';
   }
 
+  get [debug]() {
+    return `TypedObject(${JSON.stringify({ id: this[base]._id.slice(0, 8), schema: this.__schema?.typename })})`;
+  }
+
   /**
    * Returns the schema type descriptor for the object.
    * @deprecated Use `__schema` instead.
@@ -163,6 +183,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     return this[base]._getSchema();
   }
 
+  // TODO(burdon): Make immutable.
   get [meta](): ObjectMeta {
     return this[base]._createProxy({}, undefined, true);
   }
@@ -175,6 +196,19 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
 
   get [immutable](): boolean {
     return !!this[base]?._immutable;
+  }
+
+  // TODO(burdon): Reconcile with inspect.
+  get __info() {
+    return JSON.stringify({ id: this._id.slice(0, 8), schema: this.__schema?.typename });
+  }
+
+  get __meta(): ObjectMeta {
+    return this[meta];
+  }
+
+  get __deleted(): boolean {
+    return this[base]._item?.deleted ?? false;
   }
 
   get __schema(): Schema | undefined {
@@ -194,14 +228,6 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     } else {
       return undefined;
     }
-  }
-
-  get __meta(): ObjectMeta {
-    return this[meta];
-  }
-
-  get __deleted(): boolean {
-    return this[base]._item?.deleted ?? false;
   }
 
   /**
@@ -243,7 +269,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   override _itemUpdate(): void {
     super._itemUpdate();
-    this._signal?.notifyWrite();
+    this._signal.notifyWrite();
   }
 
   private _transform(value: any, visitors: ConvertVisitors = {}) {
@@ -277,6 +303,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   private _convert(visitors: ConvertVisitors = {}) {
     return {
       '@id': this.id,
+      // TODO(mykola): Secondary path is non reachable.
       '@type': this.__typename ?? (this.__schema ? { '@id': this.__schema!.id } : undefined),
       // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
@@ -292,7 +319,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @param meta If true then get from `meta` key-space.
    */
   private _get(key: string, meta?: boolean): any {
-    this._signal?.notifyRead();
+    this._signal.notifyRead();
 
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
@@ -322,7 +349,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray()._attach(this[base], key, meta);
+        return new EchoArray([], { useAutomergeBackend: false })._attach(this[base], key, meta);
       default:
         return value;
     }
@@ -349,7 +376,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
-      if (value instanceof AbstractEchoObject) {
+      if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
         const ref = this._linkObject(value);
         this._mutate(this._model.builder().set(key, ref).build(meta));
       } else if (value instanceof EchoArray) {
@@ -518,7 +545,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * Store referenced object.
    * @internal
    */
-  _linkObject(obj: AbstractEchoObject): Reference {
+  _linkObject(obj: EchoObject): Reference {
     if (this._database) {
       if (!obj[base]._database) {
         this._database.add(obj as TypedObject);
@@ -543,7 +570,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    */
   _lookupLink(ref: Reference): EchoObject | undefined {
     if (this._database) {
-      // This doesn't cleanup properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
+      // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
       return this._database.graph._lookupLink(ref, this._database, this._onLinkResolved);
     } else {
       invariant(this._linkCache);
@@ -552,7 +579,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   }
 
   private _onLinkResolved = () => {
-    this._signal?.notifyWrite();
+    this._signal.notifyWrite();
     this._emitUpdate();
   };
 
@@ -595,7 +622,7 @@ export const Expando: ExpandoConstructor = TypedObject;
 
 export type Expando = TypedObject;
 
-let mutationOverride = false;
+export let mutationOverride = false;
 
 // TODO(burdon): Document.
 export const dangerouslyMutateImmutableObject = (cb: () => void) => {
@@ -618,4 +645,31 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
+};
+
+// TODO(dmaretskyi): Remove once migration is complete.
+let globalAutomergePreference: boolean | undefined;
+
+export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
+  globalAutomergePreference = useAutomerge;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const getGlobalAutomergePreference = () => {
+  return (
+    globalAutomergePreference ??
+    (globalThis as any).DXOS_FORCE_AUTOMERGE ??
+    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
+    false
+  );
+};
+
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

@@ -23,56 +23,74 @@ import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
 
+export const DEFAULT_TYPE = 'stack-section';
+
 type StackItem = MosaicDataItem & {
   items: StackSectionItem[];
 };
 
 export type StackSectionItem = MosaicDataItem & {
-  title: string;
+  object: StackSectionContent;
 };
 
-export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit<
+export type StackSectionContent = MosaicDataItem & { title?: string };
+
+export type StackProps<TData extends StackSectionContent = StackSectionContent> = Omit<
   MosaicContainerProps<TData, number>,
   'debug' | 'Component'
 > & {
-  Component: FC<{ data: TData }>;
-  items?: TData[];
+  SectionContent: FC<{ data: TData }>;
+  items?: StackSectionItem[];
+  transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onRemoveSection?: (path: string) => void;
+  onNavigateToSection?: (id: string) => void;
 };
 
 export const Stack = ({
   id,
+  type = DEFAULT_TYPE,
   className,
-  Component: SectionContent,
+  SectionContent,
   items = [],
+  transform,
   onOver,
   onDrop,
   onRemoveSection,
+  onNavigateToSection,
 }: StackProps) => {
   const { ref: containerRef, width = 0 } = useResizeDetector({ refreshRate: 200 });
-  const { operation, overItem } = useMosaic();
+  const { operation, activeItem, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
   const Component: MosaicTileComponent<StackSectionItem, HTMLLIElement> = useMemo(
     () =>
-      forwardRef(({ path, active, draggableStyle, draggableProps, item }, forwardRef) => {
+      forwardRef(({ path, type, active, draggableStyle, draggableProps, item }, forwardRef) => {
+        const { t } = useTranslation(translationKey);
+        const transformedItem = transform
+          ? transform(
+              item,
+              // TODO(wittjosiah): `active` doesn't always seem to be accurate here.
+              activeItem?.item.id === item.id ? activeItem?.type : type,
+            )
+          : item;
         const section = (
           <Section
             ref={forwardRef}
-            id={item.id}
-            title={item.title}
+            id={transformedItem.id}
+            title={transformedItem.object.title ?? t('untitled section title')}
             active={active}
             draggableProps={draggableProps}
             draggableStyle={draggableStyle}
             onRemove={() => onRemoveSection?.(path)}
+            onNavigate={() => onNavigateToSection?.(transformedItem.object.id)}
           >
-            <SectionContent data={item} />
+            <SectionContent data={transformedItem.object} />
           </Section>
         );
 
         return active === 'overlay' ? <List>{section}</List> : section;
       }),
-    [id, SectionContent],
+    [id, SectionContent, transform, activeItem],
   );
 
   // TODO(burdon): Create context provider to relay inner section width.
@@ -80,9 +98,10 @@ export const Stack = ({
 
   return (
     <div ref={containerRef}>
-      <Mosaic.Container {...{ id, Component, getOverlayStyle, onOver, onDrop }}>
+      <Mosaic.Container {...{ id, type, Component, getOverlayStyle, onOver, onDrop }}>
         <Mosaic.DroppableTile
           path={id}
+          type={type}
           className={className}
           item={{ id, items: itemsWithPreview }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
@@ -96,15 +115,22 @@ export const Stack = ({
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
   ({ className, path, isOver, item: { items } }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { Component } = useContainer();
+    const { Component, type } = useContainer();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'p-2', isOver && dropRing)}>
+      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'm-2 p-2', isOver && dropRing)}>
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (
-              <Mosaic.SortableTile key={item.id} item={item} path={path} position={index} Component={Component!} />
+              <Mosaic.SortableTile
+                key={item.id}
+                item={item}
+                path={path}
+                type={type}
+                position={index}
+                Component={Component!}
+              />
             ))}
           </Mosaic.SortableContext>
         ) : (

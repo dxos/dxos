@@ -34,7 +34,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
           'is-[95vw] md:is-full max-is-[20rem] rounded-xl p-4',
           dialogMotion,
           surfaceElevation({ elevation }),
-          'bg-neutral-75/95 dark:bg-neutral-850/95 backdrop-blur',
+          'group-surface bg-neutral-75/95 dark:bg-neutral-850/95 backdrop-blur',
           ...etc,
         ),
     },
@@ -160,7 +160,11 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     // info.push(`%cDXOS vault (shared worker) connection: ${window.location.origin}`);
     info.push('%cTo inspect/reset the vault (shared worker) copy the URL: chrome://inspect/#workers');
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
-    createWorker().port.onmessage = (event) => {
+    const worker = createWorker();
+    worker.onerror = (event) => {
+      log.error('worker error', { event });
+    };
+    worker.port.onmessage = (event) => {
       const { command, payload } = event.data;
       if (command === 'init') {
         ports.wake(payload);

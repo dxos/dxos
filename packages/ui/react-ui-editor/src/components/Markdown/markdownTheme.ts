@@ -71,44 +71,49 @@ export const markdownTheme = {
   //   color: '#ddd'
   // },
 
-  '.dark & .cm-tooltip': {
+  '.cm-tooltip': {
+    backgroundColor: 'transparent',
     border: 'none',
-    backgroundColor: tooltipBackground,
   },
-  '.dark & .cm-tooltip .cm-tooltip-arrow:before': {
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-  },
-  '.dark & .cm-tooltip .cm-tooltip-arrow:after': {
-    borderTopColor: tooltipBackground,
-    borderBottomColor: tooltipBackground,
-  },
-  '.dark & .cm-tooltip-autocomplete': {
-    '& > ul > li[aria-selected]': {
-      backgroundColor: highlightBackground,
-      color: ivory,
-    },
-  },
+  // '.dark & .cm-tooltip': {
+  //   border: 'none',
+  //   backgroundColor: tooltipBackground,
+  // },
+  // '.dark & .cm-tooltip .cm-tooltip-arrow:before': {
+  //   borderTopColor: 'transparent',
+  //   borderBottomColor: 'transparent',
+  // },
+  // '.dark & .cm-tooltip .cm-tooltip-arrow:after': {
+  //   borderTopColor: tooltipBackground,
+  //   borderBottomColor: tooltipBackground,
+  // },
+  // '.dark & .cm-tooltip-autocomplete': {
+  //   '& > ul > li[aria-selected]': {
+  //     backgroundColor: highlightBackground,
+  //     color: ivory,
+  //   },
+  // },
   '&.cm-focused': {
     outline: 'none',
   },
   '& .cm-line': {
     paddingInline: 0,
+    minBlockSize: '1.6em',
   },
   '& .cm-line *': {
     lineHeight: 1.6,
   },
-  '& .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.150', '#00ffff') + 'aa',
+  '&.cm-focused .cm-selectionBackground, & .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
   },
-  '.dark & .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.500', '#00ffff') + 'aa',
+  '.dark & .cm-selectionBackground, .dark &.cm-focused .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
   },
   '& .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.100', '#00ffff') + '44',
+    background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
   },
   '.dark & .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.400', '#00ffff') + '44',
+    background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
   },
   '& .cm-content': {
     caretColor: 'black',
@@ -127,6 +132,7 @@ export const markdownTheme = {
   },
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    overflow: 'visible',
   },
   '& .cm-activeLine': {
     backgroundColor: 'transparent',
@@ -139,12 +145,24 @@ export const markdownTheme = {
     padding: '2px 4px',
     marginBlockStart: '-4px',
   },
-  '& .cm-ySelection': {
-    display: 'inline-block',
+  '& .cm-ySelection, & .cm-selectionMatch': {
+    paddingBlockStart: '.15em',
+    paddingBlockEnd: '.15em',
+  },
+  '& .cm-ySelection, & .cm-yLineSelection': {
+    mixBlendMode: 'multiply',
+  },
+  '.dark & .cm-ySelection, .dark & .cm-yLineSelection': {
+    mixBlendMode: 'screen',
   },
   '& .cm-ySelectionCaret': {
     display: 'inline-block',
+    insetBlockStart: '.1em',
+    blockSize: '1.4em',
     verticalAlign: 'top',
+  },
+  '& .cm-yLineSelection': {
+    margin: '0',
   },
   ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
     const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);

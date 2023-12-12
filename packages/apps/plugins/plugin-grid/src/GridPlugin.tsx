@@ -8,10 +8,12 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Grid as GridType } from '@braneframe/types';
 import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { GridMain } from './components';
+import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
-import { GRID_PLUGIN, GridAction, type GridPluginProvides, isGrid } from './types';
+import { GridAction, type GridPluginProvides, isGrid } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -19,9 +21,7 @@ import { GRID_PLUGIN, GridAction, type GridPluginProvides, isGrid } from './type
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
-    meta: {
-      id: GRID_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -29,12 +29,24 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: (props: IconProps) => <SquaresFour {...props} />,
           },
+          [GridType.Item.schema.typename]: {
+            parse: (item: GridType.Item, type: string) => {
+              switch (type) {
+                case 'node':
+                  return { id: item.object.id, label: item.object.title, data: item.object };
+                case 'object':
+                  return item.object;
+                case 'view-object':
+                  return item;
+              }
+            },
+          },
         },
       },
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -51,8 +63,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   action: GridAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -65,7 +77,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isGrid(data.active) ? <GridMain grid={data.active} /> : null;

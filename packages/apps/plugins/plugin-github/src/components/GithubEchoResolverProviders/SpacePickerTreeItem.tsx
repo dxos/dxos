@@ -14,7 +14,7 @@ import { staticDisabled } from '@dxos/react-ui-theme';
 
 import { DocumentTreeItem } from './DocumentTreeItem';
 import { matchSpace } from './spaceResolvers';
-import { GITHUB_PLUGIN } from '../../props';
+import { GITHUB_PLUGIN } from '../../meta';
 
 export const SpacePickerTreeItem = ({
   identityHex,

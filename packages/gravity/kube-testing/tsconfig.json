@@ -28,6 +28,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/esbuild-plugins"
+    },
+    {
       "path": "../../common/feed-store"
     },
     {
@@ -50,6 +53,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/automerge"
     },
     {
       "path": "../../core/echo/echo-pipeline"

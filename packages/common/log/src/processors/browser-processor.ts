@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { safariCheck } from '@dxos/util';
+import { getPrototypeSpecificInstanceId, safariCheck } from '@dxos/util';
 
 import { LogLevel } from '../config';
 import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
@@ -63,6 +63,15 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   let args = [];
+
+  if (entry.meta?.S) {
+    const scope = entry.meta?.S;
+    const prototype = Object.getPrototypeOf(scope);
+    const id = getPrototypeSpecificInstanceId(scope);
+    // TODO(dmaretskyi): Those can be made clickable with a custom formatter.
+    args.push(`%c${prototype.constructor.name}#${id}`, 'color:#C026D3;font-weight:bold');
+  }
+
   args.push(entry.message);
 
   const context = getContextFromEntry(entry);

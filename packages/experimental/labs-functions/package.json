@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-functions",
-  "version": "0.3.5",
+  "version": "0.3.8",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -14,6 +14,9 @@
     "testing.js",
     "dist"
   ],
+  "scripts": {
+    "auth": "ts-node --esm ./src/auth/test.ts"
+  },
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -22,7 +25,10 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/document-model": "workspace:*",
+    "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -30,6 +36,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@octokit/rest": "^19.0.5",
     "amadeus": "^8.0.0",
     "assert": "^2.0.0",
@@ -38,18 +45,26 @@
     "csv-parse": "^5.3.6",
     "date-fns": "^2.29.3",
     "email-addresses": "^5.0.0",
+    "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.3.2",
+    "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "html-to-text": "^9.0.4",
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",
     "js-yaml": "^4.1.0",
-    "langchain": "^0.0.180",
+    "langchain": "^0.0.196",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.startcase": "^4.4.0",
     "mailparser": "^3.6.4",
     "node-fetch": "^2.6.0",
+    "open": "^9.1.0",
     "openai": "^3.2.1",
-    "split2": "^4.1.0"
+    "server-destroy": "^1.0.1",
+    "split2": "^4.1.0",
+    "textract": "^2.5.0",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.0"
   },
   "devDependencies": {
     "@dxos/agent": "workspace:*",
@@ -63,7 +78,10 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.startcase": "^4.4.7",
     "@types/mailparser": "^3.4.0",
-    "@types/split2": "^3.2.1"
+    "@types/server-destroy": "^1.0.3",
+    "@types/split2": "^3.2.1",
+    "@types/textract": "^2.4.5",
+    "ts-node": "10.9.1"
   },
   "optionalDependencies": {
     "@faker-js/faker": "^8.0.2"

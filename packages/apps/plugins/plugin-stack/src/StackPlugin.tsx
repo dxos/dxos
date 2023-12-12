@@ -15,17 +15,12 @@ import {
   parseIntentPlugin,
   LayoutAction,
 } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { StackMain } from './components';
+import meta, { STACK_PLUGIN } from './meta';
 import translations from './translations';
-import {
-  STACK_PLUGIN,
-  StackAction,
-  isStack,
-  type StackPluginProvides,
-  type StackProvides,
-  type StackState,
-} from './types';
+import { StackAction, isStack, type StackPluginProvides, type StackProvides, type StackState } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -35,9 +30,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const stackState: StackState = deepSignal({ creators: [] });
 
   return {
-    meta: {
-      id: STACK_PLUGIN,
-    },
+    meta,
     ready: async (plugins) => {
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {
@@ -56,12 +49,24 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
+          [StackType.Section.schema.typename]: {
+            parse: (section: StackType.Section, type: string) => {
+              switch (type) {
+                case 'node':
+                  return { id: section.object.id, label: section.object.title, data: section.object };
+                case 'object':
+                  return section.object;
+                case 'view-object':
+                  return section;
+              }
+            },
+          },
         },
       },
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -78,8 +83,8 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   action: StackAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -92,7 +97,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           if (!isStack(data.active)) {
             return null;
           }
@@ -100,7 +105,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           switch (role) {
             case 'main':
               return <StackMain stack={data.active} />;
-
             default:
               return null;
           }

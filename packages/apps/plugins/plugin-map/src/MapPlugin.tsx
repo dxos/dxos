@@ -8,11 +8,12 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { Expando } from '@dxos/react-client/echo';
+import { Expando, SpaceProxy } from '@dxos/react-client/echo';
 
 import { MapMain } from './components';
+import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
-import { MAP_PLUGIN, MapAction, type MapPluginProvides, isObject } from './types';
+import { MapAction, type MapPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -22,9 +23,7 @@ const typename = 'map';
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
-    meta: {
-      id: MAP_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -37,7 +36,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -54,8 +53,8 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                   action: MapAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -68,7 +67,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main': {
               return isObject(data.active) ? <MapMain map={data.active} /> : null;

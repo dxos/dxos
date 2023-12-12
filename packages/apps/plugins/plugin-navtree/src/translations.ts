@@ -4,14 +4,12 @@
 
 import { translations as navtreeTranslations } from '@dxos/react-ui-navtree';
 
-import { NAVTREE_PLUGIN } from './types';
+import { NAVTREE_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [NAVTREE_PLUGIN]: {
-        'plugin error message': 'Content failed to render',
-      },
+      [NAVTREE_PLUGIN]: {},
     },
   },
   ...navtreeTranslations,

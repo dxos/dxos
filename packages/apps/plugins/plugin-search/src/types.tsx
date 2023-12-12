@@ -5,11 +5,12 @@
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
 
-export const SEARCH_PLUGIN = 'dxos.org/plugin/search';
+import { SEARCH_PLUGIN } from './meta';
 
 const SEARCH_ACTION = `${SEARCH_PLUGIN}/action`;
 
@@ -20,4 +21,5 @@ export enum SearchAction {
 export type SearchPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides;

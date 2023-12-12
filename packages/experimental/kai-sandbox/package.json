@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-sandbox",
-  "version": "0.3.5",
+  "version": "0.3.8",
   "private": true,
   "description": "Frame sandbox",
   "homepage": "https://dxos.org",
@@ -37,10 +37,10 @@
     "@dxos/util": "workspace:*",
     "@monaco-editor/react": "^4.4.6",
     "esbuild-wasm": "^0.16.14",
-    "monaco-editor": "^0.25.0",
+    "monaco-editor": "^0.44.0",
     "use-subscription": "^1.8.0",
     "y-monaco": "^0.1.0",
-    "yjs": "^13.6.8"
+    "yjs": "^13.6.10"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

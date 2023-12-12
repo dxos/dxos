@@ -2,75 +2,21 @@
   "sourceRoot": "packages/experimental/mosaic/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/mosaic/src/index.ts",
-        "outputPath": "packages/experimental/mosaic/dist/types",
-        "tsConfig": "packages/experimental/mosaic/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/mosaic/src/index.ts"
-        ],
-        "outputPath": "packages/experimental/mosaic/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/mosaic/**/*.{ts,tsx,js,jsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/experimental/mosaic/.storybook",
-        "uiFramework": "@storybook/react"
+        ]
       }
     },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "coveragePath": "coverage/packages/experimental/mosaic",
-        "outputPath": "tmp/mocha/packages/experimental/mosaic",
-        "resultsPath": "test-results/packages/experimental/mosaic",
-        "testPatterns": [
-          "packages/experimental/mosaic/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/mosaic/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     }
   },
   "implicitDependencies": [

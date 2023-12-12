@@ -5,7 +5,8 @@
 import React, { type FC } from 'react';
 
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { AnchoredOverflow } from '@dxos/react-ui';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
@@ -15,7 +16,8 @@ const columns: TableColumnDef<ConnectionInfo.StreamStats, any>[] = [
   helper.accessor('bytesReceived', builder.number({ header: 'received' })),
   helper.accessor('bytesSentRate', builder.number({ header: 'sent b/s' })),
   helper.accessor('bytesReceivedRate', builder.number({ header: 'received b/s' })),
-  helper.accessor('tag', {}),
+  helper.accessor('writeBufferSize', builder.number({ header: 'write buffer' })),
+  helper.accessor('tag', { meta: { cell: { classNames: textPadding } } }),
 ];
 
 const schema = {
@@ -35,6 +37,8 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         schema={schema}
         object={{
           state: connection.state,
+          transportBytesSent: connection.transportBytesSent,
+          transportBytesReceived: connection.transportBytesReceived,
           closeReason: connection.closeReason,
           session: connection.sessionId,
           remotePeer: connection.remotePeerId,
@@ -43,13 +47,15 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         }}
       />
 
-      <div className='flex grow overflow-hidden'>
+      <AnchoredOverflow.Root classNames='flex grow'>
         <Table<ConnectionInfo.StreamStats>
           columns={columns}
           data={connection.streams ?? []}
           keyAccessor={(row) => row.id.toString()}
+          fullWidth
         />
-      </div>
+        <AnchoredOverflow.Anchor />
+      </AnchoredOverflow.Root>
     </>
   );
 };

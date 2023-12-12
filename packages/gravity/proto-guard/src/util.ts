@@ -62,3 +62,21 @@ export const valuesEqual = (a: any, b: any): boolean => {
 
   return true;
 };
+
+export const copySync = (src: string, dest: string) => {
+  const files = fs.readdirSync(src);
+
+  for (const file of files) {
+    const fromPath = path.join(src, file);
+    const toPath = path.join(dest, file);
+    fs.mkdirSync(dest, { recursive: true });
+
+    const stat = fs.statSync(fromPath);
+
+    if (stat.isFile()) {
+      fs.copyFileSync(fromPath, toPath);
+    } else if (stat.isDirectory()) {
+      copySync(fromPath, toPath);
+    }
+  }
+};

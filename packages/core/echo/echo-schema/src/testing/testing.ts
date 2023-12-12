@@ -15,8 +15,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
+import { AutomergeContext } from '../automerge';
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { setGlobalAutomergePreference } from '../object';
 import { schemaBuiltin } from '../proto';
 
 /**
@@ -34,13 +36,18 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   // TODO(dmaretskyi): Fix.
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
-  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph);
+  const automergeContext = new AutomergeContext();
+  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph, automergeContext);
+  await db.automerge.open({
+    rootUrl: automergeContext.repo.create().url,
+  });
   graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
   return { db, host };
 };
 
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
+  public readonly automergeContext = new AutomergeContext();
 
   constructor(public readonly graph = new Hypergraph(), public readonly base = new DatabaseTestBuilder()) {}
 
@@ -48,8 +55,11 @@ export class TestBuilder {
 
   async createPeer(spaceKey = this.defaultSpaceKey): Promise<TestPeer> {
     const base = await this.base.createPeer(spaceKey);
-    const peer = new TestPeer(this, base, spaceKey);
+    const peer = new TestPeer(this, base, spaceKey, this.automergeContext.repo.create().url);
     this.peers.set(peer.base.key, peer);
+    await peer.db.automerge.open({
+      rootUrl: peer.automergeDocId,
+    });
     this.graph._register(spaceKey, peer.db);
     return peer;
   }
@@ -62,17 +72,21 @@ export class TestBuilder {
 }
 
 export class TestPeer {
-  public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
+  public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
 
   constructor(
     public readonly builder: TestBuilder,
     public readonly base: BasePeer,
     public readonly spaceKey: PublicKey,
+    public readonly automergeDocId: string,
   ) {}
 
   async reload() {
     await this.base.reload();
-    this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
+    this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph, this.builder.automergeContext);
+    await this.db.automerge.open({
+      rootUrl: this.automergeDocId,
+    });
     this.builder.graph._register(this.spaceKey, this.db);
   }
 
@@ -88,3 +102,23 @@ export class TestPeer {
     await this.db.flush();
   }
 }
+
+export const testWithAutomerge = (tests: () => void) => {
+  describe('with automerge', () => {
+    before(() => {
+      setGlobalAutomergePreference(true);
+    });
+
+    after(() => {
+      setGlobalAutomergePreference(false);
+    });
+
+    setGlobalAutomergePreference(true);
+    tests();
+    setGlobalAutomergePreference(false);
+  });
+
+  describe('without automerge', () => {
+    tests();
+  });
+};

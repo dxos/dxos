@@ -8,34 +8,38 @@ import { faker } from '@faker-js/faker';
 import { Bug, Compass, GithubLogo, Kanban, Gear, Table } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import type { Plugin } from '@dxos/app-framework';
+
 import { PluginList } from './PluginList';
-import { type PluginDef } from './types';
 
 faker.seed(1);
 
 const icons = [Bug, Compass, Kanban, Table, Gear, GithubLogo];
 
 const Story = () => {
-  const [plugins, setPlugins] = useState<PluginDef[]>(
+  const [plugins] = useState<Plugin['meta'][]>(
     faker.helpers.multiple(
       () => ({
         id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
         name: `${faker.lorem.sentence(3)}`,
         description: faker.datatype.boolean() ? `${faker.lorem.sentences()}` : undefined,
-        Icon: faker.helpers.arrayElement(icons),
-        enabled: faker.datatype.boolean({ probability: 0.3 }),
+        tags: faker.datatype.boolean({ probability: 0.6 })
+          ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
+          : undefined,
+        iconComponent: faker.helpers.arrayElement(icons),
       }),
       { count: 16 },
     ),
   );
+  const [enabled, setEnabled] = useState<string[]>([]);
 
   const handleChange = (id: string, enabled: boolean) => {
-    setPlugins((plugins) => plugins.map((plugin) => (plugin.id === id ? { ...plugin, enabled } : plugin)));
+    setEnabled((plugins) => (enabled ? [...plugins, id] : plugins.filter((plugin) => plugin === id)));
   };
 
   return (
     <div className={'flex w-[400px] overflow-hidden'}>
-      <PluginList plugins={plugins} onChange={handleChange} />
+      <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} />
     </div>
   );
 };

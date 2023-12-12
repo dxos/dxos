@@ -16,6 +16,7 @@ import {
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
   mx,
+  staticGhostSelectedCurrent,
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
@@ -31,10 +32,15 @@ const hoverableDescriptionIcons =
 export const emptyBranchDroppableId = '__placeholder__';
 
 const NavTreeEmptyBranch = ({ path, level }: { path: string; level: number }) => {
-  const { Component } = useContainer();
+  const { Component, type } = useContainer();
   return (
     <TreeItemComponent.Body>
-      <Mosaic.DroppableTile path={path} item={{ id: emptyBranchDroppableId, level }} Component={Component!} />
+      <Mosaic.DroppableTile
+        path={path}
+        type={type}
+        item={{ id: emptyBranchDroppableId, level }}
+        Component={Component!}
+      />
     </TreeItemComponent.Body>
   );
 };
@@ -55,7 +61,7 @@ const NavTreeEmptyBranchPlaceholder: MosaicTileComponent<NavTreeItemData, HTMLDi
 );
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
-  const { Component } = useContainer();
+  const { Component, type } = useContainer();
 
   const items = useItemsWithOrigin(path, nodes);
 
@@ -66,8 +72,9 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
           {items.map((node, index) => (
             <Mosaic.SortableTile
               key={node.id}
-              item={{ id: node.id, node, level }}
+              item={{ ...node, level }}
               path={path}
+              type={type}
               position={index}
               Component={Component!}
             />
@@ -86,12 +93,11 @@ export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLI
   }
 });
 
-// TODO(wittjosiah): Spread node?
-export type NavTreeItemData = { id: TreeNode['id']; node: TreeNode; level: number };
+export type NavTreeItemData = TreeNode & { level: number };
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, active, path, position }, forwardedRef) => {
-    const { node, level } = item;
+    const { level, ...node } = item;
     const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
 
     const [primaryAction, ...secondaryActions] = [...node.actions].sort((a, b) =>
@@ -147,9 +153,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 hoverableFocusedWithinControls,
                 hoverableDescriptionIcons,
                 level < 1 && topLevelCollapsibleSpacing,
-                (active && active !== 'overlay') || path === current
-                  ? 'bg-neutral-75 dark:bg-neutral-850'
-                  : 'hover:bg-neutral-450/5 dark:hover:bg-25/5',
+                staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
               )}
             >
               <NavTreeItemHeading
@@ -184,19 +188,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   testId={primaryAction.properties.testId}
                 />
               )}
-              {actions.length === 1 ? (
-                <NavTreeItemActionMenu
-                  id={node.id}
-                  label={Array.isArray(actions[0].label) ? t(...actions[0].label) : actions[0].label}
-                  icon={actions[0].icon ?? Placeholder}
-                  action={actions[0].actions.length === 0 ? actions[0] : undefined}
-                  actions={actions[0].actions}
-                  level={level}
-                  active={active}
-                  popoverAnchorId={popoverAnchorId}
-                  testId={actions[0].properties.testId}
-                />
-              ) : actions.length > 1 ? (
+              {actions.length > 0 && (
                 <NavTreeItemActionMenu
                   id={node.id}
                   // label={t('tree item actions label')}
@@ -207,7 +199,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   popoverAnchorId={popoverAnchorId}
                   testId={`navtree.treeItem.actionsLevel${level}`}
                 />
-              ) : null}
+              )}
               {renderPresence?.(node)}
             </div>
             {!active &&

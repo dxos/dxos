@@ -10,24 +10,9 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "tools/executors/serve-with-vault/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "tools/executors/serve-with-vault/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   },
   "implicitDependencies": [
     "log-hook"

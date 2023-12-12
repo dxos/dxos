@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
@@ -28,7 +28,10 @@ export type PipelineTableRow = {
 const { helper, builder } = createColumnBuilder<PipelineTableRow>();
 const columns: TableColumnDef<PipelineTableRow, any>[] = [
   helper.accessor('feedKey', builder.key({ tooltip: true })),
-  helper.accessor('type', { size: 60 }),
+  helper.accessor('type', {
+    meta: { cell: { classNames: textPadding } },
+    size: 60,
+  }),
   helper.accessor('own', builder.icon()),
   helper.accessor('genesis', builder.icon({ header: 'gen' })),
   helper.accessor('start', builder.number()),
@@ -42,7 +45,10 @@ const columns: TableColumnDef<PipelineTableRow, any>[] = [
         return `${Math.min(percent, 100).toFixed(0)}%`;
       }
     },
-    { id: 'progress' }, // TODO(burdon): Align right.
+    {
+      id: 'progress',
+      meta: { cell: { classNames: [textPadding, 'text-end'] } },
+    },
   ),
 ];
 
@@ -114,10 +120,10 @@ export const PipelineTable: FC<{
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: PipelineTableRow[] | undefined) => {
-    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
+  const handleSelect = (selected: PipelineTableRow | undefined) => {
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
     navigate('/echo/feeds');
   };
 
-  return <Table<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} />;
+  return <Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />;
 };

@@ -3,7 +3,6 @@
 //
 
 export * from './arrow';
-export * from './border';
 export * from './density';
 export * from './dimensions';
 export * from './disabled';
@@ -13,8 +12,8 @@ export * from './group';
 export * from './hover';
 export * from './layout';
 export * from './motion';
-export * from './open';
 export * from './ornament';
+export * from './selected';
 export * from './shimmer';
 export * from './surface';
 export * from './size';

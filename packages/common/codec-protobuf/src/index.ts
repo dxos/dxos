@@ -14,3 +14,4 @@ export * from './stream';
 export * from './substitutions';
 export * from './compression';
 export * from './util';
+export * from './request-options';

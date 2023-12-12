@@ -11,16 +11,13 @@ import type {
 } from '@dxos/app-framework';
 import { isTypedObject, type Expando, type TypedObject } from '@dxos/react-client/echo';
 
-// TODO(burdon): Copy pattern to other plugins.
-export const TEMPLATE_PLUGIN = 'dxos.org/plugin/template';
+import { TEMPLATE_PLUGIN } from './meta';
 
 const TEMPLATE_ACTION = `${TEMPLATE_PLUGIN}/action`;
 
 export enum TemplateAction {
   CREATE = `${TEMPLATE_ACTION}/create`,
 }
-
-export type TemplateProvides = {};
 
 export type TemplatePluginProvides = SurfaceProvides &
   IntentResolverProvides &

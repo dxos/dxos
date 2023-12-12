@@ -10,7 +10,7 @@ import { PanelContainer } from '../../../components';
 
 export const SignalPanel = () => {
   return (
-    <PanelContainer className='divide-y space-y-2'>
+    <PanelContainer classNames='divide-y space-y-2'>
       <SignalStatusTable />
       <SignalMessageTable />
     </PanelContainer>

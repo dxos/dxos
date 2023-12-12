@@ -8,11 +8,12 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Table as TableType, Folder } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { Schema } from '@dxos/react-client/echo';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { TableMain, TableSection, TableSlide } from './components';
+import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
-import { TABLE_PLUGIN, TableAction, type TablePluginProvides, isTable } from './types';
+import { TableAction, type TablePluginProvides, isTable } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -20,9 +21,7 @@ import { TABLE_PLUGIN, TableAction, type TablePluginProvides, isTable } from './
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
-    meta: {
-      id: TABLE_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -35,7 +34,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -52,8 +51,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   action: TableAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -66,7 +65,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isTable(data.active) ? <TableMain table={data.active} /> : null;
@@ -83,16 +82,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              const schema = new Schema({
-                props: [
-                  {
-                    id: 'title',
-                    type: Schema.PropType.STRING,
-                  },
-                ],
-              });
-
-              return { object: new TableType({ schema }) };
+              return { object: new TableType() };
             }
           }
         },

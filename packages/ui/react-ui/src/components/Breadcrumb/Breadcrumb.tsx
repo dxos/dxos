@@ -37,7 +37,14 @@ const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.ol;
-    return <Root {...props} className={tx('breadcrumb.list', 'breadcrumb__list', {}, classNames)} ref={forwardedRef} />;
+    return (
+      <Root
+        role='list'
+        {...props}
+        className={tx('breadcrumb.list', 'breadcrumb__list', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
   },
 );
 
@@ -49,6 +56,7 @@ const BreadcrumbListItem = forwardRef<HTMLLIElement, BreadcrumbListItemProps>(
     const Root = asChild ? Slot : Primitive.li;
     return (
       <Root
+        role='listitem'
         {...props}
         className={tx('breadcrumb.listItem', 'breadcrumb__list__item', {}, classNames)}
         ref={forwardedRef}

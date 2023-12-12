@@ -10,6 +10,7 @@ import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { bundleDepsPlugin } from './bundle-deps-plugin';
+import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
 import { LogTransformer } from './log-transform-plugin';
 
@@ -27,6 +28,9 @@ export interface EsbuildExecutorOptions {
   sourcemap: boolean;
   watch: boolean;
 }
+
+// Keep in sync with packages/common/node-std/src/inject-globals.js
+const GLOBALS = ['global', 'Buffer', 'process'];
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing esbuild...');
@@ -56,9 +60,9 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         entryPoints: options.entryPoints,
         outdir,
         outExtension: { '.js': extension },
-        format,
+        format: 'esm', // Output is later transpiled to CJS via plugin.
         write: true,
-        splitting: format === 'esm',
+        splitting: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,
         bundle: options.bundle,
@@ -74,15 +78,36 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
           {
             name: 'node-external',
-            setup: ({ initialOptions, onResolve }) => {
+            setup: ({ initialOptions, onResolve, onLoad }) => {
               if (options.injectGlobals && platform === 'browser') {
                 if (!packageJson.dependencies['@dxos/node-std']) {
                   throw new Error('Missing @dxos/node-std dependency.');
                 }
 
+                initialOptions.inject = ['@inject-globals'];
                 initialOptions.banner ||= {};
                 initialOptions.banner.js = 'import "@dxos/node-std/globals";';
               }
+
+              onResolve({ filter: /^@inject-globals*/ }, (args) => {
+                return { path: '@inject-globals', namespace: 'inject-globals' };
+              });
+
+              onLoad({ filter: /^@inject-globals/, namespace: 'inject-globals' }, async (args) => {
+                return {
+                  contents: `
+                    export {
+                      ${GLOBALS.join(',\n')}
+                    } from '@dxos/node-std/inject-globals';
+                    // Empty source map so that esbuild does not inject virtual source file names.
+                    //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIiJdLCJtYXBwaW5ncyI6IkEifQ==
+                  `,
+                };
+              });
+
+              onResolve({ filter: /^@dxos\/node-std\/inject-globals$/ }, (args) => {
+                return { external: true, path: '@dxos/node-std/inject-globals' };
+              });
 
               onResolve({ filter: /^node:.*/ }, (args) => {
                 if (platform !== 'browser') {
@@ -124,6 +149,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             },
           },
           yamlPlugin({}),
+          ...(format === 'cjs' ? [esmOutputToCjs()] : []),
         ],
       });
 

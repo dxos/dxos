@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { getAsyncValue } from '@dxos/util';
 
 import { type Any, type EncodingOptions } from './common';
+import { type RequestOptions } from './request-options';
 import type { Schema } from './schema';
 import { Stream } from './stream';
 
@@ -15,8 +16,8 @@ import { Stream } from './stream';
  * Service endpoint.
  */
 export interface ServiceBackend {
-  call(method: string, request: Any): Promise<Any>;
-  callStream(method: string, request: Any): Stream<Any>;
+  call(method: string, request: Any, requestOptions?: RequestOptions): Promise<Any>;
+  callStream(method: string, request: Any, requestOptions?: RequestOptions): Stream<Any>;
 }
 
 export type ServiceProvider<Service> = Service | (() => Service) | (() => Promise<Service>);
@@ -65,21 +66,29 @@ export class Service {
       const methodName = mapRpcMethodName(method.name);
 
       if (method.responseStream) {
-        (this as any)[methodName] = (request: unknown) => {
+        (this as any)[methodName] = (request: unknown, requestOptions?: RequestOptions) => {
           const encoded = requestCodec.encode(request, encodingOptions);
-          const stream = backend.callStream(method.name, {
-            value: encoded,
-            type_url: method.resolvedRequestType!.fullName,
-          });
+          const stream = backend.callStream(
+            method.name,
+            {
+              value: encoded,
+              type_url: method.resolvedRequestType!.fullName,
+            },
+            requestOptions,
+          );
           return Stream.map(stream, (data) => responseCodec.decode(data.value!, encodingOptions));
         };
       } else {
-        (this as any)[methodName] = async (request: unknown) => {
+        (this as any)[methodName] = async (request: unknown, requestOptions?: RequestOptions) => {
           const encoded = requestCodec.encode(request, encodingOptions);
-          const response = await backend.call(method.name, {
-            value: encoded,
-            type_url: method.resolvedRequestType!.fullName,
-          });
+          const response = await backend.call(
+            method.name,
+            {
+              value: encoded,
+              type_url: method.resolvedRequestType!.fullName,
+            },
+            requestOptions,
+          );
           return responseCodec.decode(response.value, encodingOptions);
         };
       }

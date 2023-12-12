@@ -91,6 +91,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../automerge"
+    },
+    {
       "path": "../document-model"
     },
     {

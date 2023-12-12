@@ -3,20 +3,19 @@
 //
 
 import { expect } from 'chai';
+import { ChatOpenAI } from 'langchain/chat_models/openai';
 
 import { describe, test } from '@dxos/test';
 
-import { Chat } from './chat';
 import { type Entity, type SchemaMap } from './schema';
 import { getConfig, getKey, loadJson } from '../../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('ChatModel', () => {
-  const createChatModel = (): Chat => {
+  const createChatModel = () => {
     const config = getConfig()!;
-    return new Chat({
-      orgId: getKey(config, 'openai.com/org_id')!,
-      apiKey: getKey(config, 'openai.com/api_key')!,
+    return new ChatOpenAI({
+      openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
     });
   };
 
@@ -25,7 +24,7 @@ describe.skip('ChatModel', () => {
     const chat = createChatModel();
     // TODO(burdon): Get dir.
     const { messages } = loadJson('packages/experimental/labs-functions/testing/messages.json');
-    const result = await chat.request(messages);
+    const result = await chat.call(messages);
     expect(result).to.exist;
   });
 

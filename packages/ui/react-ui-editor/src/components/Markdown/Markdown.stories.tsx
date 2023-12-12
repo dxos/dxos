@@ -10,12 +10,14 @@ import { PublicKey } from '@dxos/react-client';
 import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownComposer } from './Markdown';
+import { MarkdownEditor } from './Markdown';
 import { Replicator, useYjsModel } from '../../testing';
 
 export default {
-  component: MarkdownComposer,
+  component: MarkdownEditor,
+  decorators: [withTheme],
 };
 
 export const Default = {
@@ -28,6 +30,7 @@ export const Default = {
 };
 
 const replicator = new Replicator(TextKind.PLAIN);
+
 export const WithYjs = {
   render: () => {
     const [generate, setGenerate] = useState(false);
@@ -47,7 +50,7 @@ export const WithYjs = {
           <input type='checkbox' onChange={(event) => setGenerate(event.target.checked)} />
           Generate Data
         </div>
-        <MarkdownComposer model={model} />
+        <MarkdownEditor model={model} />
       </main>
     );
   },

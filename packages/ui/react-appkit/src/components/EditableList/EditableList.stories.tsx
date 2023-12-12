@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 
 import { useId, randomString } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 import { appkitTranslations } from '../../translations';
@@ -19,6 +20,7 @@ import { ThemeProvider } from '../ThemeProvider';
 
 export default {
   component: EditableList,
+  decorators: [withTheme],
 } as any;
 
 type EditableListItemData = { id: string; title: string; completed: boolean };

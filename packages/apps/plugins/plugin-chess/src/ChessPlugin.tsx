@@ -9,19 +9,20 @@ import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Game } from '@dxos/chess-app';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ChessMain } from './components';
+import meta, { CHESS_PLUGIN } from './meta';
 import translations from './translations';
-import { CHESS_PLUGIN, ChessAction, type ChessPluginProvides, isObject } from './types';
+import { ChessAction, type ChessPluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Game.name] = Game;
+
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
   return {
-    meta: {
-      id: CHESS_PLUGIN,
-    },
+    meta,
     provides: {
       metadata: {
         records: {
@@ -33,7 +34,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       },
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
+          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
 
@@ -50,8 +51,8 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   action: ChessAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -65,7 +66,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       },
       translations,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'main':
               return isObject(data.active) ? <ChessMain game={data.active} /> : null;

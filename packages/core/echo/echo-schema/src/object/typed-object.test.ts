@@ -8,7 +8,7 @@ import { devtoolsFormatter } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { Expando, TypedObject } from './typed-object';
+import { Expando, TypedObject, getGlobalAutomergePreference } from './typed-object';
 
 describe('TypedObject', () => {
   test('instance of TypedObject', async () => {
@@ -52,11 +52,13 @@ describe('TypedObject', () => {
     });
   });
 
-  test('devtools formatter', () => {
-    const obj = new TypedObject({ title: 'hello world' });
+  if (!getGlobalAutomergePreference()) {
+    test('devtools formatter', () => {
+      const obj = new TypedObject({ title: 'hello world' });
 
-    expect(obj[devtoolsFormatter].header()).to.not.be.undefined;
-    expect(obj[devtoolsFormatter].hasBody!()).to.be.true;
-    expect(obj[devtoolsFormatter].body!()).to.not.be.undefined;
-  });
+      expect(obj[devtoolsFormatter].header()).to.not.be.undefined;
+      expect(obj[devtoolsFormatter].hasBody!()).to.be.true;
+      expect(obj[devtoolsFormatter].body!()).to.not.be.undefined;
+    });
+  }
 });

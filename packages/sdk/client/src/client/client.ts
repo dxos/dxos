@@ -41,6 +41,8 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
   /** Custom model factory. */
   modelFactory?: ModelFactory;
+  /** Types. */
+  types?: TypeCollection;
 };
 
 /**
@@ -94,6 +96,9 @@ export class Client {
 
     this.addTypes(schemaBuiltin);
     this.addTypes(clientSchema);
+    if (this._options.types) {
+      this.addTypes(this._options.types);
+    }
   }
 
   [inspect.custom]() {
@@ -161,6 +166,9 @@ export class Client {
     return this._runtime.mesh;
   }
 
+  /**
+   *
+   */
   get shell(): Shell {
     invariant(this._runtime, 'Client not initialized.');
     invariant(this._runtime.shell, 'Shell not available.');
@@ -174,13 +182,14 @@ export class Client {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
-      get types() {
-        return self._graph.types;
+      get graph() {
+        return self._graph;
       },
     };
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
+  // TODO(burdon): Make idempotent.
   addTypes(types: TypeCollection) {
     this._graph.addTypes(types);
     return this;

@@ -14,10 +14,14 @@ import {
   type EchoEvent,
   type WriteRequest,
   type FlushRequest,
+  type SyncRepoRequest,
+  type SyncRepoResponse,
+  type HostInfo,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
 import { type DataServiceHost } from './data-service-host';
+import { type AutomergeHost } from '../automerge';
 
 // TODO(burdon): Clear on close.
 export class DataServiceSubscriptions {
@@ -51,7 +55,10 @@ export class DataServiceSubscriptions {
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
+  constructor(
+    private readonly _subscriptions: DataServiceSubscriptions,
+    private readonly _automergeHost: AutomergeHost,
+  ) {}
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     invariant(request.spaceKey);
@@ -73,5 +80,19 @@ export class DataServiceImpl implements DataService {
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.flush();
+  }
+
+  // Automerge specific.
+
+  async getHostInfo(request: void): Promise<HostInfo> {
+    return this._automergeHost.getHostInfo();
+  }
+
+  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
+    return this._automergeHost.syncRepo(request);
+  }
+
+  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
+    return this._automergeHost.sendSyncMessage(request);
   }
 }

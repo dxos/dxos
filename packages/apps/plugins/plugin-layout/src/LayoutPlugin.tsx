@@ -22,7 +22,7 @@ import {
   type PluginDefinition,
   type LayoutProvides,
   type IntentResolverProvides,
-  type GraphPluginProvides,
+  type GraphProvides,
   type GraphBuilderProvides,
   type SurfaceProvides,
   type TranslationsProvides,
@@ -32,18 +32,11 @@ import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, useLayout } from './LayoutContext';
-import { MainLayout, ContextView, ContentEmpty } from './components';
+import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
 import { activeToUri, uriToActive } from './helpers';
+import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
-import { LAYOUT_PLUGIN, type LayoutState } from './types';
-
-/**
- * Root application layout that controls sidebars, popovers, and dialogs.
- */
-export type LayoutPluginOptions = {
-  showComplementarySidebar?: boolean;
-};
 
 export type LayoutPluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -51,14 +44,13 @@ export type LayoutPluginProvides = SurfaceProvides &
   TranslationsProvides &
   LayoutProvides;
 
-export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<LayoutPluginProvides> => {
-  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
-  const { showComplementarySidebar = false } = { ...options };
-
+export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
+  let graphPlugin: Plugin<GraphProvides> | undefined;
   const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
+    enableComplementarySidebar: false,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -80,15 +72,14 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
   });
 
   return {
-    meta: {
-      id: LAYOUT_PLUGIN,
-    },
+    meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
-        .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+        .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
+        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
     },
     unload: async () => {
       state.close();
@@ -106,12 +97,12 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
               id: LayoutAction.TOGGLE_FULLSCREEN,
               label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
               icon: (props) => <ArrowsOut {...props} />,
+              keyBinding: 'ctrl+meta+f',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
                   action: 'toggle-fullscreen',
                 }),
-              keyBinding: 'ctrl+meta+f',
             });
           }
         },
@@ -130,7 +121,6 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         const layout = useLayout();
         const [shortId, component] = layout.active?.split(':') ?? [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
-        const result = plugin?.provides.surface.component({ data: { component } });
 
         // Update selection based on browser navigation.
         useEffect(() => {
@@ -165,7 +155,9 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
           }
         }, [state.values.active]);
 
-        const surfaceProps: SurfaceProps = layout.activeNode
+        const surfaceProps: SurfaceProps = plugin
+          ? { data: { component: `${plugin.meta.id}/${component}` } }
+          : layout.activeNode
           ? state.values.fullscreen
             ? {
                 data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
@@ -197,30 +189,37 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
                   data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
                 },
                 // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
+                documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
               },
             };
 
         return (
           <>
-            {result || <Surface {...surfaceProps} />}
+            <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
           </>
         );
       },
       surface: {
-        component: ({ component }) => {
-          switch (component) {
+        component: ({ data, role }) => {
+          if (role === 'settings') {
+            return <LayoutSettings />;
+          }
+
+          switch (data.component) {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
-                <MainLayout fullscreen={state.values.fullscreen} showComplementarySidebar={showComplementarySidebar} />
+                <MainLayout
+                  fullscreen={state.values.fullscreen}
+                  showComplementarySidebar={state.values.enableComplementarySidebar}
+                />
               );
 
             case `${LAYOUT_PLUGIN}/ContentEmpty`:
               return <ContentEmpty />;
 
             case `${LAYOUT_PLUGIN}/ContextView`:
-              return <ContextView />;
+              return <ContextPanel />;
 
             default:
               return null;
@@ -230,6 +229,12 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
+            // TODO(wittjosiah): Remove this.
+            case 'dxos.org/plugin/layout/enable-complementary-sidebar': {
+              state.values.enableComplementarySidebar = intent.data.state ?? !state.values.enableComplementarySidebar;
+              return true;
+            }
+
             case LayoutAction.TOGGLE_FULLSCREEN: {
               state.values.fullscreen =
                 (intent.data as LayoutAction.ToggleFullscreen)?.state ?? !state.values.fullscreen;

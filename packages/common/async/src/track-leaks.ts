@@ -15,10 +15,11 @@ const openResources = new Set<OpenResource>();
 
 const handleSymbol = Symbol('checkLeaksHandle');
 
-export const trackResource = (resource: OpenResource): (() => void) => {
+export const trackResource = (resourceProvider: () => OpenResource): (() => void) => {
   if (!enabled) {
     return () => {};
   }
+  const resource = resourceProvider();
 
   openResources.add(resource);
 
@@ -52,10 +53,10 @@ export const trackLeaks =
 
     {
       target.prototype[open] = async function (this: any, ...args: any) {
-        this[handleSymbol] = trackResource({
+        this[handleSymbol] = trackResource(() => ({
           name: target.name,
           openStack: new StackTrace(),
-        });
+        }));
 
         return openMethod.apply(this, args);
       };
@@ -80,7 +81,7 @@ export const dumpLeaks = () => {
   console.log(`Leaked resources ${openResources.size}:`);
   for (const resource of openResources) {
     console.log(`- ${resource.name} at`);
-    console.log(resource.openStack.getStack());
+    console.log(resource.openStack.getStack(1));
     console.log();
   }
 };

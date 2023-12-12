@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:27]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:28]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.3.5"</code>
+Type: <code>"0.3.8"</code>
 
 The version of this client API.
 

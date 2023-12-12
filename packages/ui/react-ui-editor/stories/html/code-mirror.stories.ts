@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { basicSetup } from '@codemirror/basic-setup';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { StoryObj } from '@storybook/html';
-import { basicSetup } from 'codemirror';
 import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
@@ -17,7 +17,7 @@ import { type Identity } from '@dxos/react-client/halo';
 import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 
-import { ComposerDocument, types as schema } from '../../src/testing';
+import { EditorDocument, types as schema } from '../../src/testing';
 import { cursorColor, SpaceAwarenessProvider } from '../../src/yjs';
 
 export default {
@@ -63,7 +63,7 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
 
 const setupEditor = async (id: number, client: Client, spaceKey: PublicKey, editor: HTMLDivElement) => {
   const space = await client.spaces.get(spaceKey)!;
-  const query = space.db.query(ComposerDocument.filter());
+  const query = space.db.query(EditorDocument.filter());
   query.subscribe(({ objects }) => {
     const text = objects[0]?.content;
     void (text && updateEditor(id, editor, client.halo.identity.get()!, space, text));
@@ -81,7 +81,7 @@ const setupSpace = async (count: number) => {
 
   const space = await clients[0].spaces.create();
   const text = new TextObject('Hello, Storybook!');
-  const document = new ComposerDocument({ content: text });
+  const document = new EditorDocument({ content: text });
   await space.db.add(document);
 
   await joinCommonSpace(clients, space.key);

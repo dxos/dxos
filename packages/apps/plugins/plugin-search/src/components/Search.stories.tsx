@@ -9,11 +9,11 @@ import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
-import { FullscreenDecorator } from './util';
 import { SearchContextProvider, useSearch, useSearchResults } from '../context';
 
 faker.seed(1);
@@ -27,7 +27,7 @@ const Story: FC<{ objects: any[] }> = ({ objects }) => {
     <DensityProvider density='fine'>
       <div className='flex grow justify-center overflow-hidden'>
         <div className='flex flex-col w-[300px] m-4 overflow-hidden'>
-          <Searchbar className='pl-3' variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
+          <Searchbar variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
           <SearchResults items={filteredItems} selected={selected} onSelect={setSelected} />
         </div>
       </div>

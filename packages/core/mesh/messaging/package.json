@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.3.5",
+  "version": "0.3.8",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,7 +28,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
     "isomorphic-ws": "^4.0.1",
-    "ws": "^7.4.4"
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",

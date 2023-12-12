@@ -2,45 +2,19 @@
   "sourceRoot": "packages/apps/plugins/plugin-client/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-client/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-client/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-client/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-client/src/index.ts"
+          "packages/apps/plugins/plugin-client/src/index.ts",
+          "packages/apps/plugins/plugin-client/src/meta.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-client/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-client/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+    "lint": {}
   },
   "implicitDependencies": [
     "esbuild"

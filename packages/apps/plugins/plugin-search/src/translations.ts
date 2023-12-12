@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SEARCH_PLUGIN } from './types';
+import { SEARCH_PLUGIN } from './meta';
 
 export default [
   {
@@ -10,6 +10,7 @@ export default [
       [SEARCH_PLUGIN]: {
         'plugin name': 'Search',
         'search action label': 'Search',
+        'search placeholder': 'Search...',
       },
     },
   },

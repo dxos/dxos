@@ -6,10 +6,13 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Select } from './Select';
 
 export default {
   component: Select,
+  decorators: [withTheme],
   actions: { argTypesRegex: '^on.*' },
 };
 

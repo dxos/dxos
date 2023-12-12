@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-theme",
-  "version": "0.3.5",
+  "version": "0.3.8",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,10 +23,11 @@
     "@tailwindcss/forms": "^0.5.3",
     "autoprefixer": "^10.4.12",
     "esbuild-style-plugin": "^1.6.1",
+    "glob": "~7.1.6",
     "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
     "postcss": "^8.4.21",
-    "tailwind-merge": "^1.10.0",
+    "tailwind-merge": "^1.14.0",
     "tailwindcss": "~3.3.2",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.8.0"
@@ -35,7 +36,7 @@
     "@dxos/react-ui-types": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.merge": "^4.6.6",
-    "esbuild": "^0.19.2",
+    "esbuild": "^0.19.6",
     "vite": "^4.3.9"
   },
   "publishConfig": {

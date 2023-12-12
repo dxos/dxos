@@ -26,6 +26,7 @@ export default defineConfig({
           }
         : false,
     fs: {
+      strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
@@ -36,7 +37,13 @@ export default defineConfig({
   build: {
     sourcemap: true,
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, './index.html'),
+        'script-frame': resolve(__dirname, './script-frame/index.html'),
+      },
       output: {
+        // Generate nicer chunk names. Default makes most chunks have names like index-[hash].js.
+        chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
           dxos: ['@dxos/react-client'],
@@ -51,21 +58,45 @@ export default defineConfig({
       'node-fetch': 'isomorphic-fetch',
     },
   },
+  worker: {
+    format: 'es',
+  },
   plugins: [
+    // Required for the script plugin.
+    {
+      name: 'sandbox-importmap-integration',
+      transformIndexHtml() {
+        return [{
+          tag: 'script',
+          injectTo: 'head-prepend', // Inject before vite's built-in scripts.
+          children: `
+            if(window.location.hash.includes('importMap')) {
+              const urlParams = new URLSearchParams(window.location.hash.slice(1));
+              if(urlParams.get('importMap')) {
+                const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
+                
+                const mapElement = document.createElement('script');
+                mapElement.type = 'importmap';
+                mapElement.textContent = JSON.stringify(importMap, null, 2);
+                document.head.appendChild(mapElement);
+              }
+            }
+          `
+        }];
+      }
+    },
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
+      env: [
+        'DX_DEBUG', 'DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'
+      ],
     }),
     ThemePlugin({
+      extensions: [osThemeExtension],
       root: __dirname,
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
       ],
-      extensions: [osThemeExtension],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
@@ -138,3 +169,24 @@ export default defineConfig({
     },
   ],
 });
+
+function chunkFileNames (chunkInfo) {
+  if(chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+    let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    const nodeModulesIdx = segments.indexOf('node_modules');
+    if(nodeModulesIdx !== -1) {
+      segments = segments.slice(0, nodeModulesIdx);
+    } 
+    const ignoredNames = [
+      'dist',
+      'lib',
+      'browser'
+    ]
+    const significantSegment = segments.find(segment => !ignoredNames.includes(segment));
+    if(significantSegment) {
+      return `assets/${significantSegment}-[hash].js`;
+    }
+  }
+
+  return 'assets/[name]-[hash].js';
+};

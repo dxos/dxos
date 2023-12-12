@@ -2,63 +2,21 @@
   "sourceRoot": "packages/experimental/labs-functions/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/experimental/labs-functions/src/index.ts",
-        "outputPath": "packages/experimental/labs-functions/dist/types",
-        "tsConfig": "packages/experimental/labs-functions/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/experimental/labs-functions/src/index.ts"
-        ],
-        "outputPath": "packages/experimental/labs-functions/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/labs-functions/**/!(*.d).{ts,js}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ],
-        "coveragePath": "coverage/packages/experimental/labs-functions",
-        "outputPath": "tmp/mocha/packages/experimental/labs-functions",
-        "resultsPath": "test-results/packages/experimental/labs-functions",
-        "testPatterns": [
-          "packages/experimental/labs-functions/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/labs-functions/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     }
   },
   "implicitDependencies": [

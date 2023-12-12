@@ -5,23 +5,25 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, useCallback, type Ref } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
-  type ComposerModel,
-  type MarkdownComposerProps,
-  type MarkdownComposerRef,
+  type EditorModel,
+  type MarkdownEditorProps,
+  type MarkdownEditorRef,
   useTextModel,
 } from '@dxos/react-ui-editor';
+import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
+  EditorCard,
   EditorMain,
   EditorMainEmbedded,
   EditorSection,
@@ -30,9 +32,9 @@ import {
   // SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
+import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  MARKDOWN_PLUGIN,
   MarkdownAction,
   type MarkdownPluginProvides,
   type MarkdownProperties,
@@ -56,22 +58,22 @@ export const isDocument = (data: unknown): data is Document =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN);
-  const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<MarkdownEditorProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
-  const pluginMutableRef: MutableRefObject<MarkdownComposerRef> = {
+  const pluginMutableRef: MutableRefObject<MarkdownEditorRef> = {
     current: { editor: null },
   };
-  const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
+  const pluginRefCallback: RefCallback<MarkdownEditorRef> = (nextRef: MarkdownEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc. Should these components be inline or external?
   const EditorMainStandalone: FC<{
-    composer: ComposerModel;
+    composer: EditorModel;
     properties: MarkdownProperties;
   }> = ({ composer, properties }) => {
-    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
+    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -90,16 +92,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
-
     const textModel = useTextModel({
       identity,
       space,
       text: document?.content,
     });
 
-    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
+    // TODO(burdon): Document.
+    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -139,9 +140,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   };
 
   return {
-    meta: {
-      id: MARKDOWN_PLUGIN,
-    },
+    meta,
     ready: async (plugins) => {
       settings.prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string);
 
@@ -169,7 +168,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       graph: {
         builder: ({ parent, plugins }) => {
-          if (parent.data instanceof Folder) {
+          if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
@@ -183,8 +182,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     action: MarkdownAction.CREATE,
                   },
                   {
-                    action: SpaceAction.ADD_TO_FOLDER,
-                    data: { folder: parent.data },
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target: parent.data },
                   },
                   {
                     action: LayoutAction.ACTIVATE,
@@ -216,6 +215,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
+        // TODO(burdon): Deprecated? Remove?
         choosers: [
           {
             id: 'choose-stack-section-doc',
@@ -227,8 +227,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       surface: {
-        component: (data, role) => {
-          // TODO(burdon): Document.
+        component: ({ data, role, ...props }, forwardedRef) => {
           // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {
@@ -266,6 +265,24 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'section': {
               if (isDocument(data.object) && isMarkdown(data.object.content)) {
                 return <EditorSection content={data.object.content} />;
+              }
+              break;
+            }
+
+            case 'card': {
+              if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+                const cardProps = {
+                  ...props,
+                  item: {
+                    id: data.content.id,
+                    object: data.content.object,
+                    color: typeof data.content.color === 'string' ? data.content.color : undefined,
+                  },
+                };
+
+                return isTileComponentProps(cardProps) ? (
+                  <EditorCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
+                ) : null;
               }
               break;
             }

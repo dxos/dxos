@@ -1,0 +1,23 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-inbox/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-inbox/src/index.ts",
+          "packages/apps/plugins/plugin-inbox/src/meta.tsx"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

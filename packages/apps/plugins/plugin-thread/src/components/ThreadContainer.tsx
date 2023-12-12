@@ -5,7 +5,7 @@
 import differenceInSeconds from 'date-fns/differenceInSeconds';
 import React from 'react';
 
-import { Thread as ThreadType } from '@braneframe/types';
+import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember, type Space, useMembers } from '@dxos/react-client/echo';
@@ -36,15 +36,17 @@ const colorHash = (key: PublicKey) => {
   return colors[num % colors.length];
 };
 
-export const blockPropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
-  return (identityKey: PublicKey) => {
-    const author = PublicKey.equals(identityKey, identity.identityKey)
-      ? identity
-      : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
+export const messagePropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
+  return (identityKey: PublicKey | undefined) => {
+    const author =
+      identityKey && PublicKey.equals(identityKey, identity.identityKey)
+        ? identity
+        : members.find((member) => identityKey && PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
 
+    const key = author?.identityKey ?? identityKey;
     return {
-      displayName: author?.profile?.displayName ?? generateName(identityKey.toHex()),
-      classes: colorHash(author?.identityKey ?? identityKey),
+      displayName: author?.profile?.displayName ?? (identityKey ? generateName(identityKey.toHex()) : ''),
+      classes: key ? colorHash(key) : undefined,
     } satisfies BlockProperties;
   };
 };
@@ -62,30 +64,27 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
 
   // TODO(burdon): Change to model.
   const handleSubmit = (text: string) => {
-    const message = {
+    const block = {
       timestamp: new Date().toISOString(),
       text,
     };
 
     // Update current block if same user and time > 3m.
     const period = 3 * 60; // TODO(burdon): Config.
-    const block = thread.blocks[thread.blocks.length - 1];
-    if (block?.identityKey && PublicKey.equals(block.identityKey, identity.identityKey)) {
-      const previous = block.messages[block.messages.length - 1];
-      if (
-        previous.timestamp &&
-        differenceInSeconds(new Date(message.timestamp), new Date(previous.timestamp)) < period
-      ) {
-        block.messages.push(message);
+    const message = thread.messages[thread.messages.length - 1];
+    if (message?.from?.identityKey && PublicKey.equals(message.from.identityKey, identity.identityKey)) {
+      const previous = message.blocks[message.blocks.length - 1];
+      if (previous.timestamp && differenceInSeconds(new Date(block.timestamp), new Date(previous.timestamp)) < period) {
+        message.blocks.push(block);
         return true;
       }
     }
 
-    thread.blocks.push(
-      new ThreadType.Block({
-        identityKey: identity.identityKey.toHex(),
+    thread.messages.push(
+      new MessageType({
+        from: { identityKey: identity.identityKey.toHex() },
         context: { object: activeObjectId },
-        messages: [message],
+        blocks: [block],
       }),
     );
 
@@ -94,12 +93,12 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
   };
 
   const handleDelete = (id: string, index: number) => {
-    const blockIndex = thread.blocks.findIndex((block) => block.id === id);
-    if (blockIndex !== -1) {
-      const block = thread.blocks[blockIndex];
-      block.messages.splice(index, 1);
-      if (block.messages.length === 0) {
-        thread.blocks.splice(blockIndex, 1);
+    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    if (messageIndex !== -1) {
+      const message = thread.messages[messageIndex];
+      message.blocks.splice(index, 1);
+      if (message.blocks.length === 0) {
+        thread.messages.splice(messageIndex, 1);
       }
     }
   };
@@ -108,7 +107,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
     <ThreadChannel
       identityKey={identity.identityKey}
       thread={thread}
-      getBlockProperties={blockPropertiesProvider(identity, members)}
+      propertiesProvider={messagePropertiesProvider(identity, members)}
       fullWidth={fullWidth}
       onSubmit={handleSubmit}
       onDelete={handleDelete}

@@ -10,6 +10,7 @@ import React from 'react';
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import { Message } from './Message';
+import { withTheme } from '../../testing';
 
 type StoryMessageProps = {
   valence: MessageValence;
@@ -28,6 +29,7 @@ const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
 
 export default {
   component: StoryMessage,
+  decorators: [withTheme],
 };
 
 export const Default = {

@@ -3,5 +3,6 @@
 //
 
 export * from './intent';
+export * from './provides';
+
 export * from './IntentContext';
-export * from './IntentPlugin';

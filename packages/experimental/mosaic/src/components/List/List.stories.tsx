@@ -8,6 +8,7 @@ import { Circle, X } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { getSize } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { List, ListItem, IconButton, ListItemText } from './List';
@@ -51,6 +52,7 @@ const Test = () => {
 export default {
   component: List,
   decorators: [
+    withTheme,
     SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full bg-zinc-200'>

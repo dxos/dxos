@@ -11,13 +11,12 @@ import {
   createColumnBuilder,
   type BaseColumnOptions,
   ColumnMenu,
-  type SelectQueryModel,
+  type SearchListQueryModel,
   type TableColumnDef,
   type ColumnProps,
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
-import { stripUndefinedValues } from '@dxos/util';
 
 import { createUniqueProp } from './types';
 
@@ -69,7 +68,7 @@ export const createColumns = (
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
 
-    const options: BaseColumnOptions<TypedObject, any> = stripUndefinedValues({
+    const options: BaseColumnOptions<TypedObject, any> = {
       ...props,
       meta: { resizable },
       label,
@@ -86,18 +85,18 @@ export const createColumns = (
             />
           ),
       onUpdate: onRowUpdate,
-    });
+    };
 
     switch (type) {
       case 'ref':
         return helper.accessor(
           id,
-          builder.select({ ...options, model: new QueryModel(space!.db, column.refTable!, column.refProp!) }),
+          builder.combobox({ ...options, model: new QueryModel(space!.db, column.refTable!, column.refProp!) }),
         );
       case 'number':
         return helper.accessor(id, builder.number(options));
       case 'boolean':
-        return helper.accessor(id, builder.checkbox(options));
+        return helper.accessor(id, builder.switch(options));
       case 'date':
         return helper.accessor(id, builder.date(options));
       case 'string':
@@ -129,24 +128,22 @@ export const createActionColumn = (
 
   return helper.display({
     id: '__new',
-    size: 40,
+    size: 36,
     meta: {
-      slots: {
-        header: {
-          className: 'p-0',
-        },
-        footer: {
-          className: 'p-0',
-        },
-        cell: {
-          className: 'p-0',
-        },
+      header: {
+        classNames: 'p-0',
+      },
+      footer: {
+        classNames: 'p-0',
+      },
+      cell: {
+        classNames: 'p-0',
       },
     },
     // TODO(burdon): Translation.
     header: onColumnUpdate
       ? () => (
-          <Button variant='ghost' onClick={handleAddColumn} title='New column'>
+          <Button variant='ghost' onClick={handleAddColumn} title='New column' classNames='p-1 mli-1.5'>
             <Plus className={getSize(4)} />
           </Button>
         )
@@ -154,7 +151,12 @@ export const createActionColumn = (
     cell: onRowDelete
       ? (cell) =>
           cell.row.original.id ? (
-            <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)} title='Delete row'>
+            <Button
+              variant='ghost'
+              onClick={() => onRowDelete(cell.row.original)}
+              title='Delete row'
+              classNames='rounded-none'
+            >
               <X className={getSize(4)} />
             </Button>
           ) : null
@@ -163,7 +165,7 @@ export const createActionColumn = (
 };
 
 // TODO(burdon): Factor out.
-class QueryModel implements SelectQueryModel<TypedObject> {
+class QueryModel implements SearchListQueryModel<TypedObject> {
   constructor(private readonly _db: EchoDatabase, private readonly _schema: string, private readonly _prop: string) {}
 
   getId(object: TypedObject) {

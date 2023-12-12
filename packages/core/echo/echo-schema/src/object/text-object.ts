@@ -8,11 +8,7 @@ import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-m
 
 import { AbstractEchoObject } from './object';
 
-// TODO(burdon): Consider renaming to TextObject.
-// TODO(burdon): This can be used as a general YJS document (e.g., by the drawing-plugin).
-//  So rethink how we expose this.
 export class TextObject extends AbstractEchoObject<TextModel> {
-  // TODO(burdon): Change to object.
   // TODO(mykola): Add immutable option.
   constructor(text?: string, kind?: TextKind, field?: string) {
     super(TextModel);
@@ -40,7 +36,12 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   }
 
   get kind(): TextKind | undefined {
-    return this.model?.kind;
+    return this._model?.kind;
+  }
+
+  get model(): TextModel | undefined {
+    this._signal?.notifyRead();
+    return this._model;
   }
 
   get doc(): Doc | undefined {
@@ -49,18 +50,10 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   }
 
   get content(): YText | YXmlFragment | undefined {
-    // TODO(dmaretskyi): Notify read?
-    return this.model?.content;
-  }
-
-  get model(): TextModel | undefined {
     this._signal?.notifyRead();
-    return this._model;
+    return this._model?.content;
   }
 
-  /**
-   * Returns the text content of the object.
-   */
   get text(): string {
     this._signal?.notifyRead();
     return this._model.textContent;
@@ -82,7 +75,7 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   override _itemUpdate(): void {
     log('_itemUpdate', { id: this.id });
     super._itemUpdate();
-    this._model.initialize();
+    this._model.initialize(); // TODO(burdon): Why initialized on each update?
     this._signal?.notifyWrite();
   }
 }

@@ -12,7 +12,14 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type EchoObject, type EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
-import { EchoEvent, type MutationReceipt, type WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import {
+  EchoEvent,
+  type SyncRepoRequest,
+  type MutationReceipt,
+  type WriteRequest,
+  type SyncRepoResponse,
+  type HostInfo,
+} from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
 // After this limit the incremental object updates will be replaced with the full snapshot of the object.
@@ -197,6 +204,18 @@ export class DataServiceHost {
 
   async flush(): Promise<void> {
     await this._flush();
+  }
+
+  getHostInfo(): Promise<HostInfo> {
+    throw new Error('Method not implemented.');
+  }
+
+  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
+    throw new Error('Method not implemented.');
   }
 }
 
