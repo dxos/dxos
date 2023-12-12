@@ -8,7 +8,7 @@ import React, { type FC, Fragment, type MutableRefObject, useRef, useState } fro
 import { Button, Dialog, DropdownMenu, Popover, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { getSize, hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
+import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 import type { TreeNodeAction } from '../types';
@@ -88,13 +88,11 @@ const NavTreeItemActionDropdownMenu = ({
                 disabled={action.properties.disabled}
                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
               >
-                {action.icon && (
-                  <div className='shrink-0'>
-                    <action.icon className={getSize(4)} />
-                  </div>
+                {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                <span className='grow truncate'>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                {action.keyBinding && (
+                  <span className={mx('shrink-0', descriptionText)}>{keyString(action.keyBinding)}</span>
                 )}
-                <div className='grow truncate'>{Array.isArray(action.label) ? t(...action.label) : action.label}</div>
-                {action.keyBinding && <div className='shrink-0 opacity-50'>{keyString(action.keyBinding)}</div>}
               </DropdownMenu.Item>
             ))}
           </DropdownMenu.Viewport>
@@ -108,10 +106,11 @@ const NavTreeItemActionDropdownMenu = ({
 const NavTreeItemActionSearchList = ({
   icon: Icon,
   active,
+  label,
   testId,
   actions,
   suppressNextTooltip,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active'> & {
+}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'label'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
@@ -148,38 +147,45 @@ const NavTreeItemActionSearchList = ({
         </Tooltip.Trigger>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Content classNames='z-[31]'>
-          <SearchList.Root>
-            <SearchList.Input />
-            <SearchList.Content>
-              {actions?.map((action) => (
-                <SearchList.Item
-                  key={action.id}
-                  onClick={(event) => {
-                    if (action.properties.disabled) {
-                      return;
-                    }
-                    event.stopPropagation();
-                    suppressNextTooltip.current = true;
-                    setOptionsMenuOpen(false);
-                    void action.invoke();
-                  }}
-                  classNames='gap-2'
-                  disabled={action.properties.disabled}
-                  {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                >
-                  {action.icon && (
-                    <div className='shrink-0'>
-                      <action.icon className={getSize(4)} />
-                    </div>
-                  )}
-                  <div className='grow truncate'>{Array.isArray(action.label) ? t(...action.label) : action.label}</div>
-                  {action.keyBinding && <div className='shrink-0 opacity-50'>{keyString(action.keyBinding)}</div>}
-                </SearchList.Item>
-              ))}
-            </SearchList.Content>
-          </SearchList.Root>
-        </Dialog.Content>
+        <Dialog.Overlay>
+          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0'>
+            <SearchList.Root label={t('tree item searchlist input placeholder')}>
+              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='p-4' />
+              <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto border border-is-0 border-ie-0 border-neutral-200 dark:border-neutral-800 p-2'>
+                {actions?.map((action) => {
+                  const value = Array.isArray(action.label) ? t(...action.label) : action.label;
+                  return (
+                    <SearchList.Item
+                      value={value}
+                      key={action.id}
+                      onClick={(event) => {
+                        if (action.properties.disabled) {
+                          return;
+                        }
+                        event.stopPropagation();
+                        suppressNextTooltip.current = true;
+                        setOptionsMenuOpen(false);
+                        void action.invoke();
+                      }}
+                      classNames='flex items-center gap-2 pli-2'
+                      disabled={action.properties.disabled}
+                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                    >
+                      {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                      <span className='grow truncate'>{value}</span>
+                      {action.keyBinding && (
+                        <span className={mx('shrink-0', descriptionText)}>{keyString(action.keyBinding)}</span>
+                      )}
+                    </SearchList.Item>
+                  );
+                })}
+              </SearchList.Content>
+              <div role='none' className='flex items-center plb-2 pli-3'>
+                <span className={descriptionText}>{label}</span>
+              </div>
+            </SearchList.Root>
+          </Dialog.Content>
+        </Dialog.Overlay>
       </Dialog.Portal>
     </Dialog.Root>
   );
@@ -252,6 +258,7 @@ export const NavTreeItemAction = ({
             active={active}
             suppressNextTooltip={suppressNextTooltip}
             icon={Icon}
+            label={label}
           />
         ) : (
           <NavTreeItemActionDropdownMenu
