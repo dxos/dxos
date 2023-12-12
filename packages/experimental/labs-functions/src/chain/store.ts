@@ -88,13 +88,12 @@ export class ChainStore {
       this._vectorStore = await FaissStore.fromDocuments(
         [
           {
-            metadata: { space: 'dxos', id: '0' },
-            pageContent: 'hello world',
+            metadata: { space: 'dxos', id: '_' },
+            pageContent: '',
           },
         ],
         this._embeddings,
       );
-      await this.save();
     }
 
     log.info('initialized', this.info);
