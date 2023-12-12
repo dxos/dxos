@@ -2,43 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChatOpenAI } from 'langchain/chat_models/openai';
+import { join } from 'node:path';
 
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
-import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
-import { PublicKey } from '@dxos/keys';
+import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { Chain, createOpenAIChainResources } from './chain';
-import { createRequest } from './request';
+import { createContext, createSequence } from './request';
 import { createResponse } from './response';
+import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
 
-const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
-
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
-  event: { space: spaceKey, objects: messageIds },
-  context: { client },
-  response,
-}) => {
-  const config = client.config;
-  const chat = new ChatOpenAI({
-    openAIApiKey: getKey(config, 'openai.com/api_key')!,
-  });
-  const resources = createOpenAIChainResources({
-    // TODO(burdon): Get from context (for agent profile).
-    baseDir: '/tmp/dxos/agent/functions/embedding',
-    apiKey: getKey(config, 'openai.com/api_key')!,
-    chat: { modelName: 'gpt-4' },
-  });
-  await resources.initialize();
-  const chain = new Chain(resources, { precise: false });
-
-  const space = spaceKey && client.spaces.get(PublicKey.from(spaceKey));
-  if (!space) {
+export const handler = subscriptionHandler(async ({ event, context, response }) => {
+  const { client, dataDir } = context;
+  const { space, objects } = event;
+  if (!space || !objects?.length) {
     return response.status(400);
   }
+
+  const config = client.config;
+  const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
+    baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
+    apiKey: getKey(config, 'openai.com/api_key'),
+  });
+  await resources.store.initialize();
 
   // TODO(burdon): The handler is called before the mutation is processed!
   await sleep(500);
@@ -46,8 +34,8 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = space.db.query(ThreadType.filter());
-  const activeThreads = messageIds?.reduce((activeThreads, blockId) => {
-    const thread = threads.find((thread) => thread.messages.some((message) => message.id === blockId));
+  const activeThreads = objects.reduce((activeThreads, message) => {
+    const thread = threads.find((thread) => thread.messages.some((m) => m.id === message.id));
     if (thread) {
       activeThreads.add(thread);
     }
@@ -61,29 +49,37 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       Array.from(activeThreads).map(async (thread) => {
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
-          const messages = createRequest(space, message);
-          log('request', { messages });
-
           let blocks: MessageType.Block[];
-          const text = message.blocks[0]?.text;
-          if (text?.charAt(0) === '$') {
-            const response = await chain.call(text.slice(1));
-            blocks = [
-              {
-                timestamp: new Date().toISOString(),
-                text: response,
-              },
-            ];
-          } else {
-            const { content } = await chat.invoke(messages);
-            log('response', { content: content.toString() });
-            blocks = createResponse(client, space, content.toString());
+          try {
+            let text = message.blocks
+              .map((message) => message.text)
+              .filter(Boolean)
+              .join('\n');
+
+            // Check for command.
+            let command: string | undefined;
+            const match = text.match(/\/(\w+)\s*(.+)?/);
+            if (match) {
+              command = match[1];
+              text = match[2];
+            }
+
+            const context = createContext(space, message.context);
+            const sequence = createSequence(space, resources, context, { command });
+
+            const response = await sequence.invoke(text);
+            blocks = createResponse(space, context, response);
+          } catch (error) {
+            log.error('processing message', error);
+            blocks = [{ text: 'There was an error generating the response.' }];
           }
 
           thread.messages.push(
             new MessageType(
               {
-                identityKey,
+                from: {
+                  identityKey: resources.identityKey,
+                },
                 blocks,
               },
               {
@@ -97,4 +93,4 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       }),
     );
   }
-};
+});

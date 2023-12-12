@@ -35,6 +35,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/migrations"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -57,6 +60,12 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugins/plugin-chain"
     },
     {
       "path": "../plugins/plugin-chess"
@@ -104,10 +113,16 @@
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-mermaid"
+    },
+    {
       "path": "../plugins/plugin-metadata"
     },
     {
       "path": "../plugins/plugin-navtree"
+    },
+    {
+      "path": "../plugins/plugin-outliner"
     },
     {
       "path": "../plugins/plugin-presenter"

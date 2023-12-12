@@ -7,6 +7,7 @@ syntax = "proto3";
 import "dxos/keys.proto";
 import "dxos/mesh/swarm.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
 
 package dxos.mesh.bridge;
 
@@ -26,6 +27,13 @@ service BridgeService {
 
   ///
   rpc Close(CloseRequest) returns (google.protobuf.Empty);
+
+  ///
+  rpc GetDetails(DetailsRequest) returns (DetailsResponse);
+
+  ///
+  rpc GetStats(StatsRequest) returns (StatsResponse);
+
 }
 
 enum ConnectionState {
@@ -73,4 +81,19 @@ message DataRequest {
 
 message CloseRequest{
   dxos.keys.PublicKey  proxy_id = 1;
+}
+
+message DetailsRequest{
+  dxos.keys.PublicKey  proxy_id = 1;
+}
+
+message DetailsResponse{
+  string details = 1;
+}
+
+message StatsRequest{
+  dxos.keys.PublicKey  proxy_id = 1;
+}
+message StatsResponse{
+  google.protobuf.Struct stats = 1;
 }

@@ -23,7 +23,8 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-kanban/.storybook"
+        "configDir": "tools/stories/.storybook",
+        "stories": []
       }
     },
     "test": {}

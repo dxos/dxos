@@ -36,6 +36,7 @@
       <w>iata</w>
       <w>ipdata</w>
       <w>kodama</w>
+      <w>langchain</w>
       <w>latlng</w>
       <w>libsodium</w>
       <w>lichess</w>
@@ -51,6 +52,7 @@
       <w>nanoerror</w>
       <w>nanomessage</w>
       <w>nanoresource</w>
+      <w>observablehq</w>
       <w>oclif</w>
       <w>ollama</w>
       <w>onauthenticate</w>
@@ -71,6 +73,7 @@
       <w>openfaas</w>
       <w>orgs</w>
       <w>outdir</w>
+      <w>outliner</w>
       <w>packlets</w>
       <w>permissionless</w>
       <w>prefs</w>
@@ -89,6 +92,8 @@
       <w>stringified</w>
       <w>subtiles</w>
       <w>svg's</w>
+      <w>tasklist</w>
+      <w>testbench</w>
       <w>testutils</w>
       <w>textbox</w>
       <w>tldraw</w>

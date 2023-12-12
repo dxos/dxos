@@ -1,0 +1,20 @@
+{
+  "sourceRoot": "packages/sdk/migrations/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/sdk/migrations/src/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

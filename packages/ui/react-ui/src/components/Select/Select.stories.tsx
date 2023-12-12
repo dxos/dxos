@@ -10,6 +10,7 @@ import React, { type FC, type PropsWithChildren, useState } from 'react';
 import { type Density } from '@dxos/react-ui-types';
 
 import { Select } from './Select';
+import { withTheme } from '../../testing';
 import { DensityProvider } from '../DensityProvider';
 
 faker.seed(1234);
@@ -59,6 +60,8 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
 
 export default {
   component: createDensityTest(StorybookSelect),
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

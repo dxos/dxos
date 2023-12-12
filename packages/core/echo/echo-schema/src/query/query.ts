@@ -166,7 +166,7 @@ export class Query<T extends TypedObject = TypedObject> {
 
     return () => {
       queries.splice(queries.indexOf(this), 1);
-      log.info('unsubscribe', queries.length);
+      log('unsubscribe', queries.length);
       subscription();
     };
   }

@@ -9,6 +9,7 @@ import React, { type FC, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { getSize } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { Stack } from './Stack';
@@ -126,6 +127,7 @@ const Test = () => {
 export default {
   component: Stack,
   decorators: [
+    withTheme,
     SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full bg-zinc-200'>

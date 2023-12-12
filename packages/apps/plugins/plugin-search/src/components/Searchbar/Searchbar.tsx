@@ -3,23 +3,26 @@
 //
 
 import { MagnifyingGlass } from '@phosphor-icons/react';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Button, Input, type TextInputProps } from '@dxos/react-ui';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
-  className?: string;
+  classes?: {
+    root?: string;
+    input?: string;
+  };
   value?: string;
   onChange?: (text: string) => void;
   delay?: number;
 };
 
-export const Searchbar: FC<SearchbarProps> = ({ className, variant, placeholder, value, onChange }) => {
+export const Searchbar = ({ classes, variant, placeholder, value, onChange }: SearchbarProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState(value ?? '');
+  const [text, setText] = useState(value);
   useEffect(() => {
-    setText(value ?? '');
+    setText(value);
   }, [value]);
   const handleChange = (text: string) => {
     setText(text);
@@ -32,14 +35,14 @@ export const Searchbar: FC<SearchbarProps> = ({ className, variant, placeholder,
   };
 
   return (
-    <div className={mx('flex w-full items-center', inputSurface)}>
+    <div className={mx('flex w-full items-center', inputSurface, classes?.root)}>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
           placeholder={placeholder}
           variant={variant}
-          value={text}
-          classNames={mx('pr-[40px]', className)}
+          value={text ?? ''}
+          classNames={mx('pl-3 pr-[40px]', classes?.input)}
           onChange={({ target }) => handleChange(target.value)}
           onKeyDown={({ key }) => key === 'Escape' && handleReset()}
         />

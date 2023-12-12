@@ -4,7 +4,8 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/react-ui';
+import { Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { dropRing, mx } from '@dxos/react-ui-theme';
 
 import {

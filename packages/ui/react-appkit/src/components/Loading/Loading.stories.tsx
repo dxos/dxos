@@ -4,10 +4,13 @@
 
 import '@dxosTheme';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Loading } from './Loading';
 
 export default {
   component: Loading,
+  decorators: [withTheme],
   argTypes: {
     size: {
       control: 'select',

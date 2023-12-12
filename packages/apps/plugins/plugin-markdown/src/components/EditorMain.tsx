@@ -6,6 +6,7 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import {
+  defaultHyperLinkTooltip,
   type EditorModel,
   MarkdownEditor,
   type MarkdownEditorProps,
@@ -41,6 +42,7 @@ export const EditorMain = ({
       <MarkdownEditor
         ref={editorRefCb}
         model={model}
+        extensions={[defaultHyperLinkTooltip]}
         editorMode={editorMode}
         onChange={onChange}
         slots={{

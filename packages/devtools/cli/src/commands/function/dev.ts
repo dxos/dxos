@@ -8,6 +8,7 @@ import { load } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
 
@@ -53,6 +54,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         directory,
         manifest,
         reload: this.flags.reload,
+        dataDir: getProfilePath(DX_DATA, this.flags.profile),
       });
 
       await server.initialize();

@@ -2,55 +2,116 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ChatMessage } from 'langchain/schema';
+import { PromptTemplate } from 'langchain/prompts';
+import { StringOutputParser } from 'langchain/schema/output_parser';
+import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
+import { formatDocumentsAsString } from 'langchain/util/document';
 
+import { Chain as ChainType } from '@braneframe/types';
 import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { Schema, type TypedObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
-import { createPrompt } from './prompts';
+import { sequences } from './chains';
+import type { ChainResources } from '../../chain';
 
-export const createRequest = (space: Space, message: MessageType): ChatMessage[] => {
-  const text = message.blocks
-    .map((message) => message.text)
-    .filter(Boolean)
-    .join('\n');
+export type PromptContext = {
+  object?: TypedObject;
+  schema?: Schema;
+};
 
-  let context: TypedObject | undefined;
-  if (message?.context.object) {
-    const { objects } = space.db.query({ id: message.context.object });
-    context = objects[0];
+export const createContext = (space: Space, messageContext: MessageType.Context | undefined): PromptContext => {
+  let object: TypedObject | undefined;
+  if (messageContext?.object) {
+    const { objects } = space.db.query({ id: messageContext?.object });
+    object = objects[0];
   }
 
-  // TODO(burdon): Expect client to set schema.
-  // TODO(burdon): Get from type collection.
+  // TODO(burdon): How to infer schema from message/context/prompt.
   let schema: Schema | undefined;
-  if (context?.__typename === 'braneframe.Grid') {
-    schema = new Schema({
-      typename: 'example.com/schema/project',
-      props: [
-        {
-          id: 'name',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'description',
-          description: 'Short summary',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'website',
-          description: 'Web site URL (not github)',
-          type: Schema.PropType.STRING,
-        },
-        {
-          id: 'repo',
-          description: 'Github repo URL',
-          type: Schema.PropType.STRING,
-        },
-      ],
-    });
+  if (object?.__typename === 'braneframe.Grid') {
+    const { objects: schemas } = space.db.query(Schema.filter());
+    schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
   }
 
-  return createPrompt({ message: text, context, schema })!;
+  return {
+    object,
+    schema,
+  };
+};
+
+export type SequenceTest = (context: PromptContext) => boolean;
+
+type SequenceOptions = {
+  command?: string;
+  noVectorStore?: boolean;
+  noTrainingData?: boolean;
+};
+
+export type SequenceGenerator = (
+  resources: ChainResources,
+  getContext: () => PromptContext,
+  options?: SequenceOptions,
+) => RunnableSequence;
+
+// TODO(burdon): Create registry class.
+export const createSequence = (
+  space: Space,
+  resources: ChainResources,
+  context: PromptContext,
+  options: SequenceOptions = {},
+): RunnableSequence => {
+  log.info('create sequence', {
+    context: {
+      object: { id: context.object?.id, schema: context.object?.__typename },
+      schema: context.schema?.typename,
+    },
+    options,
+  });
+
+  // Create sequence from command.
+  if (options.command) {
+    const { objects: chains = [] } = space.db.query(ChainType.filter());
+    for (const chain of chains) {
+      for (const prompt of chain.prompts) {
+        if (prompt.command === options.command) {
+          return createSequenceFromPrompt(resources, prompt);
+        }
+      }
+    }
+  }
+
+  // Create sequence from predicates.
+  const { generator } = sequences.find(({ test }) => test(context))!;
+  return generator(resources, () => context, options);
+};
+
+const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.Prompt) => {
+  const inputs = prompt.inputs.reduce<{ [name: string]: any }>((inputs, { type, name, value }) => {
+    switch (type) {
+      case ChainType.Input.Type.VALUE: {
+        inputs[name] = () => value.text;
+        break;
+      }
+      case ChainType.Input.Type.PASS_THROUGH: {
+        inputs[name] = new RunnablePassthrough();
+        break;
+      }
+      case ChainType.Input.Type.RETRIEVER: {
+        const retriever = resources.store.vectorStore.asRetriever({});
+        inputs[name] = retriever.pipe(formatDocumentsAsString);
+        break;
+      }
+    }
+
+    return inputs;
+  }, {});
+
+  return RunnableSequence.from([
+    inputs,
+    PromptTemplate.fromTemplate(prompt.source.text),
+    resources.chat,
+    new StringOutputParser(),
+  ]);
 };

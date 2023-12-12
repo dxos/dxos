@@ -83,7 +83,7 @@ export default class Start extends BaseCommand<typeof Start> {
       },
       plugins: [
         new ChainPlugin(),
-        new DashboardPlugin({ configPath: this.flags.config }),
+        new DashboardPlugin(),
         new EchoProxyPlugin(),
         new EpochMonitorPlugin(),
         new FunctionsPlugin(),

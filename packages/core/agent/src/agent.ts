@@ -63,12 +63,16 @@ export class Agent {
 
     // TODO(nf): move to config
     let transportFactory: TransportFactory;
-    if (process.env.WEBRTCLIBRARY === 'LibDataChannel') {
-      log.info('using LibDataChannel');
-      transportFactory = createLibDataChannelTransportFactory();
-    } else {
+    if (process.env.WEBRTCLIBRARY === 'SimplePeer') {
       log.info('using SimplePeer');
-      transportFactory = createSimplePeerTransportFactory();
+      transportFactory = createSimplePeerTransportFactory({
+        iceServers: this._options.config.get('runtime.services.ice'),
+      });
+    } else {
+      log.info('using LibDataChannel');
+      transportFactory = createLibDataChannelTransportFactory({
+        iceServers: this._options.config.get('runtime.services.ice'),
+      });
     }
 
     // Create client services.

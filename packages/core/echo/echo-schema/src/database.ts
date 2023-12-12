@@ -12,8 +12,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { AutomergeDb } from './automerge/automerge-db';
-import { AutomergeObject } from './automerge/automerge-object';
+import { type AutomergeContext, AutomergeDb, AutomergeObject } from './automerge';
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
@@ -23,6 +22,7 @@ import { type FilterSource, type Query } from './query';
 /**
  * Database wrapper.
  */
+// TODO(dmaretskyi): Extract interface.
 export class EchoDatabase {
   /**
    * @internal
@@ -41,7 +41,7 @@ export class EchoDatabase {
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
-  public readonly automerge = new AutomergeDb(this._graph);
+  public readonly automerge: AutomergeDb;
 
   constructor(
     /**
@@ -50,7 +50,10 @@ export class EchoDatabase {
     readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
     private readonly _graph: Hypergraph,
+    automergeContext: AutomergeContext,
   ) {
+    this.automerge = new AutomergeDb(this._graph, automergeContext, this);
+
     this._backend.itemUpdate.on(this._update.bind(this));
 
     // Load all existing objects.
@@ -66,7 +69,8 @@ export class EchoDatabase {
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
-    const obj = this._objects.get(id);
+    const obj = this._objects.get(id) ?? this.automerge._objects.get(id);
+
     if (!obj) {
       return undefined;
     }
@@ -153,6 +157,7 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
+  // TODO(burdon): Rename delete.
   remove<T extends EchoObject>(obj: T) {
     if (obj[base] instanceof AutomergeObject) {
       return this.automerge.remove(obj);
@@ -259,9 +264,9 @@ export class EchoDatabase {
     if (item.modelType === DocumentModel.meta.type) {
       const state = item.state as DocumentModelState;
       if (!state.type) {
-        return new TypedObject();
+        return new TypedObject(undefined, { useAutomergeBackend: false });
       } else {
-        return new TypedObject(undefined, { type: state.type });
+        return new TypedObject(undefined, { type: state.type, useAutomergeBackend: false });
       }
     } else if (item.modelType === TextModel.meta.type) {
       return new TextObject();

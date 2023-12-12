@@ -67,10 +67,10 @@ export const scheduleMicroTask = (ctx: Context, fn: () => MaybePromise<void>) =>
 };
 
 export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {
-  const clearTracking = trackResource({
+  const clearTracking = trackResource(() => ({
     name: `task (${fn.name || 'anonymous'})`,
     openStack: new StackTrace(),
-  });
+  }));
 
   const timeout = setTimeout(async () => {
     clearDispose();
@@ -88,10 +88,10 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
  * Run the task in the next event loop iteration, and then repeat in `interval` ms after the previous iteration completes.
  */
 export const scheduleTaskInterval = (ctx: Context, task: () => Promise<void>, interval: number) => {
-  const clearTracking = trackResource({
+  const clearTracking = trackResource(() => ({
     name: `repeating task (${task.name || 'anonymous'})`,
     openStack: new StackTrace(),
-  });
+  }));
 
   let timeoutId: NodeJS.Timeout;
 
@@ -115,10 +115,10 @@ export const scheduleExponentialBackoffTaskInterval = (
   task: () => Promise<void>,
   initialInterval: number,
 ) => {
-  const clearTracking = trackResource({
+  const clearTracking = trackResource(() => ({
     name: `repeating task (${task.name || 'anonymous'})`,
     openStack: new StackTrace(),
-  });
+  }));
 
   let timeoutId: NodeJS.Timeout;
 

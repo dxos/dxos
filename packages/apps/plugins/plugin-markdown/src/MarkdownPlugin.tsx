@@ -92,15 +92,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
-
     const textModel = useTextModel({
       identity,
       space,
       text: document?.content,
     });
 
+    // TODO(burdon): Document.
     const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
@@ -216,6 +215,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
+        // TODO(burdon): Deprecated? Remove?
         choosers: [
           {
             id: 'choose-stack-section-doc',
@@ -228,7 +228,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
-          // TODO(burdon): Document.
           // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {

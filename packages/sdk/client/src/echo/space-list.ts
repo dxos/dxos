@@ -23,6 +23,7 @@ import {
   type TypeCollection,
   type TypedObject,
 } from '@dxos/echo-schema';
+import { AutomergeContext } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -45,6 +46,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
 
+  private readonly _automergeContext: AutomergeContext;
+
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
@@ -58,6 +61,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
+    this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService);
   }
 
   [inspect.custom]() {
@@ -107,7 +111,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this._graph);
+          spaceProxy = new SpaceProxy(
+            this._serviceProvider,
+            this._modelFactory,
+            space,
+            this._graph,
+            this._automergeContext,
+          );
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
@@ -161,6 +171,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    */
   async _close() {
     await this._ctx.dispose();
+    await this._automergeContext.close();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
     this._isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);

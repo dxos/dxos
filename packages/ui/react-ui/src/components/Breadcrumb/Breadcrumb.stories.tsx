@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Breadcrumb } from './Breadcrumb';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 const StorybookBreadcrumb = () => {
@@ -39,6 +40,7 @@ const StorybookBreadcrumb = () => {
 
 export default {
   component: StorybookBreadcrumb,
+  decorators: [withTheme],
 };
 
 export const Default = {

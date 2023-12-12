@@ -16,7 +16,9 @@ export const createThread = () => {
   return new ThreadType({
     messages: [
       new MessageType({
-        identityKey: PublicKey.random().toHex(),
+        from: {
+          identityKey: PublicKey.random().toHex(),
+        },
         blocks: [
           {
             timestamp: sub(now, { days: 1, minutes: 115 }).toISOString(),
@@ -31,7 +33,9 @@ export const createThread = () => {
         ],
       }),
       new MessageType({
-        identityKey: PublicKey.random().toHex(),
+        from: {
+          identityKey: PublicKey.random().toHex(),
+        },
         blocks: [
           {
             timestamp: sub(now, { minutes: 42 }).toISOString(),
@@ -40,7 +44,9 @@ export const createThread = () => {
         ],
       }),
       new MessageType({
-        identityKey: PublicKey.random().toHex(),
+        from: {
+          identityKey: PublicKey.random().toHex(),
+        },
         blocks: [
           {
             timestamp: sub(now, { minutes: 8 }).toISOString(),

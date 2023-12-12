@@ -25,6 +25,7 @@
   "dependencies": {
     "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/crypto": "workspace:*",
@@ -38,16 +39,15 @@
     "@monaco-editor/react": "^4.4.6",
     "esbuild-wasm": "^0.16.14",
     "lodash.get": "^4.4.2",
-    "monaco-editor": "^0.25.0",
+    "monaco-editor": "^0.44.0",
     "y-monaco": "^0.1.0",
-    "yjs": "^13.6.8"
+    "yjs": "^13.6.10"
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/react-ui": "workspace:*",

@@ -10,11 +10,21 @@ import * as process from 'node:process';
 import { Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Factor out.
+export const str = (...text: (string | undefined | boolean)[]): string => text.filter(Boolean).flat().join('\n');
+
+export const toArray = <T>(value?: T | T[] | undefined, defValue = undefined): T[] | undefined =>
+  value === undefined || value === null ? defValue : Array.isArray(value) ? value : [value];
 
 export const loadJson = (filename: string) => {
   invariant(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
+};
+
+export const stringMatch = (text: string, prefix = false) => {
+  const match = text.toLowerCase();
+  return prefix
+    ? (value: string) => value.toLowerCase().indexOf(match) !== -1
+    : (value: string) => value.toLowerCase() === match;
 };
 
 export const getConfig = (
@@ -29,11 +39,4 @@ export const getKey = (config: Config, name: string) => {
   const keys = config.values?.runtime?.keys;
   const key = keys?.find((key) => key.name === name);
   return key?.value;
-};
-
-export const stringMatch = (text: string, prefix = false) => {
-  const match = text.toLowerCase();
-  return prefix
-    ? (value: string) => value.toLowerCase().indexOf(match) !== -1
-    : (value: string) => value.toLowerCase() === match;
 };

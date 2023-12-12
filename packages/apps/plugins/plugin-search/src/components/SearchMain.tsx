@@ -7,14 +7,16 @@ import React, { useState } from 'react';
 import { getActiveSpace } from '@braneframe/plugin-space';
 import { parseGraphPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { DensityProvider } from '@dxos/react-ui';
-import { baseSurface, chromeSurface, mx } from '@dxos/react-ui-theme';
+import { DensityProvider, useTranslation } from '@dxos/react-ui';
+import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
 import { useSearch, useSearchResults } from '../context';
+import { SEARCH_PLUGIN } from '../meta';
 
 export const SearchMain = () => {
+  const { t } = useTranslation(SEARCH_PLUGIN);
   const client = useClient();
   const { setMatch } = useSearch();
   // TODO(burdon): UX to select all spaces.
@@ -43,16 +45,21 @@ export const SearchMain = () => {
   };
 
   return (
-    <div className={mx('flex flex-col grow h-full overflow-hidden', baseSurface)}>
-      <DensityProvider density='coarse'>
-        <div className='flex bs-[--topbar-size] border-b mb-2'>
-          <Searchbar className='pl-3' variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
+    <div className='flex flex-col grow h-full overflow-hidden'>
+      <DensityProvider density='fine'>
+        <div className={mx('flex bs-[--topbar-size] px-2 py-2')}>
+          <Searchbar
+            classes={{ root: 'rounded shadow' }}
+            variant='subdued'
+            placeholder={t('search placeholder')}
+            onChange={setMatch}
+          />
         </div>
       </DensityProvider>
       {results.length > 0 && (
-        <div className={mx('absolute top-[--topbar-size] bottom-0', chromeSurface)}>
-          {/* TODO(burdon): Change to popover. */}
-          <div className='flex flex-col h-full overflow-hidden'>
+        <div className='absolute top-[--topbar-size] bottom-0 z-[1]'>
+          {/* TODO(burdon): Change to Portal? */}
+          <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
             <DensityProvider density='fine'>
               <SearchResults items={results} selected={selected} onSelect={handleSelect} />
             </DensityProvider>

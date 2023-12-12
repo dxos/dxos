@@ -6,7 +6,9 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { JoinPanel, JoinPanelImpl } from './JoinPanel';
+import { withTheme } from '@dxos/storybook-utils';
+
+import { JoinPanelImpl } from './JoinPanel';
 import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl, ResetIdentityImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
@@ -26,8 +28,9 @@ const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
 );
 
 export default {
-  component: JoinPanel,
-  render: JoinDialog,
+  component: JoinDialog,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
   args: {
     IdentityInput: IdentityInputImpl,
     ResetIdentity: ResetIdentityImpl,

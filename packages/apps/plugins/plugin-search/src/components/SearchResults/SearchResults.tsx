@@ -5,7 +5,8 @@
 import { type Icon, Buildings, Folders, User } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
@@ -58,7 +59,7 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
-  ({ draggableStyle, draggableProps, item, debug = true }, forwardRef) => {
+  ({ draggableStyle, draggableProps, item, debug = false }, forwardRef) => {
     const { id, type, label, snippet, match, selected, onSelect } = item;
     const Icon = type ? getIcon(type) : undefined;
 
@@ -100,21 +101,19 @@ export type SearchResultsProps = {
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   const path = 'search';
   return (
-    <ScrollArea.Root classNames={['grow']}>
+    <ScrollArea.Root classNames='grow'>
       <ScrollArea.Viewport>
-        <div className='flex flex-col py-1'>
-          <Mosaic.Container id={path} Component={SearchItem}>
-            {items.map((item) => (
-              <Mosaic.DraggableTile
-                key={item.id}
-                path={path}
-                type={SEARCH_RESULT}
-                item={{ ...item, selected: selected === item.id, onSelect }}
-                Component={SearchItem}
-              />
-            ))}
-          </Mosaic.Container>
-        </div>
+        <Mosaic.Container id={path} Component={SearchItem}>
+          {items.map((item) => (
+            <Mosaic.DraggableTile
+              key={item.id}
+              path={path}
+              type={SEARCH_RESULT}
+              item={{ ...item, selected: selected === item.id, onSelect }}
+              Component={SearchItem}
+            />
+          ))}
+        </Mosaic.Container>
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar orientation='vertical'>
         <ScrollArea.Thumb />
