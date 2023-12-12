@@ -11,12 +11,14 @@ import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { RichTextEditor, type RichTextEditorProps } from './RichText';
 import { Replicator, useYjsModel } from '../../testing';
 
 export default {
   component: RichTextEditor,
+  decorators: [withTheme],
 };
 
 export const Default = {

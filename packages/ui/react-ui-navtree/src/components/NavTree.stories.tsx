@@ -11,6 +11,7 @@ import React, { useCallback, useState } from 'react';
 import { Button, DensityProvider, Tooltip } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { NavTree, type NavTreeProps } from './NavTree';
@@ -160,6 +161,7 @@ export default {
     layout: 'fullscreen',
   },
   decorators: [
+    withTheme,
     (Story: any) => (
       <Tooltip.Provider>
         <DensityProvider density='fine'>

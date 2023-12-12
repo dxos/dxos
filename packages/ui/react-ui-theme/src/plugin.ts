@@ -8,7 +8,8 @@ import tailwindcss from 'tailwindcss';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 import { type Plugin } from 'vite';
 
-import { resolveKnownPeers, tailwindConfig } from './config';
+import { tailwindConfig } from './config';
+import { resolveKnownPeers } from './config/resolveContent';
 
 export interface VitePluginTailwindOptions {
   jit?: boolean;

@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { AlertDialog } from './AlertDialog';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 import { Toolbar } from '../Toolbar';
 
@@ -54,6 +55,7 @@ const StorybookAlertDialog = ({
 
 export default {
   component: StorybookAlertDialog,
+  decorators: [withTheme],
 };
 
 export const Default = {

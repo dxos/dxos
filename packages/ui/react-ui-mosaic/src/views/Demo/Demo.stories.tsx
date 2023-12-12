@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Mosaic } from '../../mosaic';
 import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 import { DemoGrid } from '../Grid/testing';
@@ -18,7 +20,7 @@ faker.seed(5);
 
 export default {
   title: 'Views/Demo',
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

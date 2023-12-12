@@ -15,6 +15,7 @@ import { Tooltip } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { NavTree, type TreeNode } from '@dxos/react-ui-navtree';
 import { fineBlockSize } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 faker.seed(3);
 const fake = faker.helpers.fake;
@@ -112,4 +113,5 @@ export const Demo = {
 
 export default {
   component: StorybookNavtreePresence,
+  decorators: [withTheme],
 };

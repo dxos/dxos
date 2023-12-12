@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { type PublicKey } from '@dxos/client';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ClientDecorator } from './ClientDecorator';
 import { setupPeersInSpace } from './ClientSpaceDecorator';
@@ -16,6 +17,7 @@ import { useSpace } from '../echo';
 
 export default {
   title: 'testing/decorators',
+  decorators: [withTheme],
 };
 
 const JsonPanel = ({ value }: { value: any }) => (

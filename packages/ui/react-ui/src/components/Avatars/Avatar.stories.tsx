@@ -10,6 +10,7 @@ import { getColorForValue } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
 
 import { Avatar, useJdenticonHref, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
+import { withTheme } from '../../testing';
 
 const randomColor = () => getColorForValue({ value: Math.random().toString(16), type: 'color' });
 
@@ -62,6 +63,7 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
 
 export default {
   component: StorybookAvatar,
+  decorators: [withTheme],
 };
 
 const sampleImage =
