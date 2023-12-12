@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { BlockNoteEditor } from '@blocknote/core';
 import React, { forwardRef, memo, type Ref } from 'react';
 
 import { YXmlFragment } from '@dxos/text-model';
 
-import { type EditorSlots, useTextModel, type UseTextModelOptions } from '../../model';
+import { useTextModel, type EditorSlots, type UseTextModelOptions } from '../../model';
+import { BNEditor } from '../BlockNote';
 import { MarkdownEditor, type MarkdownEditorRef } from '../Markdown';
-import { RichTextEditor, type TipTapEditor } from '../RichText';
+import { type TipTapEditor } from '../RichText';
 
 export type EditorProps = UseTextModelOptions & {
   slots?: EditorSlots;
@@ -22,10 +24,10 @@ export type EditorProps = UseTextModelOptions & {
 // NOTE: Without `memo`, if parent component uses `observer` the editor re-renders excessively.
 // TODO(wittjosiah): Factor out?
 export const Editor = memo(
-  forwardRef<TipTapEditor | MarkdownEditorRef, EditorProps>(({ slots, ...params }, forwardedRef) => {
+  forwardRef<TipTapEditor | BlockNoteEditor | MarkdownEditorRef, EditorProps>(({ slots, ...params }, forwardedRef) => {
     const model = useTextModel(params);
     if (model?.content instanceof YXmlFragment) {
-      return <RichTextEditor ref={forwardedRef as Ref<TipTapEditor>} model={model} slots={slots} />;
+      return <BNEditor ref={forwardedRef as Ref<BlockNoteEditor>} model={model} slots={slots} />;
     } else {
       return <MarkdownEditor ref={forwardedRef as Ref<MarkdownEditorRef>} model={model} slots={slots} />;
     }

@@ -5,20 +5,21 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, useCallback, type Ref } from 'react';
+import React, { useCallback, type FC, type MutableRefObject, type Ref, type RefCallback } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
-import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { LayoutAction, isObject, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
+  Editor,
+  useTextModel,
   type EditorModel,
   type MarkdownEditorProps,
   type MarkdownEditorRef,
-  useTextModel,
 } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -29,6 +30,7 @@ import {
   EditorSection,
   MarkdownMainEmpty,
   MarkdownSettings,
+  StandaloneLayout,
   // SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
@@ -100,24 +102,30 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     });
 
     // TODO(burdon): Document.
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
-      (content) => state.onChange.forEach((onChange) => onChange(content)),
-      [state.onChange],
-    );
+    // const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    //   (content) => state.onChange.forEach((onChange) => onChange(content)),
+    //   [state.onChange],
+    // );
 
     if (!textModel) {
       return null;
     }
 
+    // TODO: hacky, figure out proper architecture
     return (
-      <EditorMain
-        model={textModel}
-        properties={document}
-        layout='standalone'
-        editorMode={settings.values.editorMode}
-        onChange={onChange}
-        editorRefCb={pluginRefCallback}
-      />
+      <StandaloneLayout>
+        <Editor
+          // model={textModel}
+          identity={identity}
+          space={space}
+          text={document?.content}
+          // properties={document}
+          // layout='standalone'
+          // editorMode={settings.values.editorMode}
+          // onChange={onChange}
+          // editorRefCb={pluginRefCallback}
+        />
+      </StandaloneLayout>
     );
   };
 

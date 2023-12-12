@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate, mergeUpdates } from 'yjs';
+import { Doc, Text, XmlElement, XmlFragment, XmlText, applyUpdate, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 
 import { invariant } from '@dxos/invariant';
 import { Model, type ModelMeta, type MutationWriter, type StateMachine } from '@dxos/model-factory';
-import { type ItemID, schema } from '@dxos/protocols';
-import { type TextMutation, type TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { schema, type ItemID } from '@dxos/protocols';
+import { TextKind, type TextMutation, type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 type TextModelState = {
   doc: Doc;
@@ -16,7 +16,8 @@ type TextModelState = {
 };
 
 class TextModelStateMachine implements StateMachine<TextModelState, TextMutation, TextSnapshot> {
-  private _text = { doc: new Doc(), kind: TextKind.PLAIN, field: 'content' };
+  // TODO: hacky change from PLAIN -> RICH, figure out right way to create rich text doc
+  private _text = { doc: new Doc(), kind: TextKind.RICH, field: 'content' };
 
   getState(): TextModelState {
     return this._text;
