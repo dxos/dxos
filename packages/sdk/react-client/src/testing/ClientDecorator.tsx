@@ -4,7 +4,7 @@
 
 import { type DecoratorFunction } from '@storybook/csf';
 import { type ReactRenderer } from '@storybook/react';
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
@@ -20,6 +20,14 @@ export type ClientDecoratorOptions = {
   count?: number;
   registerSignalFactory?: boolean;
   className?: string;
+};
+
+export type ClientRepeaterOptions = {
+  clients?: Client[];
+  count?: number;
+  registerSignalFactory?: boolean;
+  className?: string;
+  Component: FC<{ id: number; count: number }>;
 };
 
 /**
@@ -49,11 +57,43 @@ export const ClientDecorator = (options: ClientDecoratorOptions = {}): Decorator
 
   return (Story, context) => (
     <div className={className}>
-      {[...Array(count)].map((_, index) => (
-        <ClientProvider key={index} services={services}>
-          {Story({ args: { id: index, count, ...context.args } })}
-        </ClientProvider>
-      ))}
+      {[...Array(count)].map((_, index) => {
+        return (
+          <ClientProvider key={index} services={services}>
+            {Story({ args: { ...context.args, id: index, count } })}
+          </ClientProvider>
+        );
+      })}
     </div>
   );
+};
+
+export const ClientRepeater = (options: ClientRepeaterOptions) => {
+  const { clients, count = 1, className = 'flex place-content-evenly', Component } = options;
+  if (options.registerSignalFactory ?? true) {
+    registerSignalFactory();
+  }
+  if (clients) {
+    return (
+      <div className={className}>
+        {clients.map((client, index) => (
+          <ClientContext.Provider key={index} value={{ client }}>
+            <Component id={index} count={clients.length} />
+          </ClientContext.Provider>
+        ))}
+      </div>
+    );
+  } else {
+    return (
+      <div className={className}>
+        {[...Array(count)].map((_, index) => {
+          return (
+            <ClientProvider key={index} services={services}>
+              <Component id={index} count={count} />
+            </ClientProvider>
+          );
+        })}
+      </div>
+    );
+  }
 };
