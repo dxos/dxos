@@ -6,14 +6,16 @@ import '@dxosTheme';
 
 import { HighlightStyle, StreamLanguage } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import React, { useState } from 'react';
+import { ArrowCircleUp } from '@phosphor-icons/react';
+import React, { StrictMode, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
-import { fixedInsetFlexLayout, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
-import { defaultHyperLinkTooltip, hyperlink } from './extensions';
+import { createHyperlinkTooltip, hyperlink } from './extensions';
 import { useTextModel } from '../../model';
 
 export const nameRegex = /\{([\w_]+)}/;
@@ -52,6 +54,18 @@ export const promptHighlightStyles = HighlightStyle.define([
     ),
   },
 ]);
+
+export const defaultHyperLinkTooltip = createHyperlinkTooltip((el, url) => {
+  const web = new URL(url);
+  createRoot(el).render(
+    <StrictMode>
+      <div className='flex gap-1 items-center'>
+        <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
+        <p className='pr-1'>{web.origin}</p>
+      </div>
+    </StrictMode>,
+  );
+});
 
 const Story = () => {
   const [item] = useState({
