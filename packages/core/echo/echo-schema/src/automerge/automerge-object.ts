@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { next as automerge, type ChangeFn, type Doc } from '@dxos/automerge/automerge';
+import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -15,7 +15,7 @@ import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
-import { mutationOverride, type TypedObjectOptions } from '../object';
+import { isActualAutomergeObject, mutationOverride, TextObject, type TypedObjectOptions } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import {
   type EchoObject,
@@ -27,6 +27,7 @@ import {
   subscribe,
   proxy,
   immutable,
+  data,
 } from '../object/types';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
@@ -117,11 +118,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   toJSON() {
-    let value = this[base]._getDoc();
-    for (const key of this[base]._path) {
-      value = value?.[key];
-    }
-    return value;
+    return this[data];
   }
 
   get id(): string {
@@ -140,6 +137,14 @@ export class AutomergeObject implements TypedObjectProperties {
 
   get [immutable](): boolean {
     return !!this[base]?._immutable;
+  }
+
+  get [data](): any {
+    let value = this[base]._getDoc();
+    for (const key of this[base]._path) {
+      value = value?.[key];
+    }
+    return value;
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
@@ -165,7 +170,7 @@ export class AutomergeObject implements TypedObjectProperties {
           (initialProps as Record<string, any>)[field.id!] ??= [];
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
           // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
-          (initialProps as Record<string, any>)[field.id!] ??= '';
+          (initialProps as Record<string, any>)[field.id!] ??= new TextObject();
         }
       }
     }
@@ -236,7 +241,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
         const value = this._get([...path, key as string]);
 
-        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
           return value;
         }
         if (value instanceof Reference && value.protocol === 'protobuf') {
@@ -442,6 +447,64 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     return this._schema;
   }
+
+  /**
+   * @internal
+   */
+  _getRawDoc(path?: string[]): DocAccessor {
+    const self = this;
+    return {
+      docSync: () => this._getDoc(),
+      change: (callback, options) => {
+        if (this._doc) {
+          if (options) {
+            this._doc = automerge.change(this._doc!, options, callback);
+          } else {
+            this._doc = automerge.change(this._doc!, callback);
+          }
+        } else {
+          invariant(this._docHandle);
+          this._docHandle.change(callback, options);
+        }
+        this._notifyUpdate();
+      },
+      changeAt: (heads, callback, options) => {
+        let result: Heads | undefined;
+        if (this._doc) {
+          if (options) {
+            const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
+            this._doc = newDoc;
+            result = newHeads ?? undefined;
+          } else {
+            const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, callback);
+            this._doc = newDoc;
+            result = newHeads ?? undefined;
+          }
+        } else {
+          invariant(this._docHandle);
+          result = this._docHandle.changeAt(heads, callback, options);
+        }
+
+        this._notifyUpdate();
+        return result;
+      },
+      addListener: (event, listener) => {
+        if (event === 'change') {
+          this[base]._docHandle?.on('change', listener);
+          this._updates.on(listener);
+        }
+      },
+      removeListener: (event, listener) => {
+        if (event === 'change') {
+          this[base]._docHandle?.off('change', listener);
+          this._updates.off(listener);
+        }
+      },
+      get path() {
+        return [...self._path, 'data', ...(path ?? [])];
+      },
+    };
+  }
 }
 
 const isValidKey = (key: string | symbol) => {
@@ -490,4 +553,21 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
+};
+
+export type DocAccessor<T = any> = {
+  docSync(): Doc<T> | undefined;
+  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
+  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
+
+  addListener(event: 'change', listener: () => void): void;
+  removeListener(event: 'change', listener: () => void): void;
+
+  path?: string[];
+};
+
+export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
+  invariant(isActualAutomergeObject(obj));
+
+  return obj[base]._getRawDoc(path);
 };
