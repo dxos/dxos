@@ -9,7 +9,7 @@ import {
   clientServiceBundle,
   DEFAULT_CLIENT_CHANNEL,
 } from '@dxos/client-protocol';
-import { WorkerProxyRuntime } from '@dxos/client-services';
+import type { WorkerProxyRuntime } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
@@ -93,6 +93,8 @@ export class WorkerClientServices implements ClientServicesProvider {
     if (this._isOpen) {
       return;
     }
+
+    const { WorkerProxyRuntime } = await import('@dxos/client-services');
 
     await this._iframeManager?.open();
     await this._shellManager?.open();
