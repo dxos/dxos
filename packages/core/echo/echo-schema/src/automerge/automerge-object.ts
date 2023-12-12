@@ -15,7 +15,7 @@ import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
-import { mutationOverride, type TypedObjectOptions } from '../object';
+import { mutationOverride, TextObject, type TypedObjectOptions } from '../object';
 import { AbstractEchoObject } from '../object/object';
 import {
   type EchoObject,
@@ -170,7 +170,7 @@ export class AutomergeObject implements TypedObjectProperties {
           (initialProps as Record<string, any>)[field.id!] ??= [];
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
           // TODO(dmaretskyi): Is this right? Should we init with empty string or an actual reference to a Text object?
-          (initialProps as Record<string, any>)[field.id!] ??= '';
+          (initialProps as Record<string, any>)[field.id!] ??= new TextObject();
         }
       }
     }
@@ -241,7 +241,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
         const value = this._get([...path, key as string]);
 
-        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
           return value;
         }
         if (value instanceof Reference && value.protocol === 'protobuf') {
