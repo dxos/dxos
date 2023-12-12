@@ -8,7 +8,7 @@ import { asyncTimeout, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl, type DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { AutomergeContext } from '@dxos/echo-schema';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {
   test('automerge context is being synced with host', async () => {
@@ -22,13 +22,11 @@ describe('AutomergeHost', () => {
     const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
 
     const host = new AutomergeHost(storageDirectory);
-    afterTest(() => host.close());
     const dataService = new DataServiceImpl(
       {} as DataServiceSubscriptions, // is not used in this test, just required argument
       host,
     );
     const client = new AutomergeContext(dataService);
-    afterTest(() => client.close());
 
     // Create document in repo.
     const handle = host.repo.create();
