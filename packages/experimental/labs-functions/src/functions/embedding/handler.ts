@@ -44,11 +44,11 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
               log.info('fetching', { url });
               const res = await fetch(url);
               const buffer = await res.arrayBuffer();
-              const pageContent = (await promisify(textract.fromBufferWithMime)(
+              pageContent = (await promisify(textract.fromBufferWithMime)(
                 res.headers.get('content-type')!,
                 Buffer.from(buffer),
               )) as string;
-              log.info('parsed', { cid: object.cid, text: pageContent?.length });
+              log.info('parsed', { cid: object.cid, pageContent: pageContent?.length });
             }
             break;
           }
@@ -69,8 +69,9 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   const spaces = client.spaces.get();
   if (space) {
     const add = addDocuments(space.key);
-    if (event.objects?.length) {
+    if (objects?.length) {
       await add(objects.filter(hasType(DocumentType.schema)));
+      await add(objects.filter(hasType(FileType.schema)));
     } else {
       const { objects: documents } = space.db.query(DocumentType.filter());
       await add(documents);
@@ -93,13 +94,17 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       apiKey: getKey(config, 'openai.com/api_key'),
     });
 
-    await resources.store.initialize();
+    try {
+      await resources.store.initialize();
 
-    // TODO(burdon): Remove deleted docs.
-    await resources.store.addDocuments(docs);
-    await resources.store.save();
+      // TODO(burdon): Remove deleted docs.
+      await resources.store.addDocuments(docs);
+      await resources.store.save();
 
-    log.info('embedding', resources.info);
+      log.info('embedding', resources.info);
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   return response.status(200);

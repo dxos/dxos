@@ -65,6 +65,7 @@ export class ChainStore {
   }
 
   async initialize() {
+    log.info('initializing...', this.info);
     try {
       if (this.baseDir && fs.existsSync(this.baseDir)) {
         this._vectorStore = await FaissStore.load(this.baseDir, this._embeddings);
@@ -83,7 +84,16 @@ export class ChainStore {
     }
 
     if (!this._vectorStore) {
-      this._vectorStore = await FaissStore.fromDocuments([], this._embeddings);
+      // TODO(burdon): Store isn't initialized properly unless adding at least one document?
+      this._vectorStore = await FaissStore.fromDocuments(
+        [
+          {
+            metadata: { space: 'dxos', id: '_' },
+            pageContent: '',
+          },
+        ],
+        this._embeddings,
+      );
     }
 
     log.info('initialized', this.info);
@@ -93,6 +103,8 @@ export class ChainStore {
   async save() {
     invariant(this.baseDir);
     invariant(this._vectorStore);
+    log.info('saving...', this.info);
+    fs.mkdirSync(this.baseDir, { recursive: true });
     await this._vectorStore.save(this.baseDir);
 
     fs.writeFileSync(
@@ -109,6 +121,7 @@ export class ChainStore {
 
   async delete() {
     invariant(this.baseDir);
+    log.info('deleting...', this.info);
     fs.rmSync(this.baseDir, { recursive: true, force: true });
     return this;
   }
