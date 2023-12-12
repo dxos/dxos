@@ -1,6 +1,6 @@
 #
 
-This package provides isomorphic observability capabilities for the DXPS platform.
+This package provides isomorphic observability capabilities for the DXOS platform.
 
 * Error log capture for monitoring and alerting.
 * Time-series data for monitoring, diagnostics, and alerting.
