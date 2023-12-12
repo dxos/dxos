@@ -158,11 +158,10 @@ const NavTreeItemActionSearchList = ({
                     <SearchList.Item
                       value={value}
                       key={action.id}
-                      onClick={(event) => {
+                      onSelect={() => {
                         if (action.properties.disabled) {
                           return;
                         }
-                        event.stopPropagation();
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
                         void action.invoke();
