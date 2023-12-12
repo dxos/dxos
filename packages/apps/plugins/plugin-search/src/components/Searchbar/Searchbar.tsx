@@ -14,7 +14,7 @@ export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
     input?: string;
   };
   value?: string;
-  onChange?: (text: string) => void;
+  onChange?: (text?: string) => void;
   delay?: number;
 };
 
@@ -24,13 +24,13 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
   useEffect(() => {
     setText(value);
   }, [value]);
-  const handleChange = (text: string) => {
+  const handleChange = (text?: string) => {
     setText(text);
     onChange?.(text);
   };
 
   const handleReset = () => {
-    handleChange('');
+    handleChange(undefined);
     inputRef.current?.focus();
   };
 
