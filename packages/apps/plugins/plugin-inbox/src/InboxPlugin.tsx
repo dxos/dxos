@@ -77,7 +77,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
             });
           };
 
-          // TODO(burdon): Use same id as action?
+          // TODO(burdon): Use same id for action and intent?
           createObject(InboxAction.CREATE_MAILBOX, {
             id: `${INBOX_PLUGIN}/create-mailbox`,
             label: ['create mailbox label', { ns: INBOX_PLUGIN }],
