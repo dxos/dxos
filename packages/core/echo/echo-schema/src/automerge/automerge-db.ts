@@ -68,7 +68,7 @@ export class AutomergeDb {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
         await asyncTimeout(this._docHandle.whenReady(), 500);
-        const ojectIds = Object.keys((await this._docHandle.doc()).objects ?? {});
+        const ojectIds = Object.keys(this._docHandle.docSync().objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
         log('Error opening document', err);
