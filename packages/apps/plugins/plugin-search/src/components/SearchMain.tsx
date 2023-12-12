@@ -30,8 +30,8 @@ export const SearchMain = () => {
 
   // TODO(burdon): Sometimes undefined (race condition?)
   const space = graph && layout ? getActiveSpace(graph, layout.active) : undefined;
-  // console.log(':::', graph && layout?.active, space?.key.truncate());
-  // console.log('???', graph && layout?.active && graph.findNode(layout.active));
+  console.log(':::', graph && layout?.active, space?.key.truncate());
+  console.log('???', graph && layout?.active && graph.findNode(layout.active));
 
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
   const { objects } = allSpaces ? client.spaces.query() : space?.db.query() ?? {};
