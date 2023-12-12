@@ -34,6 +34,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-chain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-chess/package.json",
           "jsonpath": "$.version"
         },
@@ -365,6 +370,11 @@
         {
           "type": "json",
           "path": "packages/core/agent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/chain/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -739,6 +749,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
@@ -810,6 +825,11 @@
         {
           "type": "json",
           "path": "tools/ridoculous/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/stories/package.json",
           "jsonpath": "$.version"
         },
         {

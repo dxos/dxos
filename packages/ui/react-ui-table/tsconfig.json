@@ -42,6 +42,9 @@
     },
     {
       "path": "../react-ui-types"
+    },
+    {
+      "path": "../storybook-utils"
     }
   ]
 }

@@ -15,7 +15,7 @@ import {
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { EditorState, StateField, type Text } from '@codemirror/state';
+import { EditorState, type Extension, StateField, type Text } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   keymap,
@@ -58,6 +58,7 @@ export type MarkdownEditorProps = {
   model?: EditorModel;
   slots?: EditorSlots;
   editorMode?: EditorMode;
+  extensions?: Extension[];
   onChange?: (content: string | Text) => void;
 };
 
@@ -68,7 +69,7 @@ export type MarkdownEditorRef = {
 };
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
-  ({ model, slots = {}, editorMode, onChange }, forwardedRef) => {
+  ({ model, slots = {}, editorMode, extensions = [], onChange }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -160,6 +161,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
           // Replication and awareness (incl. remote selection).
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
+
+          // Custom.
+          ...extensions,
         ],
       });
 

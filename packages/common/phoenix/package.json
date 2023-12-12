@@ -9,6 +9,7 @@
   "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
+    "bin",
     "dist",
     "src"
   ],

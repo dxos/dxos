@@ -7,10 +7,13 @@ import '@dxosTheme';
 import { ArrowRight, ClockCounterClockwise } from '@phosphor-icons/react';
 import React, { type PropsWithChildren } from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
 
 export default {
   component: CompoundButton,
+  decorators: [withTheme],
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => <div className='flex gap-4'>{children}</div>;

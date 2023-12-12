@@ -99,6 +99,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                     export {
                       ${GLOBALS.join(',\n')}
                     } from '@dxos/node-std/inject-globals';
+                    // Empty source map so that esbuild does not inject virtual source file names.
+                    //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIiJdLCJtYXBwaW5ncyI6IkEifQ==
                   `,
                 };
               });

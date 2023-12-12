@@ -5,6 +5,7 @@
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { isTypedObject, type TypedObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 // TODO(burdon): No response?
@@ -36,6 +37,16 @@ export type FunctionSubscriptionEvent2 = {
   objects?: TypedObject[];
 };
 
+/**
+ * Handler wrapper for subscription events; extracts space and objects.
+ *
+ * To test:
+ * ```
+ * curl -s -X POST -H "Content-Type: application/json" --data '{"space": "0446...1cbb"}' http://localhost:7100/dev/email-extractor
+ * ```
+ *
+ * NOTE: Get space key from devtools or `dx space list --json`
+ */
 export const subscriptionHandler = (
   handler: FunctionHandler<FunctionSubscriptionEvent2>,
 ): FunctionHandler<FunctionSubscriptionEvent> => {
@@ -48,6 +59,12 @@ export const subscriptionHandler = (
         ?.map<TypedObject | undefined>((id) => space!.db.getObjectById(id))
         .filter(nonNullable)
         .filter(isTypedObject);
+
+    if (!!event.space && !space) {
+      log.warn('invalid space', { event });
+    } else {
+      log.info('handler', { space: space?.key.truncate(), objects: objects?.length });
+    }
 
     return handler({ event: { space, objects }, context, ...rest });
   };

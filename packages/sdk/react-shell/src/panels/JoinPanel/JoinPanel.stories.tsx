@@ -6,6 +6,8 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { JoinPanelImpl } from './JoinPanel';
 import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';
@@ -27,6 +29,8 @@ const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
 
 export default {
   component: JoinDialog,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const AdditionMethodChooser = () => {

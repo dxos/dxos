@@ -287,10 +287,11 @@ export class SpaceProxy implements Space {
 
     {
       let automergeRoot;
-      if (this._data.pipeline?.appliedEpoch) {
-        invariant(checkCredentialType(this._data.pipeline.appliedEpoch, 'dxos.halo.credentials.Epoch'));
-        automergeRoot = this._data.pipeline.appliedEpoch.subject.assertion.automergeRoot;
+      if (this._data.pipeline?.currentEpoch) {
+        invariant(checkCredentialType(this._data.pipeline.currentEpoch, 'dxos.halo.credentials.Epoch'));
+        automergeRoot = this._data.pipeline.currentEpoch.subject.assertion.automergeRoot;
       }
+
       await this._db.automerge.open({
         rootUrl: automergeRoot,
       });

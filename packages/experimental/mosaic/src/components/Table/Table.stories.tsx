@@ -6,6 +6,7 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { Table, type TableColumn } from './Table';
@@ -40,6 +41,7 @@ const Test = () => {
 export default {
   component: Table,
   decorators: [
+    withTheme,
     SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full bg-zinc-200'>

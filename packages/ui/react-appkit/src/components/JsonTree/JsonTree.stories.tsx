@@ -6,10 +6,13 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { JsonTree } from './JsonTree';
 
 export default {
   component: JsonTree,
+  decorators: [withTheme],
 };
 
 const data = {

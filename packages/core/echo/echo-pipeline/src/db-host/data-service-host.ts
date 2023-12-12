@@ -18,6 +18,7 @@ import {
   type MutationReceipt,
   type WriteRequest,
   type SyncRepoResponse,
+  type HostInfo,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
@@ -203,6 +204,10 @@ export class DataServiceHost {
 
   async flush(): Promise<void> {
     await this._flush();
+  }
+
+  getHostInfo(): Promise<HostInfo> {
+    throw new Error('Method not implemented.');
   }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {

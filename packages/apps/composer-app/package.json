@@ -9,6 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "dependencies": {
+    "@braneframe/plugin-chain": "workspace:*",
     "@braneframe/plugin-chess": "workspace:*",
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
@@ -61,6 +62,7 @@
     "@dxos/react-shell": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-navtree": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",

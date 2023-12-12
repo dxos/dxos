@@ -111,12 +111,6 @@
         "prebuild"
       ]
     },
-    "chromatic": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "storybook-build"
-      ]
-    },
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -190,20 +184,6 @@
       ]
     },
     "serve-with-vault": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
-    },
-    "storybook": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
-    },
-    "storybook-build": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",

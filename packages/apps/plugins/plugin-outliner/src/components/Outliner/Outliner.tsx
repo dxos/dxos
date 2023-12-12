@@ -6,12 +6,18 @@ import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { useTextModel, type YText } from '@dxos/react-ui-editor';
+import {
+  TextEditor,
+  useTextModel,
+  type CursorInfo,
+  type TextEditorProps,
+  type TextEditorRef,
+  type YText,
+} from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type CursorInfo, TextEditor, type TextEditorProps, type TextEditorRef } from '../TextEditor';
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
@@ -59,20 +65,20 @@ const OutlinerItem = ({
     }
   }, [focus]);
 
-  const ref = useRef<TextEditorRef>(null);
+  const editorRef = useRef<TextEditorRef>(null);
   useEffect(() => {
-    if (ref.current && active && !focus) {
+    if (editorRef.current && active && !focus) {
       // TODO(burdon): Hack since ref isn't instantiated yet.
       //  NOTE: This happens with the line is split and a new line is created and set as the active line.
       setTimeout(() => {
-        ref.current?.view?.focus();
-        const from = active.from === -1 ? ref.current?.view?.state.doc.length : active.from;
+        editorRef.current?.view?.focus();
+        const from = active.from === -1 ? editorRef.current?.view?.state.doc.length : active.from;
         if (from !== undefined) {
-          ref.current?.view?.dispatch({ selection: { anchor: from, head: active.to ?? from } });
+          editorRef.current?.view?.dispatch({ selection: { anchor: from, head: active.to ?? from } });
         }
       });
     }
-  }, [ref.current?.view, active]);
+  }, [editorRef.current?.view, active]);
 
   const handleKeyDown: TextEditorProps['onKeyDown'] = (event, state) => {
     const { key, shiftKey } = event;
@@ -139,7 +145,7 @@ const OutlinerItem = ({
   };
 
   return (
-    <div className='flex px-2 group'>
+    <div className='flex group'>
       {(isTasklist && (
         <div className='py-1 mr-1'>
           <Input.Root>
@@ -162,7 +168,7 @@ const OutlinerItem = ({
 
       {model && (
         <TextEditor
-          ref={ref}
+          ref={editorRef}
           model={model}
           slots={{
             root: {
@@ -281,14 +287,15 @@ type OutlinerRootProps = {
 const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: OutlinerRootProps) => {
   const [active, setActive] = useState<CursorSelection>();
 
-  // TODO(burdon): [BUG]: New item is created while current editor has focus.
-  //  In storybooks, if typing quickly the text following ENTER will be in the old item.
+  //
+  // Create/split line.
+  //
   const handleCreate: OutlinerBranchProps['onItemCreate'] = (parent, current, state) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => current.id === id);
 
     let item: Item;
-    if (state?.from === 0) {
+    if (state?.from === 0 && state?.after?.length) {
       // Insert before.
       item = onCreate!();
       items.splice(idx, 0, item);
@@ -312,6 +319,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     return item;
   };
 
+  //
+  // Delete/join line.
+  //
   const handleDelete: OutlinerBranchProps['onItemDelete'] = (parent, item, state) => {
     if (parent === root && parent.items?.length === 1) {
       return;
@@ -351,6 +361,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Indent.
+  //
   const handleIndent: OutlinerBranchProps['onItemIndent'] = (parent, item, direction) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
@@ -381,6 +394,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Move lines.
+  //
   const handleShift: OutlinerBranchProps['onItemShift'] = (parent, item, direction) => {
     const idx = parent.items!.findIndex(({ id }) => id === item.id) ?? -1;
     switch (direction) {
@@ -400,6 +416,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Navigation.
+  //
   const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, pos) => {
     switch (direction) {
       case 'home': {

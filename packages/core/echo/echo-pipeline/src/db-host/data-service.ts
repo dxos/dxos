@@ -16,6 +16,7 @@ import {
   type FlushRequest,
   type SyncRepoRequest,
   type SyncRepoResponse,
+  type HostInfo,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
@@ -81,11 +82,17 @@ export class DataServiceImpl implements DataService {
     return host.flush();
   }
 
+  // Automerge specific.
+
+  async getHostInfo(request: void): Promise<HostInfo> {
+    return this._automergeHost.getHostInfo();
+  }
+
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
-    throw new Error('Method not implemented.');
+    return this._automergeHost.syncRepo(request);
   }
 
   sendSyncMessage(request: SyncRepoRequest): Promise<void> {
-    throw new Error('Method not implemented.');
+    return this._automergeHost.sendSyncMessage(request);
   }
 }

@@ -27,6 +27,12 @@ export const stringMatch = (text: string, prefix = false) => {
     : (value: string) => value.toLowerCase() === match;
 };
 
+export const getYaml = <T>(filename: string): T | undefined => {
+  if (fs.existsSync(filename)) {
+    return yaml.load(String(fs.readFileSync(filename))) as T;
+  }
+};
+
 export const getConfig = (
   filename = process.env.TEST_CONFIG ?? path.join(process.env.HOME!, '.config/dx/profile/default.yml'),
 ): Config | undefined => {

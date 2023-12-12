@@ -42,18 +42,6 @@
     "serve-with-vault": {
       "executor": "@dxos/serve-with-vault:run"
     },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/experimental/kai-frames/.storybook",
-        "uiFramework": "@storybook/react"
-      }
-    },
     "test": {
       "executor": "@dxos/test:run",
       "options": {
