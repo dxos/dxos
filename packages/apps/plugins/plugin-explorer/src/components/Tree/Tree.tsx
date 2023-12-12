@@ -60,14 +60,14 @@ export type TreeComponentProps<N = unknown> = {
   onNodeClick?: (node?: N) => void;
 };
 
+// TODO(burdon): Label accessor.
 export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: TreeComponentProps<N>) => {
-  // TODO(burdon): Model isn't getting updated. Subscribe to changes on space (like Graph).
   const model = useMemo(() => (space ? new SpaceGraphModel().open(space, selected) : undefined), [space, selected]);
-  const [data, setData] = useState<TreeNode>();
+  const [tree, setTree] = useState<TreeNode>();
   useEffect(() => {
     return model?.subscribe(() => {
       const tree = mapGraphToTreeData(model);
-      setData(tree);
+      setTree(tree);
     }, true);
   }, [model]);
 
@@ -80,7 +80,7 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
       const radius = size * 0.4;
       const options = {
         // TODO(burdon): Type.
-        label: (d: any) => d.label,
+        label: (d: any) => d.label ?? d.id,
         width,
         height,
         radius,
@@ -91,10 +91,12 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
         slots: defaultTreeLayoutSlots,
       };
 
-      const renderer = renderers.get(variant);
-      renderer?.(context.ref.current!, data, options);
+      if (tree) {
+        const renderer = renderers.get(variant);
+        renderer?.(context.ref.current!, tree, options);
+      }
     }
-  }, [data, width, height]);
+  }, [tree, width, height]);
 
   // TODO(burdon): Provider should expand.
   return (

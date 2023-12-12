@@ -20,6 +20,7 @@ export type DevServerOptions = {
   directory: string;
   manifest: FunctionManifest;
   reload?: boolean;
+  dataDir?: string;
 };
 
 /**
@@ -85,7 +86,7 @@ export class DevServer {
       }
     });
 
-    this._port = await getPort({ port: 7200, portRange: [7200, 7299] });
+    this._port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
     this._server = app.listen(this._port);
 
     try {
@@ -161,6 +162,7 @@ export class DevServer {
 
     const context: FunctionContext = {
       client: this._client,
+      dataDir: this._options.dataDir,
     };
 
     let statusCode = 200;

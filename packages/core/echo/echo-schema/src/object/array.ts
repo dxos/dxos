@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { AbstractEchoObject } from './object';
 import { getGlobalAutomergePreference, type AutomergeOptions, type TypedObject } from './typed-object';
 import { base } from './types';
-import { AutomergeArray } from '../automerge/automerge-array';
+import { AutomergeArray } from '../automerge';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;

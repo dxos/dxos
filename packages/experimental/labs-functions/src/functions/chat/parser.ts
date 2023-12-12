@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 export type ParseResult = {
   pre?: string;
   post?: string;
@@ -11,23 +13,11 @@ export type ParseResult = {
 };
 
 export const parseMessage = (content: string, type = '\\w+'): ParseResult | undefined => {
-  const text = content.replace(/[\n\r]/g, ' ');
-
-  // Check if entire message is JSON.
-  if (type === 'json') {
-    const data = parseJson(content);
-    if (data) {
-      return {
-        type,
-        content,
-        data,
-      };
-    }
-  }
+  invariant(content);
 
   // Check for embedded block content.
-  const regexp = new RegExp('(.+)?```(' + type + ')(.+)```(.+)');
-  const match = regexp.exec(text); // text.match(/(.+)?```(\w+) (.+)```(.+)/);
+  const regexp1 = new RegExp('(.+)?```(' + type + ')?\\s+(.+)```', 's');
+  const match = regexp1.exec(content);
   if (match) {
     const [_, pre, type, content, post] = match;
     return {

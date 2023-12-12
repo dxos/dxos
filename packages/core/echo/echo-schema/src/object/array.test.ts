@@ -8,7 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
 import { Expando, TypedObject, getGlobalAutomergePreference } from './typed-object';
-import { AutomergeArray } from '../automerge/automerge-array';
+import { AutomergeArray } from '../automerge';
 import { createDatabase, testWithAutomerge } from '../testing';
 
 describe('Arrays', () => {

@@ -11,7 +11,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { restoreSpace } from '../backup';
+import { importData } from '../backup';
 import { SPACE_PLUGIN } from '../meta';
 
 export const DialogRestoreSpace = ({ space }: { space: Space }) => {
@@ -26,7 +26,7 @@ export const DialogRestoreSpace = ({ space }: { space: Space }) => {
         classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
         dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
         handleChange={(backupFile: File) =>
-          restoreSpace(space, backupFile).finally(() => dispatch({ action: LayoutAction.CLOSE_DIALOG }))
+          importData(space, backupFile).finally(() => dispatch({ action: LayoutAction.CLOSE_DIALOG }))
         }
       >
         <FilePlus weight='duotone' className={getSize(8)} />

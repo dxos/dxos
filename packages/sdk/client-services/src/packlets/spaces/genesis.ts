@@ -11,7 +11,12 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { type SigningContext } from './data-space-manager';
 
-export const spaceGenesis = async (keyring: Keyring, signingContext: SigningContext, space: Space) => {
+export const spaceGenesis = async (
+  keyring: Keyring,
+  signingContext: SigningContext,
+  space: Space,
+  automergeRoot?: string,
+) => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
     await createCredential({
@@ -67,6 +72,7 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         previousId: undefined,
         timeframe: new Timeframe(),
         snapshotCid: undefined,
+        automergeRoot,
       },
     }),
   ];

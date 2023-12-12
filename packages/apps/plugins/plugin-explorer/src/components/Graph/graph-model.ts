@@ -34,7 +34,6 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
   }
 
   open(space: Space, objectId?: string) {
-    this.setSelected(objectId);
     if (!this._subscription) {
       // TODO(burdon): Filter.
       const query = space.db.query((object) => object.__typename !== 'braneframe.Folder');
@@ -96,6 +95,7 @@ export class SpaceGraphModel extends GraphModel<TypedObject> {
       }, true);
     }
 
+    this.setSelected(objectId);
     return this;
   }
 

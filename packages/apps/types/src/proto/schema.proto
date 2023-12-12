@@ -90,6 +90,17 @@ message Script {
 /**
  *
  */
+// TODO(burdon): Generalize to script?
+message Mermaid {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text source = 2;
+}
+
+/**
+ *
+ */
 message Stack {
   option (object) = true;
 
@@ -113,8 +124,7 @@ message Tree {
   message Item {
     option (object) = true;
 
-    string text = 1;
-    // dxos.schema.Text text = 1;
+    dxos.schema.Text text = 1;
     repeated Item items = 2;
     bool done = 3;
   }
@@ -215,6 +225,7 @@ message Mailbox {
 
 /**
  * Universal message type.
+ * Attempts to unify email, chat, and other messaging.
  */
 message Message {
   option (object) = true;
@@ -232,22 +243,72 @@ message Message {
     dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 
-  // TODO(burdon): Add reference to Contact object?
   message Recipient {
+    // TODO(burdon): Add reference to Contact object.
+    // TODO(burdon): Import key definition.
+    // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
     string email = 2;
     string name = 3;
   }
 
-  // TODO(burdon): Import key.
-  // dxos.keys.PublicKey identity_key = 2;
-  string identity_key = 1; // TODO(burdon): Replace with from.
-  Context context = 2;
-  string date = 3;
+  enum State {
+    UNREAD = 0;
+    READ = 1;
+    ARCHIVED = 2;
+    DELETED = 3; // Need to tombstone.
+    SPAM = 4;
+  }
+
+  string type = 1;
+  string date = 2;
 
   Recipient from = 10;
   repeated Recipient to = 11;
+  repeated Recipient cc = 12;
 
   string subject = 20;
   repeated Block blocks = 21;
+
+  // TODO(burdon): Email attachments and computed references.
+  repeated dxos.schema.Expando links = 30;
+
+  State visibility = 40;
+
+  Context context = 100;
+}
+
+/**
+ * AI Chain.
+ */
+message Chain {
+  option (object) = true;
+
+  message Input {
+    option (object) = true;
+
+    enum Type {
+      VALUE = 0;
+      PASS_THROUGH = 1;
+      RETRIEVER = 2;
+      FUNCTION = 3;
+      QUERY = 4;
+    }
+
+    string name = 1;
+    Type type = 2;
+    dxos.schema.Text value = 3;
+  }
+
+  // TODO(burdon): Not reactive unless object?
+  message Prompt {
+    option (object) = true;
+
+    string command = 1;
+    dxos.schema.Text source = 2;
+    repeated Input inputs = 3;
+  }
+
+  string title = 1;
+  repeated Prompt prompts = 2;
 }

@@ -8,6 +8,7 @@ import React from 'react';
 
 import { Avatar, useJdenticonHref } from './Avatar';
 import { AvatarGroup, AvatarGroupItem } from './AvatarGroup';
+import { withTheme } from '../../testing';
 
 const items = [
   '[&_.avatarFrameFill]:fill-lime-500',
@@ -42,6 +43,7 @@ const StorybookAvatarGroup = () => {
 
 export default {
   component: StorybookAvatarGroup,
+  decorators: [withTheme],
 };
 
 export const Default = {

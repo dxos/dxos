@@ -26,7 +26,7 @@
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/sdk/shell/src/playwright/playwright.config.ts",
-        "serve": "shell:storybook",
+        "serve": "stories:storybook-e2e",
         "testPatterns": [
           "packages/sdk/shell/src/playwright/**/*.spec.{ts,js}"
         ],
@@ -41,32 +41,6 @@
           "packages/sdk/shell/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/sdk/shell/.storybook"
-      }
-    },
-    "storybook-build": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:build",
-      "options": {
-        "configDir": "packages/sdk/shell/.storybook",
-        "outputDir": "packages/sdk/shell/out/shell"
-      },
-      "outputs": [
-        "{options.outputDir}"
-      ]
     }
   },
   "implicitDependencies": [

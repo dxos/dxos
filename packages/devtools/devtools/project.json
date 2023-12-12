@@ -44,18 +44,6 @@
     },
     "serve-with-vault": {
       "executor": "@dxos/serve-with-vault:run"
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/devtools/devtools/.storybook",
-        "uiFramework": "@storybook/react"
-      }
     }
   },
   "implicitDependencies": [

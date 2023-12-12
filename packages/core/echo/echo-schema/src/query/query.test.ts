@@ -205,31 +205,53 @@ test('query with model filters', async () => {
   expect(peer.db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
 });
 
-test('query by typename receives updates', async () => {
-  const testBuilder = new TestBuilder();
-  testBuilder.graph.addTypes(types);
-  const peer = await testBuilder.createPeer();
-  const contact = peer.db.add(new Contact());
-  const name = 'Rich Ivanov';
+testWithAutomerge(() => {
+  describe('Queries with types', () => {
+    test('query by typename receives updates', async () => {
+      const testBuilder = new TestBuilder();
+      testBuilder.graph.addTypes(types);
+      const peer = await testBuilder.createPeer();
+      const contact = peer.db.add(new Contact());
+      const name = 'Rich Ivanov';
 
-  const query = peer.db.query(Filter.typename('example.test.Contact'));
-  expect(query.objects).to.have.length(1);
-  expect(query.objects[0]).to.eq(contact);
+      const query = peer.db.query(Filter.typename('example.test.Contact'));
+      expect(query.objects).to.have.length(1);
+      expect(query.objects[0]).to.eq(contact);
 
-  const nameUpdate = new Trigger();
-  const anotherContactAdded = new Trigger();
-  const unsub = query.subscribe(({ objects }) => {
-    if (objects.some((obj) => obj.name === name)) {
-      nameUpdate.wake();
-    }
-    if (objects.length === 2) {
-      anotherContactAdded.wake();
-    }
+      const nameUpdate = new Trigger();
+      const anotherContactAdded = new Trigger();
+      const unsub = query.subscribe(({ objects }) => {
+        if (objects.some((obj) => obj.name === name)) {
+          nameUpdate.wake();
+        }
+        if (objects.length === 2) {
+          anotherContactAdded.wake();
+        }
+      });
+      afterTest(() => unsub());
+
+      contact.name = name;
+      peer.db.add(new Contact());
+
+      await asyncTimeout(nameUpdate.wait(), 1000);
+      await asyncTimeout(anotherContactAdded.wait(), 1000);
+    });
+
+    test('`instanceof` operator works', async () => {
+      const testBuilder = new TestBuilder();
+      testBuilder.graph.addTypes(types);
+      const peer = await testBuilder.createPeer();
+      const name = 'Rich Ivanov';
+      const contact = new Contact({ name });
+      peer.db.add(contact);
+      expect(contact instanceof Contact).to.be.true;
+
+      // query
+      {
+        const contact = peer.db.query(Contact.filter()).objects[0];
+        expect(contact.name).to.eq(name);
+        expect(contact instanceof Contact).to.be.true;
+      }
+    });
   });
-  afterTest(() => unsub());
-
-  contact.name = name;
-  peer.db.add(new Contact());
-  await asyncTimeout(nameUpdate.wait(), 1000);
-  await asyncTimeout(anotherContactAdded.wait(), 1000);
 });

@@ -69,13 +69,18 @@
 
 :root {
   --surface-bg: theme(colors.neutral.12);
+  --input-bg: theme(colors.neutral.50);
+  --input-bg-hover: theme(colors.neutral.50 / 60%);
   --surface-text: theme(colors.neutral.900);
   --description-text: theme(colors.neutral.650);
   --topbar-size: theme(spacing.12);
+  --sticky-top: 0;
 }
 
 .dark {
   --surface-bg: theme(colors.neutral.900);
+  --input-bg: theme(colors.neutral.850);
+  --input-bg-hover: theme(colors.neutral.850 / 60%);
   --surface-text: theme(colors.neutral.50);
   --description-text: theme(colors.neutral.300);
 }
@@ -83,41 +88,57 @@
 .base-surface {
   background-color: theme(colors.neutral.12);
   --surface-bg: theme(colors.neutral.12);
+  --input-bg: theme(colors.neutral.50);
+  --input-bg-hover: theme(colors.neutral.50 / 60%);
 }
 
 .dark .base-surface {
   background-color: theme(colors.neutral.900);
   --surface-bg: theme(colors.neutral.900);
+  --input-bg: theme(colors.neutral.850);
+  --input-bg-hover: theme(colors.neutral.850 / 60%);
 }
 
 .fixed-surface {
   background-color: theme(colors.neutral.12 / 30%);
   --surface-bg: theme(colors.neutral.12);
+  --input-bg: theme(colors.neutral.50);
+  --input-bg-hover: theme(colors.neutral.50 / 60%);
 }
 
 .dark .fixed-surface {
   background-color: theme(colors.neutral.900 / 40%);
   --surface-bg: theme(colors.neutral.900);
+  --input-bg: theme(colors.neutral.850);
+  --input-bg-hover: theme(colors.neutral.850 / 60%);
 }
 
 .group-surface {
   background-color: theme(colors.neutral.50);
   --surface-bg: theme(colors.neutral.50);
+  --input-bg: theme(colors.neutral.12);
+  --input-bg-hover: theme(colors.neutral.12 / 60%);
 }
 
 .dark .group-surface {
   background-color: theme(colors.neutral.850);
   --surface-bg: theme(colors.neutral.850);
+  --input-bg: theme(colors.neutral.900);
+  --input-bg-hover: theme(colors.neutral.900 / 60%);
 }
 
 .chrome-surface {
   background-color: theme(colors.neutral.12);
   --surface-bg: theme(colors.neutral.12);
+  --input-bg: theme(colors.neutral.50);
+  --input-bg-hover: theme(colors.neutral.50 / 60%);
 }
 
 .dark .chrome-surface {
   background-color: theme(colors.neutral.800);
   --surface-bg: theme(colors.neutral.800);
+  --input-bg: theme(colors.neutral.850);
+  --input-bg-hover: theme(colors.neutral.850 / 60%);
 }
 
 .input-surface {
@@ -144,4 +165,8 @@ html {
 
 .overflow-anchor {
   overflow-anchor: auto;
+}
+
+.sticky-top-from-topbar-bottom {
+  --sticky-top: var(--topbar-size);
 }

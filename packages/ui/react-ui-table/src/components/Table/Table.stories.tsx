@@ -7,10 +7,11 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
@@ -168,6 +169,7 @@ export default {
     },
   },
   decorators: [
+    withTheme,
     (Story: any) => (
       <DensityProvider density='fine'>
         <Story />
@@ -206,6 +208,7 @@ export const Empty = {
 
 export const Dynamic = {
   render: () => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(50));
     useEffect(() => {
       const interval = setInterval(() => {
@@ -219,7 +222,7 @@ export const Dynamic = {
       return () => clearInterval(interval);
     }, []);
     return (
-      <AnchoredOverflow.Root classNames='max-bs-[80dvh]'>
+      <AnchoredOverflow.Root classNames='max-bs-[80dvh]' ref={containerRef}>
         <Table<Item>
           rowsSelectable='multi'
           keyAccessor={(row) => row.publicKey.toHex()}
@@ -227,6 +230,8 @@ export const Dynamic = {
           data={items}
           fullWidth
           footer
+          stickyHeader
+          getScrollElement={() => containerRef.current}
         />
         <AnchoredOverflow.Anchor />
       </AnchoredOverflow.Root>
@@ -236,21 +241,26 @@ export const Dynamic = {
 
 export const Editable = {
   render: () => {
-    const [items, setItems] = useState<Item[]>(createItems(10));
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [items, setItems] = useState<Item[]>(createItems(200));
     const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
       setItems((items) => updateItems(items, item.publicKey, prop, value));
     };
 
     return (
-      <Table<Item>
-        role='grid'
-        rowsSelectable='multi'
-        keyAccessor={(row) => row.publicKey.toHex()}
-        columns={columns(onUpdate)}
-        data={items}
-        fullWidth
-        border
-      />
+      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
+        <Table<Item>
+          role='grid'
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={columns(onUpdate)}
+          data={items}
+          fullWidth
+          stickyHeader
+          border
+          getScrollElement={() => containerRef.current}
+        />
+      </div>
     );
   },
 };
@@ -273,6 +283,7 @@ export const Resizable = {
         columns={columns(onUpdate)}
         data={items}
         fullWidth
+        stickyHeader
         // onColumnResize={handleColumnResize}
       />
     );

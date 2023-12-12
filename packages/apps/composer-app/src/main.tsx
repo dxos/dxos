@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
@@ -22,6 +23,7 @@ import KanbanMeta from '@braneframe/plugin-kanban/meta';
 import LayoutMeta from '@braneframe/plugin-layout/meta';
 import MapMeta from '@braneframe/plugin-map/meta';
 import MarkdownMeta from '@braneframe/plugin-markdown/meta';
+import MermaidMeta from '@braneframe/plugin-mermaid/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
 import OutlinerMeta from '@braneframe/plugin-outliner/meta';
@@ -40,22 +42,14 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { Config, Defaults, createClientServices } from '@dxos/react-client';
-import { EchoDatabase, SpaceProxy, TextObject, TypedObject } from '@dxos/react-client/echo';
-import { ProgressBar } from '@dxos/react-ui';
+import { createClientServices, Config, Defaults } from '@dxos/react-client';
+import { TextObject } from '@dxos/react-client/echo';
+import { Status, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
-// @ts-ignore
-import './globals';
 import { setupConfig } from './config';
+import { appKey } from './globals';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TypedObject.name] = TypedObject;
-(globalThis as any)[EchoDatabase.name] = EchoDatabase;
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-
-const appKey = 'composer.dxos.org';
 
 const main = async () => {
   const config = await setupConfig();
@@ -64,9 +58,11 @@ const main = async () => {
 
   const App = createApp({
     fallback: (
-      <div className='flex h-screen justify-center items-center'>
-        <ProgressBar indeterminate />
-      </div>
+      <ThemeProvider tx={defaultTx}>
+        <div className='flex bs-[100dvh] justify-center items-center'>
+          <Status indeterminate aria-label='Initializing' />
+        </div>
+      </ThemeProvider>
     ),
     order: [
       // Needs to run ASAP on startup (but not blocking).
@@ -98,9 +94,11 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
+      ChainMeta,
       StackMeta,
       PresenterMeta,
       MarkdownMeta,
+      MermaidMeta,
       SketchMeta,
       GridMeta,
       InboxMeta,
@@ -117,6 +115,7 @@ const main = async () => {
       SearchMeta,
     ],
     plugins: {
+      [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
         appKey,
@@ -138,6 +137,7 @@ const main = async () => {
       [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout')),
       [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
+      [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
@@ -150,6 +150,7 @@ const main = async () => {
       [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
+        version: '1',
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
           const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);

@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { ScrollContainer } from './ScrollContainer';
 
 const TAGS = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length - i}`);
@@ -44,6 +46,7 @@ const Lists = ({ count = 10 }) => {
 export default {
   component: ScrollContainer,
   decorators: [
+    withTheme,
     (Story: any) => (
       <div className='flex flex-col w-full h-screen justify-center items-center bg-white'>
         <Story />

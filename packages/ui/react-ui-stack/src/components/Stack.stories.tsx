@@ -8,6 +8,7 @@ import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack, type StackSectionContent, type StackProps, type StackSectionItem } from './Stack';
 import { FullscreenDecorator, TestObjectGenerator } from '../testing';
@@ -28,6 +29,7 @@ const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string;
 
 export default {
   component: Stack,
+  decorators: [withTheme],
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
       <Mosaic.Root debug={debug}>
@@ -93,7 +95,7 @@ export const Copy = {
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
       <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay />
+        <Mosaic.DragOverlay debug={debug} />
         <div className='flex grow justify-center p-4'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
@@ -122,7 +124,7 @@ const DemoStack = ({
 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count });
+    return generator.createObjects({ length: count }).map((object) => ({ id: faker.datatype.uuid(), object }));
   });
 
   const itemsRef = useRef(items);

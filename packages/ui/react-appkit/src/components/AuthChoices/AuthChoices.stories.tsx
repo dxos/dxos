@@ -7,12 +7,14 @@ import '@dxosTheme';
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { AuthChoices, type AuthChoicesProps } from './AuthChoices';
 import { Group } from '../Group';
 
 export default {
   component: AuthChoices,
+  decorators: [withTheme],
   argTypes: {
     onCreate: { action: 'create' },
     onRecover: { action: 'recover' },

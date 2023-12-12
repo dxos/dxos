@@ -2,23 +2,29 @@
 <html lang="en" style="overscroll-behavior: none">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
     <title>Composer</title>
-    <meta name="description" content="DXOS Composer Application">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#003E70">
-    <meta name="msapplication-TileColor" content="#003E70">
-    <meta name="theme-color" content="#003E70">
+    <meta name="description" content="DXOS Composer Application" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#003E70" />
+    <meta name="msapplication-TileColor" content="#003E70" />
+    <meta name="theme-color" content="#003E70" />
     <script>
       function setTheme(darkMode) {
-        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
       }
-      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-        setTheme(e.matches)
+        setTheme(e.matches);
       });
+    </script>
+    <script>
+      // Load automerge settings.
+      if (localStorage.getItem('dxos.org/settings/automerge') === 'true') {
+        DXOS_FORCE_AUTOMERGE = true;
+      }
     </script>
     <style>
       html {
@@ -26,7 +32,7 @@
       }
       @media (min-width: 768px) {
         html {
-          font-size: 16px
+          font-size: 16px;
         }
       }
     </style>
