@@ -27,6 +27,7 @@ import {
   subscribe,
   proxy,
   immutable,
+  data,
 } from '../object/types';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
@@ -117,11 +118,7 @@ export class AutomergeObject implements TypedObjectProperties {
   }
 
   toJSON() {
-    let value = this[base]._getDoc();
-    for (const key of this[base]._path) {
-      value = value?.[key];
-    }
-    return value;
+    return this[data];
   }
 
   get id(): string {
@@ -140,6 +137,14 @@ export class AutomergeObject implements TypedObjectProperties {
 
   get [immutable](): boolean {
     return !!this[base]?._immutable;
+  }
+
+  get [data](): any {
+    let value = this[base]._getDoc();
+    for (const key of this[base]._path) {
+      value = value?.[key];
+    }
+    return value;
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
