@@ -14,7 +14,7 @@ export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
     input?: string;
   };
   value?: string;
-  onChange?: (text: string) => void;
+  onChange?: (text?: string) => void;
   delay?: number;
 };
 
@@ -24,13 +24,13 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
   useEffect(() => {
     setText(value);
   }, [value]);
-  const handleChange = (text: string) => {
+  const handleChange = (text?: string) => {
     setText(text);
     onChange?.(text);
   };
 
   const handleReset = () => {
-    handleChange('');
+    handleChange(undefined);
     inputRef.current?.focus();
   };
 
@@ -42,12 +42,13 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
           placeholder={placeholder}
           variant={variant}
           value={text ?? ''}
-          classNames={mx('pl-3 pr-[40px]', classes?.input)}
+          classNames={mx('pl-3 pr-10', classes?.input)}
           onChange={({ target }) => handleChange(target.value)}
           onKeyDown={({ key }) => key === 'Escape' && handleReset()}
         />
 
-        <Button variant='ghost' classNames='-ml-8 p-0 cursor-pointer' onClick={handleReset}>
+        {/* TODO(burdon): Margin should be density specific. */}
+        <Button variant='ghost' classNames='-ml-7 p-0 cursor-pointer' onClick={handleReset}>
           <MagnifyingGlass className={getSize(5)} />
         </Button>
       </Input.Root>
