@@ -22,7 +22,6 @@ export default (field: Field, handle: Peer, transactions: Transaction[], state: 
   }
 
   if (!hasChanges) {
-    console.log('No changes', transactions);
     return undefined;
   }
 
