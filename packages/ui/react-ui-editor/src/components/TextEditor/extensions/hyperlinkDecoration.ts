@@ -4,7 +4,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type RangeSet, RangeSetBuilder, StateField } from '@codemirror/state';
+import { type EditorState, type RangeSet, RangeSetBuilder, StateField, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 // Adapted from:
@@ -57,41 +57,43 @@ type HyperlinkDecorationConfig = {
  * Creates a state field to replace AST elements with a hyperlink widget.
  * https://codemirror.net/docs/ref/#state.StateField
  */
-export const hyperlinkDecoration = ({ link }: HyperlinkDecorationConfig = {}) =>
-  StateField.define<RangeSet<any>>({
-    create: () => Decoration.none,
-    // Called on each edit.
-    update: (_, tr) => {
-      const builder = new RangeSetBuilder();
-      const cursor = tr.state.selection.main.head;
-      syntaxTree(tr.state).iterate({
-        enter: (node) => {
-          // Check if cursor is inside text.
-          if (cursor < node.from || cursor > node.to) {
-            if (node.name === 'Link') {
-              const marks = node.node.getChildren('LinkMark');
-              const text = marks.length >= 2 ? tr.state.sliceDoc(marks[0].to, marks[1].from) : '';
-
-              const urlNode = node.node.getChild('URL');
-              const url = urlNode ? tr.state.sliceDoc(urlNode.from, urlNode.to) : '';
-
-              builder.add(
-                node.from,
-                node.to,
-                Decoration.replace({
-                  widget: new Link(node.from, text, link ? url : undefined),
-                }),
-              );
-
-              return false;
-            }
-          }
-
-          return true;
-        },
-      });
-
-      return builder.finish();
-    },
+export const hyperlinkDecoration = ({ link }: HyperlinkDecorationConfig = {}) => {
+  return StateField.define<RangeSet<any>>({
+    create: (state) => update(state, link),
+    update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, link),
     provide: (field) => EditorView.decorations.from(field),
   });
+};
+
+const update = (state: EditorState, link?: boolean) => {
+  const builder = new RangeSetBuilder();
+  const cursor = state.selection.main.head;
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      // Check if cursor is inside text.
+      if (cursor < node.from || cursor > node.to) {
+        if (node.name === 'Link') {
+          const marks = node.node.getChildren('LinkMark');
+          const text = marks.length >= 2 ? state.sliceDoc(marks[0].to, marks[1].from) : '';
+
+          const urlNode = node.node.getChild('URL');
+          const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
+
+          builder.add(
+            node.from,
+            node.to,
+            Decoration.replace({
+              widget: new Link(node.from, text, link ? url : undefined),
+            }),
+          );
+
+          return false;
+        }
+      }
+
+      return true;
+    },
+  });
+
+  return builder.finish();
+};
