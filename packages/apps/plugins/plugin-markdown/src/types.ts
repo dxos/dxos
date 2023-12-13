@@ -50,7 +50,10 @@ type StackProvides = {
   };
 };
 
-export type MarkdownSettingsProps = { editorMode?: EditorMode };
+export type MarkdownSettingsProps = {
+  editorMode?: EditorMode;
+  showWidgets?: boolean; // TODO(burdon): Flip.
+};
 
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &

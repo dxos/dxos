@@ -20,11 +20,21 @@ export default {
   decorators: [withTheme],
 };
 
+const content = [
+  '',
+  '',
+  'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
+  '',
+  'This is a link: https://www.dxos.org',
+  '',
+  '',
+].join('\n');
+
 export const Default = {
   args: {
     model: {
       id: 'editor',
-      content: 'Hello, Storybook!',
+      content,
     },
   },
 };
@@ -54,6 +64,7 @@ export const WithYjs = {
       </main>
     );
   },
+
   // TODO(wittjosiah): Decorator for doing this without clients being initialized?
   decorators: [ClientDecorator({ count: 2 })],
 };
