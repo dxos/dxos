@@ -23,7 +23,7 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.9.2",
+    "@codemirror/language": "^6.9.3",
     "@dxos/display-name": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
