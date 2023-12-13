@@ -7,10 +7,11 @@ import React, { forwardRef } from 'react';
 import type { Document as DocumentType } from '@braneframe/types';
 import { DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
-import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import { createHyperlinkTooltip, MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
+import { onTooltip } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 export type EditorCardProps = {
@@ -54,6 +55,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
           <Card.Body>
             <MarkdownEditor
               model={content}
+              extensions={[createHyperlinkTooltip(onTooltip)]}
               slots={{
                 root: {
                   className: mx(
