@@ -11,7 +11,7 @@
         "script": "apidoc"
       },
       "outputs": [
-        "{options.outputFile}"
+        "docs/docs/api"
       ]
     },
     "build": {
@@ -33,7 +33,7 @@
         "script": "bundle"
       },
       "outputs": [
-        "{options.outputFile}"
+        "docs/docs/.vuepress/dist"
       ]
     },
     "lint": {
@@ -51,8 +51,8 @@
         "script": "prerelease"
       },
       "outputs": [
-        "docs/docs",
-        "docs/docs/.vuepress/dist"
+        "docs/apidoc.json",
+        "docs/docs/api"
       ]
     },
     "serve": {
@@ -76,7 +76,7 @@
         "script": "typedoc"
       },
       "outputs": [
-        "{options.outputFile}"
+        "docs/apidoc.json"
       ]
     }
   },
