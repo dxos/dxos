@@ -6,6 +6,7 @@ import { markdownLanguage } from '@codemirror/lang-markdown';
 import { HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import get from 'lodash.get';
+import { type StyleSpec } from 'style-mod';
 
 import { markdownTags } from './markdownTags';
 import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
@@ -36,7 +37,12 @@ const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 // TODO(burdon): On first character, height of editor changes by a few pixels.
 // TODO(burdon): Is the '&' prefix required? If so, document.
 
-export const markdownTheme = {
+// TODO(burdon): Type.
+export type Styles = {
+  [selector: string]: StyleSpec;
+};
+
+export const markdownTheme: Styles = {
   // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated.
   // '&': {
   //   color: ivory,

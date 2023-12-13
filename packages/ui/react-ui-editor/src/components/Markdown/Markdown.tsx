@@ -2,35 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import {
-  bracketMatching,
-  defaultHighlightStyle,
-  foldKeymap,
-  indentOnInput,
-  syntaxHighlighting,
-} from '@codemirror/language';
-import { languages } from '@codemirror/language-data';
-import { lintKeymap } from '@codemirror/lint';
-import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import {
-  keymap,
-  crosshairCursor,
-  drawSelection,
-  dropCursor,
-  highlightActiveLine,
-  highlightActiveLineGutter,
-  highlightSpecialChars,
-  placeholder,
-  rectangularSelection,
-  EditorView,
-} from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
-// import { GFM } from '@lezer/markdown';
 import { vim } from '@replit/codemirror-vim';
 import React, { type KeyboardEvent, forwardRef, useEffect, useImperativeHandle, useState, useCallback } from 'react';
 import { yCollab } from 'y-codemirror.next';
@@ -40,8 +14,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue } from '@dxos/react-ui-theme';
 import { YText } from '@dxos/text-model';
 
-import { markdownTagsExtension } from './markdownTags';
-import { markdownHighlightStyle, markdownTheme } from './markdownTheme';
+import { basicBundle, markdownBundle } from './extensions';
 import { type EditorModel, type EditorSlots } from '../../model';
 
 export const EditorModes = ['default', 'vim'] as const;
@@ -57,7 +30,6 @@ export type MarkdownEditorProps = {
   model: EditorModel;
   extensions?: Extension[];
   slots?: EditorSlots;
-  // TODO(burdon): Move props to extensions.
   editorMode?: EditorMode;
 };
 
@@ -75,24 +47,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       view,
     }));
 
-    // TODO(burdon): Factor out?
-    // TODO(burdon): Why useMemo vs useCallback?
-    // const onChangeExtension = useMemo(
-    //   () =>
-    //     StateField.define({
-    //       create: () => null,
-    //       update: (_value, transaction) => {
-    //         if (transaction.docChanged && onChange) {
-    //           onChange(transaction.newDoc);
-    //         }
-    //
-    //         return null;
-    //       },
-    //     }),
-    //   [onChange],
-    // );
-
     // Presence/awareness.
+    // TODO(burdon): Plugin.
     const { provider, peer, content } = model;
     useEffect(() => {
       if (provider && peer) {
@@ -112,63 +68,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
-          // TODO(burdon): Create custom bundle to make this class more reusable and retire simpler TextEditor component.
-          // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
-          // https://codemirror.net/docs/ref/#codemirror.basicSetup
-          autocompletion(),
-          bracketMatching(),
-          closeBrackets(),
-          crosshairCursor(),
-          dropCursor(),
-          drawSelection(),
-          highlightActiveLine(),
-          highlightActiveLineGutter(),
-          highlightSelectionMatches(),
-          highlightSpecialChars(),
-          history(),
-          indentOnInput(),
-          placeholder(slots.editor?.placeholder ?? ''), // TODO(burdon): Needs consistent styling.
-          rectangularSelection(),
-          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-          EditorState.allowMultipleSelections.of(true),
-          EditorView.lineWrapping,
-
-          keymap.of([
-            ...closeBracketsKeymap,
-            ...completionKeymap,
-            ...defaultKeymap,
-            ...foldKeymap,
-            ...historyKeymap,
-            ...lintKeymap,
-            ...searchKeymap,
-            indentWithTab,
-          ]),
-
-          // Main extension.
-          // https://github.com/codemirror/lang-markdown
-          markdown({
-            base: markdownLanguage,
-            codeLanguages: languages,
-            extensions: [
-              // TODO(burdon): This seems to upgrade the parser.
-              // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
-              // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
-              // https://github.github.com/gfm
-              // GFM,
-
-              // Custom styling.
-              markdownTagsExtension,
-            ],
-          }),
-
-          // Theme.
-          EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
-          ...(themeMode === 'dark'
-            ? [syntaxHighlighting(oneDarkHighlightStyle)]
-            : [syntaxHighlighting(defaultHighlightStyle)]),
-
-          // TODO(thure): All but one rule here apply to both themes; rename or refactor.
-          syntaxHighlighting(markdownHighlightStyle),
+          basicBundle({ placeholder: slots?.editor?.placeholder }),
+          markdownBundle({ themeMode, theme: slots.editor?.markdownTheme }),
 
           // Settings.
           ...(editorMode === 'vim' ? [vim()] : []),
@@ -220,8 +121,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return (
       <div
         key={model.id}
-        tabIndex={0}
         ref={setParent}
+        tabIndex={0}
         {...slots.root}
         {...(editorMode !== 'vim' ? tabsterDOMAttribute : {})}
         onKeyUp={handleKeyUp}
