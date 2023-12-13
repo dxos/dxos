@@ -49,7 +49,7 @@ export type AutomergePlugin = {
   reconcile: (handle: Peer, view: EditorView) => void;
 }
 
-export const plugin = <T>(doc: Doc<T>, path: Prop[]): AutomergePlugin => {
+export const automergePlugin = <T>(doc: Doc<T>, path: Prop[]): AutomergePlugin => {
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
       lastHeads: automerge.getHeads(doc),
