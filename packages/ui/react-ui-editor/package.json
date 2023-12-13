@@ -62,6 +62,7 @@
     "yjs": "^13.6.10"
   },
   "devDependencies": {
+    "@automerge/automerge-repo-network-broadcastchannel": "^1.0.19",
     "@dxos/automerge": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
