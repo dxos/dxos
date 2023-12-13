@@ -16,7 +16,6 @@ export type EditorProps = UseTextModelOptions & {
 
 /**
  * Memoized editor which depends on DXOS platform.
- *
  * Determines which editor to render based on the kind of text.
  */
 // NOTE: Without `memo`, if parent component uses `observer` the editor re-renders excessively.
