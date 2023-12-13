@@ -17,5 +17,6 @@ export const withTheme: Decorator = (StoryFn, context) => {
   return createElement(ThemeProvider, {
     children: createElement(StoryFn),
     tx: defaultTx,
+    resourceExtensions: context?.parameters?.translations,
   });
 };

@@ -654,6 +654,9 @@ export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
   globalAutomergePreference = useAutomerge;
 };
 
+/**
+ * @deprecated Temporary.
+ */
 export const getGlobalAutomergePreference = () => {
   return (
     globalAutomergePreference ??

@@ -287,14 +287,15 @@ type OutlinerRootProps = {
 const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: OutlinerRootProps) => {
   const [active, setActive] = useState<CursorSelection>();
 
-  // TODO(burdon): [BUG]: New item is created while current editor has focus.
-  //  In storybooks, if typing quickly the text following ENTER will be in the old item.
+  //
+  // Create/split line.
+  //
   const handleCreate: OutlinerBranchProps['onItemCreate'] = (parent, current, state) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => current.id === id);
 
     let item: Item;
-    if (state?.from === 0) {
+    if (state?.from === 0 && state?.after?.length) {
       // Insert before.
       item = onCreate!();
       items.splice(idx, 0, item);
@@ -318,6 +319,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     return item;
   };
 
+  //
+  // Delete/join line.
+  //
   const handleDelete: OutlinerBranchProps['onItemDelete'] = (parent, item, state) => {
     if (parent === root && parent.items?.length === 1) {
       return;
@@ -357,6 +361,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Indent.
+  //
   const handleIndent: OutlinerBranchProps['onItemIndent'] = (parent, item, direction) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
@@ -387,6 +394,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Move lines.
+  //
   const handleShift: OutlinerBranchProps['onItemShift'] = (parent, item, direction) => {
     const idx = parent.items!.findIndex(({ id }) => id === item.id) ?? -1;
     switch (direction) {
@@ -406,6 +416,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Navigation.
+  //
   const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, pos) => {
     switch (direction) {
       case 'home': {

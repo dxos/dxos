@@ -243,20 +243,21 @@ message Message {
     dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 
+  // TODO(burdon): Promote to top-level (shared with Event).
   message Recipient {
     // TODO(burdon): Add reference to Contact object.
     // TODO(burdon): Import key definition.
     // dxos.keys.PublicKey identity_key = 2;
-    string identity_key = 1;
+    optional string identity_key = 1;
     string email = 2;
-    string name = 3;
+    optional string name = 3;
+    optional Contact contact = 4;
   }
 
   enum State {
-    UNREAD = 0;
-    READ = 1;
+    NONE = 0;
     ARCHIVED = 2;
-    DELETED = 3; // Need to tombstone.
+    DELETED = 3; // TODO(burdon): Actually delete (need sync range so that doesn't return).
     SPAM = 4;
   }
 
@@ -273,9 +274,46 @@ message Message {
   // TODO(burdon): Email attachments and computed references.
   repeated dxos.schema.Expando links = 30;
 
-  State visibility = 40;
+  // TODO(burdon): Tags.
+  optional State state = 40;
+  optional bool read = 41;
 
   Context context = 100;
+}
+
+message Contact {
+  option (object) = true;
+
+  message Identifier {
+    string type = 1;
+    string value = 2;
+  }
+
+  string name = 1;
+  repeated Identifier identifiers = 2;
+}
+
+message Event {
+  option (object) = true;
+
+  string title = 1;
+  Message.Recipient owner = 2;
+  repeated Message.Recipient attendees = 3;
+
+  string start_date = 10;
+
+  // TODO(burdon): Model links separately?
+  repeated dxos.schema.Expando links = 20;
+}
+
+// TODO(burdon): Rename? Singleton with queries?
+message AddressBook {
+  option (object) = true;
+}
+
+// TODO(burdon): Rename?
+message Calendar {
+  option (object) = true;
 }
 
 /**
@@ -300,7 +338,8 @@ message Chain {
     dxos.schema.Text value = 3;
   }
 
-  // TODO(burdon): Not reactive unless object?
+  // TODO(burdon): Bug: Not reactive unless object?
+  //  https://github.com/dxos/dxos/issues/4882
   message Prompt {
     option (object) = true;
 
