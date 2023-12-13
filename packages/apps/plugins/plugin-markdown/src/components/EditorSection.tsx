@@ -17,7 +17,7 @@ import { type EditorMainProps } from './EditorMain';
 import { onTooltip } from './extensions';
 
 // TODO(burdon): Reconcile types.
-type EditorSectionProps = EditorMainProps['showWidgets'] & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
+type EditorSectionProps = Pick<EditorMainProps, 'showWidgets'> & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
 
 export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
   const editorRef = useRef<MarkdownEditorRef>(null);

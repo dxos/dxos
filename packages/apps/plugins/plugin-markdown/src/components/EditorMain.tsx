@@ -30,13 +30,13 @@ export type EditorMainProps = {
 } & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
+  editorRefCb,
   model,
   properties,
   layout,
   editorMode,
   showWidgets,
   onChange,
-  editorRefCb,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;

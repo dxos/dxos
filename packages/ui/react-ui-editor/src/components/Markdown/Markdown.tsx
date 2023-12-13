@@ -198,7 +198,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       };
     }, [parent, content, provider?.awareness, themeMode, editorMode]);
 
-    // TODO(burdon): Create extension?
+    // TODO(burdon): Create extension with listener.
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
