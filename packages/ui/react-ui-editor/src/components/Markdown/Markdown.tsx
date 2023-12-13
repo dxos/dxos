@@ -15,7 +15,7 @@ import {
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { EditorState, type Extension, StateField, type Text } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   keymap,
@@ -32,15 +32,7 @@ import {
 import { useFocusableGroup } from '@fluentui/react-tabster';
 // import { GFM } from '@lezer/markdown';
 import { vim } from '@replit/codemirror-vim';
-import React, {
-  type KeyboardEvent,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-  useMemo,
-  useCallback,
-} from 'react';
+import React, { type KeyboardEvent, forwardRef, useEffect, useImperativeHandle, useState, useCallback } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { generateName } from '@dxos/display-name';
@@ -55,51 +47,56 @@ import { type EditorModel, type EditorSlots } from '../../model';
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
-export type MarkdownEditorProps = {
-  model: EditorModel;
-  slots?: EditorSlots;
-  editorMode?: EditorMode;
-  showWidgets?: boolean;
-  extensions?: Extension[];
-  onChange?: (content: string | Text) => void;
-};
-
 export type MarkdownEditorRef = {
   editor: HTMLDivElement | null;
   state?: EditorState;
   view?: EditorView;
 };
 
+export type MarkdownEditorProps = {
+  model: EditorModel;
+  extensions?: Extension[];
+  slots?: EditorSlots;
+  // TODO(burdon): Move props to extensions.
+  editorMode?: EditorMode;
+  showWidgets?: boolean;
+  // TODO(burdon): Factor out (move to extension).
+  // onChange?: (content: string | Text) => void;
+};
+
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
-  ({ model, slots = {}, editorMode, extensions = [], onChange }, forwardedRef) => {
-    const { id, content, provider, peer } = model ?? {};
+  ({ model, extensions = [], slots = {}, editorMode }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
     const [parent, setParent] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
     const [view, setView] = useState<EditorView>();
-
     useImperativeHandle(forwardedRef, () => ({
       editor: parent,
       state,
       view,
     }));
 
-    const listenChangesExtension = useMemo(
-      () =>
-        StateField.define({
-          create: () => null,
-          update: (_value, transaction) => {
-            if (transaction.docChanged && onChange) {
-              onChange(transaction.newDoc);
-            }
-            return null;
-          },
-        }),
-      [onChange],
-    );
+    // TODO(burdon): Factor out?
+    // TODO(burdon): Why useMemo vs useCallback?
+    // const onChangeExtension = useMemo(
+    //   () =>
+    //     StateField.define({
+    //       create: () => null,
+    //       update: (_value, transaction) => {
+    //         if (transaction.docChanged && onChange) {
+    //           onChange(transaction.newDoc);
+    //         }
+    //
+    //         return null;
+    //       },
+    //     }),
+    //   [onChange],
+    // );
 
+    // Presence/awareness.
+    const { provider, peer, content } = model;
     useEffect(() => {
       if (provider && peer) {
         provider.awareness.setLocalStateField('user', {
@@ -118,9 +115,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
-          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
-          listenChangesExtension,
-
           // TODO(burdon): Create custom bundle to make this class more reusable and retire simpler TextEditor component.
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
           // https://codemirror.net/docs/ref/#codemirror.basicSetup
@@ -207,6 +201,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       };
     }, [parent, content, provider?.awareness, themeMode, editorMode]);
 
+    // TODO(burdon): Create extension?
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
@@ -227,9 +222,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
     return (
       <div
+        key={model.id}
         tabIndex={0}
         ref={setParent}
-        key={id}
         {...slots.root}
         {...(editorMode !== 'vim' ? tabsterDOMAttribute : {})}
         onKeyUp={handleKeyUp}

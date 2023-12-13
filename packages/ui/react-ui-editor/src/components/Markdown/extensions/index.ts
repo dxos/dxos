@@ -5,3 +5,4 @@
 export * from './hyperlinkDecoration';
 export * from './hyperlinkTooltip';
 export * from './hyperlinkWidget';
+export * from './onChange';

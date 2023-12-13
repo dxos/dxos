@@ -14,18 +14,14 @@ import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, Layo
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import {
-  type EditorModel,
-  type MarkdownEditorProps,
-  type MarkdownEditorRef,
-  useTextModel,
-} from '@dxos/react-ui-editor';
+import { type EditorModel, type MarkdownEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
   EditorCard,
   EditorMain,
   EditorMainEmbedded,
+  type EditorMainProps,
   EditorSection,
   MarkdownMainEmpty,
   MarkdownSettings,
@@ -58,7 +54,7 @@ export const isDocument = (data: unknown): data is Document =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
-  const state = deepSignal<{ onChange: NonNullable<MarkdownEditorProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<EditorMainProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
   const pluginMutableRef: MutableRefObject<MarkdownEditorRef> = {
@@ -73,7 +69,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     composer: EditorModel;
     properties: MarkdownProperties;
   }> = ({ composer, properties }) => {
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -100,8 +96,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       text: document?.content,
     });
 
-    // TODO(burdon): Document.
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );

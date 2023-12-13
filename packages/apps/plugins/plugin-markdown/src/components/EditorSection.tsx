@@ -28,8 +28,8 @@ export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionP
     <MarkdownEditor
       ref={editorRef}
       model={model}
-      editorMode={editorMode}
       extensions={extensions}
+      editorMode={editorMode}
       slots={{
         root: {
           role: 'none',

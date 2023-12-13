@@ -7,5 +7,4 @@ export { tags } from '@lezer/highlight';
 
 export * from './TextEditor';
 
-export * from './extensions';
 export * from './theme';

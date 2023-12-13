@@ -168,7 +168,7 @@ export type RichTextEditorProps = UseEditorOptions & {
 /**
  * @deprecated
  */
-// TODO(burdon): Currently broken.
+// TODO(burdon): Remove?
 export const RichTextEditor = forwardRef<Editor | null, RichTextEditorProps>((props, ref) => {
   const editor = useEditor(props);
   useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);

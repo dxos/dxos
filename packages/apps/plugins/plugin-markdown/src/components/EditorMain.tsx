@@ -11,6 +11,7 @@ import {
   type MarkdownEditorRef,
   MarkdownEditor,
   hyperlinkDecoration,
+  onChangeExtension,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
@@ -20,11 +21,12 @@ import { onTooltip } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
-type EditorMainProps = {
+export type EditorMainProps = {
+  editorRefCb: RefCallback<MarkdownEditorRef>;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
-  editorRefCb: RefCallback<MarkdownEditorRef>;
-} & Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets' | 'onChange'>;
+  onChange: (text: string) => void;
+} & Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets'>;
 
 export const EditorMain = ({
   model,
@@ -37,7 +39,7 @@ export const EditorMain = ({
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = [createHyperlinkTooltip(onTooltip)];
+  const extensions = [onChangeExtension(onChange), createHyperlinkTooltip(onTooltip)];
   if (showWidgets) {
     extensions.push(hyperlinkDecoration());
   }
@@ -49,7 +51,6 @@ export const EditorMain = ({
         model={model}
         editorMode={editorMode}
         extensions={extensions}
-        onChange={onChange}
         slots={{
           root: {
             role: 'none',
