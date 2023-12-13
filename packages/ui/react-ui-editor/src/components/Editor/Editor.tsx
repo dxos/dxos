@@ -24,6 +24,10 @@ export type EditorProps = UseTextModelOptions & {
 export const Editor = memo(
   forwardRef<TipTapEditor | MarkdownEditorRef, EditorProps>(({ slots, ...params }, forwardedRef) => {
     const model = useTextModel(params);
+    if (!model) {
+      return null;
+    }
+
     if (model?.content instanceof YXmlFragment) {
       return <RichTextEditor ref={forwardedRef as Ref<TipTapEditor>} model={model} slots={slots} />;
     } else {
