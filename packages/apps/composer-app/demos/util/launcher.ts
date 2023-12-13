@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Browser, BrowserContext, BrowserType, Page, chromium } from '@playwright/test';
+import { type Browser, type BrowserContext, type BrowserType, type Page, chromium } from '@playwright/test';
 
-import { Bounds } from './grid';
+import { type Bounds } from './grid';
 
 /**
  * https://playwright.dev/docs/api/class-playwright
