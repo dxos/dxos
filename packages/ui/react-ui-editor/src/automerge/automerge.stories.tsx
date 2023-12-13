@@ -25,20 +25,20 @@ const Editor = ({ handle, path }: EditorProps) => {
     const doc = handle.doc;
     const source = doc.text; // this should use path
 
-    const automergePluginInstance = automergePlugin(doc, path);
+    const automergePluginInstance = automergePlugin(handle, path);
 
     const view = (editorRoot.current = new EditorView({
       doc: source,
       extensions: [basicSetup, automergePluginInstance],
       dispatchTransactions(trs, view) {
         view.update(trs);
-        automergePluginInstance.reconcile(handle, view);
+        automergePluginInstance.reconcile(view);
       },
       parent: containerRef.current as any,
     }));
 
     const handleChange = () => {
-      automergePluginInstance.reconcile(handle, view);
+      automergePluginInstance.reconcile(view);
     };
 
     handle.changeEvent.on(handleChange);

@@ -46,13 +46,13 @@ const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
 
 export type AutomergePlugin = {
   extension: Extension;
-  reconcile: (handle: IDocHandle, view: EditorView) => void;
+  reconcile: (view: EditorView) => void;
 }
 
-export const automergePlugin = <T>(doc: Doc<T>, path: Prop[]): AutomergePlugin => {
+export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
-      lastHeads: automerge.getHeads(doc),
+      lastHeads: automerge.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
       path: path.slice(),
     }),
@@ -83,7 +83,7 @@ export const automergePlugin = <T>(doc: Doc<T>, path: Prop[]): AutomergePlugin =
 
   return {
     extension: [stateField, semaphoreFacet.of(semaphore)],
-    reconcile: (handle: IDocHandle, view: EditorView) => {
+    reconcile: (view: EditorView) => {
       view.state.facet(semaphoreFacet).reconcile(handle, view);
     }
   };
