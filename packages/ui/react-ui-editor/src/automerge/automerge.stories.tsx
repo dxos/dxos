@@ -29,10 +29,6 @@ const Editor = ({ handle, path }: EditorProps) => {
     const view = (editorRoot.current = new EditorView({
       doc: source,
       extensions: [basicSetup, automergePluginInstance],
-      dispatchTransactions: (trs, view) => {
-        view.update(trs);
-        automergePluginInstance.reconcile(view);
-      },
       parent: containerRef.current as any,
     }));
 
