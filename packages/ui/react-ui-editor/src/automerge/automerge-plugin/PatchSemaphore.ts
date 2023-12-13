@@ -28,7 +28,7 @@ export class PatchSemaphore {
   }
 
   reconcile = (handle: Peer, view: EditorView) => {
-    if (!this._inReconcile) {
+    if (this._inReconcile) {
       return;
     }
     this._inReconcile = true;
