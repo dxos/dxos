@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@preact/signals-react'; // Register react integration
+import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { EditorView } from '@codemirror/view';
 import { basicSetup } from 'codemirror';
-import React, { useEffect, useRef, useState } from 'react';
-import '@preact/signals-react'; // Register react integration
-
-import { type Prop, next as automerge } from '@dxos/automerge/automerge';
-
-import { IDocHandle, automergePlugin } from './automerge-plugin';
 import get from 'lodash.get';
-import { DocHandle, Repo } from '@dxos/automerge/automerge-repo';
-import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { type Prop } from '@dxos/automerge/automerge';
+import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
+
+import { type IDocHandle, automergePlugin } from './automerge-plugin';
 
 type EditorProps = {
   handle: IDocHandle;
@@ -57,7 +57,7 @@ const Story = () => {
       });
 
       const object2 = repo2.find(object1.url);
-      await object2.whenReady()
+      await object2.whenReady();
 
       setObject1(object1);
       setObject2(object2);

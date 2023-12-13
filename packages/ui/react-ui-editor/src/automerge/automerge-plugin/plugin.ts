@@ -12,7 +12,7 @@ import {
   type Transaction,
   type TransactionSpec,
 } from '@codemirror/state';
-import { ViewPlugin, type EditorView, PluginValue, ViewUpdate } from '@codemirror/view';
+import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
 
 import * as automerge from '@dxos/automerge/automerge';
 import { type Heads, type Prop } from '@dxos/automerge/automerge';
@@ -90,7 +90,7 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
       }
 
       update(update: ViewUpdate) {
-        if(update.transactions.length > 0 && update.transactions.some(t => !isReconcileTx(t))) {
+        if (update.transactions.length > 0 && update.transactions.some((t) => !isReconcileTx(t))) {
           queueMicrotask(() => {
             this._view.state.facet(semaphoreFacet).reconcile(handle, this._view);
           });
