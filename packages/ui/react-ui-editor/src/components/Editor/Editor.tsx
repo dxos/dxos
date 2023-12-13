@@ -16,7 +16,6 @@ export type EditorProps = UseTextModelOptions & {
 
 /**
  * Memoized editor which depends on DXOS platform.
- *
  * Determines which editor to render based on the kind of text.
  */
 // NOTE: Without `memo`, if parent component uses `observer` the editor re-renders excessively.
@@ -24,6 +23,10 @@ export type EditorProps = UseTextModelOptions & {
 export const Editor = memo(
   forwardRef<TipTapEditor | MarkdownEditorRef, EditorProps>(({ slots, ...params }, forwardedRef) => {
     const model = useTextModel(params);
+    if (!model) {
+      return null;
+    }
+
     if (model?.content instanceof YXmlFragment) {
       return <RichTextEditor ref={forwardedRef as Ref<TipTapEditor>} model={model} slots={slots} />;
     } else {
