@@ -30,6 +30,7 @@ import {
   EditorView,
 } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
+import { GFM } from '@lezer/markdown';
 import { vim } from '@replit/codemirror-vim';
 import React, {
   type KeyboardEvent,
@@ -48,7 +49,7 @@ import { getColorForValue } from '@dxos/react-ui-theme';
 import { YText } from '@dxos/text-model';
 
 import { markdownTagsExtension } from './markdownTags';
-import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
+import { markdownHighlightStyle, markdownTheme } from './markdownTheme';
 import { type EditorModel, type EditorSlots } from '../../model';
 
 export const EditorModes = ['default', 'vim'] as const;
@@ -120,8 +121,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
           listenChangesExtension,
 
-          ...(editorMode === 'vim' ? [vim()] : []),
-
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
           // https://codemirror.net/docs/ref/#codemirror.basicSetup
           highlightActiveLineGutter(),
@@ -152,14 +151,32 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           ]),
           EditorView.lineWrapping,
 
-          // Themes.
-          markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
+          // Main extension.
+          // https://github.com/codemirror/lang-markdown
+          markdown({
+            base: markdownLanguage,
+            codeLanguages: languages,
+            extensions: [
+              // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
+              // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
+              GFM,
+
+              // Custom styling.
+              markdownTagsExtension,
+            ],
+          }),
+
+          // Theme.
           EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
           ...(themeMode === 'dark'
             ? [syntaxHighlighting(oneDarkHighlightStyle)]
             : [syntaxHighlighting(defaultHighlightStyle)]),
+
           // TODO(thure): All but one rule here apply to both themes; rename or refactor.
-          syntaxHighlighting(markdownDarkHighlighting),
+          syntaxHighlighting(markdownHighlightStyle),
+
+          // Settings.
+          ...(editorMode === 'vim' ? [vim()] : []),
 
           // Replication and awareness (incl. remote selection).
           // https://codemirror.net/docs/ref/#collab

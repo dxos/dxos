@@ -29,7 +29,7 @@ export const defaultStyles: {
     border: 'none',
   },
   '.cm-link': {
-    color: get(tokens, 'colors.primary.500'), // TODO(burdon): Not working.
+    color: get(tokens, 'extend.colors.primary.500'),
     textDecoration: 'underline',
   },
 };
