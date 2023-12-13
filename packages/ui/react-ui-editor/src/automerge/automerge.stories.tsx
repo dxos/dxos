@@ -11,6 +11,7 @@ import { type Prop, next as automerge } from '@dxos/automerge/automerge';
 
 import { automergePlugin } from './automerge-plugin';
 import { Peer } from './demo';
+import get from 'lodash.get';
 
 type EditorProps = {
   handle: Peer;
@@ -22,13 +23,9 @@ const Editor = ({ handle, path }: EditorProps) => {
   const editorRoot = useRef<EditorView>();
 
   useEffect(() => {
-    const source = handle.doc.text; // this should use path
-
-    const automergePluginInstance = automergePlugin(handle, path);
-
     const view = (editorRoot.current = new EditorView({
-      doc: source,
-      extensions: [basicSetup, automergePluginInstance],
+      doc: get(handle.doc, path),
+      extensions: [basicSetup, automergePlugin(handle, path)],
       parent: containerRef.current as any,
     }));
 
