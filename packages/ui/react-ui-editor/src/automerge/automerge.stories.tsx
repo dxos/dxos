@@ -37,13 +37,7 @@ const Editor = ({ handle, path }: EditorProps) => {
       parent: containerRef.current as any,
     }));
 
-    const handleChange = () => {
-      automergePluginInstance.reconcile(view);
-    };
-
-    handle.changeEvent.on(handleChange);
     return () => {
-      handle.changeEvent.off(handleChange);
       view.destroy();
     };
   }, []);
