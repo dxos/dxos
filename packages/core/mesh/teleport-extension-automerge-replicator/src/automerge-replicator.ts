@@ -114,6 +114,10 @@ export class AutomergeReplicator implements TeleportExtension {
     invariant(this._rpc, 'RPC not initialized');
     await this._rpc.rpc.AutomergeReplicatorService.sendSyncMessage(message);
   }
+
+  async disconnect() {
+    await this._rpc?.rpc.AutomergeReplicatorService.stopReplication({ id: this._params.peerId });
+  }
 }
 
 type ServiceBundle = {
