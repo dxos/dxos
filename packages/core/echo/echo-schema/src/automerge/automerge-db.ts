@@ -21,6 +21,7 @@ import {
   getGlobalAutomergePreference,
   isActualTypedObject,
   isActualAutomergeObject,
+  TextObject,
 } from '../object';
 import { type Schema } from '../proto';
 
@@ -66,8 +67,8 @@ export class AutomergeDb {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        await asyncTimeout(this._docHandle.whenReady(), 500);
-        const ojectIds = Object.keys((await this._docHandle.doc()).objects ?? {});
+        const doc = await asyncTimeout(this._docHandle.doc(), 500);
+        const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
         log('Error opening document', err);
@@ -122,7 +123,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj)) {
+    if (isActualTypedObject(obj) || obj instanceof TextObject) {
       return this._echoDatabase.add(obj);
     }
 

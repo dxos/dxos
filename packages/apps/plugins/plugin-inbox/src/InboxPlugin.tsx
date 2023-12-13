@@ -2,49 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Envelope, type IconProps } from '@phosphor-icons/react';
+import { AddressBook, Calendar, Envelope, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Mailbox as MailboxType } from '@braneframe/types';
 import {
-  LayoutAction,
-  // type GraphPluginProvides,
-  // type LayoutProvides,
-  // type Plugin,
-  type PluginDefinition,
-  parseIntentPlugin,
-  // parseLayoutPlugin,
-  // parseGraphPlugin,
-  resolvePlugin,
-} from '@dxos/app-framework';
+  Folder,
+  Mailbox as MailboxType,
+  AddressBook as AddressBookType,
+  Calendar as CalendarType,
+} from '@braneframe/types';
+import { LayoutAction, type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { type Action } from '@dxos/app-graph';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
-import { Mailbox } from './components';
+import { ContactsMain, EventsMain, Mailbox } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
-import { InboxAction, type InboxPluginProvides, isInbox } from './types';
+import { InboxAction, type InboxPluginProvides, isAddressBook, isCalendar, isMailbox } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[MailboxType.name] = MailboxType;
+(globalThis as any)[AddressBookType.name] = AddressBookType;
+(globalThis as any)[CalendarType.name] = CalendarType;
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
-  // let graphPlugin: Plugin<GraphPluginProvides> | undefined;
-  // let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
-
   return {
     meta,
-    ready: async (plugins) => {
-      // graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      // layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-    },
     provides: {
       metadata: {
         records: {
           [MailboxType.schema.typename]: {
-            placeholder: ['inbox title placeholder', { ns: INBOX_PLUGIN }],
+            placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Envelope {...props} />,
+          },
+          [AddressBookType.schema.typename]: {
+            placeholder: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
+            icon: (props: IconProps) => <AddressBook {...props} />,
+          },
+          [CalendarType.schema.typename]: {
+            placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
+            icon: (props: IconProps) => <Calendar {...props} />,
           },
         },
       },
@@ -58,27 +57,41 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${INBOX_PLUGIN}/create`,
-            label: ['create inbox label', { ns: INBOX_PLUGIN }],
+          const createObject = (action: string, props: Pick<Action, 'id' | 'label' | 'icon'>) => {
+            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+              ...props,
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: INBOX_PLUGIN,
+                    action,
+                  },
+                  {
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target: parent.data },
+                  },
+                  {
+                    action: LayoutAction.ACTIVATE,
+                  },
+                ]),
+            });
+          };
+
+          // TODO(burdon): Use same id for action and intent?
+          createObject(InboxAction.CREATE_MAILBOX, {
+            id: `${INBOX_PLUGIN}/create-mailbox`,
+            label: ['create mailbox label', { ns: INBOX_PLUGIN }],
             icon: (props) => <Envelope {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
-                  plugin: INBOX_PLUGIN,
-                  action: InboxAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: LayoutAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'inboxPlugin.createObject',
-            },
+          });
+          createObject(InboxAction.CREATE_ADDRESSBOOK, {
+            id: `${INBOX_PLUGIN}/create-addressbook`,
+            label: ['create addressbook label', { ns: INBOX_PLUGIN }],
+            icon: (props) => <AddressBook {...props} />,
+          });
+          createObject(InboxAction.CREATE_CALENDAR, {
+            id: `${INBOX_PLUGIN}/create-calendar`,
+            label: ['create calendar label', { ns: INBOX_PLUGIN }],
+            icon: (props) => <Calendar {...props} />,
           });
         },
       },
@@ -86,7 +99,16 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isInbox(data.active) ? <Mailbox mailbox={data.active} /> : null;
+              if (isMailbox(data.active)) {
+                return <Mailbox mailbox={data.active} />;
+              }
+              if (isAddressBook(data.active)) {
+                return <ContactsMain contacts={data.active} />;
+              }
+              if (isCalendar(data.active)) {
+                return <EventsMain calendar={data.active} />;
+              }
+              return null;
             default:
               return null;
           }
@@ -95,8 +117,14 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case InboxAction.CREATE: {
+            case InboxAction.CREATE_MAILBOX: {
               return { object: new MailboxType() };
+            }
+            case InboxAction.CREATE_ADDRESSBOOK: {
+              return { object: new AddressBookType() };
+            }
+            case InboxAction.CREATE_CALENDAR: {
+              return { object: new CalendarType() };
             }
           }
         },

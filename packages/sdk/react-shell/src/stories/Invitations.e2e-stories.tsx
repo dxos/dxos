@@ -16,9 +16,11 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { ClientDecorator } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
 import { getSize, groupSurface } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ClipboardProvider, IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
+import { osTranslations } from '../translations';
 
 export default {
   title: 'Invitations',
@@ -220,8 +222,9 @@ export const Default = {
       </Tooltip.Provider>
     </ClipboardProvider>
   ),
-  decorators: [ClientDecorator({ count: 3 })],
+  decorators: [withTheme, ClientDecorator({ count: 3 })],
   parameters: {
     chromatic: { disableSnapshot: true },
+    translations: [osTranslations],
   },
 };

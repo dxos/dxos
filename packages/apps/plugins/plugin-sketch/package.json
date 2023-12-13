@@ -24,6 +24,8 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@tldraw/assets": "2.0.0-alpha.14",
     "@tldraw/editor": "2.0.0-alpha.14",
