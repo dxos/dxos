@@ -559,27 +559,12 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/kai-sandbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/kodama/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/labs-functions/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/experimental/metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/mosaic/package.json",
           "jsonpath": "$.version"
         },
         {
