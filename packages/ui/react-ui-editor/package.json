@@ -49,7 +49,7 @@
     "@tiptap/pm": "2.0.0-beta.220",
     "@tiptap/react": "2.0.0-beta.220",
     "@tiptap/starter-kit": "2.0.0-beta.220",
-    "codemirror": "^6.65.7",
+    "codemirror": "6.0.1",
     "lib0": "^0.2.65",
     "lodash.get": "^4.4.2",
     "prosemirror-model": "^1.19.0",
