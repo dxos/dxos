@@ -6,9 +6,9 @@ import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
 import { resolve } from 'path';
-import { InlineConfig, mergeConfig } from 'vite';
+import { type InlineConfig, mergeConfig } from 'vite';
+import topLevelAwait from 'vite-plugin-top-level-await';
 import turbosnap from 'vite-plugin-turbosnap';
-import topLevelAwait from "vite-plugin-top-level-await";
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
@@ -44,7 +44,8 @@ export const config = (
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
         resolve: {
           alias: {
-            '@automerge/automerge-repo':'/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js', // '@dxos/automerge/automerge-repo',
+            '@automerge/automerge-repo':
+              '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js', // '@dxos/automerge/automerge-repo',
           },
         },
         plugins: [
