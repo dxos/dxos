@@ -84,6 +84,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         properties={properties}
         layout='standalone'
         editorMode={settings.values.editorMode}
+        showWidgets={settings.values.showWidgets}
         onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
@@ -115,6 +116,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         properties={document}
         layout='standalone'
         editorMode={settings.values.editorMode}
+        showWidgets={settings.values.showWidgets}
         onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
@@ -142,7 +144,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string);
+      settings
+        .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
+        .prop(settings.values.$showWidgets!, 'show-widgets', LocalStorageStore.bool);
 
       const filters: ((document: Document) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
@@ -264,7 +268,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (isDocument(data.object) && isMarkdown(data.object.content)) {
-                return <EditorSection content={data.object.content} />;
+                return (
+                  <EditorSection
+                    model={data.object.content}
+                    editorMode={settings.values.editorMode}
+                    showWidgets={settings.values.showWidgets}
+                  />
+                );
               }
               break;
             }

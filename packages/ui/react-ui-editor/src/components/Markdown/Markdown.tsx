@@ -55,9 +55,10 @@ export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
 export type MarkdownEditorProps = {
-  model?: EditorModel;
+  model: EditorModel;
   slots?: EditorSlots;
   editorMode?: EditorMode;
+  showWidgets?: boolean;
   extensions?: Extension[];
   onChange?: (content: string | Text) => void;
 };

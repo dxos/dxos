@@ -7,7 +7,6 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import {
   createHyperlinkTooltip,
-  type EditorModel,
   type MarkdownEditorProps,
   type MarkdownEditorRef,
   MarkdownEditor,
@@ -21,23 +20,27 @@ import { onTooltip } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
+type EditorMainProps = {
+  properties: MarkdownProperties;
+  layout: 'standalone' | 'embedded';
+  editorRefCb: RefCallback<MarkdownEditorRef>;
+} & Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets' | 'onChange'>;
+
 export const EditorMain = ({
   model,
   properties,
   layout,
   editorMode,
+  showWidgets,
   onChange,
   editorRefCb,
-}: {
-  model: EditorModel;
-  properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  editorMode?: MarkdownEditorProps['editorMode'];
-  onChange?: MarkdownEditorProps['onChange'];
-  editorRefCb: RefCallback<MarkdownEditorRef>;
-}) => {
+}: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
+  const extensions = [createHyperlinkTooltip(onTooltip)];
+  if (showWidgets) {
+    extensions.push(hyperlinkDecoration());
+  }
 
   return (
     <Root properties={properties} model={model}>
@@ -45,7 +48,8 @@ export const EditorMain = ({
         ref={editorRefCb}
         model={model}
         editorMode={editorMode}
-        extensions={[createHyperlinkTooltip(onTooltip), hyperlinkDecoration()]}
+        extensions={extensions}
+        onChange={onChange}
         slots={{
           root: {
             role: 'none',
@@ -71,7 +75,6 @@ export const EditorMain = ({
             placeholder: t('editor placeholder'),
           },
         }}
-        onChange={onChange}
       />
     </Root>
   );
