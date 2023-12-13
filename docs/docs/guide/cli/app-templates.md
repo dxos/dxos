@@ -36,16 +36,28 @@ This is the default template when using `npm init @dxos@latest` or `dx app creat
 
 This template provides some opinions for app development:
 
-| Feature | Description |
-| :-- | :-- |
-| `vite` | A fast developer loop based on esbuild. |
-| `typescript` | Type safety |
-| `vite-pwa` | Turnkey [PWA](../glossary#PWA) configuration provided by `vite-plugin-pwa` |
-| `tailwind` | A productive CSS framework |
-| `phosphor-icons` | A solid icons library |
-| `@dxos/client` | ECHO, HALO, KUBE configuration support |
-| `@dxos/react-components` | UI components for React |
-| `@dxos/react-shell` | UI flows for managing HALO identity and ECHO spaces |
+| Feature                  | Description                                                                |
+| :----------------------- | :------------------------------------------------------------------------- |
+| `vite`                   | A fast developer loop based on esbuild.                                    |
+| `typescript`             | Type safety                                                                |
+| `vite-pwa`               | Turnkey [PWA](../glossary#PWA) configuration provided by `vite-plugin-pwa` |
+| `tailwind`               | A productive CSS framework                                                 |
+| `phosphor-icons`         | A solid icons library                                                      |
+| `@dxos/client`           | ECHO, HALO, KUBE configuration support                                     |
+| `@dxos/react-components` | UI components for React                                                    |
+| `@dxos/react-shell`      | UI flows for managing HALO identity and ECHO spaces                        |
+
+## `tasks` template
+
+This is a basic tasks app template. Try out the [Tasks app hosted on dxos.org](https://tasks.dxos.org).
+
+```bash
+npm init @dxos/tasks@latest
+# or
+dx app create --template tasks <project-name>
+```
+
+Tasks includes the sharing panels for inviting other collaborators into the task list.
 
 ## Turn features on or off
 

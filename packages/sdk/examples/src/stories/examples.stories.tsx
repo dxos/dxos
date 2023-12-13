@@ -11,7 +11,7 @@ import React from 'react';
 import { Document } from '@braneframe/types';
 import { type Client, type PublicKey } from '@dxos/react-client';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { ClientDecorator, setupPeersInSpace, ToggleNetworkDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater, setupPeersInSpace, ToggleNetworkDecorator } from '@dxos/react-client/testing';
 import { Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -26,8 +26,10 @@ export default {
 const tasksList = await setupPeersInSpace({ count: 2 });
 
 export const TaskList = {
-  render: (args: { id: number }) => <TaskListExample {...args} spaceKey={tasksList.spaceKey} />,
-  decorators: [ClientDecorator({ clients: tasksList.clients }), ToggleNetworkDecorator({ clients: tasksList.clients })],
+  render: () => (
+    <ClientRepeater clients={tasksList.clients} Component={TaskListExample} args={{ spaceKey: tasksList.spaceKey }} />
+  ),
+  decorators: [ToggleNetworkDecorator({ clients: tasksList.clients })],
 };
 
 const editor = await setupPeersInSpace({
@@ -94,6 +96,13 @@ const DemoToggles = ({
 };
 
 export const Editor = {
-  render: (args: { id: number }) => <EditorExample {...args} spaceKey={editor.spaceKey} />,
-  decorators: [ClientDecorator({ clients: editor.clients, className: 'demo' }), DemoToggles(editor)],
+  render: () => (
+    <ClientRepeater
+      clients={editor.clients}
+      className='demo'
+      Component={EditorExample}
+      args={{ spaceKey: editor.spaceKey }}
+    />
+  ),
+  decorators: [DemoToggles(editor)],
 };

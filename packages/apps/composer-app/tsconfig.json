@@ -16,10 +16,14 @@
     "vite.config.ts"
   ],
   "include": [
+    "demos",
     "script-frame",
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/log"
+    },
     {
       "path": "../../core/echo/echo-schema"
     },

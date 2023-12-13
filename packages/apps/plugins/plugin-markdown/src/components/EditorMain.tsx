@@ -6,44 +6,49 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import {
-  defaultHyperLinkTooltip,
-  type EditorModel,
-  MarkdownEditor,
+  createHyperlinkTooltip,
   type MarkdownEditorProps,
   type MarkdownEditorRef,
+  MarkdownEditor,
+  hyperlinkDecoration,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
+import { onTooltip } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
+
+type EditorMainProps = {
+  properties: MarkdownProperties;
+  layout: 'standalone' | 'embedded';
+  editorRefCb: RefCallback<MarkdownEditorRef>;
+} & Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets' | 'onChange'>;
 
 export const EditorMain = ({
   model,
   properties,
   layout,
   editorMode,
+  showWidgets,
   onChange,
   editorRefCb,
-}: {
-  model: EditorModel;
-  properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  editorMode?: MarkdownEditorProps['editorMode'];
-  onChange?: MarkdownEditorProps['onChange'];
-  editorRefCb: RefCallback<MarkdownEditorRef>;
-}) => {
+}: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
+  const extensions = [createHyperlinkTooltip(onTooltip)];
+  if (showWidgets) {
+    extensions.push(hyperlinkDecoration());
+  }
 
   return (
     <Root properties={properties} model={model}>
       <MarkdownEditor
         ref={editorRefCb}
         model={model}
-        extensions={[defaultHyperLinkTooltip]}
         editorMode={editorMode}
+        extensions={extensions}
         onChange={onChange}
         slots={{
           root: {
