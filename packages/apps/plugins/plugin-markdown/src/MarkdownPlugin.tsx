@@ -57,7 +57,7 @@ export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.schema.typename === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN);
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: true });
   const state = deepSignal<{ onChange: NonNullable<MarkdownEditorProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
