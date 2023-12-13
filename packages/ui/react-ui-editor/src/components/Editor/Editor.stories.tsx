@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { type PublicKey } from '@dxos/react-client';
 import { TextObject, TextKind, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { setupPeersInSpace, textGenerator, useDataGenerator, ClientRepeater } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -56,8 +56,7 @@ const { spaceKey: markdownSpaceKey, clients: markdownClients } = await setupPeer
 });
 
 export const Markdown = {
-  render: (args: { id: number }) => <Story {...args} spaceKey={markdownSpaceKey} />,
-  decorators: [ClientDecorator({ clients: markdownClients })],
+  render: () => <ClientRepeater Component={Story} clients={markdownClients} args={{ spaceKey: markdownSpaceKey }} />,
 };
 
 const { spaceKey: richSpaceKey, clients: richClients } = await setupPeersInSpace({
@@ -70,7 +69,7 @@ const { spaceKey: richSpaceKey, clients: richClients } = await setupPeersInSpace
 });
 
 export const Rich = {
-  render: (args: { id: number }) => <Story {...args} spaceKey={richSpaceKey} />,
+  render: () => <ClientRepeater Component={Story} clients={richClients} args={{ spaceKey: richSpaceKey }} />,
   args: {
     slots: {
       editor: {
@@ -78,5 +77,4 @@ export const Rich = {
       },
     },
   },
-  decorators: [ClientDecorator({ clients: richClients })],
 };
