@@ -7,9 +7,9 @@ import { type EditorState, type Text, type Transaction } from '@codemirror/state
 import { next as am, type Heads } from '@dxos/automerge/automerge';
 
 import { type Field } from './plugin';
-import { type Peer } from '../demo';
+import { IDocHandle } from './handle';
 
-export default (field: Field, handle: Peer, transactions: Transaction[], state: EditorState): Heads | undefined => {
+export default (field: Field, handle: IDocHandle, transactions: Transaction[], state: EditorState): Heads | undefined => {
   const { lastHeads, path } = state.field(field);
 
   // We don't want to call `automerge.updateAt` if there are no changes.

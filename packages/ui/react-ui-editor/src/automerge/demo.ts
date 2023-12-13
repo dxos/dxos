@@ -11,8 +11,18 @@ import {
   type Heads,
   type SyncState,
 } from '@dxos/automerge/automerge';
+import { IDocHandle } from './automerge-plugin/handle';
 
-export class Peer {
+export class Peer implements IDocHandle {
+  docSync(): Doc<any> | undefined {
+    return this.doc;
+  }
+  addListener(event: 'change', listener: () => void): void {
+    this.changeEvent.on(listener);
+  }
+  removeListener(event: 'change', listener: () => void): void {
+    this.changeEvent.off(listener);
+  }
   changeEvent = new Event();
 
   storage = new Map<string, Uint8Array>();
@@ -27,16 +37,28 @@ export class Peer {
 
   doc!: Doc<{ text: string }>;
 
-  change(options: string | ChangeOptions<any> | ChangeFn<any>, callback?: ChangeFn<any>) {
-    this.doc = automerge.change(this.doc, options, callback);
+  change(callback: ChangeFn<any>, options?: string | ChangeOptions<any> | ChangeFn<any>) {
+    if (options) {
+      this.doc = automerge.change(this.doc!, options, callback);
+    } else {
+      this.doc = automerge.change(this.doc!, callback);
+    }
     this._handleChange();
   }
 
-  changeAt(scope: Heads, options: string | ChangeOptions<any> | ChangeFn<any>, callback?: ChangeFn<any>) {
-    const { newDoc, newHeads } = automerge.changeAt(this.doc, scope, options, callback);
-    this.doc = newDoc;
+  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>) {
+    let result: Heads | undefined;
+    if (options) {
+      const { newDoc, newHeads } = automerge.changeAt(this.doc!, heads, options, callback);
+      this.doc = newDoc;
+      result = newHeads ?? undefined;
+    } else {
+      const { newDoc, newHeads } = automerge.changeAt(this.doc!, heads, callback);
+      this.doc = newDoc;
+      result = newHeads ?? undefined;
+    }
     this._handleChange();
-    return newHeads;
+    return result;
   }
 
   replicate(): { readable: ReadableStream<Uint8Array>; writable: WritableStream<Uint8Array> } {

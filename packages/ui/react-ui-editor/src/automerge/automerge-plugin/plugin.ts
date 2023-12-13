@@ -18,7 +18,7 @@ import * as automerge from '@dxos/automerge/automerge';
 import { type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 
 import { PatchSemaphore } from './PatchSemaphore';
-import { type Peer } from '../demo';
+import { IDocHandle } from './handle';
 
 export type Value = {
   lastHeads: Heads;
@@ -46,7 +46,7 @@ const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
 
 export type AutomergePlugin = {
   extension: Extension;
-  reconcile: (handle: Peer, view: EditorView) => void;
+  reconcile: (handle: IDocHandle, view: EditorView) => void;
 }
 
 export const automergePlugin = <T>(doc: Doc<T>, path: Prop[]): AutomergePlugin => {
@@ -83,7 +83,7 @@ export const automergePlugin = <T>(doc: Doc<T>, path: Prop[]): AutomergePlugin =
 
   return {
     extension: [stateField, semaphoreFacet.of(semaphore)],
-    reconcile: (handle: Peer, view: EditorView) => {
+    reconcile: (handle: IDocHandle, view: EditorView) => {
       view.state.facet(semaphoreFacet).reconcile(handle, view);
     }
   };
