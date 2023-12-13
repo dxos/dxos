@@ -6,7 +6,8 @@ import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
 import { resolve } from 'path';
-import { mergeConfig } from 'vite';
+import { type InlineConfig, mergeConfig } from 'vite';
+import topLevelAwait from 'vite-plugin-top-level-await';
 import turbosnap from 'vite-plugin-turbosnap';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -41,14 +42,21 @@ export const config = (
       {
         // When `jsxRuntime` is set to 'classic', top-level awaits are rejected unless build.target is 'esnext'
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
+        resolve: {
+          alias: {
+            '@automerge/automerge-repo':
+              '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js', // '@dxos/automerge/automerge-repo',
+          },
+        },
         plugins: [
+          topLevelAwait(),
           ThemePlugin({
             root: __dirname,
             content: [resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}'],
           }),
           turbosnap({ rootDir: config.root ?? __dirname }),
         ],
-      },
+      } satisfies InlineConfig,
     );
   },
   ...specificConfig,
