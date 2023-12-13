@@ -122,6 +122,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           ...(editorMode === 'vim' ? [vim()] : []),
 
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
+          // https://codemirror.net/docs/ref/#codemirror.basicSetup
           highlightActiveLineGutter(),
           highlightSpecialChars(),
           history(),
@@ -160,6 +161,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           syntaxHighlighting(markdownDarkHighlighting),
 
           // Replication and awareness (incl. remote selection).
+          // https://codemirror.net/docs/ref/#collab
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
 
           // Custom.

@@ -15,6 +15,7 @@ export type OnHyperlinkHover = (el: Element, url: string) => void;
  * https://codemirror.net/docs/ref/#view.hoverTooltip
  * https://github.com/codemirror/view/blob/main/src/tooltip.ts
  */
+// TODO(burdon): Create config object.
 export const createHyperlinkTooltip = (onHover: OnHyperlinkHover, regexp = markdownLinkRegexp) =>
   hoverTooltip((view, pos) => {
     const { from, text } = view.state.doc.lineAt(pos);
