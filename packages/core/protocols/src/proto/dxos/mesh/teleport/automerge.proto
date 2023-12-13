@@ -1,0 +1,27 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package dxos.mesh.teleport.automerge;
+
+message PeerInfo {
+  string id = 1;
+}
+
+
+message SyncMessage {
+  string id = 1;
+
+  optional bytes sync_message = 2;
+}
+
+
+service AutomergeReplicatorService {
+  rpc StartReplication(PeerInfo) returns (google.protobuf.Empty);
+  rpc StopReplication(PeerInfo) returns (google.protobuf.Empty);
+  rpc SendSyncMessage(SyncMessage) returns (google.protobuf.Empty);
+}
