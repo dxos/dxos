@@ -32,6 +32,10 @@ export const cursor = '#ffffff';
 
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
+// TODO(burdon): Subtle difference in layout for documents and stacks.
+// TODO(burdon): On first character, height of editor changes by a few pixels.
+// TODO(burdon): Is the '&' prefix required? If so, document.
+
 export const markdownTheme = {
   // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated.
   // '&': {
@@ -164,6 +168,13 @@ export const markdownTheme = {
   '& .cm-yLineSelection': {
     margin: '0',
   },
+  '.cm-link': {
+    color: 'rgb(20 89 208)',
+    textDecorationLine: 'underline',
+    textDecorationThickness: '1px',
+    textUnderlineOffset: '2px',
+    borderRadius: '.125rem',
+  },
   ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
     const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
     // TODO(thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
@@ -174,7 +185,7 @@ export const markdownTheme = {
   }, {}),
 };
 
-export const markdownDarkHighlighting = HighlightStyle.define(
+export const markdownHighlightStyle = HighlightStyle.define(
   [
     {
       tag: [

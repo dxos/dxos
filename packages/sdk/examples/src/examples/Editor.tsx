@@ -27,6 +27,10 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
     space.db._backend.maxBatchSize = 0;
   }, [space]);
 
+  if (!model) {
+    return null;
+  }
+
   return (
     <main className={`client client-${id}`}>
       <MarkdownEditor

@@ -26,7 +26,10 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
     forwardRef,
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
-    const content = useTextModel({ text: object.content });
+    const model = useTextModel({ text: object.content });
+    if (!model) {
+      return null;
+    }
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
@@ -54,7 +57,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
           </Card.Header>
           <Card.Body>
             <MarkdownEditor
-              model={content}
+              model={model}
               extensions={[createHyperlinkTooltip(onTooltip)]}
               slots={{
                 root: {
