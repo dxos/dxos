@@ -9,16 +9,11 @@ import React, { useState } from 'react';
 import { PublicKey } from '@dxos/react-client';
 import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
-import { useId } from '@dxos/react-ui';
+import { useId, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor } from './Markdown';
 import { Replicator, useYjsModel } from '../../testing';
-
-export default {
-  component: MarkdownEditor,
-  decorators: [withTheme],
-};
 
 const content = [
   '',
@@ -30,18 +25,14 @@ const content = [
   '',
 ].join('\n');
 
-export const Default = {
-  args: {
-    model: {
-      id: 'editor',
-      content,
-    },
-  },
+export default {
+  component: MarkdownEditor,
+  decorators: [withTheme],
 };
 
 const replicator = new Replicator(TextKind.PLAIN);
 
-export const WithYjs = {
+export const Default = {
   render: () => {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
@@ -56,9 +47,11 @@ export const WithYjs = {
 
     return (
       <main className='flex-1 min-w-0 p-4'>
-        <div id={generateId} className='flex'>
-          <input type='checkbox' onChange={(event) => setGenerate(event.target.checked)} />
-          Generate Data
+        <div id={generateId} className='flex gap-2'>
+          <Input.Root>
+            <Input.Checkbox checked={generate} onCheckedChange={(checked) => setGenerate(!!checked)} />
+            <Input.Label>Generate Data</Input.Label>
+          </Input.Root>
         </div>
         <MarkdownEditor model={model} />
       </main>

@@ -6,13 +6,9 @@ import { markdownLanguage } from '@codemirror/lang-markdown';
 import { HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import get from 'lodash.get';
-import { type StyleSpec } from 'style-mod';
 
-import { markdownTags } from './markdownTags';
-import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
-
-// TODO(burdon): Use theme colors.
-// TODO(burdon): Light mode.
+import { markdownTags } from './tags';
+import { bold, heading, italic, mark, strikethrough, tokens, type ThemeStyles } from '../../../../styles';
 
 export const chalky = '#e5c07b';
 export const coral = '#e06c75';
@@ -33,16 +29,12 @@ export const cursor = '#ffffff';
 
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
+// TODO(burdon): Rationalize theme/colors.
 // TODO(burdon): Subtle difference in layout for documents and stacks.
 // TODO(burdon): On first character, height of editor changes by a few pixels.
 // TODO(burdon): Is the '&' prefix required? If so, document.
 
-// TODO(burdon): Type.
-export type Styles = {
-  [selector: string]: StyleSpec;
-};
-
-export const markdownTheme: Styles = {
+export const markdownTheme: ThemeStyles = {
   // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated.
   // '&': {
   //   color: ivory,

@@ -8,6 +8,7 @@ import {
   createHyperlinkTooltip,
   hyperlinkDecoration,
   MarkdownEditor,
+  markdownTheme,
   type MarkdownEditorProps,
   type MarkdownEditorRef,
 } from '@dxos/react-ui-editor';
@@ -39,7 +40,8 @@ export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionP
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {
-          markdownTheme: {
+          theme: {
+            ...markdownTheme,
             '&, & .cm-scroller': {
               inlineSize: '100%',
             },

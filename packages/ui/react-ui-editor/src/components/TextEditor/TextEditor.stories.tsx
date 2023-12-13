@@ -13,8 +13,8 @@ import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
-import { useTextModel } from '../../model';
-import { createHyperlinkTooltip, hyperlinkDecoration } from '../Markdown';
+import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
+import { useTextModel } from '../../hooks';
 
 const text = [
   '',

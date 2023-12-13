@@ -11,6 +11,7 @@ import {
   type MarkdownEditorRef,
   MarkdownEditor,
   hyperlinkDecoration,
+  markdownTheme,
   onChangeExtension,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
@@ -68,7 +69,10 @@ export const EditorMain = ({
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
-            markdownTheme: {
+            placeholder: t('editor placeholder'),
+            // TODO(burdon): Set as default?
+            theme: {
+              ...markdownTheme,
               '&, & .cm-scroller': {
                 display: 'flex',
                 flexDirection: 'column',
@@ -77,7 +81,6 @@ export const EditorMain = ({
               },
               '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
             },
-            placeholder: t('editor placeholder'),
           },
         }}
       />

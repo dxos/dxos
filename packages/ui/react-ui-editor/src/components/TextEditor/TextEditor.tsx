@@ -16,14 +16,15 @@ import React, {
   useCallback,
   type HTMLAttributes,
 } from 'react';
-import { type StyleSpec } from 'style-mod';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { YText } from '@dxos/text-model';
 
+import { type EditorSlots } from './Markdown';
 import { defaultStyles } from './theme';
-import { type EditorModel, type EditorSlots } from '../../model';
+import { type EditorModel } from '../../hooks';
+import { type ThemeStyles } from '../../styles';
 
 export type CursorInfo = {
   from: number;
@@ -42,10 +43,10 @@ export type TextEditorRef = {
 export type TextEditorProps = {
   model?: EditorModel;
   extensions?: Extension[];
-  theme?: {
-    [selector: string]: StyleSpec;
-  };
   slots?: EditorSlots;
+  theme?: ThemeStyles;
+
+  // TODO(burdon): Remove.
   onKeyDown?: (event: KeyboardEvent, info: CursorInfo) => void;
 } & Pick<HTMLAttributes<HTMLDivElement>, 'onBlur' | 'onFocus'>;
 

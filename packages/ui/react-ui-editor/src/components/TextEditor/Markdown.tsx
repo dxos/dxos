@@ -6,19 +6,35 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
-import React, { type KeyboardEvent, forwardRef, useEffect, useImperativeHandle, useState, useCallback } from 'react';
-import { yCollab } from 'y-codemirror.next';
+import React, {
+  type KeyboardEvent,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  type ComponentProps,
+} from 'react';
 
-import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
-import { getColorForValue } from '@dxos/react-ui-theme';
-import { YText } from '@dxos/text-model';
 
 import { basicBundle, markdownBundle } from './extensions';
-import { type EditorModel, type EditorSlots } from '../../model';
+import { type EditorModel, useCollaboration } from '../../hooks';
+import type { ThemeStyles } from '../../styles';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
+
+export type EditorSlots = {
+  root?: Omit<ComponentProps<'div'>, 'ref'>;
+  editor?: {
+    className?: string;
+    placeholder?: string;
+    spellCheck?: boolean;
+    tabIndex?: number;
+    theme?: ThemeStyles;
+  };
+};
 
 export type MarkdownEditorRef = {
   editor: HTMLDivElement | null;
@@ -41,24 +57,19 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     const [parent, setParent] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
     const [view, setView] = useState<EditorView>();
-    useImperativeHandle(forwardedRef, () => ({
-      editor: parent,
-      state,
-      view,
-    }));
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        editor: parent,
+        state,
+        view,
+      }),
+      [view, state, parent],
+    );
 
-    // Presence/awareness.
-    // TODO(burdon): Plugin.
-    const { provider, peer, content } = model;
-    useEffect(() => {
-      if (provider && peer) {
-        provider.awareness.setLocalStateField('user', {
-          name: peer.name ?? generateName(peer.id),
-          color: getColorForValue({ value: peer.id, type: 'color' }),
-          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-        });
-      }
-    }, [provider, peer, themeMode]);
+    // TODO(burdon): Pass in.
+    const { content } = model;
+    const collaboration = useCollaboration(model, themeMode);
 
     useEffect(() => {
       if (!parent) {
@@ -69,19 +80,20 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         doc: content?.toString(),
         extensions: [
           basicBundle({ placeholder: slots?.editor?.placeholder }),
-          markdownBundle({ themeMode, theme: slots.editor?.markdownTheme }),
+          markdownBundle({ themeMode }),
+
+          // Theme.
+          slots?.editor?.theme && EditorView.theme(slots.editor.theme),
 
           // Settings.
-          ...(editorMode === 'vim' ? [vim()] : []),
+          editorMode === 'vim' && vim(),
 
-          // TODO(burdon): Move to extensions.
-          // Replication and awareness (incl. remote selection).
-          // https://codemirror.net/docs/ref/#collab
-          ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
+          // Replication.
+          collaboration,
 
           // Custom.
           ...extensions,
-        ],
+        ].filter(Boolean) as Extension[],
       });
 
       setState(state);
@@ -97,7 +109,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         setView(undefined);
         setState(undefined);
       };
-    }, [parent, content, provider?.awareness, themeMode, editorMode]);
+    }, [parent, content, themeMode, editorMode]);
 
     // TODO(burdon): Create extension with listener.
     const handleKeyUp = useCallback(
@@ -118,6 +130,26 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       [view, editorMode],
     );
 
+    // export type CursorInfo = {
+    //   from: number;
+    //   to: number;
+    //   line: number;
+    //   lines: number;
+    //   after?: string;
+    // };
+
+    // const handleKeyDown = useCallback(
+    //   (event: KeyboardEvent) => {
+    //     if (view) {
+    //       const { head, from, to } = view.state.selection.ranges[0];
+    //       const { number } = view.state.doc.lineAt(head);
+    //       const after = view.state.sliceDoc(from);
+    //       onKeyDown?.(event, { from, to, line: number, lines: view.state.doc.lines, after });
+    //     }
+    //   },
+    //   [view],
+    // );
+
     return (
       <div
         key={model.id}
@@ -126,6 +158,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         {...slots.root}
         {...(editorMode !== 'vim' ? tabsterDOMAttribute : {})}
         onKeyUp={handleKeyUp}
+        // onKeyDown={handleKeyDown}
       />
     );
   },

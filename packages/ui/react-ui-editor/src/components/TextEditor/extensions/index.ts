@@ -4,7 +4,5 @@
 
 export * from './basic';
 export * from './change';
-export * from './hyperlinkDecoration';
-export * from './hyperlinkTooltip';
-export * from './hyperlinkWidget';
+export * from './hyperlink';
 export * from './markdown';
