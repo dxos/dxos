@@ -87,6 +87,7 @@ const getFolderGraphNodePartials = ({
         ],
         properties: {
           disposition: 'toolbar',
+          menuType: 'searchList',
           testId: 'spacePlugin.createObject',
         },
       },
