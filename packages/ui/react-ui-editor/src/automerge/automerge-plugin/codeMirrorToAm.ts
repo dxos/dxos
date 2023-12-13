@@ -16,14 +16,13 @@ export default (field: Field, handle: Peer, transactions: Transaction[], state: 
   // Otherwise later on `automerge.diff` will return empty patches that result in a no-op but still mess up the selection.
   let hasChanges = false;
   for (const tr of transactions) {
-    if (tr.changes.length) {
-      tr.changes.iterChanges(() => {
-        hasChanges = true;
-      });
-    }
+    tr.changes.iterChanges(() => {
+      hasChanges = true;
+    });
   }
 
   if (!hasChanges) {
+    console.log('No changes', transactions);
     return undefined;
   }
 
