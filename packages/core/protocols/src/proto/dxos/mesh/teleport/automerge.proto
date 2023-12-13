@@ -16,7 +16,7 @@ message PeerInfo {
 message SyncMessage {
   string id = 1;
 
-  optional bytes sync_message = 2;
+  bytes sync_message = 2;
 }
 
 
