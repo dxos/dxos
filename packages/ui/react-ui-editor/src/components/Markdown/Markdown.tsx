@@ -30,6 +30,7 @@ import {
   EditorView,
 } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
+// import { GFM } from '@lezer/markdown';
 import { vim } from '@replit/codemirror-vim';
 import React, {
   type KeyboardEvent,
@@ -48,16 +49,17 @@ import { getColorForValue } from '@dxos/react-ui-theme';
 import { YText } from '@dxos/text-model';
 
 import { markdownTagsExtension } from './markdownTags';
-import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
+import { markdownHighlightStyle, markdownTheme } from './markdownTheme';
 import { type EditorModel, type EditorSlots } from '../../model';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
 export type MarkdownEditorProps = {
-  model?: EditorModel;
+  model: EditorModel;
   slots?: EditorSlots;
   editorMode?: EditorMode;
+  showWidgets?: boolean;
   extensions?: Extension[];
   onChange?: (content: string | Text) => void;
 };
@@ -116,50 +118,73 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
-          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
+          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
           listenChangesExtension,
 
-          ...(editorMode === 'vim' ? [vim()] : []),
-
+          // TODO(burdon): Create custom bundle to make this class more reusable and retire simpler TextEditor component.
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
-          highlightActiveLineGutter(),
-          highlightSpecialChars(),
-          history(),
-          drawSelection(),
-          dropCursor(),
-          EditorState.allowMultipleSelections.of(true),
-          indentOnInput(),
-          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+          // https://codemirror.net/docs/ref/#codemirror.basicSetup
+          autocompletion(),
           bracketMatching(),
           closeBrackets(),
-          autocompletion(),
-          rectangularSelection(),
           crosshairCursor(),
+          dropCursor(),
+          drawSelection(),
           highlightActiveLine(),
+          highlightActiveLineGutter(),
           highlightSelectionMatches(),
+          highlightSpecialChars(),
+          history(),
+          indentOnInput(),
           placeholder(slots.editor?.placeholder ?? ''), // TODO(burdon): Needs consistent styling.
-          keymap.of([
-            ...closeBracketsKeymap,
-            ...defaultKeymap,
-            ...searchKeymap,
-            ...historyKeymap,
-            ...foldKeymap,
-            ...completionKeymap,
-            ...lintKeymap,
-            indentWithTab,
-          ]),
+          rectangularSelection(),
+          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+          EditorState.allowMultipleSelections.of(true),
           EditorView.lineWrapping,
 
-          // Themes.
-          markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
+          keymap.of([
+            ...closeBracketsKeymap,
+            ...completionKeymap,
+            ...defaultKeymap,
+            ...foldKeymap,
+            ...historyKeymap,
+            ...lintKeymap,
+            ...searchKeymap,
+            indentWithTab,
+          ]),
+
+          // Main extension.
+          // https://github.com/codemirror/lang-markdown
+          markdown({
+            base: markdownLanguage,
+            codeLanguages: languages,
+            extensions: [
+              // TODO(burdon): This seems to upgrade the parser.
+              // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
+              // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
+              // https://github.github.com/gfm
+              // GFM,
+
+              // Custom styling.
+              markdownTagsExtension,
+            ],
+          }),
+
+          // Theme.
           EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
           ...(themeMode === 'dark'
             ? [syntaxHighlighting(oneDarkHighlightStyle)]
             : [syntaxHighlighting(defaultHighlightStyle)]),
-          // TODO(thure): All but one rule here apply to both themes; rename or refactor.
-          syntaxHighlighting(markdownDarkHighlighting),
 
+          // TODO(thure): All but one rule here apply to both themes; rename or refactor.
+          syntaxHighlighting(markdownHighlightStyle),
+
+          // Settings.
+          ...(editorMode === 'vim' ? [vim()] : []),
+
+          // TODO(burdon): Move to extensions.
           // Replication and awareness (incl. remote selection).
+          // https://codemirror.net/docs/ref/#collab
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
 
           // Custom.

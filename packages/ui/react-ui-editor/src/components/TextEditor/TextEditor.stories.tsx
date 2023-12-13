@@ -3,9 +3,7 @@
 //
 
 import '@dxosTheme';
-
-import { HighlightStyle, StreamLanguage } from '@codemirror/language';
-import { tags } from '@lezer/highlight';
+import { markdown } from '@codemirror/lang-markdown';
 import { ArrowCircleUp } from '@phosphor-icons/react';
 import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -15,75 +13,52 @@ import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
-import { createHyperlinkTooltip, hyperlink } from './extensions';
+import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
 import { useTextModel } from '../../model';
 
-export const nameRegex = /\{([\w_]+)}/;
+const text = [
+  '',
+  '',
+  'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
+  '',
+  '',
+].join('\n');
 
-/**
- * Simple Monaco language extension.
- * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
- */
-export const promptLanguage = StreamLanguage.define<{ count: number }>({
-  startState: () => ({ count: 0 }),
-
-  token: (stream, state) => {
-    state.count++;
-    if (stream.eatSpace()) {
-      return null;
-    }
-    if (stream.match(/^(<\w+>)/)) {
-      return 'tagName';
-    }
-    stream.next();
-    return null;
-  },
-});
-
-/**
- * https://codemirror.net/examples/styling
- * https://lezer.codemirror.net/docs/ref/#highlight
- */
-export const promptHighlightStyles = HighlightStyle.define([
-  {
-    tag: tags.tagName,
-    class: mx(
-      'mr-1 p-1',
-      'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white font-mono text-sm',
-      'rounded border border-neutral-300 dark:border-neutral-700',
-    ),
-  },
-]);
-
-export const defaultHyperLinkTooltip = createHyperlinkTooltip((el, url) => {
-  const web = new URL(url);
-  createRoot(el).render(
-    <StrictMode>
-      <div className='flex gap-1 items-center'>
-        <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
-        <p className='pr-1'>{web.origin}</p>
-      </div>
-    </StrictMode>,
-  );
-});
-
-const Story = () => {
-  const [item] = useState({
-    text: new TextObject(
-      '\n\n\nThis is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).\n\n\n',
-    ),
+const hyperLinkTooltip = () =>
+  createHyperlinkTooltip((el, url) => {
+    const web = new URL(url);
+    createRoot(el).render(
+      <StrictMode>
+        <div className='flex gap-1 items-center'>
+          <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
+          <p className='pr-1'>{web.origin}</p>
+        </div>
+      </StrictMode>,
+    );
   });
 
+const Story = () => {
+  const [item] = useState({ text: new TextObject(text) });
   const model = useTextModel({ text: item.text });
 
   return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface, 'p-4 gap-4')}>
-      <TextEditor
-        model={model}
-        slots={{ root: { className: mx(inputSurface, 'p-2') } }}
-        extensions={[hyperlink, defaultHyperLinkTooltip]}
-      />
-      <pre>{JSON.stringify(model?.content?.toString(), null, 2)}</pre>
+    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
+      <div className='flex justify-center p-8'>
+        <div className='w-[800px]'>
+          <TextEditor
+            model={model}
+            extensions={[
+              markdown(),
+              hyperlinkDecoration({ link: false }),
+              hyperLinkTooltip(),
+              // EditorView.domEventHandlers({
+              //   mousedown: (e, view) => {},
+              // }),
+            ]}
+            slots={{ root: { className: mx(inputSurface, 'p-2') } }}
+          />
+        </div>
+      </div>
     </div>
   );
 };

@@ -13,7 +13,7 @@ import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react
 import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { ClientDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
 import { getSize, groupSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -112,7 +112,8 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
   }
 };
 
-const Invitations = ({ id }: { id: number }) => {
+const Invitations = (args: { id: number; count: number }) => {
+  const { id }: { id: number } = args;
   const client = useClient();
   const networkStatus = useNetworkStatus().swarm;
   const identity = useIdentity();
@@ -218,11 +219,11 @@ export const Default = {
   render: (args: { id: number }) => (
     <ClipboardProvider>
       <Tooltip.Provider>
-        <Invitations {...args} />
+        <ClientRepeater Component={Invitations} count={3} />
       </Tooltip.Provider>
     </ClipboardProvider>
   ),
-  decorators: [withTheme, ClientDecorator({ count: 3 })],
+  decorators: [withTheme],
   parameters: {
     chromatic: { disableSnapshot: true },
     translations: [osTranslations],

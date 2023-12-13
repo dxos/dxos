@@ -4,16 +4,32 @@
 
 import React, { type HTMLAttributes, useRef } from 'react';
 
-import { type EditorModel, MarkdownEditor, type MarkdownEditorRef } from '@dxos/react-ui-editor';
+import {
+  createHyperlinkTooltip,
+  hyperlinkDecoration,
+  MarkdownEditor,
+  type MarkdownEditorProps,
+  type MarkdownEditorRef,
+} from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-export const EditorSection = ({ content: document }: { content: EditorModel }) => {
+import { onTooltip } from './extensions';
+
+type EditorSectionProps = Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets'>;
+
+export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
   const editorRef = useRef<MarkdownEditorRef>(null);
+  const extensions = [createHyperlinkTooltip(onTooltip)];
+  if (showWidgets) {
+    extensions.push(hyperlinkDecoration());
+  }
 
   return (
     <MarkdownEditor
       ref={editorRef}
-      model={document}
+      model={model}
+      editorMode={editorMode}
+      extensions={extensions}
       slots={{
         root: {
           role: 'none',
