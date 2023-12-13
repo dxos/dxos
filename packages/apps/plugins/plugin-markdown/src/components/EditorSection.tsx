@@ -13,9 +13,11 @@ import {
 } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
+import { type EditorMainProps } from './EditorMain';
 import { onTooltip } from './extensions';
 
-type EditorSectionProps = Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets'>;
+// TODO(burdon): Reconcile types.
+type EditorSectionProps = EditorMainProps['showWidgets'] & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
 
 export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
   const editorRef = useRef<MarkdownEditorRef>(null);

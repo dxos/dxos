@@ -25,8 +25,9 @@ export type EditorMainProps = {
   editorRefCb: RefCallback<MarkdownEditorRef>;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
-  onChange: (text: string) => void;
-} & Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets'>;
+  showWidgets?: boolean;
+  onChange?: (text: string) => void;
+} & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
   model,
@@ -39,7 +40,10 @@ export const EditorMain = ({
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = [onChangeExtension(onChange), createHyperlinkTooltip(onTooltip)];
+  const extensions = [createHyperlinkTooltip(onTooltip)];
+  if (onChange) {
+    extensions.push(onChangeExtension(onChange));
+  }
   if (showWidgets) {
     extensions.push(hyperlinkDecoration());
   }

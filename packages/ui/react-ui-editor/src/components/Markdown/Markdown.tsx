@@ -59,9 +59,6 @@ export type MarkdownEditorProps = {
   slots?: EditorSlots;
   // TODO(burdon): Move props to extensions.
   editorMode?: EditorMode;
-  showWidgets?: boolean;
-  // TODO(burdon): Factor out (move to extension).
-  // onChange?: (content: string | Text) => void;
 };
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
