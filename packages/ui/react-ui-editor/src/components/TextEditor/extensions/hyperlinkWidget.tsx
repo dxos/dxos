@@ -15,14 +15,20 @@ import {
 
 // Notes: Can't edit widget content (or cursor nav through them).
 // - https://discuss.codemirror.net/t/focusing-inputs-within-widgets/5178/7
-//   Widgets intentionally always get set to contenteditable=false, or they would become part of CodeMirror’s editable content element.
+//   Widgets intentionally always get set to contenteditable=false,
+//   or they would become part of CodeMirror’s editable content element.
 //   You should be able to introduce new contenteditable=true child elements inside of them.
 
 const markdownLinkRegexp = /\[([^\]]+)]\(([^)]+)\)(!?)/gi;
 
+/**
+ * Custom link decorator.
+ * NOTE: The default markdown extension formats links by default.
+ * @deprecated
+ */
 const linkDecorator = () =>
   new MatchDecorator({
-    regexp: markdownLinkRegexp, // regexp || defaultRegexp,
+    regexp: markdownLinkRegexp,
     decorate: (add, from, to, match, view) => {
       const [_, label, url] = match;
       const p0 = {
@@ -45,15 +51,20 @@ const linkDecorator = () =>
         end: p1.end + 1 + url.length + 2,
       };
 
-      // TODO(burdon): Wrap with tagName?
-      add(p0.start, p0.end, Decoration.mark({ class: 'cm-hyperlink-bracket' }));
+      add(
+        p0.start,
+        p0.end,
+        Decoration.mark({ class: 'cm-hyperlink-bracket', _attributes: { style: 'display: none' } }),
+      );
       add(p1.start, p1.end, Decoration.mark({ class: 'cm-hyperlink-label' }));
-      add(p2.start, p2.end, Decoration.mark({ class: 'cm-hyperlink-bracket' }));
-      add(p3.start, p3.end, Decoration.mark({ class: 'cm-hyperlink-url', __attributes: { style: 'display: none' } }));
+      add(
+        p2.start,
+        p2.end,
+        Decoration.mark({ class: 'cm-hyperlink-bracket', _attributes: { style: 'display: none' } }),
+      );
+      add(p3.start, p3.end, Decoration.mark({ class: 'cm-hyperlink-url', _attributes: { style: 'display: none' } }));
     },
   });
-
-// const anchor = (dom: HTMLAnchorElement) => dom;
 
 export function hyperLinkExtension() {
   return ViewPlugin.fromClass(
@@ -91,7 +102,7 @@ export function hyperLinkExtension() {
   );
 }
 
-export const hyperLinkStyle = EditorView.baseTheme({
+export const hyperlinkStyle = EditorView.baseTheme({
   '.cm-hyperlink-label': {
     cursor: 'pointer',
     textDecoration: 'underline',
@@ -105,4 +116,4 @@ export const hyperLinkStyle = EditorView.baseTheme({
   },
 });
 
-export const hyperlink: Extension = [hyperLinkExtension(), hyperLinkStyle];
+export const hyperlinkWidget: Extension = [hyperLinkExtension(), hyperlinkStyle];

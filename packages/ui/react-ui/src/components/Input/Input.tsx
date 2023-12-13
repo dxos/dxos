@@ -182,8 +182,6 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 
     const { tx } = themeContextValue;
 
-    console.log('[theme context value]', themeContextValue);
-
     return (
       <TextInputPrimitive
         {...props}
