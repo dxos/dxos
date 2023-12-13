@@ -12,13 +12,13 @@ import {
   type Transaction,
   type TransactionSpec,
 } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
 
 import * as automerge from '@dxos/automerge/automerge';
-import { type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
+import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
 import { PatchSemaphore } from './PatchSemaphore';
-import { type Peer } from '../demo';
+import { type IDocHandle } from './handle';
 
 export type Value = {
   lastHeads: Heads;
@@ -44,10 +44,14 @@ const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.
 });
 
-export const plugin = <T>(doc: Doc<T>, path: Prop[]): Extension => {
+export type AutomergePlugin = {
+  extension: Extension;
+};
+
+export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
-      lastHeads: automerge.getHeads(doc),
+      lastHeads: automerge.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
       path: path.slice(),
     }),
@@ -76,7 +80,36 @@ export const plugin = <T>(doc: Doc<T>, path: Prop[]): Extension => {
   });
   const semaphore = new PatchSemaphore(stateField);
 
-  return [stateField, semaphoreFacet.of(semaphore)];
+  const viewPlugin = ViewPlugin.fromClass(
+    class AutomergeCodemirrorViewPlugin implements PluginValue {
+      private _view: EditorView;
+
+      constructor(view: EditorView) {
+        this._view = view;
+        handle.addListener('change', this._handleChange);
+      }
+
+      update(update: ViewUpdate) {
+        if (update.transactions.length > 0 && update.transactions.some((t) => !isReconcileTx(t))) {
+          queueMicrotask(() => {
+            this._view.state.facet(semaphoreFacet).reconcile(handle, this._view);
+          });
+        }
+      }
+
+      destroy() {
+        handle.addListener('change', this._handleChange);
+      }
+
+      private _handleChange = () => {
+        this._view.state.facet(semaphoreFacet).reconcile(handle, this._view);
+      };
+    },
+  );
+
+  return {
+    extension: [stateField, semaphoreFacet.of(semaphore), viewPlugin],
+  };
 };
 
 export const reconcileAnnotationType = Annotation.define<unknown>();
@@ -97,8 +130,4 @@ export const makeReconcile = (tr: TransactionSpec) => {
   // ...tr,
   // annotations: reconcileAnnotationType.of({})
   // }
-};
-
-export const reconcile = (handle: Peer, view: EditorView) => {
-  view.state.facet(semaphoreFacet).reconcile(handle, view);
 };
