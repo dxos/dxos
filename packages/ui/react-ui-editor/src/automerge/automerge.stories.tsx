@@ -22,8 +22,7 @@ const Editor = ({ handle, path }: EditorProps) => {
   const editorRoot = useRef<EditorView>();
 
   useEffect(() => {
-    const doc = handle.doc;
-    const source = doc.text; // this should use path
+    const source = handle.doc.text; // this should use path
 
     const automergePluginInstance = automergePlugin(handle, path);
 
