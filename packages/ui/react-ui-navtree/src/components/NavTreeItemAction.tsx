@@ -52,8 +52,8 @@ const NavTreeItemActionDropdownMenu = ({
         },
       }}
     >
-      <DropdownMenu.Trigger asChild>
-        <Tooltip.Trigger asChild>
+      <Tooltip.Trigger asChild>
+        <DropdownMenu.Trigger asChild>
           <Button
             variant='ghost'
             classNames={[
@@ -66,8 +66,8 @@ const NavTreeItemActionDropdownMenu = ({
           >
             <Icon className={getSize(4)} />
           </Button>
-        </Tooltip.Trigger>
-      </DropdownMenu.Trigger>
+        </DropdownMenu.Trigger>
+      </Tooltip.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content classNames='z-[31]'>
           <DropdownMenu.Viewport>
@@ -116,6 +116,7 @@ const NavTreeItemActionSearchList = ({
   const { t } = useTranslation(translationKey);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const button = useRef<HTMLButtonElement | null>(null);
 
   // TODO(thure): Use LayoutPlugin’s global Dialog.
   return (
@@ -130,9 +131,10 @@ const NavTreeItemActionSearchList = ({
         },
       }}
     >
-      <Dialog.Trigger asChild>
-        <Tooltip.Trigger asChild>
+      <Tooltip.Trigger asChild>
+        <Dialog.Trigger asChild>
           <Button
+            ref={button}
             variant='ghost'
             classNames={[
               'shrink-0 pli-2 pointer-fine:pli-1',
@@ -141,11 +143,25 @@ const NavTreeItemActionSearchList = ({
               active === 'overlay' && 'invisible',
             ]}
             data-testid={testId}
+            onKeyDownCapture={(event) => {
+              // TODO(thure): Why is only this `Button` affected and not `DropdownMenu.Trigger`’s?
+              if (button.current && button.current === event.target) {
+                switch (event.key) {
+                  case 'Enter':
+                  case ' ':
+                    // Capture this event and stop propagation to the drag start handler.
+                    event.stopPropagation();
+                    setOptionsMenuOpen(true);
+                    break;
+                  default:
+                }
+              }
+            }}
           >
             <Icon className={getSize(4)} />
           </Button>
-        </Tooltip.Trigger>
-      </Dialog.Trigger>
+        </Dialog.Trigger>
+      </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
           <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0'>
@@ -203,20 +219,20 @@ export const NavTreeItemAction = ({
   menuType,
 }: NavTreeItemActionProps) => {
   const suppressNextTooltip = useRef<boolean>(false);
-  const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
+  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
   const ActionRoot = popoverAnchorId === `dxos.org/ui/navtree/${id}` ? Popover.Anchor : Fragment;
 
   return (
     <ActionRoot>
       <Tooltip.Root
-        open={optionsTooltipOpen}
+        open={triggerTooltipOpen}
         onOpenChange={(nextOpen) => {
           if (suppressNextTooltip.current) {
-            setOptionsTooltipOpen(false);
+            setTriggerTooltipOpen(false);
             suppressNextTooltip.current = false;
           } else {
-            setOptionsTooltipOpen(nextOpen);
+            setTriggerTooltipOpen(nextOpen);
           }
         }}
       >
