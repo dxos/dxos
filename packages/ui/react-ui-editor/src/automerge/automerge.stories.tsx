@@ -9,7 +9,7 @@ import '@preact/signals-react'; // Register react integration
 
 import { type Prop, next as automerge } from '@dxos/automerge/automerge';
 
-import { plugin as amgPlugin, reconcile } from './automerge-plugin';
+import { plugin as amgPlugin } from './automerge-plugin';
 import { Peer } from './demo';
 
 type EditorProps = {
@@ -24,19 +24,21 @@ const Editor = ({ handle, path }: EditorProps) => {
   useEffect(() => {
     const doc = handle.doc;
     const source = doc.text; // this should use path
+
     const plugin = amgPlugin(doc, path);
+
     const view = (editorRoot.current = new EditorView({
       doc: source,
       extensions: [basicSetup, plugin],
       dispatch: (transaction) => {
         view.update([transaction]);
-        reconcile(handle, view);
+        plugin.reconcile(handle, view);
       },
       parent: containerRef.current as any,
     }));
 
     const handleChange = () => {
-      reconcile(handle, view);
+      plugin.reconcile(handle, view);
     };
 
     handle.changeEvent.on(handleChange);
