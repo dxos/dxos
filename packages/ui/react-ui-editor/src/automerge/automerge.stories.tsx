@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { basicSetup } from '@codemirror/basic-setup';
+import { basicSetup } from 'codemirror';
 import { EditorView } from '@codemirror/view';
 import React, { useEffect, useRef, useState } from 'react';
+import '@preact/signals-react'; // Register react integration
 
 import { type Prop, next as automerge } from '@dxos/automerge/automerge';
 
