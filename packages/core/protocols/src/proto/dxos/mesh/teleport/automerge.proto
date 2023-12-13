@@ -14,14 +14,11 @@ message PeerInfo {
 
 
 message SyncMessage {
-  string id = 1;
-
-  bytes sync_message = 2;
+  bytes payload = 2;
 }
 
 
 service AutomergeReplicatorService {
   rpc StartReplication(PeerInfo) returns (google.protobuf.Empty);
-  rpc StopReplication(PeerInfo) returns (google.protobuf.Empty);
   rpc SendSyncMessage(SyncMessage) returns (google.protobuf.Empty);
 }

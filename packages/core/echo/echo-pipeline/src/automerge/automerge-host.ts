@@ -188,9 +188,7 @@ class MeshNetworkAdapter extends NetworkAdapter {
     const receiverId = message.targetId;
     const extension = this._extensions.get(receiverId);
     invariant(extension, 'Extension not found.');
-    extension
-      .sendSyncMessage({ id: message.senderId, syncMessage: cbor.encode(message) })
-      .catch((err) => log.catch(err));
+    extension.sendSyncMessage({ payload: cbor.encode(message) }).catch((err) => log.catch(err));
   }
 
   override disconnect(): void {
@@ -214,13 +212,8 @@ class MeshNetworkAdapter extends NetworkAdapter {
             peerId: info.id as PeerId,
           });
         },
-        onStopReplication: async (info) => {
-          this.emit('peer-disconnected', {
-            peerId: info.id as PeerId,
-          });
-        },
-        onSyncMessage: async ({ syncMessage }) => {
-          const message = cbor.decode(syncMessage) as Message;
+        onSyncMessage: async ({ payload }) => {
+          const message = cbor.decode(payload) as Message;
           this.emit('message', message);
         },
         onClose: async () => {

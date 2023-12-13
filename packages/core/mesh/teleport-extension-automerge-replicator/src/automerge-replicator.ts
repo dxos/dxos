@@ -28,11 +28,6 @@ export type AutomergeReplicatorCallbacks = {
   onStartReplication?: (info: PeerInfo) => Promise<void>;
 
   /**
-   * Callback to be called when remote peer stops replication.
-   */
-  onStopReplication?: (info: PeerInfo) => Promise<void>;
-
-  /**
    * Callback to be called when a sync message is received.
    */
   onSyncMessage?: (message: SyncMessage) => Promise<void>;
@@ -71,10 +66,6 @@ export class AutomergeReplicator implements TeleportExtension {
             log('startReplication', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, info });
             await this._callbacks.onStartReplication?.(info);
           },
-          stopReplication: async (info: PeerInfo): Promise<void> => {
-            log('startReplication', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, info });
-            await this._callbacks.onStopReplication?.(info);
-          },
           sendSyncMessage: async (message: SyncMessage): Promise<void> => {
             log('sendSyncMessage', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onSyncMessage?.(message);
@@ -91,7 +82,6 @@ export class AutomergeReplicator implements TeleportExtension {
 
   async onClose(err?: Error): Promise<void> {
     this._opened.reset();
-    await this._rpc?.rpc.AutomergeReplicatorService.stopReplication({ id: this._params.peerId });
     await this._rpc?.close();
     this._rpc = undefined;
     await this._callbacks.onClose?.(err);
@@ -100,7 +90,6 @@ export class AutomergeReplicator implements TeleportExtension {
   async onAbort(err?: Error): Promise<void> {
     log('abort', { err });
     try {
-      await this._rpc?.rpc.AutomergeReplicatorService.stopReplication({ id: this._params.peerId });
       await this._rpc?.abort();
     } catch (err) {
       log.catch(err);
@@ -113,10 +102,6 @@ export class AutomergeReplicator implements TeleportExtension {
     await this._opened.wait();
     invariant(this._rpc, 'RPC not initialized');
     await this._rpc.rpc.AutomergeReplicatorService.sendSyncMessage(message);
-  }
-
-  async disconnect() {
-    await this._rpc?.rpc.AutomergeReplicatorService.stopReplication({ id: this._params.peerId });
   }
 }
 
