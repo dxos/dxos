@@ -11,6 +11,7 @@ import {
   type MarkdownEditorProps,
   type MarkdownEditorRef,
   MarkdownEditor,
+  hyperlinkDecoration,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
@@ -44,7 +45,7 @@ export const EditorMain = ({
         ref={editorRefCb}
         model={model}
         editorMode={editorMode}
-        extensions={[createHyperlinkTooltip(onTooltip)]}
+        extensions={[createHyperlinkTooltip(onTooltip), hyperlinkDecoration()]}
         slots={{
           root: {
             role: 'none',
