@@ -30,7 +30,7 @@ import {
   EditorView,
 } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
-import { GFM } from '@lezer/markdown';
+// import { GFM } from '@lezer/markdown';
 import { vim } from '@replit/codemirror-vim';
 import React, {
   type KeyboardEvent,
@@ -118,38 +118,40 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
-          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
+          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
           listenChangesExtension,
 
+          // TODO(burdon): Create custom bundle to make this class more reusable and retire simpler TextEditor component.
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
           // https://codemirror.net/docs/ref/#codemirror.basicSetup
-          highlightActiveLineGutter(),
-          highlightSpecialChars(),
-          history(),
-          drawSelection(),
-          dropCursor(),
-          EditorState.allowMultipleSelections.of(true),
-          indentOnInput(),
-          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+          autocompletion(),
           bracketMatching(),
           closeBrackets(),
-          autocompletion(),
-          rectangularSelection(),
           crosshairCursor(),
+          dropCursor(),
+          drawSelection(),
           highlightActiveLine(),
+          highlightActiveLineGutter(),
           highlightSelectionMatches(),
+          highlightSpecialChars(),
+          history(),
+          indentOnInput(),
           placeholder(slots.editor?.placeholder ?? ''), // TODO(burdon): Needs consistent styling.
+          rectangularSelection(),
+          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+          EditorState.allowMultipleSelections.of(true),
+          EditorView.lineWrapping,
+
           keymap.of([
             ...closeBracketsKeymap,
-            ...defaultKeymap,
-            ...searchKeymap,
-            ...historyKeymap,
-            ...foldKeymap,
             ...completionKeymap,
+            ...defaultKeymap,
+            ...foldKeymap,
+            ...historyKeymap,
             ...lintKeymap,
+            ...searchKeymap,
             indentWithTab,
           ]),
-          EditorView.lineWrapping,
 
           // Main extension.
           // https://github.com/codemirror/lang-markdown
@@ -157,9 +159,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             base: markdownLanguage,
             codeLanguages: languages,
             extensions: [
+              // TODO(burdon): This seems to upgrade the parser.
               // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
               // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
-              GFM,
+              // https://github.github.com/gfm
+              // GFM,
 
               // Custom styling.
               markdownTagsExtension,
@@ -178,6 +182,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           // Settings.
           ...(editorMode === 'vim' ? [vim()] : []),
 
+          // TODO(burdon): Move to extensions.
           // Replication and awareness (incl. remote selection).
           // https://codemirror.net/docs/ref/#collab
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
