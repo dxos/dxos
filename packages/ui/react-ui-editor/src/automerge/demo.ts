@@ -11,18 +11,22 @@ import {
   type Heads,
   type SyncState,
 } from '@dxos/automerge/automerge';
-import { IDocHandle } from './automerge-plugin/handle';
+
+import { type IDocHandle } from './automerge-plugin/handle';
 
 export class Peer implements IDocHandle {
   docSync(): Doc<any> | undefined {
     return this.doc;
   }
+
   addListener(event: 'change', listener: () => void): void {
     this.changeEvent.on(listener);
   }
+
   removeListener(event: 'change', listener: () => void): void {
     this.changeEvent.off(listener);
   }
+
   changeEvent = new Event();
 
   storage = new Map<string, Uint8Array>();

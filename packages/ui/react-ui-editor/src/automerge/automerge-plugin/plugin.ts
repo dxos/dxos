@@ -15,10 +15,10 @@ import {
 import { ViewPlugin, type EditorView } from '@codemirror/view';
 
 import * as automerge from '@dxos/automerge/automerge';
-import { type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
+import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
 import { PatchSemaphore } from './PatchSemaphore';
-import { IDocHandle } from './handle';
+import { type IDocHandle } from './handle';
 
 export type Value = {
   lastHeads: Heads;
@@ -47,7 +47,7 @@ const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
 export type AutomergePlugin = {
   extension: Extension;
   reconcile: (view: EditorView) => void;
-}
+};
 
 export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
   const stateField: StateField<Value> = StateField.define({
@@ -81,28 +81,30 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
   });
   const semaphore = new PatchSemaphore(stateField);
 
-  const viewPlugin = ViewPlugin.fromClass(class AutomergeCodemirrorViewPlugin {
-    private _view: EditorView;
+  const viewPlugin = ViewPlugin.fromClass(
+    class AutomergeCodemirrorViewPlugin {
+      private _view: EditorView;
 
-    constructor(view: EditorView) {
-      this._view = view;
-      handle.addListener('change', this._handleChange);
-    }
+      constructor(view: EditorView) {
+        this._view = view;
+        handle.addListener('change', this._handleChange);
+      }
 
-    destroy() {
-      handle.addListener('change', this._handleChange);
-    }
+      destroy() {
+        handle.addListener('change', this._handleChange);
+      }
 
-    private _handleChange = () => { 
-      this._view.state.facet(semaphoreFacet).reconcile(handle, this._view);
-    }
-  });
+      private _handleChange = () => {
+        this._view.state.facet(semaphoreFacet).reconcile(handle, this._view);
+      };
+    },
+  );
 
   return {
     extension: [stateField, semaphoreFacet.of(semaphore), viewPlugin],
     reconcile: (view: EditorView) => {
       view.state.facet(semaphoreFacet).reconcile(handle, view);
-    }
+    },
   };
 };
 
@@ -125,4 +127,3 @@ export const makeReconcile = (tr: TransactionSpec) => {
   // annotations: reconcileAnnotationType.of({})
   // }
 };
-

@@ -1,4 +1,8 @@
-import * as A from '@dxos/automerge/automerge'
+//
+// Copyright 2023 DXOS.org
+//
+
+import type * as A from '@dxos/automerge/automerge';
 
 export type IDocHandle<T = any> = {
   docSync(): A.Doc<T> | undefined;

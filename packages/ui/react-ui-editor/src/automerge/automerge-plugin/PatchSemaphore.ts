@@ -8,8 +8,8 @@ import { next as automerge } from '@dxos/automerge/automerge';
 
 import amToCodemirror from './amToCodemirror';
 import codeMirrorToAm from './codeMirrorToAm';
+import { type IDocHandle } from './handle';
 import { type Field, isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads } from './plugin';
-import { IDocHandle } from './handle';
 
 type Doc<T> = automerge.Doc<T>;
 type Heads = automerge.Heads;

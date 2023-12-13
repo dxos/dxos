@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { basicSetup } from 'codemirror';
 import { EditorView } from '@codemirror/view';
+import { basicSetup } from 'codemirror';
 import React, { useEffect, useRef, useState } from 'react';
 import '@preact/signals-react'; // Register react integration
 
@@ -29,7 +29,7 @@ const Editor = ({ handle, path }: EditorProps) => {
     const view = (editorRoot.current = new EditorView({
       doc: source,
       extensions: [basicSetup, automergePluginInstance],
-      dispatchTransactions(trs, view) {
+      dispatchTransactions: (trs, view) => {
         view.update(trs);
         automergePluginInstance.reconcile(view);
       },
