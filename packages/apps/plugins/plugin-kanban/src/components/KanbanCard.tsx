@@ -50,11 +50,15 @@ export const KanbanCardComponent: FC<{
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow'>
-          <MarkdownEditor
-            // TODO(burdon): Placeholder ignored.
-            slots={{ root: { className: mx(focusRing, 'p-1') }, editor: { placeholder: t('item title placeholder') } }}
-            model={model}
-          />
+          {model && (
+            <MarkdownEditor
+              slots={{
+                root: { className: mx(focusRing, 'p-1') },
+                editor: { placeholder: t('item title placeholder') },
+              }}
+              model={model}
+            />
+          )}
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (
