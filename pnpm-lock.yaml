@@ -8217,9 +8217,6 @@ importers:
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8254,6 +8251,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
