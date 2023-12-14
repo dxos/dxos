@@ -20,6 +20,7 @@
     "lint": {},
     "test": {
       "options": {
+        "forceExit": true,
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
