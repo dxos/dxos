@@ -69,6 +69,7 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
+        keyBinding: 'cmd+k',
         invoke: () => {
           // No-op.
         },
