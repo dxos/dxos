@@ -13,7 +13,7 @@ import { Reference } from '@dxos/document-model';
 
 export type TextObjectOptions = AutomergeOptions;
 
-export const LEGACY_TEXT_TYPE = 'legacy.Text';
+export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
 
 export type AutomergeTextCompat = TypedObject<{
   kind?: TextKind;
