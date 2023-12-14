@@ -35,14 +35,16 @@ const Story = () => {
   });
 
   return (
-    <main className='flex-1 min-w-0 p-4'>
+    <main className='flex flex-col flex-1 p-4 gap-4'>
       <div id={generateId} className='flex gap-2'>
         <Input.Root>
           <Input.Checkbox checked={generate} onCheckedChange={(checked) => setGenerate(!!checked)} />
-          <Input.Label>Generate Data</Input.Label>
+          <Input.Label>Start</Input.Label>
         </Input.Root>
       </div>
-      <MarkdownEditor model={model} />
+      <div className='border'>
+        <MarkdownEditor model={model} />
+      </div>
     </main>
   );
 };

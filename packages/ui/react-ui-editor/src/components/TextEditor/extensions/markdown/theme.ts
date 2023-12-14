@@ -10,7 +10,7 @@ import get from 'lodash.get';
 import { markdownTags } from './tags';
 import { bold, heading, italic, mark, strikethrough, tokens, type ThemeStyles } from '../../../../styles';
 
-// TODO(burdon): Rationalize theme/colors.
+// TODO(burdon): Rationalize theme/colors. Hoist onto single property object.
 export const chalky = '#e5c07b';
 export const coral = '#e06c75';
 export const cyan = '#56b6c2';
@@ -36,6 +36,7 @@ const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
 /**
  * NOTE: The '&' prefix denotes the CM editor root.
+ * https://codemirror.net/examples/styling
  */
 export const markdownTheme: ThemeStyles = {
   // TODO(thure): Consider whether these commented-out rules from one-dark-theme should be integrated.
@@ -122,6 +123,7 @@ export const markdownTheme: ThemeStyles = {
   },
   '& .cm-content': {
     caretColor: 'black',
+    padding: 0,
   },
   '.dark & .cm-content': {
     caretColor: cursor,

@@ -30,10 +30,11 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
  */
 // TODO(burdon): Reconcile with ClientSpaceDecorator.
 export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
-  const { clients, count = 1, className = 'flex place-content-evenly', Component } = props;
+  const { clients, count = 1, className = 'flex w-full place-content-evenly', Component } = props;
   if (props.registerSignalFactory ?? true) {
     registerSignalFactory();
   }
+
   if (clients) {
     return (
       <div className={className}>

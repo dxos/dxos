@@ -6,6 +6,7 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
+import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type KeyboardEvent,
   forwardRef,
@@ -18,8 +19,7 @@ import React, {
 
 import { useThemeContext } from '@dxos/react-ui';
 
-import { basicBundle, markdownBundle } from './extensions';
-import { defaultTheme } from './theme';
+import { basicBundle, basicTheme, markdownBundle, markdownTheme } from './extensions';
 import { type EditorModel, useCollaboration } from '../../hooks';
 import type { ThemeStyles } from '../../styles';
 
@@ -98,7 +98,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           collaboration,
 
           // Theme.
-          EditorView.theme(slots?.editor?.theme ?? defaultTheme),
+          slots?.editor?.theme && EditorView.theme(slots?.editor?.theme),
 
           // Custom.
           ...extensions,
@@ -151,18 +151,32 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
-export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions: _extensions, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
-    const extensions = [...(_extensions ?? []), markdownBundle({ themeMode })];
-    return <BaseTextEditor ref={forwardedRef} {...props} extensions={extensions} />;
-  },
-);
-
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const extensions = [...(_extensions ?? []), basicBundle({ themeMode, placeholder: slots?.editor?.placeholder })];
-    return <BaseTextEditor ref={forwardedRef} slots={slots} {...props} extensions={extensions} />;
+    return (
+      <BaseTextEditor
+        ref={forwardedRef}
+        extensions={extensions}
+        slots={defaultsDeep({}, slots, { editor: { theme: basicTheme } })}
+        {...props}
+      />
+    );
+  },
+);
+
+export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
+  ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
+    const extensions = [...(_extensions ?? []), markdownBundle({ themeMode })];
+    return (
+      <BaseTextEditor
+        ref={forwardedRef}
+        extensions={extensions}
+        slots={defaultsDeep({}, slots, { editor: { theme: markdownTheme } })}
+        {...props}
+      />
+    );
   },
 );

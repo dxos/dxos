@@ -70,7 +70,6 @@ export const EditorMain = ({
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
             placeholder: t('editor placeholder'),
-            // TODO(burdon): Set defaults.
             theme: {
               ...markdownTheme,
               '&, & .cm-scroller': {
