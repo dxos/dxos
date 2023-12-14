@@ -13,8 +13,6 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { NavTreeItemAction } from './NavTreeItemAction';
 
-// TODO(burdon): Goal: Factor-out CMD-K like dialog.
-
 const meta: Meta = {
   // TODO(burdon): Remove title from others (so all appear in ui tree?)
   // title: 'Components/NavTree/NavTreeItemActionSearchList',
@@ -42,19 +40,22 @@ export default meta;
 
 export const Default = {
   render: ({ debug }: { debug?: boolean }) => {
+    // TODO(burdon): Factor out across tests.
     const actions = faker.helpers.multiple(
       () => ({
         id: faker.string.uuid(),
         label: faker.lorem.words(2),
         icon: Circle,
         actions: [],
-        invoke: () => {},
+        invoke: () => {
+          console.log('invoke');
+        },
         properties: {},
       }),
       { count: 20 },
     );
 
-    // TODO(burdon): Util to create test actions/graph for all tests.
+    // TODO(burdon): Goal: Factor-out CMD-K like dialog.
     return (
       <NavTreeItemAction
         id='test'

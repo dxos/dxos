@@ -177,7 +177,9 @@ export const NavTreeItemActionSearchList = ({
           <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
               <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='p-4' />
-              <SearchList.Content classNames={[inputSurface, 'min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
+              <SearchList.Content
+                classNames={[inputSurface, 'p-0', 'min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}
+              >
                 {actions?.map((action) => {
                   const value = Array.isArray(action.label) ? t(...action.label) : action.label;
                   return (
