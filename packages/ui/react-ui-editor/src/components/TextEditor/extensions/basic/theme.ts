@@ -6,7 +6,6 @@ import get from 'lodash.get';
 import { type StyleSpec } from 'style-mod';
 
 import { tokens } from '../../../../styles';
-import { cursor } from '../markdown';
 
 /**
  * Minimal styles.
@@ -20,6 +19,13 @@ export const basicTheme: {
   '&.cm-focused': {
     outline: 'none',
   },
+  '& .cm-line': {
+    paddingInline: 0,
+    minBlockSize: '1.6em',
+  },
+  '& .cm-line *': {
+    lineHeight: 1.6,
+  },
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     overflow: 'visible',
@@ -29,7 +35,7 @@ export const basicTheme: {
     caretColor: 'black',
   },
   '.dark & .cm-content': {
-    caretColor: cursor,
+    caretColor: 'white',
   },
   '& .cm-tooltip': {
     backgroundColor: 'transparent',
