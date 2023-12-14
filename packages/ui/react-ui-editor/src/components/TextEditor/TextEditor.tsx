@@ -7,6 +7,7 @@ import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
+import get from 'lodash.get';
 import React, {
   type KeyboardEvent,
   forwardRef,
@@ -17,6 +18,7 @@ import React, {
   type ComponentProps,
 } from 'react';
 
+import { isDocAccessor } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { basicBundle, basicTheme, markdownBundle, markdownTheme } from './extensions';
@@ -88,8 +90,12 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         return;
       }
 
+      const initialText = isDocAccessor(model.content)
+        ? get(model.content.handle.docSync(), model.content.path)
+        : model.content?.toString();
+
       const state = EditorState.create({
-        doc: model.content?.toString(),
+        doc: initialText,
         extensions: [
           // TODO(burdon): Factor out VIM mode?
           editorMode === 'vim' && vim(),

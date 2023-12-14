@@ -84,6 +84,6 @@ export default {
   title: 'Automerge',
 };
 
-export const EditorStory = {
+export const AutomergeRepo = {
   render: () => <Story />,
 };
