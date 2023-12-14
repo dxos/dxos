@@ -89,7 +89,7 @@ export class ChainStore {
         [
           {
             metadata: { space: 'dxos', id: '_' },
-            pageContent: '',
+            pageContent: 'test', // Cannot be empty.
           },
         ],
         this._embeddings,

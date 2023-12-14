@@ -82,8 +82,10 @@ export const createSequence = (
     }
   }
 
+  // TODO(burdon): Return meta -- e.g., ID.
   // Create sequence from predicates.
-  const { generator } = sequences.find(({ test }) => test(context))!;
+  const { id, generator } = sequences.find(({ test }) => test(context))!;
+  log.info('sequence', { id });
   return generator(resources, () => context, options);
 };
 

@@ -15,20 +15,23 @@ import { AutomergeArray } from './automerge-array';
 import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
-import { isActualAutomergeObject, mutationOverride, TextObject, type TypedObjectOptions } from '../object';
-import { AbstractEchoObject } from '../object/object';
 import {
+  isActualAutomergeObject,
+  TextObject,
+  type TypedObjectOptions,
   type EchoObject,
   type ObjectMeta,
   type TypedObjectProperties,
   base,
+  data,
   db,
   debug,
-  subscribe,
-  proxy,
   immutable,
-  data,
-} from '../object/types';
+  mutationOverride,
+  proxy,
+  subscribe,
+} from '../object';
+import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
 
@@ -44,7 +47,7 @@ export class AutomergeObject implements TypedObjectProperties {
   private _doc?: Doc<any> = undefined;
   private _docHandle?: DocHandle<DocStructure> = undefined;
   private _schema?: Schema = undefined;
-  private readonly _immutable: boolean;
+  private readonly _immutable: boolean; // TODO(burdon): Not used.
 
   /**
    * @internal
@@ -72,7 +75,8 @@ export class AutomergeObject implements TypedObjectProperties {
       this._schema = opts.schema;
     }
 
-    // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types. References should not leak outside of the AutomergeObject, It should be internal concept.
+    // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
+    //  References should not leak outside of the AutomergeObject, It should be internal concept.
     const type =
       opts?.type ??
       (this._schema
@@ -153,6 +157,7 @@ export class AutomergeObject implements TypedObjectProperties {
         callback(this);
       }
     };
+
     this[base]._docHandle?.on('change', listener);
     this[base]._updates.on(callback);
     return () => {
@@ -355,6 +360,7 @@ export class AutomergeObject implements TypedObjectProperties {
       Object.freeze(value);
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
+
     return value;
   }
 
@@ -594,6 +600,5 @@ export const isDocAccessor = (obj: any): obj is DocAccessor => {
 
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   invariant(isActualAutomergeObject(obj));
-
   return obj[base]._getRawDoc(path);
 };

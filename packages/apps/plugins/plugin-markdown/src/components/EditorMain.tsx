@@ -64,7 +64,7 @@ export const EditorMain = ({
               inputSurface,
               surfaceElevation({ elevation: 'group' }),
               layout !== 'embedded' && 'rounded',
-              'flex flex-col shrink-0 grow pli-10 m-0.5 pt-2',
+              'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
             ),
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
