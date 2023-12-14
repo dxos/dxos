@@ -12,6 +12,8 @@ import { getColorForValue } from '@dxos/react-ui-theme';
 import { YText } from '@dxos/text-model';
 
 import type { EditorModel } from './useTextModel';
+import { isDocAccessor } from '@dxos/echo-schema';
+import { automergePlugin } from '../automerge/automerge-plugin';
 
 /**
  * Replication and awareness (incl. remote selection).
@@ -19,7 +21,15 @@ import type { EditorModel } from './useTextModel';
  */
 export const useCollaboration = (model: EditorModel, themeMode: ThemeMode): Extension | undefined => {
   const { provider, peer, content } = model;
-  const extension = useMemo(() => (content instanceof YText ? yCollab(content, provider?.awareness) : undefined), []);
+  const extension = useMemo(() => {
+    if (content instanceof YText) {
+      return yCollab(content, provider?.awareness);
+    } else if (isDocAccessor(content)) {
+      return automergePlugin(content.handle, content.path);
+    } else {
+      return undefined;
+    }
+  }, []);
 
   useEffect(() => {
     if (provider && peer) {

@@ -17,7 +17,7 @@ export const LEGACY_TEXT_TYPE = 'legacy.Text';
 
 export type AutomergeTextCompat = TypedObject<{
   kind?: TextKind;
-  field?: string;
+  field: string;
   content?: string;
 }>;
 

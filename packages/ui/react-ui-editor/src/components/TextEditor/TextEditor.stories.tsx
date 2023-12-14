@@ -15,6 +15,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { TextEditor } from './TextEditor';
 import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
 import { useTextModel } from '../../hooks';
+import type { Meta } from '@storybook/react';
 
 const text = [
   '',
@@ -37,11 +38,11 @@ const hyperLinkTooltip = () =>
     );
   });
 
-const Story = () => {
-  const [item] = useState({ text: new TextObject(text) });
+const Story = ({ automerge }: { automerge?: boolean}) => {
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: !!automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
-    return null;
+    return <></>;
   }
 
   return (
@@ -73,3 +74,7 @@ export default {
 };
 
 export const Default = {};
+
+export const Automerge = {
+  render: () => <Story automerge />
+}

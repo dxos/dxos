@@ -505,6 +505,8 @@ export class AutomergeObject implements TypedObjectProperties {
       get path() {
         return [...self._path, 'data', ...(path ?? [])];
       },
+
+      isAutomergeDocAccessor: true,
     };
   }
 }
@@ -569,8 +571,14 @@ export type IDocHandle<T = any> = {
 export type DocAccessor<T = any> = {
   handle: IDocHandle<T>;
 
-  path?: string[];
+  path: string[];
+
+  isAutomergeDocAccessor: true
 };
+
+export const isDocAccessor = (obj: any): obj is DocAccessor => {
+  return !!obj?.isAutomergeDocAccessor;
+}
 
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   invariant(isActualAutomergeObject(obj));

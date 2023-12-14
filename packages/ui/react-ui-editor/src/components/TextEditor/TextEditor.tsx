@@ -22,6 +22,8 @@ import { useThemeContext } from '@dxos/react-ui';
 import { basicBundle, basicTheme, markdownBundle, markdownTheme } from './extensions';
 import { type EditorModel, useCollaboration } from '../../hooks';
 import type { ThemeStyles } from '../../styles';
+import { isDocAccessor } from '@dxos/echo-schema';
+import get from 'lodash.get';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
@@ -88,8 +90,12 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         return;
       }
 
+      const initialText = isDocAccessor(model.content)
+        ? get(model.content.handle.docSync(), model.content.path)
+        : model.content?.toString();
+
       const state = EditorState.create({
-        doc: model.content?.toString(),
+        doc: initialText,
         extensions: [
           // TODO(burdon): Factor out VIM mode?
           editorMode === 'vim' && vim(),
