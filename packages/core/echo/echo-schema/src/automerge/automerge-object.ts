@@ -190,6 +190,11 @@ export class AutomergeObject implements TypedObjectProperties {
   _bind(options: BindOptions) {
     this._database = options.db;
     this._docHandle = options.docHandle;
+    this._docHandle.on('change', (event) => {
+      if (objectIsUpdated(this._id, event)) {
+        this._notifyUpdate();
+      }
+    });
     this._path = options.path;
 
     if (this._linkCache) {
@@ -312,12 +317,13 @@ export class AutomergeObject implements TypedObjectProperties {
   _change(changeFn: ChangeFn<any>) {
     if (this._docHandle) {
       this._docHandle.change(changeFn);
+      // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
     } else if (this._doc) {
       this._doc = automerge.change(this._doc, changeFn);
+      this._notifyUpdate();
     } else {
       failedInvariant();
     }
-    this._notifyUpdate();
   }
 
   /**
@@ -425,6 +431,10 @@ export class AutomergeObject implements TypedObjectProperties {
     this._updates.emit();
   };
 
+  /**
+   * Notifies listeners and front-end framework about the change.
+   */
+  // TODO(mykola): Unify usage of `_notifyUpdate`.
   private _notifyUpdate = () => {
     this._signal.notifyWrite();
     this._updates.emit();
@@ -463,11 +473,12 @@ export class AutomergeObject implements TypedObjectProperties {
             } else {
               this._doc = automerge.change(this._doc!, callback);
             }
+            this._notifyUpdate();
           } else {
             invariant(this._docHandle);
             this._docHandle.change(callback, options);
+            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
           }
-          this._notifyUpdate();
         },
         changeAt: (heads, callback, options) => {
           let result: Heads | undefined;
@@ -481,12 +492,13 @@ export class AutomergeObject implements TypedObjectProperties {
               this._doc = newDoc;
               result = newHeads ?? undefined;
             }
+            this._notifyUpdate();
           } else {
             invariant(this._docHandle);
             result = this._docHandle.changeAt(heads, callback, options);
+            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
           }
 
-          this._notifyUpdate();
           return result;
         },
         addListener: (event, listener) => {
