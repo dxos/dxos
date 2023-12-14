@@ -189,8 +189,10 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
 
 const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
   return (
-    <div className='border border-neutral-100 rounded-md'>
-      <div className='flex h-[32px] items-center bg-neutral-50 rounded-t border-b'>
+    <div className={mx('border rounded-md', groupBorder)}>
+      <div
+        className={mx('flex h-[32px] items-center bg-neutral-50 dark:bg-neutral-800 rounded-t border-b', groupBorder)}
+      >
         <h2 className='px-2 text-xs'>{title}</h2>
         <div className='grow' />
         {actions}

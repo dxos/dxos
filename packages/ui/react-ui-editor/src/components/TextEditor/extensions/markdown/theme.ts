@@ -10,6 +10,7 @@ import get from 'lodash.get';
 import { markdownTags } from './tags';
 import { bold, heading, italic, mark, strikethrough, tokens, type ThemeStyles } from '../../../../styles';
 
+// TODO(burdon): Rationalize theme/colors.
 export const chalky = '#e5c07b';
 export const coral = '#e06c75';
 export const cyan = '#56b6c2';
@@ -29,13 +30,15 @@ export const cursor = '#ffffff';
 
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
-// TODO(burdon): Rationalize theme/colors.
 // TODO(burdon): Subtle difference in layout for documents and stacks.
 // TODO(burdon): On first character, height of editor changes by a few pixels.
-// TODO(burdon): Is the '&' prefix required? If so, document.
+//  Also jiggles once styles is applied in code block.
 
+/**
+ * NOTE: The '&' prefix denotes the CM editor root.
+ */
 export const markdownTheme: ThemeStyles = {
-  // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated.
+  // TODO(thure): Consider whether these commented-out rules from one-dark-theme should be integrated.
   // '&': {
   //   color: ivory,
   //   backgroundColor: background
@@ -73,7 +76,7 @@ export const markdownTheme: ThemeStyles = {
   //   color: '#ddd'
   // },
 
-  '.cm-tooltip': {
+  '& .cm-tooltip': {
     backgroundColor: 'transparent',
     border: 'none',
   },
@@ -167,12 +170,13 @@ export const markdownTheme: ThemeStyles = {
     margin: '0',
   },
   '.cm-link': {
-    color: 'rgb(20 89 208)',
+    color: 'rgb(20 89 208)', // TODO(burdon): Rationalize.
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
   },
+  // TODO(burdon): Document.
   ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
     const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
     // TODO(thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.

@@ -3,17 +3,10 @@
 //
 
 import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
+import React, { type HTMLAttributes, type KeyboardEventHandler, useEffect, useRef, useState } from 'react';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import {
-  TextEditor,
-  useTextModel,
-  type CursorInfo,
-  type TextEditorProps,
-  type TextEditorRef,
-  type YText,
-} from '@dxos/react-ui-editor';
+import { TextEditor, useTextModel, type CursorInfo, type TextEditorRef, type YText } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
@@ -80,9 +73,20 @@ const OutlinerItem = ({
     }
   }, [editorRef.current?.view, active]);
 
-  const handleKeyDown: TextEditorProps['onKeyDown'] = (event, state) => {
+  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
+    const view = editorRef.current?.view;
+    if (!view) {
+      return;
+    }
+
+    // TODO(burdon): Factor out util.
+    const { head, from, to } = view.state.selection.ranges[0];
+    const { number: line } = view.state.doc.lineAt(head);
+    const after = view.state.sliceDoc(from);
+    const lines = view.state.doc.lines;
+    const state = { from, to, line, lines, after };
+
     const { key, shiftKey } = event;
-    const { from, to, line, lines, after } = state;
     switch (key) {
       // TODO(burdon): Only move lines if at start/end of line.
       case 'ArrowUp':
@@ -122,6 +126,8 @@ const OutlinerItem = ({
         }
         break;
       }
+      // TODO(burdon): BUG: When outdenting the last item.
+      //  TypeError: Cannot read properties of undefined (reading 'items')
       case 'Tab': {
         event.preventDefault();
         onIndent?.(event.shiftKey ? 'left' : 'right');
@@ -145,7 +151,7 @@ const OutlinerItem = ({
   };
 
   return (
-    <div className='flex group'>
+    <div className='flex group' onKeyDownCapture={handleKeyDown}>
       {(isTasklist && (
         <div className='py-1 mr-1'>
           <Input.Root>
@@ -173,14 +179,13 @@ const OutlinerItem = ({
           slots={{
             root: {
               className: 'w-full',
+              onFocus: () => setFocus(true),
+              onBlur: () => setFocus(false),
             },
             editor: {
               placeholder,
             },
           }}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
         />
       )}
 
@@ -407,6 +412,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         }
         break;
       }
+
       case 'down':
         if (idx < parent.items!.length - 1) {
           const next = parent.items![idx + 1];
@@ -425,6 +431,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         setActive({ itemId: root.items![0].id, from: 0 });
         break;
       }
+
       case 'end': {
         const last = getLastDescendent(root.items![root.items!.length - 1]);
         if (last) {
@@ -432,6 +439,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         }
         break;
       }
+
       case 'up': {
         const previous = getPrevious(root, item);
         if (previous) {
@@ -439,6 +447,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         }
         break;
       }
+
       case 'down': {
         const next = getNext(root, item);
         if (next) {

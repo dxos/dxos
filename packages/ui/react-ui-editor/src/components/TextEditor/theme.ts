@@ -13,8 +13,9 @@ const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
  * Minimal styles.
  * https://codemirror.net/examples/styling
  */
+// TODO(burdon): Reconile with markdown theme.
 // TODO(burdon): If given a "theme" suffix, `__docgen` properties are added to the object.
-export const defaultStyles: {
+export const defaultTheme: {
   [selector: string]: StyleSpec;
 } = {
   '&.cm-focused': {

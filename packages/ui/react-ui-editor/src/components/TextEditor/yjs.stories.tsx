@@ -12,18 +12,8 @@ import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-cl
 import { useId, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor } from './Markdown';
+import { MarkdownEditor } from './TextEditor';
 import { Replicator, useYjsModel } from '../../testing';
-
-const content = [
-  '',
-  '',
-  'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
-  '',
-  'This is a link: https://www.dxos.org',
-  '',
-  '',
-].join('\n');
 
 export default {
   component: MarkdownEditor,

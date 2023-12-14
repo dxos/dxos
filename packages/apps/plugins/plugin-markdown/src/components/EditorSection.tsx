@@ -10,7 +10,7 @@ import {
   MarkdownEditor,
   markdownTheme,
   type MarkdownEditorProps,
-  type MarkdownEditorRef,
+  type TextEditorRef,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
@@ -21,8 +21,8 @@ import { onTooltip } from './extensions';
 type EditorSectionProps = Pick<EditorMainProps, 'showWidgets'> & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
 
 export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
-  const editorRef = useRef<MarkdownEditorRef>(null);
-  const extensions = [createHyperlinkTooltip(onTooltip)];
+  const editorRef = useRef<TextEditorRef>(null);
+  const extensions = [createHyperlinkTooltip(onTooltip)]; // TODO(burdon): Widgets.
   if (showWidgets) {
     extensions.push(hyperlinkDecoration());
   }
@@ -48,7 +48,9 @@ export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionP
             '& .cm-content': {
               paddingBlock: '1rem',
             },
-            '& .cm-line': { paddingInline: '0' },
+            '& .cm-line': {
+              paddingInline: '0',
+            },
           },
         },
       }}

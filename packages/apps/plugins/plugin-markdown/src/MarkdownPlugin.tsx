@@ -14,7 +14,7 @@ import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, Layo
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type EditorModel, type MarkdownEditorRef, useTextModel } from '@dxos/react-ui-editor';
+import { type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -57,10 +57,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<EditorMainProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
-  const pluginMutableRef: MutableRefObject<MarkdownEditorRef> = {
+  const pluginMutableRef: MutableRefObject<TextEditorRef> = {
     current: { editor: null },
   };
-  const pluginRefCallback: RefCallback<MarkdownEditorRef> = (nextRef: MarkdownEditorRef) => {
+  const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 

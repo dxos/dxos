@@ -8,11 +8,11 @@ import { useTranslation } from '@dxos/react-ui';
 import {
   createHyperlinkTooltip,
   type MarkdownEditorProps,
-  type MarkdownEditorRef,
+  type TextEditorRef,
   MarkdownEditor,
   hyperlinkDecoration,
-  markdownTheme,
   onChangeExtension,
+  markdownTheme,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
@@ -23,7 +23,7 @@ import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
 export type EditorMainProps = {
-  editorRefCb: RefCallback<MarkdownEditorRef>;
+  editorRefCb: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
   showWidgets?: boolean;
@@ -70,7 +70,7 @@ export const EditorMain = ({
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
             placeholder: t('editor placeholder'),
-            // TODO(burdon): Set as default?
+            // TODO(burdon): Set defaults.
             theme: {
               ...markdownTheme,
               '&, & .cm-scroller': {
@@ -79,7 +79,11 @@ export const EditorMain = ({
                 flex: '1 0 auto',
                 inlineSize: '100%',
               },
-              '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
+              '& .cm-content': {
+                flex: '1 0 auto',
+                inlineSize: '100%',
+                paddingBlock: '1rem',
+              },
             },
           },
         }}
