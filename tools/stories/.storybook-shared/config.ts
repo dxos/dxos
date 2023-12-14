@@ -44,8 +44,10 @@ export const config = (
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
         resolve: {
           alias: {
-            '@automerge/automerge-repo':
-              '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js', // '@dxos/automerge/automerge-repo',
+            // TODO(burdon): Add documentation.
+            // '@automerge/automerge-repo': '@dxos/automerge/automerge-repo'
+            // '@automerge/automerge-repo':
+            //   '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js',
           },
         },
         plugins: [
