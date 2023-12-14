@@ -5,7 +5,7 @@
 import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/react-ui';
-import { type EditorModel, type MarkdownEditorRef } from '@dxos/react-ui-editor';
+import { type EditorModel, type TextEditorRef } from '@dxos/react-ui-editor';
 import { baseSurface, topbarBlockPaddingStart, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
@@ -16,7 +16,7 @@ export const StandaloneLayout = ({
   model: EditorModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
-  editorRef?: MutableRefObject<MarkdownEditorRef>;
+  editorRef?: MutableRefObject<TextEditorRef>;
 }>) => {
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>

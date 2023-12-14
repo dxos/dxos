@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
 import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
-import { useTextModel } from '../../model';
+import { useTextModel } from '../../hooks';
 
 const text = [
   '',
@@ -40,6 +40,9 @@ const hyperLinkTooltip = () =>
 const Story = () => {
   const [item] = useState({ text: new TextObject(text) });
   const model = useTextModel({ text: item.text });
+  if (!model) {
+    return null;
+  }
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>

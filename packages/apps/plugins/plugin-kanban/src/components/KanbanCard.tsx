@@ -52,11 +52,11 @@ export const KanbanCardComponent: FC<{
         <div className='flex flex-col grow'>
           {model && (
             <MarkdownEditor
+              model={model}
               slots={{
                 root: { className: mx(focusRing, 'p-1') },
                 editor: { placeholder: t('item title placeholder') },
               }}
-              model={model}
             />
           )}
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
