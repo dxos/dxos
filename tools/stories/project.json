@@ -63,19 +63,24 @@
       }
     },
     "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
       "dependsOn": [
-        "composer-app:compile",
-        "halo-app:compile",
-        "devtools:compile",
-        "chess-app:compile",
-        "gem-core:compile",
-        "plexus:compile",
         "app-graph:compile",
+        "chess-app:compile",
+        "composer-app:compile",
+        "devtools:compile",
         "examples:compile",
-        "react-client:compile",
-        "react-shell:compile",
+        "gem-core:compile",
+        "halo-app:compile",
+        "plexus:compile",
         "react-appkit:compile",
+        "react-client:compile",
         "react-icons:compile",
+        "react-shell:compile",
         "react-ui-card:compile",
         "react-ui-editor:compile",
         "react-ui-mosaic:compile",
@@ -85,35 +90,20 @@
         "react-ui-table:compile",
         "react-ui:compile"
       ],
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "tools/stories/all-stories"
       }
     },
-    "storybook-e2e": {
-      "dependsOn": ["react-shell:compile", "react-client:compile"],
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "tools/stories/e2e-stories"
-      }
-    },
     "storybook-build-examples": {
-      "dependsOn": ["examples:compile"],
       "configurations": {
         "ci": {
           "quiet": true
         }
       },
+      "dependsOn": [
+        "examples:compile"
+      ],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/examples-stories",
@@ -124,12 +114,14 @@
       ]
     },
     "storybook-build-shell": {
-      "dependsOn": ["react-shell:compile"],
       "configurations": {
         "ci": {
           "quiet": true
         }
       },
+      "dependsOn": [
+        "react-shell:compile"
+      ],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/shell-stories",
@@ -140,12 +132,14 @@
       ]
     },
     "storybook-build-ui": {
-      "dependsOn": ["react-ui:compile"],
       "configurations": {
         "ci": {
           "quiet": true
         }
       },
+      "dependsOn": [
+        "react-ui:compile"
+      ],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/ui-stories",
@@ -154,6 +148,21 @@
       "outputs": [
         "{options.outputDir}"
       ]
+    },
+    "storybook-e2e": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "react-client:compile",
+        "react-shell:compile"
+      ],
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/stories/e2e-stories"
+      }
     }
   }
 }
