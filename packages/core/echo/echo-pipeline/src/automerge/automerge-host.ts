@@ -14,8 +14,11 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import { type Directory } from '@dxos/random-access-storage';
+import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 export class AutomergeHost {
@@ -29,17 +32,14 @@ export class AutomergeHost {
     this._clientNetwork = new LocalHostNetworkAdapter();
     this._storage = new AutomergeStorageAdapter(storageDirectory);
     this._repo = new Repo({
-      network: [
-        // this._meshNetwork,
-        this._clientNetwork,
-      ],
-
+      network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
       sharePolicy: async (peerId, documentId) => true, // Share everything.
     });
     this._clientNetwork.ready();
+    this._meshNetwork.ready();
   }
 
   get repo(): Repo {
@@ -64,6 +64,14 @@ export class AutomergeHost {
 
   getHostInfo(): HostInfo {
     return this._clientNetwork.getHostInfo();
+  }
+
+  //
+  // Mesh replication.
+  //
+
+  createExtension(): AutomergeReplicator {
+    return this._meshNetwork.createExtension();
   }
 }
 
@@ -159,16 +167,64 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
  * Used to replicate with other peers over the network.
  */
 class MeshNetworkAdapter extends NetworkAdapter {
+  private readonly _extensions: Map<string, AutomergeReplicator> = new Map();
+
+  /**
+   * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
+   */
+  ready() {
+    // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
+    //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
+    this.emit('ready', {
+      network: this,
+    });
+  }
+
   override connect(peerId: PeerId): void {
-    throw new Error('Method not implemented.');
+    this.peerId = peerId;
   }
 
   override send(message: Message): void {
-    throw new Error('Method not implemented.');
+    const receiverId = message.targetId;
+    const extension = this._extensions.get(receiverId);
+    invariant(extension, 'Extension not found.');
+    extension.sendSyncMessage({ payload: cbor.encode(message) }).catch((err) => log.catch(err));
   }
 
   override disconnect(): void {
-    throw new Error('Method not implemented.');
+    // No-op
+  }
+
+  createExtension(): AutomergeReplicator {
+    invariant(this.peerId, 'Peer id not set.');
+
+    let peerInfo: PeerInfo;
+    const extension = new AutomergeReplicator(
+      {
+        peerId: this.peerId,
+      },
+      {
+        onStartReplication: async (info) => {
+          peerInfo = info;
+          // TODO(mykola): Fix race condition?
+          this._extensions.set(info.id, extension);
+          this.emit('peer-candidate', {
+            peerId: info.id as PeerId,
+          });
+        },
+        onSyncMessage: async ({ payload }) => {
+          const message = cbor.decode(payload) as Message;
+          this.emit('message', message);
+        },
+        onClose: async () => {
+          peerInfo &&
+            this.emit('peer-disconnected', {
+              peerId: peerInfo.id as PeerId,
+            });
+        },
+      },
+    );
+    return extension;
   }
 }
 
