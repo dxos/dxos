@@ -22,10 +22,9 @@ export default {
 
 const replicator = new Replicator(TextKind.PLAIN);
 
-export const Default = {
-  render: () => {
-    const [generate, setGenerate] = useState(false);
-    const generateId = useId('generate');
+const Story = () => {
+  const [generate, setGenerate] = useState(false);
+  const generateId = useId('generate');
 
   const [id] = useState(PublicKey.random().toHex());
   const model = useYjsModel({ id, replicator });
@@ -35,20 +34,20 @@ export const Default = {
     options: { text: typeof model?.content !== 'string' ? model?.content : undefined },
   });
 
-    return (
-      <main className='flex-1 min-w-0 p-4'>
-        <div id={generateId} className='flex gap-2'>
-          <Input.Root>
-            <Input.Checkbox checked={generate} onCheckedChange={(checked) => setGenerate(!!checked)} />
-            <Input.Label>Generate Data</Input.Label>
-          </Input.Root>
+  return (
+    <main className='flex-1 min-w-0 p-4'>
+      <div id={generateId} className='flex gap-2'>
+        <Input.Root>
+          <Input.Checkbox checked={generate} onCheckedChange={(checked) => setGenerate(!!checked)} />
+          <Input.Label>Generate Data</Input.Label>
+        </Input.Root>
       </div>
       <MarkdownEditor model={model} />
     </main>
   );
 };
 
-export const WithYjs = {
+export const Default = {
   // TODO(wittjosiah): Decorator for doing this without clients being initialized?
   render: () => <ClientRepeater count={2} Component={Story} />,
 };
