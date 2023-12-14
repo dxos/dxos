@@ -31,7 +31,7 @@ const Story = () => {
 
   useDataGenerator({
     generator: generate ? textGenerator : undefined,
-    options: { text: typeof model?.content !== 'string' ? model?.content : undefined },
+    options: { text: typeof model?.content !== 'string' ? (model?.content as any) : undefined },
   });
 
   return (

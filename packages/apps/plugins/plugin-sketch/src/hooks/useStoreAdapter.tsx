@@ -182,13 +182,13 @@ export class AutomergeStoreAdapter {
 
     // Initial sync
     {
-      const contentRecords: Record<string, TLRecord> | undefined = getDeep(docAccess.docSync()!, path);
+      const contentRecords: Record<string, TLRecord> | undefined = getDeep(docAccess.handle.docSync()!, path);
 
       // Initialize the store with the automerge doc records.
       // If the automerge doc is empty, initialize the automerge doc with the default store records.
       if (Object.entries(contentRecords ?? {}).length === 0) {
         // Sync the store records to the automerge doc.
-        docAccess.change((doc) => {
+        docAccess.handle.change((doc) => {
           const content: Record<string, TLRecord> = getAndInit(doc, path, {});
           const allRecords = this._store.allRecords();
           log.info('seed initial records', { allRecords });
@@ -210,7 +210,7 @@ export class AutomergeStoreAdapter {
     // Subscribe to ECHO automerge mutations (events) to update ECHO object.
     //
     const handleChange = () => {
-      const doc = docAccess.docSync()!;
+      const doc = docAccess.handle.docSync()!;
 
       const currentHeads = A.getHeads(doc);
       const diff = A.equals(this._lastHeads, currentHeads) ? [] : A.diff(doc, this._lastHeads ?? [], currentHeads);
@@ -277,8 +277,8 @@ export class AutomergeStoreAdapter {
       this._lastHeads = currentHeads;
     };
 
-    docAccess.addListener('change', handleChange);
-    this._subscriptions.push(() => docAccess.removeListener('change', handleChange));
+    docAccess.handle.addListener('change', handleChange);
+    this._subscriptions.push(() => docAccess.handle.removeListener('change', handleChange));
 
     //
     // Subscribe to changes from component's store (model).
@@ -305,7 +305,7 @@ export class AutomergeStoreAdapter {
           });
 
           timeout = setTimeout(() => {
-            docAccess.change((doc) => {
+            docAccess.handle.change((doc) => {
               const content: Record<string, TLRecord> = getAndInit(doc, path, {});
               log.info('submitting mutations', { mutations });
               mutations.forEach(({ type, record }) => {

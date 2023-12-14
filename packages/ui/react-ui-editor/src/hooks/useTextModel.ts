@@ -5,7 +5,14 @@
 import { useMemo } from 'react';
 import type * as awarenessProtocol from 'y-protocols/awareness';
 
-import { type Space, type TextObject } from '@dxos/react-client/echo';
+import {
+  type DocAccessor,
+  type Space,
+  type TextObject,
+  type AutomergeTextCompat,
+  getRawDoc,
+  isActualAutomergeObject,
+} from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 
@@ -18,7 +25,7 @@ type Provider = { awareness: Awareness };
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type EditorModel = {
   id: string;
-  content: string | YText | YXmlFragment;
+  content: string | YText | YXmlFragment | DocAccessor;
   provider?: Provider;
   peer?: {
     id: string;
@@ -37,12 +44,40 @@ export type UseTextModelOptions = {
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
   const provider = useMemo(() => {
+    if (isActualAutomergeObject(text)) {
+      return undefined;
+    }
+
     if (!space || !text?.doc) {
       return undefined;
     }
 
     return new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` });
-  }, [identity, space, text?.doc]);
+  }, [identity, space, text, text?.doc]);
+
+  const content = useMemo(() => {
+    if (isActualAutomergeObject(text)) {
+      const obj = text as any as AutomergeTextCompat;
+      return getRawDoc(obj, [obj.field]);
+    } else {
+      return text?.content;
+    }
+  }, [text]);
+
+  if (isActualAutomergeObject(text)) {
+    const obj = text as any as AutomergeTextCompat;
+    return {
+      id: obj.id,
+      content: content!,
+      provider: undefined,
+      peer: identity
+        ? {
+            id: identity.identityKey.toHex(),
+            name: identity.profile?.displayName,
+          }
+        : undefined,
+    };
+  }
 
   if (!text?.doc || !text?.content) {
     return undefined;

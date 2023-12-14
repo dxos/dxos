@@ -269,7 +269,7 @@ export class EchoDatabase {
         return new TypedObject(undefined, { type: state.type, useAutomergeBackend: false });
       }
     } else if (item.modelType === TextModel.meta.type) {
-      return new TextObject();
+      return new TextObject(undefined, undefined, undefined, { useAutomergeBackend: false });
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;
