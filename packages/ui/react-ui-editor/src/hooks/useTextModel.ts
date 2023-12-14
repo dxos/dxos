@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
-import { type ComponentProps, useMemo } from 'react';
+import { useMemo } from 'react';
 import type * as awarenessProtocol from 'y-protocols/awareness';
 
 import { type Space, type TextObject } from '@dxos/react-client/echo';
@@ -12,17 +11,7 @@ import type { YText, YXmlFragment } from '@dxos/text-model';
 
 import { SpaceAwarenessProvider } from './yjs';
 
-export type EditorSlots = {
-  root?: Omit<ComponentProps<'div'>, 'ref'>;
-  editor?: {
-    className?: string;
-    placeholder?: string;
-    spellCheck?: boolean;
-    tabIndex?: number;
-    markdownTheme?: Parameters<typeof EditorView.theme>[0];
-  };
-};
-
+// TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
 type Provider = { awareness: Awareness };
 
@@ -43,8 +32,9 @@ export type UseTextModelOptions = {
   text?: TextObject;
 };
 
-// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
+// TODO(burdon): Don't support returning undefined (and remove checks from calling code).
 // TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
+// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
   const provider = useMemo(() => {
     if (!space || !text?.doc) {

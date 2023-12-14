@@ -21,9 +21,8 @@ Composer is:
 - Extensible. Add features by building plugins.
 - Open source.
 
-Your feedback is most welcome - feature requests, bug reports, questions: [Discord](https://discord.gg/uTYyx6srAW)
+Your feedback is most welcome: feature requests, bug reports, questions: [Discord](https://discord.gg/uTYyx6srAW)
 
 See also:
-- [Composer Labs](https://labs.dxos.org) where we experiment with new features ahead of introducing them to this app.
 - [DXOS Documentation](https://docs.dxos.org) where you can build your own local-first, collaborative software.
 `;

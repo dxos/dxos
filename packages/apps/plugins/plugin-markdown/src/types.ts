@@ -11,8 +11,9 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { ObjectMeta } from '@dxos/react-client/echo';
-import type { EditorMode, MarkdownEditorProps } from '@dxos/react-ui-editor';
+import type { EditorMode } from '@dxos/react-ui-editor';
 
+import { type EditorMainProps } from './components';
 import { MARKDOWN_PLUGIN } from './meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
@@ -32,7 +33,7 @@ export type MarkdownProperties = {
 export type MarkdownProvides = {
   markdown: {
     filter?: (document: Document) => boolean;
-    onChange?: MarkdownEditorProps['onChange'];
+    onChange?: EditorMainProps['onChange'];
   };
 };
 
