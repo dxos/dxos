@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
-import { AutomergeOptions, TypedObject, getGlobalAutomergePreference } from './typed-object';
+import { type AutomergeOptions, type TypedObject, getGlobalAutomergePreference } from './typed-object';
 import { AutomergeObject } from '../automerge';
-import { Reference } from '@dxos/document-model';
 
 export type TextObjectOptions = AutomergeOptions;
 
@@ -28,11 +28,14 @@ export class TextObject extends AbstractEchoObject<TextModel> {
 
     if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
       const defaultedField = field ?? 'content';
-      return new AutomergeObject({
-        kind,
-        field: defaultedField,
-        [defaultedField]: text ?? '',
-      }, { type: Reference.fromLegacyTypename(LEGACY_TEXT_TYPE) }) as any;
+      return new AutomergeObject(
+        {
+          kind,
+          field: defaultedField,
+          [defaultedField]: text ?? '',
+        },
+        { type: Reference.fromLegacyTypename(LEGACY_TEXT_TYPE) },
+      ) as any;
     }
 
     const mutation: TextMutation = {};

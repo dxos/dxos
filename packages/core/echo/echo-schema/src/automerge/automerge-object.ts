@@ -573,12 +573,12 @@ export type DocAccessor<T = any> = {
 
   path: string[];
 
-  isAutomergeDocAccessor: true
+  isAutomergeDocAccessor: true;
 };
 
 export const isDocAccessor = (obj: any): obj is DocAccessor => {
   return !!obj?.isAutomergeDocAccessor;
-}
+};
 
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
   invariant(isActualAutomergeObject(obj));

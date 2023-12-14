@@ -6,10 +6,10 @@ import { useMemo } from 'react';
 import type * as awarenessProtocol from 'y-protocols/awareness';
 
 import {
-  DocAccessor,
+  type DocAccessor,
   type Space,
   type TextObject,
-  AutomergeTextCompat,
+  type AutomergeTextCompat,
   getRawDoc,
   isActualAutomergeObject,
 } from '@dxos/react-client/echo';
@@ -57,7 +57,7 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
 
   const content = useMemo(() => {
     if (isActualAutomergeObject(text)) {
-      const obj = text as AutomergeTextCompat;
+      const obj = text as any as AutomergeTextCompat;
       return getRawDoc(obj, [obj.field]);
     } else {
       return text?.content;
@@ -65,7 +65,7 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
   }, [text]);
 
   if (isActualAutomergeObject(text)) {
-    const obj = text as AutomergeTextCompat;
+    const obj = text as any as AutomergeTextCompat;
     return {
       id: obj.id,
       content: content!,

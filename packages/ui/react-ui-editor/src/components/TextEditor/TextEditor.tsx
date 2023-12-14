@@ -7,6 +7,7 @@ import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
+import get from 'lodash.get';
 import React, {
   type KeyboardEvent,
   forwardRef,
@@ -17,13 +18,12 @@ import React, {
   type ComponentProps,
 } from 'react';
 
+import { isDocAccessor } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { basicBundle, basicTheme, markdownBundle, markdownTheme } from './extensions';
 import { type EditorModel, useCollaboration } from '../../hooks';
 import type { ThemeStyles } from '../../styles';
-import { isDocAccessor } from '@dxos/echo-schema';
-import get from 'lodash.get';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];

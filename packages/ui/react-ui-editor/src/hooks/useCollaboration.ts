@@ -7,12 +7,12 @@ import { useEffect, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { generateName } from '@dxos/display-name';
+import { isDocAccessor } from '@dxos/echo-schema';
 import type { ThemeMode } from '@dxos/react-ui';
 import { getColorForValue } from '@dxos/react-ui-theme';
 import { YText } from '@dxos/text-model';
 
 import type { EditorModel } from './useTextModel';
-import { isDocAccessor } from '@dxos/echo-schema';
 import { automergePlugin } from '../automerge/automerge-plugin';
 
 /**
