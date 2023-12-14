@@ -33,8 +33,8 @@ export type UseTextModelOptions = {
 };
 
 // TODO(burdon): Don't support returning undefined (and remove checks from calling code).
-// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 // TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
+// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
   const provider = useMemo(() => {
     if (!space || !text?.doc) {

@@ -9,7 +9,7 @@ import {
   hyperlinkDecoration,
   MarkdownEditor,
   markdownTheme,
-  type MarkdownEditorProps,
+  type TextEditorProps,
   type TextEditorRef,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -18,7 +18,7 @@ import { type EditorMainProps } from './EditorMain';
 import { onTooltip } from './extensions';
 
 // TODO(burdon): Reconcile types.
-type EditorSectionProps = Pick<EditorMainProps, 'showWidgets'> & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
+type EditorSectionProps = Pick<EditorMainProps, 'showWidgets'> & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
 export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
   const editorRef = useRef<TextEditorRef>(null);

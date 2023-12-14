@@ -7,7 +7,7 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import {
   createHyperlinkTooltip,
-  type MarkdownEditorProps,
+  type TextEditorProps,
   type TextEditorRef,
   MarkdownEditor,
   hyperlinkDecoration,
@@ -28,7 +28,7 @@ export type EditorMainProps = {
   layout: 'standalone' | 'embedded';
   showWidgets?: boolean;
   onChange?: (text: string) => void;
-} & Pick<MarkdownEditorProps, 'model' | 'editorMode'>;
+} & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
   editorRefCb,

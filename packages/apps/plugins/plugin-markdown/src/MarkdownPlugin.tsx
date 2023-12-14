@@ -90,24 +90,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
-    const textModel = useTextModel({
-      identity,
-      space,
-      text: document?.content,
-    });
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
+      return null;
+    }
 
     const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
 
-    if (!textModel) {
-      return null;
-    }
-
     return (
       <EditorMain
-        model={textModel}
+        model={model}
         properties={document}
         layout='standalone'
         editorMode={settings.values.editorMode}
@@ -122,18 +117,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
-
-    const textModel = useTextModel({
-      identity,
-      space,
-      text: document?.content,
-    });
-
-    if (!textModel) {
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
       return null;
     }
 
-    return <StandaloneMenu properties={document} model={textModel} editorRef={pluginMutableRef} />;
+    return <StandaloneMenu properties={document} model={model} editorRef={pluginMutableRef} />;
   };
 
   return {

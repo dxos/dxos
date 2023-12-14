@@ -40,6 +40,9 @@ const hyperLinkTooltip = () =>
 const Story = () => {
   const [item] = useState({ text: new TextObject(text) });
   const model = useTextModel({ text: item.text });
+  if (!model) {
+    return null;
+  }
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>

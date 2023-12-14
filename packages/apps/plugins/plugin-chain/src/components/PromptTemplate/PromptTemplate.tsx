@@ -87,6 +87,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     }
   }, [text]);
 
+  if (!model) {
+    return null;
+  }
+
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
@@ -170,6 +174,9 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: input.value });
+  if (!model) {
+    return null;
+  }
 
   return (
     <TextEditor
