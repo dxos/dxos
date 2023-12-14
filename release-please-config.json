@@ -484,6 +484,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mesh/teleport-extension-automerge-replicator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/teleport-extension-gossip/package.json",
           "jsonpath": "$.version"
         },

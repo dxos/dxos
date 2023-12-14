@@ -228,6 +228,7 @@ export class DataSpaceManager {
           gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+        session.addExtension('dxos.mesh.teleport.automerge', this._automergeHost.createExtension());
       },
       onAuthFailure: () => {
         log.warn('auth failure');

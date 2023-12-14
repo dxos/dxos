@@ -4381,6 +4381,9 @@ importers:
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
+      '@dxos/teleport-extension-automerge-replicator':
+        specifier: workspace:*
+        version: link:../../mesh/teleport-extension-automerge-replicator
       '@dxos/teleport-extension-gossip':
         specifier: workspace:*
         version: link:../../mesh/teleport-extension-gossip
@@ -5161,6 +5164,46 @@ importers:
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
+
+  packages/core/mesh/teleport-extension-automerge-replicator:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../../common/codec-protobuf
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../rpc
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../teleport
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+    devDependencies:
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/core/mesh/teleport-extension-gossip:
     dependencies:
