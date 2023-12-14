@@ -21,8 +21,10 @@ const StorybookToggle = (props: StorybookToggleProps) => {
 };
 
 export default {
+  title: 'DXOS UI/Toggle button',
   component: StorybookToggle,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {
