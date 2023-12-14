@@ -122,8 +122,8 @@ export const markdownTheme: ThemeStyles = {
     background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
   },
   '& .cm-content': {
-    caretColor: 'black',
     padding: 0,
+    caretColor: 'black',
   },
   '.dark & .cm-content': {
     caretColor: cursor,
