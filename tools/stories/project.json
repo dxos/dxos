@@ -63,6 +63,28 @@
       }
     },
     "storybook": {
+      "dependsOn": [
+        "composer-app:compile",
+        "halo-app:compile",
+        "devtools:compile",
+        "chess-app:compile",
+        "gem-core:compile",
+        "plexus:compile",
+        "app-graph:compile",
+        "examples:compile",
+        "react-client:compile",
+        "react-shell:compile",
+        "react-appkit:compile",
+        "react-icons:compile",
+        "react-ui-card:compile",
+        "react-ui-editor:compile",
+        "react-ui-mosaic:compile",
+        "react-ui-navtree:compile",
+        "react-ui-searchlist:compile",
+        "react-ui-stack:compile",
+        "react-ui-table:compile",
+        "react-ui:compile"
+      ],
       "configurations": {
         "ci": {
           "quiet": true
@@ -73,7 +95,20 @@
         "configDir": "tools/stories/all-stories"
       }
     },
+    "storybook-e2e": {
+      "dependsOn": ["react-shell:compile", "react-client:compile"],
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/stories/e2e-stories"
+      }
+    },
     "storybook-build-examples": {
+      "dependsOn": ["examples:compile"],
       "configurations": {
         "ci": {
           "quiet": true
@@ -89,6 +124,7 @@
       ]
     },
     "storybook-build-shell": {
+      "dependsOn": ["react-shell:compile"],
       "configurations": {
         "ci": {
           "quiet": true
@@ -104,6 +140,7 @@
       ]
     },
     "storybook-build-ui": {
+      "dependsOn": ["react-ui:compile"],
       "configurations": {
         "ci": {
           "quiet": true
@@ -117,17 +154,6 @@
       "outputs": [
         "{options.outputDir}"
       ]
-    },
-    "storybook-e2e": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "tools/stories/e2e-stories"
-      }
     }
   }
 }
