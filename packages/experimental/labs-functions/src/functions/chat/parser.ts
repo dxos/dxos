@@ -13,7 +13,7 @@ export type ParseResult = {
   data?: any;
 };
 
-export const parseMessage = (content: string, type = undefined): ParseResult | undefined => {
+export const parseMessage = (content: string, type?: string): ParseResult | undefined => {
   invariant(content);
 
   // Check if raw JSON.
