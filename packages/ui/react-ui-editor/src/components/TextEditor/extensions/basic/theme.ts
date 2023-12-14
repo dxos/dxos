@@ -21,6 +21,7 @@ export const basicTheme: {
   },
   '& .cm-line': {
     paddingInline: 0,
+    lineHeight: 1.6,
     minBlockSize: '1.6em',
   },
   '& .cm-line *': {

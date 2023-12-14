@@ -29,10 +29,6 @@ const _selection = '#3E4451';
 
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
-// TODO(burdon): Subtle difference in layout for documents and stacks.
-// TODO(burdon): On first character, height of editor changes by a few pixels.
-//  Also jiggles once styles is applied in code block.
-
 /**
  * NOTE: The '&' prefix denotes the CM editor root.
  * https://codemirror.net/examples/styling
@@ -103,6 +99,7 @@ export const markdownTheme: ThemeStyles = {
   },
   '& .cm-line': {
     paddingInline: 0,
+    lineHeight: 1.6,
     minBlockSize: '1.6em',
   },
   '& .cm-line *': {

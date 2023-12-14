@@ -51,7 +51,7 @@ export const ChatInput: FC<{ onMessage: (text: string) => boolean | void }> = ({
         extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}
         slots={{
           root: {
-            className: 'w-full',
+            className: 'flex w-full items-center pl-2',
           },
           editor: {
             placeholder: t('text placeholder'),

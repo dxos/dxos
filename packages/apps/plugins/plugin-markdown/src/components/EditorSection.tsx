@@ -36,7 +36,7 @@ export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionP
       slots={{
         root: {
           role: 'none',
-          className: mx(focusRing, 'm-0.5 is-[calc(100%-4px)]'),
+          className: mx(focusRing, 'is-[calc(100%-4px)] m-0.5 pt-2'),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {
