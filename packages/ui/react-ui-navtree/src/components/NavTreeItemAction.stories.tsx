@@ -3,8 +3,8 @@
 //
 
 import '@dxosTheme';
-
-import { Bug } from '@phosphor-icons/react';
+import { faker } from '@faker-js/faker';
+import { List, Circle } from '@phosphor-icons/react';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
@@ -12,9 +12,10 @@ import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { NavTreeItemAction } from './NavTreeItemAction';
-import { type TreeNodeAction } from '../types';
 
-const meta: Meta<typeof NavTreeItemAction> = {
+// TODO(burdon): Goal: Factor-out CMD-K like dialog.
+
+const meta: Meta = {
   // TODO(burdon): Remove title from others (so all appear in ui tree?)
   // title: 'Components/NavTree/NavTreeItemActionSearchList',
   component: NavTreeItemAction,
@@ -41,24 +42,27 @@ export default meta;
 
 export const Default = {
   render: ({ debug }: { debug?: boolean }) => {
-    // TODO(burdon): Util to create test actions/graph for all tests.
-    const action: TreeNodeAction = {
-      id: 'test-action',
-      label: 'Test',
-      invoke: () => {
-        console.log('test.invoke');
-      },
-      actions: [],
-      properties: {},
-    };
+    const actions = faker.helpers.multiple(
+      () => ({
+        id: faker.string.uuid(),
+        label: faker.lorem.words(2),
+        icon: Circle,
+        actions: [],
+        invoke: () => {},
+        properties: {},
+      }),
+      { count: 20 },
+    );
 
+    // TODO(burdon): Util to create test actions/graph for all tests.
     return (
       <NavTreeItemAction
         id='test'
-        icon={Bug}
+        icon={List}
         level={0}
-        action={action}
-        actions={action.actions}
+        actions={actions}
+        menuType='searchList'
+        label='Select action'
         onAction={(action) => {
           console.log(action);
         }}

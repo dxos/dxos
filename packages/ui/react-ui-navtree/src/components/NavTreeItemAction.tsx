@@ -284,9 +284,7 @@ export const NavTreeItemAction = ({
             suppressNextTooltip={suppressNextTooltip}
             icon={Icon}
             label={label}
-            onAction={(action) => {
-              void action.invoke();
-            }}
+            onAction={(action) => action.invoke()}
           />
         ) : (
           <NavTreeItemActionDropdownMenu
@@ -295,9 +293,7 @@ export const NavTreeItemAction = ({
             active={active}
             suppressNextTooltip={suppressNextTooltip}
             icon={Icon}
-            onAction={(action) => {
-              void action.invoke();
-            }}
+            onAction={(action) => action.invoke()}
           />
         )}
       </Tooltip.Root>
