@@ -74,7 +74,7 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
 };
 
 export default {
-  title: 'Components/NavTree/Graph',
+  // title: 'Components/NavTree/Graph',
   component: NavTree,
   parameters: {
     layout: 'fullscreen',
