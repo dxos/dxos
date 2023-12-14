@@ -26,7 +26,6 @@ export const highlightBackground = '#2c313a';
 const _background = '#282c34';
 export const tooltipBackground = '#353a42';
 const _selection = '#3E4451';
-export const cursor = '#ffffff';
 
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
@@ -126,13 +125,13 @@ export const markdownTheme: ThemeStyles = {
     caretColor: 'black',
   },
   '.dark & .cm-content': {
-    caretColor: cursor,
+    caretColor: 'white',
   },
   '& .cm-cursor': {
     borderLeftColor: 'black',
   },
   '.dark & .cm-cursor': {
-    borderLeftColor: cursor,
+    borderLeftColor: 'white',
   },
   '.cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
