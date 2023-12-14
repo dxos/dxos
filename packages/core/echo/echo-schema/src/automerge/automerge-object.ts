@@ -454,55 +454,59 @@ export class AutomergeObject implements TypedObjectProperties {
   _getRawDoc(path?: string[]): DocAccessor {
     const self = this;
     return {
-      docSync: () => this._getDoc(),
-      change: (callback, options) => {
-        if (this._doc) {
-          if (options) {
-            this._doc = automerge.change(this._doc!, options, callback);
+      handle: {
+        docSync: () => this._getDoc(),
+        change: (callback, options) => {
+          if (this._doc) {
+            if (options) {
+              this._doc = automerge.change(this._doc!, options, callback);
+            } else {
+              this._doc = automerge.change(this._doc!, callback);
+            }
           } else {
-            this._doc = automerge.change(this._doc!, callback);
+            invariant(this._docHandle);
+            this._docHandle.change(callback, options);
           }
-        } else {
-          invariant(this._docHandle);
-          this._docHandle.change(callback, options);
-        }
-        this._notifyUpdate();
-      },
-      changeAt: (heads, callback, options) => {
-        let result: Heads | undefined;
-        if (this._doc) {
-          if (options) {
-            const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
-            this._doc = newDoc;
-            result = newHeads ?? undefined;
+          this._notifyUpdate();
+        },
+        changeAt: (heads, callback, options) => {
+          let result: Heads | undefined;
+          if (this._doc) {
+            if (options) {
+              const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
+              this._doc = newDoc;
+              result = newHeads ?? undefined;
+            } else {
+              const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, callback);
+              this._doc = newDoc;
+              result = newHeads ?? undefined;
+            }
           } else {
-            const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, callback);
-            this._doc = newDoc;
-            result = newHeads ?? undefined;
+            invariant(this._docHandle);
+            result = this._docHandle.changeAt(heads, callback, options);
           }
-        } else {
-          invariant(this._docHandle);
-          result = this._docHandle.changeAt(heads, callback, options);
-        }
 
-        this._notifyUpdate();
-        return result;
-      },
-      addListener: (event, listener) => {
-        if (event === 'change') {
-          this[base]._docHandle?.on('change', listener);
-          this._updates.on(listener);
-        }
-      },
-      removeListener: (event, listener) => {
-        if (event === 'change') {
-          this[base]._docHandle?.off('change', listener);
-          this._updates.off(listener);
-        }
+          this._notifyUpdate();
+          return result;
+        },
+        addListener: (event, listener) => {
+          if (event === 'change') {
+            this[base]._docHandle?.on('change', listener);
+            this._updates.on(listener);
+          }
+        },
+        removeListener: (event, listener) => {
+          if (event === 'change') {
+            this[base]._docHandle?.off('change', listener);
+            this._updates.off(listener);
+          }
+        },
       },
       get path() {
         return [...self._path, 'data', ...(path ?? [])];
       },
+
+      isAutomergeDocAccessor: true,
     };
   }
 }
@@ -555,15 +559,25 @@ const getSchemaProto = (): typeof Schema => {
   return schemaProto;
 };
 
-export type DocAccessor<T = any> = {
+export type IDocHandle<T = any> = {
   docSync(): Doc<T> | undefined;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
 
   addListener(event: 'change', listener: () => void): void;
   removeListener(event: 'change', listener: () => void): void;
+};
 
-  path?: string[];
+export type DocAccessor<T = any> = {
+  handle: IDocHandle<T>;
+
+  path: string[];
+
+  isAutomergeDocAccessor: true;
+};
+
+export const isDocAccessor = (obj: any): obj is DocAccessor => {
+  return !!obj?.isAutomergeDocAccessor;
 };
 
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {

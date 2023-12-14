@@ -37,11 +37,11 @@ const hyperLinkTooltip = () =>
     );
   });
 
-const Story = () => {
-  const [item] = useState({ text: new TextObject(text) });
+const Story = ({ automerge }: { automerge?: boolean }) => {
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: !!automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
-    return null;
+    return <></>;
   }
 
   return (
@@ -73,3 +73,7 @@ export default {
 };
 
 export const Default = {};
+
+export const Automerge = {
+  render: () => <Story automerge />,
+};
