@@ -14,18 +14,14 @@ import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, Layo
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import {
-  type EditorModel,
-  type MarkdownEditorProps,
-  type MarkdownEditorRef,
-  useTextModel,
-} from '@dxos/react-ui-editor';
+import { type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
   EditorCard,
   EditorMain,
   EditorMainEmbedded,
+  type EditorMainProps,
   EditorSection,
   MarkdownMainEmpty,
   MarkdownSettings,
@@ -58,13 +54,13 @@ export const isDocument = (data: unknown): data is Document =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
-  const state = deepSignal<{ onChange: NonNullable<MarkdownEditorProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<EditorMainProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
-  const pluginMutableRef: MutableRefObject<MarkdownEditorRef> = {
+  const pluginMutableRef: MutableRefObject<TextEditorRef> = {
     current: { editor: null },
   };
-  const pluginRefCallback: RefCallback<MarkdownEditorRef> = (nextRef: MarkdownEditorRef) => {
+  const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 
@@ -73,7 +69,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     composer: EditorModel;
     properties: MarkdownProperties;
   }> = ({ composer, properties }) => {
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -94,25 +90,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
-    const textModel = useTextModel({
-      identity,
-      space,
-      text: document?.content,
-    });
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
+      return null;
+    }
 
-    // TODO(burdon): Document.
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
 
-    if (!textModel) {
-      return null;
-    }
-
     return (
       <EditorMain
-        model={textModel}
+        model={model}
         properties={document}
         layout='standalone'
         editorMode={settings.values.editorMode}
@@ -127,18 +117,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
-
-    const textModel = useTextModel({
-      identity,
-      space,
-      text: document?.content,
-    });
-
-    if (!textModel) {
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
       return null;
     }
 
-    return <StandaloneMenu properties={document} model={textModel} editorRef={pluginMutableRef} />;
+    return <StandaloneMenu properties={document} model={model} editorRef={pluginMutableRef} />;
   };
 
   return {

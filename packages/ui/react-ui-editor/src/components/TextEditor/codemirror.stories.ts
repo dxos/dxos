@@ -5,7 +5,7 @@
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import type { StoryObj } from '@storybook/html';
+import { type StoryObj } from '@storybook/html';
 import { basicSetup } from 'codemirror';
 import { yCollab } from 'y-codemirror.next';
 
@@ -17,8 +17,8 @@ import { type Identity } from '@dxos/react-client/halo';
 import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 
-import { EditorDocument, types as schema } from '../../src/testing';
-import { cursorColor, SpaceAwarenessProvider } from '../../src/yjs';
+import { cursorColor, SpaceAwarenessProvider } from '../../hooks';
+import { EditorDocument, types as schema } from '../../testing';
 
 export default {
   title: 'CodeMirror',
@@ -90,6 +90,7 @@ const setupSpace = async (count: number) => {
 };
 
 const count = 2;
+
 export const Default: StoryObj<{ id: number; client: Client; spaceKey: PublicKey }> = {
   render: ({ id, client, spaceKey }) => {
     const editor = document.createElement('div');
