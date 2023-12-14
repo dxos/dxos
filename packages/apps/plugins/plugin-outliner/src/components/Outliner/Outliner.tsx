@@ -153,7 +153,7 @@ const OutlinerItem = ({
   return (
     <div className='flex group' onKeyDownCapture={handleKeyDown}>
       {(isTasklist && (
-        <div className='py-1 mr-1'>
+        <div className='mt-0.5 mr-2.5'>
           <Input.Root>
             <Input.Checkbox
               checked={item.done}
@@ -164,7 +164,7 @@ const OutlinerItem = ({
           </Input.Root>
         </div>
       )) || (
-        <div className='px-1 py-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
+        <div className='mr-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
           <DotOutline
             weight={focus ? 'fill' : undefined}
             className={mx('shrink-0', getSize(6), active && 'text-primary-500')}
@@ -375,14 +375,15 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     switch (direction) {
       case 'left': {
         if (parent) {
-          // Move all siblings.
-          const move = items.splice(idx, items.length - idx);
-
           // Get parent's parent.
           const ancestor = getParent(root, parent)!;
-          const ancestorItems = getItems(ancestor);
-          const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
-          ancestorItems.splice(parentIdx + 1, 0, ...move);
+          if (ancestor) {
+            // Move all siblings.
+            const move = items.splice(idx, items.length - idx);
+            const ancestorItems = getItems(ancestor);
+            const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
+            ancestorItems.splice(parentIdx + 1, 0, ...move);
+          }
         }
         break;
       }
