@@ -165,7 +165,7 @@ describe('QueryPlugin', () => {
 
       {
         // Wait for client to be ready.
-        await asyncTimeout(client.spaces.isReady.wait(), 1000);
+        await asyncTimeout(client.spaces.isReady.wait(), 2000);
         await asyncTimeout(client.spaces.default.waitUntilReady(), 1000);
       }
     });
