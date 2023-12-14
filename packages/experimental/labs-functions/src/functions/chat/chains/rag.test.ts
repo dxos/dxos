@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { generator } from './knowledge';
+import { generator } from './rag';
 import { getResources } from './testing';
 import { type ChainDocument } from '../../../chain';
 
