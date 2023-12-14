@@ -190,6 +190,11 @@ export class AutomergeObject implements TypedObjectProperties {
   _bind(options: BindOptions) {
     this._database = options.db;
     this._docHandle = options.docHandle;
+    this._docHandle.on('change', (event) => {
+      if (objectIsUpdated(this._id, event)) {
+        this._notifyUpdate();
+      }
+    });
     this._path = options.path;
 
     if (this._linkCache) {
@@ -314,10 +319,10 @@ export class AutomergeObject implements TypedObjectProperties {
       this._docHandle.change(changeFn);
     } else if (this._doc) {
       this._doc = automerge.change(this._doc, changeFn);
+      this._notifyUpdate();
     } else {
       failedInvariant();
     }
-    this._notifyUpdate();
   }
 
   /**
@@ -425,6 +430,10 @@ export class AutomergeObject implements TypedObjectProperties {
     this._updates.emit();
   };
 
+  /**
+   * Notifies listeners and front-end framework about the change.
+   */
+  // TODO(mykola): Unify usage of `_notifyUpdate`.
   private _notifyUpdate = () => {
     this._signal.notifyWrite();
     this._updates.emit();
@@ -476,17 +485,18 @@ export class AutomergeObject implements TypedObjectProperties {
               const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
               this._doc = newDoc;
               result = newHeads ?? undefined;
+              this._notifyUpdate();
             } else {
               const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, callback);
               this._doc = newDoc;
               result = newHeads ?? undefined;
+              this._notifyUpdate();
             }
           } else {
             invariant(this._docHandle);
             result = this._docHandle.changeAt(heads, callback, options);
           }
 
-          this._notifyUpdate();
           return result;
         },
         addListener: (event, listener) => {
