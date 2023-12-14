@@ -19,11 +19,12 @@ import { getKey } from '../../util';
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
   const { space, objects } = event;
-  if (!space || !objects?.length) {
-    return response.status(400);
-  }
-  invariant(dataDir);
+  // TODO(burdon): Option to process all spaces.
+  // if (!space || !objects?.length) {
+  //   return response.status(400);
+  // }
 
+  invariant(dataDir);
   const docs: ChainDocument[] = [];
   const addDocuments =
     (space: PublicKey | undefined = undefined) =>
@@ -66,7 +67,6 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       }
     };
 
-  const spaces = client.spaces.get();
   if (space) {
     const add = addDocuments(space.key);
     if (objects?.length) {
@@ -79,6 +79,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       await add(files);
     }
   } else {
+    const spaces = client.spaces.get();
     for (const space of spaces) {
       const { objects: documents } = space.db.query(DocumentType.filter());
       await addDocuments(space.key)(documents);
