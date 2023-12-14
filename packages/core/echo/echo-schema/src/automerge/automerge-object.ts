@@ -317,6 +317,7 @@ export class AutomergeObject implements TypedObjectProperties {
   _change(changeFn: ChangeFn<any>) {
     if (this._docHandle) {
       this._docHandle.change(changeFn);
+      // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
     } else if (this._doc) {
       this._doc = automerge.change(this._doc, changeFn);
       this._notifyUpdate();
@@ -472,11 +473,12 @@ export class AutomergeObject implements TypedObjectProperties {
             } else {
               this._doc = automerge.change(this._doc!, callback);
             }
+            this._notifyUpdate();
           } else {
             invariant(this._docHandle);
             this._docHandle.change(callback, options);
+            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
           }
-          this._notifyUpdate();
         },
         changeAt: (heads, callback, options) => {
           let result: Heads | undefined;
@@ -485,16 +487,16 @@ export class AutomergeObject implements TypedObjectProperties {
               const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, options, callback);
               this._doc = newDoc;
               result = newHeads ?? undefined;
-              this._notifyUpdate();
             } else {
               const { newDoc, newHeads } = automerge.changeAt(this._doc!, heads, callback);
               this._doc = newDoc;
               result = newHeads ?? undefined;
-              this._notifyUpdate();
             }
+            this._notifyUpdate();
           } else {
             invariant(this._docHandle);
             result = this._docHandle.changeAt(heads, callback, options);
+            // Note: We don't need to notify listeners here, since `change` event is already emitted by the doc handle.
           }
 
           return result;
