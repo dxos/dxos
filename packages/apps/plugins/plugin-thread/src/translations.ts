@@ -21,6 +21,7 @@ export default [
         'delete column label': 'Delete column',
         'delete item label': 'Delete item',
         'create thread label': 'Create thread',
+        'text placeholder': 'Enter message...',
       },
     },
   },

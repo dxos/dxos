@@ -2,10 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-//
-// Copyright 2020 DXOS.org
-//
-
 import { Duplex } from 'stream';
 
 import { sleep, TestStream } from '@dxos/async';

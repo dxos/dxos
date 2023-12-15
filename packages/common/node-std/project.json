@@ -44,6 +44,7 @@
           "packages/common/node-std/src/events.js",
           "packages/common/node-std/src/fs.js",
           "packages/common/node-std/src/globals.js",
+          "packages/common/node-std/src/inject-globals.js",
           "packages/common/node-std/src/path.js",
           "packages/common/node-std/src/stream.js",
           "packages/common/node-std/src/util.js"

@@ -42,6 +42,8 @@ export default defineConfig({
         'script-frame': resolve(__dirname, './script-frame/index.html'),
       },
       output: {
+        // Generate nicer chunk names. Default makes most chunks have names like index-[hash].js.
+        chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
           dxos: ['@dxos/react-client'],
@@ -94,20 +96,6 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
-
-        // TODO(burdon): Indirect deps.
-        resolve(__dirname, './node_modules/@braneframe/plugin-grid/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-layout/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-table/node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-table/node_modules/@dxos/react-ui-table/node_modules/@dxos/react-ui-searchlist/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-debug/node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
-
-        // TODO(burdon): Hoisted as direct deps.
-        resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269
@@ -181,3 +169,24 @@ export default defineConfig({
     },
   ],
 });
+
+function chunkFileNames (chunkInfo) {
+  if(chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+    let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    const nodeModulesIdx = segments.indexOf('node_modules');
+    if(nodeModulesIdx !== -1) {
+      segments = segments.slice(0, nodeModulesIdx);
+    } 
+    const ignoredNames = [
+      'dist',
+      'lib',
+      'browser'
+    ]
+    const significantSegment = segments.find(segment => !ignoredNames.includes(segment));
+    if(significantSegment) {
+      return `assets/${significantSegment}-[hash].js`;
+    }
+  }
+
+  return 'assets/[name]-[hash].js';
+};

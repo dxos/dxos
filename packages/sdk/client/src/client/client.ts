@@ -41,6 +41,8 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
   /** Custom model factory. */
   modelFactory?: ModelFactory;
+  /** Types. */
+  types?: TypeCollection;
 };
 
 /**
@@ -94,6 +96,9 @@ export class Client {
 
     this.addTypes(schemaBuiltin);
     this.addTypes(clientSchema);
+    if (this._options.types) {
+      this.addTypes(this._options.types);
+    }
   }
 
   [inspect.custom]() {
@@ -184,6 +189,7 @@ export class Client {
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
+  // TODO(burdon): Make idempotent.
   addTypes(types: TypeCollection) {
     this._graph.addTypes(types);
     return this;

@@ -14,6 +14,7 @@ import {
   Users,
   Upload,
   X,
+  Database,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
@@ -24,6 +25,7 @@ import { type DispatchIntent, type MetadataResolver } from '@dxos/app-framework'
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { Migrations } from '@dxos/migrations';
 import {
   EchoDatabase,
   type Space,
@@ -67,6 +69,8 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
+        // TODO(burdon): Need to bind based on context.
+        keyBinding: 'meta+k',
         invoke: () => {
           // No-op.
         },
@@ -85,6 +89,7 @@ const getFolderGraphNodePartials = ({
         ],
         properties: {
           disposition: 'toolbar',
+          menuType: 'searchList',
           testId: 'spacePlugin.createObject',
         },
       },
@@ -138,12 +143,14 @@ export const spaceToGraphNode = ({
   space,
   parent,
   hidden,
+  version,
   dispatch,
   resolve,
 }: {
   space: Space;
   parent: Node;
   hidden?: boolean;
+  version?: string;
   dispatch: DispatchIntent;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
@@ -176,6 +183,19 @@ export const spaceToGraphNode = ({
         testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       },
     });
+
+    if (
+      space.state.get() === SpaceState.READY &&
+      Migrations.versionProperty &&
+      space.properties[Migrations.versionProperty] !== version
+    ) {
+      node.addAction({
+        id: 'migrate-space',
+        label: ['migrate space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <Database {...props} />,
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } }),
+      });
+    }
 
     if (!isPersonalSpace && space.state.get() === SpaceState.READY) {
       node.addAction(
@@ -214,15 +234,15 @@ export const spaceToGraphNode = ({
     node.addAction(
       {
         id: 'backup-space',
-        label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
+        label: ['export data label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Download {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.BACKUP, data: { space } }),
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.EXPORT, data: { space } }),
       },
       {
         id: 'restore-space',
-        label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
+        label: ['import data label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Upload {...props} />,
-        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RESTORE, data: { space } }),
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.IMPORT, data: { space } }),
       },
     );
 

@@ -13,15 +13,17 @@ import { type BlockProperties, MessageCard } from './MessageCard';
 
 // TODO(burdon): Translation provider (decorator?)
 
-const getBlockProperties = (identityKey: PublicKey): BlockProperties => ({
-  displayName: 'Tester',
+const getBlockProperties = (identityKey: PublicKey | undefined): BlockProperties => ({
+  displayName: identityKey?.toHex() ?? 'Unknown',
 });
 
 const Story = () => {
   const [identityKey] = useState(PublicKey.random());
   const [message] = useState(
     new MessageType({
-      identityKey: identityKey.toHex(),
+      from: {
+        identityKey: identityKey.toHex(),
+      },
       blocks: [
         {
           text: 'hello',

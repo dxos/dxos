@@ -15,11 +15,13 @@ export type FunctionDef = {
   description?: string;
 };
 
+// TODO(burdon): Query DSL.
 export type TriggerSubscription = {
   type: string;
   spaceKey: string;
   props?: Record<string, any>;
-  nested?: string[];
+  deep?: boolean; // Watch changes to object (not just creation).
+  delay?: number;
 };
 
 // TODO(burdon): Generalize binding.
@@ -28,7 +30,7 @@ export type TriggerSubscription = {
 export type FunctionTrigger = {
   function: string;
   schedule?: string;
-  subscription?: TriggerSubscription;
+  subscriptions?: TriggerSubscription[];
 };
 
 /**

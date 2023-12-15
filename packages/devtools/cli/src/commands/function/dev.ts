@@ -8,6 +8,7 @@ import { load } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
 
@@ -15,7 +16,7 @@ import { BaseCommand } from '../../base-command';
 
 export default class Dev extends BaseCommand<typeof Dev> {
   static override enableJsonFlag = true;
-  static override description = 'Development server.';
+  static override description = 'Functions development server.';
   static override aliases = ['function:dev-server'];
   static override examples = [
     {
@@ -53,6 +54,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         directory,
         manifest,
         reload: this.flags.reload,
+        dataDir: getProfilePath(DX_DATA, this.flags.profile),
       });
 
       await server.initialize();

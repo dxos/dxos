@@ -32,7 +32,13 @@
       "path": "../react-ui-mosaic"
     },
     {
+      "path": "../react-ui-searchlist"
+    },
+    {
       "path": "../react-ui-theme"
+    },
+    {
+      "path": "../storybook-utils"
     }
   ]
 }

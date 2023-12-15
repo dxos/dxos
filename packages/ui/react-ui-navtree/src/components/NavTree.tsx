@@ -12,16 +12,19 @@ import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeMosaicComponent } from './NavTreeItem';
 import type { TreeNode } from '../types';
 
+export const DEFAULT_TYPE = 'tree-item';
+
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
-  const { id, Component } = useContainer();
+  const { id, Component, type } = useContainer();
 
   return (
     <Mosaic.SortableContext id={id} items={node.children} direction='vertical'>
       {node.children.map((node, index) => (
         <Mosaic.SortableTile
           key={node.id}
-          item={{ id: node.id, node, level: 0 }}
+          item={{ ...node, level: 0 }}
           path={id}
+          type={type}
           position={index}
           Component={Component!}
         />
@@ -45,6 +48,7 @@ export type NavTreeProps = {
 export const NavTree = ({
   node,
   current,
+  type = DEFAULT_TYPE,
   popoverAnchorId,
   onSelect,
   isOver = defaultIsOver,
@@ -58,6 +62,7 @@ export const NavTree = ({
       {...{
         id: node.id,
         Component: NavTreeMosaicComponent,
+        type,
         onOver,
         onDrop,
       }}

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -65,6 +65,7 @@
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-shell": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

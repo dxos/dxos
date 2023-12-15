@@ -22,7 +22,7 @@ import {
   type PluginDefinition,
   type LayoutProvides,
   type IntentResolverProvides,
-  type GraphPluginProvides,
+  type GraphProvides,
   type GraphBuilderProvides,
   type SurfaceProvides,
   type TranslationsProvides,
@@ -33,7 +33,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextView, ContentEmpty, LayoutSettings } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -45,7 +45,7 @@ export type LayoutPluginProvides = SurfaceProvides &
   LayoutProvides;
 
 export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
-  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  let graphPlugin: Plugin<GraphProvides> | undefined;
   const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
@@ -189,7 +189,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
                 },
                 // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
+                documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
               },
             };
 
@@ -219,7 +219,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               return <ContentEmpty />;
 
             case `${LAYOUT_PLUGIN}/ContextView`:
-              return <ContextView />;
+              return <ContextPanel />;
 
             default:
               return null;

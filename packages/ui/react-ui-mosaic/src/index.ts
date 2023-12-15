@@ -3,6 +3,3 @@
 //
 
 export * from './mosaic';
-
-// TODO(burdon): Remove (factor out components).
-export * from './views';

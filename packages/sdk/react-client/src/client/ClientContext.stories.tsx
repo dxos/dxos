@@ -6,11 +6,13 @@ import React, { Component, type PropsWithChildren } from 'react';
 
 import { fromHost } from '@dxos/client/services';
 import { Config } from '@dxos/config';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ClientProvider, useClient } from './ClientContext';
 
 export default {
   component: ClientProvider,
+  decorators: [withTheme],
 };
 
 const JsonPanel = ({ value }: { value: any }) => (

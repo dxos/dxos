@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './EditorCard';
 export * from './EditorMain';
 export * from './EditorMainEmbedded';
 export * from './EditorSection';

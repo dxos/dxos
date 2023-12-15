@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
-import { data, Expando, getGlobalAutomergePreference, TypedObject } from './object';
+import { Expando, getGlobalAutomergePreference, proxy, TypedObject } from './object';
 import { Schema } from './proto';
 import { TestBuilder, createDatabase, testWithAutomerge } from './testing';
 
@@ -55,31 +55,29 @@ describe('Database', () => {
       expect(objects).toHaveLength(n);
     });
 
-    if (!getGlobalAutomergePreference()) {
-      test('removing objects', async () => {
-        const { db } = await createDatabase();
+    test('removing objects', async () => {
+      const { db } = await createDatabase();
 
-        const n = 10;
-        for (const _ of Array.from({ length: n })) {
-          const obj = new TypedObject();
-          db.add(obj);
-        }
-        await db.flush();
+      const n = 10;
+      for (const _ of Array.from({ length: n })) {
+        const obj = new TypedObject();
+        db.add(obj);
+      }
+      await db.flush();
 
-        {
-          const { objects } = db.query();
-          expect(objects).toHaveLength(n);
-        }
+      {
+        const { objects } = db.query();
+        expect(objects).toHaveLength(n);
+      }
 
-        db.remove(db.query().objects[0]);
-        await db.flush();
+      db.remove(db.query().objects[0]);
+      await db.flush();
 
-        {
-          const { objects } = db.query();
-          expect(objects).toHaveLength(n - 1);
-        }
-      });
-    }
+      {
+        const { objects } = db.query();
+        expect(objects).toHaveLength(n - 1);
+      }
+    });
 
     // TODO(burdon): 100 times (not batched).
     test.skip('flush callback', async () => {
@@ -179,19 +177,18 @@ describe('Database', () => {
       expect(obj.description).toEqual('Test description');
     });
 
-    if (!getGlobalAutomergePreference()) {
-      test('get/set reference after save', async () => {
-        const { db } = await createDatabase();
+    test('get/set reference after save', async () => {
+      const { db } = await createDatabase();
 
-        const obj = new TypedObject();
-        db.add(obj);
-        await db.flush();
+      const obj = new TypedObject();
+      db.add(obj);
+      await db.flush();
 
-        obj.nested = new TypedObject({ title: 'Test title' });
+      obj.nested = new TypedObject({ title: 'Test title' });
 
-        expect(obj.nested.title).toEqual('Test title');
-      });
-    }
+      expect(obj.nested[proxy]).toEqual(true);
+      expect(obj.nested.title).toEqual('Test title');
+    });
 
     test('object constructor', async () => {
       const { db } = await createDatabase();
@@ -207,38 +204,38 @@ describe('Database', () => {
       expect(obj.description).toEqual('Test description');
     });
 
+    test('object refs', async () => {
+      const { db } = await createDatabase();
+
+      const task = new TypedObject({ title: 'Fix bugs' });
+      const john = new TypedObject({ name: 'John Doe' });
+      task.assignee = john;
+
+      expect(task.title).toEqual('Fix bugs');
+      expect(task.assignee).toEqual(john);
+
+      db.add(task);
+      await db.flush();
+
+      expect(task.title).toEqual('Fix bugs');
+      expect(task.assignee).toStrictEqual(john);
+      expect(task.assignee.name).toEqual('John Doe');
+    });
+
+    test('nested props', async () => {
+      const { db } = await createDatabase();
+
+      const task = new TypedObject({ title: 'Fix bugs' });
+      db.add(task);
+      await db.flush();
+
+      task.details = { priority: 'low' };
+      task.details.deadline = '2021-01-01';
+      expect(task.details.priority).toEqual('low');
+      expect(task.details.deadline).toEqual('2021-01-01');
+    });
+
     if (!getGlobalAutomergePreference()) {
-      test('object refs', async () => {
-        const { db } = await createDatabase();
-
-        const task = new TypedObject({ title: 'Fix bugs' });
-        const john = new TypedObject({ name: 'John Doe' });
-        task.assignee = john;
-
-        expect(task.title).toEqual('Fix bugs');
-        expect(task.assignee).toEqual(john);
-
-        db.add(task);
-        await db.flush();
-
-        expect(task.title).toEqual('Fix bugs');
-        expect(task.assignee).toStrictEqual(john);
-        expect(task.assignee.name).toEqual('John Doe');
-      });
-
-      test('nested props', async () => {
-        const { db } = await createDatabase();
-
-        const task = new TypedObject({ title: 'Fix bugs' });
-        db.add(task);
-        await db.flush();
-
-        task.details = { priority: 'low' };
-        task.details.deadline = '2021-01-01';
-        expect(task.details.priority).toEqual('low');
-        expect(task.details.deadline).toEqual('2021-01-01');
-      });
-
       test('toJSON', async () => {
         const { db } = await createDatabase();
 
@@ -262,29 +259,30 @@ describe('Database', () => {
           },
         });
       });
-
-      test('meta', async () => {
-        const { db } = await createDatabase();
-
-        const obj = new TypedObject();
-        expect(Array.from(obj.__meta.keys)).toEqual([]);
-        obj.__meta.keys = [{ id: 'test-key', source: 'test' }];
-        expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
-
-        db.add(obj);
-        await db.flush();
-
-        expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
-        expect(obj[data]).toEqual({
-          '@id': obj.id,
-          '@type': undefined,
-          '@model': 'dxos.org/model/document',
-          '@meta': {
-            keys: [{ id: 'test-key', source: 'test' }],
-          },
-        });
-      });
     }
+
+    test('meta', async () => {
+      const { db } = await createDatabase();
+
+      const obj = new TypedObject();
+      expect(Array.from(obj.__meta.keys)).toEqual([]);
+      obj.__meta.keys = [{ id: 'test-key', source: 'test' }];
+      expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
+
+      db.add(obj);
+      await db.flush();
+
+      expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
+      // TODO(mykola): Implement in automerge.
+      // expect(obj[data]).toEqual({
+      //   '@id': obj.id,
+      //   '@type': undefined,
+      //   '@model': 'dxos.org/model/document',
+      //   '@meta': {
+      //     keys: [{ id: 'test-key', source: 'test' }],
+      //   },
+      // });
+    });
 
     test('query by id', async () => {
       const { db } = await createDatabase();

@@ -4,7 +4,15 @@
 
 import { type CellContext } from '@tanstack/react-table';
 
-import { chromeSurface, fixedSurface, focusRing, groupBorder, hoverColors, mx } from '@dxos/react-ui-theme';
+import {
+  chromeSurface,
+  fixedSurface,
+  focusRing,
+  ghostSelected,
+  ghostSelectedCurrent,
+  groupBorder,
+  mx,
+} from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
 import { type TableContextValue, type TableFlags } from './components';
@@ -35,8 +43,8 @@ export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
 
 export type TheadStyleProps = Partial<TableFlags>;
 
-export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header }, ...etc) =>
-  mx(header ? 'sticky block-start-0 z-10' : 'collapse', header && fixedSurface, ...etc);
+export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header, stickyHeader }, ...etc) =>
+  mx(header ? stickyHeader && 'sticky block-start-[--sticky-top] z-[1]' : 'collapse', header && fixedSurface, ...etc);
 
 export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
 
@@ -65,13 +73,12 @@ export const theadResizeThumb: ComponentFunction<TheadStyleProps> = (_props, ...
 export type TbodyStyleProps = Partial<TableContextValue<any>>;
 export const tbodyRoot: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx(...etc);
 
-export type TbodyTrStyleProps = Partial<{ isSelected?: boolean; isCurrent?: boolean; canBeCurrent?: boolean }>;
-export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ isSelected, isCurrent, canBeCurrent }, ...etc) =>
+export type TbodyTrStyleProps = Partial<{ canBeCurrent?: boolean }>;
+export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent }, ...etc) =>
   mx(
     'group',
-    isSelected ? selectedRow : isCurrent && currentRow,
+    canBeCurrent ? ghostSelectedCurrent : ghostSelected,
     canBeCurrent && focusRing,
-    canBeCurrent && hoverColors,
     canBeCurrent && 'cursor-pointer rounded',
     ...etc,
   );

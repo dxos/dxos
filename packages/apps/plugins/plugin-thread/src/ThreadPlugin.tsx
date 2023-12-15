@@ -9,7 +9,7 @@ import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-sp
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
   LayoutAction,
-  type GraphPluginProvides,
+  type GraphProvides,
   type LayoutProvides,
   type Plugin,
   type PluginDefinition,
@@ -18,10 +18,10 @@ import {
   parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { type TypedObject, SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
-import meta, { THREAD_PLUGIN } from './meta';
+import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
@@ -30,7 +30,7 @@ import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  let graphPlugin: Plugin<GraphProvides> | undefined;
   let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
   return {
@@ -45,6 +45,18 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           [ThreadType.schema.typename]: {
             placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,
+          },
+          [THREAD_ITEM]: {
+            parse: (item: TypedObject, type: string) => {
+              switch (type) {
+                case 'node':
+                  return { id: item.id, label: item.title, data: item };
+                case 'object':
+                  return item;
+                case 'view-object':
+                  return { id: `${item.id}-view`, object: item };
+              }
+            },
           },
         },
       },

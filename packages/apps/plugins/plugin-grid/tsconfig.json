@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../core/echo/echo-generator"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -28,6 +31,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-card"
     },
     {
       "path": "../../../ui/react-ui-editor"

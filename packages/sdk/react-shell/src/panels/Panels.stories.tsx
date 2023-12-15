@@ -6,6 +6,8 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as JoinPanels from './JoinPanel/JoinPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
@@ -53,5 +55,7 @@ AllPanels.parameters = { layout: 'fullscreen' };
 
 export default {
   title: 'Panels/All',
+  decorators: [withTheme],
   component: StoryRow,
+  parameters: { chromatic: { disableSnapshot: false } },
 };

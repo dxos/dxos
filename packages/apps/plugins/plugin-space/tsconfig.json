@@ -51,6 +51,9 @@
       "path": "../../../sdk/client"
     },
     {
+      "path": "../../../sdk/migrations"
+    },
+    {
       "path": "../../../sdk/react-client"
     },
     {

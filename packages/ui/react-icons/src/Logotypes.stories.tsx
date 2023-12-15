@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { type FC, type ReactNode } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { DXOSType, DXOSHorizontalType, DXOSVerticalType } from './logotypes';
 
@@ -14,6 +15,7 @@ const Icon = () => null;
 
 export default {
   component: Icon,
+  decorators: [withTheme],
 };
 
 const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) => (

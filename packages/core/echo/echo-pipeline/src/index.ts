@@ -7,3 +7,4 @@ export * from './db-host';
 export * from './metadata';
 export * from './pipeline';
 export * from './space';
+export * from './automerge';

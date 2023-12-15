@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
@@ -27,6 +27,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
