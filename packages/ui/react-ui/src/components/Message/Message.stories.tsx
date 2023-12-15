@@ -28,8 +28,10 @@ const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
 );
 
 export default {
+  title: 'DXOS UI/Message',
   component: StoryMessage,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {
