@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { CaretDown } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -139,7 +140,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         {...props}
         onSelect={handleSelect}
         className={mx(
-          'p-1 rounded select-none cursor-pointer data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10',
+          'p-1 select-none cursor-pointer data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10',
           classNames,
         )}
         ref={forwardedRef}

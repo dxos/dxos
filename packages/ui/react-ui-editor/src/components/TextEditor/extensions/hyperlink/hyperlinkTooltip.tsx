@@ -49,13 +49,10 @@ export const createHyperlinkTooltip = (onHover: OnHyperlinkHover, regexp = markd
       end: idx + from + match[0].length,
       above: true,
       create: () => {
-        const el = document.createElement('a');
-        el.innerText = '_'; // Required so doesn't collapse.
-        el.className = tooltipContent({}, 'mb-2 p-1');
-        el.setAttribute('target', '_blank');
-        el.setAttribute('href', url);
+        const el = document.createElement('div');
+        el.className = tooltipContent({}, 'pli-2 plb-1');
         onHover(el, url);
-        return { dom: el };
+        return { dom: el, offset: { x: 0, y: 12 } };
       },
     };
   });
