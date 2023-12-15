@@ -41,10 +41,15 @@ describe('AutomergeObject', () => {
 
     const contact = new Contact({ name: 'Contact' }, { useAutomergeBackend: false });
     db.add(contact);
-    const task = new Task({ title: 'Task' }, { useAutomergeBackend: true });
+    const task1 = new Task({ title: 'Task1' }, { useAutomergeBackend: true });
+    const task2 = new Task({ title: 'Task2' }, { useAutomergeBackend: false });
 
-    contact.tasks.push(task);
+    contact.tasks.push(task1);
+    contact.tasks.push(task2);
 
-    expect(contact.tasks[0]).to.eq(task);
+    task2.previous = task1;
+
+    expect(contact.tasks[0]).to.eq(task1);
+    expect(task2.previous).to.eq(task1);
   });
 });
