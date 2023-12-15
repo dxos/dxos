@@ -9,7 +9,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { AbstractEchoObject } from './object';
-import { getGlobalAutomergePreference, type AutomergeOptions, type TypedObject } from './typed-object';
+import {
+  getGlobalAutomergePreference,
+  type AutomergeOptions,
+  type TypedObject,
+  isActualAutomergeObject,
+} from './typed-object';
 import { base } from './types';
 import { AutomergeArray } from '../automerge';
 
@@ -356,7 +361,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof AbstractEchoObject) {
+    if (value instanceof AbstractEchoObject || isActualAutomergeObject(value)) {
       return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&
