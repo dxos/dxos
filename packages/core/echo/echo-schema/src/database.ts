@@ -57,7 +57,7 @@ export class EchoDatabase {
     this._backend.itemUpdate.on(this._update.bind(this));
 
     // Load all existing objects.
-    this._update(new UpdateEvent(this._backend.spaceKey)); // TODO: Seems hacky.
+    this._update(new UpdateEvent(this.spaceKey)); // TODO: Seems hacky.
   }
 
   get objects(): EchoObject[] {
@@ -66,6 +66,10 @@ export class EchoDatabase {
 
   get graph() {
     return this._graph;
+  }
+
+  get spaceKey() {
+    return this._backend.spaceKey;
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
@@ -205,7 +209,7 @@ export class EchoDatabase {
    */
   query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     options ??= {};
-    options.spaces = [this._backend.spaceKey];
+    options.spaces = [this.spaceKey];
 
     return this._graph.query(filter, options);
   }
