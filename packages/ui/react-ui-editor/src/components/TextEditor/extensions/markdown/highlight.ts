@@ -96,6 +96,7 @@ export const markdownHighlightStyle = HighlightStyle.define(
       tag: [tags.link, tags.url],
       color: 'inherit !important',
       textDecoration: 'none !important',
+      class: 'text-red-400',
     },
     {
       tag: [tags.function(tags.variableName), tags.labelName],

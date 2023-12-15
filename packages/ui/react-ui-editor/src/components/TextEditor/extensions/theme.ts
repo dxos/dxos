@@ -39,7 +39,7 @@ export const baseTheme: {
   // placeholder
   //
   '& .cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    // fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     fontWeight: 100,
   },
 
@@ -85,7 +85,7 @@ export const baseTheme: {
   },
 
   '& .cm-ySelectionInfo': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    // fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     padding: '2px 4px',
     marginBlockStart: '-4px',
   },
