@@ -148,7 +148,14 @@ export class AutomergeObject implements TypedObjectProperties {
     for (const key of this[base]._path) {
       value = value?.[key];
     }
-    return value;
+
+    return {
+      '@id': this._id,
+      '@type': this.__typename, 
+      ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
+      '@meta': value.meta,
+      ...value.data,
+    };
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {

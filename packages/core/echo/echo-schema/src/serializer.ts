@@ -11,19 +11,20 @@ import { type EchoDatabase } from './database';
 import { base, TextObject, TypedObject } from './object';
 import { Filter } from './query';
 
+export type SerializedSpace = {
+  objects: SerializedObject[];
+};
+
 export type SerializedObject = {
   '@id': string;
   '@type'?: string;
   '@model'?: string;
+  '@deleted'?: boolean;
   /**
    * Text content of Text object.
    */
   text?: string;
 } & Record<string, any>;
-
-export type SerializedSpace = {
-  objects: SerializedObject[];
-};
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
 // TODO(burdon): Option to decode JSON/protobuf.
@@ -49,7 +50,7 @@ export class Serializer {
 
     const { objects } = data;
     for (const object of objects) {
-      const { '@id': id, '@type': type, '@model': model, ...data } = object;
+      const { '@id': id, '@type': type, '@model': model, '@internal': internal, ...data } = object;
 
       // Handle Space Properties
       // TODO(mykola): move to @dxos/client
