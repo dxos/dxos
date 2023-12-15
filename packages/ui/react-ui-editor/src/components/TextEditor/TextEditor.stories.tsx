@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 import { markdown } from '@codemirror/lang-markdown';
+import { type Extension } from '@codemirror/state';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -13,7 +14,7 @@ import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
-import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
+import { createHyperlinkTooltip, hyperlinkDecoration, hyperlinkWidget } from './extensions';
 import { useTextModel } from '../../hooks';
 
 const text = [
@@ -44,8 +45,8 @@ const hyperLinkTooltip = () =>
     );
   });
 
-const Story = ({ automerge }: { automerge?: boolean }) => {
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: !!automerge }) });
+const Story = ({ extensions, automerge }: { extensions: Extension[]; automerge?: boolean }) => {
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
     return <></>;
@@ -58,9 +59,7 @@ const Story = ({ automerge }: { automerge?: boolean }) => {
           <TextEditor
             model={model}
             extensions={[
-              markdown(),
-              hyperlinkDecoration({ link: false }),
-              hyperLinkTooltip(),
+              ...extensions,
               // EditorView.domEventHandlers({
               //   mousedown: (e, view) => {},
               // }),
@@ -79,8 +78,14 @@ export default {
   render: Story,
 };
 
-export const Default = {};
+export const Default = {
+  render: () => <Story extensions={[markdown(), hyperlinkDecoration({ link: false }), hyperLinkTooltip()]} />,
+};
 
 export const Automerge = {
-  render: () => <Story automerge />,
+  render: () => <Story automerge extensions={[markdown(), hyperlinkDecoration({ link: false }), hyperLinkTooltip()]} />,
+};
+
+export const Widget = {
+  render: () => <Story extensions={[hyperlinkWidget]} />,
 };

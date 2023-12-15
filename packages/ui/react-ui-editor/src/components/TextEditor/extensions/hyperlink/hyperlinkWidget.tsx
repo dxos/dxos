@@ -19,6 +19,7 @@ import {
 //   or they would become part of CodeMirror’s editable content element.
 //   You should be able to introduce new contenteditable=true child elements inside of them.
 
+// TODO(burdon): URL match?
 const markdownLinkRegexp = /\[([^\]]+)]\(([^)]+)\)(!?)/gi;
 
 /**
