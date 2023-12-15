@@ -12,7 +12,7 @@ RUN npm i -g n pnpm@7.17.0
 RUN mkdir -p /usr/local/n
 
 ARG NODE_VER
-ENV NODE_VER=${NODE_VER:-18.12.1}
+ENV NODE_VER=${NODE_VER:-18.19.0}
 RUN n i ${NODE_VER}
 ARG GIT_TOKEN
 RUN git config --global url."https://${GIT_TOKEN}:@github.com/".insteadOf "https://github.com/"
