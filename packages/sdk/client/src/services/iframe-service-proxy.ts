@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
@@ -39,12 +39,10 @@ export type IFrameClientServicesProxyOptions = {
  * @deprecated
  */
 export class IFrameClientServicesProxy implements ClientServicesProvider {
-  readonly joinedSpace = new Event<PublicKey>();
-
   /**
    * @internal
    */
-  private readonly _shellManager?: ShellManager;
+  readonly _shellManager?: ShellManager;
   private readonly _iframeManager: IFrameManager;
   private _appPort!: RpcPort;
   private _clientServicesProxy?: ClientServicesProxy;
@@ -116,7 +114,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     });
 
     if (typeof this._shell === 'string') {
-      this._shellManager = new ShellManager(this._iframeManager, this.joinedSpace);
+      this._shellManager = new ShellManager(this._iframeManager);
     }
   }
 

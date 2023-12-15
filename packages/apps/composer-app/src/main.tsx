@@ -123,6 +123,7 @@ const main = async () => {
         services,
         types,
         debugIdentity,
+        shell: './shell.html',
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),

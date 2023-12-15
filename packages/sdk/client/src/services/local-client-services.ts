@@ -3,24 +3,13 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import {
-  type ClientServices,
-  type ClientServicesProvider,
-  clientServiceBundle,
-  DEFAULT_CLIENT_CHANNEL,
-} from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import type { ClientServicesHost, ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { NetworkManagerOptions } from '@dxos/network-manager';
-import { createProtoRpcPeer, type ProtoRpcPeer, type ServiceBundle } from '@dxos/rpc';
-import { createIFramePort } from '@dxos/rpc-tunnel';
-import { isNode } from '@dxos/util';
-
-import { IFrameManager } from './iframe-manager';
-import { ShellManager } from './shell-manager';
+import { type ServiceBundle } from '@dxos/rpc';
 
 /**
  * Creates stand-alone services without rpc.
@@ -71,32 +60,18 @@ const setupNetworking = async (config: Config, options: Partial<NetworkManagerOp
   };
 };
 
-export type LocalClientServicesParams = ClientServicesHostParams & {
-  shell?: string | null;
-};
-
 /**
  * Starts a local instance of the service host.
  */
 export class LocalClientServices implements ClientServicesProvider {
-  readonly joinedSpace = new Event<PublicKey>();
-
+  readonly terminated = new Event<void>();
+  private readonly _ctx = new Context();
   private readonly _params: ClientServicesHostParams;
   private _host?: ClientServicesHost;
-  private _proxy?: ProtoRpcPeer<ClientServices>;
-
   private _isOpen = false;
-  private _iframeManager?: IFrameManager;
-  /**
-   * @internal
-   */
-  _shellManager?: ShellManager;
 
-  constructor({ shell = '/shell.html', ...params }: LocalClientServicesParams) {
+  constructor(params: ClientServicesHostParams) {
     this._params = params;
-    this._iframeManager =
-      shell && !isNode() ? new IFrameManager({ source: new URL(shell, window.location.origin) }) : undefined;
-    this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager, this.joinedSpace) : undefined;
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
@@ -118,26 +93,17 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     const { ClientServicesHost } = await import('@dxos/client-services');
-    this._host = new ClientServicesHost(this._params);
-
-    // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
-    await this._iframeManager?.open();
-    await this._shellManager?.open();
-    await this._host.open(new Context());
-
-    if (this._iframeManager?.iframe) {
-      this._proxy = createProtoRpcPeer({
-        exposed: clientServiceBundle,
-        handlers: this._host.services as ClientServices,
-        port: createIFramePort({
-          channel: DEFAULT_CLIENT_CHANNEL,
-          iframe: this._iframeManager.iframe,
-          origin: this._iframeManager.source.origin,
-        }),
-      });
-      await this._proxy.open();
-    }
-
+    this._host = new ClientServicesHost({
+      ...this._params,
+      callbacks: {
+        ...this._params.callbacks,
+        onReset: async () => {
+          this.terminated.emit();
+          await this._params.callbacks?.onReset?.();
+        },
+      },
+    });
+    await this._host.open(this._ctx);
     this._isOpen = true;
   }
 
@@ -147,11 +113,7 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    await this._proxy?.close();
     await this._host?.close();
-    await this._shellManager?.close();
-    await this._iframeManager?.close();
-
     this._isOpen = false;
   }
 }

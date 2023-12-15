@@ -62,6 +62,7 @@ export const ClientPlugin = ({
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
       } catch (err) {
+        log.catch(err);
         error = err;
       }
 

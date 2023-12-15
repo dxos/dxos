@@ -55,19 +55,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
   switch (panel) {
     case 'identity': {
-      return (
-        <JoinPanel
-          mode='halo-only'
-          onDone={() => {
-            setPanel(undefined);
-            console.log('done');
-          }}
-          onExit={() => {
-            setPanel(undefined);
-            console.log('exit');
-          }}
-        />
-      );
+      return <JoinPanel mode='halo-only' onDone={() => setPanel(undefined)} onExit={() => setPanel(undefined)} />;
     }
 
     case 'devices': {
@@ -206,8 +194,6 @@ const Invitations = (args: { id: number; count: number }) => {
     </div>
   );
 
-  console.log({ identity, panel });
-
   return (
     <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
       <div className={`${groupSurface} rounded p-2 mbe-2`}>
@@ -222,14 +208,7 @@ const Invitations = (args: { id: number; count: number }) => {
       </div>
       {identity || panel ? (
         <div className={`${groupSurface} rounded p-2`}>
-          <Panel
-            id={id}
-            panel={panel}
-            setPanel={(x) => {
-              console.log('test');
-              setPanel(x);
-            }}
-          />
+          <Panel id={id} panel={panel} setPanel={setPanel} />
         </div>
       ) : null}
     </div>

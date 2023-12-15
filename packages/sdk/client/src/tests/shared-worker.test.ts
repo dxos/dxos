@@ -14,12 +14,13 @@ import { type MaybePromise, type Provider } from '@dxos/util';
 
 import { Client } from '../client';
 import { ClientServicesProxy, fromIFrame } from '../services';
+import { LOCK_KEY } from '../services/worker-client-services';
 import { TestBuilder } from '../testing';
 
 chai.use(chaiAsPromised);
 
 const setup = (getConfig: Provider<MaybePromise<Config>>) => {
-  const workerRuntime = new WorkerRuntime(getConfig);
+  const workerRuntime = new WorkerRuntime(LOCK_KEY, getConfig);
 
   const systemPorts = createLinkedPorts();
   const appPorts = createLinkedPorts();

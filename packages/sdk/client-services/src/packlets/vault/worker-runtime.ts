@@ -33,12 +33,15 @@ export class WorkerRuntime {
   private readonly _clientServices!: ClientServicesHost;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
+  private _releaseLock!: () => void;
+  private _lockPromise!: Promise<void>;
 
-  constructor(private readonly _configProvider: () => MaybePromise<Config>) {
+  constructor(private readonly _lockKey: string, private readonly _configProvider: () => MaybePromise<Config>) {
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => {
-          // self.close();
+          // Close the shared worker, lock will be released automatically.
+          self.close();
         },
       },
     });
@@ -51,6 +54,14 @@ export class WorkerRuntime {
   async start() {
     log('starting...');
     try {
+      this._lockPromise = new Promise((resolve) => (this._releaseLock = resolve));
+      const lockAcquired = new Trigger();
+      void navigator.locks.request(this._lockKey, (lock) => {
+        lockAcquired.wake();
+        return this._lockPromise;
+      });
+      await lockAcquired.wait();
+
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
@@ -71,7 +82,8 @@ export class WorkerRuntime {
   }
 
   async stop() {
-    // TODO(dmaretskyi): Terminate active sessions.
+    // Release the lock to notify remote clients that the worker is terminating.
+    this._releaseLock();
     await this._clientServices.close();
   }
 

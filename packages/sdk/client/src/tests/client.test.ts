@@ -109,7 +109,6 @@ describe('Client', () => {
 
       {
         // Start again.
-        await client.initialize();
         expect(client.halo.identity.get()).to.eq(null);
         await client.halo.createIdentity({ displayName });
         expect(client.halo.identity).to.exist;

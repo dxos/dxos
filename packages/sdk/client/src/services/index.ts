@@ -19,6 +19,8 @@ export {
 
 export { getUnixSocket, fromAgent, type FromAgentOptions, AgentClientServiceProvider } from './agent';
 export { createClientServices, Remote } from './client-services-factory';
+// TODO(wittjosiah): Remove this once this is internal to shell manager.
+export { IFrameManager } from './iframe-manager';
 export { IFrameClientServicesHost, type IFrameClientServicesHostOptions } from './iframe-service-host';
 export { IFrameClientServicesProxy, type IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 export { fromHost, LocalClientServices } from './local-client-services';

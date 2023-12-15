@@ -9,7 +9,6 @@ import {
   appServiceBundle,
   shellServiceBundle,
 } from '@dxos/client-protocol';
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type AppContextRequest, type LayoutRequest, ShellDisplay } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
@@ -37,9 +36,9 @@ export class ShellManager {
   private _shellRpc?: ProtoRpcPeer<ShellServiceBundle>;
   private _display = ShellDisplay.NONE;
 
+  // prettier-ignore
   constructor(
     private readonly _iframeManager: IFrameManager,
-    private readonly _joinedSpace: Event<PublicKey>,
     private readonly _channel = DEFAULT_SHELL_CHANNEL,
   ) {}
 
@@ -55,6 +54,10 @@ export class ShellManager {
   }
 
   async open() {
+    if (this._shellRpc) {
+      return;
+    }
+
     await this._iframeManager.open();
 
     const iframe = this._iframeManager.iframe;
@@ -65,7 +68,6 @@ export class ShellManager {
       if (display === ShellDisplay.NONE) {
         iframe!.blur();
       }
-      spaceKey && this._joinedSpace.emit(spaceKey);
     });
 
     const port = createIFramePort({
@@ -95,6 +97,10 @@ export class ShellManager {
   }
 
   async close() {
+    if (!this._shellRpc) {
+      return;
+    }
+
     await this._shellRpc?.close();
     this._shellRpc = undefined;
   }

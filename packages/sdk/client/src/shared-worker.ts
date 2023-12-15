@@ -8,8 +8,9 @@ import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { mountDevtoolsHooks } from './devtools';
+import { LOCK_KEY } from './services/worker-client-services';
 
-const workerRuntime = new WorkerRuntime(async () => {
+const workerRuntime = new WorkerRuntime(LOCK_KEY, async () => {
   const config = new Config(await Envs(), Local(), Defaults());
   log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
   return config;

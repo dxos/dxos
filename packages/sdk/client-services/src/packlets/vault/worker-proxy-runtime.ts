@@ -104,7 +104,11 @@ export class WorkerProxyRuntime {
   async close() {
     this._release.wake();
     await this._shellRuntime?.close();
-    await this._systemRpc.rpc.WorkerService.stop();
+    try {
+      await this._systemRpc.rpc.WorkerService.stop();
+    } catch {
+      // If this fails, the worker is probably already gone.
+    }
     await this._systemRpc.close();
   }
 

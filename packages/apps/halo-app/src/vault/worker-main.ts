@@ -21,7 +21,7 @@ void initializeAppTelemetry({
   telemetryOptions: { enable: false },
 });
 
-const workerRuntime = new WorkerRuntime(async () => {
+const workerRuntime = new WorkerRuntime('dxos-client-worker', async () => {
   const config = new Config(await Dynamics(), await Envs(), Local(), Defaults());
   log.config({ filter: LOG_FILTER, prefix: config.get('runtime.client.log.prefix') });
   return config;

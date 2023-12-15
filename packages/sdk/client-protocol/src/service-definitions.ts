@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { schema } from '@dxos/protocols';
 import { type FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
@@ -50,6 +51,9 @@ export type ClientServices = {
 export interface ClientServicesProvider {
   descriptors: ServiceBundle<ClientServices>;
   services: Partial<ClientServices>;
+  // TODO(wittjosiah): Should this be required?
+  //  If reset happens in the shell this is required to communicate the reset client that the reset happen and restart.
+  terminated?: Event<void>;
 
   open(ctx: Context): Promise<void>;
   close(ctx: Context): Promise<void>;
