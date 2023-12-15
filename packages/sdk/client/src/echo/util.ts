@@ -21,7 +21,7 @@ export const createDefaultModelFactory = () => {
 // TODO(burdon): Normalize API getters.
 export const getSpaceForObject = (object: EchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
-  const key = db?._backend.spaceKey;
+  const key = db?.spaceKey;
   if (key) {
     const owner = db.graph._getOwningObject(key);
     if (owner instanceof SpaceProxy) {
