@@ -29,7 +29,6 @@ import {
   placeholder,
   rectangularSelection,
 } from '@codemirror/view';
-import { GFM } from '@lezer/markdown';
 
 import type { ThemeMode } from '@dxos/react-ui';
 
@@ -78,22 +77,25 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     // https://github.com/codemirror/lang-markdown
     // https://codemirror.net/5/mode/markdown/index.html (demo).
     markdown({
+      // GRM by default (vs strict CommonMark):
+      // Table, TaskList, Strikethrough, and Autolink.
+      // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
+      // https://github.github.com/gfm
       base: markdownLanguage,
-      codeLanguages: languages,
-      extensions: [
-        // TODO(burdon): This seems to upgrade the parser.
-        // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
-        // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
-        // https://github.github.com/gfm
-        GFM,
 
+      // Languages to support highlighting fenced code blocks.
+      codeLanguages: languages,
+
+      extensions: [
         // Custom styling.
         markdownTagsExtension,
       ],
     }),
 
-    // TODO(thure): All but one rule here apply to both themes; rename or refactor.
+    // Custom styles.
     syntaxHighlighting(markdownHighlightStyle),
+
+    // TODO(thure): All but one rule here apply to both themes; rename or refactor.
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
   ].filter(Boolean) as Extension[];
 };

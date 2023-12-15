@@ -17,8 +17,9 @@ import React, {
 } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, baseTheme, markdownBundle } from './extensions';
+import { baseTheme, basicBundle, markdownBundle } from './extensions';
 import { type EditorModel, useCollaboration } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 
@@ -50,6 +51,12 @@ export type TextEditorSlots = {
   };
 };
 
+export const defaultSlots: TextEditorSlots = {
+  root: {
+    className: mx(inputSurface, 'p-2'),
+  },
+};
+
 export type TextEditorProps = {
   model: EditorModel;
   extensions?: Extension[];
@@ -62,7 +69,7 @@ export type TextEditorProps = {
  * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
 export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, extensions = [], slots, editorMode }, forwardedRef) => {
+  ({ model, extensions = [], slots = defaultSlots, editorMode }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
@@ -87,7 +94,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 
           // Theme.
           EditorView.baseTheme(baseTheme),
-          // EditorView.theme(slots?.editor?.theme ?? textTheme),
+          EditorView.theme(slots?.editor?.theme ?? {}),
           // TODO(burdon): themeMode doesn't change in storybooks.
           EditorView.darkTheme.of(themeMode === 'dark'),
 
@@ -144,18 +151,31 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
+// TODO(burdon): Set default text theme?
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
+  ({ extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const extensions = [...(_extensions ?? []), basicBundle({ themeMode, placeholder: slots?.editor?.placeholder })];
-    return <BaseTextEditor ref={forwardedRef} extensions={extensions} slots={slots} {...props} />;
+    return (
+      <BaseTextEditor
+        ref={forwardedRef}
+        extensions={[basicBundle({ themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
+        slots={slots}
+        {...props}
+      />
+    );
   },
 );
 
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
+  ({ extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const extensions = [...(_extensions ?? []), markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder })];
-    return <BaseTextEditor ref={forwardedRef} extensions={extensions} slots={slots} {...props} />;
+    return (
+      <BaseTextEditor
+        ref={forwardedRef}
+        extensions={[markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
+        slots={slots}
+        {...props}
+      />
+    );
   },
 );

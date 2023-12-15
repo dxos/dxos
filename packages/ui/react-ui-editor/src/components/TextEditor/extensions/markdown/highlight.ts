@@ -11,47 +11,50 @@ import get from 'lodash.get';
 import { bold, heading, italic, mark, strikethrough, tokens } from '../../../../styles';
 
 export const markdownTags = {
-  headingMark: Tag.define(),
-  quoteMark: Tag.define(),
-  listMark: Tag.define(),
-  linkMark: Tag.define(),
-  emphasisMark: Tag.define(),
   codeBlock: Tag.define(),
   codeMark: Tag.define(),
   codeText: Tag.define(),
+  emphasisMark: Tag.define(),
+  headerMark: Tag.define(),
   inlineCode: Tag.define(),
-  url: Tag.define(),
-  linkReference: Tag.define(),
   linkLabel: Tag.define(),
+  linkMark: Tag.define(),
+  linkReference: Tag.define(),
+  listMark: Tag.define(),
+  quoteMark: Tag.define(),
+  url: Tag.define(),
 };
 
 /**
- * https://github.com/lezer-parser/highlight
+ * Markdown parser tags.
  * https://github.com/lezer-parser/markdown
  * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
+ * https://github.com/lezer-parser/highlight
  */
 export const markdownTagsExtension: MarkdownConfig = {
   props: [
     styleTags({
-      HeaderMark: markdownTags.headingMark,
-      QuoteMark: markdownTags.quoteMark,
-      ListMark: markdownTags.listMark,
-      LinkMark: markdownTags.linkMark,
-      EmphasisMark: markdownTags.emphasisMark,
       CodeBlock: markdownTags.codeBlock,
-      CodeText: markdownTags.codeText,
       CodeMark: markdownTags.codeMark,
+      CodeText: markdownTags.codeText,
+      EmphasisMark: markdownTags.emphasisMark,
+      HeaderMark: markdownTags.headerMark,
       InlineCode: markdownTags.inlineCode,
-      URL: markdownTags.url,
-      LinkReference: markdownTags.linkReference,
       LinkLabel: markdownTags.linkLabel,
+      LinkMark: markdownTags.linkMark,
+      LinkReference: markdownTags.linkReference,
+      ListMark: markdownTags.listMark,
+      QuoteMark: markdownTags.quoteMark,
+      URL: markdownTags.url,
     }),
   ],
 };
 
-// TODO(burdon): Replace with class assignment.
-const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
-
+/**
+ * Styling based on `lezer` parser tags.
+ * https://github.com/lezer-parser/markdown
+ * https://codemirror.net/examples/styling
+ */
 export const markdownHighlightStyle = HighlightStyle.define(
   [
     {
@@ -96,31 +99,33 @@ export const markdownHighlightStyle = HighlightStyle.define(
       tag: [tags.link, tags.url],
       color: 'inherit !important',
       textDecoration: 'none !important',
-      class: 'text-red-400',
     },
     {
       tag: [tags.function(tags.variableName), tags.labelName],
       color: get(tokens, 'extend.colors.primary.500'),
-      fontFamily: monospace,
+      class: 'font-mono',
     },
     {
       tag: [
         markdownTags.codeMark,
         markdownTags.emphasisMark,
-        markdownTags.headingMark,
+        markdownTags.headerMark,
         markdownTags.linkLabel,
         markdownTags.linkReference,
         markdownTags.listMark,
         markdownTags.quoteMark,
-        markdownTags.url,
         tags.meta,
         tags.processingInstruction,
       ],
       class: mark,
     },
     {
+      tag: [markdownTags.url],
+      class: mark,
+    },
+    {
       tag: [markdownTags.codeBlock, markdownTags.codeText, markdownTags.inlineCode],
-      fontFamily: monospace,
+      // class: code,
     },
     { tag: tags.emphasis, class: italic },
     { tag: tags.heading1, class: heading[1] },
@@ -131,9 +136,12 @@ export const markdownHighlightStyle = HighlightStyle.define(
     { tag: tags.heading6, class: heading[6] },
     { tag: tags.strikethrough, class: strikethrough },
     { tag: tags.strong, class: bold },
+    {
+      tag: [tags.content],
+      class: 'font-body',
+    },
   ],
   {
     scope: markdownLanguage,
-    all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') },
   },
 );

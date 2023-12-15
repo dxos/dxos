@@ -36,6 +36,7 @@ export type EditorModel = {
   };
 };
 
+// TODO(burdon): Remove space/identity dependency. Define interface for the framework re content and presence.
 export type UseTextModelOptions = {
   identity?: Identity | null;
   space?: Space;

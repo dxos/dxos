@@ -44,3 +44,5 @@ export const italic = 'italic';
 export const strikethrough = 'line-through';
 
 export const mark = '!font-normal !no-underline !text-inherit opacity-40';
+
+export const link = 'text-primary-500 no-underline';

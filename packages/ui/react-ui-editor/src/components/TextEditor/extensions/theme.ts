@@ -11,12 +11,20 @@ import { tokens } from '../../../styles';
  * Minimal styles.
  * https://codemirror.net/examples/styling
  * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
+ * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  */
 export const baseTheme: {
   [selector: string]: StyleSpec;
 } = {
   //
-  // root
+  // Main layout:
+  // <div class=".cm-editor .cm-focused">
+  //   <div class=".cm-scroller">
+  //     <div class=".cm-content" role="textbox" contenteditable="true">
+  //       <div class=".cm-line" />
+  //     </div>
+  //   </div>
+  // </div>
   //
   '&': {},
   '&.cm-focused': {
@@ -28,18 +36,23 @@ export const baseTheme: {
   '& .cm-content': {
     padding: 0,
   },
+
+  //
+  // Cursor
+  //
   '&light .cm-content': {
     caretColor: 'black',
   },
   '&dark .cm-content': {
     caretColor: 'white',
   },
-
-  //
-  // placeholder
-  //
+  '&light .cm-cursor': {
+    borderLeft: '2px solid black',
+  },
+  '&dark .cm-cursor': {
+    borderLeft: '2px solid white',
+  },
   '& .cm-placeholder': {
-    // fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     fontWeight: 100,
   },
 
@@ -104,16 +117,6 @@ export const baseTheme: {
   },
 
   //
-  // tooltip
-  //
-  '& .cm-tooltip': {
-    backgroundColor: 'white', // TODO(burdon): Input surface.
-    border: 'none',
-  },
-  // '& .cm-tooltip-below': {},
-  // '& .cm-tooltip-autocomplete': {},
-
-  //
   // link
   //
   '& .cm-link': {
@@ -123,6 +126,16 @@ export const baseTheme: {
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
   },
+
+  //
+  // tooltip
+  //
+  '& .cm-tooltip': {
+    backgroundColor: 'white', // TODO(burdon): Input surface.
+    border: 'none',
+  },
+  // '& .cm-tooltip-below': {},
+  // '& .cm-tooltip-autocomplete': {},
 
   //
   // font size
