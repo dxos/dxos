@@ -56,10 +56,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
   const state = deepSignal<{ onChange: NonNullable<EditorMainProps['onChange']>[] }>({ onChange: [] });
 
-  // TODO(burdon): Document.
-  const pluginMutableRef: MutableRefObject<TextEditorRef> = {
-    current: { editor: null },
-  };
+  const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };

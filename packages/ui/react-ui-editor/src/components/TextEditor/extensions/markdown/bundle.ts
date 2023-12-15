@@ -33,8 +33,8 @@ import {
 
 import type { ThemeMode } from '@dxos/react-ui';
 
+import { markdownHighlightStyle } from './highlight';
 import { markdownTagsExtension } from './tags';
-import { markdownHighlightStyle } from './theme';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
@@ -77,6 +77,7 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
 
     // Main extension.
     // https://github.com/codemirror/lang-markdown
+    // https://codemirror.net/5/mode/markdown/index.html (demo).
     markdown({
       base: markdownLanguage,
       codeLanguages: languages,

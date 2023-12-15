@@ -7,46 +7,139 @@ import { type StyleSpec } from 'style-mod';
 
 import { tokens } from '../../../../styles';
 
+// TODO(burdon): Reconcile with markdown theme. Create base with overrides.
+//  E.g., options for font.
+
 /**
  * Minimal styles.
- * NOTE: The '&' prefix denotes the CM editor root.
  * https://codemirror.net/examples/styling
  */
-// TODO(burdon): Remove?
 export const basicTheme: {
   [selector: string]: StyleSpec;
 } = {
+  //
+  // root
+  //
+  '&': {},
   '&.cm-focused': {
     outline: 'none',
   },
-  '& .cm-line': {
+
+  //
+  // main content
+  //
+  '.cm-scroller': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    overflow: 'visible',
+  },
+  '.cm-content': {
+    padding: 0,
+  },
+  '&light .cm-content': {
+    caretColor: 'red',
+  },
+  '&dark .cm-content': {
+    caretColor: 'blue',
+  },
+
+  //
+  // placeholder
+  //
+  '.cm-placeholder': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+
+  //
+  // line
+  //
+  '.cm-line': {
     paddingInline: 0,
     lineHeight: 1.6,
     minBlockSize: '1.6em',
   },
-  '& .cm-line *': {
+  '.cm-line *': {
     lineHeight: 1.6,
   },
-  '& .cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-    overflow: 'visible',
-  },
-  '& .cm-content': {
-    padding: 0,
-    caretColor: 'black',
-  },
-  '.dark & .cm-content': {
-    caretColor: 'white',
-  },
-  '& .cm-tooltip': {
+  '.cm-activeLine': {
     backgroundColor: 'transparent',
+  },
+
+  //
+  // selection
+  // TODO(burdon): Review.
+  //
+
+  '&light .cm-selectionBackground, &light &.cm-focused .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
+  },
+  '&dark .cm-selectionBackground, &dark &.cm-focused .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
+  },
+
+  '&light .cm-selectionMatch': {
+    background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
+  },
+  '&dark .cm-selectionMatch': {
+    background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
+  },
+
+  '&light .cm-ySelection, &light .cm-yLineSelection': {
+    mixBlendMode: 'multiply',
+  },
+  '&dark .cm-ySelection, &dark .cm-yLineSelection': {
+    mixBlendMode: 'screen',
+  },
+
+  '.cm-ySelectionInfo': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    padding: '2px 4px',
+    marginBlockStart: '-4px',
+  },
+  '.cm-ySelection, .cm-selectionMatch': {
+    paddingBlockStart: '.15em',
+    paddingBlockEnd: '.15em',
+  },
+  '.cm-ySelectionCaret': {
+    display: 'inline-block',
+    insetBlockStart: '.1em',
+    blockSize: '1.4em',
+    verticalAlign: 'top',
+  },
+  '.cm-yLineSelection': {
+    margin: '0',
+  },
+
+  //
+  // tooltip
+  //
+  '.cm-tooltip': {
+    backgroundColor: 'white', // TODO(burdon): Input surface.
     border: 'none',
   },
-  '& .cm-link': {
+  // '.cm-tooltip-below': {},
+  // '.cm-tooltip-autocomplete': {},
+
+  //
+  // link
+  //
+  '.cm-link': {
     color: get(tokens, 'extend.colors.primary.500'),
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
   },
+
+  //
+  // font size
+  // TODO(thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
+  //
+  ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
+    const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
+
+    acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
+    acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
+    acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
+    return acc;
+  }, {}),
 };
