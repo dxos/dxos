@@ -12,7 +12,6 @@ import {
   MarkdownEditor,
   hyperlinkDecoration,
   onChangeExtension,
-  markdownTheme,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
@@ -71,7 +70,6 @@ export const EditorMain = ({
           editor: {
             placeholder: t('editor placeholder'),
             theme: {
-              ...markdownTheme,
               '&, & .cm-scroller': {
                 display: 'flex',
                 flexDirection: 'column',
