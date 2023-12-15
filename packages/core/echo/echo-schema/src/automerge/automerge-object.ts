@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
@@ -193,10 +193,15 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _bind(options: BindOptions) {
+    const binded = new Trigger();
     this._database = options.db;
     this._docHandle = options.docHandle;
-    this._docHandle.on('change', (event) => {
+    this._docHandle.on('change', async (event) => {
       if (objectIsUpdated(this._id, event)) {
+        // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
+        //       Without it there was race condition in SpacePlugin on Folder creation.
+        //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
+        await binded.wait();
         this._notifyUpdate();
       }
     });
@@ -219,6 +224,7 @@ export class AutomergeObject implements TypedObjectProperties {
       this._doc = undefined;
       this._set([], doc);
     }
+    binded.wake();
   }
 
   private _createProxy(path: string[]): any {
@@ -405,7 +411,7 @@ export class AutomergeObject implements TypedObjectProperties {
         return new Reference(obj.id);
       } else {
         if ((obj[base]._database as any) !== this._database) {
-          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
         } else {
           return new Reference(obj.id);
         }
@@ -442,8 +448,12 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   // TODO(mykola): Unify usage of `_notifyUpdate`.
   private _notifyUpdate = () => {
-    this._signal.notifyWrite();
-    this._updates.emit();
+    try {
+      this._signal.notifyWrite();
+      this._updates.emit();
+    } catch (err) {
+      log.catch(err);
+    }
   };
 
   /**
