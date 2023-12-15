@@ -42,8 +42,10 @@ const StorybookAvatarGroup = () => {
 };
 
 export default {
+  title: 'DXOS UI/Avatar Group',
   component: StorybookAvatarGroup,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {
