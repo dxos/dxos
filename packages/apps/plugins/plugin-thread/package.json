@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-thread",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,7 +23,7 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.9.2",
+    "@codemirror/language": "^6.9.3",
     "@dxos/display-name": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

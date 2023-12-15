@@ -2,28 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { closeBrackets } from '@codemirror/autocomplete';
-import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { EditorState, type Extension } from '@codemirror/state';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import { EditorView, placeholder } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
+import { useFocusableGroup } from '@fluentui/react-tabster';
+import { vim } from '@replit/codemirror-vim';
+import defaultsDeep from 'lodash.defaultsdeep';
+import get from 'lodash.get';
 import React, {
   type KeyboardEvent,
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useState,
-  useCallback,
-  type HTMLAttributes,
+  type ComponentProps,
 } from 'react';
-import { type StyleSpec } from 'style-mod';
-import { yCollab } from 'y-codemirror.next';
 
+import { isDocAccessor } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
-import { YText } from '@dxos/text-model';
 
-import { defaultStyles } from './theme';
-import { type EditorModel, type EditorSlots } from '../../model';
+import { basicBundle, basicTheme, markdownBundle, markdownTheme } from './extensions';
+import { type EditorModel, useCollaboration } from '../../hooks';
+import type { ThemeStyles } from '../../styles';
+
+export const EditorModes = ['default', 'vim'] as const;
+export type EditorMode = (typeof EditorModes)[number];
 
 export type CursorInfo = {
   from: number;
@@ -39,71 +42,81 @@ export type TextEditorRef = {
   view?: EditorView;
 };
 
-export type TextEditorProps = {
-  model?: EditorModel;
-  extensions?: Extension[];
-  theme?: {
-    [selector: string]: StyleSpec;
+export type TextEditorSlots = {
+  root?: Omit<ComponentProps<'div'>, 'ref'>;
+  editor?: {
+    className?: string;
+    placeholder?: string;
+    spellCheck?: boolean;
+    tabIndex?: number;
+    theme?: ThemeStyles;
   };
-  slots?: EditorSlots;
-  onKeyDown?: (event: KeyboardEvent, info: CursorInfo) => void;
-} & Pick<HTMLAttributes<HTMLDivElement>, 'onBlur' | 'onFocus'>;
+};
+
+export type TextEditorProps = {
+  model: EditorModel;
+  extensions?: Extension[];
+  slots?: TextEditorSlots;
+  editorMode?: EditorMode;
+};
 
 /**
- * Simple text editor.
+ * Base text editor.
+ * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
-export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, extensions = [], theme = defaultStyles, slots = {}, onKeyDown, ...props }, forwardedRef) => {
-    const { id, content } = model ?? {};
+export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
+  ({ model, extensions = [], slots, editorMode }, forwardedRef) => {
     const { themeMode } = useThemeContext();
+    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
     const [parent, setParent] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
     const [view, setView] = useState<EditorView>();
-
-    // TODO(burdon): The ref may be instantiated before the view is created.
     useImperativeHandle(
       forwardedRef,
-      () => {
-        return {
-          editor: parent,
-          state,
-          view,
-        };
-      },
-      [view],
+      () => ({
+        editor: parent,
+        state,
+        view,
+      }),
+      [view, state, parent],
     );
+
+    // TODO(burdon): Pass in extension?
+    const collaboration = useCollaboration(model, themeMode);
 
     useEffect(() => {
       if (!parent) {
         return;
       }
 
-      view?.destroy();
+      const initialText = isDocAccessor(model.content)
+        ? get(model.content.handle.docSync(), model.content.path)
+        : model.content?.toString();
 
       const state = EditorState.create({
-        doc: content?.toString(),
+        doc: initialText,
         extensions: [
-          bracketMatching(),
-          closeBrackets(),
-          placeholder(slots.editor?.placeholder ?? ''),
-          EditorView.lineWrapping,
-
-          // Themes.
-          EditorView.theme(theme),
-          ...(themeMode === 'dark'
-            ? [syntaxHighlighting(oneDarkHighlightStyle)]
-            : [syntaxHighlighting(defaultHighlightStyle)]),
+          // TODO(burdon): Factor out VIM mode?
+          editorMode === 'vim' && vim(),
 
           // Replication.
-          ...(content instanceof YText ? [yCollab(content, undefined)] : []),
+          collaboration,
+
+          // Theme.
+          slots?.editor?.theme && EditorView.theme(slots?.editor?.theme),
 
           // Custom.
           ...extensions,
-        ],
+        ].filter(Boolean) as Extension[],
       });
 
       setState(state);
+
+      // NOTE: This repaints the editor.
+      // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
+      // Ideally this should not be hit except when changing between text objects.
+      view?.destroy();
       setView(new EditorView({ state, parent }));
 
       return () => {
@@ -111,20 +124,65 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         setView(undefined);
         setState(undefined);
       };
-    }, [parent, content, themeMode]);
+    }, [parent, model.content, themeMode, editorMode]);
 
-    const handleKeyDown = useCallback(
+    const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
-        if (view) {
-          const { head, from, to } = view.state.selection.ranges[0];
-          const { number } = view.state.doc.lineAt(head);
-          const after = view.state.sliceDoc(from);
-          onKeyDown?.(event, { from, to, line: number, lines: view.state.doc.lines, after });
+        const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
+        switch (key) {
+          case 'Enter': {
+            view?.contentDOM.focus();
+            break;
+          }
+
+          case 'Escape': {
+            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && parent?.focus();
+            break;
+          }
         }
       },
-      [view],
+      [view, editorMode],
     );
 
-    return <div key={id} ref={setParent} {...slots.root} onKeyDown={handleKeyDown} {...props} />;
+    return (
+      <div
+        key={model.id}
+        ref={setParent}
+        tabIndex={0}
+        {...slots?.root}
+        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        onKeyUp={handleKeyUp}
+      />
+    );
+  },
+);
+
+export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
+  ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
+    const extensions = [...(_extensions ?? []), basicBundle({ themeMode, placeholder: slots?.editor?.placeholder })];
+    return (
+      <BaseTextEditor
+        ref={forwardedRef}
+        extensions={extensions}
+        slots={defaultsDeep({}, slots, { editor: { theme: basicTheme } })}
+        {...props}
+      />
+    );
+  },
+);
+
+export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
+  ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
+    const extensions = [...(_extensions ?? []), markdownBundle({ themeMode })];
+    return (
+      <BaseTextEditor
+        ref={forwardedRef}
+        extensions={extensions}
+        slots={defaultsDeep({}, slots, { editor: { theme: markdownTheme } })}
+        {...props}
+      />
+    );
   },
 );

@@ -15,10 +15,6 @@ import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
-  const [doc] = useQuery(space, Document.filter());
-
-  const model = useTextModel({ identity, space, text: doc?.content });
-
   useEffect(() => {
     if (!space) {
       return;
@@ -26,6 +22,12 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
 
     space.db._backend.maxBatchSize = 0;
   }, [space]);
+
+  const [doc] = useQuery(space, Document.filter());
+  const model = useTextModel({ identity, space, text: doc?.content });
+  if (!model) {
+    return null;
+  }
 
   return (
     <main className={`client client-${id}`}>
@@ -35,20 +37,6 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
           root: {
             role: 'none',
             className: 'pli-4',
-          },
-          editor: {
-            // TODO(wittjosiah): Copied from plugin-markdown.
-            //   Without this the cursors are cut off at the edges.
-            //   These should be the defaults.
-            markdownTheme: {
-              '&, & .cm-scroller': {
-                display: 'flex',
-                flexDirection: 'column',
-                flex: '1 0 auto',
-                inlineSize: '100%',
-              },
-              '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-            },
           },
         }}
       />

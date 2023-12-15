@@ -552,7 +552,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
         return new Reference(obj.id);
       } else {
         if (obj[base]._database !== this._database) {
-          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
         } else {
           return new Reference(obj.id);
         }
@@ -650,6 +650,9 @@ const getSchemaProto = (): typeof Schema => {
 // TODO(dmaretskyi): Remove once migration is complete.
 let globalAutomergePreference: boolean | undefined;
 
+/**
+ * @deprecated Temporary.
+ */
 export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
   globalAutomergePreference = useAutomerge;
 };
@@ -666,10 +669,16 @@ export const getGlobalAutomergePreference = () => {
   );
 };
 
+/**
+ * @deprecated Temporary.
+ */
 export const isActualTypedObject = (object: unknown): object is TypedObject => {
   return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
 };
 
+/**
+ * @deprecated Temporary.
+ */
 export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
   return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

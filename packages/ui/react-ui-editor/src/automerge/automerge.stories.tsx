@@ -2,17 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { basicSetup } from '@codemirror/basic-setup';
+import '@preact/signals-react'; // Register react integration
+import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { EditorView } from '@codemirror/view';
+import { basicSetup } from 'codemirror';
+import get from 'lodash.get';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type Prop, next as automerge } from '@dxos/automerge/automerge';
+import { type Prop } from '@dxos/automerge/automerge';
+import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
 
-import { plugin as amgPlugin, reconcile } from './automerge-plugin';
-import { Peer } from './demo';
+import { type IDocHandle, automergePlugin } from './automerge-plugin';
 
 type EditorProps = {
-  handle: Peer;
+  handle: IDocHandle;
   path: Prop[];
 };
 
@@ -21,27 +24,13 @@ const Editor = ({ handle, path }: EditorProps) => {
   const editorRoot = useRef<EditorView>();
 
   useEffect(() => {
-    const doc = handle.doc;
-    const source = doc.text; // this should use path
-    const plugin = amgPlugin(doc, path);
     const view = (editorRoot.current = new EditorView({
-      doc: source,
-      extensions: [basicSetup, plugin],
-      dispatch: (transaction) => {
-        view.update([transaction]);
-        reconcile(handle, view);
-      },
+      doc: get(handle.docSync()!, path),
+      extensions: [basicSetup, automergePlugin(handle, path)],
       parent: containerRef.current as any,
     }));
 
-    const handleChange = () => {
-      reconcile(handle, view);
-    };
-
-    handle.changeEvent.on(handleChange);
-
     return () => {
-      handle.changeEvent.off(handleChange);
       view.destroy();
     };
   }, []);
@@ -50,31 +39,29 @@ const Editor = ({ handle, path }: EditorProps) => {
 };
 
 const Story = () => {
-  const [object1, setObject1] = useState<Peer | null>(null);
-  const [object2, setObject2] = useState<Peer | null>(null);
-  const [stats1, setStats1] = useState<any>({});
-  const [stats2, setStats2] = useState<any>({});
+  const [object1, setObject1] = useState<DocHandle<any> | null>(null);
+  const [object2, setObject2] = useState<DocHandle<any> | null>(null);
 
   useEffect(() => {
-    const object1 = new Peer();
-    object1.doc = automerge.from({ text: 'Hello world!' });
+    queueMicrotask(async () => {
+      const repo1 = new Repo({
+        network: [new BroadcastChannelNetworkAdapter()],
+      });
+      const repo2 = new Repo({
+        network: [new BroadcastChannelNetworkAdapter()],
+      });
 
-    const object2 = new Peer();
-    object2.doc = automerge.init();
+      const object1 = repo1.create();
+      object1.change((doc: any) => {
+        doc.text = 'Hello world!';
+      });
 
-    const r1 = object1.replicate();
-    const r2 = object2.replicate();
+      const object2 = repo2.find(object1.url);
+      await object2.whenReady();
 
-    void r1.readable.pipeTo(r2.writable);
-    void r2.readable.pipeTo(r1.writable);
-
-    setObject1(object1);
-    setObject2(object2);
-
-    setInterval(() => {
-      setStats1({ ...object1.stats });
-      setStats2({ ...object2.stats });
-    }, 500);
+      setObject1(object1);
+      setObject2(object2);
+    });
   }, []);
 
   if (!object1 || !object2) {
@@ -85,11 +72,9 @@ const Story = () => {
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', width: '100vw' }}>
       <div>
         <Editor handle={object1} path={['text']} />
-        <div style={{ whiteSpace: 'pre' }}>{JSON.stringify(stats1, null, 2)}</div>
       </div>
       <div>
         <Editor handle={object2} path={['text']} />
-        <div style={{ whiteSpace: 'pre' }}>{JSON.stringify(stats2, null, 2)}</div>
       </div>
     </div>
   );
@@ -99,6 +84,6 @@ export default {
   title: 'Automerge',
 };
 
-export const EditorStory = {
+export const AutomergeRepo = {
   render: () => <Story />,
 };

@@ -3,17 +3,10 @@
 //
 
 import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
+import React, { type HTMLAttributes, type KeyboardEventHandler, useEffect, useRef, useState } from 'react';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import {
-  TextEditor,
-  useTextModel,
-  type CursorInfo,
-  type TextEditorProps,
-  type TextEditorRef,
-  type YText,
-} from '@dxos/react-ui-editor';
+import { TextEditor, useTextModel, type CursorInfo, type TextEditorRef, type YText } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
@@ -80,9 +73,20 @@ const OutlinerItem = ({
     }
   }, [editorRef.current?.view, active]);
 
-  const handleKeyDown: TextEditorProps['onKeyDown'] = (event, state) => {
+  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
+    const view = editorRef.current?.view;
+    if (!view) {
+      return;
+    }
+
+    // TODO(burdon): Factor out util.
+    const { head, from, to } = view.state.selection.ranges[0];
+    const { number: line } = view.state.doc.lineAt(head);
+    const after = view.state.sliceDoc(from);
+    const lines = view.state.doc.lines;
+    const state = { from, to, line, lines, after };
+
     const { key, shiftKey } = event;
-    const { from, to, line, lines, after } = state;
     switch (key) {
       // TODO(burdon): Only move lines if at start/end of line.
       case 'ArrowUp':
@@ -122,6 +126,8 @@ const OutlinerItem = ({
         }
         break;
       }
+      // TODO(burdon): BUG: When outdenting the last item.
+      //  TypeError: Cannot read properties of undefined (reading 'items')
       case 'Tab': {
         event.preventDefault();
         onIndent?.(event.shiftKey ? 'left' : 'right');
@@ -145,9 +151,9 @@ const OutlinerItem = ({
   };
 
   return (
-    <div className='flex group'>
+    <div className='flex group' onKeyDownCapture={handleKeyDown}>
       {(isTasklist && (
-        <div className='py-1 mr-1'>
+        <div className='mt-0.5 mr-2.5'>
           <Input.Root>
             <Input.Checkbox
               checked={item.done}
@@ -158,7 +164,7 @@ const OutlinerItem = ({
           </Input.Root>
         </div>
       )) || (
-        <div className='px-1 py-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
+        <div className='mr-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
           <DotOutline
             weight={focus ? 'fill' : undefined}
             className={mx('shrink-0', getSize(6), active && 'text-primary-500')}
@@ -173,14 +179,13 @@ const OutlinerItem = ({
           slots={{
             root: {
               className: 'w-full',
+              onFocus: () => setFocus(true),
+              onBlur: () => setFocus(false),
             },
             editor: {
               placeholder,
             },
           }}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
         />
       )}
 
@@ -287,14 +292,15 @@ type OutlinerRootProps = {
 const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: OutlinerRootProps) => {
   const [active, setActive] = useState<CursorSelection>();
 
-  // TODO(burdon): [BUG]: New item is created while current editor has focus.
-  //  In storybooks, if typing quickly the text following ENTER will be in the old item.
+  //
+  // Create/split line.
+  //
   const handleCreate: OutlinerBranchProps['onItemCreate'] = (parent, current, state) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => current.id === id);
 
     let item: Item;
-    if (state?.from === 0) {
+    if (state?.from === 0 && state?.after?.length) {
       // Insert before.
       item = onCreate!();
       items.splice(idx, 0, item);
@@ -318,6 +324,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     return item;
   };
 
+  //
+  // Delete/join line.
+  //
   const handleDelete: OutlinerBranchProps['onItemDelete'] = (parent, item, state) => {
     if (parent === root && parent.items?.length === 1) {
       return;
@@ -357,20 +366,24 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Indent.
+  //
   const handleIndent: OutlinerBranchProps['onItemIndent'] = (parent, item, direction) => {
     const items = getItems(parent);
     const idx = items.findIndex(({ id }) => id === item.id) ?? -1;
     switch (direction) {
       case 'left': {
         if (parent) {
-          // Move all siblings.
-          const move = items.splice(idx, items.length - idx);
-
           // Get parent's parent.
           const ancestor = getParent(root, parent)!;
-          const ancestorItems = getItems(ancestor);
-          const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
-          ancestorItems.splice(parentIdx + 1, 0, ...move);
+          if (ancestor) {
+            // Move all siblings.
+            const move = items.splice(idx, items.length - idx);
+            const ancestorItems = getItems(ancestor);
+            const parentIdx = ancestorItems.findIndex(({ id }) => id === parent.id);
+            ancestorItems.splice(parentIdx + 1, 0, ...move);
+          }
         }
         break;
       }
@@ -387,6 +400,9 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Move lines.
+  //
   const handleShift: OutlinerBranchProps['onItemShift'] = (parent, item, direction) => {
     const idx = parent.items!.findIndex(({ id }) => id === item.id) ?? -1;
     switch (direction) {
@@ -397,6 +413,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         }
         break;
       }
+
       case 'down':
         if (idx < parent.items!.length - 1) {
           const next = parent.items![idx + 1];
@@ -406,12 +423,16 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
   };
 
+  //
+  // Navigation.
+  //
   const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, pos) => {
     switch (direction) {
       case 'home': {
         setActive({ itemId: root.items![0].id, from: 0 });
         break;
       }
+
       case 'end': {
         const last = getLastDescendent(root.items![root.items!.length - 1]);
         if (last) {
@@ -419,6 +440,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         }
         break;
       }
+
       case 'up': {
         const previous = getPrevious(root, item);
         if (previous) {
@@ -426,6 +448,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         }
         break;
       }
+
       case 'down': {
         const next = getNext(root, item);
         if (next) {

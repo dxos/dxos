@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-chain",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@codemirror/language": "^6.9.2",
+    "@codemirror/language": "^6.9.3",
     "@dxos/chain": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",

@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { EventSubscriptions } from '@dxos/async';
 import { Client } from '@dxos/react-client';
 import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
-import { ClientDecorator, TestBuilder } from '@dxos/react-client/testing';
+import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -230,6 +230,5 @@ const EchoGraphStory = () => {
 };
 
 export const EchoGraph = {
-  render: () => <EchoGraphStory />,
-  decorators: [ClientDecorator({ clients: [client], className: 'flex flex-col' })],
+  render: () => <ClientRepeater Component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
 };

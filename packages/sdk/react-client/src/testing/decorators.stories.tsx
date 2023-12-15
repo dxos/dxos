@@ -6,10 +6,9 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { type PublicKey } from '@dxos/client';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ClientDecorator } from './ClientDecorator';
+import { ClientRepeater } from './ClientRepeater';
 import { setupPeersInSpace } from './ClientSpaceDecorator';
 import { ToggleNetworkDecorator } from './ToggleNetworkDecorator';
 import { useClient } from '../client';
@@ -41,11 +40,12 @@ const ClientStory = () => {
 };
 
 export const WithClient = {
-  render: () => <ClientStory />,
-  decorators: [ClientDecorator({ count: 2 })],
+  render: () => <ClientRepeater Component={ClientStory} count={2} />,
 };
 
-const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
+const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
+
+const ClientSpace = () => {
   const space = useSpace(spaceKey);
 
   if (!space) {
@@ -61,14 +61,11 @@ const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
   );
 };
 
-const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
-
 export const WithClientSpace = {
-  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients })],
+  render: () => <ClientRepeater Component={ClientSpace} clients={clients} />,
 };
 
 export const WithNetworkToggle = {
-  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients }), ToggleNetworkDecorator({ clients })],
+  render: () => <ClientRepeater Component={ClientSpace} clients={clients} />,
+  decorators: [ToggleNetworkDecorator({ clients })],
 };

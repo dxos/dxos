@@ -22,24 +22,24 @@ alias gb='git branch -vv'
 
 alias pi="pnpm install"
 alias pw="pnpm watch"
-alias nx="pnpm -w nx"
+alias px="pnpm -w nx"
 
 # Run target in local directory (e.g., `p build`).
 function p () {
   TARGET=$1
   shift 1
 
-  nx $TARGET "${PWD##*/}" "$@"
+  px $TARGET "${PWD##*/}" "$@"
 }
 
 # Build
 function pb () {
-  nx build "${PWD##*/}" "$@"
+  px build "${PWD##*/}" "$@"
 }
 
 # Test
 function pt () {
-  nx test "${PWD##*/}" "$@"
+  px test "${PWD##*/}" "$@"
 }
 
 # Break NX cache (e.g., `pc test`).
@@ -47,7 +47,7 @@ function pc () {
   TARGET=$1
   shift 1
 
-  nx $TARGET "${PWD##*/}" "$@" "${RANDOM}"
+  px $TARGET "${PWD##*/}" "$@" "${RANDOM}"
 }
 
 # Run everything (e.g., `pa build`).
@@ -57,7 +57,7 @@ function pa () {
 
   ROOT=$(git rev-parse --show-toplevel)
   if [ "$ROOT" = "$PWD" ]; then
-    nx run-many --target=$TARGET "$@"
+    px run-many --target=$TARGET "$@"
   else;
     pushd $ROOT
     nx run-many --target=$TARGET "$@"
@@ -73,7 +73,7 @@ function pre () {
 
   # export CI=true
   # ROOT=$(git rev-parse --show-toplevel)
-  nx reset
+  px reset
 
   CI=true pi
   CI=true pa build
