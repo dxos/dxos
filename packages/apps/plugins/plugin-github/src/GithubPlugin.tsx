@@ -17,7 +17,7 @@ import {
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
-import { type MarkdownEditorRef } from '@dxos/react-ui-editor';
+import { type TextEditorRef } from '@dxos/react-ui-editor';
 
 import {
   EmbeddedMain,
@@ -122,7 +122,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return (
                     <ImportDialog
                       docGhId={data.docGhId as GhIdentifier}
-                      editorRef={data.editorRef as RefObject<MarkdownEditorRef>}
+                      editorRef={data.editorRef as RefObject<TextEditorRef>}
                     />
                   );
                 default:
@@ -133,7 +133,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 <MarkdownActions
                   model={data.model}
                   properties={data.properties}
-                  editorRef={data.editorRef as RefObject<MarkdownEditorRef>}
+                  editorRef={data.editorRef as RefObject<TextEditorRef>}
                 />
               ) : null;
             case 'settings':

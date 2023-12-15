@@ -87,6 +87,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     }
   }, [text]);
 
+  if (!model) {
+    return null;
+  }
+
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
@@ -170,6 +174,9 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: input.value });
+  if (!model) {
+    return null;
+  }
 
   return (
     <TextEditor
@@ -189,8 +196,10 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
 
 const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
   return (
-    <div className='border border-neutral-100 rounded-md'>
-      <div className='flex h-[32px] items-center bg-neutral-50 rounded-t border-b'>
+    <div className={mx('border rounded-md', groupBorder)}>
+      <div
+        className={mx('flex h-[32px] items-center bg-neutral-50 dark:bg-neutral-800 rounded-t border-b', groupBorder)}
+      >
         <h2 className='px-2 text-xs'>{title}</h2>
         <div className='grow' />
         {actions}

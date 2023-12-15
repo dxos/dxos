@@ -28,6 +28,7 @@ const StorybookPopover = ({ openTrigger, children }: PropsWithChildren<{ openTri
 };
 
 export default {
+  title: 'DXOS UI/Popover',
   component: StorybookPopover,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -14,6 +14,7 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
+  turbosnapRootDir?: string,
 ): StorybookConfig => ({
   addons: ['@storybook/addon-links', '@storybook/addon-essentials', '@storybook/addon-interactions'],
   // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories
@@ -44,8 +45,10 @@ export const config = (
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
         resolve: {
           alias: {
-            '@automerge/automerge-repo':
-              '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js', // '@dxos/automerge/automerge-repo',
+            // TODO(burdon): Add documentation.
+            // '@automerge/automerge-repo': '@dxos/automerge/automerge-repo'
+            // '@automerge/automerge-repo':
+            //   '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js',
           },
         },
         plugins: [
@@ -54,7 +57,7 @@ export const config = (
             root: __dirname,
             content: [resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}'],
           }),
-          turbosnap({ rootDir: config.root ?? __dirname }),
+          turbosnap({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
         ],
       } satisfies InlineConfig,
     );

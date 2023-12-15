@@ -7,10 +7,12 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import {
   createHyperlinkTooltip,
-  type MarkdownEditorProps,
-  type MarkdownEditorRef,
+  type TextEditorProps,
+  type TextEditorRef,
   MarkdownEditor,
   hyperlinkDecoration,
+  onChangeExtension,
+  markdownTheme,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
@@ -20,24 +22,29 @@ import { onTooltip } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
-type EditorMainProps = {
+export type EditorMainProps = {
+  editorRefCb: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
-  editorRefCb: RefCallback<MarkdownEditorRef>;
-} & Pick<MarkdownEditorProps, 'model' | 'editorMode' | 'showWidgets' | 'onChange'>;
+  showWidgets?: boolean;
+  onChange?: (text: string) => void;
+} & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
+  editorRefCb,
   model,
   properties,
   layout,
   editorMode,
   showWidgets,
   onChange,
-  editorRefCb,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
   const extensions = [createHyperlinkTooltip(onTooltip)];
+  if (onChange) {
+    extensions.push(onChangeExtension(onChange));
+  }
   if (showWidgets) {
     extensions.push(hyperlinkDecoration());
   }
@@ -49,7 +56,6 @@ export const EditorMain = ({
         model={model}
         editorMode={editorMode}
         extensions={extensions}
-        onChange={onChange}
         slots={{
           root: {
             role: 'none',
@@ -58,21 +64,26 @@ export const EditorMain = ({
               inputSurface,
               surfaceElevation({ elevation: 'group' }),
               layout !== 'embedded' && 'rounded',
-              'pli-10 m-0.5 shrink-0 grow flex flex-col',
+              'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
             ),
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
-            markdownTheme: {
+            placeholder: t('editor placeholder'),
+            theme: {
+              ...markdownTheme,
               '&, & .cm-scroller': {
                 display: 'flex',
                 flexDirection: 'column',
                 flex: '1 0 auto',
                 inlineSize: '100%',
               },
-              '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
+              '& .cm-content': {
+                flex: '1 0 auto',
+                inlineSize: '100%',
+                paddingBlock: '1rem',
+              },
             },
-            placeholder: t('editor placeholder'),
           },
         }}
       />

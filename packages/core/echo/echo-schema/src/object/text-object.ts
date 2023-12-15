@@ -2,16 +2,41 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
+import { type AutomergeOptions, type TypedObject, getGlobalAutomergePreference } from './typed-object';
+import { AutomergeObject } from '../automerge';
+
+export type TextObjectOptions = AutomergeOptions;
+
+export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
+
+export type AutomergeTextCompat = TypedObject<{
+  kind?: TextKind;
+  field: string;
+  content?: string;
+}>;
 
 export class TextObject extends AbstractEchoObject<TextModel> {
   // TODO(mykola): Add immutable option.
-  constructor(text?: string, kind?: TextKind, field?: string) {
+  constructor(text?: string, kind?: TextKind, field?: string, opts?: TextObjectOptions) {
     super(TextModel);
+
+    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+      const defaultedField = field ?? 'content';
+      return new AutomergeObject(
+        {
+          kind,
+          field: defaultedField,
+          [defaultedField]: text ?? '',
+        },
+        { type: Reference.fromLegacyTypename(LEGACY_TEXT_TYPE) },
+      ) as any;
+    }
 
     const mutation: TextMutation = {};
     if (kind) {
