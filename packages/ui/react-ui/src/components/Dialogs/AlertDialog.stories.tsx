@@ -54,8 +54,10 @@ const StorybookAlertDialog = ({
 };
 
 export default {
+  title: 'DXOS UI/Dialog (alert)',
   component: StorybookAlertDialog,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

@@ -59,6 +59,7 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
 };
 
 export default {
+  title: 'DXOS UI/Select',
   component: createDensityTest(StorybookSelect),
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
