@@ -8,12 +8,12 @@ export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 // https://tailwindcss.com/docs/font-weight
 export const heading: Record<HeadingLevel, string> = {
-  1: 'mbs-4 mbe-2 text-4xl font-body font-medium text-inherit no-underline',
-  2: 'mbs-4 mbe-2 text-3xl font-body font-medium text-inherit no-underline',
-  3: 'mbs-4 mbe-2 text-2xl font-body font-medium text-inherit no-underline',
-  4: 'mbs-4 mbe-2 text-xl font-body font-medium text-inherit no-underline',
-  5: 'mbs-4 mbe-2 text-lg font-body font-medium text-inherit no-underline',
-  6: 'mbs-4 mbe-2 font-body font-medium text-inherit no-underline',
+  1: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-4xl',
+  2: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-3xl',
+  3: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-2xl',
+  4: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-xl',
+  5: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-lg',
+  6: 'mbs-4 mbe-2 font-medium text-inherit no-underline',
 };
 
 export const blockquote = 'mlb-2 border-is-4 border-neutral-500/50 pis-5';
@@ -44,4 +44,4 @@ export const italic = 'italic';
 
 export const strikethrough = 'line-through';
 
-export const mark = '!font-normal !no-underline !text-inherit opacity-30';
+export const mark = '!font-normal !no-underline !text-inherit opacity-40';
