@@ -42,9 +42,6 @@
       "path": "../../core/echo/automerge"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/echo-typegen"
     },
     {

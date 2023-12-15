@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import get from 'lodash.get';
 import { useMemo } from 'react';
 import type * as awarenessProtocol from 'y-protocols/awareness';
 
+import { isDocAccessor } from '@dxos/echo-schema';
 import {
   type DocAccessor,
   type Space,
@@ -26,6 +28,7 @@ type Provider = { awareness: Awareness };
 export type EditorModel = {
   id: string;
   content: string | YText | YXmlFragment | DocAccessor;
+  text?: string;
   provider?: Provider;
   peer?: {
     id: string;
@@ -86,7 +89,9 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
   return {
     id: text.doc.guid,
     content: text.content,
-    provider,
+    text: isDocAccessor(text.content)
+      ? get(text.content.handle.docSync(), text.content.path)
+      : text.content?.toString(),
     peer: identity
       ? {
           id: identity.identityKey.toHex(),

@@ -6,7 +6,6 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
-import get from 'lodash.get';
 import React, {
   type ComponentProps,
   type KeyboardEvent,
@@ -17,7 +16,6 @@ import React, {
   useState,
 } from 'react';
 
-import { isDocAccessor } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { basicBundle, baseTheme, markdownBundle, textTheme } from './extensions';
@@ -81,13 +79,8 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         return;
       }
 
-      // TODO(burdon): Remove echo dependency (move into model).
-      const initialText = isDocAccessor(model.content)
-        ? get(model.content.handle.docSync(), model.content.path)
-        : model.content?.toString();
-
       const state = EditorState.create({
-        doc: initialText,
+        doc: model.text,
         extensions: [
           // TODO(burdon): Factor out VIM mode?
           editorMode === 'vim' && vim(),
