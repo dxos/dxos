@@ -1,0 +1,47 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../devtools/cli"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/vault"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    }
+  ]
+}
