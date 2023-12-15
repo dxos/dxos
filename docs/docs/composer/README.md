@@ -93,6 +93,10 @@ TBD
 
 This section describes the user interface for Composer.
 
+### ReactUI
+
+the DXOS react UI framework
+
 ### The NavTree
 
 - Spaces
@@ -115,6 +119,10 @@ Discuss identity, device joins, etcs
 - Search
 - Threads
 - How we recommend using it
+
+### Mosaic
+
+data-bound controls
 
 ### Stacks
 
