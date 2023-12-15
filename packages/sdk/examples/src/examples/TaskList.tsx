@@ -16,12 +16,12 @@ import { Task } from '../proto/gen/schema';
 const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);
   const tasks = useQuery(space, Task.filter());
-  const [input, setInput] = useState<HTMLInputElement>();
+  const [inputValue, setInputValue] = useState('');
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    if (event.key === 'Enter' && space && input) {
-      const task = new Task({ title: input.value });
-      input.value = '';
+    if (event.key === 'Enter' && space && inputValue) {
+      const task = new Task({ title: inputValue });
+      setInputValue('');
       space.db.add(task);
     }
   };
@@ -32,9 +32,10 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
       <Input.Root>
         <Input.Label srOnly>Create new item</Input.Label>
         <Input.TextInput
+          value={inputValue}
+          onChange={({ target: { value } }) => setInputValue(value)}
           classNames='mbe-2'
           placeholder='New item'
-          ref={(e: HTMLInputElement) => setInput(e)}
           onKeyDown={handleKeyDown}
         />
       </Input.Root>
@@ -43,7 +44,7 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
           <li key={task.id} className='flex items-center gap-2 mbe-2 pl-3'>
             <Input.Root>
               <Input.Label srOnly>Complete {task.title}</Input.Label>
-              <Input.Checkbox checked={!!task.completed} onCheckedChange={() => (task.completed = !task.completed)} />
+              <Input.Checkbox checked={task.completed} onCheckedChange={() => (task.completed = !task.completed)} />
             </Input.Root>
             <div className='grow'>{task.title}</div>
             <Button variant='ghost' onClick={() => space?.db.remove(task)}>
