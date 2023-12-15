@@ -199,6 +199,8 @@ export class AutomergeObject implements TypedObjectProperties {
     this._docHandle.on('change', async (event) => {
       if (objectIsUpdated(this._id, event)) {
         // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
+        //       Without it there was race condition in SpacePlugin on Folder creation.
+        //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
         await binded.wait();
         this._notifyUpdate();
       }
