@@ -3,6 +3,10 @@
 //
 
 import { resolve } from 'node:path';
+
 import { config } from '../.storybook-shared/config';
 
-export default config({ stories: ['../../../packages/ui/react-ui/src/**/*.stories.tsx'] }, resolve(__dirname, '../.././packages/ui'));
+export default config(
+  { stories: ['../../../packages/ui/react-ui/src/**/*.stories.tsx'] },
+  resolve(__dirname, '../.././packages/ui'),
+);
