@@ -63,7 +63,12 @@ export class Client {
   /**
    * The version of this client API.
    */
-  public readonly version = DXOS_VERSION;
+  readonly version = DXOS_VERSION;
+
+  /**
+   * Emitted after the client is reset and the services have finished restarting.
+   */
+  readonly reloaded = new Event<void>();
 
   private readonly _options: ClientOptions;
   private _ctx = new Context();
@@ -280,6 +285,7 @@ export class Client {
       if (!this._resetting) {
         await this._close();
         await this._open();
+        this.reloaded.emit();
       }
     });
 
@@ -392,7 +398,6 @@ export class Client {
 
   /**
    * Resets and destroys client storage.
-   * Warning: Inconsistent state after reset, do not continue to use this client instance.
    */
   @synchronized
   async reset() {
@@ -407,6 +412,7 @@ export class Client {
     await this._close();
     await this._open();
     this._resetting = false;
+    this.reloaded.emit();
     log('reset complete');
   }
 }

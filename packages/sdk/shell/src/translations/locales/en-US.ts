@@ -96,5 +96,6 @@ export const os = {
   'confirm label': 'Confirm',
   'reset identity input label':
     'This will clear this device and all associated data. Type {{confirmationValue}} and confirm to continue.',
+  'failed to reset identity message': 'Failed to reset identity.',
   'confirmation value': 'CONFIRM',
 };

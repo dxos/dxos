@@ -14,7 +14,7 @@ import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@d
 
 import meta from './meta';
 
-const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
+const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
 
@@ -48,6 +48,15 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
+
+        // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
+        client.reloaded.on(() => {
+          client.halo.identity.subscribe(async (identity) => {
+            if (identity) {
+              window.location.href = window.location.origin;
+            }
+          });
+        });
 
         if (types) {
           client.addTypes(types);
