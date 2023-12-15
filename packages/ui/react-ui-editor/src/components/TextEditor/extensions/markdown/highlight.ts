@@ -119,14 +119,12 @@ export const markdownHighlightStyle = HighlightStyle.define(
       ],
       class: mark,
     },
-    {
-      tag: [markdownTags.url],
-      class: mark,
-    },
-    {
-      tag: [markdownTags.codeBlock, markdownTags.codeText, markdownTags.inlineCode],
-      // class: code,
-    },
+    // Fenced code blocks will be highlighted by custom syntax highlighters configured by the bundle.
+    // However, the base font will be the default font of the root element (which should be kept as monospace).
+    // {
+    //   tag: [markdownTags.codeBlock, markdownTags.codeText, markdownTags.inlineCode],
+    //   class: code,
+    // },
     { tag: tags.emphasis, class: italic },
     { tag: tags.heading1, class: heading[1] },
     { tag: tags.heading2, class: heading[2] },
@@ -138,7 +136,8 @@ export const markdownHighlightStyle = HighlightStyle.define(
     { tag: tags.strong, class: bold },
     {
       tag: [tags.content],
-      class: 'font-body',
+      // class: 'font-body',
+      fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     },
   ],
   {

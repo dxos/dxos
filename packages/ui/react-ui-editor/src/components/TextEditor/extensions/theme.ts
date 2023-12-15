@@ -125,6 +125,7 @@ export const baseTheme: {
     textDecorationThickness: '1px',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
 
   //

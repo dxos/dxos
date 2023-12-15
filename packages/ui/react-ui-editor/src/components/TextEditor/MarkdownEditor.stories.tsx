@@ -11,6 +11,7 @@ import {
   type CompletionResult,
 } from '@codemirror/autocomplete';
 import { keymap } from '@codemirror/view';
+import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -23,11 +24,12 @@ import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './Text
 import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
 import { useTextModel } from '../../hooks';
 
-// TODO(burdon): Create more complete test.
 const initialText = [
   '# Test',
   '',
-  'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
+  'This is all about https://dxos.org.',
+  '',
+  '__NOTE__: Fenced code uses the base font.',
   '',
   '```',
   'const x = 100;',
@@ -39,6 +41,17 @@ const initialText = [
   '  return () => <div>Test</div>;',
   '};',
   '```',
+  '',
+  ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+].join('\n');
+
+const textWithLinks = [
+  '# Test',
+  '',
+  'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
+  '',
+  '',
+  '',
   '',
 ].join('\n');
 
@@ -76,8 +89,8 @@ const Story = ({
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center p-8'>
-        <div className='w-[800px]'>
+      <div className='flex justify-center p-8 overflow-y-scroll'>
+        <div className='w-[800px] bg-red-100'>
           <MarkdownEditor ref={ref} model={model} {...props} />
         </div>
       </div>
@@ -97,11 +110,11 @@ export const Default = {
 };
 
 export const Tooltips = {
-  render: () => <Story text={initialText} extensions={[hyperLinkTooltip()]} />,
+  render: () => <Story text={textWithLinks} extensions={[hyperLinkTooltip()]} />,
 };
 
 export const EditableLinks = {
-  render: () => <Story text={initialText} extensions={[hyperlinkDecoration()]} />,
+  render: () => <Story text={textWithLinks} extensions={[hyperlinkDecoration()]} />,
 };
 
 // TODO(burdon): Automcomplete: https://codemirror.net/5/doc/manual.html#addon_runmode
