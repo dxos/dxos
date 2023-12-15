@@ -10,6 +10,7 @@ import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import {
   descriptionText,
+  fixedBorder,
   getSize,
   hoverableControlItem,
   hoverableOpenControlItem,
@@ -172,11 +173,14 @@ export const NavTreeItemActionSearchList = ({
           </Button>
         </Dialog.Trigger>
       </Tooltip.Trigger>
-      <Dialog.Portal>
+      <Dialog.Portal className={fixedBorder}>
         <Dialog.Overlay>
           <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='p-4' />
+              <SearchList.Input
+                placeholder={t('tree item searchlist input placeholder')}
+                classNames={[inputSurface, 'p-4']}
+              />
               <SearchList.Content
                 classNames={[inputSurface, 'p-0', 'min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}
               >
