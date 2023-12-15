@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { List, Circle } from '@phosphor-icons/react';
 import { type Meta } from '@storybook/react';
@@ -34,12 +35,11 @@ const meta: Meta = {
   ],
 };
 
-// TODO(burdon): Required otherwise ID complains:
-//  Inferred type of error: packages/ui/react-ui-card/node_modules/@phosphor-icons/react/dist
+// TODO(burdon): Required otherwise ID complains with `Inferred type...` error.
 export default meta;
 
 export const Default = {
-  render: ({ debug }: { debug?: boolean }) => {
+  render: () => {
     // TODO(burdon): Factor out across tests.
     const actions = faker.helpers.multiple(
       () => ({

@@ -167,8 +167,8 @@ export const markdownTheme: ThemeStyles = {
   '& .cm-yLineSelection': {
     margin: '0',
   },
-  '.cm-link': {
-    color: 'rgb(20 89 208)', // TODO(burdon): Rationalize.
+  '& .cm-link': {
+    color: get(tokens, 'extend.colors.primary.500'),
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
     textUnderlineOffset: '2px',

@@ -44,6 +44,9 @@ export const basicTheme: {
   },
   '& .cm-link': {
     color: get(tokens, 'extend.colors.primary.500'),
-    textDecoration: 'underline',
+    textDecorationLine: 'underline',
+    textDecorationThickness: '1px',
+    textUnderlineOffset: '2px',
+    borderRadius: '.125rem',
   },
 };
