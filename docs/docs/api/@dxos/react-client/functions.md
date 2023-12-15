@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L96)
+### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L99)
 
 
 Root component that provides the DXOS client instance to child components.
@@ -153,7 +153,7 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L45)
+### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L46)
 
 
 Hook returning instance of DXOS client.
