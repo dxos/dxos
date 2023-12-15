@@ -139,6 +139,9 @@ jobs:
             NODE_OPTIONS: --max_old_space_size=10240
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
+          environment:
+            # TODO(wittjosiah): Remove? Seems to be needed after automerge was added.
+            NODE_OPTIONS: --max_old_space_size=10240
           when: always
       - *send_test_report
       - *codecov_upload

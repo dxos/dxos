@@ -2,41 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChatOpenAI } from 'langchain/chat_models/openai';
+import { join } from 'node:path';
 
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
-import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
-import { PublicKey } from '@dxos/keys';
+import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { createRequest } from './request';
+import { createContext, createSequence } from './request';
 import { createResponse } from './response';
+import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
 
-const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
-
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
-  event: { space: spaceKey, objects: messageIds },
-  context: { client },
-  response,
-}) => {
-  const config = client.config;
-  const chat = new ChatOpenAI({
-    openAIApiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
-  });
-
-  // TODO(burdon): Logging (filename missing).
-  const space = client.spaces.get(PublicKey.from(spaceKey));
-  if (!space) {
+export const handler = subscriptionHandler(async ({ event, context, response }) => {
+  const { client, dataDir } = context;
+  const { space, objects } = event;
+  if (!space || !objects?.length) {
     return response.status(400);
   }
+
+  const config = client.config;
+  const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
+    baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
+    apiKey: getKey(config, 'openai.com/api_key'),
+  });
+  await resources.store.initialize();
+
+  // TODO(burdon): The handler is called before the mutation is processed!
+  await sleep(500);
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = space.db.query(ThreadType.filter());
-  const activeThreads = messageIds.reduce((activeThreads, blockId) => {
-    const thread = threads.find((thread) => thread.messages.some((message) => message.id === blockId));
+  const activeThreads = objects.reduce((activeThreads, message) => {
+    const thread = threads.find((thread) => thread.messages.some((m) => m.id === message.id));
     if (thread) {
       activeThreads.add(thread);
     }
@@ -45,35 +44,55 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   }, new Set<ThreadType>());
 
   // Process threads.
-  await Promise.all(
-    Array.from(activeThreads).map(async (thread) => {
-      // TODO(burdon): Wait for block to be added???
-      await sleep(100);
+  if (activeThreads) {
+    await Promise.all(
+      Array.from(activeThreads).map(async (thread) => {
+        const message = thread.messages[thread.messages.length - 1];
+        if (message.__meta.keys.length === 0) {
+          let blocks: MessageType.Block[];
+          try {
+            let text = message.blocks
+              .map((message) => message.text)
+              .filter(Boolean)
+              .join('\n');
 
-      const message = thread.messages[thread.messages.length - 1];
-      if (message.__meta.keys.length === 0) {
-        const messages = createRequest(space, message);
-        log('request', { messages });
+            // Check for command.
+            let command: string | undefined;
+            const match = text.match(/\/(\w+)\s*(.+)?/);
+            if (match) {
+              command = match[1];
+              text = match[2];
+            }
 
-        // TODO(burdon): Streaming API.
-        // TODO(burdon): Error handling (e.g., 401);
-        const { content } = await chat.invoke(messages);
-        log('response', { content: content.toString() });
-        const blocks = createResponse(client, space, content.toString());
-        thread.messages.push(
-          new MessageType(
-            {
-              identityKey,
-              blocks,
-            },
-            {
-              meta: {
-                keys: [{ source: 'openai.com' }],
+            const context = createContext(space, message.context);
+            const sequence = createSequence(space, resources, context, { command });
+            const response = await sequence.invoke(text);
+            log.info('response', { response });
+
+            blocks = createResponse(space, context, response);
+            log.info('response', { blocks });
+          } catch (error) {
+            log.error('processing message', error);
+            blocks = [{ text: 'There was an error generating the response.' }];
+          }
+
+          thread.messages.push(
+            new MessageType(
+              {
+                from: {
+                  identityKey: resources.identityKey,
+                },
+                blocks,
               },
-            },
-          ),
-        );
-      }
-    }),
-  );
-};
+              {
+                meta: {
+                  keys: [{ source: 'openai.com' }],
+                },
+              },
+            ),
+          );
+        }
+      }),
+    );
+  }
+});

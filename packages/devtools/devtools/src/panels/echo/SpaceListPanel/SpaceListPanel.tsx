@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { type PublicKey } from '@dxos/keys';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Table, type TableColumnDef, createColumnBuilder } from '@dxos/react-ui-table';
+import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
@@ -32,10 +32,14 @@ export const SpaceListPanel: FC = () => {
   };
 
   // TODO(burdon): Get builder from hook.
-  const { helper, builder } = createColumnBuilder<Space>();
+  // TODO(dmaretskyi): Fix the types.
+  const { helper, builder } = createColumnBuilder<any>();
   const columns: TableColumnDef<Space, any>[] = [
     helper.accessor('key', builder.key({ tooltip: true })),
-    helper.accessor((space) => space.properties.name, { id: 'name' }),
+    helper.accessor((space) => space.properties.name, {
+      id: 'name',
+      meta: { cell: { classNames: textPadding } },
+    }) as any,
     helper.accessor((space) => space.db.objects.length, {
       id: 'objects',
       ...builder.number(),
@@ -71,7 +75,7 @@ export const SpaceListPanel: FC = () => {
   ];
 
   return (
-    <PanelContainer className='overflow-auto'>
+    <PanelContainer classNames='overflow-auto'>
       <Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
     </PanelContainer>
   );

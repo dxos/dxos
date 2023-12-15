@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [IPFS_PLUGIN]: {
         'plugin name': 'Files',
-        'object title placeholder': 'New file',
+        'file title placeholder': 'New file',
         'delete object label': 'Delete',
       },
     },

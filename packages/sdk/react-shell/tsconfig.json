@@ -51,6 +51,9 @@
       "path": "../../ui/react-ui-types"
     },
     {
+      "path": "../../ui/storybook-utils"
+    },
+    {
       "path": "../config"
     },
     {

@@ -90,6 +90,17 @@ message Script {
 /**
  *
  */
+// TODO(burdon): Generalize to script?
+message Mermaid {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text source = 2;
+}
+
+/**
+ *
+ */
 message Stack {
   option (object) = true;
 
@@ -102,6 +113,27 @@ message Stack {
 
   string title = 1;
   repeated Section sections = 2;
+}
+
+/**
+ *
+ */
+message Tree {
+  option (object) = true;
+
+  message Item {
+    option (object) = true;
+
+    dxos.schema.Text text = 1;
+    repeated Item items = 2;
+    bool done = 3;
+  }
+
+  string title = 1;
+  Item root = 2;
+
+  // Options.
+  bool checkbox = 10;
 }
 
 /**
@@ -140,19 +172,23 @@ message Kanban {
 message Grid {
   option (object) = true;
 
+  message Position {
+    int32 x = 1;
+    int32 y = 2;
+  }
+
   // TODO(burdon): Reconcile with Kanban.Item.
   message Item {
     option (object) = true;
 
     dxos.schema.TypedObject object = 1;
 
-    string position = 10; // TODO(burdon): Replace layout object?
+    Position position = 10;
     string color = 11;
   }
 
   string title = 1;
   repeated Item items = 2;
-  dxos.schema.TypedObject layout = 3;
 }
 
 /**
@@ -189,6 +225,7 @@ message Mailbox {
 
 /**
  * Universal message type.
+ * Attempts to unify email, chat, and other messaging.
  */
 message Message {
   option (object) = true;
@@ -206,22 +243,111 @@ message Message {
     dxos.schema.Expando object = 4; // TODO(burdon): Change to TypedObject.
   }
 
-  // TODO(burdon): Add reference to Contact object?
+  // TODO(burdon): Promote to top-level (shared with Event).
   message Recipient {
-    string identity_key = 1;
+    // TODO(burdon): Add reference to Contact object.
+    // TODO(burdon): Import key definition.
+    // dxos.keys.PublicKey identity_key = 2;
+    optional string identity_key = 1;
     string email = 2;
-    string name = 3;
+    optional string name = 3;
+    optional Contact contact = 4;
   }
 
-  // TODO(burdon): Import key.
-  // dxos.keys.PublicKey identity_key = 2;
-  string identity_key = 1; // TODO(burdon): Replace with from.
-  Context context = 2;
-  string date = 3;
+  enum State {
+    NONE = 0;
+    ARCHIVED = 2;
+    DELETED = 3; // TODO(burdon): Actually delete (need sync range so that doesn't return).
+    SPAM = 4;
+  }
+
+  string type = 1;
+  string date = 2;
 
   Recipient from = 10;
   repeated Recipient to = 11;
+  repeated Recipient cc = 12;
 
   string subject = 20;
   repeated Block blocks = 21;
+
+  // TODO(burdon): Email attachments and computed references.
+  repeated dxos.schema.Expando links = 30;
+
+  // TODO(burdon): Tags.
+  optional State state = 40;
+  optional bool read = 41;
+
+  Context context = 100;
+}
+
+message Contact {
+  option (object) = true;
+
+  message Identifier {
+    string type = 1;
+    string value = 2;
+  }
+
+  string name = 1;
+  repeated Identifier identifiers = 2;
+}
+
+message Event {
+  option (object) = true;
+
+  string title = 1;
+  Message.Recipient owner = 2;
+  repeated Message.Recipient attendees = 3;
+
+  string start_date = 10;
+
+  // TODO(burdon): Model links separately?
+  repeated dxos.schema.Expando links = 20;
+}
+
+// TODO(burdon): Rename? Singleton with queries?
+message AddressBook {
+  option (object) = true;
+}
+
+// TODO(burdon): Rename?
+message Calendar {
+  option (object) = true;
+}
+
+/**
+ * AI Chain.
+ */
+message Chain {
+  option (object) = true;
+
+  message Input {
+    option (object) = true;
+
+    enum Type {
+      VALUE = 0;
+      PASS_THROUGH = 1;
+      RETRIEVER = 2;
+      FUNCTION = 3;
+      QUERY = 4;
+    }
+
+    string name = 1;
+    Type type = 2;
+    dxos.schema.Text value = 3;
+  }
+
+  // TODO(burdon): Bug: Not reactive unless object?
+  //  https://github.com/dxos/dxos/issues/4882
+  message Prompt {
+    option (object) = true;
+
+    string command = 1;
+    dxos.schema.Text source = 2;
+    repeated Input inputs = 3;
+  }
+
+  string title = 1;
+  repeated Prompt prompts = 2;
 }

@@ -23,11 +23,12 @@ import {
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { Expando, TypedObject, isTypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject, SpaceState } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
 
-import { backupSpace } from './backup';
+import { exportData } from './backup';
 import {
   AwaitingObject,
   DialogRestoreSpace,
@@ -55,6 +56,7 @@ const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 (globalThis as any)[Folder.name] = Folder;
 
 export type SpacePluginOptions = {
+  version?: string;
   /**
    * Root folder structure is created on application first run if it does not yet exist.
    * This callback is invoked immediately following the creation of the root folder structure.
@@ -72,7 +74,10 @@ export type SpacePluginOptions = {
   }) => void;
 };
 
-export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({
+  version,
+  onFirstRun,
+}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = deepSignal<PluginState>({
     awaiting: undefined,
@@ -158,31 +163,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         }),
       );
 
-      // TODO(wittjosiah): Remove. The SDK should provide a way to do migrations.
-      const introduceRootSpaceFolder = (space: Space) => {
-        if (space.state.get() !== SpaceState.READY) {
-          return;
-        }
-
-        if (space.properties[Folder.schema.typename]) {
-          return;
-        }
-
-        const [folder] = space.db.query(Folder.filter({ name: space.key.toHex() })).objects;
-        if (!folder) {
-          return;
-        }
-
-        space.properties[Folder.schema.typename] = folder;
-      };
-
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
           spaces.forEach((space) => {
-            introduceRootSpaceFolder(space);
-
             spaceSubscriptions.add(
               space.listen('viewing', (message) => {
                 const { added, removed } = message.payload;
@@ -322,7 +307,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
+            spaceToGraphNode({ space: client.spaces.default, parent, version, dispatch, resolve }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -411,6 +396,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                   space,
                   parent: space === client.spaces.default ? parent : groupNode,
                   hidden: settings.values.showHidden,
+                  version,
                   dispatch,
                   resolve,
                 }),
@@ -443,11 +429,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesFolder],
-              } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
+              } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data);
-              const folder = new Folder({ name: space.key.toHex() });
+              const folder = new Folder({ name: space.key.toHex() }); // TODO(burdon): Will show up in search results.
               space.properties[Folder.schema.typename] = folder;
-              sharedSpacesFolder.objects.push(folder);
+              sharedSpacesFolder?.objects.push(folder);
               return { space, id: space.key.toHex() };
             }
 
@@ -498,17 +484,25 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               break;
             }
 
-            case SpaceAction.BACKUP: {
+            case SpaceAction.MIGRATE: {
+              const space = intent.data.space;
+              if (space instanceof SpaceProxy) {
+                return Migrations.migrate(space, intent.data.version);
+              }
+              break;
+            }
+
+            case SpaceAction.EXPORT: {
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
                 // TODO(wittjosiah): Expose translations helper from theme plugin provides.
-                const backupBlob = await backupSpace(space, 'unnamed document');
-                const spaceName = space.properties.name || 'unnamed space';
+                const backupBlob = await exportData(space, space.key.toHex());
+                const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
                 const url = URL.createObjectURL(backupBlob);
                 // TODO(burdon): See DebugMain useFileDownload
                 const element = document.createElement('a');
                 element.setAttribute('href', url);
-                element.setAttribute('download', `${spaceName} backup.zip`);
+                element.setAttribute('download', `${filename}.zip`);
                 element.setAttribute('target', 'download');
                 element.click();
                 return true;
@@ -516,7 +510,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               break;
             }
 
-            case SpaceAction.RESTORE: {
+            case SpaceAction.IMPORT: {
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_DIALOG,

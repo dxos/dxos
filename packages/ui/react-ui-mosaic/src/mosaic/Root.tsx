@@ -133,13 +133,13 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   //
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveItem(pick(event.active.data.current as MosaicDraggedItem, 'path', 'item', 'position'));
+    setActiveItem(pick(event.active.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position'));
   };
 
   const handleDragMove = (event: DragMoveEvent) => {};
 
   const handleDragOver = (event: DragOverEvent) => {
-    const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'item', 'position');
+    const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
 
     // If the over item is the same as the active item, do nothing.
     // This happens when moving between containers where a placeholder of itself is rendered where it will be dropped.
@@ -241,11 +241,13 @@ const MosaicDebug: FC<{
         active: {
           id: activeItem?.item?.id.slice(0, 16),
           path: activeItem?.path && Path.create(...Path.parts(activeItem.path).map((part) => part.slice(0, 16))),
+          type: activeItem?.type,
           position: activeItem?.position,
         },
         over: {
           id: overItem?.item?.id.slice(0, 16),
           path: overItem?.path && Path.create(...Path.parts(overItem.path).map((part) => part.slice(0, 16))),
+          type: overItem?.type,
           position: overItem?.position,
         },
       }}

@@ -1,0 +1,34 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-wildcard/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-wildcard/src/index.ts",
+          "packages/apps/plugins/plugin-wildcard/src/meta.ts"
+        ],
+        "outputPath": "packages/apps/plugins/plugin-wildcard/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-wildcard/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

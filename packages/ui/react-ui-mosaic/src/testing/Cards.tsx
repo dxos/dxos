@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Mosaic, type MosaicTileComponent } from '../mosaic';

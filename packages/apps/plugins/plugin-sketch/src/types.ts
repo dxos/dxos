@@ -41,3 +41,6 @@ export interface SketchModel {
 export const isSketch = (data: unknown): data is SketchType => {
   return isTypedObject(data) && SketchType.schema.typename === data.__typename;
 };
+
+// TODO(burdon): Factor out.
+export type Unsubscribe = () => void;

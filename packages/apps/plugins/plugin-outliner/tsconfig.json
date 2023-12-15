@@ -1,0 +1,51 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-stack"
+    }
+  ]
+}

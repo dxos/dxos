@@ -79,6 +79,9 @@
       "path": "../../mesh/teleport"
     },
     {
+      "path": "../../mesh/teleport-extension-automerge-replicator"
+    },
+    {
       "path": "../../mesh/teleport-extension-gossip"
     },
     {
@@ -89,6 +92,9 @@
     },
     {
       "path": "../../protocols"
+    },
+    {
+      "path": "../automerge"
     },
     {
       "path": "../document-model"

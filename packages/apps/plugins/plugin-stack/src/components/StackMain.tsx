@@ -6,47 +6,54 @@ import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
-import { LayoutAction, Surface, useIntent, usePlugin } from '@dxos/app-framework';
-import { type TypedObject, getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
+import {
+  LayoutAction,
+  Surface,
+  parseMetadataResolverPlugin,
+  useIntent,
+  usePlugin,
+  useResolvePlugin,
+} from '@dxos/app-framework';
+import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
-import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
-import { baseSurface, chromeSurface, topbarBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
+import { Stack, type StackProps } from '@dxos/react-ui-stack';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  getSize,
+  surfaceElevation,
+  staticDefaultButtonColors,
+} from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
 import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
-const StackContent = ({ data }: { data: StackSectionItem }) => {
-  // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
-  const object = (data as any).node?.data ?? data;
-  return <Surface role='section' data={{ object }} />;
-};
+const SectionContent: StackProps['SectionContent'] = ({ data }) => <Surface role='section' data={{ object: data }} />;
 
 export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
+  const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
-    .map(({ object }) => object as TypedObject<StackSectionItem>)
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter((object) => Boolean(object));
+    .filter(({ object }) => Boolean(object));
   const space = getSpaceForObject(stack);
   const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
-    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
-    if (!isTypedObject(active.item) && !isTypedObject((active.item as any).node?.data)) {
-      return 'reject';
-    }
+    const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
+    const data = parseData ? parseData(active.item, 'object') : active.item;
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (isStack(active.item) || isStack((active.item as any).node?.data)) {
+    if (!isTypedObject(data) || isStack(data)) {
       return 'reject';
     }
 
@@ -66,17 +73,18 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
       stack.sections.splice(active.position!, 1);
     }
 
-    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
-    const object = ((active.item as any).node?.data ?? active.item) as TypedObject;
-    if (over.path === Path.create(id, over.item.id)) {
+    const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
+    const object = parseData?.(active.item, 'object');
+    // TODO(wittjosiah): Stop creating new section objects for each drop.
+    if (object && over.path === Path.create(id, over.item.id)) {
       stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
-    } else if (over.path === id) {
+    } else if (object && over.path === id) {
       stack.sections.push(new StackType.Section({ object }));
     }
   };
 
   const handleRemove = (path: string) => {
-    const index = stack.sections.findIndex(({ object }) => object.id === Path.last(path));
+    const index = stack.sections.findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
       stack.sections.splice(index, 1);
     }
@@ -98,12 +106,19 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     });
   };
 
+  const handleTransform = (item: MosaicDataItem, type?: string) => {
+    const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
+    return parseData ? parseData(item, 'view-object') : item;
+  };
+
   return (
-    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
-        Component={StackContent}
+        SectionContent={SectionContent}
+        type={StackType.Section.schema.typename}
         items={items}
+        transform={handleTransform}
         onOver={handleOver}
         onDrop={handleDrop}
         onRemoveSection={handleRemove}
@@ -111,7 +126,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
       />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
+        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
               <Button variant='ghost'>

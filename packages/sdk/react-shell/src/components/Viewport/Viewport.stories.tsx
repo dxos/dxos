@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { AlertDialog } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useViewportContext, Viewport, type ViewportScopedProps } from './Viewport';
 import { Action } from '../Panel';
@@ -55,6 +56,8 @@ const StorybookViewport = (props: StorybookViewportProps) => {
 
 export default {
   component: StorybookViewport,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

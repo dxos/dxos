@@ -18,6 +18,7 @@ export const createDefaultModelFactory = () => {
 /**
  * @deprecated
  */
+// TODO(burdon): Normalize API getters.
 export const getSpaceForObject = (object: EchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?._backend.spaceKey;

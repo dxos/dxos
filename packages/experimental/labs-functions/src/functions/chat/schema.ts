@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Triggers.
-
 export type Generator<Subject> = (subject: Subject) => string;
 
 export type PropertyType = {

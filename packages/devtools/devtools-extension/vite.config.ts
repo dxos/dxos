@@ -11,7 +11,6 @@ import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
 import packageJson from './package.json';
 
@@ -47,11 +46,8 @@ export default defineConfig({
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
       ],
-      extensions: [osThemeExtension],
     }),
 
     chromeExtensionPlugin({

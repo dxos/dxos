@@ -13,6 +13,7 @@ export * from './hover';
 export * from './layout';
 export * from './motion';
 export * from './ornament';
+export * from './selected';
 export * from './shimmer';
 export * from './surface';
 export * from './size';

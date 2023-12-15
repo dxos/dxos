@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-inbox",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/app-graph": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -49,6 +50,7 @@
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

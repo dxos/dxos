@@ -5,25 +5,23 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, useCallback, type Ref } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import {
-  type EditorModel,
-  type MarkdownEditorProps,
-  type MarkdownEditorRef,
-  useTextModel,
-} from '@dxos/react-ui-editor';
+import { type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
+import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
+  EditorCard,
   EditorMain,
   EditorMainEmbedded,
+  type EditorMainProps,
   EditorSection,
   MarkdownMainEmpty,
   MarkdownSettings,
@@ -55,14 +53,14 @@ export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.schema.typename === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN);
-  const state = deepSignal<{ onChange: NonNullable<MarkdownEditorProps['onChange']>[] }>({ onChange: [] });
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
+  const state = deepSignal<{ onChange: NonNullable<EditorMainProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
-  const pluginMutableRef: MutableRefObject<MarkdownEditorRef> = {
+  const pluginMutableRef: MutableRefObject<TextEditorRef> = {
     current: { editor: null },
   };
-  const pluginRefCallback: RefCallback<MarkdownEditorRef> = (nextRef: MarkdownEditorRef) => {
+  const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 
@@ -71,7 +69,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     composer: EditorModel;
     properties: MarkdownProperties;
   }> = ({ composer, properties }) => {
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -82,6 +80,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         properties={properties}
         layout='standalone'
         editorMode={settings.values.editorMode}
+        showWidgets={settings.values.showWidgets}
         onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
@@ -90,30 +89,24 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
+      return null;
+    }
 
-    const textModel = useTextModel({
-      identity,
-      space,
-      text: document?.content,
-    });
-
-    const onChange: NonNullable<MarkdownEditorProps['onChange']> = useCallback(
+    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
 
-    if (!textModel) {
-      return null;
-    }
-
     return (
       <EditorMain
-        model={textModel}
+        model={model}
         properties={document}
         layout='standalone'
         editorMode={settings.values.editorMode}
+        showWidgets={settings.values.showWidgets}
         onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
@@ -124,24 +117,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
-
-    const textModel = useTextModel({
-      identity,
-      space,
-      text: document?.content,
-    });
-
-    if (!textModel) {
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
       return null;
     }
 
-    return <StandaloneMenu properties={document} model={textModel} editorRef={pluginMutableRef} />;
+    return <StandaloneMenu properties={document} model={model} editorRef={pluginMutableRef} />;
   };
 
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string);
+      settings
+        .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
+        .prop(settings.values.$showWidgets!, 'show-widgets', LocalStorageStore.bool);
 
       const filters: ((document: Document) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
@@ -214,6 +203,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
+        // TODO(burdon): Deprecated? Remove?
         choosers: [
           {
             id: 'choose-stack-section-doc',
@@ -225,8 +215,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
-          // TODO(burdon): Document.
+        component: ({ data, role, ...props }, forwardedRef) => {
           // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {
@@ -263,7 +252,31 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (isDocument(data.object) && isMarkdown(data.object.content)) {
-                return <EditorSection content={data.object.content} />;
+                return (
+                  <EditorSection
+                    model={data.object.content}
+                    editorMode={settings.values.editorMode}
+                    showWidgets={settings.values.showWidgets}
+                  />
+                );
+              }
+              break;
+            }
+
+            case 'card': {
+              if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+                const cardProps = {
+                  ...props,
+                  item: {
+                    id: data.content.id,
+                    object: data.content.object,
+                    color: typeof data.content.color === 'string' ? data.content.color : undefined,
+                  },
+                };
+
+                return isTileComponentProps(cardProps) ? (
+                  <EditorCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
+                ) : null;
               }
               break;
             }

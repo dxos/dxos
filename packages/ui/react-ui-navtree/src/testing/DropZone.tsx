@@ -17,7 +17,7 @@ export const DropZone = () => {
 
   return (
     <Mosaic.Container id='dropzone' onOver={handleOver} onDrop={handleDrop}>
-      <Mosaic.DroppableTile Component={DropComponent} path='dropzone' item={{ id: 'dropzone', node: item?.node }} />
+      <Mosaic.DroppableTile Component={DropComponent} path='dropzone' item={{ id: 'dropzone', node: item }} />
     </Mosaic.Container>
   );
 };
@@ -32,10 +32,10 @@ const DropComponent: MosaicTileComponent<NavTreeItemData> = forwardRef(({ isOver
         isOver && 'bg-gray-200 border-solid',
       )}
     >
-      {item.node ? (
+      {item ? (
         <>
-          {item.node.icon && <item.node.icon />}
-          {Array.isArray(item.node.label) ? t(...item.node.label) : item.node.label}
+          {item.icon && <item.icon />}
+          {Array.isArray(item.label) ? t(...item.label) : item.label}
         </>
       ) : (
         'Drop Zone'

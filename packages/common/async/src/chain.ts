@@ -10,7 +10,7 @@ type Transform = (...args: any) => Promise<any>;
 export const asyncChain =
   <T>(chain: Transform[]) =>
   async (elements: Promise<T[]>) => {
-    let result = await Promise.resolve(elements);
+    let result = await elements;
     for (const part of chain) {
       result = await Promise.all(result.map(async (element) => await part(element)));
     }
