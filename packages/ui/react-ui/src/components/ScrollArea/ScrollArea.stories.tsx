@@ -34,6 +34,7 @@ const StorybookScrollArea = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export default {
+  title: 'DXOS UI/Scroll area',
   component: StorybookScrollArea,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
