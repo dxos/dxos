@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, Lock } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
@@ -193,10 +193,13 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _bind(options: BindOptions) {
+    const binded = new Trigger();
     this._database = options.db;
     this._docHandle = options.docHandle;
-    this._docHandle.on('change', (event) => {
+    this._docHandle.on('change', async (event) => {
       if (objectIsUpdated(this._id, event)) {
+        // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
+        await binded.wait();
         this._notifyUpdate();
       }
     });
@@ -219,6 +222,7 @@ export class AutomergeObject implements TypedObjectProperties {
       this._doc = undefined;
       this._set([], doc);
     }
+    binded.wake();
   }
 
   private _createProxy(path: string[]): any {
