@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, Lock } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
@@ -405,7 +405,7 @@ export class AutomergeObject implements TypedObjectProperties {
         return new Reference(obj.id);
       } else {
         if ((obj[base]._database as any) !== this._database) {
-          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
         } else {
           return new Reference(obj.id);
         }
@@ -442,8 +442,12 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   // TODO(mykola): Unify usage of `_notifyUpdate`.
   private _notifyUpdate = () => {
-    this._signal.notifyWrite();
-    this._updates.emit();
+    try {
+      this._signal.notifyWrite();
+      this._updates.emit();
+    } catch (err) {
+      log.catch(err);
+    }
   };
 
   /**
