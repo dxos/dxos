@@ -8091,6 +8091,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

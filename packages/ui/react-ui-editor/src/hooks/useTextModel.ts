@@ -86,6 +86,7 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
     return undefined;
   }
 
+  // TODO(burdon): Remove dependency on schema.
   return {
     id: text.doc.guid,
     content: text.content,
