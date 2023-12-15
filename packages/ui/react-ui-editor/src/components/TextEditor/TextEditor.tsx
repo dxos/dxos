@@ -6,6 +6,7 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
+import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
   type ComponentProps,
   type KeyboardEvent,
@@ -19,7 +20,7 @@ import React, {
 import { useThemeContext } from '@dxos/react-ui';
 import { inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { baseTheme, basicBundle, markdownBundle } from './extensions';
+import { baseTheme, basicBundle, markdownBundle, textTheme } from './extensions';
 import { type EditorModel, useCollaboration } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 
@@ -49,12 +50,6 @@ export type TextEditorSlots = {
     tabIndex?: number;
     theme?: ThemeStyles;
   };
-};
-
-export const defaultSlots: TextEditorSlots = {
-  root: {
-    className: mx(inputSurface, 'p-2'),
-  },
 };
 
 export type TextEditorProps = {
@@ -153,8 +148,9 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 
 // TODO(burdon): Set default text theme?
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions = [], slots, ...props }, forwardedRef) => {
+  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
+    const slots = defaultsDeep({}, _slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -167,8 +163,9 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 );
 
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions = [], slots, ...props }, forwardedRef) => {
+  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
+    const slots = defaultsDeep({}, _slots, defaultSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -179,3 +176,16 @@ export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
     );
   },
 );
+
+export const defaultSlots: TextEditorSlots = {
+  root: {
+    className: mx(inputSurface, 'p-2'),
+  },
+};
+
+export const defaultTextSlots: TextEditorSlots = {
+  ...defaultSlots,
+  editor: {
+    theme: textTheme,
+  },
+};
