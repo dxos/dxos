@@ -552,7 +552,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
         return new Reference(obj.id);
       } else {
         if (obj[base]._database !== this._database) {
-          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
         } else {
           return new Reference(obj.id);
         }
