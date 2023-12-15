@@ -5,16 +5,14 @@
 import get from 'lodash.get';
 import { type StyleSpec } from 'style-mod';
 
-import { tokens } from '../../../../styles';
-
-// TODO(burdon): Reconcile with markdown theme. Create base with overrides.
-//  E.g., options for font.
+import { tokens } from '../../../styles';
 
 /**
  * Minimal styles.
  * https://codemirror.net/examples/styling
+ * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  */
-export const basicTheme: {
+export const baseTheme: {
   [selector: string]: StyleSpec;
 } = {
   //
@@ -24,43 +22,39 @@ export const basicTheme: {
   '&.cm-focused': {
     outline: 'none',
   },
-
-  //
-  // main content
-  //
-  '.cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  '& .cm-scroller': {
     overflow: 'visible',
   },
-  '.cm-content': {
+  '& .cm-content': {
     padding: 0,
   },
   '&light .cm-content': {
-    caretColor: 'red',
+    caretColor: 'black',
   },
   '&dark .cm-content': {
-    caretColor: 'blue',
+    caretColor: 'white',
   },
 
   //
   // placeholder
   //
-  '.cm-placeholder': {
+  '& .cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    fontWeight: 100,
   },
 
   //
   // line
   //
-  '.cm-line': {
+  '& .cm-line': {
     paddingInline: 0,
     lineHeight: 1.6,
     minBlockSize: '1.6em',
   },
-  '.cm-line *': {
+  '& .cm-line *': {
     lineHeight: 1.6,
   },
-  '.cm-activeLine': {
+  '& .cm-activeLine': {
     backgroundColor: 'transparent',
   },
 
@@ -69,10 +63,10 @@ export const basicTheme: {
   // TODO(burdon): Review.
   //
 
-  '&light .cm-selectionBackground, &light &.cm-focused .cm-selectionBackground': {
+  '&light .cm-selectionBackground, &light.cm-focused .cm-selectionBackground': {
     background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
   },
-  '&dark .cm-selectionBackground, &dark &.cm-focused .cm-selectionBackground': {
+  '&dark .cm-selectionBackground, &dark.cm-focused .cm-selectionBackground': {
     background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
   },
 
@@ -90,39 +84,39 @@ export const basicTheme: {
     mixBlendMode: 'screen',
   },
 
-  '.cm-ySelectionInfo': {
+  '& .cm-ySelectionInfo': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     padding: '2px 4px',
     marginBlockStart: '-4px',
   },
-  '.cm-ySelection, .cm-selectionMatch': {
+  '& .cm-ySelection, & .cm-selectionMatch': {
     paddingBlockStart: '.15em',
     paddingBlockEnd: '.15em',
   },
-  '.cm-ySelectionCaret': {
+  '& .cm-ySelectionCaret': {
     display: 'inline-block',
     insetBlockStart: '.1em',
     blockSize: '1.4em',
     verticalAlign: 'top',
   },
-  '.cm-yLineSelection': {
+  '& .cm-yLineSelection': {
     margin: '0',
   },
 
   //
   // tooltip
   //
-  '.cm-tooltip': {
+  '& .cm-tooltip': {
     backgroundColor: 'white', // TODO(burdon): Input surface.
     border: 'none',
   },
-  // '.cm-tooltip-below': {},
-  // '.cm-tooltip-autocomplete': {},
+  // '& .cm-tooltip-below': {},
+  // '& .cm-tooltip-autocomplete': {},
 
   //
   // link
   //
-  '.cm-link': {
+  '& .cm-link': {
     color: get(tokens, 'extend.colors.primary.500'),
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
@@ -142,4 +136,20 @@ export const basicTheme: {
     acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
     return acc;
   }, {}),
+};
+
+export const textTheme: {
+  [selector: string]: StyleSpec;
+} = {
+  '& .cm-scroller': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+};
+
+export const codeTheme: {
+  [selector: string]: StyleSpec;
+} = {
+  '& .cm-scroller': {
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+  },
 };

@@ -6,3 +6,4 @@ export * from './basic';
 export * from './change';
 export * from './hyperlink';
 export * from './markdown';
+export * from './theme';

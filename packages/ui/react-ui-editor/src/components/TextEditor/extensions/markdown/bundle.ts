@@ -29,12 +29,11 @@ import {
   placeholder,
   rectangularSelection,
 } from '@codemirror/view';
-// import { GFM } from '@lezer/markdown';
+import { GFM } from '@lezer/markdown';
 
 import type { ThemeMode } from '@dxos/react-ui';
 
-import { markdownHighlightStyle } from './highlight';
-import { markdownTagsExtension } from './tags';
+import { markdownHighlightStyle, markdownTagsExtension } from './highlight';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
@@ -86,7 +85,7 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
         // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
         // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
         // https://github.github.com/gfm
-        // GFM,
+        GFM,
 
         // Custom styling.
         markdownTagsExtension,

@@ -6,7 +6,6 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
-import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import React, {
   type ComponentProps,
@@ -21,9 +20,9 @@ import React, {
 import { isDocAccessor } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 
-import { basicBundle, basicTheme, markdownBundle, markdownTheme } from './extensions';
+import { basicBundle, baseTheme, markdownBundle, textTheme } from './extensions';
 import { type EditorModel, useCollaboration } from '../../hooks';
-import type { ThemeStyles } from '../../styles';
+import { type ThemeStyles } from '../../styles';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
@@ -93,25 +92,26 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           // TODO(burdon): Factor out VIM mode?
           editorMode === 'vim' && vim(),
 
+          // Theme.
+          EditorView.baseTheme(baseTheme),
+          EditorView.theme(slots?.editor?.theme ?? textTheme),
+          // TODO(burdon): themeMode doesn't change in storybooks.
+          EditorView.darkTheme.of(themeMode === 'dark'),
+
           // Replication.
           collaboration,
-
-          // Theme.
-          slots?.editor?.theme && EditorView.baseTheme(slots?.editor?.theme),
-          EditorView.theme({}, { dark: themeMode === 'dark' }),
 
           // Custom.
           ...extensions,
         ].filter(Boolean) as Extension[],
       });
 
-      setState(state);
-
       // NOTE: This repaints the editor.
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
       // Ideally this should not be hit except when changing between text objects.
       view?.destroy();
       setView(new EditorView({ state, parent: root }));
+      setState(state);
 
       return () => {
         view?.destroy();
@@ -155,14 +155,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const extensions = [...(_extensions ?? []), basicBundle({ themeMode, placeholder: slots?.editor?.placeholder })];
-    return (
-      <BaseTextEditor
-        ref={forwardedRef}
-        extensions={extensions}
-        slots={defaultsDeep({}, slots, { editor: { theme: basicTheme } })}
-        {...props}
-      />
-    );
+    return <BaseTextEditor ref={forwardedRef} extensions={extensions} slots={slots} {...props} />;
   },
 );
 
@@ -170,13 +163,6 @@ export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const extensions = [...(_extensions ?? []), markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder })];
-    return (
-      <BaseTextEditor
-        ref={forwardedRef}
-        extensions={extensions}
-        slots={defaultsDeep({}, slots, { editor: { theme: markdownTheme } })}
-        {...props}
-      />
-    );
+    return <BaseTextEditor ref={forwardedRef} extensions={extensions} slots={slots} {...props} />;
   },
 );

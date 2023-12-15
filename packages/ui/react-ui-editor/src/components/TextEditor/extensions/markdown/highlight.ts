@@ -4,12 +4,52 @@
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { HighlightStyle } from '@codemirror/language';
-import { tags } from '@lezer/highlight';
+import { tags, styleTags, Tag } from '@lezer/highlight';
+import { type MarkdownConfig } from '@lezer/markdown';
 import get from 'lodash.get';
 
-import { markdownTags } from './tags';
 import { bold, heading, italic, mark, strikethrough, tokens } from '../../../../styles';
 
+export const markdownTags = {
+  headingMark: Tag.define(),
+  quoteMark: Tag.define(),
+  listMark: Tag.define(),
+  linkMark: Tag.define(),
+  emphasisMark: Tag.define(),
+  codeBlock: Tag.define(),
+  codeMark: Tag.define(),
+  codeText: Tag.define(),
+  inlineCode: Tag.define(),
+  url: Tag.define(),
+  linkReference: Tag.define(),
+  linkLabel: Tag.define(),
+};
+
+/**
+ * https://github.com/lezer-parser/highlight
+ * https://github.com/lezer-parser/markdown
+ * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
+ */
+export const markdownTagsExtension: MarkdownConfig = {
+  props: [
+    styleTags({
+      HeaderMark: markdownTags.headingMark,
+      QuoteMark: markdownTags.quoteMark,
+      ListMark: markdownTags.listMark,
+      LinkMark: markdownTags.linkMark,
+      EmphasisMark: markdownTags.emphasisMark,
+      CodeBlock: markdownTags.codeBlock,
+      CodeText: markdownTags.codeText,
+      CodeMark: markdownTags.codeMark,
+      InlineCode: markdownTags.inlineCode,
+      URL: markdownTags.url,
+      LinkReference: markdownTags.linkReference,
+      LinkLabel: markdownTags.linkLabel,
+    }),
+  ],
+};
+
+// TODO(burdon): Replace with class assignment.
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
 export const markdownHighlightStyle = HighlightStyle.define(
@@ -77,7 +117,10 @@ export const markdownHighlightStyle = HighlightStyle.define(
       ],
       class: mark,
     },
-    { tag: [markdownTags.codeText, markdownTags.inlineCode], class: 'font-mono' },
+    {
+      tag: [markdownTags.codeBlock, markdownTags.codeText, markdownTags.inlineCode],
+      fontFamily: monospace,
+    },
     { tag: tags.emphasis, class: italic },
     { tag: tags.heading1, class: heading[1] },
     { tag: tags.heading2, class: heading[2] },
@@ -88,5 +131,8 @@ export const markdownHighlightStyle = HighlightStyle.define(
     { tag: tags.strikethrough, class: strikethrough },
     { tag: tags.strong, class: bold },
   ],
-  { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } },
+  {
+    scope: markdownLanguage,
+    all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') },
+  },
 );
