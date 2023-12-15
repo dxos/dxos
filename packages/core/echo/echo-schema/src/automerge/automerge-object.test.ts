@@ -50,6 +50,7 @@ describe('AutomergeObject', () => {
     task2.previous = task1;
 
     expect(contact.tasks[0]).to.eq(task1);
+    expect(contact.tasks[1]).to.eq(task2);
     expect(task2.previous).to.eq(task1);
   });
 });
