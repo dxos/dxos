@@ -18,6 +18,9 @@ parameters:
     default: false
 
 aliases:
+  # https://github.com/dxos/dxos/issues/4946
+  # - &node-version [ "18.19.0", "20.10.0", "21.4.0" ]
+  - &node-version [ "18.19.0", "20.10.0"]
   - &docker_image_default
     image: ghcr.io/dxos/circleci-node:latest
     auth:
@@ -217,7 +220,7 @@ workflows:
             - Github
           matrix:
             parameters:
-              node-version: [ "18.19.0", "20.10.0", "21.4.0" ]
+              node-version: *node-version
 
   e2e:
     when: << pipeline.parameters.e2e >>
@@ -227,7 +230,7 @@ workflows:
             - Github
           matrix:
             parameters:
-              node-version: [ "18.19.0", "20.10.0", "21.4.0" ]
+              node-version: *node-version
 
   deploy:
     jobs:
