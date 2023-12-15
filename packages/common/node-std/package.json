@@ -1,6 +1,6 @@
 {
   "name": "@dxos/node-std",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Simple wrapper for browser replacements of node stdlib modules within the DXOS codebase.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,6 +11,7 @@
     "./crypto": "./dist/lib/browser/crypto.mjs",
     "./events": "./dist/lib/browser/events.mjs",
     "./globals": "./dist/lib/browser/globals.mjs",
+    "./inject-globals": "./dist/lib/browser/inject-globals.mjs",
     "./path": "./dist/lib/browser/path.mjs",
     "./stream": "./dist/lib/browser/stream.mjs",
     "./util": "./dist/lib/browser/util.mjs",

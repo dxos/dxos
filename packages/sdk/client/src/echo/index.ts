@@ -11,6 +11,7 @@ export {
   debug,
   subscribe,
   createSubscription,
+  hasType,
   isTypedObject,
   EchoDatabase,
   Expando,
@@ -21,6 +22,12 @@ export {
   TypeCollection,
   TextObject,
   TypedObject,
+  getGlobalAutomergePreference, // TODO(dmaretskyi): Remove.
+  getRawDoc,
+  isActualAutomergeObject,
+  isDocAccessor,
+  type AutomergeTextCompat,
+  type DocAccessor,
   type EchoObject, // TODO(burdon): Remove from API?
   type FilterSource,
   type ObjectMeta,

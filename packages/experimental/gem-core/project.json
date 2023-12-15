@@ -10,19 +10,7 @@
         ]
       }
     },
-    "lint": {},
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/experimental/gem-core/.storybook",
-        "uiFramework": "@storybook/react"
-      }
-    }
+    "lint": {}
   },
   "implicitDependencies": [
     "test"

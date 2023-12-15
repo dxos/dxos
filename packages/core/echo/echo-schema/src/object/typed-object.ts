@@ -25,7 +25,7 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
-import { AutomergeObject } from '../automerge/automerge-object';
+import { AutomergeObject } from '../automerge';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -72,6 +72,9 @@ export type TypedObjectOptions = {
   type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
+} & AutomergeOptions;
+
+export type AutomergeOptions = {
   useAutomergeBackend?: boolean;
 };
 
@@ -82,6 +85,10 @@ export type TypedObjectOptions = {
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
+  static [Symbol.hasInstance](instance: any) {
+    return !!instance?.[base] && (isActualTypedObject(instance) || isActualAutomergeObject(instance));
+  }
+
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
@@ -125,7 +132,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     if (this._schema) {
       for (const field of this._schema.props) {
         if (field.repeated) {
-          this._set(field.id!, new EchoArray());
+          this._set(field.id!, new EchoArray([], { useAutomergeBackend: false }));
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { TextObject } = require('./text-object');
@@ -342,7 +349,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray()._attach(this[base], key, meta);
+        return new EchoArray([], { useAutomergeBackend: false })._attach(this[base], key, meta);
       default:
         return value;
     }
@@ -615,7 +622,7 @@ export const Expando: ExpandoConstructor = TypedObject;
 
 export type Expando = TypedObject;
 
-let mutationOverride = false;
+export let mutationOverride = false;
 
 // TODO(burdon): Document.
 export const dangerouslyMutateImmutableObject = (cb: () => void) => {
@@ -643,10 +650,16 @@ const getSchemaProto = (): typeof Schema => {
 // TODO(dmaretskyi): Remove once migration is complete.
 let globalAutomergePreference: boolean | undefined;
 
+/**
+ * @deprecated Temporary.
+ */
 export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
   globalAutomergePreference = useAutomerge;
 };
 
+/**
+ * @deprecated Temporary.
+ */
 export const getGlobalAutomergePreference = () => {
   return (
     globalAutomergePreference ??
@@ -654,4 +667,18 @@ export const getGlobalAutomergePreference = () => {
     (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
     false
   );
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

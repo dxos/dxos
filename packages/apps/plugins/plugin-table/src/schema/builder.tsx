@@ -17,7 +17,6 @@ import {
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
-import { stripUndefinedValues } from '@dxos/util';
 
 import { createUniqueProp } from './types';
 
@@ -69,7 +68,7 @@ export const createColumns = (
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
 
-    const options: BaseColumnOptions<TypedObject, any> = stripUndefinedValues({
+    const options: BaseColumnOptions<TypedObject, any> = {
       ...props,
       meta: { resizable },
       label,
@@ -86,7 +85,7 @@ export const createColumns = (
             />
           ),
       onUpdate: onRowUpdate,
-    });
+    };
 
     switch (type) {
       case 'ref':
@@ -129,7 +128,7 @@ export const createActionColumn = (
 
   return helper.display({
     id: '__new',
-    size: 40,
+    size: 36,
     meta: {
       header: {
         classNames: 'p-0',
@@ -144,7 +143,7 @@ export const createActionColumn = (
     // TODO(burdon): Translation.
     header: onColumnUpdate
       ? () => (
-          <Button variant='ghost' onClick={handleAddColumn} title='New column'>
+          <Button variant='ghost' onClick={handleAddColumn} title='New column' classNames='p-1 mli-1.5'>
             <Plus className={getSize(4)} />
           </Button>
         )
@@ -152,7 +151,12 @@ export const createActionColumn = (
     cell: onRowDelete
       ? (cell) =>
           cell.row.original.id ? (
-            <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)} title='Delete row'>
+            <Button
+              variant='ghost'
+              onClick={() => onRowDelete(cell.row.original)}
+              title='Delete row'
+              classNames='rounded-none'
+            >
               <X className={getSize(4)} />
             </Button>
           ) : null

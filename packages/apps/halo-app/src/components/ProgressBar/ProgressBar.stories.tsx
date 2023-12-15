@@ -6,10 +6,13 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { ProgressBar } from './ProgressBar';
 
 export default {
   component: ProgressBar,
+  decorators: [withTheme],
   actions: { argTypesRegex: '^on.*' },
 };
 

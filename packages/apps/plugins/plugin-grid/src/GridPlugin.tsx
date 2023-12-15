@@ -29,6 +29,18 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: (props: IconProps) => <SquaresFour {...props} />,
           },
+          [GridType.Item.schema.typename]: {
+            parse: (item: GridType.Item, type: string) => {
+              switch (type) {
+                case 'node':
+                  return { id: item.object.id, label: item.object.title, data: item.object };
+                case 'object':
+                  return item.object;
+                case 'view-object':
+                  return item;
+              }
+            },
+          },
         },
       },
       translations,

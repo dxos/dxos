@@ -77,7 +77,7 @@ A service worker and the CRDT-based architecture of ECHO enable both offline and
 
 ![HALO Vault Topology Diagram](./images/topology.drawio.svg)
 
-This means that when apps request the user's identity (ask to log in), they are in fact obtaining a secure identifier from the local HALO application directly, without making any network calls. Any reads and writes end up storing data in a database owned by the `halo.dxos.com` application, which serves as an identity wallet and data vault where specific devices or applications can be revoked from accessing user data at any time.
+This means that when apps request the user's identity (ask to log in), they are in fact obtaining a secure identifier from the local HALO application directly, without making any network calls. Any reads and writes end up storing data in a database owned by the `halo.dxos.org` application, which serves as an identity wallet and data vault where specific devices or applications can be revoked from accessing user data at any time.
 
 ::: note
 For Node.js applications, the vault is implemented by an in-process storage engine that persists to files on disk, and is not isolated from the consuming application the way it is in browser.

@@ -6,25 +6,24 @@ import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
 import { TestSchemaType } from '@dxos/echo-generator';
 import { type Schema, Expando, type ForeignKey } from '@dxos/echo-schema';
-import { type FunctionSubscriptionEvent, type FunctionHandler } from '@dxos/functions';
+import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 type GithubContributors = RestEndpointMethodTypes['repos']['listContributors']['response']['data'];
 
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context }) => {
+export const handler = subscriptionHandler(async ({ event, context }) => {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+  const { space, objects } = event;
+  if (!space || !objects?.length) {
+    return;
+  }
 
-  for (const objectId of event.objects) {
-    const space = context.client.spaces.get(PublicKey.from(event.space));
-    invariant(space);
-    await space.waitUntilReady();
-
-    const project = context.client.spaces.query({ id: objectId }).objects[0];
-    if (!project || !project.repo || !project.repo.includes('github.com') || project.__meta.keys.length !== 0) {
+  for (const project of objects) {
+    if (!project.repo || !project.repo.includes('github.com') || project.__meta.keys.length !== 0) {
       return;
     }
+
     const [owner, repo] = new URL(project.repo).pathname.split('/').slice(1, 3);
 
     //
@@ -111,4 +110,4 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
     // TODO(burdon): Make automatic.
     await space.db.flush();
   }
-};
+});

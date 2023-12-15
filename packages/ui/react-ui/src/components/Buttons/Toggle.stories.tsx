@@ -8,6 +8,7 @@ import { TextB } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Toggle } from './Toggle';
+import { withTheme } from '../../testing';
 
 type StorybookToggleProps = {};
 
@@ -21,6 +22,7 @@ const StorybookToggle = (props: StorybookToggleProps) => {
 
 export default {
   component: StorybookToggle,
+  decorators: [withTheme],
 };
 
 export const Default = {

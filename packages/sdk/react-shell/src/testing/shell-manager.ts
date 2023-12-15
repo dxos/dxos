@@ -24,7 +24,7 @@ export class ShellManager {
   }
 
   async inputInvitation(type: 'device' | 'space', invitation: string, scope?: Scope) {
-    await (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).type(invitation);
+    await (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).fill(invitation);
     await this.page.keyboard.press('Enter');
   }
 

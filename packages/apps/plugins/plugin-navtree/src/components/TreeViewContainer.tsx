@@ -34,6 +34,8 @@ import { VersionInfo } from './VersionInfo';
 import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
 
+export const NODE_TYPE = 'dxos/app-graph/node';
+
 const getMosaicPath = (graph: Graph, id: string) => {
   const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
   return parts ? Path.create('root', ...parts) : undefined;
@@ -245,6 +247,7 @@ export const TreeViewContainer = ({
             <NavTree
               node={graph.root}
               current={currentPath}
+              type={NODE_TYPE}
               onSelect={handleSelect}
               isOver={isOver}
               onOver={handleOver}

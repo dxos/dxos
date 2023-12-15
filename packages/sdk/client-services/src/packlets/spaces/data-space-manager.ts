@@ -5,7 +5,13 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { type CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
-import { type DataServiceSubscriptions, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import {
+  type AutomergeHost,
+  type DataServiceSubscriptions,
+  type MetadataStore,
+  type Space,
+  type SpaceManager,
+} from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -71,6 +77,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
+    private readonly _automergeHost: AutomergeHost,
   ) {}
 
   // TODO(burdon): Remove.
@@ -135,7 +142,9 @@ export class DataSpaceManager {
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner);
+    const automergeRoot = this._automergeHost.repo.create();
+
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, automergeRoot.url);
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
@@ -219,6 +228,7 @@ export class DataSpaceManager {
           gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+        session.addExtension('dxos.mesh.teleport.automerge', this._automergeHost.createExtension());
       },
       onAuthFailure: () => {
         log.warn('auth failure');
@@ -257,6 +267,7 @@ export class DataSpaceManager {
         },
       },
       cache: metadata.cache,
+      automergeHost: this._automergeHost,
     });
 
     if (metadata.state !== SpaceState.INACTIVE) {

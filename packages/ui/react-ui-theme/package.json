@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-theme",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "@tailwindcss/forms": "^0.5.3",
     "autoprefixer": "^10.4.12",
     "esbuild-style-plugin": "^1.6.1",
+    "glob": "~7.1.6",
     "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
     "postcss": "^8.4.21",

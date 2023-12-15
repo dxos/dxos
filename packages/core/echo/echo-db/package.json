@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,11 +51,11 @@
   },
   "devDependencies": {
     "@automerge/automerge": "^2.1.7",
-    "@automerge/automerge-repo": "^1.0.17",
+    "@automerge/automerge-repo": "^1.0.19",
     "@dxos/feed-store": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/typings": "workspace:*",
-    "yjs": "^13.6.8"
+    "yjs": "^13.6.10"
   },
   "publishConfig": {
     "access": "public"

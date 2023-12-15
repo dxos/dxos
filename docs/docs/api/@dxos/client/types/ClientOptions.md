@@ -23,4 +23,10 @@ Type: <code>MaybePromise&lt;ClientServicesProvider&gt;</code>
 Custom services provider.
 
 
+### [types](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L45)
+Type: <code>TypeCollection</code>
+
+Types.
+
+
 

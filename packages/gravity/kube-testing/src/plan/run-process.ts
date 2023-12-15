@@ -47,6 +47,7 @@ export const runNode = <S, C>(
     );
   }
 
+  const startTs = performance.now();
   const childProcess = fork(process.argv[1], {
     execArgv: options.debug
       ? [
@@ -84,6 +85,8 @@ export const runNode = <S, C>(
           result: exitCode ?? -1,
           outDir: agentParams.outDir,
           logFile: join(agentParams.outDir, AGENT_LOG_FILE),
+          startTs,
+          endTs: performance.now(),
         });
       });
       // TODO(nf): add timeout for agent completion
@@ -106,10 +109,24 @@ export const runBrowser = <S, C>(
     const start = Date.now();
     invariant(agentParams.runtime.platform);
 
-    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, { headless: true });
+    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, {
+      headless: options.headless ?? true,
+    });
     ctx.onDispose(async () => {
       await page.close();
       await context.close();
+    });
+
+    page.on('crash', () => {
+      log.error('page crashed');
+    });
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        log.error('page console error', { msg });
+      }
+    });
+    page.on('pageerror', (error) => {
+      log.error('page error', { error });
     });
 
     const fileProcessor = createFileProcessor({
@@ -154,7 +171,7 @@ export const runBrowser = <S, C>(
         GRAVITY_SPEC: planName,
       })}
     </script>
-    <script src="index.js"></script>
+    <script type="module" src="index.js"></script>
   </body>
   </html>
   `,

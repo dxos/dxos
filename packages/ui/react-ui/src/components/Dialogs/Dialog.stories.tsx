@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Dialog } from './Dialog';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 type StorybookDialogProps = Partial<{
@@ -39,6 +40,7 @@ const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger }
 
 export default {
   component: StorybookDialog,
+  decorators: [withTheme],
 };
 
 export const Default = {
