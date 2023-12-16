@@ -3,63 +3,46 @@
 //
 
 import '@dxosTheme';
-import { markdown } from '@codemirror/lang-markdown';
-import { ArrowCircleUp } from '@phosphor-icons/react';
-import React, { StrictMode, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+
+import defaultsDeep from 'lodash.defaultsdeep';
+import React, { useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
-import { fixedInsetFlexLayout, getSize, groupSurface, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { TextEditor } from './TextEditor';
-import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
+import { defaultSlots, TextEditor, type TextEditorProps, type TextEditorRef, type TextEditorSlots } from './TextEditor';
+import { textTheme } from './themes';
 import { useTextModel } from '../../hooks';
 
-const text = [
+const initialText = [
+  '# TextEditor',
   '',
+  'This is the basic plain text editor within minimal formatting.',
+  'You can add custom styles and create custom extensions.',
+  'Or use the MarkdownEditor to edit documents.',
   '',
-  'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
-  '',
-  '',
+  'https://dxos.org',
 ].join('\n');
 
-const hyperLinkTooltip = () =>
-  createHyperlinkTooltip((el, url) => {
-    const web = new URL(url);
-    createRoot(el).render(
-      <StrictMode>
-        <div className='flex gap-1 items-center'>
-          <ArrowCircleUp className={mx(getSize(6), 'text-blue-500')} />
-          <p className='pr-1'>{web.origin}</p>
-        </div>
-      </StrictMode>,
-    );
-  });
-
-const Story = ({ automerge }: { automerge?: boolean }) => {
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: !!automerge }) });
+const Story = ({
+  text,
+  automerge,
+  ...props
+}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'extensions' | 'slots'>) => {
+  const ref = useRef<TextEditorRef>(null);
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
-    return <></>;
+    return null;
   }
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center p-8'>
-        <div className='w-[800px]'>
-          <TextEditor
-            model={model}
-            extensions={[
-              markdown(),
-              hyperlinkDecoration({ link: false }),
-              hyperLinkTooltip(),
-              // EditorView.domEventHandlers({
-              //   mousedown: (e, view) => {},
-              // }),
-            ]}
-            slots={{ root: { className: mx(inputSurface, 'p-2') } }}
-          />
+      <div className='flex justify-center overflow-y-scroll'>
+        <div className='flex flex-col w-[800px] py-16'>
+          <TextEditor ref={ref} model={model} {...props} />
+          <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
     </div>
@@ -67,13 +50,33 @@ const Story = ({ automerge }: { automerge?: boolean }) => {
 };
 
 export default {
+  title: 'react-ui-editor/TextEditor',
   component: TextEditor,
   decorators: [withTheme],
   render: Story,
 };
 
-export const Default = {};
+export const Default = {
+  render: () => (
+    <Story
+      text={initialText}
+      slots={defaultsDeep(
+        { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
+        defaultSlots,
+      )}
+    />
+  ),
+};
 
 export const Automerge = {
-  render: () => <Story automerge />,
+  render: () => (
+    <Story
+      text={initialText}
+      slots={defaultsDeep(
+        { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
+        defaultSlots,
+      )}
+      automerge
+    />
+  ),
 };
