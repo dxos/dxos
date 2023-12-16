@@ -9,7 +9,7 @@ import React, { type FC, type MutableRefObject, type RefCallback, useCallback, t
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Document, Folder } from '@braneframe/types';
+import { Document as DocumentType, Folder } from '@braneframe/types';
 import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
@@ -49,8 +49,8 @@ import {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Document.name] = Document;
 
-export const isDocument = (data: unknown): data is Document =>
-  isTypedObject(data) && Document.schema.typename === data.__typename;
+export const isDocument = (data: unknown): data is DocumentType =>
+  isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
@@ -61,7 +61,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     pluginMutableRef.current = { ...nextRef };
   };
 
-  // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc. Should these components be inline or external?
+  // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc.
+  //  Should these components be inline or external?
   const EditorMainStandalone: FC<{
     composer: EditorModel;
     properties: MarkdownProperties;
@@ -84,13 +85,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
-  const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
+  const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
     if (!model) {
       return null;
     }
+
+    const handleSearch = () => {
+      // TODO(burdon): Specify filter (e.g., stack).
+      const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
+      return objects.map((object) => ({
+        text: object.title,
+        url: object.id,
+      }));
+    };
 
     const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
@@ -105,12 +115,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         editorMode={settings.values.editorMode}
         showWidgets={settings.values.showWidgets}
         onChange={onChange}
+        onSearch={handleSearch}
         editorRefCb={pluginRefCallback}
       />
     );
   };
 
-  const StandaloneMainMenu: FC<{ content: Document }> = ({ content: document }) => {
+  const StandaloneMainMenu: FC<{ content: DocumentType }> = ({ content: document }) => {
     const identity = useIdentity();
     // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
@@ -129,7 +140,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
         .prop(settings.values.$showWidgets!, 'show-widgets', LocalStorageStore.bool);
 
-      const filters: ((document: Document) => boolean)[] = [];
+      const filters: ((document: DocumentType) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
           state.onChange.push(plugin.provides.markdown.onChange);
@@ -145,7 +156,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       translations,
       metadata: {
         records: {
-          [Document.schema.typename]: {
+          [DocumentType.schema.typename]: {
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <ArticleMedium {...props} />,
           },
@@ -178,7 +189,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 testId: 'markdownPlugin.createDocument',
               },
             });
-          } else if (parent.data instanceof Document && !parent.data.title) {
+          } else if (parent.data instanceof DocumentType && !parent.data.title) {
             return effect(() => {
               const document = parent.data;
               parent.label = document.title ||
@@ -299,7 +310,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case MarkdownAction.CREATE: {
-              return { object: new Document() };
+              return { object: new DocumentType() };
             }
           }
         },

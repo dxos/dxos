@@ -14,12 +14,18 @@ import { useExtensions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
+export type SearchResult = {
+  text: string;
+  url: string;
+};
+
 export type EditorMainProps = {
-  editorRefCb: RefCallback<TextEditorRef>;
+  editorRefCb?: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
   showWidgets?: boolean;
   onChange?: (text: string) => void;
+  onSearch?: (text: string) => SearchResult[];
 } & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
@@ -30,10 +36,17 @@ export const EditorMain = ({
   editorMode,
   showWidgets,
   onChange,
+  onSearch,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = useExtensions({ showWidgets, onChange });
+  const extensions = useExtensions({
+    showWidgets,
+    onSearch: onSearch
+      ? (text: string) => onSearch(text).map(({ text, url }) => ({ label: text, apply: `[${text}](/${url})` }))
+      : undefined,
+    onChange,
+  });
 
   return (
     <Root properties={properties} model={model}>

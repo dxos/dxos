@@ -77,7 +77,7 @@ export const statefield = (): Extension => {
     const builder = new RangeSetBuilder();
     syntaxTree(state).iterate({
       enter: (node) => {
-        console.log(node.name, node.from, node.to);
+        // console.log(node.name, node.from, node.to);
         if (node.name === 'TaskMarker') {
           builder.add(
             node.from,

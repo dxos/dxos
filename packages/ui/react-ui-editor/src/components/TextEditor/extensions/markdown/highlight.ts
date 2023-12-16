@@ -28,10 +28,7 @@ import {
  * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
  */
 export const markdownTags = {
-  // TODO(burdon): Parsing bug? How to test?
-  //  https://discuss.codemirror.net/t/markdown-blockquote-isnt-getting-parsed/7578
   Blockquote: Tag.define(),
-
   CodeMark: Tag.define(),
   CodeText: Tag.define(),
   EmphasisMark: Tag.define(),

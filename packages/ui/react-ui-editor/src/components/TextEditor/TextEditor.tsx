@@ -83,7 +83,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       }
 
       const state = EditorState.create({
-        doc: model.text,
+        doc: model.text(),
         extensions: [
           // TODO(burdon): Factor out VIM mode?
           editorMode === 'vim' && vim(),

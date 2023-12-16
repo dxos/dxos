@@ -30,38 +30,43 @@ export type AutocompleteOptions = {
 /**
  * Autocomplete extension.
  */
-export const autocomplete = ({ getOptions }: AutocompleteOptions) => [
-  // https://codemirror.net/docs/ref/#view.keymap
-  // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
-  keymap.of(completionKeymap),
+export const autocomplete = ({ getOptions }: AutocompleteOptions) => {
+  return [
+    // https://codemirror.net/docs/ref/#view.keymap
+    // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
+    keymap.of(completionKeymap),
 
-  // https://codemirror.net/examples/autocompletion
-  // https://codemirror.net/docs/ref/#autocomplete.autocompletion
-  autocompletion({
-    // TODO(burdon): Set custom keymap.
-    // defaultKeymap: false,
+    // https://codemirror.net/examples/autocompletion
+    // https://codemirror.net/docs/ref/#autocomplete.autocompletion
+    autocompletion({
+      // TODO(burdon): Set custom keymap.
+      // defaultKeymap: false,
 
-    // TODO(burdon): Option to create new page?
-    // TODO(burdon): Optional decoration via addToOptions
-    override: [
-      (context: CompletionContext): CompletionResult | null => {
-        const word = context.matchBefore(/\w*/);
-        if (!word || (word.from === word.to && !context.explicit)) {
-          return null;
-        }
+      // Don't start unless key press.
+      activateOnTyping: false,
 
-        // TODO(burdon): Option to convert to links?
-        return {
-          from: word.from,
-          options: getOptions(word.text),
-          // options: [
-          //   { label: 'apple', type: 'keyword' },
-          //   { label: 'amazon', type: 'keyword' },
-          //   { label: 'hello', type: 'variable', info: '(World)' },
-          //   { label: 'magic', type: 'text', apply: '⠁⭒*.✩.*⭒⠁', detail: 'macro' },
-          // ],
-        };
-      },
-    ],
-  }),
-];
+      // TODO(burdon): Option to create new page?
+      // TODO(burdon): Optional decoration via addToOptions
+      override: [
+        (context: CompletionContext): CompletionResult | null => {
+          const word = context.matchBefore(/\w*/);
+          if (!word || (word.from === word.to && !context.explicit)) {
+            return null;
+          }
+
+          // TODO(burdon): Option to convert to links?
+          return {
+            from: word.from,
+            options: getOptions(word.text.toLowerCase()),
+            // options: [
+            //   { label: 'apple', type: 'keyword' },
+            //   { label: 'amazon', type: 'keyword' },
+            //   { label: 'hello', type: 'variable', info: '(World)' },
+            //   { label: 'magic', type: 'text', apply: '⠁⭒*.✩.*⭒⠁', detail: 'macro' },
+            // ],
+          };
+        },
+      ],
+    }),
+  ];
+};

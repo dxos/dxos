@@ -3,29 +3,47 @@
 //
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
-import React, { StrictMode } from 'react';
+import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { useIntent, type DispatchIntent, LayoutAction } from '@dxos/app-framework';
 import {
   link,
   tasklist,
   tooltip,
   type Extension,
   type TextListener,
-  type LinkOptions,
   listener,
   type TooltipOptions,
+  autocomplete,
+  type AutocompleteOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Factor out style.
 const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onRender: LinkOptions['onRender'] = (el, url) => {
+const onRender = (dispatch: DispatchIntent) => (el: Element, url: string) => {
+  // TODO(burdon): Dispatch if local link.
+  const options: AnchorHTMLAttributes<any> = url.startsWith('/')
+    ? {
+        onClick: () => {
+          void dispatch({
+            action: LayoutAction.ACTIVATE,
+            data: { id: url.slice(1) },
+          });
+        },
+      }
+    : {
+        href: url,
+        target: '_blank',
+        rel: 'noreferrer',
+      };
+
   createRoot(el).render(
     <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-1')} />
+      <a {...options} className={hover}>
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
       </a>
     </StrictMode>,
   );
@@ -37,7 +55,7 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
         {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
       </a>
     </StrictMode>,
   );
@@ -45,11 +63,18 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
 
 type UseExtensionsOptions = {
   showWidgets?: boolean;
+  onSearch?: AutocompleteOptions['getOptions'];
   onChange?: TextListener;
 };
 
-export const useExtensions = ({ showWidgets, onChange }: UseExtensionsOptions = {}): Extension[] => {
-  return [link({ onRender }), tooltip({ onHover }), showWidgets && tasklist(), onChange && listener(onChange)].filter(
-    Boolean,
-  ) as Extension[];
+export const useExtensions = ({ showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
+  const { dispatch } = useIntent();
+
+  return [
+    link({ onRender: onRender(dispatch) }),
+    tooltip({ onHover }),
+    onSearch && autocomplete({ getOptions: onSearch }),
+    onChange && listener(onChange),
+    showWidgets && tasklist(),
+  ].filter(Boolean) as Extension[];
 };
