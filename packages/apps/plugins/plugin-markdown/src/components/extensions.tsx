@@ -75,6 +75,6 @@ export const useExtensions = ({ showWidgets, onSearch, onChange }: UseExtensions
     tooltip({ onHover }),
     onSearch && autocomplete({ getOptions: onSearch }),
     onChange && listener(onChange),
-    showWidgets && tasklist(),
+    showWidgets && [tasklist()],
   ].filter(Boolean) as Extension[];
 };
