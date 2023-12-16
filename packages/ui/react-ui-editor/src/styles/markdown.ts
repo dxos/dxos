@@ -32,7 +32,8 @@ export const codeBlock = 'mlb-2 font-mono bg-neutral-500/10 p-3 rounded';
 
 export const inlineUrl = mx(code, 'px-1');
 
-export const horizontalRule = 'mlb-4 border-neutral-500/50';
+// TODO(burdon): Replace with widget.
+export const horizontalRule = 'flex mlb-4 border-b text-neutral-100 dark:text-neutral-900 border-neutral-500/50';
 
 export const paragraph = 'mlb-1';
 

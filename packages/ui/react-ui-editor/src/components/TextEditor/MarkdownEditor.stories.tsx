@@ -24,10 +24,17 @@ import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './Text
 import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
 import { useTextModel } from '../../hooks';
 
+// TODO(burdon): Read-only render mode.
+// TODO(burdon): Block quote.
+// TODO(burdon): Checkbox list.
+// TODO(burdon): Images.
+// TODO(burdon): Tables.
+// TODO(burdon): Autocomplete.
+
 const initialText = [
   '# Markdown',
   '',
-  '> Style', // TODO(burdon): Not processed.
+  '> This is a block quote.',
   '',
   'This is all about https://dxos.org and related technologies.',
   '',
@@ -35,11 +42,20 @@ const initialText = [
   '',
   '__NOTE__: Fenced code uses the base font.',
   '',
-  // TODO(burdon): Not processed via GFM lezer?
   'Unordered list:',
-  '- a',
-  '- b',
-  '- c',
+  '- new york',
+  '- london',
+  '- tokyo',
+  '',
+  'Checked list:',
+  '- [x] parsing',
+  '- [ ] styling',
+  '- [ ] rendering',
+  '',
+  'Numbered list:',
+  '1. one',
+  '2. two',
+  '3. three',
   '',
   '```',
   'const x = 100;',
@@ -51,7 +67,6 @@ const initialText = [
   '  return () => <div>Test</div>;',
   '};',
   '```',
-  '',
   '---', // TODO(burdon): Horizontal rule.
   '',
   ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
@@ -136,7 +151,6 @@ export const EditableLinks = {
 //  https://codemirror.net/5/doc/manual.html#addon_runmode
 // TODO(burdon): Add-on: dialog.
 // TODO(burdon): Comments: https://codemirror.net/5/doc/manual.html#setBookmark
-
 // TODO(burdon): Split view: https://codemirror.net/examples/split
 
 // https://codemirror.net/examples/autocompletion

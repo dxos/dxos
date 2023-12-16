@@ -79,15 +79,19 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     markdown({
       // GRM by default (vs strict CommonMark):
       // Table, TaskList, Strikethrough, and Autolink.
-      // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
+      // NOTE: This extends the parser; it doesn't affect rendering.
       // https://github.github.com/gfm
+      // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
       base: markdownLanguage,
 
-      // Languages to support highlighting fenced code blocks.
+      // Languages for syntax highlighting fenced code blocks.
       codeLanguages: languages,
 
       // Parser extensions.
-      extensions: [markdownTagsExtension],
+      extensions: [
+        // GFM, // TODO(burdon): Provided by default?
+        markdownTagsExtension,
+      ],
     }),
 
     // Custom styles.

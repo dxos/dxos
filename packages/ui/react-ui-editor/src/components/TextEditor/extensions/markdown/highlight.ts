@@ -8,13 +8,34 @@ import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig } from '@lezer/markdown';
 import get from 'lodash.get';
 
-import { bold, code, inlineUrl, codeMark, heading, italic, mark, strikethrough, tokens } from '../../../../styles';
+import {
+  bold,
+  inlineUrl,
+  codeMark,
+  heading,
+  italic,
+  strikethrough,
+  tokens,
+  horizontalRule,
+  code,
+  mark,
+} from '../../../../styles';
 
+/**
+ * Custom tags defined and processed by the GFM lezer extension.
+ * https://github.com/lezer-parser/markdown
+ * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
+ */
 export const markdownTags = {
+  // TODO(burdon): Parsing bug? How to test?
+  //  https://discuss.codemirror.net/t/markdown-blockquote-isnt-getting-parsed/7578
+  Blockquote: Tag.define(),
+
   CodeMark: Tag.define(),
   CodeText: Tag.define(),
   EmphasisMark: Tag.define(),
   HeaderMark: Tag.define(),
+  HorizontalRule: Tag.define(),
   InlineCode: Tag.define(),
   LinkLabel: Tag.define(),
   LinkReference: Tag.define(),
@@ -30,9 +51,7 @@ export const markdownTagsExtension: MarkdownConfig = {
 /**
  * Styling based on `lezer` parser tags.
  * https://codemirror.net/examples/styling
- * https://github.com/lezer-parser/markdown
  * https://github.com/lezer-parser/highlight
- * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
  * https://lezer.codemirror.net/docs/ref/#highlight (list of tags)
  */
 export const markdownHighlightStyle = HighlightStyle.define(
@@ -124,6 +143,17 @@ export const markdownHighlightStyle = HighlightStyle.define(
     {
       tag: [markdownTags.CodeText, markdownTags.InlineCode],
       class: code,
+    },
+
+    // TODO(burdon): Not working.
+    {
+      tag: [markdownTags.Blockquote],
+      color: 'green',
+    },
+
+    {
+      tag: [markdownTags.HorizontalRule],
+      class: horizontalRule,
     },
 
     // Main content, paragraphs, etc.
