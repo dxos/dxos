@@ -8,15 +8,7 @@ import React, { type FC, Fragment, type MutableRefObject, useRef, useState } fro
 import { Button, Dialog, DropdownMenu, Popover, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import {
-  descriptionText,
-  fixedBorder,
-  getSize,
-  hoverableControlItem,
-  hoverableOpenControlItem,
-  inputSurface,
-  mx,
-} from '@dxos/react-ui-theme';
+import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 import type { TreeNodeAction } from '../types';
@@ -33,17 +25,15 @@ type NavTreeItemActionProps = {
   popoverAnchorId?: string;
   testId?: string;
   menuType?: 'searchList' | 'dropdown';
-  onAction?: (action: TreeNodeAction) => void;
 };
 
-export const NavTreeItemActionDropdownMenu = ({
+const NavTreeItemActionDropdownMenu = ({
   icon: Icon,
   active,
   testId,
   actions,
   suppressNextTooltip,
-  onAction,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
+}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
@@ -92,7 +82,7 @@ export const NavTreeItemActionDropdownMenu = ({
                   // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                   suppressNextTooltip.current = true;
                   setOptionsMenuOpen(false);
-                  onAction?.(action);
+                  void action.invoke();
                 }}
                 classNames='gap-2'
                 disabled={action.properties.disabled}
@@ -113,15 +103,14 @@ export const NavTreeItemActionDropdownMenu = ({
   );
 };
 
-export const NavTreeItemActionSearchList = ({
+const NavTreeItemActionSearchList = ({
   icon: Icon,
   active,
   label,
   testId,
   actions,
   suppressNextTooltip,
-  onAction,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'label' | 'onAction'> & {
+}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'label'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
@@ -173,17 +162,12 @@ export const NavTreeItemActionSearchList = ({
           </Button>
         </Dialog.Trigger>
       </Tooltip.Trigger>
-      <Dialog.Portal className={fixedBorder}>
+      <Dialog.Portal>
         <Dialog.Overlay>
           <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input
-                placeholder={t('tree item searchlist input placeholder')}
-                classNames={[inputSurface, 'p-4']}
-              />
-              <SearchList.Content
-                classNames={[inputSurface, 'p-0', 'min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}
-              >
+              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='p-4' />
+              <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto border border-is-0 border-ie-0 border-neutral-200 dark:border-neutral-800 p-2'>
                 {actions?.map((action) => {
                   const value = Array.isArray(action.label) ? t(...action.label) : action.label;
                   return (
@@ -196,7 +180,7 @@ export const NavTreeItemActionSearchList = ({
                         }
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
-                        onAction?.(action);
+                        void action.invoke();
                       }}
                       classNames='flex items-center gap-2 pli-2'
                       disabled={action.properties.disabled}
@@ -290,7 +274,6 @@ export const NavTreeItemAction = ({
             suppressNextTooltip={suppressNextTooltip}
             icon={Icon}
             label={label}
-            onAction={(action) => action.invoke()}
           />
         ) : (
           <NavTreeItemActionDropdownMenu
@@ -299,7 +282,6 @@ export const NavTreeItemAction = ({
             active={active}
             suppressNextTooltip={suppressNextTooltip}
             icon={Icon}
-            onAction={(action) => action.invoke()}
           />
         )}
       </Tooltip.Root>
