@@ -6,10 +6,8 @@ import { StateField } from '@codemirror/state';
 
 /**
  * Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
- * @param onChange
  */
-// TODO(burdon): Name?
-export const onChangeExtension = (onChange: (text: string) => void) =>
+export const listener = (onChange: (text: string) => void) =>
   StateField.define({
     create: () => null,
     update: (_value, transaction) => {

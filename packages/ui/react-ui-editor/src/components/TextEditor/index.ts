@@ -5,4 +5,6 @@
 export { tags } from '@lezer/highlight';
 
 export * from './extensions';
+export * from './themes';
+
 export * from './TextEditor';

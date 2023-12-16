@@ -6,12 +6,12 @@ import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import {
-  createHyperlinkTooltip,
+  tooltip,
   type TextEditorProps,
   type TextEditorRef,
   MarkdownEditor,
-  hyperlinkDecoration,
-  onChangeExtension,
+  link,
+  listener,
   tasklist,
 } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
@@ -41,12 +41,12 @@ export const EditorMain = ({
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = [createHyperlinkTooltip(onTooltip), tasklist()];
+  const extensions = [tooltip(onTooltip), tasklist()];
   if (onChange) {
-    extensions.push(onChangeExtension(onChange));
+    extensions.push(listener(onChange));
   }
   if (showWidgets) {
-    extensions.push(hyperlinkDecoration());
+    extensions.push(link());
   }
 
   return (

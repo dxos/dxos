@@ -6,8 +6,8 @@ import React, { type HTMLAttributes, useRef } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import {
-  createHyperlinkTooltip,
-  hyperlinkDecoration,
+  tooltip,
+  link,
   tasklist,
   MarkdownEditor,
   type TextEditorProps,
@@ -25,9 +25,9 @@ type EditorSectionProps = Pick<EditorMainProps, 'showWidgets'> & Pick<TextEditor
 export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const editorRef = useRef<TextEditorRef>(null);
-  const extensions = [createHyperlinkTooltip(onTooltip), tasklist()];
+  const extensions = [tooltip(onTooltip), tasklist()];
   if (showWidgets) {
-    extensions.push(hyperlinkDecoration());
+    extensions.push(link());
   }
 
   return (

@@ -13,7 +13,7 @@ import { tokens } from '../../../styles';
  * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  */
-export const baseTheme: {
+export const defaultTheme: {
   [selector: string]: StyleSpec;
 } = {
   //

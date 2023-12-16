@@ -20,7 +20,8 @@ import React, {
 import { useThemeContext } from '@dxos/react-ui';
 import { inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { baseTheme, basicBundle, markdownBundle, textTheme } from './extensions';
+import { basicBundle, markdownBundle } from './extensions';
+import { defaultTheme, textTheme } from './themes';
 import { type EditorModel, useCollaboration } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 
@@ -88,7 +89,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           editorMode === 'vim' && vim(),
 
           // Theme.
-          EditorView.baseTheme(baseTheme),
+          EditorView.baseTheme(defaultTheme),
           EditorView.theme(slots?.editor?.theme ?? {}),
           // TODO(burdon): themeMode doesn't change in storybooks.
           EditorView.darkTheme.of(themeMode === 'dark'),
