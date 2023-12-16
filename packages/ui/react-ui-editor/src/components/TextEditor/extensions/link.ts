@@ -4,7 +4,14 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type RangeSet, RangeSetBuilder, StateField, type Transaction } from '@codemirror/state';
+import {
+  type EditorState,
+  type Extension,
+  type RangeSet,
+  RangeSetBuilder,
+  StateField,
+  type Transaction,
+} from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 // Adapted from:
@@ -21,7 +28,7 @@ import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 class LinkButton extends WidgetType {
   constructor(
-    private readonly _anchor: number,
+    private readonly _pos: number,
     private readonly _url: string,
     private readonly _onAttach: LinkOptions['onRender'],
   ) {
@@ -29,7 +36,7 @@ class LinkButton extends WidgetType {
   }
 
   override eq(other: LinkButton) {
-    return this._anchor === other._anchor && this._url === other._url;
+    return this._pos === other._pos && this._url === other._url;
   }
 
   toDOM(view: EditorView) {
@@ -40,12 +47,12 @@ class LinkButton extends WidgetType {
 }
 
 class LinkText extends WidgetType {
-  constructor(private readonly _anchor: number, private readonly _text: string, private readonly _url?: string) {
+  constructor(private readonly _pos: number, private readonly _text: string, private readonly _url?: string) {
     super();
   }
 
   override eq(other: LinkText) {
-    return this._anchor === other._anchor && this._text === other._text && this._url === other._url;
+    return this._pos === other._pos && this._url === other._url;
   }
 
   toDOM(view: EditorView) {
@@ -60,7 +67,7 @@ class LinkText extends WidgetType {
       link.onclick = () => {
         view.dispatch({
           selection: {
-            anchor: this._anchor,
+            anchor: this._pos,
           },
         });
       };
@@ -120,7 +127,7 @@ export type LinkOptions = {
  * Creates a state field to replace AST elements with a hyperlink widget.
  * https://codemirror.net/docs/ref/#state.StateField
  */
-export const link = (options: LinkOptions = {}) => {
+export const link = (options: LinkOptions = {}): Extension => {
   return StateField.define<RangeSet<any>>({
     create: (state) => update(state, options),
     update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),

@@ -9,7 +9,10 @@ import { tooltipContent } from '@dxos/react-ui-theme';
 
 const markdownLinkRegexp = /\[([^\]]+)]\(([^)]+)\)/;
 
-export type TooltipOptions = { onHover: (el: Element, url: string) => void; regexp?: RegExp };
+export type TooltipOptions = {
+  onHover: (el: Element, url: string) => void;
+  regexp?: RegExp;
+};
 
 /**
  * https://codemirror.net/examples/tooltip

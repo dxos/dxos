@@ -14,26 +14,25 @@ import {
 import { EditorView, Decoration, WidgetType } from '@codemirror/view';
 
 class CheckboxWidget extends WidgetType {
-  constructor(private readonly _pos: number, private _checked: boolean) {
+  constructor(private readonly _pos: number, private readonly _getCursor: () => number, private _checked: boolean) {
     super();
   }
 
-  // TODO(burdon): Check other widgets.
+  // TODO(burdon): Is this efficient? Check life-cycle.
   override eq(other: CheckboxWidget) {
     return this._pos === other._pos;
   }
 
   toDOM(view: EditorView) {
-    console.log('toDom', this._pos);
+    // console.log('toDom', this._pos);
     const wrap = document.createElement('span');
     wrap.setAttribute('aria-hidden', 'true');
     wrap.className = 'cm-task-item';
+
     const box = wrap.appendChild(document.createElement('input'));
     box.type = 'checkbox';
     box.checked = this._checked;
-    box.onclick = () => {
-      const text = view.state.sliceDoc(this._pos, this._pos + 3).toLowerCase();
-      console.log('click', this._pos, isChecked(view.state, this._pos), text);
+    box.onclick = (event) => {
       this._checked = !isChecked(view.state, this._pos);
       view.dispatch({
         changes: {
@@ -41,19 +40,21 @@ class CheckboxWidget extends WidgetType {
           to: this._pos + 2,
           insert: this._checked ? 'x' : ' ',
         },
-        // TODO(burdon): Move cursor to end of line on click.
+        // TODO(burdon): Restore cursor position? More useful to move to end of line (can indent).
         selection: {
           anchor: this._pos + 4,
+          // anchor: this._getCursor(),
         },
       });
       return true;
     };
+
     return wrap;
   }
 
-  // TODO(burdon): Remove listener?
   override destroy() {
-    console.log('destroy', this._pos);
+    // TODO(burdon): Remove listener?
+    // console.log('destroy', this._pos);
   }
 
   override ignoreEvent() {
@@ -66,6 +67,11 @@ const isChecked = (state: EditorState, pos: number) => {
 };
 
 export const statefield = (): Extension => {
+  let lastPosition: number = 0;
+  const listener = EditorView.updateListener.of((update) => {
+    lastPosition = update.startState.selection.main.head;
+  });
+
   const checkbox = (state: EditorState) => {
     const builder = new RangeSetBuilder();
     syntaxTree(state).iterate({
@@ -74,7 +80,9 @@ export const statefield = (): Extension => {
           builder.add(
             node.from,
             node.to,
-            Decoration.replace({ widget: new CheckboxWidget(node.from, isChecked(state, node.from)) }),
+            Decoration.replace({
+              widget: new CheckboxWidget(node.from, () => lastPosition, isChecked(state, node.from)),
+            }),
           );
         }
       },
@@ -83,11 +91,14 @@ export const statefield = (): Extension => {
     return builder.finish();
   };
 
-  return StateField.define<RangeSet<any>>({
-    create: (state) => checkbox(state),
-    update: (_: RangeSet<any>, tr: Transaction) => checkbox(tr.state),
-    provide: (field) => EditorView.decorations.from(field),
-  });
+  return [
+    listener,
+    StateField.define<RangeSet<any>>({
+      create: (state) => checkbox(state),
+      update: (_: RangeSet<any>, tr: Transaction) => checkbox(tr.state),
+      provide: (field) => EditorView.decorations.from(field),
+    }),
+  ];
 };
 
 // TODO(burdon): Reconcile with theme.

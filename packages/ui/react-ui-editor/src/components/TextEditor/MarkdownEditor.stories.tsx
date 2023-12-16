@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-
+import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { StrictMode, useRef, useState } from 'react';
@@ -24,36 +24,36 @@ import { useTextModel } from '../../hooks';
 // TODO(burdon): Images.
 // TODO(burdon): Tables.
 
-const str = (lines: string[]) => lines.join('\n');
+const str = (...lines: string[]) => lines.join('\n');
 
 // prettier-ignore
 const text = {
-  tasks: str([
+  tasks: str(
     '## Tasks',
     '',
     '- [x] parsing',
     '- [ ] styling',
     '- [ ] rendering',
-  ]),
+  ),
 
-  list: str([
+  list: str(
     '## List',
     '',
     '- new york',
     '- london',
     '- tokyo',
-  ]),
+  ),
 
-  numbered: str([
+  numbered: str(
     '## Numbered',
     '',
     '1. one',
     '2. two',
     '3. three',
     ''
-  ]),
+  ),
 
-  code: str([
+  code: str(
     '## Code',
     '',
     '```',
@@ -66,23 +66,23 @@ const text = {
     '  return () => <div>Test</div>;',
     '};',
     '```'
-  ]),
+  ),
 
-  links: str([
+  links: str(
     '## Links',
     '',
     'This is a naked link https://dxos.org within a sentence.',
     '',
     'Take a look at [DXOS](https://dxos.org) and how to [get started](https://docs.dxos.org/guide/getting-started.html).',
     '',
-  ]),
+  ),
 
   headings: str(
-    [1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+    ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
   ),
 };
 
-const document = str([
+const document = str(
   '# Markdown',
   '',
   '> This is a block quote.',
@@ -105,20 +105,16 @@ const document = str([
   text.code,
   '---',
   text.headings,
-]);
+);
+
+const hover =
+  'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
 const onHover: TooltipOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
-      <a
-        href={url}
-        target='_blank'
-        rel='noreferrer'
-        className={mx(
-          'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200',
-        )}
-      >
+      <a href={url} target='_blank' rel='noreferrer' className={hover}>
         {web.origin}
         <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
       </a>
@@ -129,14 +125,7 @@ const onHover: TooltipOptions['onHover'] = (el, url) => {
 const onRender: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
-      <a
-        href={url}
-        target='_blank'
-        rel='noreferrer'
-        className={mx(
-          'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200',
-        )}
-      >
+      <a href={url} target='_blank' rel='noreferrer' className={hover}>
         <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-1')} />
       </a>
     </StrictMode>,
@@ -193,7 +182,7 @@ export const EditableLinks = {
 export const TaskList = {
   render: () => (
     <Story
-      text={str([text.tasks, '', text.list])}
+      text={str(text.tasks, '', text.list)}
       extensions={[
         tasklist(),
         listener((text) => {
@@ -205,5 +194,36 @@ export const TaskList = {
 };
 
 export const Autocomplete = {
-  render: () => <Story text={document} extensions={[autocomplete()]} />,
+  render: () => (
+    <Story
+      text={str('# Autocomplete', '', '', '', '', '', '')}
+      extensions={[
+        link({ onRender }),
+        autocomplete({
+          getOptions: (text) => {
+            console.log('getOptions', text);
+            return [
+              { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
+              { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
+              { label: 'IPFS', apply: '[Protocol Labs](https://docs.ipfs.tech)' },
+            ];
+          },
+        }),
+      ]}
+    />
+  ),
+};
+
+export const Diagnostics = {
+  render: () => (
+    <Story
+      text={document}
+      extensions={[
+        // Cursor moved.
+        EditorView.updateListener.of((update) => {
+          console.log('update', update.view.state.selection.main.head);
+        }),
+      ]}
+    />
+  ),
 };
