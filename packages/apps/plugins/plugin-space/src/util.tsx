@@ -209,6 +209,7 @@ export const spaceToGraphNode = ({
           id: 'share-space',
           label: ['share space', { ns: SPACE_PLUGIN }],
           icon: (props) => <Users {...props} />,
+          keyBinding: 'meta+shift+s',
           invoke: () =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
         },

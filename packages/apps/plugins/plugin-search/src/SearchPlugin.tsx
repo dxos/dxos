@@ -45,7 +45,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
               id: SearchAction.SEARCH,
               label: ['search action label', { ns: SEARCH_PLUGIN }],
               icon: (props) => <MagnifyingGlass {...props} />,
-              keyBinding: 'shift+meta+s',
+              keyBinding: 'shift+meta+f',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: SEARCH_PLUGIN,
