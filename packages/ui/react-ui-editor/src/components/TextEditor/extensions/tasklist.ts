@@ -3,7 +3,14 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type RangeSet, RangeSetBuilder, StateField, type Transaction } from '@codemirror/state';
+import {
+  type EditorState,
+  type Extension,
+  type RangeSet,
+  RangeSetBuilder,
+  StateField,
+  type Transaction,
+} from '@codemirror/state';
 import { EditorView, Decoration, WidgetType } from '@codemirror/view';
 
 class CheckboxWidget extends WidgetType {
@@ -58,7 +65,7 @@ const isChecked = (state: EditorState, pos: number) => {
   return state.sliceDoc(pos, pos + 3).toLowerCase() === '[x]';
 };
 
-export const statefield = () => {
+export const statefield = (): Extension => {
   const checkbox = (state: EditorState) => {
     const builder = new RangeSetBuilder();
     syntaxTree(state).iterate({

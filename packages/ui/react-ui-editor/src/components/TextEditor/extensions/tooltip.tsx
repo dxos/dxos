@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { hoverTooltip } from '@codemirror/view';
 
 import { tooltipContent } from '@dxos/react-ui-theme';
@@ -15,7 +16,7 @@ export type TooltipOptions = { onHover: (el: Element, url: string) => void; rege
  * https://codemirror.net/docs/ref/#view.hoverTooltip
  * https://github.com/codemirror/view/blob/main/src/tooltip.ts
  */
-export const tooltip = ({ onHover, regexp = markdownLinkRegexp }: TooltipOptions) =>
+export const tooltip = ({ onHover, regexp = markdownLinkRegexp }: TooltipOptions): Extension =>
   hoverTooltip((view, pos) => {
     const { from, text } = view.state.doc.lineAt(pos);
     const p = pos - from;

@@ -5,18 +5,11 @@
 import React, { type HTMLAttributes, useRef } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import {
-  tooltip,
-  link,
-  tasklist,
-  MarkdownEditor,
-  type TextEditorProps,
-  type TextEditorRef,
-} from '@dxos/react-ui-editor';
+import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { type EditorMainProps } from './EditorMain';
-import { onTooltip } from './extensions';
+import { useExtensions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 // TODO(burdon): Reconcile types.
@@ -25,10 +18,7 @@ type EditorSectionProps = Pick<EditorMainProps, 'showWidgets'> & Pick<TextEditor
 export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const editorRef = useRef<TextEditorRef>(null);
-  const extensions = [tooltip(onTooltip), tasklist()];
-  if (showWidgets) {
-    extensions.push(link());
-  }
+  const extensions = useExtensions({ showWidgets });
 
   return (
     <MarkdownEditor

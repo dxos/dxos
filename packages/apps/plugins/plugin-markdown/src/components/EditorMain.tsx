@@ -5,20 +5,12 @@
 import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import {
-  tooltip,
-  type TextEditorProps,
-  type TextEditorRef,
-  MarkdownEditor,
-  link,
-  listener,
-  tasklist,
-} from '@dxos/react-ui-editor';
+import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { onTooltip } from './extensions';
+import { useExtensions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
@@ -41,13 +33,7 @@ export const EditorMain = ({
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = [tooltip(onTooltip), tasklist()];
-  if (onChange) {
-    extensions.push(listener(onChange));
-  }
-  if (showWidgets) {
-    extensions.push(link());
-  }
+  const extensions = useExtensions({ showWidgets, onChange });
 
   return (
     <Root properties={properties} model={model}>

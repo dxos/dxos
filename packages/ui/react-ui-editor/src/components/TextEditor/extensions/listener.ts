@@ -4,10 +4,12 @@
 
 import { StateField } from '@codemirror/state';
 
+export type TextListener = (text: string) => void;
+
 /**
  * Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
  */
-export const listener = (onChange: (text: string) => void) =>
+export const listener = (onChange: TextListener) =>
   StateField.define({
     create: () => null,
     update: (_value, transaction) => {
