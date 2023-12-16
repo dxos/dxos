@@ -7,7 +7,7 @@ export const INITIAL_TITLE = 'README';
 // TODO(wittjosiah): translate
 export const INITIAL_CONTENT = `# README
 
-Thank you for trying DXOS Composer. 
+> Welcome to DXOS Composer.
 
 Here, you can:
 - Create and organize things
