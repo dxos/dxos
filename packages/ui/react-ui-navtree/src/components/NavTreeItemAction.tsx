@@ -4,6 +4,7 @@
 
 import { type IconProps } from '@phosphor-icons/react';
 import React, { type FC, Fragment, type MutableRefObject, useRef, useState } from 'react';
+import { type UseTranslationResponse } from 'react-i18next';
 
 import { Button, Dialog, DropdownMenu, Popover, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
@@ -112,6 +113,15 @@ export const NavTreeItemActionDropdownMenu = ({
   );
 };
 
+// TODO(burdon): Factor out.
+const labelCompare =
+  (t: UseTranslationResponse['t']) =>
+  ({ label: l1 }: TreeNodeAction, { label: l2 }: TreeNodeAction) => {
+    const t1 = Array.isArray(l1) ? t(...l1) : l1;
+    const t2 = Array.isArray(l2) ? t(...l2) : l2;
+    return t1.localeCompare(t2);
+  };
+
 export const NavTreeItemActionSearchList = ({
   icon: Icon,
   active,
@@ -127,6 +137,9 @@ export const NavTreeItemActionSearchList = ({
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const button = useRef<HTMLButtonElement | null>(null);
+
+  // TODO(burdon): Optionally sort.
+  const sortedActions = actions?.sort(labelCompare(t));
 
   // TODO(thure): Use LayoutPlugin’s global Dialog.
   return (
@@ -183,7 +196,7 @@ export const NavTreeItemActionSearchList = ({
               <SearchList.Content
                 classNames={[inputSurface, 'p-0 min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}
               >
-                {actions?.map((action) => {
+                {sortedActions?.map((action) => {
                   const value = Array.isArray(action.label) ? t(...action.label) : action.label;
                   return (
                     <SearchList.Item
