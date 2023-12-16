@@ -35,6 +35,8 @@ export const baseTheme: {
   },
   '& .cm-content': {
     padding: 0,
+    // Base font size (otherwise defined by HTML tag, which might be different for storybook).
+    fontSize: '16px',
   },
 
   //
@@ -61,11 +63,11 @@ export const baseTheme: {
   //
   '& .cm-line': {
     paddingInline: 0,
-    lineHeight: 1.6,
-    minBlockSize: '1.6em',
+    // lineHeight: 1.6,
+    // minBlockSize: '1.6em',
   },
   '& .cm-line *': {
-    lineHeight: 1.6,
+    // lineHeight: 1.6,
   },
   '& .cm-activeLine': {
     backgroundColor: 'transparent',
@@ -73,48 +75,47 @@ export const baseTheme: {
 
   //
   // selection
-  // TODO(burdon): Review.
+  // TODO(burdon): Review/remove.
   //
 
-  '&light .cm-selectionBackground, &light.cm-focused .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
-  },
-  '&dark .cm-selectionBackground, &dark.cm-focused .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
-  },
+  // '&light .cm-selectionBackground, &light.cm-focused .cm-selectionBackground': {
+  //   background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
+  // },
+  // '&dark .cm-selectionBackground, &dark.cm-focused .cm-selectionBackground': {
+  //   background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
+  // },
 
-  '&light .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
-  },
-  '&dark .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
-  },
+  // '&light .cm-selectionMatch': {
+  //   background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
+  // },
+  // '&dark .cm-selectionMatch': {
+  //   background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
+  // },
 
-  '&light .cm-ySelection, &light .cm-yLineSelection': {
-    mixBlendMode: 'multiply',
-  },
-  '&dark .cm-ySelection, &dark .cm-yLineSelection': {
-    mixBlendMode: 'screen',
-  },
+  // '&light .cm-ySelection, &light .cm-yLineSelection': {
+  //   mixBlendMode: 'multiply',
+  // },
+  // '&dark .cm-ySelection, &dark .cm-yLineSelection': {
+  //   mixBlendMode: 'screen',
+  // },
 
-  '& .cm-ySelectionInfo': {
-    // fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-    padding: '2px 4px',
-    marginBlockStart: '-4px',
-  },
-  '& .cm-ySelection, & .cm-selectionMatch': {
-    paddingBlockStart: '.15em',
-    paddingBlockEnd: '.15em',
-  },
-  '& .cm-ySelectionCaret': {
-    display: 'inline-block',
-    insetBlockStart: '.1em',
-    blockSize: '1.4em',
-    verticalAlign: 'top',
-  },
-  '& .cm-yLineSelection': {
-    margin: '0',
-  },
+  // '& .cm-ySelectionInfo': {
+  //   padding: '2px 4px',
+  //   marginBlockStart: '-4px',
+  // },
+  // '& .cm-ySelection, & .cm-selectionMatch': {
+  //   paddingBlockStart: '.15em',
+  //   paddingBlockEnd: '.15em',
+  // },
+  // '& .cm-ySelectionCaret': {
+  //   display: 'inline-block',
+  //   insetBlockStart: '.1em',
+  //   blockSize: '1.4em',
+  //   verticalAlign: 'top',
+  // },
+  // '& .cm-yLineSelection': {
+  //   margin: '0',
+  // },
 
   //
   // link

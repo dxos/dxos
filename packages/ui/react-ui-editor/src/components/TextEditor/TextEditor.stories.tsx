@@ -39,9 +39,10 @@ const Story = ({
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center p-8'>
-        <div className='w-[800px]'>
+      <div className='flex justify-center overflow-y-scroll'>
+        <div className='flex flex-col w-[800px] py-16'>
           <TextEditor ref={ref} model={model} {...props} />
+          <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
     </div>

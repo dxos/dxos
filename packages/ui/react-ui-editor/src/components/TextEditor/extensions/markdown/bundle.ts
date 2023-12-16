@@ -5,11 +5,18 @@
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
-import { bracketMatching, foldKeymap, indentOnInput, syntaxHighlighting } from '@codemirror/language';
+import {
+  bracketMatching,
+  defaultHighlightStyle,
+  foldKeymap,
+  indentOnInput,
+  syntaxHighlighting,
+} from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
+import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   crosshairCursor,
   drawSelection,
@@ -79,16 +86,14 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
       // Languages to support highlighting fenced code blocks.
       codeLanguages: languages,
 
-      extensions: [
-        // Custom styling.
-        markdownTagsExtension,
-      ],
+      // Parser extensions.
+      extensions: [markdownTagsExtension],
     }),
 
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle),
 
     // TODO(thure): All but one rule here apply to both themes; rename or refactor.
-    // themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
+    themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
   ].filter(Boolean) as Extension[];
 };

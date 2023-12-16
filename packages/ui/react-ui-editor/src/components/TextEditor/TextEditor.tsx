@@ -179,7 +179,7 @@ export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx(inputSurface, 'p-2'),
+    className: mx('p-2', inputSurface),
   },
 };
 

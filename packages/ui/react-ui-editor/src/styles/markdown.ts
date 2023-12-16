@@ -26,22 +26,18 @@ export const orderedList =
 
 export const listItem = 'contents before:[counter-increment:section]';
 
+export const code = 'font-mono !no-underline text-neutral-700 dark:text-neutral-300';
+export const codeMark = 'font-mono text-primary-500';
 export const codeBlock = 'mlb-2 font-mono bg-neutral-500/10 p-3 rounded';
+
+export const inlineUrl = mx(code, 'px-1');
 
 export const horizontalRule = 'mlb-4 border-neutral-500/50';
 
 export const paragraph = 'mlb-1';
 
 export const bold = 'font-bold';
-
-export const code = 'font-mono bg-neutral-500/10 rounded pli-0.5 plb-0.5 -mlb-0.5';
-
-export const placeholder = 'font-mono';
-
-export const codeWithoutMarks = mx(code, 'pli-1.5 mli-0.5');
-
 export const italic = 'italic';
-
 export const strikethrough = 'line-through';
 
 export const mark = '!font-normal !no-underline !text-inherit opacity-40';

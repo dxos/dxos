@@ -27,6 +27,8 @@ import { useTextModel } from '../../hooks';
 const initialText = [
   '# Markdown',
   '',
+  '> Style', // TODO(burdon): Not processed.
+  '',
   'This is all about https://dxos.org and related technologies.',
   '',
   'This this is **bold**, __underlined__, _italic_, and `f(INLINE)`.',
@@ -49,6 +51,8 @@ const initialText = [
   '  return () => <div>Test</div>;',
   '};',
   '```',
+  '',
+  '---', // TODO(burdon): Horizontal rule.
   '',
   ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
 ].join('\n');
@@ -97,9 +101,10 @@ const Story = ({
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center p-8 overflow-y-scroll'>
-        <div className='w-[800px] bg-red-100'>
+      <div className='flex justify-center overflow-y-scroll'>
+        <div className='flex flex-col w-[800px] py-16'>
           <MarkdownEditor ref={ref} model={model} {...props} />
+          <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
     </div>

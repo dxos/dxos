@@ -8,58 +8,32 @@ import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig } from '@lezer/markdown';
 import get from 'lodash.get';
 
-import { bold, heading, italic, mark, strikethrough, tokens } from '../../../../styles';
+import { bold, code, inlineUrl, codeMark, heading, italic, mark, strikethrough, tokens } from '../../../../styles';
 
 export const markdownTags = {
-  CodeBlock: Tag.define(),
   CodeMark: Tag.define(),
   CodeText: Tag.define(),
-  FencedCode: Tag.define(),
   EmphasisMark: Tag.define(),
   HeaderMark: Tag.define(),
   InlineCode: Tag.define(),
   LinkLabel: Tag.define(),
-  LinkMark: Tag.define(),
   LinkReference: Tag.define(),
   ListMark: Tag.define(),
   QuoteMark: Tag.define(),
   URL: Tag.define(),
 };
 
-/**
- * Markdown parser tags.
- * https://github.com/lezer-parser/markdown
- * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
- * https://github.com/lezer-parser/highlight
- */
 export const markdownTagsExtension: MarkdownConfig = {
-  props: [
-    // TODO(burdon): Does this do anything?
-    styleTags(markdownTags),
-    styleTags({
-      CodeBlock: markdownTags.CodeBlock,
-      CodeMark: markdownTags.CodeMark,
-      CodeText: markdownTags.CodeText,
-      EmphasisMark: markdownTags.EmphasisMark,
-      FencedCode: markdownTags.FencedCode,
-      HeaderMark: markdownTags.HeaderMark,
-      InlineCode: markdownTags.InlineCode,
-      LinkLabel: markdownTags.LinkLabel,
-      LinkMark: markdownTags.LinkMark,
-      LinkReference: markdownTags.LinkReference,
-      ListMark: markdownTags.ListMark,
-      QuoteMark: markdownTags.QuoteMark,
-      URL: markdownTags.URL,
-    }),
-  ],
+  props: [styleTags(markdownTags)],
 };
-
-console.log(markdownTagsExtension);
 
 /**
  * Styling based on `lezer` parser tags.
- * https://github.com/lezer-parser/markdown
  * https://codemirror.net/examples/styling
+ * https://github.com/lezer-parser/markdown
+ * https://github.com/lezer-parser/highlight
+ * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
+ * https://lezer.codemirror.net/docs/ref/#highlight (list of tags)
  */
 export const markdownHighlightStyle = HighlightStyle.define(
   [
@@ -101,9 +75,12 @@ export const markdownHighlightStyle = HighlightStyle.define(
       ],
       color: 'inherit !important',
     },
+
     // Markdown marks.
     {
       tag: [
+        tags.meta,
+        tags.processingInstruction,
         markdownTags.CodeMark,
         markdownTags.EmphasisMark,
         markdownTags.HeaderMark,
@@ -111,16 +88,10 @@ export const markdownHighlightStyle = HighlightStyle.define(
         markdownTags.LinkReference,
         markdownTags.ListMark,
         markdownTags.QuoteMark,
-        tags.meta,
-        tags.processingInstruction,
       ],
       class: mark,
     },
-    // Main content, paragraphs, etc.
-    {
-      tag: [tags.content],
-      fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-    },
+
     // Headings.
     { tag: tags.heading1, class: heading[1] },
     { tag: tags.heading2, class: heading[2] },
@@ -128,39 +99,38 @@ export const markdownHighlightStyle = HighlightStyle.define(
     { tag: tags.heading4, class: heading[4] },
     { tag: tags.heading5, class: heading[5] },
     { tag: tags.heading6, class: heading[6] },
-    // Formatting.
-    { tag: tags.strong, class: bold },
+
+    // Emphasis.
     { tag: tags.emphasis, class: italic },
+    { tag: tags.strong, class: bold },
     { tag: tags.strikethrough, class: strikethrough },
+
     // Naked URLs.
     {
-      tag: [markdownTags.URL, tags.link, tags.url],
-      color: 'inherit !important',
-      textDecoration: 'none !important',
-      fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-      fontSize: '11pt', // TODO(burdon): ???
-      padding: '0 4px',
+      tag: [markdownTags.URL],
+      class: inlineUrl,
     },
+
     // E.g., code block language (after ```).
     {
       tag: [tags.function(tags.variableName), tags.labelName],
-      color: get(tokens, 'extend.colors.primary.500'),
-      fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-      fontSize: '11pt',
+      class: codeMark,
     },
-    // Fenced code blocks will be highlighted by custom syntax highlighters configured by the bundle,
-    // IFF a language is defined (since the `codeLanguages` property is set in the `markdown` plugin).
-    // Otherwise, we catch the code text here.
+
+    // The `markdown` extension configures extensions for `lezer` to parse markdown tokens (incl. below).
+    // However, since `codeLanguages` is also defined, the `lezer` will not parse fenced code blocks,
+    // when a language is specified. In this case, the syntax highlighting extensions will colorize
+    // the code, but all other CSS properties will be inherited.
     {
       tag: [markdownTags.CodeText, markdownTags.InlineCode],
-      fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-      fontSize: '11pt',
-      color: 'red',
+      class: code,
     },
-    {
-      tag: [markdownTags.FencedCode, markdownTags.CodeBlock],
-      color: 'red',
-    },
+
+    // Main content, paragraphs, etc.
+    // {
+    //   tag: [tags.content],
+    //   fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    // },
   ],
   {
     scope: markdownLanguage,
