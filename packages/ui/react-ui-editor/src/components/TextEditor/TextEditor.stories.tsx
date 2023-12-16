@@ -80,8 +80,3 @@ export const Automerge = {
     />
   ),
 };
-
-// TODO(burdon): Custom event handler.
-// const custom = EditorView.domEventHandlers({
-//   mousedown: (e, view) => {},
-// });

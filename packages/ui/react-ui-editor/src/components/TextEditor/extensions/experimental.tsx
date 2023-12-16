@@ -103,7 +103,7 @@ export function hyperLinkExtension() {
   );
 }
 
-export const hyperlinkStyle = EditorView.baseTheme({
+export const styles = EditorView.baseTheme({
   '.cm-hyperlink-label': {
     cursor: 'pointer',
     textDecoration: 'underline',
@@ -117,4 +117,4 @@ export const hyperlinkStyle = EditorView.baseTheme({
   },
 });
 
-export const hyperlinkWidget: Extension = [hyperLinkExtension(), hyperlinkStyle];
+export const hyperlinkWidget: Extension = [hyperLinkExtension(), styles];

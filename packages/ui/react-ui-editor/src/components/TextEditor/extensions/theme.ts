@@ -38,16 +38,18 @@ export const baseTheme: {
     // Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
   },
+  '&light .cm-content': {
+    color: get(tokens, 'extend.colors.neutral.900', 'black'),
+    caretColor: 'black',
+  },
+  '&dark .cm-content': {
+    color: get(tokens, 'extend.colors.neutral.100', 'white'),
+    caretColor: 'white',
+  },
 
   //
   // Cursor
   //
-  '&light .cm-content': {
-    caretColor: 'black',
-  },
-  '&dark .cm-content': {
-    caretColor: 'white',
-  },
   '&light .cm-cursor': {
     borderLeft: '2px solid black',
   },
@@ -63,59 +65,58 @@ export const baseTheme: {
   //
   '& .cm-line': {
     paddingInline: 0,
-    // lineHeight: 1.6,
-    // minBlockSize: '1.6em',
   },
-  '& .cm-line *': {
-    // lineHeight: 1.6,
-  },
+  '& .cm-line *': {},
   '& .cm-activeLine': {
     backgroundColor: 'transparent',
   },
 
   //
   // selection
-  // TODO(burdon): Review/remove.
   //
 
-  // '&light .cm-selectionBackground, &light.cm-focused .cm-selectionBackground': {
-  //   background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
-  // },
-  // '&dark .cm-selectionBackground, &dark.cm-focused .cm-selectionBackground': {
-  //   background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
-  // },
+  '&light .cm-selectionBackground, &light.cm-focused .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
+  },
+  '&dark .cm-selectionBackground, &dark.cm-focused .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
+  },
+  '&light .cm-selectionMatch': {
+    background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
+  },
+  '&dark .cm-selectionMatch': {
+    background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
+  },
 
-  // '&light .cm-selectionMatch': {
-  //   background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
-  // },
-  // '&dark .cm-selectionMatch': {
-  //   background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
-  // },
+  //
+  // collaboration
+  // TODO(burdon): Review classnames (YJS dependent?)
+  //
 
-  // '&light .cm-ySelection, &light .cm-yLineSelection': {
-  //   mixBlendMode: 'multiply',
-  // },
-  // '&dark .cm-ySelection, &dark .cm-yLineSelection': {
-  //   mixBlendMode: 'screen',
-  // },
+  '&light .cm-ySelection, &light .cm-yLineSelection': {
+    mixBlendMode: 'multiply',
+  },
+  '&dark .cm-ySelection, &dark .cm-yLineSelection': {
+    mixBlendMode: 'screen',
+  },
 
-  // '& .cm-ySelectionInfo': {
-  //   padding: '2px 4px',
-  //   marginBlockStart: '-4px',
-  // },
-  // '& .cm-ySelection, & .cm-selectionMatch': {
-  //   paddingBlockStart: '.15em',
-  //   paddingBlockEnd: '.15em',
-  // },
-  // '& .cm-ySelectionCaret': {
-  //   display: 'inline-block',
-  //   insetBlockStart: '.1em',
-  //   blockSize: '1.4em',
-  //   verticalAlign: 'top',
-  // },
-  // '& .cm-yLineSelection': {
-  //   margin: '0',
-  // },
+  '& .cm-ySelectionInfo': {
+    padding: '2px 4px',
+    marginBlockStart: '-4px',
+  },
+  '& .cm-ySelection, & .cm-selectionMatch': {
+    paddingBlockStart: '.15em',
+    paddingBlockEnd: '.15em',
+  },
+  '& .cm-ySelectionCaret': {
+    display: 'inline-block',
+    insetBlockStart: '.1em',
+    blockSize: '1.4em',
+    verticalAlign: 'top',
+  },
+  '& .cm-yLineSelection': {
+    margin: 0,
+  },
 
   //
   // link
@@ -133,7 +134,6 @@ export const baseTheme: {
   // tooltip
   //
   '& .cm-tooltip': {
-    backgroundColor: 'white', // TODO(burdon): Input surface.
     border: 'none',
   },
   // '& .cm-tooltip-below': {},

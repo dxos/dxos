@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './hyperlinkDecoration';
-export * from './hyperlinkTooltip';
-export * from './hyperlinkWidget';
+export * from './link';
+export * from './tooltip';

@@ -4,13 +4,6 @@
 
 import '@dxosTheme';
 
-import {
-  autocompletion,
-  type CompletionContext,
-  completionKeymap,
-  type CompletionResult,
-} from '@codemirror/autocomplete';
-import { keymap } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { StrictMode, useRef, useState } from 'react';
@@ -21,7 +14,7 @@ import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
-import { createHyperlinkTooltip, hyperlinkDecoration } from './extensions';
+import { tasklist, createHyperlinkTooltip, hyperlinkDecoration, onChangeExtension } from './extensions';
 import { useTextModel } from '../../hooks';
 
 // TODO(burdon): Read-only render mode.
@@ -31,7 +24,19 @@ import { useTextModel } from '../../hooks';
 // TODO(burdon): Tables.
 // TODO(burdon): Autocomplete.
 
-const initialText = [
+const str = (lines: string[]) => lines.join('\n');
+
+// prettier-ignore
+const tasks = str([
+  '## Task list',
+  '',
+  '- [x] parsing',
+  '- [ ] styling',
+  '- [ ] rendering',
+  '',
+]);
+
+const text = str([
   '# Markdown',
   '',
   '> This is a block quote.',
@@ -47,10 +52,7 @@ const initialText = [
   '- london',
   '- tokyo',
   '',
-  'Checked list:',
-  '- [x] parsing',
-  '- [ ] styling',
-  '- [ ] rendering',
+  tasks,
   '',
   'Numbered list:',
   '1. one',
@@ -70,17 +72,18 @@ const initialText = [
   '---', // TODO(burdon): Horizontal rule.
   '',
   ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
-].join('\n');
+]);
 
-const textWithLinks = [
+const textWithLinks = str([
   '# Test',
   '',
-  'This is all about [DXOS](https://dxos.org); read more [here](https://docs.dxos.org/guide/getting-started.html).',
+  'This is all about [DXOS](https://dxos.org); take a look!',
+  // 'read more [here](https://docs.dxos.org/guide/getting-started.html).',
   '',
   '',
   '',
   '',
-].join('\n');
+]);
 
 const hyperLinkTooltip = () =>
   createHyperlinkTooltip((el, url) => {
@@ -134,7 +137,11 @@ export default {
 };
 
 export const Default = {
-  render: () => <Story text={initialText} />,
+  render: () => <Story text={text} extensions={[hyperlinkDecoration(), tasklist()]} />,
+};
+
+export const Simple = {
+  render: () => <Story text={text} />,
 };
 
 export const Tooltips = {
@@ -145,59 +152,26 @@ export const EditableLinks = {
   render: () => <Story text={textWithLinks} extensions={[hyperlinkDecoration()]} />,
 };
 
-// TODO(burdon): Automcomplete: https://codemirror.net/5/doc/manual.html#addon_runmode
-// TODO(burdon): Modes: parallel parsing and decoration (e.g., associated with language).
-// TODO(burdon): Add-on: runmode: run lexer over content (with rendering codemirror).
-//  https://codemirror.net/5/doc/manual.html#addon_runmode
-// TODO(burdon): Add-on: dialog.
-// TODO(burdon): Comments: https://codemirror.net/5/doc/manual.html#setBookmark
-// TODO(burdon): Split view: https://codemirror.net/examples/split
-
-// https://codemirror.net/examples/autocompletion
-// https://codemirror.net/docs/ref/#autocomplete.autocompletion
-// https://codemirror.net/docs/ref/#autocomplete.Completion
-
-// TODO(burdon): Hint to customize?
-// https://codemirror.net/examples/autocompletion
-export const Autocomplete = {
-  render: () => {
-    return (
-      <Story
-        text={initialText}
-        extensions={[
-          keymap.of(completionKeymap),
-          autocompletion({
-            // addToOptions: [
-            //   {
-            //     render: (completion) => {
-            //       const el = document.createElement('div');
-            //       el.innerText = 'info';
-            //       return el;
-            //     },
-            //     position: 0,
-            //   },
-            // ],
-            override: [
-              (context: CompletionContext): CompletionResult | null => {
-                const word = context.matchBefore(/\w*/);
-                if (!word || (word.from === word.to && !context.explicit)) {
-                  return null;
-                }
-
-                return {
-                  from: word.from,
-                  options: [
-                    { label: 'apple', type: 'keyword' },
-                    { label: 'amazon', type: 'keyword' },
-                    { label: 'hello', type: 'variable', info: '(World)' },
-                    { label: 'magic', type: 'text', apply: '⠁⭒*.✩.*⭒⠁', detail: 'macro' },
-                  ],
-                };
-              },
-            ],
-          }),
-        ]}
-      />
-    );
-  },
+export const TaskList = {
+  render: () => (
+    <Story
+      text={tasks}
+      extensions={[
+        tasklist(),
+        onChangeExtension((text) => {
+          console.log(text);
+        }),
+      ]}
+    />
+  ),
 };
+
+// export const Decorators = {
+//   render: () => <Story text={textWithLinks} extensions={[hyperlinkWidget]} />,
+// };
+
+// export const Autocomplete = {
+//   render: () => <Story text={text} extensions={[autocomplete()]} />,
+// };
+
+// TODO(burdon): State field: track state of document (e.g., spans).

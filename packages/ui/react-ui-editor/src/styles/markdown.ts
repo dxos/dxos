@@ -16,6 +16,8 @@ export const heading: Record<HeadingLevel, string> = {
   6: 'mbs-4 mbe-2 font-medium text-inherit no-underline',
 };
 
+export const text = 'text-neutral-800 dark:text-neutral-200';
+
 export const blockquote = 'mlb-2 border-is-4 border-neutral-500/50 pis-5';
 
 // TODO(thure): Tailwind was not seeing `[&>li:before]:content-["•"]` as a utility class, but it would work if instead of `"•"` it was `"X"`… why?
