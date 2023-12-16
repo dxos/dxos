@@ -29,12 +29,10 @@ import {
   placeholder,
   rectangularSelection,
 } from '@codemirror/view';
-// import { GFM } from '@lezer/markdown';
 
 import type { ThemeMode } from '@dxos/react-ui';
 
-import { markdownTagsExtension } from './tags';
-import { markdownHighlightStyle } from './theme';
+import { markdownHighlightStyle, markdownTagsExtension } from './highlight';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
@@ -77,23 +75,29 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
 
     // Main extension.
     // https://github.com/codemirror/lang-markdown
+    // https://codemirror.net/5/mode/markdown/index.html (demo).
     markdown({
+      // GRM by default (vs strict CommonMark):
+      // Table, TaskList, Strikethrough, and Autolink.
+      // NOTE: This extends the parser; it doesn't affect rendering.
+      // https://github.github.com/gfm
+      // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
       base: markdownLanguage,
-      codeLanguages: languages,
-      extensions: [
-        // TODO(burdon): This seems to upgrade the parser.
-        // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
-        // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
-        // https://github.github.com/gfm
-        // GFM,
 
-        // Custom styling.
+      // Languages for syntax highlighting fenced code blocks.
+      codeLanguages: languages,
+
+      // Parser extensions.
+      extensions: [
+        // GFM, // TODO(burdon): Provided by default?
         markdownTagsExtension,
       ],
     }),
 
-    // TODO(thure): All but one rule here apply to both themes; rename or refactor.
+    // Custom styles.
     syntaxHighlighting(markdownHighlightStyle),
+
+    // TODO(thure): All but one rule here apply to both themes; rename or refactor.
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
   ].filter(Boolean) as Extension[];
 };

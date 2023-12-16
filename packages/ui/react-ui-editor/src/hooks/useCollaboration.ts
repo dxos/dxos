@@ -3,7 +3,7 @@
 //
 
 import type { Extension } from '@codemirror/state';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { generateName } from '@dxos/display-name';
@@ -20,8 +20,8 @@ import { automergePlugin } from '../automerge/automerge-plugin';
  * https://codemirror.net/docs/ref/#collab
  */
 export const useCollaboration = (model: EditorModel, themeMode: ThemeMode): Extension | undefined => {
-  const { provider, peer, content } = model;
-  const extension = useMemo(() => {
+  const { content, provider, peer } = model;
+  const [extension] = useState(() => {
     if (content instanceof YText) {
       return yCollab(content, provider?.awareness);
     } else if (isDocAccessor(content)) {
@@ -29,7 +29,7 @@ export const useCollaboration = (model: EditorModel, themeMode: ThemeMode): Exte
     } else {
       return undefined;
     }
-  }, []);
+  });
 
   useEffect(() => {
     if (provider && peer) {
