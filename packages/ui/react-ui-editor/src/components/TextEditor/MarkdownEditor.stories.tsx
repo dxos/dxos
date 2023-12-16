@@ -193,6 +193,14 @@ export const TaskList = {
   ),
 };
 
+const links = [
+  { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
+  { label: 'GitHub', apply: '[DXOS](https://github.com/dxos)' },
+  { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
+  { label: 'IPFS', apply: '[Protocol Labs](https://docs.ipfs.tech)' },
+  { label: 'StackEdit', apply: '[StackEdit](https://stackedit.io/app)' },
+];
+
 export const Autocomplete = {
   render: () => (
     <Story
@@ -201,12 +209,8 @@ export const Autocomplete = {
         link({ onRender }),
         autocomplete({
           getOptions: (text) => {
-            console.log('getOptions', text);
-            return [
-              { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
-              { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
-              { label: 'IPFS', apply: '[Protocol Labs](https://docs.ipfs.tech)' },
-            ];
+            // TODO(burdon): Option to create new page?
+            return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
           },
         }),
       ]}
