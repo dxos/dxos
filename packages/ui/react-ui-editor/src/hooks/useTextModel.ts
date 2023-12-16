@@ -47,6 +47,8 @@ export type UseTextModelOptions = {
 // TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
+  // TODO(burdon): Remove?
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const provider = useMemo(() => {
     if (isActualAutomergeObject(text)) {
       return undefined;
