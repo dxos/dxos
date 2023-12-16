@@ -167,6 +167,7 @@ export class Replicator {
     const model: EditorModel = {
       id: doc.guid,
       content: this._kind === TextKind.PLAIN ? doc.getText('content') : doc.getXmlFragment('content'),
+      text: () => model.content.toString(), // TODO(burdon): Fix.
       provider,
       peer: { id },
     };

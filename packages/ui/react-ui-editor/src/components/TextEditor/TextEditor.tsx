@@ -7,23 +7,26 @@ import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
-import get from 'lodash.get';
 import React, {
+  type ComponentProps,
   type KeyboardEvent,
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
   useState,
-  type ComponentProps,
 } from 'react';
+import { yCollab } from 'y-codemirror.next';
 
-import { isDocAccessor } from '@dxos/echo-schema';
+import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
+import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
+import { type YText } from '@dxos/text-model';
 
-import { basicBundle, basicTheme, markdownBundle, markdownTheme } from './extensions';
-import { type EditorModel, useCollaboration } from '../../hooks';
-import type { ThemeStyles } from '../../styles';
+import { basicBundle, markdownBundle } from './extensions';
+import { defaultTheme, textTheme } from './themes';
+import { type EditorModel } from '../../hooks';
+import { type ThemeStyles } from '../../styles';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
@@ -37,7 +40,7 @@ export type CursorInfo = {
 };
 
 export type TextEditorRef = {
-  editor: HTMLDivElement | null;
+  root: HTMLDivElement | null;
   state?: EditorState;
   view?: EditorView;
 };
@@ -65,66 +68,66 @@ export type TextEditorProps = {
  * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
 export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, extensions = [], slots, editorMode }, forwardedRef) => {
+  ({ model, extensions = [], slots = defaultSlots, editorMode }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
-    const [parent, setParent] = useState<HTMLDivElement | null>(null);
+    // TODO(burdon): Factor out extension (remove logic from react-ui-editor).
+    // const collaboration = useCollaboration(model, themeMode);
+    const { provider, peer } = model;
+    useEffect(() => {
+      if (provider && peer) {
+        provider.awareness.setLocalStateField('user', {
+          name: peer.name ?? generateName(peer.id),
+          color: getColorForValue({ value: peer.id, type: 'color' }),
+          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
+        });
+      }
+    }, [provider, peer, themeMode]);
+
+    const [root, setRoot] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
     const [view, setView] = useState<EditorView>();
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        editor: parent,
-        state,
-        view,
-      }),
-      [view, state, parent],
-    );
-
-    // TODO(burdon): Pass in extension?
-    const collaboration = useCollaboration(model, themeMode);
+    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
     useEffect(() => {
-      if (!parent) {
+      if (!root) {
         return;
       }
 
-      const initialText = isDocAccessor(model.content)
-        ? get(model.content.handle.docSync(), model.content.path)
-        : model.content?.toString();
-
       const state = EditorState.create({
-        doc: initialText,
+        doc: model.text(),
         extensions: [
           // TODO(burdon): Factor out VIM mode?
           editorMode === 'vim' && vim(),
 
-          // Replication.
-          collaboration,
-
           // Theme.
-          slots?.editor?.theme && EditorView.theme(slots?.editor?.theme),
+          EditorView.baseTheme(defaultTheme),
+          EditorView.theme(slots?.editor?.theme ?? {}),
+          // TODO(burdon): themeMode doesn't change in storybooks.
+          EditorView.darkTheme.of(themeMode === 'dark'),
+
+          // Storage and replication.
+          yCollab(model.content as YText, model.provider?.awareness),
 
           // Custom.
           ...extensions,
         ].filter(Boolean) as Extension[],
       });
 
-      setState(state);
-
       // NOTE: This repaints the editor.
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
       // Ideally this should not be hit except when changing between text objects.
       view?.destroy();
-      setView(new EditorView({ state, parent }));
+      setView(new EditorView({ state, parent: root }));
+      setState(state);
 
       return () => {
         view?.destroy();
         setView(undefined);
         setState(undefined);
       };
-    }, [parent, model.content, themeMode, editorMode]);
+    }, [root, model.content, themeMode, editorMode]);
 
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
@@ -136,7 +139,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           }
 
           case 'Escape': {
-            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && parent?.focus();
+            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && root?.focus();
             break;
           }
         }
@@ -147,7 +150,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     return (
       <div
         key={model.id}
-        ref={setParent}
+        ref={setRoot}
         tabIndex={0}
         {...slots?.root}
         {...(editorMode !== 'vim' && tabsterDOMAttribute)}
@@ -157,15 +160,16 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
+// TODO(burdon): Set default text theme?
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
+  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const extensions = [...(_extensions ?? []), basicBundle({ themeMode, placeholder: slots?.editor?.placeholder })];
+    const slots = defaultsDeep({}, _slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
-        extensions={extensions}
-        slots={defaultsDeep({}, slots, { editor: { theme: basicTheme } })}
+        extensions={[basicBundle({ themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
+        slots={slots}
         {...props}
       />
     );
@@ -173,16 +177,29 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 );
 
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions: _extensions, slots, ...props }, forwardedRef) => {
+  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const extensions = [...(_extensions ?? []), markdownBundle({ themeMode })];
+    const slots = defaultsDeep({}, _slots, defaultSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
-        extensions={extensions}
-        slots={defaultsDeep({}, slots, { editor: { theme: markdownTheme } })}
+        extensions={[markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
+        slots={slots}
         {...props}
       />
     );
   },
 );
+
+export const defaultSlots: TextEditorSlots = {
+  root: {
+    className: mx('p-2', inputSurface),
+  },
+};
+
+export const defaultTextSlots: TextEditorSlots = {
+  ...defaultSlots,
+  editor: {
+    theme: textTheme,
+  },
+};

@@ -119,15 +119,12 @@ const OutlinerItem = ({
         break;
       }
       case 'ArrowRight': {
-        console.log(from, to);
         if (!after?.length) {
           event.preventDefault();
           onCursor?.('down', 0);
         }
         break;
       }
-      // TODO(burdon): BUG: When outdenting the last item.
-      //  TypeError: Cannot read properties of undefined (reading 'items')
       case 'Tab': {
         event.preventDefault();
         onIndent?.(event.shiftKey ? 'left' : 'right');
