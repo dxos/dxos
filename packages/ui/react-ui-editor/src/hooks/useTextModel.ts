@@ -68,6 +68,10 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
     }
   }, [text]);
 
+  if (!text?.doc || !text?.content) {
+    return undefined;
+  }
+
   if (isActualAutomergeObject(text)) {
     const obj = text as any as AutomergeTextCompat;
     return {
@@ -84,11 +88,6 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
     };
   }
 
-  if (!text?.doc || !text?.content) {
-    return undefined;
-  }
-
-  // TODO(burdon): Remove dependency on schema.
   return {
     id: text.doc.guid,
     content: text.content,

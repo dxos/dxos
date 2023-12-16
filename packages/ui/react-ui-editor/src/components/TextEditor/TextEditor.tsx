@@ -16,13 +16,16 @@ import React, {
   useImperativeHandle,
   useState,
 } from 'react';
+import { yCollab } from 'y-codemirror.next';
 
+import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
-import { inputSurface, mx } from '@dxos/react-ui-theme';
+import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
+import { type YText } from '@dxos/text-model';
 
 import { basicBundle, markdownBundle } from './extensions';
 import { defaultTheme, textTheme } from './themes';
-import { type EditorModel, useCollaboration } from '../../hooks';
+import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 
 export const EditorModes = ['default', 'vim'] as const;
@@ -69,8 +72,18 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
-    // TODO(burdon): Pass in extension?
-    const collaboration = useCollaboration(model, themeMode);
+    // TODO(burdon): Factor out extension (remove logic from react-ui-editor).
+    // const collaboration = useCollaboration(model, themeMode);
+    const { provider, peer } = model;
+    useEffect(() => {
+      if (provider && peer) {
+        provider.awareness.setLocalStateField('user', {
+          name: peer.name ?? generateName(peer.id),
+          color: getColorForValue({ value: peer.id, type: 'color' }),
+          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
+        });
+      }
+    }, [provider, peer, themeMode]);
 
     const [root, setRoot] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
@@ -94,8 +107,8 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           // TODO(burdon): themeMode doesn't change in storybooks.
           EditorView.darkTheme.of(themeMode === 'dark'),
 
-          // Replication.
-          collaboration,
+          // Storage and replication.
+          yCollab(model.content as YText, model.provider?.awareness),
 
           // Custom.
           ...extensions,
