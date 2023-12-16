@@ -193,7 +193,7 @@ export const EditableLinks = {
 export const TaskList = {
   render: () => (
     <Story
-      text={text.tasks}
+      text={str([text.tasks, '', text.list])}
       extensions={[
         tasklist(),
         listener((text) => {

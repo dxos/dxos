@@ -11,11 +11,13 @@ class CheckboxWidget extends WidgetType {
     super();
   }
 
-  override eq(other: any) {
-    return other.pos === this._pos && other.checked === this._checked;
+  // TODO(burdon): Check other widgets.
+  override eq(other: CheckboxWidget) {
+    return this._pos === other._pos;
   }
 
   toDOM(view: EditorView) {
+    console.log('toDom', this._pos);
     const wrap = document.createElement('span');
     wrap.setAttribute('aria-hidden', 'true');
     wrap.className = 'cm-task-item';
@@ -40,6 +42,11 @@ class CheckboxWidget extends WidgetType {
       return true;
     };
     return wrap;
+  }
+
+  // TODO(burdon): Remove listener?
+  override destroy() {
+    console.log('destroy', this._pos);
   }
 
   override ignoreEvent() {
