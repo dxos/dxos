@@ -9,16 +9,17 @@ import { type MarkdownConfig } from '@lezer/markdown';
 import get from 'lodash.get';
 
 import {
+  blockquote,
   bold,
-  inlineUrl,
+  code,
   codeMark,
   heading,
+  horizontalRule,
+  inlineUrl,
   italic,
+  mark,
   strikethrough,
   tokens,
-  horizontalRule,
-  code,
-  mark,
 } from '../../../../styles';
 
 /**
@@ -145,10 +146,9 @@ export const markdownHighlightStyle = HighlightStyle.define(
       class: code,
     },
 
-    // TODO(burdon): Not working.
     {
-      tag: [markdownTags.Blockquote],
-      color: 'green',
+      tag: [markdownTags.QuoteMark],
+      class: blockquote,
     },
 
     {

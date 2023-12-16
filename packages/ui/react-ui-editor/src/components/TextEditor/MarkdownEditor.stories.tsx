@@ -107,6 +107,14 @@ const document = str(
   text.headings,
 );
 
+const links = [
+  { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
+  { label: 'GitHub', apply: '[DXOS GitHub](https://github.com/dxos)' },
+  { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
+  { label: 'IPFS', apply: '[Protocol Labs](https://docs.ipfs.tech)' },
+  { label: 'StackEdit', apply: '[StackEdit](https://stackedit.io/app)' },
+];
+
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
@@ -164,7 +172,19 @@ export default {
 };
 
 export const Default = {
-  render: () => <Story text={document} extensions={[link({ onRender }), tasklist(), tooltip({ onHover })]} />,
+  render: () => (
+    <Story
+      text={document}
+      extensions={[
+        link({ onRender }),
+        tooltip({ onHover }),
+        tasklist(),
+        autocomplete({
+          getOptions: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+        }),
+      ]}
+    />
+  ),
 };
 
 export const Simple = {
@@ -175,7 +195,7 @@ export const Tooltips = {
   render: () => <Story text={text.links} extensions={[tooltip({ onHover })]} />,
 };
 
-export const EditableLinks = {
+export const Links = {
   render: () => <Story text={text.links} extensions={[link({ onRender })]} />,
 };
 
@@ -193,14 +213,6 @@ export const TaskList = {
   ),
 };
 
-const links = [
-  { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
-  { label: 'GitHub', apply: '[DXOS](https://github.com/dxos)' },
-  { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
-  { label: 'IPFS', apply: '[Protocol Labs](https://docs.ipfs.tech)' },
-  { label: 'StackEdit', apply: '[StackEdit](https://stackedit.io/app)' },
-];
-
 export const Autocomplete = {
   render: () => (
     <Story
@@ -208,10 +220,7 @@ export const Autocomplete = {
       extensions={[
         link({ onRender }),
         autocomplete({
-          getOptions: (text) => {
-            // TODO(burdon): Option to create new page?
-            return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
-          },
+          getOptions: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
       ]}
     />

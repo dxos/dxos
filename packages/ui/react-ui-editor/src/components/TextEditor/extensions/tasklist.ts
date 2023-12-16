@@ -18,9 +18,10 @@ class CheckboxWidget extends WidgetType {
     super();
   }
 
-  // TODO(burdon): Is this efficient? Check life-cycle.
   override eq(other: CheckboxWidget) {
-    return this._pos === other._pos;
+    // Uniqueness based on position; also checks state.
+    // TODO(burdon): Is this efficient? Check life-cycle.
+    return this._pos === other._pos && this._checked === other._checked;
   }
 
   toDOM(view: EditorView) {
@@ -52,10 +53,10 @@ class CheckboxWidget extends WidgetType {
     return wrap;
   }
 
-  override destroy() {
-    // TODO(burdon): Remove listener?
-    // console.log('destroy', this._pos);
-  }
+  // TODO(burdon): Remove listener?
+  // override destroy() {
+  // console.log('destroy', this._pos);
+  // }
 
   override ignoreEvent() {
     return false;
@@ -76,6 +77,7 @@ export const statefield = (): Extension => {
     const builder = new RangeSetBuilder();
     syntaxTree(state).iterate({
       enter: (node) => {
+        console.log(node.name, node.from, node.to);
         if (node.name === 'TaskMarker') {
           builder.add(
             node.from,

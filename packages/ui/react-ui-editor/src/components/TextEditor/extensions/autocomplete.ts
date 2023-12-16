@@ -41,10 +41,8 @@ export const autocomplete = ({ getOptions }: AutocompleteOptions) => [
     // TODO(burdon): Set custom keymap.
     // defaultKeymap: false,
 
-    // closeOnBlur: false,
-
+    // TODO(burdon): Option to create new page?
     // TODO(burdon): Optional decoration via addToOptions
-
     override: [
       (context: CompletionContext): CompletionResult | null => {
         const word = context.matchBefore(/\w*/);
