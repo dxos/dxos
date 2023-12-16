@@ -3,4 +3,4 @@
 //
 
 export * from './bundle';
-export * from './theme';
+export * from './highlight';

@@ -50,6 +50,7 @@ const Story = () => {
 };
 
 export const Default = {
+  title: 'react-ui-editor/YJS',
   // TODO(wittjosiah): Decorator for doing this without clients being initialized?
   render: () => <ClientRepeater count={2} Component={Story} />,
 };

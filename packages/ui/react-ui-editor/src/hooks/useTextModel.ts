@@ -26,6 +26,7 @@ type Provider = { awareness: Awareness };
 export type EditorModel = {
   id: string;
   content: string | YText | YXmlFragment | DocAccessor;
+  text: () => string;
   provider?: Provider;
   peer?: {
     id: string;
@@ -33,6 +34,7 @@ export type EditorModel = {
   };
 };
 
+// TODO(burdon): Remove space/identity dependency. Define interface for the framework re content and presence.
 export type UseTextModelOptions = {
   identity?: Identity | null;
   space?: Space;
@@ -43,6 +45,8 @@ export type UseTextModelOptions = {
 // TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
+  // TODO(burdon): Remove?
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const provider = useMemo(() => {
     if (isActualAutomergeObject(text)) {
       return undefined;
@@ -64,11 +68,16 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
     }
   }, [text]);
 
+  if (!text?.doc || !text?.content) {
+    return undefined;
+  }
+
   if (isActualAutomergeObject(text)) {
     const obj = text as any as AutomergeTextCompat;
     return {
       id: obj.id,
       content: content!,
+      text: () => content!.toString(),
       provider: undefined,
       peer: identity
         ? {
@@ -79,14 +88,10 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
     };
   }
 
-  if (!text?.doc || !text?.content) {
-    return undefined;
-  }
-
   return {
     id: text.doc.guid,
     content: text.content,
-    provider,
+    text: () => text.content!.toString(),
     peer: identity
       ? {
           id: identity.identityKey.toHex(),
