@@ -4,8 +4,8 @@
 
 import { type IconProps } from '@phosphor-icons/react';
 import React, { type FC, Fragment, type MutableRefObject, useRef, useState } from 'react';
-import { type UseTranslationResponse } from 'react-i18next';
 
+import { type Label } from '@dxos/app-graph';
 import { Button, Dialog, DropdownMenu, Popover, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -113,15 +113,6 @@ export const NavTreeItemActionDropdownMenu = ({
   );
 };
 
-// TODO(burdon): Factor out.
-const labelCompare =
-  (t: UseTranslationResponse['t']) =>
-  ({ label: l1 }: TreeNodeAction, { label: l2 }: TreeNodeAction) => {
-    const t1 = Array.isArray(l1) ? t(...l1) : l1;
-    const t2 = Array.isArray(l2) ? t(...l2) : l2;
-    return t1.localeCompare(t2);
-  };
-
 export const NavTreeItemActionSearchList = ({
   icon: Icon,
   active,
@@ -139,7 +130,12 @@ export const NavTreeItemActionSearchList = ({
   const button = useRef<HTMLButtonElement | null>(null);
 
   // TODO(burdon): Optionally sort.
-  const sortedActions = actions?.sort(labelCompare(t));
+  const sortedActions = actions?.sort(({ label: l1 }, { label: l2 }) => {
+    const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
+    const t1 = getLabel(l1).toLowerCase();
+    const t2 = getLabel(l2).toLowerCase();
+    return t1.localeCompare(t2);
+  });
 
   // TODO(thure): Use LayoutPlugin’s global Dialog.
   return (

@@ -8327,6 +8327,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
+      react-i18next:
+        specifier: ^11.18.6
+        version: 11.18.6(i18next@21.10.0)(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
