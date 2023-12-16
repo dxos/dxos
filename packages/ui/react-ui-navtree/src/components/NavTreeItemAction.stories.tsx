@@ -15,8 +15,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { NavTreeItemAction } from './NavTreeItemAction';
 
 const meta: Meta = {
-  // TODO(burdon): Remove title from others (so all appear in ui tree?)
-  // title: 'Components/NavTree/NavTreeItemActionSearchList',
+  title: 'react-ui-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
   parameters: {
     layout: 'fullscreen',

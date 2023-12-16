@@ -140,7 +140,8 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         {...props}
         onSelect={handleSelect}
         className={mx(
-          'p-1 select-none cursor-pointer data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10',
+          // TODO(burdon): Remove rounded since full bleed to edge like list selection.
+          'p-1 rounded select-none cursor-pointer data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10',
           classNames,
         )}
         ref={forwardedRef}

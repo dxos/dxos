@@ -174,11 +174,14 @@ export const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0'>
+          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0 rounded-none'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='p-4' />
+              <SearchList.Input
+                placeholder={t('tree item searchlist input placeholder')}
+                classNames={mx('px-3', inputSurface)}
+              />
               <SearchList.Content
-                classNames={[inputSurface, 'p-0', 'min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}
+                classNames={[inputSurface, 'p-0 min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}
               >
                 {actions?.map((action) => {
                   const value = Array.isArray(action.label) ? t(...action.label) : action.label;
