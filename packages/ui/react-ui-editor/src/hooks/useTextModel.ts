@@ -25,7 +25,6 @@ import { SpaceAwarenessProvider } from './yjs';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
-type Provider = { awareness: Awareness };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type EditorModel = {
@@ -33,7 +32,7 @@ export type EditorModel = {
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
   extension?: Extension;
-  provider?: Provider;
+  awareness?: Awareness;
   peer?: {
     id: string;
     name?: string;
@@ -47,6 +46,29 @@ export type UseTextModelOptions = {
   text?: TextObject;
 };
 
+// TODO(burdon): Remove YJS/Automerge deps (from UI component -- create abstraction; incl. all ECHO/Space deps).
+// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
+export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
+  const [model, setModel] = useState<EditorModel | undefined>(() => createModel({ identity, space, text }));
+  useEffect(() => {
+    setModel(createModel({ identity, space, text }));
+  }, [identity, space, text]);
+  return model;
+};
+
+const createModel = (options: UseTextModelOptions) => {
+  const { space, text } = options;
+  if (!space || !text?.doc || !text?.content) {
+    return undefined;
+  }
+
+  if (isActualAutomergeObject(text)) {
+    return createAutomergeModel(options);
+  } else {
+    return createYjsModel(options);
+  }
+};
+
 const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorModel => {
   invariant(space && text?.doc && text?.content);
   const provider = new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` });
@@ -56,7 +78,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     content: text.content,
     text: () => text.content!.toString(),
     extension: yCollab(text.content as YText, provider.awareness),
-    provider,
+    awareness: provider.awareness,
     peer: identity
       ? {
           id: identity.identityKey.toHex(),
@@ -83,28 +105,4 @@ const createAutomergeModel = ({ identity, space, text }: UseTextModelOptions): E
         }
       : undefined,
   };
-};
-
-const createModel = (options: UseTextModelOptions) => {
-  const { space, text } = options;
-  if (!space || !text?.doc || !text?.content) {
-    return undefined;
-  }
-
-  if (isActualAutomergeObject(text)) {
-    return createAutomergeModel(options);
-  } else {
-    return createYjsModel(options);
-  }
-};
-
-// TODO(burdon): Don't support returning undefined (and remove checks from calling code).
-// TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
-// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
-export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
-  const [model, setModel] = useState<EditorModel | undefined>(() => createModel({ identity, space, text }));
-  useEffect(() => {
-    setModel(createModel({ identity, space, text }));
-  }, [identity, space, text]);
-  return model;
 };

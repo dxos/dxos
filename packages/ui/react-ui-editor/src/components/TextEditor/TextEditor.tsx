@@ -70,34 +70,22 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
-    // TODO(burdon): Factor out extension (remove logic from react-ui-editor).
-    // const collaboration = useCollaboration(model, themeMode);
-    const { provider, peer } = model;
+    // TODO(burdon): Factor out?
+    const { awareness, peer } = model;
     useEffect(() => {
-      if (provider && peer) {
-        provider.awareness.setLocalStateField('user', {
+      if (awareness && peer) {
+        awareness.setLocalStateField('user', {
           name: peer.name ?? generateName(peer.id),
           color: getColorForValue({ value: peer.id, type: 'color' }),
           colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
         });
       }
-    }, [provider, peer, themeMode]);
+    }, [awareness, peer, themeMode]);
 
     const [root, setRoot] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
     const [view, setView] = useState<EditorView>();
     useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
-
-    // TODO(burdon): Factor out.
-    useEffect(() => {
-      if (provider && peer) {
-        provider.awareness.setLocalStateField('user', {
-          name: peer.name ?? generateName(peer.id),
-          color: getColorForValue({ value: peer.id, type: 'color' }),
-          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-        });
-      }
-    }, [provider, peer, themeMode]);
 
     useEffect(() => {
       if (!root) {
