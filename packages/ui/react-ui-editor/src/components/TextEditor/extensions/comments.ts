@@ -14,9 +14,10 @@ import {
 import { Decoration, EditorView, keymap, type Rect, WidgetType } from '@codemirror/view';
 
 // 1. TODO(burdon): Make atomic.
-// 2. TODO(burdon): Create/track threads in composer (change global state). Select/follow. Scroll with.
-// 3. TODO(burdon): Resolve thread to close comments.
-// 4. TODO(burdon): Prevent accidental delete? (Or undo?).
+// 2. TODO(burdon): Create/track threads in composer (change global state). Select/follow. Scroll with page.
+// 3. TODO(burdon): Support multiple threads in sidebar?
+// 4. TODO(burdon): Anchor AI thread when creating section.
+// 5. TODO(burdon): Button to resolve thread to close comments.
 
 class BookmarkWidget extends WidgetType {
   constructor(private readonly _pos: number) {
