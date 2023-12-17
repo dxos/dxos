@@ -32,7 +32,7 @@ export type EditorModel = {
   id: string;
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
-  extension: Extension;
+  extension?: Extension;
   provider?: Provider;
   peer?: {
     id: string;
