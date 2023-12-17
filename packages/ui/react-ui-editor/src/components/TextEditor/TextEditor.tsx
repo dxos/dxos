@@ -16,12 +16,10 @@ import React, {
   useImperativeHandle,
   useState,
 } from 'react';
-import { yCollab } from 'y-codemirror.next';
 
 import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
-import { type YText } from '@dxos/text-model';
 
 import { basicBundle, markdownBundle } from './extensions';
 import { defaultTheme, textTheme } from './themes';
@@ -90,6 +88,17 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     const [view, setView] = useState<EditorView>();
     useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
+    // TODO(burdon): Factor out.
+    useEffect(() => {
+      if (provider && peer) {
+        provider.awareness.setLocalStateField('user', {
+          name: peer.name ?? generateName(peer.id),
+          color: getColorForValue({ value: peer.id, type: 'color' }),
+          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
+        });
+      }
+    }, [provider, peer, themeMode]);
+
     useEffect(() => {
       if (!root) {
         return;
@@ -108,7 +117,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           EditorView.darkTheme.of(themeMode === 'dark'),
 
           // Storage and replication.
-          yCollab(model.content as YText, model.provider?.awareness),
+          model.extension,
 
           // Custom.
           ...extensions,
@@ -127,7 +136,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         setView(undefined);
         setState(undefined);
       };
-    }, [root, model.content, themeMode, editorMode]);
+    }, [root, model, themeMode, editorMode]);
 
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {

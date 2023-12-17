@@ -2,9 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useMemo } from 'react';
+import { type Extension } from '@codemirror/state';
+import get from 'lodash.get';
+import { useEffect, useState } from 'react';
+import { yCollab } from 'y-codemirror.next';
 import type * as awarenessProtocol from 'y-protocols/awareness';
 
+import { invariant } from '@dxos/invariant';
 import {
   type DocAccessor,
   type Space,
@@ -16,6 +20,7 @@ import {
 import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 
+import { automergePlugin } from './automerge';
 import { SpaceAwarenessProvider } from './yjs';
 
 // TODO(burdon): Move.
@@ -27,6 +32,7 @@ export type EditorModel = {
   id: string;
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
+  extension: Extension;
   provider?: Provider;
   peer?: {
     id: string;
@@ -41,57 +47,16 @@ export type UseTextModelOptions = {
   text?: TextObject;
 };
 
-// TODO(burdon): Don't support returning undefined (and remove checks from calling code).
-// TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
-// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
-export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
-  // TODO(burdon): Remove?
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const provider = useMemo(() => {
-    if (isActualAutomergeObject(text)) {
-      return undefined;
-    }
-
-    if (!space || !text?.doc) {
-      return undefined;
-    }
-
-    return new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` });
-  }, [identity, space, text, text?.doc]);
-
-  const content = useMemo(() => {
-    if (isActualAutomergeObject(text)) {
-      const obj = text as any as AutomergeTextCompat;
-      return getRawDoc(obj, [obj.field]);
-    } else {
-      return text?.content;
-    }
-  }, [text]);
-
-  if (!text?.doc || !text?.content) {
-    return undefined;
-  }
-
-  if (isActualAutomergeObject(text)) {
-    const obj = text as any as AutomergeTextCompat;
-    return {
-      id: obj.id,
-      content: content!,
-      text: () => content!.toString(),
-      provider: undefined,
-      peer: identity
-        ? {
-            id: identity.identityKey.toHex(),
-            name: identity.profile?.displayName,
-          }
-        : undefined,
-    };
-  }
+const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorModel => {
+  invariant(space && text?.doc && text?.content);
+  const provider = new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` });
 
   return {
     id: text.doc.guid,
     content: text.content,
     text: () => text.content!.toString(),
+    extension: yCollab(text.content as YText, provider.awareness),
+    provider,
     peer: identity
       ? {
           id: identity.identityKey.toHex(),
@@ -99,4 +64,47 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
         }
       : undefined,
   };
+};
+
+const createAutomergeModel = ({ identity, space, text }: UseTextModelOptions): EditorModel => {
+  invariant(space && text?.doc && text?.content);
+  const obj = text as any as AutomergeTextCompat;
+  const doc = getRawDoc(obj, [obj.field]);
+
+  return {
+    id: obj.id,
+    content: doc,
+    text: () => get(doc.handle.docSync(), doc.path),
+    extension: automergePlugin(doc.handle, doc.path),
+    peer: identity
+      ? {
+          id: identity.identityKey.toHex(),
+          name: identity.profile?.displayName,
+        }
+      : undefined,
+  };
+};
+
+const createModel = (options: UseTextModelOptions) => {
+  const { space, text } = options;
+  if (!space || !text?.doc || !text?.content) {
+    return undefined;
+  }
+
+  if (isActualAutomergeObject(text)) {
+    return createAutomergeModel(options);
+  } else {
+    return createYjsModel(options);
+  }
+};
+
+// TODO(burdon): Don't support returning undefined (and remove checks from calling code).
+// TODO(burdon): Decouple space (make Editor less dependent on entire stack)?
+// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
+export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
+  const [model, setModel] = useState<EditorModel | undefined>(() => createModel({ identity, space, text }));
+  useEffect(() => {
+    setModel(createModel({ identity, space, text }));
+  }, [identity, space, text]);
+  return model;
 };
