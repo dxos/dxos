@@ -57,8 +57,8 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
 };
 
 const createModel = (options: UseTextModelOptions) => {
-  const { space, text } = options;
-  if (!space || !text?.doc || !text?.content) {
+  const { text } = options;
+  if (!text?.doc || !text?.content) {
     return undefined;
   }
 
@@ -70,15 +70,17 @@ const createModel = (options: UseTextModelOptions) => {
 };
 
 const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorModel => {
-  invariant(space && text?.doc && text?.content);
-  const provider = new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` });
+  invariant(text?.doc && text?.content);
+  const provider = space
+    ? new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
+    : undefined;
 
   return {
     id: text.doc.guid,
     content: text.content,
     text: () => text.content!.toString(),
-    extension: yCollab(text.content as YText, provider.awareness),
-    awareness: provider.awareness,
+    extension: yCollab(text.content as YText, provider?.awareness),
+    awareness: provider?.awareness,
     peer: identity
       ? {
           id: identity.identityKey.toHex(),
@@ -88,8 +90,8 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
   };
 };
 
-const createAutomergeModel = ({ identity, space, text }: UseTextModelOptions): EditorModel => {
-  invariant(space && text?.doc && text?.content);
+const createAutomergeModel = ({ identity, text }: UseTextModelOptions): EditorModel => {
+  invariant(text?.doc && text?.content);
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
 

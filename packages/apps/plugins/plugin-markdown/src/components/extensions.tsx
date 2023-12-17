@@ -7,6 +7,7 @@ import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { useIntent, type DispatchIntent, LayoutAction } from '@dxos/app-framework';
+import { PublicKey } from '@dxos/keys';
 import {
   link,
   tasklist,
@@ -17,6 +18,7 @@ import {
   type TooltipOptions,
   autocomplete,
   type AutocompleteOptions,
+  comments,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -63,16 +65,18 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
 
 type UseExtensionsOptions = {
   showWidgets?: boolean;
-  onSearch?: AutocompleteOptions['getOptions'];
+  onSearch?: AutocompleteOptions['onSearch'];
   onChange?: TextListener;
 };
 
-export const useExtensions = ({ showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
+export const useExtensions = ({ space, showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
 
   return [
     link({ onRender: onRender(dispatch) }),
     tooltip({ onHover }),
+    // TODO(burdon): Callbacks.
+    comments({ onCreate: () => PublicKey.random().toHex(), onUpdate: () => {} }),
     onSearch && autocomplete({ getOptions: onSearch }),
     onChange && listener(onChange),
     showWidgets && [tasklist()],

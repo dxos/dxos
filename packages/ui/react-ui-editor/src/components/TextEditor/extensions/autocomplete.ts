@@ -24,13 +24,13 @@ import {
 import { keymap } from '@codemirror/view';
 
 export type AutocompleteOptions = {
-  getOptions: (text: string) => Completion[];
+  onSearch: (text: string) => Completion[];
 };
 
 /**
  * Autocomplete extension.
  */
-export const autocomplete = ({ getOptions }: AutocompleteOptions) => {
+export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
   return [
     // https://codemirror.net/docs/ref/#view.keymap
     // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
@@ -57,7 +57,7 @@ export const autocomplete = ({ getOptions }: AutocompleteOptions) => {
           // TODO(burdon): Option to convert to links?
           return {
             from: word.from,
-            options: getOptions(word.text.toLowerCase()),
+            options: onSearch(word.text.toLowerCase()),
             // options: [
             //   { label: 'apple', type: 'keyword' },
             //   { label: 'amazon', type: 'keyword' },
