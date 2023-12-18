@@ -24,6 +24,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/local-storage"
     },
     {

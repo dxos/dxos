@@ -55,7 +55,7 @@ class BookmarkWidget extends WidgetType {
 }
 
 // TODO(burdon): Reconcile with theme.
-export const styles = EditorView.baseTheme({
+const styles = EditorView.baseTheme({
   '& .cm-bookmark': {
     cursor: 'pointer',
     margin: '4px',
@@ -86,7 +86,7 @@ export const comments = (options: CommentOptions = {}): Extension => {
   // TODO(burdon): Reuse for tasks? Requires more complex AST parsing.
   const bookmarks = ViewPlugin.fromClass(
     class {
-      private tasks: DecorationSet;
+      tasks: DecorationSet;
       constructor(view: EditorView) {
         this.tasks = matchDecorator.createDeco(view);
       }

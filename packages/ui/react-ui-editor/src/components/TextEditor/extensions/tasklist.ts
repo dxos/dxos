@@ -104,7 +104,7 @@ const statefield = (): Extension => {
 };
 
 // TODO(burdon): Reconcile with theme.
-export const styles = EditorView.baseTheme({
+const styles = EditorView.baseTheme({
   '& .cm-task-item': {
     padding: '0 4px',
   },

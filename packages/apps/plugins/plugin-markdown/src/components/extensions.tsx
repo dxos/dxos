@@ -69,7 +69,7 @@ type UseExtensionsOptions = {
   onChange?: TextListener;
 };
 
-export const useExtensions = ({ space, showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
+export const useExtensions = ({ showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
 
   return [
@@ -77,7 +77,7 @@ export const useExtensions = ({ space, showWidgets, onSearch, onChange }: UseExt
     tooltip({ onHover }),
     // TODO(burdon): Callbacks.
     comments({ onCreate: () => PublicKey.random().toHex(), onUpdate: () => {} }),
-    onSearch && autocomplete({ getOptions: onSearch }),
+    onSearch && autocomplete({ onSearch }),
     onChange && listener(onChange),
     showWidgets && [tasklist()],
   ].filter(Boolean) as Extension[];
