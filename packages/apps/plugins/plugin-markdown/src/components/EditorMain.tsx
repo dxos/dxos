@@ -5,29 +5,27 @@
 import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import {
-  createHyperlinkTooltip,
-  type TextEditorProps,
-  type TextEditorRef,
-  MarkdownEditor,
-  hyperlinkDecoration,
-  onChangeExtension,
-  markdownTheme,
-} from '@dxos/react-ui-editor';
+import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { onTooltip } from './extensions';
+import { useExtensions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
+export type SearchResult = {
+  text: string;
+  url: string;
+};
+
 export type EditorMainProps = {
-  editorRefCb: RefCallback<TextEditorRef>;
+  editorRefCb?: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
   showWidgets?: boolean;
   onChange?: (text: string) => void;
+  onSearch?: (text: string) => SearchResult[];
 } & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
@@ -38,16 +36,17 @@ export const EditorMain = ({
   editorMode,
   showWidgets,
   onChange,
+  onSearch,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = [createHyperlinkTooltip(onTooltip)];
-  if (onChange) {
-    extensions.push(onChangeExtension(onChange));
-  }
-  if (showWidgets) {
-    extensions.push(hyperlinkDecoration());
-  }
+  const extensions = useExtensions({
+    showWidgets,
+    onSearch: onSearch
+      ? (text: string) => onSearch(text).map(({ text, url }) => ({ label: text, apply: `[${text}](/${url})` }))
+      : undefined,
+    onChange,
+  });
 
   return (
     <Root properties={properties} model={model}>
@@ -71,7 +70,6 @@ export const EditorMain = ({
           editor: {
             placeholder: t('editor placeholder'),
             theme: {
-              ...markdownTheme,
               '&, & .cm-scroller': {
                 display: 'flex',
                 flexDirection: 'column',

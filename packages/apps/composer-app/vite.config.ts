@@ -84,11 +84,7 @@ export default defineConfig({
         }];
       }
     },
-    ConfigPlugin({
-      env: [
-        'DX_DEBUG', 'DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'
-      ],
-    }),
+    ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
       content: [

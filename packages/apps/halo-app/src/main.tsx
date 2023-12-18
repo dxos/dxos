@@ -31,7 +31,7 @@ const HaloMeta = {
 
 const main = async () => {
   const config = new Config(await Envs(), Local(), Defaults());
-  const services = config.get('runtime.app.env.DX_DEBUG') ? fromHost(config) : fromIFrame(config);
+  const services = config.get('runtime.app.env.DX_HOST') ? fromHost(config) : fromIFrame(config);
 
   const App = createApp({
     fallback: (
