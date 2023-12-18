@@ -87,7 +87,9 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   toJSON() {
     return {
       '@id': this.id,
+      // TODO(mykola): Add legacy text type.
       '@model': TextModel.meta.type,
+      // TODO(mykola): Reconcile with automerge.
       '@text': {
         text: this.text,
         kind: this.kind,
