@@ -163,11 +163,11 @@ export class Replicator {
       colorLight: cursorColor.light,
     });
 
-    // TODO(burdon): Create concrete class that implements SyncModel?
     const model: EditorModel = {
       id: doc.guid,
       content: this._kind === TextKind.PLAIN ? doc.getText('content') : doc.getXmlFragment('content'),
-      provider,
+      text: () => model.content.toString(),
+      awareness: provider.awareness,
       peer: { id },
     };
 

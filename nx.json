@@ -37,7 +37,8 @@
     // https://nx.dev/more-concepts/customizing-inputs#global-settings.
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
-      "{workspaceRoot}/.eslintrc*.js"
+      "{workspaceRoot}/.eslintrc*.js",
+      { "runtime": "node --version" }
     ],
     "production": [
       "default",
