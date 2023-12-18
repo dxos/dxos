@@ -13,7 +13,7 @@ import { createDatabase, testWithAutomerge } from './testing';
 
 describe.only('Serializer', () => {
   testWithAutomerge(() => {
-    test.only('Basic', async () => {
+    test('Basic', async () => {
       const serializer = new Serializer();
 
       let data: SerializedSpace;
@@ -27,9 +27,6 @@ describe.only('Serializer', () => {
         expect(db.objects).to.have.length(1);
 
         data = await serializer.export(db);
-
-        console.log(data)
-
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
           '@id': obj.id,
