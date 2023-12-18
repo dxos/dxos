@@ -73,7 +73,6 @@ export class Serializer {
         '@text': text,
         ...data
       } = object;
-      log.info('import', { id, type, model, deleted, meta, text, data });
 
       // Handle Space Properties
       // TODO(mykola): move to @dxos/client
