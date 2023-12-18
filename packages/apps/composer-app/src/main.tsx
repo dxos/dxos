@@ -54,7 +54,6 @@ import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 const main = async () => {
   const config = await setupConfig();
   const services = await createClientServices(config);
-  const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
 
   const App = createApp({
     fallback: (
@@ -122,7 +121,6 @@ const main = async () => {
         config,
         services,
         types,
-        debugIdentity,
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),

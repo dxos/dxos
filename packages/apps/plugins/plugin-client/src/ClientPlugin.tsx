@@ -6,17 +6,16 @@ import React, { useEffect, useState } from 'react';
 
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
 import { type TypeCollection } from '@dxos/client/echo';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
-import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
 import meta from './meta';
 
 const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
+export type ClientPluginOptions = ClientOptions & { types?: TypeCollection; appKey: string };
 
 export type ClientPluginProvides = {
   client: Client;
@@ -31,7 +30,6 @@ export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
 export const ClientPlugin = ({
-  debugIdentity,
   types,
   appKey,
   ...options
@@ -108,26 +106,6 @@ export const ClientPlugin = ({
         }
       } catch (err) {
         error = err;
-      }
-
-      // Debugging (e.g., for monolithic mode).
-      if (debugIdentity) {
-        if (!client.halo.identity.get()) {
-          await client.halo.createIdentity();
-        }
-
-        // Handle initial connection (assumes no PIN).
-        const searchParams = new URLSearchParams(window.location.search);
-        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-        if (spaceInvitationCode) {
-          setTimeout(() => {
-            // TODO(burdon): Unsubscribe.
-            const observer = client.spaces.join(InvitationEncoder.decode(spaceInvitationCode));
-            observer.subscribe(({ state }) => {
-              log.info('invitation', { state });
-            });
-          }, 2000);
-        }
       }
 
       let firstRun = false;

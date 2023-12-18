@@ -59,5 +59,5 @@ export const createClientServices = (config: Config): Promise<ClientServicesProv
     }
   }
 
-  return config.get('runtime.app.env.DX_DEBUG') || isNode() ? fromHost(config) : fromWorker(config);
+  return config.get('runtime.app.env.DX_HOST') || isNode() ? fromHost(config) : fromWorker(config);
 };
