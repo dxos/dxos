@@ -58,13 +58,13 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Ed
 
 const createModel = (options: UseTextModelOptions) => {
   const { space, text } = options;
-  if (!space || !text?.doc || !text?.content) {
-    return undefined;
-  }
 
   if (isActualAutomergeObject(text)) {
     return createAutomergeModel(options);
   } else {
+    if (!space || !text?.doc || !text?.content) {
+      return undefined;
+    }
     return createYjsModel(options);
   }
 };
@@ -89,7 +89,6 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
 };
 
 const createAutomergeModel = ({ identity, space, text }: UseTextModelOptions): EditorModel => {
-  invariant(space && text?.doc && text?.content);
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
 
