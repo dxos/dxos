@@ -9,8 +9,17 @@ import React, { type FC, type MutableRefObject, type RefCallback, type Ref } fro
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { ThreadAction } from '@braneframe/plugin-thread';
 import { Document as DocumentType, Thread as ThreadType, Folder } from '@braneframe/types';
-import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type Plugin,
+  type PluginDefinition,
+  type IntentPluginProvides,
+  parseIntentPlugin,
+  isObject,
+  LayoutAction,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -37,14 +46,7 @@ import {
   type MarkdownProperties,
   type MarkdownSettingsProps,
 } from './types';
-import {
-  getFallbackTitle,
-  isMarkdown,
-  isMarkdownContent,
-  isMarkdownPlaceholder,
-  isMarkdownProperties,
-  markdownPlugins,
-} from './util';
+import { getFallbackTitle, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -53,14 +55,22 @@ import {
 export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
+export type MarkdownPluginState = {
+  onChange: NonNullable<(text: string) => void>[];
+};
+
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
-  const state = deepSignal<{ onChange: NonNullable<(text: string) => void>[] }>({ onChange: [] });
+
+  // TODO(burdon): Why does this need to be a signal? Race condition?
+  const state = deepSignal<MarkdownPluginState>({ onChange: [] });
 
   const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
+
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc.
   //  Should these components be inline or external?
@@ -81,6 +91,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   // TODO(burdon): Better way for different plugins to configure extensions.
   const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
+    // TODO(burdon): Change to passing in config object.
     onChange: (text: string) => {
       state.onChange.forEach((onChange) => onChange(text));
     },
@@ -94,6 +105,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             object.title?.length && object.id !== document.id
               ? {
                   label: object.title,
+                  // TODO(burdon): Factor out URL builder.
                   apply: `[${object.title}](/${object.id})`,
                 }
               : undefined,
@@ -110,7 +122,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
       },
       onUpdate: (info) => {
-        console.log(info);
+        const { id } = info;
+        void intentPlugin?.provides.intent.dispatch({
+          action: ThreadAction.SELECT,
+          data: { id },
+        });
       },
     },
   });
@@ -171,6 +187,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
         .prop(settings.values.$showWidgets!, 'show-widgets', LocalStorageStore.bool);
 
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
       const filters: ((document: DocumentType) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
@@ -184,7 +202,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     },
     provides: {
       settings: settings.values,
-      translations,
       metadata: {
         records: {
           [DocumentType.schema.typename]: {
@@ -193,6 +210,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           },
         },
       },
+      translations,
       graph: {
         builder: ({ parent, plugins }) => {
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
@@ -240,16 +258,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               plugin: MARKDOWN_PLUGIN,
               action: MarkdownAction.CREATE,
             },
-          },
-        ],
-        // TODO(burdon): Deprecated? Remove?
-        choosers: [
-          {
-            id: 'choose-stack-section-doc',
-            testId: 'markdownPlugin.chooseSectionSpaceDocument',
-            label: ['choose stack section label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: any) => <ArticleMedium {...props} />,
-            filter: isMarkdownContent,
           },
         ],
       },

@@ -43,7 +43,6 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     EditorState.allowMultipleSelections.of(true),
     EditorView.lineWrapping,
 
-    // autocompletion(),
     crosshairCursor(),
     dropCursor(),
     drawSelection(),

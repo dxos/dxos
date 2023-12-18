@@ -10,9 +10,10 @@ import { type Space, isTypedObject } from '@dxos/react-client/echo';
 
 import { ThreadContainer } from './ThreadContainer';
 
-export const ThreadSidebar: FC<{ space?: Space }> = ({ space }) => {
+export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType }> = ({ space, thread: controlledThread }) => {
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const [thread, setThread] = useState<ThreadType>();
+  const [thread, setThread] = useState<ThreadType | undefined>(controlledThread);
+  useEffect(() => setThread(controlledThread), [controlledThread]);
   useEffect(() => {
     if (space) {
       // Don's show if the main layout is displaying the active thread.
@@ -25,15 +26,14 @@ export const ThreadSidebar: FC<{ space?: Space }> = ({ space }) => {
       }
 
       // TODO(burdon): Get thread appropriate for context.
-      const { objects: threads } = space.db.query(ThreadType.filter());
-      if (threads.length) {
-        setThread(threads[0]);
-        return;
+      if (!controlledThread) {
+        const { objects: threads } = space.db.query(ThreadType.filter());
+        if (threads.length) {
+          setThread(threads[0]);
+        }
       }
     }
-
-    setThread(undefined);
-  }, [space, layoutPlugin?.provides.layout.active]);
+  }, [space, controlledThread, layoutPlugin?.provides.layout.active]);
 
   if (!space || !thread) {
     return null;

@@ -38,8 +38,8 @@ const onRender = (dispatch: DispatchIntent) => (el: Element, url: string) => {
       }
     : {
         href: url,
-        target: '_blank',
         rel: 'noreferrer',
+        target: '_blank',
       };
 
   createRoot(el).render(

@@ -40,13 +40,10 @@ export type MarkdownProvides = {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[DocumentType.name] = DocumentType;
 
-// TODO(burdon): Hack to avoid circular dependency (stack stories depend on markdown plugin).
-// TODO(burdon): Review with @thure.
 // TODO(wittjosiah): Factor out to graph plugin?
 type StackProvides = {
   stack: {
     creators?: Record<string, any>[];
-    choosers?: Record<string, any>[];
   };
 };
 

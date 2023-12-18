@@ -29,6 +29,7 @@ type Awareness = awarenessProtocol.Awareness;
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type EditorModel = {
   id: string;
+  // TODO(burdon): Remove.
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
   extension?: Extension;

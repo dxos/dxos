@@ -67,7 +67,7 @@ const styles = EditorView.baseTheme({
 export type CommentsOptions = {
   key?: string;
   onCreate?: () => string | void;
-  onUpdate?: (info: { pos: number; location: Rect }) => void;
+  onUpdate?: (info: { id: string; pos: number; location: Rect }) => void;
 };
 
 // https://www.markdownguide.org/extended-syntax/#footnotes
@@ -77,8 +77,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   const bookmarkMatcher = new MatchDecorator({
     regexp: /\[\^(\w+)\]/g,
     decoration: (match, view, pos) => {
+      const id = match[1];
       return Decoration.replace({
-        widget: new BookmarkWidget(pos, match[1]),
+        id,
+        widget: new BookmarkWidget(pos, id),
       });
     },
   });
@@ -142,9 +144,15 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       });
 
       if (decorations.length) {
-        const location = view.coordsAtPos(decorations[0].from);
+        const {
+          from,
+          value: {
+            spec: { id },
+          },
+        } = decorations[0];
+        const location = view.coordsAtPos(from);
         if (location) {
-          options.onUpdate?.({ pos, location });
+          options.onUpdate?.({ id, pos, location });
         }
       }
     }),
