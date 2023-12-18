@@ -4,28 +4,35 @@
 
 import React, { useEffect, useState } from 'react';
 
-import type { Plugin, PluginDefinition } from '@dxos/app-framework';
+import type { Plugin, PluginDefinition, SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
 import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
+import { ClientSettings } from './components/ClientSettings';
 import meta from './meta';
+import translations from './translations';
+import { type ClientSettingsProps } from './types';
 
 const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
 
-export type ClientPluginProvides = {
-  client: Client;
+export type ClientPluginProvides = SurfaceProvides &
+  TranslationsProvides & {
+    client: Client;
 
-  /**
-   * True if this is the first time the current app has been used by this identity.
-   */
-  firstRun: boolean;
-};
+    /**
+     * True if this is the first time the current app has been used by this identity.
+     */
+    firstRun: boolean;
+
+    settings: ClientSettingsProps;
+  };
 
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
@@ -35,9 +42,14 @@ export const ClientPlugin = ({
   types,
   appKey,
   ...options
-}: ClientPluginOptions): PluginDefinition<{}, ClientPluginProvides> => {
+}: ClientPluginOptions): PluginDefinition<
+  Omit<ClientPluginProvides, 'client' | 'firstRun'>,
+  Pick<ClientPluginProvides, 'client' | 'firstRun'>
+> => {
   // TODO(burdon): Document.
   registerSignalFactory();
+
+  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings');
 
   const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
 
@@ -122,8 +134,24 @@ export const ClientPlugin = ({
         },
       };
     },
+    ready: async () => {
+      settings.prop(settings.values.$automerge!, 'automerge', LocalStorageStore.bool);
+    },
     unload: async () => {
       await client.destroy();
+    },
+    provides: {
+      settings: settings.values,
+      translations,
+      surface: {
+        component: ({ data, role }) => {
+          const { component } = data;
+          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
+            return <ClientSettings />;
+          }
+          return null;
+        },
+      },
     },
   };
 };

@@ -27,8 +27,10 @@
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-client": "workspace:*"
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
