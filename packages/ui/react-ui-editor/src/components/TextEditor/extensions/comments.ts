@@ -22,6 +22,7 @@ import { invariant } from '@dxos/invariant';
 //    - https://discuss.codemirror.net/t/creating-atomic-replace-decorations/2961
 //    - https://codemirror.net/docs/ref/#state.EditorState%5EtransactionFilter (transaction filter: move, delete).
 // 2. TODO(burdon): Create/track threads in composer (change global state). Select/follow. Scroll with page.
+//    - Separate from chat/search.
 // 3. TODO(burdon): Support multiple threads in sidebar?
 // 4. TODO(burdon): Anchor AI thread when creating section.
 // 5. TODO(burdon): Button to resolve thread to close comments.
