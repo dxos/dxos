@@ -18,7 +18,7 @@ class CheckboxWidget extends WidgetType {
     private readonly _pos: number,
     private _checked: boolean,
     private readonly _indent: number,
-    private readonly _onCheck: (check: boolean) => number,
+    private readonly _onCheck: (check: boolean) => void,
   ) {
     super();
   }
@@ -34,7 +34,7 @@ class CheckboxWidget extends WidgetType {
     const wrap = document.createElement('span');
     wrap.className = 'cm-task-item';
     wrap.setAttribute('aria-hidden', 'true');
-    wrap.style['margin-left'] = this._indent * 24 + 'px';
+    wrap.style.setProperty('margin-left', this._indent * 24 + 'px');
 
     const box = wrap.appendChild(document.createElement('input'));
     box.type = 'checkbox';
