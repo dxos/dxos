@@ -61,8 +61,7 @@ const createModel = (options: UseTextModelOptions) => {
   if (isActualAutomergeObject(text)) {
     return createAutomergeModel(options);
   } else {
-    const { space } = options;
-    if (!space || !text?.doc || !text?.content) {
+    if (!text?.doc) {
       return undefined;
     }
 

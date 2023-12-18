@@ -903,12 +903,18 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../../core/echo/echo-signals
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
