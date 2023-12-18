@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: false
   excludeLinksFromLockfile: false
 
+overrides:
+  ipfs-utils: 9.0.14
+
 patchedDependencies:
   '@automerge/automerge-repo@1.0.19':
     hash: nvpryxq2zb6q2byifzjmzcheaq
@@ -9366,11 +9369,6 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  /@achingbrain/node-fetch@2.6.7:
-    resolution: {integrity: sha512-iTASGs+HTFK5E4ZqcMsHmeJ4zodyq8L38lZV33jwqcBJYoUt3HjN4+ot+O9/0b+ke8ddE7UgOtVuZN/OkV19/g==}
-    engines: {node: 4.x || >=6.0.0}
-    dev: false
-
   /@alloc/quick-lru@5.2.0:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
@@ -18548,7 +18546,7 @@ packages:
     requiresBuild: true
     dependencies:
       https-proxy-agent: 5.0.1
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       progress: 2.0.3
       proxy-from-env: 1.1.0
       which: 2.0.2
@@ -31318,7 +31316,7 @@ packages:
       err-code: 3.0.1
       ipfs-core-types: 0.10.3(node-fetch@2.6.7)
       ipfs-unixfs: 6.0.9
-      ipfs-utils: 9.0.7
+      ipfs-utils: 9.0.14
       it-all: 1.0.6
       it-map: 1.0.6
       it-peekable: 1.0.3
@@ -31332,6 +31330,7 @@ packages:
       timeout-abort-controller: 3.0.0
       uint8arrays: 3.1.1
     transitivePeerDependencies:
+      - encoding
       - node-fetch
       - supports-color
     dev: false
@@ -31350,7 +31349,7 @@ packages:
       err-code: 3.0.1
       ipfs-core-types: 0.10.3(node-fetch@2.6.7)
       ipfs-core-utils: 0.14.3(node-fetch@2.6.7)
-      ipfs-utils: 9.0.7
+      ipfs-utils: 9.0.14
       it-first: 1.0.7
       it-last: 1.0.6
       merge-options: 3.0.4
@@ -31360,6 +31359,7 @@ packages:
       stream-to-it: 0.2.4
       uint8arrays: 3.1.1
     transitivePeerDependencies:
+      - encoding
       - node-fetch
       - supports-color
     dev: false
@@ -31372,23 +31372,28 @@ packages:
       protobufjs: 6.11.3
     dev: false
 
-  /ipfs-utils@9.0.7:
-    resolution: {integrity: sha512-Umvb0Zydy2zZiTmQBGLfLISr8vOmXX8cxEIP+N8zGHrtRShG/j32yl1xd/BtS+Hbg0FIbVm3opwvxB2gmta0YA==}
+  /ipfs-utils@9.0.14:
+    resolution: {integrity: sha512-zIaiEGX18QATxgaS0/EOQNoo33W0islREABAcxXE8n7y2MGAlB+hdsxXn4J0hGZge8IqVQhW8sWIb+oJz2yEvg==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       any-signal: 3.0.1
+      browser-readablestream-to-it: 1.0.3
       buffer: 6.0.3
       electron-fetch: 1.9.1
       err-code: 3.0.1
       is-electron: 2.2.1
       iso-url: 1.2.1
+      it-all: 1.0.6
       it-glob: 1.0.2
       it-to-stream: 1.0.0
       merge-options: 3.0.4
       nanoid: 3.3.6
-      native-fetch: 3.0.0(@achingbrain/node-fetch@2.6.7)
-      node-fetch: /@achingbrain/node-fetch@2.6.7
-      react-native-fetch-api: 2.0.0
+      native-fetch: 3.0.0(node-fetch@2.7.0)
+      node-fetch: 2.7.0
+      react-native-fetch-api: 3.0.0
       stream-to-it: 0.2.4
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /is-absolute-url@3.0.3:
@@ -36236,20 +36241,20 @@ packages:
   /napi-macros@2.0.0:
     resolution: {integrity: sha512-A0xLykHtARfueITVDernsAWdtIMbOJgKgcluwENp3AlsKN/PloyO10HtmoqnFAQAcxPkgZN7wdfPfEd0zNGxbg==}
 
-  /native-fetch@3.0.0(@achingbrain/node-fetch@2.6.7):
-    resolution: {integrity: sha512-G3Z7vx0IFb/FQ4JxvtqGABsOTIqRWvgQz6e+erkB+JJD6LrszQtMozEHI4EkmgZQvnGHrpLVzUWk7t4sJCIkVw==}
-    peerDependencies:
-      node-fetch: '*'
-    dependencies:
-      node-fetch: /@achingbrain/node-fetch@2.6.7
-    dev: false
-
   /native-fetch@3.0.0(node-fetch@2.6.7):
     resolution: {integrity: sha512-G3Z7vx0IFb/FQ4JxvtqGABsOTIqRWvgQz6e+erkB+JJD6LrszQtMozEHI4EkmgZQvnGHrpLVzUWk7t4sJCIkVw==}
     peerDependencies:
       node-fetch: '*'
     dependencies:
       node-fetch: 2.6.7
+    dev: false
+
+  /native-fetch@3.0.0(node-fetch@2.7.0):
+    resolution: {integrity: sha512-G3Z7vx0IFb/FQ4JxvtqGABsOTIqRWvgQz6e+erkB+JJD6LrszQtMozEHI4EkmgZQvnGHrpLVzUWk7t4sJCIkVw==}
+    peerDependencies:
+      node-fetch: '*'
+    dependencies:
+      node-fetch: 2.7.0
     dev: false
 
   /natural-compare@1.4.0:
@@ -39001,8 +39006,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /react-native-fetch-api@2.0.0:
-    resolution: {integrity: sha512-GOA8tc1EVYLnHvma/TU9VTgLOyralO7eATRuCDchQveXW9Fr9vXygyq9iwqmM7YRZ8qRJfEt9xOS7OYMdJvRFw==}
+  /react-native-fetch-api@3.0.0:
+    resolution: {integrity: sha512-g2rtqPjdroaboDKTsJCTlcmtw54E25OjyaunUP0anOZn4Fuo2IKs8BVfe02zVggA/UysbmfSnRJIqtNkAgggNA==}
     dependencies:
       p-defer: 3.0.0
     dev: false
