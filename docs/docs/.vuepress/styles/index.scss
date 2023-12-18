@@ -1,5 +1,5 @@
-@use "sass:color";
-@use "sass:map";
+@use 'sass:color';
+@use 'sass:map';
 @import './tailwind-colors.scss';
 @import './palette.scss';
 
@@ -10,13 +10,17 @@
   transition: none !important;
 }
 
-#message-container .message {
-  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+body {
+  font-size: 17px !important;
 }
 
-html[data-theme=light] {
+#message-container .message {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme='light'] {
   .hint-container {
-    box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -87,7 +91,7 @@ html[data-theme=light] {
   }
 }
 
-html[data-theme=dark] .home.project .hero-info-wrapper {
+html[data-theme='dark'] .home.project .hero-info-wrapper {
   img.dark {
     opacity: 0.9 !important;
   }
@@ -96,7 +100,7 @@ html[data-theme=dark] .home.project .hero-info-wrapper {
   }
 }
 
-html[data-theme=light] .home.project .hero-info-wrapper {
+html[data-theme='light'] .home.project .hero-info-wrapper {
   img.light {
     opacity: 0.9 !important;
   }
@@ -106,7 +110,7 @@ html[data-theme=light] .home.project .hero-info-wrapper {
 }
 
 .custom-container {
-  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
   ul {
     li {
       margin-bottom: 0.62em;
@@ -118,7 +122,7 @@ html[data-theme=light] .home.project .hero-info-wrapper {
   }
 }
 
-html[data-theme=dark] {
+html[data-theme='dark'] {
   .custom-container.note,
   .hint-container.note {
     background-color: darken($zinc-800, 3%);
@@ -130,23 +134,41 @@ html[data-theme=dark] {
  */
 
 // Rich text formatting.
-h2,h3,h4,h5,h6 {
-  >a:first-child {
+h2,
+h3,
+h4,
+h5,
+h6 {
+  > a:first-child {
     margin-left: -1.1em;
   }
 }
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.65rem;
+}
+h3 {
+  font-size: 1.35rem;
+}
+h4 {
+  font-size: 1.15rem;
+}
 
-html[data-theme=light] {
-  th, td {
+html[data-theme='light'] {
+  th,
+  td {
     border-color: $zinc-200;
   }
 }
 
-html[data-theme=dark] {
+html[data-theme='dark'] {
   tr:nth-child(2n) {
     background-color: transparent;
   }
-  th, td {
+  th,
+  td {
     border-color: $zinc-700;
   }
 }
@@ -166,32 +188,33 @@ code {
   background-color: color.adjust($zinc-200, $lightness: 3%);
 }
 
-a code, p a code {
+a code,
+p a code {
   color: $emerald-500;
   font-weight: 600;
 }
 
-div[class^="language-"] {
-  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+div[class^='language-'] {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-html[data-theme=dark] div[class^="language-"] {
+html[data-theme='dark'] div[class^='language-'] {
   background-color: $zinc-900;
 }
 
-div[class^="language-error"] code {
+div[class^='language-error'] code {
   color: $red-600;
-  html[data-theme=dark] & {
+  html[data-theme='dark'] & {
     color: $red-400;
   }
 }
 
 // Code highlight v height adjustment for font
-div[class*=language-] .highlight-lines {
+div[class*='language-'] .highlight-lines {
   line-height: 1.376;
 }
 
-div[class*=language-] > button.copy-code-button:not(.fancy) {
+div[class*='language-'] > button.copy-code-button:not(.fancy) {
   top: auto;
   bottom: 0;
   right: 0;
@@ -199,23 +222,23 @@ div[class*=language-] > button.copy-code-button:not(.fancy) {
   border-radius: 0.25em;
 }
 
-html[data-theme=light] {
-  div[class*=language-] > button.copy-code-button:not(.pure) {
+html[data-theme='light'] {
+  div[class*='language-'] > button.copy-code-button:not(.pure) {
     background-color: $zinc-300;
-    box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.075);
     &:hover {
       background-color: $theme-color; // map.get($theme-color, 'light');
     }
   }
 }
 
-html[data-theme=dark] {
-  div[class*=language-] > button.copy-code-button:not(.pure) {
+html[data-theme='dark'] {
+  div[class*='language-'] > button.copy-code-button:not(.pure) {
     background-color: $zinc-700;
     .copy-icon {
       color: $zinc-400;
     }
-    box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.075);
     &:hover {
       background-color: $theme-color; // map.get($theme-color, 'dark');
       .copy-icon {
@@ -230,7 +253,7 @@ html[data-theme=dark] {
   display: none;
 }
 
-html[data-theme=dark] {
+html[data-theme='dark'] {
   .dark {
     display: block;
   }
@@ -250,18 +273,18 @@ html[data-theme=dark] {
 
 // discord button
 .home.project .hero-info-wrapper {
-  html[data-theme=dark] & {
+  html[data-theme='dark'] & {
     .action-button.discord {
-      background-color: #6A5ACD;
+      background-color: #6a5acd;
       color: var(--white);
       &:hover {
         background-color: #7a6bdb;
       }
     }
   }
-  html[data-theme=light] & {
+  html[data-theme='light'] & {
     .action-button.discord {
-      background-color: #7289DA;
+      background-color: #7289da;
       color: white;
       &:hover {
         background-color: #8b9fe9;
@@ -274,6 +297,6 @@ html[data-theme=dark] {
 .shell-images {
   img {
     border-radius: 12px;
-    box-shadow: 0px 10px 12px rgba(0,0,0,0.25);
+    box-shadow: 0px 10px 12px rgba(0, 0, 0, 0.25);
   }
 }

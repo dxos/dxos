@@ -134,3 +134,7 @@ build
 .husky/reference-transaction
 
 .nx
+
+# Obsidian
+**/.obsidian**
+
