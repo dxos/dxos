@@ -24,8 +24,8 @@ export const EditorSection = ({ model, editorMode, extensions: _extensions }: Ed
     <MarkdownEditor
       ref={editorRef}
       model={model}
-      extensions={extensions}
       editorMode={editorMode}
+      extensions={extensions}
       slots={{
         root: {
           role: 'none',

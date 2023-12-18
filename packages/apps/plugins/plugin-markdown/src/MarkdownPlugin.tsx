@@ -16,6 +16,7 @@ import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client
 import { useIdentity } from '@dxos/react-client/halo';
 import { type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
+import { nonNullable } from '@dxos/util';
 
 import {
   EditorCard,
@@ -78,6 +79,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
+  const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
+    const identity = useIdentity();
+    const space = getSpaceForObject(document);
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
+      return null;
+    }
+
+    return <EditorSection model={model} editorMode={settings.values.editorMode} />;
+  };
+
   const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
@@ -86,6 +98,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       return null;
     }
 
+    // TODO(burdon): Factor out for section.
     // TODO(burdon): Better way for different plugins to configure extensions.
     const extensions: UseExtensionsOptions = {
       onChange: (text: string) => {
@@ -96,10 +109,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         onSearch: (text: string) => {
           // TODO(burdon): Specify filter (e.g., stack).
           const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
-          return objects.map((object) => ({
-            label: object.title,
-            apply: `[${text}](/${object.id})`,
-          }));
+          return objects
+            .map(
+              (object) =>
+                object.title?.length && {
+                  label: object.title,
+                  apply: `[${object.title}](/${object.id})`,
+                },
+            )
+            .filter(nonNullable);
         },
       },
       comments: {
@@ -266,13 +284,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (isDocument(data.object) && isMarkdown(data.object.content)) {
-                return (
-                  <EditorSection
-                    model={data.object.content}
-                    editorMode={settings.values.editorMode}
-                    showWidgets={settings.values.showWidgets}
-                  />
-                );
+                return <MarkdownSection content={data.object} />;
               }
               break;
             }
