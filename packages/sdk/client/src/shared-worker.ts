@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -10,11 +11,23 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { mountDevtoolsHooks } from './devtools';
 import { LOCK_KEY } from './services/worker-client-services';
 
-const workerRuntime = new WorkerRuntime(LOCK_KEY, async () => {
-  const config = new Config(await Envs(), Local(), Defaults());
-  log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
-  return config;
+let releaseLock: () => void;
+const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
+const lockAcquired = new Trigger();
+void navigator.locks.request(LOCK_KEY, (lock) => {
+  lockAcquired.wake();
+  return lockPromise;
 });
+
+const workerRuntime = new WorkerRuntime(
+  () => lockAcquired.wait(),
+  () => releaseLock(),
+  async () => {
+    const config = new Config(await Envs(), Local(), Defaults());
+    log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
+    return config;
+  },
+);
 
 // Allow to access host from console.
 mountDevtoolsHooks({
