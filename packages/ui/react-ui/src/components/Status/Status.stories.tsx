@@ -10,6 +10,7 @@ import { Status } from './Status';
 import { withTheme } from '../../testing';
 
 export default {
+  title: 'DXOS UI/Status',
   component: Status,
   actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],

@@ -72,6 +72,7 @@ const StoryInput = (props: StoryInputProps) => {
 };
 
 export default {
+  title: 'DXOS UI/Input',
   component: StoryInput,
   // TODO(thure): Refactor
   argTypes: {
@@ -88,6 +89,7 @@ export default {
     },
   },
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

@@ -12,7 +12,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { type Prop } from '@dxos/automerge/automerge';
 import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
 
-import { type IDocHandle, automergePlugin } from './automerge-plugin';
+import { type IDocHandle } from './handle';
+import { automergePlugin } from './plugin';
 
 type EditorProps = {
   handle: IDocHandle;

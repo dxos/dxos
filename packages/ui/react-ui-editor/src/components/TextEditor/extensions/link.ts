@@ -4,7 +4,14 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type RangeSet, RangeSetBuilder, StateField, type Transaction } from '@codemirror/state';
+import {
+  type EditorState,
+  type Extension,
+  type RangeSet,
+  RangeSetBuilder,
+  StateField,
+  type Transaction,
+} from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 // Adapted from:
@@ -19,13 +26,33 @@ import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 //  https://codemirror.net/5/demo/simplemode.html
 //  https://codemirror.net/5/demo/search.html (Search dialog).
 
-class Link extends WidgetType {
-  constructor(private readonly _anchor: number, private readonly _text: string, private readonly _url?: string) {
+class LinkButton extends WidgetType {
+  constructor(
+    private readonly _pos: number,
+    private readonly _url: string,
+    private readonly _onAttach: LinkOptions['onRender'],
+  ) {
     super();
   }
 
-  override eq(other: any) {
-    return this._text === other.text && this._url === other.url;
+  override eq(other: LinkButton) {
+    return this._pos === other._pos && this._url === other._url;
+  }
+
+  toDOM(view: EditorView) {
+    const el = document.createElement('span');
+    this._onAttach!(el, this._url);
+    return el;
+  }
+}
+
+class LinkText extends WidgetType {
+  constructor(private readonly _pos: number, private readonly _text: string, private readonly _url?: string) {
+    super();
+  }
+
+  override eq(other: LinkText) {
+    return this._pos === other._pos && this._url === other._url;
   }
 
   toDOM(view: EditorView) {
@@ -33,13 +60,14 @@ class Link extends WidgetType {
     link.setAttribute('class', 'cm-link');
     link.textContent = this._text;
     if (this._url) {
+      link.setAttribute('rel', 'noreferrer');
       link.setAttribute('target', '_blank');
       link.href = this._url;
     } else {
       link.onclick = () => {
         view.dispatch({
           selection: {
-            anchor: this._anchor,
+            anchor: this._pos,
           },
         });
       };
@@ -49,45 +77,37 @@ class Link extends WidgetType {
   }
 }
 
-type HyperlinkDecorationConfig = {
-  link?: boolean;
-};
-
-/**
- * Creates a state field to replace AST elements with a hyperlink widget.
- * https://codemirror.net/docs/ref/#state.StateField
- */
-export const hyperlinkDecoration = ({ link }: HyperlinkDecorationConfig = {}) => {
-  return StateField.define<RangeSet<any>>({
-    create: (state) => update(state, link),
-    update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, link),
-    provide: (field) => EditorView.decorations.from(field),
-  });
-};
-
-const update = (state: EditorState, link?: boolean) => {
+const update = (state: EditorState, options: LinkOptions) => {
   const builder = new RangeSetBuilder();
   const cursor = state.selection.main.head;
   syntaxTree(state).iterate({
     enter: (node) => {
       // Check if cursor is inside text.
-      if (cursor < node.from || cursor > node.to) {
-        if (node.name === 'Link') {
-          const marks = node.node.getChildren('LinkMark');
-          const text = marks.length >= 2 ? state.sliceDoc(marks[0].to, marks[1].from) : '';
+      if (node.name === 'Link') {
+        const marks = node.node.getChildren('LinkMark');
+        const text = marks.length >= 2 ? state.sliceDoc(marks[0].to, marks[1].from) : '';
 
-          const urlNode = node.node.getChild('URL');
-          const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
+        const urlNode = node.node.getChild('URL');
+        const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
 
+        if (cursor < node.from || cursor > node.to) {
           builder.add(
             node.from,
             node.to,
             Decoration.replace({
-              widget: new Link(node.from, text, link ? url : undefined),
+              widget: new LinkText(node.from, text, options.link ? url : undefined),
             }),
           );
+        }
 
-          return false;
+        if (options.onRender) {
+          builder.add(
+            node.to,
+            node.to,
+            Decoration.replace({
+              widget: new LinkButton(node.from, url, options.onRender),
+            }),
+          );
         }
       }
 
@@ -96,4 +116,21 @@ const update = (state: EditorState, link?: boolean) => {
   });
 
   return builder.finish();
+};
+
+export type LinkOptions = {
+  link?: boolean;
+  onRender?: (el: Element, url: string) => void;
+};
+
+/**
+ * Creates a state field to replace AST elements with a hyperlink widget.
+ * https://codemirror.net/docs/ref/#state.StateField
+ */
+export const link = (options: LinkOptions = {}): Extension => {
+  return StateField.define<RangeSet<any>>({
+    create: (state) => update(state, options),
+    update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
+    provide: (field) => EditorView.decorations.from(field),
+  });
 };
