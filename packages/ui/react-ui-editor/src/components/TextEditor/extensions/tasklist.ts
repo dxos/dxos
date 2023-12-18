@@ -67,7 +67,7 @@ const isChecked = (state: EditorState, pos: number) => {
   return state.sliceDoc(pos, pos + 3).toLowerCase() === '[x]';
 };
 
-export const statefield = (): Extension => {
+const statefield = (): Extension => {
   let lastPosition: number = 0;
   const listener = EditorView.updateListener.of((update) => {
     lastPosition = update.startState.selection.main.head;
@@ -110,4 +110,6 @@ export const styles = EditorView.baseTheme({
   },
 });
 
-export const tasklist = () => [statefield(), styles];
+export const tasklist = () => {
+  return [statefield(), styles];
+};
