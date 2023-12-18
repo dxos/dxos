@@ -23,13 +23,10 @@ class CheckboxWidget extends WidgetType {
   }
 
   override eq(other: CheckboxWidget) {
-    // Uniqueness based on position; also checks state.
-    // TODO(burdon): Is this efficient? Check life-cycle.
     return this._pos === other._pos && this._checked === other._checked && this._indent === other._indent;
   }
 
   toDOM(view: EditorView) {
-    // console.log('toDom', this._pos);
     const wrap = document.createElement('span');
     wrap.className = 'cm-task-item';
     wrap.setAttribute('aria-hidden', 'true');
@@ -45,11 +42,6 @@ class CheckboxWidget extends WidgetType {
 
     return wrap;
   }
-
-  // TODO(burdon): Remove listener?
-  // override destroy() {
-  // console.log('destroy', this._pos);
-  // }
 
   override ignoreEvent() {
     return false;
@@ -111,9 +103,5 @@ export const tasklist = () => {
     },
   );
 
-  return [
-    // statefield(),
-    tasks,
-    styles,
-  ];
+  return [tasks, styles];
 };
