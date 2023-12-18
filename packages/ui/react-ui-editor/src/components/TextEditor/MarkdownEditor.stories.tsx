@@ -41,9 +41,11 @@ const text = {
   tasks: str(
     '## Tasks',
     '',
-    '- [x] parsing',
-    '- [ ] styling',
-    '- [ ] rendering',
+    '- [x] decorator',
+    '- [ ] checkbox',
+    '  - [ ] state',
+    '  - [ ] indent',
+    '  - [x] style',
   ),
 
   list: str(

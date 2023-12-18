@@ -94,6 +94,9 @@ const update = (state: EditorState, options: LinkOptions) => {
 
         const urlNode = node.node.getChild('URL');
         const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
+        if (!url) {
+          return false;
+        }
 
         if (cursor < node.from || cursor > node.to) {
           builder.add(
@@ -114,9 +117,9 @@ const update = (state: EditorState, options: LinkOptions) => {
             }),
           );
         }
-      }
 
-      return true;
+        return false;
+      }
     },
   });
 

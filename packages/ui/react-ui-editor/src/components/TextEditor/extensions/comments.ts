@@ -74,7 +74,7 @@ export type CommentOptions = {
 // TODO(burdon): Record span in automerge model?
 // TODO(burdon): Extended markdown: https://www.markdownguide.org/extended-syntax
 export const comments = (options: CommentOptions = {}): Extension => {
-  const matchDecorator = new MatchDecorator({
+  const bookmarkMatcher = new MatchDecorator({
     regexp: /\[\^(\w+)\]/g,
     decoration: (match, view, pos) => {
       return Decoration.replace({
@@ -83,23 +83,22 @@ export const comments = (options: CommentOptions = {}): Extension => {
     },
   });
 
-  // TODO(burdon): Reuse for tasks? Requires more complex AST parsing.
   const bookmarks = ViewPlugin.fromClass(
     class {
-      tasks: DecorationSet;
+      bookmarks: DecorationSet;
       constructor(view: EditorView) {
-        this.tasks = matchDecorator.createDeco(view);
+        this.bookmarks = bookmarkMatcher.createDeco(view);
       }
 
       update(update: ViewUpdate) {
-        this.tasks = matchDecorator.updateDeco(update, this.tasks);
+        this.bookmarks = bookmarkMatcher.updateDeco(update, this.bookmarks);
       }
     },
     {
-      decorations: (instance) => instance.tasks,
+      decorations: (instance) => instance.bookmarks,
       provide: (plugin) =>
         EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.tasks || Decoration.none;
+          return view.plugin(plugin)?.bookmarks || Decoration.none;
         }),
     },
   );
@@ -135,7 +134,7 @@ export const comments = (options: CommentOptions = {}): Extension => {
       const pos = view.state.selection.main.head;
 
       const decorations: { from: number; to: number; value: Decoration }[] = [];
-      const rangeSet = view.plugin(bookmarks)?.tasks;
+      const rangeSet = view.plugin(bookmarks)?.bookmarks;
       rangeSet?.between(pos, pos + 1, (from, to, value) => {
         if (value.spec.widget) {
           decorations.push({ from, to, value });
