@@ -17,11 +17,13 @@ export type BasicBundleOptions = {
 
 export const basicBundle = ({ themeMode, placeholder: _placeholder }: BasicBundleOptions): Extension[] =>
   [
+    // TODO(burdon): Compare with minimalSetup.
+    // https://codemirror.net/docs/ref/#codemirror.minimalSetup
     bracketMatching(),
     closeBrackets(),
-    _placeholder && placeholder(_placeholder),
-
     EditorView.lineWrapping,
+
+    _placeholder && placeholder(_placeholder),
 
     // TODO(burdon): Is this required?
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),

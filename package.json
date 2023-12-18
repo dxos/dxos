@@ -119,6 +119,7 @@
     "syncpack": "^8.2.4",
     "ts-jest": "^28.0.0",
     "ts-node": "10.9.1",
+    "tsx": "^4.6.2",
     "types-package-json": "^2.0.39",
     "typescript": "^5.2.2",
     "uuid": "^8.3.2",
@@ -131,6 +132,9 @@
     "node": ">=12.0.0"
   },
   "pnpm": {
+    "overrides": {
+      "ipfs-utils": "9.0.14"
+    },
     "patchedDependencies": {
       "@nx/js@16.5.4": "patches/@nx__js@16.5.4.patch",
       "@nx/vite@16.5.4": "patches/@nx__vite@16.5.4.patch",

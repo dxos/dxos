@@ -2,21 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { hoverTooltip } from '@codemirror/view';
 
 import { tooltipContent } from '@dxos/react-ui-theme';
 
 const markdownLinkRegexp = /\[([^\]]+)]\(([^)]+)\)/;
 
-export type OnHyperlinkHover = (el: Element, url: string) => void;
+export type TooltipOptions = {
+  onHover: (el: Element, url: string) => void;
+  regexp?: RegExp;
+};
 
 /**
  * https://codemirror.net/examples/tooltip
  * https://codemirror.net/docs/ref/#view.hoverTooltip
  * https://github.com/codemirror/view/blob/main/src/tooltip.ts
  */
-// TODO(burdon): Create config object.
-export const createHyperlinkTooltip = (onHover: OnHyperlinkHover, regexp = markdownLinkRegexp) =>
+export const tooltip = ({ onHover, regexp = markdownLinkRegexp }: TooltipOptions): Extension =>
   hoverTooltip((view, pos) => {
     const { from, text } = view.state.doc.lineAt(pos);
     const p = pos - from;
@@ -49,13 +52,10 @@ export const createHyperlinkTooltip = (onHover: OnHyperlinkHover, regexp = markd
       end: idx + from + match[0].length,
       above: true,
       create: () => {
-        const el = document.createElement('a');
-        el.innerText = '_'; // Required so doesn't collapse.
-        el.className = tooltipContent({}, 'mb-2 p-1');
-        el.setAttribute('target', '_blank');
-        el.setAttribute('href', url);
+        const el = document.createElement('div');
+        el.className = tooltipContent({}, 'pli-2 plb-1');
         onHover(el, url);
-        return { dom: el };
+        return { dom: el, offset: { x: 0, y: 12 } };
       },
     };
   });
