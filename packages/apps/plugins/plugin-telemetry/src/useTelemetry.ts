@@ -12,7 +12,7 @@ import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, setupTelemetryListen
 
 export type UseTelemetryOptions = {
   namespace: string;
-  observability: Observability;
+  observability?: Observability;
 };
 
 /**
@@ -22,6 +22,9 @@ export const useTelemetry = ({ namespace, observability }: UseTelemetryOptions) 
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const client = useClient();
 
+  if (!observability) {
+    return;
+  }
   useEffect(() => {
     observability.telemetryEvent({
       identityId: getTelemetryIdentifier(client),

@@ -50,7 +50,7 @@ export type ObservabilityRuntimeConfig = {
   // TODO(nf): make platform a required extension?
   // platform: Platform;
   config?: Config;
-  secrets?: Map<string, string>;
+  secrets?: any;
   group?: string;
   mode?: 'basic' | 'full' | 'disabled';
 };
@@ -81,7 +81,7 @@ export class Observability {
     this._runtimeConfig = config;
     this._mode = mode ?? 'disabled';
     this._group = group;
-    this.config = this._loadSecrets(config, secrets);
+    this.config = secrets ?? this._loadSecrets(config);
 
     if (this._group) {
       this.setTag('group', this._group);
@@ -93,18 +93,8 @@ export class Observability {
     }
   }
 
-  private _loadSecrets(config: Config | undefined, secrets?: Map<string, string>) {
-    if (secrets) {
-      return {
-        DX_ENVIRONMENT: secrets.get('DX_ENVIRONMENT') ?? null,
-        DX_RELEASE: secrets.get('DX_RELEASE') ?? null,
-        SENTRY_DESTINATION: secrets.get('SENTRY_DESTINATION') ?? null,
-        TELEMETRY_API_KEY: secrets.get('TELEMETRY_API_KEY') ?? null,
-        IPDATA_API_KEY: secrets.get('IPDATA_API_KEY') ?? null,
-        DATADOG_API_KEY: secrets.get('DATADOG_API_KEY') ?? null,
-        DATADOG_APP_KEY: secrets.get('DATADOG_APP_KEY') ?? null,
-      };
-    } else if (isNode()) {
+  private _loadSecrets(config: Config | undefined, secrets?: any) {
+    if (isNode()) {
       return buildSecrets as ObservabilityConfig;
     } else {
       invariant(config, 'runtime config is required');

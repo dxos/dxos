@@ -28,12 +28,7 @@ export const TelemetryPlugin = (options: AppObservabilityOptions): PluginDefinit
     },
     provides: {
       root: () => {
-        if (!observability) {
-          log.error('Observability not initialized');
-          return null;
-        }
         useTelemetry({ namespace: options.namespace, observability });
-
         return null;
       },
     },

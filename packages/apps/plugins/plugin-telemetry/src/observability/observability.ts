@@ -11,7 +11,7 @@ import * as localForage from 'localforage';
 
 // import { type Platform } from '@dxos/client-services';
 import { log } from '@dxos/log';
-import { Observability } from '@dxos/observability';
+import { type Observability } from '@dxos/observability';
 import type { Client, Config } from '@dxos/react-client';
 // import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
@@ -111,6 +111,8 @@ export const initializeAppObservability = async (
   BASE_TELEMETRY_PROPERTIES.release = release;
   BASE_TELEMETRY_PROPERTIES.environment = environment;
   const observabilityDisabled = await isObservabilityDisabled(namespace);
+
+  const { Observability } = await import('@dxos/observability');
 
   // TODO(nf): configure mode
   const observability = new Observability({ namespace, group, mode: 'full', config });
