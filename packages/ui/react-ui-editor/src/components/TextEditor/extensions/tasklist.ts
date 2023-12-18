@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorState } from '@codemirror/state';
 import {
   EditorView,
   Decoration,
@@ -36,12 +35,11 @@ class CheckboxWidget extends WidgetType {
     wrap.setAttribute('aria-hidden', 'true');
     wrap.style.setProperty('margin-left', this._indent * 24 + 'px');
 
-    const box = wrap.appendChild(document.createElement('input'));
-    box.type = 'checkbox';
-    box.checked = this._checked;
-    box.onclick = (event) => {
-      this._checked = !isChecked(view.state, this._pos);
-      this._onCheck(this._checked);
+    const input = wrap.appendChild(document.createElement('input'));
+    input.type = 'checkbox';
+    input.checked = this._checked;
+    input.onchange = (event) => {
+      this._onCheck(event.target.checked);
       return true;
     };
 
@@ -58,10 +56,6 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
-const isChecked = (state: EditorState, pos: number) => {
-  return state.sliceDoc(pos, pos + 3).toLowerCase() === '[x]';
-};
-
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
   '& .cm-task-item': {
@@ -76,7 +70,7 @@ export const tasklist = () => {
   const taskMatcher = new MatchDecorator({
     regexp: /^(\s*)- \[([ xX])\]\s/g,
     decoration: (match, view, pos) => {
-      const indent = match[1].length / 2;
+      const indent = Math.floor(match[1].length / 2);
       const checked = match[2] === 'x' || match[2] === 'X';
       return Decoration.replace({
         widget: new CheckboxWidget(pos, checked, indent, (checked) => {
