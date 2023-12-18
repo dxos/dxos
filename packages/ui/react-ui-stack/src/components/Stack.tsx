@@ -57,6 +57,7 @@ export const Stack = ({
   onDrop,
   onRemoveSection,
   onNavigateToSection,
+  ...props
 }: StackProps) => {
   const { ref: containerRef, width = 0 } = useResizeDetector({ refreshRate: 200 });
   const { operation, activeItem, overItem } = useMosaic();
@@ -97,7 +98,7 @@ export const Stack = ({
   const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} {...props}>
       <Mosaic.Container {...{ id, type, Component, getOverlayStyle, onOver, onDrop }}>
         <Mosaic.DroppableTile
           path={id}

@@ -69,6 +69,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 active === 'destination' && 'invisible',
                 active === 'overlay' && 'text-primary-600 dark:text-primary-300',
               )}
+              data-testid='drag-handle'
               {...draggableProps}
             >
               <DotsSixVertical
