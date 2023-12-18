@@ -132,6 +132,9 @@
     "node": ">=12.0.0"
   },
   "pnpm": {
+    "overrides": {
+      "ipfs-utils": "9.0.14"
+    },
     "patchedDependencies": {
       "@nx/js@16.5.4": "patches/@nx__js@16.5.4.patch",
       "@nx/vite@16.5.4": "patches/@nx__vite@16.5.4.patch",
