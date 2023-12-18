@@ -102,7 +102,6 @@ export class Serializer {
 
         case DocumentModel.meta.type:
         default: {
-          log.info('import', object);
           invariant(!text);
           const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
 
