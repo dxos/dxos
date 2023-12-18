@@ -3,13 +3,9 @@
 //
 
 import { type Modifier } from '@dnd-kit/core';
-import React, {
-  createContext,
-  useEffect,
-  type CSSProperties,
-  type HTMLAttributes,
-  type PropsWithChildren,
-} from 'react';
+import React, { createContext, useEffect, type CSSProperties, type PropsWithChildren } from 'react';
+
+import { type ThemedClassName } from '@dxos/react-ui';
 
 import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
@@ -49,10 +45,7 @@ export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & 
   operation: MosaicOperation;
 };
 
-export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
-  HTMLAttributes<HTMLDivElement>,
-  'className'
-> &
+export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = ThemedClassName<
   PropsWithChildren<{
     id: string;
 
@@ -102,7 +95,8 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
      * Called when a tile is dropped on the container.
      */
     onDrop?: (event: MosaicDropEvent<TPosition>) => void;
-  }>;
+  }>
+>;
 
 export type MosaicContainerContextType<
   TData extends MosaicDataItem = MosaicDataItem,

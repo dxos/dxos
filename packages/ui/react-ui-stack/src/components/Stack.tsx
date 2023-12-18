@@ -49,7 +49,7 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
 export const Stack = ({
   id,
   type = DEFAULT_TYPE,
-  className,
+  classNames,
   SectionContent,
   items = [],
   transform,
@@ -116,7 +116,7 @@ export const Stack = ({
         <Mosaic.DroppableTile
           path={id}
           type={type}
-          className={className}
+          classNames={classNames}
           item={{ id, items: itemsWithPreview }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
@@ -127,13 +127,13 @@ export const Stack = ({
 };
 
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
-  ({ className, path, isOver, item: { items } }, forwardedRef) => {
+  ({ classNames, path, isOver, item: { items } }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'm-2 p-2', isOver && dropRing)}>
+      <List ref={forwardedRef} classNames={mx(textBlockWidth, 'm-2 p-2 rounded-lg', isOver && dropRing, classNames)}>
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (

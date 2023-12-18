@@ -44,20 +44,19 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
 
     return (
       <DensityProvider density='fine'>
-        <ListItem.Root ref={forwardedRef} id={id} classNames='pbe-2 block' style={draggableStyle}>
+        <ListItem.Root ref={forwardedRef} id={id} classNames='block pbe-2' style={draggableStyle}>
           <div
             role='none'
             className={mx(
               surfaceElevation({ elevation: 'group' }),
               inputSurface,
               hoverableControls,
-              'flex rounded',
+              'flex rounded min-bs-[4rem]',
               active && staticHoverableControls,
-              active === 'destination' && 'opacity-50',
-              (active === 'origin' || active === 'rearrange') && 'opacity-0',
+              (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
-            <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading>
+            {/* <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading> */}
 
             {/* Drag handle */}
             <div
@@ -66,19 +65,15 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 focusRing,
                 hoverableFocusedKeyboardControls,
                 'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-                active === 'destination' && 'invisible',
-                active === 'overlay' && 'text-primary-600 dark:text-primary-300',
+                (active === 'destination' || active === 'overlay') && 'invisible',
               )}
               {...draggableProps}
             >
-              <DotsSixVertical
-                weight={active === 'overlay' ? 'bold' : 'regular'}
-                className={mx(getSize(5), hoverableControlItem, 'transition-opacity')}
-              />
+              <DotsSixVertical className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
             </div>
 
             {/* Main content */}
-            <div role='none' className='flex flex-1 min-is-0 overflow-hidden'>
+            <div role='none' className='flex-1 min-is-0'>
               {children}
             </div>
 
