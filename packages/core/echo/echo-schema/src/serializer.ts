@@ -4,6 +4,9 @@
 
 import { DocumentModel } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { type TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -13,6 +16,7 @@ import { Filter } from './query';
 
 export type SerializedSpace = {
   objects: SerializedObject[];
+  version: number;
 };
 
 export type SerializedObject = {
@@ -23,13 +27,19 @@ export type SerializedObject = {
   /**
    * Text content of Text object.
    */
-  text?: string;
+  '@text'?: {
+    text: string;
+    kind?: TextKind;
+    field?: string;
+  };
 } & Record<string, any>;
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
 // TODO(burdon): Option to decode JSON/protobuf.
 // TODO(burdon): Sort JSON keys (npm canonical serialize util).
 export class Serializer {
+  static version = 1;
+
   async export(database: EchoDatabase): Promise<SerializedSpace> {
     const { objects } = database.query(undefined, { models: ['*'] });
     const data = {
@@ -38,19 +48,32 @@ export class Serializer {
           ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
         });
       }),
+
+      version: Serializer.version,
     };
 
     return data;
   }
 
   async import(database: EchoDatabase, data: SerializedSpace) {
+    invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
     const {
       objects: [properties],
     } = database.query(Filter.typename(TYPE_PROPERTIES));
 
     const { objects } = data;
+
     for (const object of objects) {
-      const { '@id': id, '@type': type, '@model': model, '@internal': internal, ...data } = object;
+      const {
+        '@id': id,
+        '@type': type,
+        '@model': model,
+        '@deleted': deleted,
+        '@meta': meta,
+        '@text': text,
+        ...data
+      } = object;
+      log.info('import', { id, type, model, deleted, meta, text, data });
 
       // Handle Space Properties
       // TODO(mykola): move to @dxos/client
@@ -64,21 +87,37 @@ export class Serializer {
       }
 
       switch (model) {
-        case DocumentModel.meta.type: {
-          const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
-
-          const obj = new Prototype({
-            ...data,
-          });
+        case TextModel.meta.type: {
+          invariant(text);
+          const obj = new TextObject(text.text, text.kind, text.field);
           obj[base]._id = id;
           database.add(obj);
+          if (deleted) {
+            // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
+            database.remove(obj);
+          }
           await database.flush();
           break;
         }
-        case TextModel.meta.type: {
-          const obj = new TextObject(data.text);
+
+        case DocumentModel.meta.type:
+        default: {
+          log.info('import', object);
+          invariant(!text);
+          const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
+
+          const obj = new Prototype(
+            {
+              ...data,
+            },
+            { meta },
+          );
           obj[base]._id = id;
           database.add(obj);
+          if (deleted) {
+            // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
+            database.remove(obj);
+          }
           await database.flush();
           break;
         }

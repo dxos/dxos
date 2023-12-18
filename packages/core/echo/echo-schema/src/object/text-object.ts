@@ -88,7 +88,11 @@ export class TextObject extends AbstractEchoObject<TextModel> {
     return {
       '@id': this.id,
       '@model': TextModel.meta.type,
-      text: this.text,
+      '@text': {
+        text: this.text,
+        kind: this.kind,
+        field: this.model?.field,
+      },
     };
   }
 
