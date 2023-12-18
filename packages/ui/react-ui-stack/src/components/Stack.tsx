@@ -94,11 +94,25 @@ export const Stack = ({
   );
 
   // TODO(burdon): Create context provider to relay inner section width.
-  const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
+  const getOverlayStyle = useCallback(() => {
+    return { width: Math.min(width, 59 * 16) };
+  }, [width]);
+
+  // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
+  //  in particular is unknown, so this solution may may backfire in unforseeable cases.
+  const stackModifier = useCallback<Exclude<MosaicContainerProps['modifier'], undefined>>(
+    (_activeItem, { transform, activeNodeRect, overlayNodeRect }) => {
+      if (activeNodeRect && overlayNodeRect) {
+        transform.y += activeNodeRect?.top - overlayNodeRect?.top;
+      }
+      return transform;
+    },
+    [],
+  );
 
   return (
     <div ref={containerRef}>
-      <Mosaic.Container {...{ id, type, Component, getOverlayStyle, onOver, onDrop }}>
+      <Mosaic.Container {...{ id, type, Component, getOverlayStyle, onOver, onDrop, modifier: stackModifier }}>
         <Mosaic.DroppableTile
           path={id}
           type={type}
