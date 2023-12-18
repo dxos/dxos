@@ -5,11 +5,11 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, useCallback, type Ref } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, type Ref } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Document as DocumentType, Folder } from '@braneframe/types';
+import { Document as DocumentType, Thread as ThreadType, Folder } from '@braneframe/types';
 import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
@@ -21,13 +21,13 @@ import {
   EditorCard,
   EditorMain,
   EditorMainEmbedded,
-  type EditorMainProps,
   EditorSection,
   MarkdownMainEmpty,
   MarkdownSettings,
   // SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
+import type { UseExtensionsOptions } from './components/extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -54,7 +54,7 @@ export const isDocument = (data: unknown): data is DocumentType =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
-  const state = deepSignal<{ onChange: NonNullable<EditorMainProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<(text: string) => void>[] }>({ onChange: [] });
 
   const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
@@ -67,19 +67,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     composer: EditorModel;
     properties: MarkdownProperties;
   }> = ({ composer, properties }) => {
-    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
-      (content) => state.onChange.forEach((onChange) => onChange(content)),
-      [state.onChange],
-    );
-
     return (
       <EditorMain
         model={composer}
         properties={properties}
         layout='standalone'
         editorMode={settings.values.editorMode}
-        showWidgets={settings.values.showWidgets}
-        onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
     );
@@ -93,19 +86,34 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       return null;
     }
 
-    const handleSearch = () => {
-      // TODO(burdon): Specify filter (e.g., stack).
-      const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
-      return objects.map((object) => ({
-        text: object.title,
-        url: object.id,
-      }));
+    // TODO(burdon): Better way for different plugins to configure extensions.
+    const extensions: UseExtensionsOptions = {
+      onChange: (text: string) => {
+        state.onChange.forEach((onChange) => onChange(text));
+      },
+      showWidgets: settings.values.showWidgets,
+      autocomplete: {
+        onSearch: (text: string) => {
+          // TODO(burdon): Specify filter (e.g., stack).
+          const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
+          return objects.map((object) => ({
+            label: object.title,
+            apply: `[${text}](/${object.id})`,
+          }));
+        },
+      },
+      comments: {
+        onCreate: () => {
+          if (space) {
+            const thread = space.db.add(new ThreadType());
+            return thread.id;
+          }
+        },
+        onUpdate: (info) => {
+          console.log(info);
+        },
+      },
     };
-
-    const onChange: NonNullable<EditorMainProps['onChange']> = useCallback(
-      (content) => state.onChange.forEach((onChange) => onChange(content)),
-      [state.onChange],
-    );
 
     return (
       <EditorMain
@@ -113,9 +121,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         properties={document}
         layout='standalone'
         editorMode={settings.values.editorMode}
-        showWidgets={settings.values.showWidgets}
-        onChange={onChange}
-        onSearch={handleSearch}
+        extensions={extensions}
         editorRefCb={pluginRefCallback}
       />
     );

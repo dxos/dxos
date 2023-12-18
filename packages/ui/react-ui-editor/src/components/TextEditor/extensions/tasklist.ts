@@ -35,8 +35,8 @@ class CheckboxWidget extends WidgetType {
     const input = wrap.appendChild(document.createElement('input'));
     input.type = 'checkbox';
     input.checked = this._checked;
-    input.onchange = (event) => {
-      this._onCheck(event.target.checked);
+    input.onchange = (event: Event) => {
+      this._onCheck((event.target as any).checked);
       return true;
     };
 

@@ -64,16 +64,16 @@ const styles = EditorView.baseTheme({
   },
 });
 
-export type CommentOptions = {
+export type CommentsOptions = {
   key?: string;
-  onCreate?: () => string;
+  onCreate?: () => string | void;
   onUpdate?: (info: { pos: number; location: Rect }) => void;
 };
 
 // https://www.markdownguide.org/extended-syntax/#footnotes
 // TODO(burdon): Record span in automerge model?
 // TODO(burdon): Extended markdown: https://www.markdownguide.org/extended-syntax
-export const comments = (options: CommentOptions = {}): Extension => {
+export const comments = (options: CommentsOptions = {}): Extension => {
   const bookmarkMatcher = new MatchDecorator({
     regexp: /\[\^(\w+)\]/g,
     decoration: (match, view, pos) => {
