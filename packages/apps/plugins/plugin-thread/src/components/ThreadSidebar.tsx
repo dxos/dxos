@@ -22,6 +22,7 @@ export const ThreadSidebar: FC<{ space?: Space }> = ({ space }) => {
   const [thread, setThread] = useState<ThreadType>();
   useEffect(() => {
     if (space) {
+      // Don's show if the main layout is displaying the active thread.
       if (layoutPlugin?.provides.layout.active) {
         const active = space.db.getObjectById(layoutPlugin?.provides.layout.active);
         if (isTypedObject(active) && active.__typename === ThreadType.schema.typename) {

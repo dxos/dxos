@@ -23,6 +23,8 @@ import {
 } from '@codemirror/autocomplete';
 import { keymap } from '@codemirror/view';
 
+export type AutocompleteResult = Completion;
+
 export type AutocompleteOptions = {
   onSearch: (text: string) => Completion[];
 };

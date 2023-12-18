@@ -12,9 +12,9 @@ import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document as DocumentType, Thread as ThreadType, Folder } from '@braneframe/types';
 import { type PluginDefinition, isObject, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { SpaceProxy, getSpaceForObject, isTypedObject, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
+import { type AutocompleteResult, type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 import { nonNullable } from '@dxos/util';
 
@@ -79,6 +79,42 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
+  // TODO(burdon): Better way for different plugins to configure extensions.
+  const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
+    onChange: (text: string) => {
+      state.onChange.forEach((onChange) => onChange(text));
+    },
+    showWidgets: settings.values.showWidgets,
+    autocomplete: {
+      onSearch: (text: string) => {
+        // TODO(burdon): Specify filter (e.g., stack).
+        const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
+        return objects
+          .map<AutocompleteResult | undefined>((object) =>
+            object.title?.length && object.id !== document.id
+              ? {
+                  label: object.title,
+                  apply: `[${object.title}](/${object.id})`,
+                }
+              : undefined,
+          )
+          .filter(nonNullable);
+      },
+    },
+    comments: {
+      onCreate: () => {
+        if (space) {
+          // TODO(burdon): Set back ref to object.
+          const thread = space.db.add(new ThreadType());
+          return thread.id;
+        }
+      },
+      onUpdate: (info) => {
+        console.log(info);
+      },
+    },
+  });
+
   const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
@@ -87,7 +123,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       return null;
     }
 
-    return <EditorSection model={model} editorMode={settings.values.editorMode} />;
+    return (
+      <EditorSection
+        editorMode={settings.values.editorMode}
+        model={model}
+        extensions={getExtensionsConfig(space!, document)}
+      />
+    );
   };
 
   const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
@@ -98,48 +140,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       return null;
     }
 
-    // TODO(burdon): Factor out for section.
-    // TODO(burdon): Better way for different plugins to configure extensions.
-    const extensions: UseExtensionsOptions = {
-      onChange: (text: string) => {
-        state.onChange.forEach((onChange) => onChange(text));
-      },
-      showWidgets: settings.values.showWidgets,
-      autocomplete: {
-        onSearch: (text: string) => {
-          // TODO(burdon): Specify filter (e.g., stack).
-          const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
-          return objects
-            .map(
-              (object) =>
-                object.title?.length && {
-                  label: object.title,
-                  apply: `[${object.title}](/${object.id})`,
-                },
-            )
-            .filter(nonNullable);
-        },
-      },
-      comments: {
-        onCreate: () => {
-          if (space) {
-            const thread = space.db.add(new ThreadType());
-            return thread.id;
-          }
-        },
-        onUpdate: (info) => {
-          console.log(info);
-        },
-      },
-    };
-
     return (
       <EditorMain
+        editorMode={settings.values.editorMode}
         model={model}
+        extensions={getExtensionsConfig(space!, document)}
         properties={document}
         layout='standalone'
-        editorMode={settings.values.editorMode}
-        extensions={extensions}
         editorRefCb={pluginRefCallback}
       />
     );
