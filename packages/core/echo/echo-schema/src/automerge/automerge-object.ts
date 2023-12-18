@@ -37,7 +37,7 @@ import { compositeRuntime } from '../util';
 
 export type BindOptions = {
   db: AutomergeDb;
-  docHandle: DocHandle<any>;
+  docHandle: DocHandle<DocStructure>;
   path: string[];
   ignoreCache?: boolean;
 };
@@ -151,7 +151,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
     return {
       '@id': this._id,
-      '@type': this.__typename, 
+      '@type': this.__typename,
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
       '@meta': value.meta,
       ...value.data,
