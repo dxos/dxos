@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Configure endpoints here:
 # https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/dxos.org/dns/records
@@ -22,20 +23,20 @@ YELLOW=16776960
 
 function notifySuccess() {
   if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
-  MESSAGE='{ "embeds": [{ "title": "Deploy successful", "description": "'$1' ('$DX_ENVIRONMENT')", "color": '$GREEN' }] }'
-  curl -H "Content-Type: application/json" -d "${MESSAGE}" $DX_DISCORD_WEBHOOK_URL
+  MESSAGE='{ "embeds": [{ "title": "Deploy successful", "description": "'$1' ('${DX_ENVIRONMENT-}')", "color": '$GREEN' }] }'
+  curl -H "Content-Type: application/json" -d "${MESSAGE-}" $DX_DISCORD_WEBHOOK_URL
 }
 
 function notifyFailure() {
   if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
-  MESSAGE='{ "embeds": [{ "title": "Deploy failed", "description": "'$1' ('$DX_ENVIRONMENT')", "color": '$RED' }] }'
-  curl -H "Content-Type: application/json" -d "${MESSAGE}" $DX_DISCORD_WEBHOOK_URL
+  MESSAGE='{ "embeds": [{ "title": "Deploy failed", "description": "'$1' ('${DX_ENVIRONMENT-}')", "color": '$RED' }] }'
+  curl -H "Content-Type: application/json" -d "${MESSAGE-}" $DX_DISCORD_WEBHOOK_URL
 }
 
 function notifyStart() {
   if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
-  MESSAGE='{ "embeds": [{ "title": "Deploy started", "description": "Environment: '$DX_ENVIRONMENT'", "color": '$YELLOW' }] }'
-  curl -H "Content-Type: application/json" -d "${MESSAGE}" $DX_DISCORD_WEBHOOK_URL
+  MESSAGE='{ "embeds": [{ "title": "Deploy started", "description": "Environment: '${DX_ENVIRONMENT-}'", "color": '$YELLOW' }] }'
+  curl -H "Content-Type: application/json" -d "${MESSAGE-}" $DX_DISCORD_WEBHOOK_URL
 }
 
 if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
