@@ -24,21 +24,26 @@ export type BlockProperties = {
 
 export type ThreadMessageProps = {
   message: MessageType;
-  identityKey: PublicKey;
-  propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
+  identityKey?: PublicKey;
+  propertiesProvider?: (identityKey: PublicKey | undefined) => BlockProperties;
+  className?: string;
   onDelete?: (blockId: string, idx: number) => void;
 };
 
-export const MessageCard = ({ message, propertiesProvider, onDelete }: ThreadMessageProps) => {
+export const MessageCard = ({
+  message,
+  propertiesProvider,
+  className = mx(inputSurface, 'rounded shadow'),
+  onDelete,
+}: ThreadMessageProps) => {
   useSubscription(message.blocks); // TODO(burdon): Not updated.
-  if (!message.blocks.length || !message.from?.identityKey) {
+  if (!message.blocks.length) {
     return null;
   }
 
   const message2 = message.blocks[0]!;
-  const { classes, displayName } = propertiesProvider(
-    message.from?.identityKey ? PublicKey.from(message.from?.identityKey) : undefined,
-  );
+  const { classes, displayName = 'anonymous' } =
+    propertiesProvider?.(message.from?.identityKey ? PublicKey.from(message.from?.identityKey) : undefined) ?? {};
   const date = message2.timestamp ? new Date(message2.timestamp) : undefined;
 
   // TODO(burdon): Use aurora cards.
@@ -48,8 +53,8 @@ export const MessageCard = ({ message, propertiesProvider, onDelete }: ThreadMes
       <div
         key={message.id}
         className={mx(
-          'flex flex-col overflow-hidden rounded shadow',
-          inputSurface,
+          'flex flex-col overflow-hidden',
+          className,
           // !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
         )}
       >
@@ -58,15 +63,19 @@ export const MessageCard = ({ message, propertiesProvider, onDelete }: ThreadMes
             <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
           </div>
           <div className='flex flex-col w-full overflow-hidden'>
-            <div className='flex text-sm px-2 py-1 space-x-1 truncate'>
-              <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>{displayName}</span>
-              {date && (
-                <>
-                  <span className='font-mono text-xs'>{format(date, 'HH:mm')}</span>
-                  <span className='font-mono text-xs'>{format(date, 'aaa')}</span>
-                </>
-              )}
-            </div>
+            {displayName && (
+              <div className='flex text-sm px-2 py-1 space-x-1 truncate'>
+                <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>
+                  {displayName}
+                </span>
+                {date && (
+                  <>
+                    <span className='font-mono text-xs'>{format(date, 'HH:mm')}</span>
+                    <span className='font-mono text-xs'>{format(date, 'aaa')}</span>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className='overflow-hidden pb-1'>
               {message.blocks.map((block, i) => (

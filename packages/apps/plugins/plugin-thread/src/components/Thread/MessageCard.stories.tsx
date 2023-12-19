@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type BlockProperties, MessageCard } from './MessageCard';
 
@@ -38,6 +39,7 @@ const Story = () => {
 export default {
   component: MessageCard,
   render: Story,
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },

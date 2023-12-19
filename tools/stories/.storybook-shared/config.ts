@@ -16,7 +16,11 @@ export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
   turbosnapRootDir?: string,
 ): StorybookConfig => ({
-  addons: ['@storybook/addon-links', '@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [
+    '@storybook/addon-links',
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+  ],
   // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories
   typescript: { reactDocgen: false },
   framework: {
@@ -55,7 +59,10 @@ export const config = (
           topLevelAwait(),
           ThemePlugin({
             root: __dirname,
-            content: [resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}'],
+            content: [
+              resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              resolve(__dirname, '../../../packages/apps/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}'
+            ],
           }),
           turbosnap({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
         ],

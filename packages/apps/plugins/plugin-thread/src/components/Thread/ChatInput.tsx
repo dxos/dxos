@@ -4,7 +4,7 @@
 
 import { syntaxHighlighting } from '@codemirror/language';
 import { PaperPlaneRight } from '@phosphor-icons/react';
-import React, { type FC, type KeyboardEventHandler, useState } from 'react';
+import React, { type KeyboardEventHandler, useState } from 'react';
 
 import { TextObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
@@ -14,7 +14,12 @@ import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 import { promptHighlightStyles, promptLanguage } from './syntax';
 import { THREAD_PLUGIN } from '../../meta';
 
-export const ChatInput: FC<{ onMessage: (text: string) => boolean | void }> = ({ onMessage }) => {
+export type ChatInputProps = {
+  className?: string;
+  onMessage: (text: string) => boolean | void;
+};
+
+export const ChatInput = ({ className = mx(inputSurface, 'rounded shadow p-2'), onMessage }: ChatInputProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const [text] = useState(new TextObject());
   const model = useTextModel({ text });
@@ -45,7 +50,7 @@ export const ChatInput: FC<{ onMessage: (text: string) => boolean | void }> = ({
   }
 
   return (
-    <div className={mx('flex w-full p-2 shadow rounded', inputSurface)} onKeyDownCapture={handleKeyDown}>
+    <div className={mx('flex w-full', className)} onKeyDownCapture={handleKeyDown}>
       <TextEditor
         model={model}
         extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}

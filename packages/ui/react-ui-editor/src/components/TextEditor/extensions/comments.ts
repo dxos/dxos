@@ -67,7 +67,7 @@ const styles = EditorView.baseTheme({
 export type CommentsOptions = {
   key?: string;
   onCreate?: () => string | void;
-  onUpdate?: (info: { items: string[]; active: string; pos: number; location: Rect }) => void;
+  onUpdate?: (info: { active: string; items: { id: string; pos: number; location: Rect | null }[] }) => void;
 };
 
 // https://www.markdownguide.org/extended-syntax/#footnotes
@@ -135,6 +135,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const view = update.view;
       const pos = view.state.selection.main.head;
 
+      // TODO(burdon): Determine when to fire.
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
       rangeSet?.between(pos, pos + 1, (from, to, value) => {
@@ -145,26 +146,21 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
       if (decorations.length) {
         const {
-          from,
           value: {
             spec: { id },
           },
         } = decorations[0];
-        const location = view.coordsAtPos(from);
-        if (location) {
-          options.onUpdate?.({
-            items: decorations.map(
-              ({
-                value: {
-                  spec: { id },
-                },
-              }) => id,
-            ),
-            active: id,
-            pos,
-            location,
-          });
-        }
+        options.onUpdate?.({
+          active: id,
+          items: decorations.map(
+            ({
+              from,
+              value: {
+                spec: { id },
+              },
+            }) => ({ id: id as string, pos: from, location: view.coordsAtPos(from) }),
+          ),
+        });
       }
     }),
 

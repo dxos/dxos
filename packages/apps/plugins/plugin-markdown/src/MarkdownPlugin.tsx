@@ -91,11 +91,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   // TODO(burdon): Better way for different plugins to configure extensions.
   const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
-    // TODO(burdon): Change to passing in config object.
-    onChange: (text: string) => {
-      state.onChange.forEach((onChange) => onChange(text));
-    },
     showWidgets: settings.values.showWidgets,
+    // TODO(burdon): Change to passing in config object.
+    listener: {
+      onChange: (text: string) => {
+        state.onChange.forEach((onChange) => onChange(text));
+      },
+    },
     autocomplete: {
       onSearch: (text: string) => {
         // TODO(burdon): Specify filter (e.g., stack).
