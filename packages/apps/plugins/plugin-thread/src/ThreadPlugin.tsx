@@ -3,6 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal';
 import React from 'react';
 
 import { getActiveSpace, SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -32,6 +33,8 @@ import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
+
+  const state = deepSignal<{ active?: string | undefined }>({});
 
   return {
     meta,
@@ -101,11 +104,17 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             // TODO(burdon): Better way to get this?
+            // TODO(burdon): Pass in state signal.
             case 'context-thread': {
               const graph = graphPlugin?.provides.graph;
               const layout = layoutPlugin?.provides.layout;
               const space = getActiveSpace(graph!, layout!.active);
-              return <ThreadSidebar space={space} />;
+              if (space) {
+                const thread = state.active ? (space!.db.getObjectById(state.active) as ThreadType) : undefined;
+                return <ThreadSidebar space={space} thread={thread} />;
+              } else {
+                return null;
+              }
             }
 
             default:
@@ -118,6 +127,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
               return { object: new ThreadType() };
+            }
+            case ThreadAction.SELECT: {
+              state.active = intent.data?.active;
+              break;
             }
           }
         },

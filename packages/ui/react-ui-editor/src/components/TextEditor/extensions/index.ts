@@ -4,6 +4,7 @@
 
 export * from './autocomplete';
 export * from './basic';
+export * from './comments';
 export * from './link';
 export * from './listener';
 export * from './markdown';
