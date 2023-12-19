@@ -148,10 +148,18 @@ export class AutomergeObject implements TypedObjectProperties {
     for (const key of this[base]._path) {
       value = value?.[key];
     }
+    const typeRef = this.__system.type;
 
     return {
       '@id': this._id,
-      '@type': this.__typename,
+      '@type': typeRef
+        ? {
+            '@type': REFERENCE_TYPE_TAG,
+            itemId: typeRef.itemId,
+            protocol: typeRef.protocol,
+            host: typeRef.host,
+          }
+        : undefined,
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
       '@meta': value.meta,
       ...value.data,
