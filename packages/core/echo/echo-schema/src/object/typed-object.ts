@@ -25,7 +25,7 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
-import { AutomergeObject } from '../automerge';
+import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -235,7 +235,12 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description
    */
   toJSON() {
-    return this[base]._convert();
+    return this[base]._convert({
+      onRef: (id, obj) => ({
+        '@type': REFERENCE_TYPE_TAG,
+        itemId: id,
+      }),
+    });
   }
 
   /**
@@ -304,7 +309,8 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     return {
       '@id': this.id,
       // TODO(mykola): Secondary path is non reachable.
-      '@type': this.__typename ?? (this.__schema ? { '@id': this.__schema!.id } : undefined),
+      '@type':
+        this.__typename ?? (this.__schema ? { '@type': REFERENCE_TYPE_TAG, itemId: this.__schema!.id } : undefined),
       // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
@@ -384,7 +390,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
           if (item instanceof AbstractEchoObject) {
             return this._linkObject(item);
           } else if (isReferenceLike(item)) {
+            // Old reference format.
             return new Reference(item['@id']);
+          } else if (typeof item === 'object' && item !== null && item['@type'] === REFERENCE_TYPE_TAG) {
+            return new Reference(item.itemId, item.protocol, item.host);
           } else {
             return item;
           }
@@ -398,8 +407,14 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       } else if (typeof value === 'object' && value !== null) {
         if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
           // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+          // Old reference format.
           this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
-        } else {
+        } else if (value['@type'] === REFERENCE_TYPE_TAG) {
+          this._mutate(
+            this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
+          );
+        }
+        {
           const sub = this._createProxy({}, key);
           this._mutate(this._model.builder().set(key, {}).build(meta));
           for (const [subKey, subValue] of Object.entries(value)) {

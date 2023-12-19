@@ -85,11 +85,18 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   }
 
   toJSON() {
-    return {
+    const jsonRepresentation = {
       '@id': this.id,
       '@model': TextModel.meta.type,
-      text: this.text,
+      '@type': LEGACY_TEXT_TYPE,
+      kind: this.kind,
+      field: this.model?.field,
     };
+    if (this.model?.field) {
+      (jsonRepresentation as any)[this.model.field] = this.text;
+    }
+
+    return jsonRepresentation;
   }
 
   protected override _afterBind() {
