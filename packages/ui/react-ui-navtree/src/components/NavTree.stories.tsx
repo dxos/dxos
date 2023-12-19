@@ -156,6 +156,7 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
 };
 
 export default {
+  title: 'react-ui-navtree/NavTree',
   component: NavTree,
   parameters: {
     layout: 'fullscreen',
