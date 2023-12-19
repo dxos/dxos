@@ -42,7 +42,13 @@ describe('static schema', () => {
 
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
-    expect(task1.toJSON()).to.deep.contain({ title: 'Task 1', assignee: { '@id': contact.id } });
+    expect(task1.toJSON()).to.deep.contain({
+      title: 'Task 1',
+      assignee: {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: contact.id,
+      },
+    });
     expect(JSON.stringify(task1, null, 4)).to.equal(
       JSON.stringify(
         {
@@ -51,10 +57,16 @@ describe('static schema', () => {
           '@model': 'dxos.org/model/document',
           '@meta': { keys: [] },
           subTasks: [],
-          description: { '@id': task1.description.id },
+          description: {
+            '@type': 'dxos.echo.model.document.Reference',
+            itemId: task1.description.id,
+          },
           todos: [],
           title: 'Task 1',
-          assignee: { '@id': contact.id },
+          assignee: {
+            '@type': 'dxos.echo.model.document.Reference',
+            itemId: contact.id,
+          },
         },
         null,
         4,
@@ -75,10 +87,12 @@ describe('static schema', () => {
       name: 'User 1',
       tasks: [
         {
-          '@id': contact.tasks[0].id,
+          '@type': 'dxos.echo.model.document.Reference',
+          itemId: contact.tasks[0].id,
         },
         {
-          '@id': contact.tasks[1].id,
+          '@type': 'dxos.echo.model.document.Reference',
+          itemId: contact.tasks[1].id,
         },
       ],
     });
