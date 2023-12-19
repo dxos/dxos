@@ -350,6 +350,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../packages/common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../packages/sdk/observability
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../packages/core/protocols
@@ -368,9 +371,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../packages/ui/react-ui-theme
-      '@dxos/telemetry':
-        specifier: workspace:*
-        version: link:../packages/common/telemetry
       '@dxos/vault':
         specifier: workspace:*
         version: link:../packages/sdk/vault
@@ -2657,21 +2657,30 @@ importers:
 
   packages/apps/plugins/plugin-telemetry:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../../sdk/observability
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@dxos/sentry':
         specifier: workspace:*
         version: link:../../../common/sentry
-      '@dxos/telemetry':
-        specifier: workspace:*
-        version: link:../../../common/telemetry
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -3938,40 +3947,6 @@ importers:
       sentry-testkit:
         specifier: ^5.0.5
         version: 5.0.5
-
-  packages/common/telemetry:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../async
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../context
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
-      '@dxos/sentry':
-        specifier: workspace:*
-        version: link:../sentry
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../util
-      '@segment/snippet':
-        specifier: ^4.15.3
-        version: 4.15.3
-      analytics-node:
-        specifier: ^6.2.0
-        version: 6.2.0
-    devDependencies:
-      '@types/analytics-node':
-        specifier: ^3.1.9
-        version: 3.1.9
 
   packages/common/timeframe:
     dependencies:
@@ -5452,6 +5427,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -5473,6 +5451,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/plate':
         specifier: workspace:*
         version: link:../../common/plate
@@ -5491,9 +5475,6 @@ importers:
       '@dxos/tasks-template':
         specifier: workspace:*
         version: link:../../apps/templates/tasks-template
-      '@dxos/telemetry':
-        specifier: workspace:*
-        version: link:../../common/telemetry
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -5632,6 +5613,9 @@ importers:
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -7359,6 +7343,70 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
 
+  packages/sdk/observability:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../client-services
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
+      '@dxos/sentry':
+        specifier: workspace:*
+        version: link:../../common/sentry
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@segment/snippet':
+        specifier: ^4.15.3
+        version: 4.15.3
+      analytics-node:
+        specifier: ^6.2.0
+        version: 6.2.0(debug@4.3.4)
+      datadog-metrics:
+        specifier: ^0.11.1
+        version: 0.11.1
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@8.1.1)
+    devDependencies:
+      '@types/analytics-node':
+        specifier: ^3.1.9
+        version: 3.1.9
+      '@types/debug':
+        specifier: ^4.1.10
+        version: 4.1.12
+
   packages/sdk/react-client:
     dependencies:
       '@dxos/async':
@@ -7776,6 +7824,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -7788,9 +7839,6 @@ importers:
       '@dxos/sentry':
         specifier: workspace:*
         version: link:../../common/sentry
-      '@dxos/telemetry':
-        specifier: workspace:*
-        version: link:../../common/telemetry
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -12506,6 +12554,24 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+
+  /@datadog/datadog-api-client@1.20.0:
+    resolution: {integrity: sha512-HGNd4p6n2PAWfqlrs0N8AQ2X5lLR9utew/5TF+rYNtgmp48f4VR/xoXuCAnWf3fy2xrViRwmfPsRuGWX5XmTKw==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      '@types/buffer-from': 1.1.3
+      '@types/node': 18.18.9
+      '@types/pako': 1.0.7
+      buffer-from: 1.1.2
+      cross-fetch: 3.1.5
+      es6-promise: 4.2.8
+      form-data: 4.0.0
+      loglevel: 1.8.1
+      pako: 2.1.0
+      url-parse: 1.5.10
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /@devicefarmer/adbkit-logcat@2.1.3:
     resolution: {integrity: sha512-yeaGFjNBc/6+svbDeul1tNHtNChw6h8pSHAt5D+JsedUrMTN7tla7B15WLDyekxsuS2XlZHRxpuC6m92wiwCNw==}
@@ -18767,7 +18833,7 @@ packages:
       '@types/uuid': 9.0.7
       dequal: 2.0.3
       polished: 4.2.2
-      uuid: 9.0.0
+      uuid: 9.0.1
     dev: true
 
   /@storybook/addon-backgrounds@7.6.4:
@@ -20533,6 +20599,12 @@ packages:
     resolution: {integrity: sha512-wJsiX1tosQ+J5+bY5LrSahHxr2wT+uME5UDwdN1kg4frt40euqA+wzECkmq4t5QbveHiJepfdThgQrPw6KiSlg==}
     dev: false
 
+  /@types/buffer-from@1.1.3:
+    resolution: {integrity: sha512-2lq4YC9uLUMGHkl2IDtX4tCXSo2+hwMpOJcY1qiIk1kybc31rIlPyM1HCVJhkPFIo75a/pOVxqyvwuf5TpCG/w==}
+    dependencies:
+      '@types/node': 18.18.9
+    dev: false
+
   /@types/bytes@3.1.1:
     resolution: {integrity: sha512-lOGyCnw+2JVPKU3wIV0srU0NyALwTBJlVSx5DfMQOFuuohA8y9S8orImpuIQikZ0uIQ8gehrRjxgQC1rLRi11w==}
     dev: false
@@ -20788,8 +20860,8 @@ packages:
       '@types/d3-zoom': 3.0.1
     dev: true
 
-  /@types/debug@4.1.7:
-    resolution: {integrity: sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==}
+  /@types/debug@4.1.12:
+    resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
     dependencies:
       '@types/ms': 0.7.31
 
@@ -21322,6 +21394,10 @@ packages:
 
   /@types/offscreencanvas@2019.3.0:
     resolution: {integrity: sha512-esIJx9bQg+QYF0ra8GnvfianIY8qWB0GBx54PK5Eps6m+xTj86KLavHv6qDhzKcu5UUOgNfJ2pWaIIV7TRUd9Q==}
+    dev: false
+
+  /@types/pako@1.0.7:
+    resolution: {integrity: sha512-YBtzT2ztNF6R/9+UXj2wTGFnC9NklAnASt3sC0h2m1bbH7G6FyBIkt4AN8ThZpNfxUo1b2iMVO0UawiJymEt8A==}
     dev: false
 
   /@types/parse-json@4.0.0:
@@ -22407,7 +22483,7 @@ packages:
   /@vuepress/utils@2.0.0-beta.61:
     resolution: {integrity: sha512-W7g6xjrdyOW5E1V1ouyTm5d4+kgSd4KcM80D7K0NNScrhLIW6gpOggVVOVyTH3q2K1GQhzPlUcUe04ZNSo0ilQ==}
     dependencies:
-      '@types/debug': 4.1.7
+      '@types/debug': 4.1.12
       '@types/fs-extra': 11.0.1
       '@types/hash-sum': 1.0.0
       '@vuepress/shared': 2.0.0-beta.61
@@ -22973,12 +23049,12 @@ packages:
       qs: 6.11.0
     dev: false
 
-  /analytics-node@6.2.0:
+  /analytics-node@6.2.0(debug@4.3.4):
     resolution: {integrity: sha512-NLU4tCHlWt0tzEaFQL7NIoWhq2KmQSmz0JvyS2lYn6fc4fEjTMSabhJUx8H1r5995FX8fE3rZ15uIHU6u+ovlQ==}
     engines: {node: '>=4'}
     dependencies:
       '@segment/loosely-validate-event': 2.0.0
-      axios: 0.27.2
+      axios: 0.27.2(debug@4.3.4)
       axios-retry: 3.2.0
       lodash.isstring: 4.0.1
       md5: 2.3.0
@@ -23548,15 +23624,15 @@ packages:
   /axios@0.26.1:
     resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2(debug@4.3.4)
     transitivePeerDependencies:
       - debug
     dev: false
 
-  /axios@0.27.2:
+  /axios@0.27.2(debug@4.3.4):
     resolution: {integrity: sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2(debug@4.3.4)
       form-data: 4.0.0
     transitivePeerDependencies:
       - debug
@@ -23565,7 +23641,7 @@ packages:
   /axios@1.1.3:
     resolution: {integrity: sha512-00tXVRwKx/FZr/IDVFt4C+f9FYairX517WoGCL6dpOntqLkZofjhu43F/Xl44UOpqa+9sLFDrG/XAnFsUYgkDA==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2(debug@4.3.4)
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -23575,7 +23651,7 @@ packages:
   /axios@1.3.4:
     resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2(debug@4.3.4)
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -26446,6 +26522,17 @@ packages:
       whatwg-mimetype: 3.0.0
       whatwg-url: 11.0.0
 
+  /datadog-metrics@0.11.1:
+    resolution: {integrity: sha512-Yae6Zv588nKwqyt6bsUKKUc8VryDTxIfRVoJP6Kpnm17Vqg1I3MVW/tP20RZyNB7tBewYwCpbOYpgRejEzsSzg==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      '@datadog/datadog-api-client': 1.20.0
+      debug: 4.3.4(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: false
+
   /date-fns@2.29.3:
     resolution: {integrity: sha512-dDCnyH2WnnKusqvZZ6+jA1O51Ibt8ZMRNkDZdyAyK4YfbDwa/cEmuztzG5pk6hqlp9aSBPYcjOlktquahGwGeA==}
     engines: {node: '>=0.11'}
@@ -29189,7 +29276,7 @@ packages:
       tslib: 2.4.1
     dev: true
 
-  /follow-redirects@1.15.2:
+  /follow-redirects@1.15.2(debug@4.3.4):
     resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
     engines: {node: '>=4.0'}
     peerDependencies:
@@ -29197,6 +29284,8 @@ packages:
     peerDependenciesMeta:
       debug:
         optional: true
+    dependencies:
+      debug: 4.3.4(supports-color@8.1.1)
 
   /fontkit@2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
@@ -30076,7 +30165,7 @@ packages:
       google-auth-library: 9.4.1
       qs: 6.11.0
       url-template: 2.0.8
-      uuid: 9.0.0
+      uuid: 9.0.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -30738,7 +30827,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2(debug@4.3.4)
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -33665,7 +33754,7 @@ packages:
       langsmith: 0.0.48
       p-queue: 6.6.2
       p-retry: 4.6.2
-      uuid: 9.0.0
+      uuid: 9.0.1
     dev: false
 
   /langchain@0.0.196(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@20.0.1):
@@ -34009,7 +34098,7 @@ packages:
       commander: 10.0.1
       p-queue: 6.6.2
       p-retry: 4.6.2
-      uuid: 9.0.0
+      uuid: 9.0.1
     dev: false
 
   /last-one-wins@1.0.4:
@@ -34509,6 +34598,11 @@ packages:
       cli-cursor: 3.1.0
       slice-ansi: 4.0.0
       wrap-ansi: 6.2.0
+    dev: false
+
+  /loglevel@1.8.1:
+    resolution: {integrity: sha512-tCRIJM51SHjAayKwC+QAg8hT8vg6z7GSgLJKGvzuPb1Wc+hLzqtuVLxp6/HzSPOozuK+8ErAhy7U/sVzw8Dgfg==}
+    engines: {node: '>= 0.6.0'}
     dev: false
 
   /long@4.0.0:
@@ -35266,7 +35360,7 @@ packages:
       non-layered-tidy-tree-layout: 2.0.2
       stylis: 4.3.0
       ts-dedent: 2.2.0
-      uuid: 9.0.0
+      uuid: 9.0.1
       web-worker: 1.2.0
     dev: true
 
@@ -35615,7 +35709,7 @@ packages:
   /micromark@3.1.0:
     resolution: {integrity: sha512-6Mj0yHLdUZjHnOPgr5xfWIMqMWS12zDN6iws9SLuSz76W8jTtAv24MN4/CL7gJrl5vtxGInkkqDv/JIoRsQOvA==}
     dependencies:
-      '@types/debug': 4.1.7
+      '@types/debug': 4.1.12
       debug: 4.3.4(supports-color@8.1.1)
       decode-named-character-reference: 1.0.2
       micromark-core-commonmark: 1.0.6
@@ -37455,6 +37549,10 @@ packages:
 
   /pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
+
+  /pako@2.1.0:
+    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
+    dev: false
 
   /papaparse@5.4.1:
     resolution: {integrity: sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw==}
@@ -43213,7 +43311,6 @@ packages:
   /uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
-    dev: true
 
   /uvu@0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
