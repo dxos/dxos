@@ -111,7 +111,9 @@ describe('Serializer', () => {
       expect(data.objects[0]).to.deep.eq({
         '@id': text.id,
         '@model': 'dxos.org/model/text',
-        '@text': { text: content, kind: TextKind.PLAIN, field: 'content' },
+        content,
+        kind: TextKind.PLAIN,
+        field: 'content',
       });
     }
 
@@ -148,7 +150,9 @@ describe('Serializer from Hypergraph to Automerge', () => {
       expect(data.objects[0]).to.deep.eq({
         '@id': text.id,
         '@model': 'dxos.org/model/text',
-        '@text': { text: content, kind: TextKind.PLAIN, field: 'content' },
+        content,
+        kind: TextKind.PLAIN,
+        field: 'content',
       });
     }
 

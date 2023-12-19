@@ -5,7 +5,6 @@
 import { DocumentModel } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { type TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -58,17 +57,6 @@ export type SerializedObject = {
    * Model name for the objects backed by a legacy ECHO model.
    */
   '@model'?: string;
-
-  /**
-   * @deprecated
-   *
-   * Text content of Text object.
-   */
-  '@text'?: {
-    text: string;
-    kind?: TextKind;
-    field?: string;
-  };
 } & Record<string, any>;
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
@@ -101,15 +89,7 @@ export class Serializer {
     const { objects } = data;
 
     for (const object of objects) {
-      const {
-        '@id': id,
-        '@type': type,
-        '@model': model,
-        '@deleted': deleted,
-        '@meta': meta,
-        '@text': text,
-        ...data
-      } = object;
+      const { '@id': id, '@type': type, '@model': model, '@deleted': deleted, '@meta': meta, ...data } = object;
 
       // Handle Space Properties
       // TODO(mykola): move to @dxos/client
@@ -124,8 +104,8 @@ export class Serializer {
 
       switch (model) {
         case TextModel.meta.type: {
-          invariant(text);
-          const obj = new TextObject(text.text, text.kind, text.field);
+          invariant(data.field);
+          const obj = new TextObject(data[data.field], data.kind, data.field);
           obj[base]._id = id;
           database.add(obj);
           if (deleted) {
@@ -138,7 +118,6 @@ export class Serializer {
 
         case DocumentModel.meta.type:
         default: {
-          invariant(!text);
           const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
 
           const obj = new Prototype(
