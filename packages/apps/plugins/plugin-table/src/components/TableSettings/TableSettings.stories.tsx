@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Table as TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { Schema, useSpaces } from '@dxos/react-client/echo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 
 import { TableSettings } from './TableSettings';
@@ -46,8 +46,7 @@ const Story = () => {
 
 export default {
   component: TableSettings,
-  render: Story,
-  decorators: [ClientSpaceDecorator()],
+  render: () => <ClientRepeater Component={Story} createSpace />,
   parameters: {
     layout: 'fullscreen',
   },

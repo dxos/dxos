@@ -7298,6 +7298,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
@@ -7316,6 +7319,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)

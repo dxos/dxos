@@ -4,22 +4,16 @@
 
 import React from 'react';
 
-import { type Client, ClientProvider, type PublicKey } from '@dxos/react-client';
+import { ClientRepeater } from '@dxos/react-client/testing';
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { Demo } from './components';
 
-const App = ({ spaceKey, clients }: { spaceKey: PublicKey; clients: Client[] }) => {
+const App = () => {
   return (
     <ThemeProvider tx={defaultTx}>
-      <div className='flex place-content-evenly'>
-        {clients.map((client, id) => (
-          <ClientProvider key={id} client={client}>
-            <Demo spaceKey={spaceKey} id={id} />
-          </ClientProvider>
-        ))}
-      </div>
+      <ClientRepeater className='flex place-content-evenly' Component={Demo} count={2} />
     </ThemeProvider>
   );
 };

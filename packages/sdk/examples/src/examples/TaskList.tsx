@@ -3,7 +3,7 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { type KeyboardEventHandler, useState } from 'react';
+import React, { type KeyboardEventHandler, useRef } from 'react';
 
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
@@ -16,9 +16,12 @@ import { Task } from '../proto/gen/schema';
 const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);
   const tasks = useQuery(space, Task.filter());
-  const [input, setInput] = useState<HTMLInputElement>();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  console.log({ id, spaceKey, space, tasks });
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
+    const input = inputRef.current;
     if (event.key === 'Enter' && space && input) {
       const task = new Task({ title: input.value });
       input.value = '';
@@ -31,12 +34,7 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
       <h2 className='mbe-2 font-bold'>{`Peer ${id + 1}`}</h2>
       <Input.Root>
         <Input.Label srOnly>Create new item</Input.Label>
-        <Input.TextInput
-          classNames='mbe-2'
-          placeholder='New item'
-          ref={(e: HTMLInputElement) => setInput(e)}
-          onKeyDown={handleKeyDown}
-        />
+        <Input.TextInput classNames='mbe-2' placeholder='New item' ref={inputRef} onKeyDown={handleKeyDown} />
       </Input.Root>
       <ul>
         {tasks.map((task) => (

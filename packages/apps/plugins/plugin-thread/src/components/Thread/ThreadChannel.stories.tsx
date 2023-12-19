@@ -11,7 +11,7 @@ import { Thread as ThreadType, Message as MessageType, types } from '@braneframe
 import { PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { ThreadChannel } from './ThreadChannel';
 import { messagePropertiesProvider } from '../ThreadContainer';
@@ -115,13 +115,8 @@ const Story = () => {
 
 export default {
   component: ThreadChannel,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
-  render: Story,
+  decorators: [FullscreenDecorator()],
+  render: () => <ClientRepeater Component={Story} createSpace types={types} />,
 };
 
 export const Default = {};
