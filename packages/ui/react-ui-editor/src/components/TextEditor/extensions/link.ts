@@ -77,6 +77,11 @@ class LinkText extends WidgetType {
   }
 }
 
+/**
+ * Range sets provide a data structure that can hold a collection of tagged,
+ * possibly overlapping ranges in such a way that they can efficiently be mapped though document changes.
+ * https://codemirror.net/docs/ref/#state
+ */
 const update = (state: EditorState, options: LinkOptions) => {
   const builder = new RangeSetBuilder();
   const cursor = state.selection.main.head;
@@ -89,6 +94,9 @@ const update = (state: EditorState, options: LinkOptions) => {
 
         const urlNode = node.node.getChild('URL');
         const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
+        if (!url) {
+          return false;
+        }
 
         if (cursor < node.from || cursor > node.to) {
           builder.add(
@@ -109,9 +117,9 @@ const update = (state: EditorState, options: LinkOptions) => {
             }),
           );
         }
-      }
 
-      return true;
+        return false;
+      }
     },
   });
 

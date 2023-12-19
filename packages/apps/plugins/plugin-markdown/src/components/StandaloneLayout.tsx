@@ -24,6 +24,7 @@ export const StandaloneLayout = ({
         <div role='none' className={mx('plb-4 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
           {children}
         </div>
+        {/* Overscroll area. */}
         <div role='none' className='bs-[50dvh]' />
       </div>
     </Main.Content>

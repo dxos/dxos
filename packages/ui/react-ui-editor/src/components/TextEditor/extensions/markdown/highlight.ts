@@ -134,10 +134,11 @@ export const markdownHighlightStyle = HighlightStyle.define(
       class: codeMark,
     },
 
-    // The `markdown` extension configures extensions for `lezer` to parse markdown tokens (incl. below).
+    // NOTE: The `markdown` extension configures extensions for `lezer` to parse markdown tokens (incl. below).
     // However, since `codeLanguages` is also defined, the `lezer` will not parse fenced code blocks,
     // when a language is specified. In this case, the syntax highlighting extensions will colorize
     // the code, but all other CSS properties will be inherited.
+    // IMPORTANT: Therefore, the fenced code block will use the base editor font.
     {
       tag: [markdownTags.CodeText, markdownTags.InlineCode],
       class: code,
