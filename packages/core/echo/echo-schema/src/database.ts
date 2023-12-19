@@ -61,7 +61,7 @@ export class EchoDatabase {
   }
 
   get objects(): EchoObject[] {
-    return Array.from(this._objects.values());
+    return [...this._objects.values(), ...this.automerge._objects.values()];
   }
 
   get graph() {
