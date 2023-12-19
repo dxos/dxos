@@ -14,17 +14,55 @@ import { type EchoDatabase } from './database';
 import { base, TextObject, TypedObject } from './object';
 import { Filter } from './query';
 
+/**
+ * Archive of echo objects.
+ * 
+ * ## Encoding and file format
+ * 
+ * The data is serialized to JSON.
+ * Preferred file extensions are `.dx.json`.
+ * The file might be compressed with gzip (`.dx.json.gz`).
+ */
 export type SerializedSpace = {
-  objects: SerializedObject[];
+  /**
+   * Format version number.
+   * 
+   * Current version: 1.
+   */
   version: number;
+
+  /**
+   * List of objects included in the archive.
+   */
+  objects: SerializedObject[];
 };
 
 export type SerializedObject = {
-  '@id': string;
-  '@type'?: string;
-  '@model'?: string;
-  '@deleted'?: boolean;
   /**
+   * Unique object identifier.
+   */
+  '@id': string;
+
+  /**
+   * Fully qualified name for the object's type.
+   */
+  '@type'?: string;
+
+  /**
+   * Flag to indicate soft-deleted objects.
+   */
+  '@deleted'?: boolean;
+
+  /**
+   * @deprecated
+   * 
+   * Model name for the objects backed by a legacy ECHO model.
+   */
+  '@model'?: string;
+
+  /**
+   * @deprecated
+   * 
    * Text content of Text object.
    */
   '@text'?: {
