@@ -7,7 +7,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { setupPage } from '@dxos/test/playwright';
 
-import { StackManager } from './stack-manager';
+import { StackManager } from '../testing';
 
 // TODO(wittjosiah): Factor out.
 const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;

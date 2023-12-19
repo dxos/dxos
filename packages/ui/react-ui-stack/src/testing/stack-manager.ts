@@ -19,6 +19,10 @@ export class StackManager {
     return this.locator.locator('li').count();
   }
 
+  order() {
+    return this.locator.locator('li').evaluateAll((els) => els.map((el) => el.getAttribute('id')));
+  }
+
   section(index: number) {
     return new SectionManager(this.locator.locator('li').nth(index));
   }
@@ -29,6 +33,10 @@ export class SectionManager {
 
   constructor(readonly locator: Locator) {
     this._page = locator.page();
+  }
+
+  async id() {
+    return this.locator.getAttribute('id');
   }
 
   async remove() {
