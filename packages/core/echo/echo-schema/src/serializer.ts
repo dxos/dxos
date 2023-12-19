@@ -5,7 +5,6 @@
 import { DocumentModel } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
@@ -16,9 +15,9 @@ import { Filter } from './query';
 
 /**
  * Archive of echo objects.
- * 
+ *
  * ## Encoding and file format
- * 
+ *
  * The data is serialized to JSON.
  * Preferred file extensions are `.dx.json`.
  * The file might be compressed with gzip (`.dx.json.gz`).
@@ -26,7 +25,7 @@ import { Filter } from './query';
 export type SerializedSpace = {
   /**
    * Format version number.
-   * 
+   *
    * Current version: 1.
    */
   version: number;
@@ -55,14 +54,14 @@ export type SerializedObject = {
 
   /**
    * @deprecated
-   * 
+   *
    * Model name for the objects backed by a legacy ECHO model.
    */
   '@model'?: string;
 
   /**
    * @deprecated
-   * 
+   *
    * Text content of Text object.
    */
   '@text'?: {
