@@ -3,17 +3,10 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { defaultKeymap, history, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
-import {
-  bracketMatching,
-  defaultHighlightStyle,
-  foldKeymap,
-  indentOnInput,
-  syntaxHighlighting,
-} from '@codemirror/language';
+import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { lintKeymap } from '@codemirror/lint';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
@@ -50,7 +43,6 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     EditorState.allowMultipleSelections.of(true),
     EditorView.lineWrapping,
 
-    // autocompletion(),
     crosshairCursor(),
     dropCursor(),
     drawSelection(),
@@ -62,13 +54,13 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     indentOnInput(),
     rectangularSelection(),
 
+    // TODO(burdon): Review.
     keymap.of([
       ...closeBracketsKeymap,
-      // ...completionKeymap,
       ...defaultKeymap,
-      ...foldKeymap,
-      ...historyKeymap,
-      ...lintKeymap,
+      // ...foldKeymap,
+      // ...historyKeymap,
+      // ...lintKeymap,
       ...searchKeymap,
       indentWithTab,
     ]),
