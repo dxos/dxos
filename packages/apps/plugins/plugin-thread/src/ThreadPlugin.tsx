@@ -34,7 +34,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
-  const state = deepSignal<{ active: string | undefined }>({});
+  const state = deepSignal<{ active?: string | undefined }>({});
 
   return {
     meta,
