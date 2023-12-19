@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentModel } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { base, TextObject, TypedObject } from './object';
+import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject } from './object';
 import { Filter } from './query';
 
 /**
@@ -89,7 +88,7 @@ export class Serializer {
     const { objects } = data;
 
     for (const object of objects) {
-      const { '@id': id, '@type': type, '@model': model, '@deleted': deleted, '@meta': meta, ...data } = object;
+      const { '@type': type, ...data } = object;
 
       // Handle Space Properties
       // TODO(mykola): move to @dxos/client
@@ -102,40 +101,33 @@ export class Serializer {
         continue;
       }
 
-      switch (model) {
-        case TextModel.meta.type: {
-          invariant(data.field);
-          const obj = new TextObject(data[data.field], data.kind, data.field);
-          obj[base]._id = id;
-          database.add(obj);
-          if (deleted) {
-            // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
-            database.remove(obj);
-          }
-          await database.flush();
-          break;
-        }
-
-        case DocumentModel.meta.type:
-        default: {
-          const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
-
-          const obj = new Prototype(
-            {
-              ...data,
-            },
-            { meta },
-          );
-          obj[base]._id = id;
-          database.add(obj);
-          if (deleted) {
-            // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
-            database.remove(obj);
-          }
-          await database.flush();
-          break;
-        }
-      }
+      await this._importObject(database, object);
     }
+  }
+
+  private async _importObject(database: EchoDatabase, object: SerializedObject) {
+    const { '@id': id, '@type': type, '@model': model, '@deleted': deleted, '@meta': meta, ...data } = object;
+
+    let obj: EchoObject;
+    if (model === TextModel.meta.type || type === LEGACY_TEXT_TYPE) {
+      invariant(data.field);
+      obj = new TextObject(data[data.field], data.kind, data.field);
+    } else {
+      const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
+      obj = new Prototype(
+        {
+          ...data,
+        },
+        { meta },
+      );
+    }
+
+    obj[base]._id = id;
+    database.add(obj);
+    if (deleted) {
+      // Note: We support "soft" deletion. This is why adding and removing the object is not equal to no-op.
+      database.remove(obj);
+    }
+    await database.flush();
   }
 }
