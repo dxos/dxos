@@ -22,7 +22,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { basicBundle, markdownBundle } from './extensions';
-import { defaultTheme, textTheme } from './themes';
+import { defaultTheme, markdownTheme, textTheme } from './themes';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 
@@ -70,6 +70,11 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
+    const [root, setRoot] = useState<HTMLDivElement | null>(null);
+    const [state, setState] = useState<EditorState>();
+    const [view, setView] = useState<EditorView>();
+    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
+
     // TODO(burdon): Factor out?
     const { awareness, peer } = model;
     useEffect(() => {
@@ -81,11 +86,6 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         });
       }
     }, [awareness, peer, themeMode]);
-
-    const [root, setRoot] = useState<HTMLDivElement | null>(null);
-    const [state, setState] = useState<EditorState>();
-    const [view, setView] = useState<EditorView>();
-    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
     useEffect(() => {
       if (!root) {
@@ -176,7 +176,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultSlots);
+    const slots = defaultsDeep({}, _slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
@@ -198,5 +198,12 @@ export const defaultTextSlots: TextEditorSlots = {
   ...defaultSlots,
   editor: {
     theme: textTheme,
+  },
+};
+
+export const defaultMarkdownSlots: TextEditorSlots = {
+  ...defaultSlots,
+  editor: {
+    theme: markdownTheme,
   },
 };

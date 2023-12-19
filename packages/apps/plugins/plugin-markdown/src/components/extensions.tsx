@@ -17,6 +17,8 @@ import {
   type TooltipOptions,
   autocomplete,
   type AutocompleteOptions,
+  comments,
+  type CommentsOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -36,8 +38,8 @@ const onRender = (dispatch: DispatchIntent) => (el: Element, url: string) => {
       }
     : {
         href: url,
-        target: '_blank',
         rel: 'noreferrer',
+        target: '_blank',
       };
 
   createRoot(el).render(
@@ -61,19 +63,27 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
   );
 };
 
-type UseExtensionsOptions = {
+// TODO(burdon): Make markdown plugins separately configurable.
+export type UseExtensionsOptions = {
   showWidgets?: boolean;
-  onSearch?: AutocompleteOptions['getOptions'];
+  autocomplete?: AutocompleteOptions;
+  comments?: CommentsOptions;
   onChange?: TextListener;
 };
 
-export const useExtensions = ({ showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
+export const useExtensions = ({
+  showWidgets,
+  autocomplete: _autocomplete,
+  comments: _comments,
+  onChange,
+}: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
 
   return [
     link({ onRender: onRender(dispatch) }),
     tooltip({ onHover }),
-    onSearch && autocomplete({ getOptions: onSearch }),
+    _autocomplete && autocomplete(_autocomplete),
+    _comments && comments(_comments),
     onChange && listener(onChange),
     showWidgets && [tasklist()],
   ].filter(Boolean) as Extension[];

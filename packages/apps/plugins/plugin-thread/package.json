@@ -29,7 +29,9 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-react": "^1.3.6",
     "date-fns": "^2.29.3",
+    "deepsignal": "1.4.0-shallow.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
