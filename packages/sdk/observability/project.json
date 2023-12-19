@@ -1,32 +1,32 @@
 {
-  "sourceRoot": "packages/common/observability/src",
+  "sourceRoot": "packages/sdk/observability/src",
   "projectType": "library",
   "targets": {
     "build": {
       "options": {
-        "main": "packages/common/observability/src/index.ts",
-        "outputPath": "packages/common/observability/dist/types",
-        "tsConfig": "packages/common/observability/tsconfig.json"
+        "main": "packages/sdk/observability/src/index.ts",
+        "outputPath": "packages/sdk/observability/dist/types",
+        "tsConfig": "packages/sdk/observability/tsconfig.json"
       }
     },
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/observability/src/datadog/index.ts",
-          "packages/common/observability/src/index.ts"
+          "packages/sdk/observability/src/datadog/index.ts",
+          "packages/sdk/observability/src/index.ts"
         ],
-        "outputPath": "packages/common/observability/dist/lib",
+        "outputPath": "packages/sdk/observability/dist/lib",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/common/observability/tsconfig.json"
+        "tsConfig": "packages/sdk/observability/tsconfig.json"
       }
     },
     "lint": {
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/observability/**/*.{ts,js}?(x)"
+          "packages/sdk/observability/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },
@@ -59,7 +59,7 @@
         "script": "api-keys"
       },
       "outputs": [
-        "packages/common/observability/src/cli-observability-secrets.json"
+        "packages/sdk/observability/src/cli-observability-secrets.json"
       ]
     }
   },

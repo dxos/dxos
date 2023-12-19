@@ -30,9 +30,6 @@
       "path": "../packages/common/log"
     },
     {
-      "path": "../packages/common/observability"
-    },
-    {
       "path": "../packages/core/echo/echo-schema"
     },
     {
@@ -49,6 +46,9 @@
     },
     {
       "path": "../packages/sdk/examples"
+    },
+    {
+      "path": "../packages/sdk/observability"
     },
     {
       "path": "../packages/sdk/react-client"

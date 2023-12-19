@@ -30,9 +30,6 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/observability"
-    },
-    {
       "path": "../../../common/sentry"
     },
     {
@@ -43,6 +40,9 @@
     },
     {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/observability"
     },
     {
       "path": "../../../sdk/react-client"

@@ -22,46 +22,46 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/client-protocol"
+      "path": "../client-protocol"
     },
     {
-      "path": "../../sdk/client-services"
+      "path": "../client-services"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../config"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../context"
-    },
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../sentry"
-    },
-    {
-      "path": "../util"
+      "path": "../react-client"
     }
   ]
 }

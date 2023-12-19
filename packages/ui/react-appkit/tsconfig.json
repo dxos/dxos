@@ -28,9 +28,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/observability"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
@@ -41,6 +38,9 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"

@@ -47,9 +47,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/observability"
-    },
-    {
       "path": "../../common/plate"
     },
     {
@@ -87,6 +84,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     }
   ],
   "ts-node": {
