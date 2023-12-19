@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-template",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Template for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

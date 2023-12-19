@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.10](https://github.com/dxos/dxos/compare/v0.3.9...v0.3.10) (2023-12-19)
+
+
+### Features
+
+* Add automerge switch to settings ([#4958](https://github.com/dxos/dxos/issues/4958)) ([3cfd481](https://github.com/dxos/dxos/commit/3cfd48171fbfadf6538fab181897da75bd2195b4))
+* Comments ([#4963](https://github.com/dxos/dxos/issues/4963)) ([28981f2](https://github.com/dxos/dxos/commit/28981f2ab4586f28e9eac5145b2476b21a5efb72))
+* Serializing automerge objects ([#4940](https://github.com/dxos/dxos/issues/4940)) ([88763c4](https://github.com/dxos/dxos/commit/88763c4dc110781b96a40515e6effa3b18ae06ed))
+* Storybook for navtree. ([#4949](https://github.com/dxos/dxos/issues/4949)) ([6ba804d](https://github.com/dxos/dxos/commit/6ba804d22cc9bcffa69e69abb4f95cdfd5d6af01))
+
+
+### Bug Fixes
+
+* Automerge build ([3c0616c](https://github.com/dxos/dxos/commit/3c0616c354fa3f50aad7a158c2aee76174487d73))
+* Automerge/YJS text model. ([#4954](https://github.com/dxos/dxos/issues/4954)) ([a21ec31](https://github.com/dxos/dxos/commit/a21ec319e9789b9b080a02ffc695b795a248517c))
+* **automerge:** Fix automerge textModel and dedup network streams ([#4955](https://github.com/dxos/dxos/issues/4955)) ([ee543cf](https://github.com/dxos/dxos/commit/ee543cf573dc79567a270597b40d2f896b3f28ac))
+* **automerge:** Fix object creation in Composer and cross-references ([#4942](https://github.com/dxos/dxos/issues/4942)) ([43b334a](https://github.com/dxos/dxos/commit/43b334a903bf712dd852cc42809431326bc2c776))
+* circleci config ([#4947](https://github.com/dxos/dxos/issues/4947)) ([504bdbf](https://github.com/dxos/dxos/commit/504bdbf06943847e1b2a96e1c7be0857c9970cb0))
+* cli KUBE publishing ([#4959](https://github.com/dxos/dxos/issues/4959)) ([8aaa303](https://github.com/dxos/dxos/commit/8aaa303554cb520019cac393920d3d2c24775e1e))
+* Editor styles ([#4945](https://github.com/dxos/dxos/issues/4945)) ([5515dfe](https://github.com/dxos/dxos/commit/5515dfeea67173e0bcee01af19e7e556bd497a84))
+* trigger CI ([#4953](https://github.com/dxos/dxos/issues/4953)) ([11cdcf4](https://github.com/dxos/dxos/commit/11cdcf48317a017b8f4b69f2f126327afc09d207))
+
 ## [0.3.9](https://github.com/dxos/dxos/compare/v0.3.8...v0.3.9) (2023-12-14)
 
 
