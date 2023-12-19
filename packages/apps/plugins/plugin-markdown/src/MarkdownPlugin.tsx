@@ -122,10 +122,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
       },
       onUpdate: (info) => {
-        const { id } = info;
+        const { items, active } = info;
         void intentPlugin?.provides.intent.dispatch({
           action: ThreadAction.SELECT,
-          data: { id },
+          data: { items, active },
         });
       },
     },

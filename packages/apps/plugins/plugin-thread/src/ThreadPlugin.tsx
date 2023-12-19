@@ -129,7 +129,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               return { object: new ThreadType() };
             }
             case ThreadAction.SELECT: {
-              state.active = intent.data?.id;
+              state.active = intent.data?.active;
               break;
             }
           }

@@ -67,7 +67,7 @@ const styles = EditorView.baseTheme({
 export type CommentsOptions = {
   key?: string;
   onCreate?: () => string | void;
-  onUpdate?: (info: { id: string; pos: number; location: Rect }) => void;
+  onUpdate?: (info: { items: string[]; active: string; pos: number; location: Rect }) => void;
 };
 
 // https://www.markdownguide.org/extended-syntax/#footnotes
@@ -152,7 +152,18 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         } = decorations[0];
         const location = view.coordsAtPos(from);
         if (location) {
-          options.onUpdate?.({ id, pos, location });
+          options.onUpdate?.({
+            items: decorations.map(
+              ({
+                value: {
+                  spec: { id },
+                },
+              }) => id,
+            ),
+            active: id,
+            pos,
+            location,
+          });
         }
       }
     }),
