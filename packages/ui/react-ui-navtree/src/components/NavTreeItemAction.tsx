@@ -12,9 +12,9 @@ import { SearchList } from '@dxos/react-ui-searchlist';
 import {
   descriptionText,
   getSize,
+  groupBorder,
   hoverableControlItem,
   hoverableOpenControlItem,
-  inputSurface,
   mx,
 } from '@dxos/react-ui-theme';
 
@@ -183,15 +183,10 @@ export const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0 rounded-none'>
+          <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] p-0 border', groupBorder]}>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input
-                placeholder={t('tree item searchlist input placeholder')}
-                classNames={mx('px-3', inputSurface)}
-              />
-              <SearchList.Content
-                classNames={[inputSurface, 'p-0 min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}
-              >
+              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
+              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
                 {sortedActions?.map((action) => {
                   const value = Array.isArray(action.label) ? t(...action.label) : action.label;
                   return (

@@ -103,7 +103,7 @@ type SearchListContentProps = ThemedClassName<ComponentPropsWithRef<typeof Comma
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandList {...props} className={mx('p-1', classNames)} ref={forwardedRef}>
+      <CommandList {...props} className={mx(classNames)} ref={forwardedRef}>
         {children}
       </CommandList>
     );
@@ -115,7 +115,7 @@ type SearchListEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof Command
 const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandEmpty {...props} className={mx('', classNames)} ref={forwardedRef}>
+      <CommandEmpty {...props} className={mx(classNames)} ref={forwardedRef}>
         {children}
       </CommandEmpty>
     );
@@ -140,8 +140,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         {...props}
         onSelect={handleSelect}
         className={mx(
-          // TODO(burdon): Remove rounded since full bleed to edge like list selection.
-          'p-1 rounded select-none cursor-pointer data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10',
+          'mli-1 p-1 rounded select-none cursor-pointer data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10',
           classNames,
         )}
         ref={forwardedRef}
