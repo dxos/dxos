@@ -10,7 +10,7 @@ import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-th
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { useExtensions } from './extensions';
+import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
 
@@ -23,9 +23,7 @@ export type EditorMainProps = {
   editorRefCb?: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
-  showWidgets?: boolean;
-  onChange?: (text: string) => void;
-  onSearch?: (text: string) => SearchResult[];
+  extensions?: UseExtensionsOptions;
 } & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
@@ -34,19 +32,11 @@ export const EditorMain = ({
   properties,
   layout,
   editorMode,
-  showWidgets,
-  onChange,
-  onSearch,
+  extensions: _extensions,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = useExtensions({
-    showWidgets,
-    onSearch: onSearch
-      ? (text: string) => onSearch(text).map(({ text, url }) => ({ label: text, apply: `[${text}](/${url})` }))
-      : undefined,
-    onChange,
-  });
+  const extensions = useExtensions(_extensions);
 
   return (
     <Root properties={properties} model={model}>

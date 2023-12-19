@@ -19,6 +19,7 @@ import {
 // TODO(burdon): Add-on: dialog.
 // TODO(burdon): Comments: https://codemirror.net/5/doc/manual.html#setBookmark
 // TODO(burdon): Split view: https://codemirror.net/examples/split
+// TODO(burdon): https://codemirror.net/5/demo/simplemode.html
 
 // https://codemirror.net/examples/autocompletion
 // https://codemirror.net/docs/ref/#autocomplete.autocompletion
