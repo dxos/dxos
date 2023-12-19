@@ -135,7 +135,10 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
             ))}
           </Mosaic.SortableContext>
         ) : (
-          <p className='text-center m-1 p-4 border border-dashed border-neutral-500/50 rounded'>
+          <p
+            className='text-center m-1 p-4 border border-dashed border-neutral-500/50 rounded'
+            data-testid='stack.empty'
+          >
             {t('empty stack message')}
           </p>
         )}

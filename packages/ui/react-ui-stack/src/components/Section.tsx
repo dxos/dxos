@@ -69,7 +69,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 active === 'destination' && 'invisible',
                 active === 'overlay' && 'text-primary-600 dark:text-primary-300',
               )}
-              data-testid='drag-handle'
+              data-testid='section.drag-handle'
               {...draggableProps}
             >
               <DotsSixVertical
@@ -106,7 +106,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                       hoverableOpenControlItem,
                       active === 'overlay' && 'invisible',
                     ]}
-                    // data-testid={testId}
+                    data-testid='section.options-menu'
                   >
                     <DotsThreeVertical className={getSize(4)} />
                   </Button>
@@ -115,11 +115,11 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content>
                     <DropdownMenu.Viewport>
-                      <DropdownMenu.Item onClick={onNavigate}>
+                      <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
                         <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
                         <span className='grow'>{t('navigate to section label')}</span>
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={onRemove}>
+                      <DropdownMenu.Item onClick={onRemove} data-testid='section.remove'>
                         <X className={mx(getSize(5), 'mr-2')} />
                         <span className='grow'>{t('remove section label')}</span>
                       </DropdownMenu.Item>
