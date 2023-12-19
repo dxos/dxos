@@ -26,3 +26,4 @@ export { ClientServicesProxy } from './service-proxy';
 export { Shell } from './shell';
 export { fromSocket } from './socket';
 export { fromHost, fromIFrame } from './utils';
+export { AgentHostingProviderClient } from './agent-hosting-provider';

@@ -5,7 +5,7 @@
 import { CaretRight, Plus, Power, UserGear } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { useClient } from '@dxos/react-client';
+import { useClient, useAgentHostingProviderClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { DensityProvider, useTranslation } from '@dxos/react-ui';
@@ -26,6 +26,21 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
       console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     }
   }, []);
+  const onAgentCreateEvent = useCallback(async (invitation: Invitation) => {
+    const invitationCode = InvitationEncoder.encode(invitation);
+    if (invitation.state === Invitation.State.CONNECTING) {
+      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+      const identity = client.halo.identity.get();
+      if (!identity) {
+        console.error('Identity not found');
+        return;
+      }
+      const agentHostingProviderClient = useAgentHostingProviderClient();
+      const res = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
+
+      console.log(res);
+    }
+  }, []);
   const createInvitation = (e: React.MouseEvent) => {
     const testing = e.altKey && e.shiftKey;
     invitations.forEach((invitation) => invitation.cancel());
@@ -38,15 +53,32 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
     }
     send?.({ type: 'selectInvitation', invitation });
   };
-  return <IdentityActionChooserImpl {...props} onCreateInvitationClick={(e) => createInvitation(e)} />;
+
+  const createAgent = () => {
+    // TODO(nf): placeholder code...
+    invitations.forEach((invitation) => invitation.cancel());
+    const invitation = client.halo.share({ type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE });
+
+    invitation.subscribe(onAgentCreateEvent);
+
+  };
+  return (
+    <IdentityActionChooserImpl
+      {...props}
+      onCreateInvitationClick={(e) => createInvitation(e)}
+      onDeployAgentClick={createAgent}
+    />
+  );
 };
 
 export type IdentityActionChooserImplProps = IdentityActionChooserProps & {
   onCreateInvitationClick?: (e: React.MouseEvent) => void;
+  onDeployAgentClick?: () => void;
 };
 
 export const IdentityActionChooserImpl = ({
   onCreateInvitationClick,
+  onDeployAgentClick,
   active,
   send,
   onDone,
@@ -63,6 +95,16 @@ export const IdentityActionChooserImpl = ({
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
         <div className='grow justify-center flex flex-col gap-1'>
+          <Action
+            disabled={!active}
+            data-testid='devices-panel.deploy-agent'
+            onClick={onDeployAgentClick}
+            classNames='plb-4'
+          >
+            <Plus className={getSize(6)} />
+            <span className='grow mli-3'>Deploy agent</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Action>
           <Action
             disabled={!active}
             data-testid='devices-panel.create-invitation'
