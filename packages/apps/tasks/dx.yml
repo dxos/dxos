@@ -4,7 +4,7 @@ package:
     - name: tasks
       type: dxos:type/app
       build:
-        command: npm run build
+        command: pnpm -w nx bundle tasks
         outdir: out/tasks
 runtime:
   client:

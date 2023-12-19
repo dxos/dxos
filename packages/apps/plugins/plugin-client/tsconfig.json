@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -37,6 +40,9 @@
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
     },
     {
       "path": "../../types"
