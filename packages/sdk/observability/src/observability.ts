@@ -163,7 +163,6 @@ export class Observability {
 
   public async setDeviceTags(client: Client) {
     client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
-
       if (!dqr || !dqr.devices || dqr.devices.length === 0) {
         log('empty response from device service', { device: dqr });
         return;
@@ -395,8 +394,6 @@ export class Observability {
       if (enableLogProcessor) {
         enableSentryLogProcessor();
       }
-
-
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
         if (SENTRY_TAGS.includes(k)) {

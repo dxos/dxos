@@ -4,7 +4,6 @@
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { getPlugin, type PluginDefinition } from '@dxos/app-framework';
-import { log } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
 
 import meta from './meta';

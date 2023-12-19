@@ -50,8 +50,6 @@ const DEFAULTS: TelemetryContext = {
 
 // TODO(nf): presence of file not checked
 
-
-
 /**
  * Print telemetry banner once per installation.
  */
