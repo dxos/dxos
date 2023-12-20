@@ -1,8 +1,11 @@
 @import './tailwind-colors.scss';
 
-$transform-transition: "0s linear";
+$transform-transition: '0s linear';
 
 $theme-color: $emerald-500;
+
+$font-family: 'DM Sans';
+$font-family-heading: 'Sharp Sans, sans-serif';
 
 $bg-color: (
   light: $zinc-100,
@@ -11,7 +14,7 @@ $bg-color: (
 
 $border-color: (
   light: $zinc-300,
-  dark: $zinc-700
+  dark: $zinc-700,
 );
 
 // $code-highlight-line-color: (
@@ -21,21 +24,21 @@ $border-color: (
 
 $bg-color-secondary: (
   light: $zinc-300,
-  dark: $zinc-900
+  dark: $zinc-900,
 );
 
 $bg-color-tertiary: (
   light: $zinc-200,
-  dark: $zinc-700
+  dark: $zinc-700,
 );
 
 #app {
-  html[data-theme=light] & {
+  html[data-theme='light'] & {
     --note-bg-color: #fff;
     --code-bg-color: #fff;
-    --code-highlight-line-color: #FFFBEB;
+    --code-highlight-line-color: #fffbeb;
   }
-  html[data-theme=dark] & {
+  html[data-theme='dark'] & {
     --code-highlight-line-color: #222225;
-  }  
+  }
 }
