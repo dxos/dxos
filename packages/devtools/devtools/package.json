@@ -55,6 +55,7 @@
     "react-charts": "beta",
     "react-dom": "^18.2.0",
     "react-drag-drop-files": "^2.3.8",
+    "react-is": "^18.2.0",
     "react-json-tree": "^0.18.0",
     "react-resize-detector": "^7.1.2",
     "react-router-dom": "^6.4.0",

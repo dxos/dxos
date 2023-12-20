@@ -21,9 +21,10 @@ export const StandaloneLayout = ({
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div role='none' className={mx('plb-4 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
+        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] plb-4'>
           {children}
         </div>
+
         {/* Overscroll area. */}
         <div role='none' className='bs-[50dvh]' />
       </div>

@@ -11,6 +11,7 @@ import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { Schema, useSpaces } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { TableSettings } from './TableSettings';
 
@@ -47,10 +48,7 @@ const Story = () => {
 export default {
   component: TableSettings,
   render: Story,
-  decorators: [ClientSpaceDecorator()],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  decorators: [withTheme, ClientSpaceDecorator()],
 };
 
 export const Default = {

@@ -4,17 +4,18 @@
 
 import { type Extension } from '@codemirror/state';
 import {
-  Decoration,
-  type DecorationSet,
-  EditorView,
   keymap,
-  MatchDecorator,
+  type DecorationSet,
   type Rect,
-  ViewPlugin,
   type ViewUpdate,
+  Decoration,
+  EditorView,
+  MatchDecorator,
+  ViewPlugin,
   WidgetType,
 } from '@codemirror/view';
 
+import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
 // 1. TODO(burdon): Make atomic (for tasklist also).
@@ -44,10 +45,10 @@ class BookmarkWidget extends WidgetType {
     return this._id === other._id;
   }
 
-  // TODO(burdon): Click to select.
   override toDOM() {
     const span = document.createElement('span');
     span.className = 'cm-bookmark';
+    // TODO(burdon): Call out to react?
     // https://emojifinder.com/comment
     span.textContent = '💬';
     return span;
@@ -62,18 +63,28 @@ const styles = EditorView.baseTheme({
     padding: '4px',
     backgroundColor: 'yellow',
   },
+  '& .cm-bookmark-selected': {
+    backgroundColor: 'orange',
+  },
 });
+
+type CommentsInfo = {
+  active?: string;
+  items: { id: string; pos: number; location: Rect | null }[];
+};
 
 export type CommentsOptions = {
   key?: string;
   onCreate?: () => string | void;
-  onUpdate?: (info: { items: string[]; active: string; pos: number; location: Rect }) => void;
+  onUpdate?: (info: CommentsInfo) => void;
 };
 
 // https://www.markdownguide.org/extended-syntax/#footnotes
 // TODO(burdon): Record span in automerge model?
 // TODO(burdon): Extended markdown: https://www.markdownguide.org/extended-syntax
 export const comments = (options: CommentsOptions = {}): Extension => {
+  let active: string | undefined;
+
   const bookmarkMatcher = new MatchDecorator({
     regexp: /\[\^(\w+)\]/g,
     decoration: (match, view, pos) => {
@@ -105,10 +116,14 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     },
   );
 
+  const doUpdate = debounce((data: CommentsInfo) => {
+    options.onUpdate?.(data);
+  }, 200);
+
   return [
     keymap.of([
       {
-        key: options?.key ?? 'alt-meta-c',
+        key: options?.key ?? 'shift-meta-c',
         run: (view) => {
           // Insert footnote.
           const id = options.onCreate?.();
@@ -132,39 +147,41 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
     // Monitor cursor movement.
     EditorView.updateListener.of((update) => {
+      active = undefined;
+      if (!options.onUpdate) {
+        return;
+      }
+
       const view = update.view;
       const pos = view.state.selection.main.head;
 
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
-      rangeSet?.between(pos, pos + 1, (from, to, value) => {
-        if (value.spec.widget) {
-          decorations.push({ from, to, value });
+      let closest = Infinity;
+      // TODO(burdon): Always shows entire document?
+      const { from, to } = view.visibleRanges?.[0] ?? { from: 0, to: view.state.doc.length };
+      rangeSet?.between(from, to, (from, to, value) => {
+        decorations.push({ from, to, value });
+        const d = Math.min(Math.abs(pos - from), Math.abs(pos - to));
+        if (d < closest) {
+          // TODO(burdon): Update class of selected.
+          active = value.spec.id;
+          closest = d;
         }
       });
 
       if (decorations.length) {
-        const {
-          from,
-          value: {
-            spec: { id },
-          },
-        } = decorations[0];
-        const location = view.coordsAtPos(from);
-        if (location) {
-          options.onUpdate?.({
-            items: decorations.map(
-              ({
-                value: {
-                  spec: { id },
-                },
-              }) => id,
-            ),
-            active: id,
-            pos,
-            location,
-          });
-        }
+        doUpdate({
+          active,
+          items: decorations.map(
+            ({
+              from,
+              value: {
+                spec: { id },
+              },
+            }) => ({ id: id as string, pos: from, location: view.coordsAtPos(from) }),
+          ),
+        });
       }
     }),
 
