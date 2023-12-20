@@ -53,7 +53,7 @@ describe('Serializer', () => {
       }
     });
 
-    test('Array of nested objects', async () => {
+    test('Nested objects', async () => {
       const serializer = new Serializer();
 
       let serialized: SerializedSpace;
@@ -70,16 +70,16 @@ describe('Serializer', () => {
               title: 'Subtask 2',
             }),
           ],
+          previous: new TypedObject({
+            title: 'Previous task',
+          }),
         });
         db.add(obj);
         await db.flush();
-
-        await sleep(100);
-
-        expect(db.objects).to.have.length(3);
+        expect(db.objects).to.have.length(4);
 
         serialized = await serializer.export(db);
-        expect(serialized.objects).to.have.length(3);
+        expect(serialized.objects).to.have.length(4);
       }
 
       {
@@ -87,7 +87,7 @@ describe('Serializer', () => {
         await serializer.import(db, serialized);
 
         const { objects } = db.query();
-        expect(objects).to.have.length(3);
+        expect(objects).to.have.length(4);
         const main = objects.find((object) => object.title === 'Main task')!;
         expect(main).to.exist;
         expect(main.subtasks).to.have.length(2);
@@ -95,6 +95,8 @@ describe('Serializer', () => {
         expect(main.subtasks[0].title).to.eq('Subtask 1');
         expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
         expect(main.subtasks[1].title).to.eq('Subtask 2');
+        expect(main.previous).to.be.instanceOf(TypedObject);
+        expect(main.previous.title).to.eq('Previous task');
       }
     });
   });
