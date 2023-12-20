@@ -219,8 +219,10 @@ export const TaskList = {
       text={str(text.tasks, '', text.list)}
       extensions={[
         tasklist(),
-        listener((text) => {
-          console.log(text);
+        listener({
+          onChange: (text) => {
+            console.log(text);
+          },
         }),
       ]}
     />
