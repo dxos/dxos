@@ -45,10 +45,10 @@ class BookmarkWidget extends WidgetType {
     return this._id === other._id;
   }
 
-  // TODO(burdon): Click to select.
   override toDOM() {
     const span = document.createElement('span');
     span.className = 'cm-bookmark';
+    // TODO(burdon): Call out to react?
     // https://emojifinder.com/comment
     span.textContent = '💬';
     return span;
@@ -62,6 +62,9 @@ const styles = EditorView.baseTheme({
     margin: '4px',
     padding: '4px',
     backgroundColor: 'yellow',
+  },
+  '& .cm-bookmark-selected': {
+    backgroundColor: 'orange',
   },
 });
 
@@ -80,6 +83,8 @@ export type CommentsOptions = {
 // TODO(burdon): Record span in automerge model?
 // TODO(burdon): Extended markdown: https://www.markdownguide.org/extended-syntax
 export const comments = (options: CommentsOptions = {}): Extension => {
+  let active: string | undefined;
+
   const bookmarkMatcher = new MatchDecorator({
     regexp: /\[\^(\w+)\]/g,
     decoration: (match, view, pos) => {
@@ -118,7 +123,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   return [
     keymap.of([
       {
-        key: options?.key ?? 'alt-meta-c',
+        key: options?.key ?? 'shift-meta-c',
         run: (view) => {
           // Insert footnote.
           const id = options.onCreate?.();
@@ -142,6 +147,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
     // Monitor cursor movement.
     EditorView.updateListener.of((update) => {
+      active = undefined;
       if (!options.onUpdate) {
         return;
       }
@@ -151,15 +157,16 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
-      let active: string | undefined;
-      let distance = Infinity;
-      // TODO(burdon): Determine when to fire -- and range (on screen). Throttle.
-      rangeSet?.between(0, view.state.doc.length, (from, to, value) => {
+      let closest = Infinity;
+      // TODO(burdon): Always shows entire document?
+      const { from, to } = view.visibleRanges[0];
+      rangeSet?.between(from, to, (from, to, value) => {
         decorations.push({ from, to, value });
         const d = Math.min(Math.abs(pos - from), Math.abs(pos - to));
-        if (d < distance) {
+        if (d < closest) {
+          // TODO(burdon): Update class of selected.
           active = value.spec.id;
-          distance = d;
+          closest = d;
         }
       });
 
