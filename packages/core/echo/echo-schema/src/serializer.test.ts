@@ -12,6 +12,7 @@ import { AutomergeObject } from './automerge';
 import { TextObject, TypedObject, setGlobalAutomergePreference } from './object';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase, testWithAutomerge } from './testing';
+import { Contact } from './tests/proto';
 
 describe('Serializer', () => {
   testWithAutomerge(() => {
@@ -128,7 +129,32 @@ describe('Serializer', () => {
       expect(objects[0].text).to.deep.eq(content);
     }
   });
-  // TODO(burdon): Create typed tests in echo-typegen.
+
+  test('Serialize object with schema', async () => {
+    let data: SerializedSpace;
+    const name = 'Dmytro Veremchuk';
+
+    {
+      const { db } = await createDatabase();
+      const contact = new Contact({ name });
+      db.add(contact);
+      await db.flush();
+      data = await new Serializer().export(db);
+    }
+
+    {
+      const { db } = await createDatabase();
+      await new Serializer().import(db, data);
+      expect(db.objects).to.have.length(1);
+
+      const {
+        objects: [contact],
+      } = db.query(Contact.filter());
+      expect(contact.name).to.eq(name);
+      expect(contact instanceof Contact).to.be.true;
+      expect(contact.__typename).to.eq(Contact.schema.typename);
+    }
+  });
 });
 
 describe('Serializer from Hypergraph to Automerge', () => {

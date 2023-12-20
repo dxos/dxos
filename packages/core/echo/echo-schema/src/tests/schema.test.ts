@@ -53,7 +53,12 @@ describe('static schema', () => {
       JSON.stringify(
         {
           '@id': task1.id,
-          '@type': task1.__typename,
+          '@type': {
+            '@type': 'dxos.echo.model.document.Reference',
+            itemId: task1.__typename,
+            protocol: 'protobuf',
+            host: 'dxos.org',
+          },
           '@model': 'dxos.org/model/document',
           '@meta': { keys: [] },
           subTasks: [],
@@ -81,7 +86,12 @@ describe('static schema', () => {
 
     expect(contact.toJSON()).to.deep.eq({
       '@id': contact.id,
-      '@type': contact.__typename,
+      '@type': {
+        '@type': 'dxos.echo.model.document.Reference',
+        host: 'dxos.org',
+        itemId: contact.__typename,
+        protocol: 'protobuf',
+      },
       '@model': 'dxos.org/model/document',
       '@meta': { keys: [] },
       name: 'User 1',

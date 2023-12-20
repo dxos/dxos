@@ -40,7 +40,7 @@ export type SerializedSpace = {
 export type SerializedReference = {
   '@type': 'dxos.echo.model.document.Reference';
   itemId: ItemID;
-  protocols: string;
+  protocol: string;
   host: string;
 };
 
@@ -128,7 +128,7 @@ export class Serializer {
     } else {
       let typeRef: Reference | undefined;
       if (typeof type === 'object' && type !== null) {
-        typeRef = new Reference(type.itemId, type.protocols, type.host);
+        typeRef = new Reference(type.itemId, type.protocol, type.host);
       } else if (typeof type === 'string') {
         // TODO(mykola): Never reached?
         typeRef = Reference.fromLegacyTypename(type);
