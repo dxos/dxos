@@ -306,12 +306,20 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   private _convert(visitors: ConvertVisitors = {}) {
+    const typeRef = this[base]._getState().type;
     return {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'hypercore',
       '@id': this.id,
       // TODO(mykola): Secondary path is non reachable.
-      '@type':
-        this.__typename ?? (this.__schema ? { '@type': REFERENCE_TYPE_TAG, itemId: this.__schema!.id } : undefined),
-      // '@schema': this.__schema,
+      '@type': typeRef
+        ? {
+            '@type': REFERENCE_TYPE_TAG,
+            itemId: typeRef.itemId,
+            protocol: typeRef.protocol,
+            host: typeRef.host,
+          }
+        : undefined,
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
@@ -410,11 +418,11 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
           // Old reference format.
           this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
         } else if (value['@type'] === REFERENCE_TYPE_TAG) {
+          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
           this._mutate(
             this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
           );
-        }
-        {
+        } else {
           const sub = this._createProxy({}, key);
           this._mutate(this._model.builder().set(key, {}).build(meta));
           for (const [subKey, subValue] of Object.entries(value)) {

@@ -148,10 +148,20 @@ export class AutomergeObject implements TypedObjectProperties {
     for (const key of this[base]._path) {
       value = value?.[key];
     }
+    const typeRef = this.__system.type;
 
     return {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'automerge',
       '@id': this._id,
-      '@type': this.__typename,
+      '@type': typeRef
+        ? {
+            '@type': REFERENCE_TYPE_TAG,
+            itemId: typeRef.itemId,
+            protocol: typeRef.protocol,
+            host: typeRef.host,
+          }
+        : undefined,
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
       '@meta': value.meta,
       ...value.data,
@@ -262,7 +272,9 @@ export class AutomergeObject implements TypedObjectProperties {
           return Reflect.get(this, key);
         }
 
-        const value = this._get([...path, key as string]);
+        const relativePath = [...path, ...(key as string).split('.')];
+
+        const value = this._get(relativePath);
 
         if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
           return value;
@@ -272,21 +284,22 @@ export class AutomergeObject implements TypedObjectProperties {
           return value;
         }
         if (Array.isArray(value)) {
-          return new AutomergeArray()._attach(this[base], [...path, key as string]);
+          return new AutomergeArray()._attach(this[base], relativePath);
         }
         if (typeof value === 'object' && value !== null) {
-          return this._createProxy([...path, key as string]);
+          return this._createProxy(relativePath);
         }
 
         return value;
       },
 
       set: (_, key, value) => {
+        const relativePath = [...path, ...(key as string).split('.')];
         if (this[base]._immutable && !mutationOverride) {
           log.warn('Read only access');
           return false;
         }
-        this._set([...path, key as string], value);
+        this._set(relativePath, value);
         return true;
       },
     });
