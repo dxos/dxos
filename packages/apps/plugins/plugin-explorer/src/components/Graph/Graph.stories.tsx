@@ -11,7 +11,7 @@ import { View as ViewType, types } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Graph } from './Graph';
 
@@ -43,13 +43,8 @@ const Story = () => {
 
 export default {
   component: Graph,
-  render: Story,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
+  render: () => <ClientRepeater Component={Story} createSpace types={types} />,
+  decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

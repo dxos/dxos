@@ -38,6 +38,7 @@
   "devDependencies": {
     "@braneframe/plugin-layout": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@types/react": "^18.0.21",
     "react": "^18.2.0",
     "vite": "^4.3.9"

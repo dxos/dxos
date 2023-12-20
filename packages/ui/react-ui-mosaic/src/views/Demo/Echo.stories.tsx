@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 
 import { type PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
@@ -43,12 +43,10 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
 
 export default {
   title: 'Views/Demo',
-  render: Story,
-  decorators: [
-    withTheme,
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      onCreateSpace: async (space) => {
+  render: () => (
+    <ClientRepeater
+      Component={Story}
+      onCreateSpace={async (space) => {
         const factory = generator.factories.project;
         const objects = [
           factory.schema,
@@ -66,9 +64,11 @@ export default {
 
         // TODO(burdon): Batch API.
         objects.forEach((object) => space.db.add(object));
-      },
-    }),
-  ],
+      }}
+      createSpace
+    />
+  ),
+  decorators: [withTheme, FullscreenDecorator()],
 };
 
 // TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.
