@@ -35,6 +35,17 @@ export const CommentsSidebar: FC<{
     );
   };
 
+  const handleDelete = (id: string, index: number) => {
+    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    if (messageIndex !== -1) {
+      const message = thread.messages[messageIndex];
+      message.blocks.splice(index, 1);
+      if (message.blocks.length === 0) {
+        thread.messages.splice(messageIndex, 1);
+      }
+    }
+  };
+
   // TODO(burdon): Scroll document when selected.
   return (
     <DensityProvider density='fine'>
@@ -46,8 +57,9 @@ export const CommentsSidebar: FC<{
               identityKey={identity.identityKey}
               propertiesProvider={messagePropertiesProvider(identity, members)}
               thread={thread}
-              onCreate={thread.id === active ? (text) => handleSubmit(thread, text) : undefined}
               onSelect={() => onSelect?.(thread.id)}
+              onCreate={thread.id === active ? (text) => handleSubmit(thread, text) : undefined}
+              onDelete={handleDelete}
             />
           ))}
 
