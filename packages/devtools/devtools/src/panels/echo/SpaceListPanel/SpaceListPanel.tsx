@@ -103,7 +103,7 @@ export const SpaceListPanel: FC = () => {
           {context.row.original.isOpen ? 'Close' : 'Open'}
         </Button>
       ),
-      size: 60,
+      maxSize: 60,
     }),
     helper.display({
       id: 'open',
