@@ -39,7 +39,7 @@ const Story = () => {
     <div className='flex w-full justify-center'>
       <div className='flex flex-col w-[400px] overflow-x-hidden gap-4'>
         {threads.map((thread, i) => (
-          <Comments key={thread.id} thread={thread} onMessage={i === 0 ? () => {} : undefined} />
+          <Comments key={thread.id} thread={thread} onCreate={i === 0 ? () => {} : undefined} />
         ))}
       </div>
     </div>

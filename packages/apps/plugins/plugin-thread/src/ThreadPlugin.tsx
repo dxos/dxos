@@ -21,7 +21,7 @@ import {
 } from '@dxos/app-framework';
 import { type TypedObject, SpaceProxy } from '@dxos/react-client/echo';
 
-import { CommentsColumn, ThreadMain, ThreadSidebar } from './components';
+import { CommentsSidebar, ThreadMain, ThreadSidebar } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
@@ -116,9 +116,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 if (state.threads) {
                   const threads = state.threads.map(({ id }) => space!.db.getObjectById(id) as ThreadType);
                   return (
-                    <CommentsColumn
-                      active={state.active}
+                    <CommentsSidebar
                       threads={threads}
+                      active={state.active}
                       onSelect={(id: string) => {
                         // TODO(burdon): Dispatch to markdown doc (scroll into view).
                         state.active = id;

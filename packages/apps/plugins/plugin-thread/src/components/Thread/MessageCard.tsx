@@ -15,16 +15,14 @@ import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM } from '../../meta';
-import { useSubscription } from '../util';
 
 export type BlockProperties = {
   displayName?: string;
   classes?: string;
 };
 
-export type ThreadMessageProps = {
+export type MessageCardProps = {
   message: MessageType;
-  identityKey?: PublicKey;
   propertiesProvider?: (identityKey: PublicKey | undefined) => BlockProperties;
   className?: string;
   onDelete?: (blockId: string, idx: number) => void;
@@ -35,8 +33,7 @@ export const MessageCard = ({
   propertiesProvider,
   className = mx(inputSurface, 'rounded shadow'),
   onDelete,
-}: ThreadMessageProps) => {
-  useSubscription(message.blocks); // TODO(burdon): Not updated.
+}: MessageCardProps) => {
   if (!message.blocks.length) {
     return null;
   }
@@ -50,14 +47,7 @@ export const MessageCard = ({
   // TODO(burdon): Reply button.
   return (
     <DensityProvider density='fine'>
-      <div
-        key={message.id}
-        className={mx(
-          'flex flex-col overflow-hidden',
-          className,
-          // !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
-        )}
-      >
+      <div key={message.id} className={mx('flex flex-col overflow-hidden', className)}>
         <div className='flex'>
           <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
             <UserCircle weight='duotone' className={mx(getSize(7), classes)} />

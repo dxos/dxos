@@ -19,7 +19,7 @@ export type ChatInputProps = {
 };
 
 export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
-  ({ className = mx(inputSurface, 'rounded shadow p-2'), placeholder, onMessage }, ref) => {
+  ({ className = 'rounded shadow p-2', placeholder, onMessage }, ref) => {
     const [text] = useState(new TextObject());
     const model = useTextModel({ text });
 
@@ -49,7 +49,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
     }
 
     return (
-      <div ref={ref} className={mx('flex w-full overflow-hidden', className)} onKeyDownCapture={handleKeyDown}>
+      <div ref={ref} className={mx('flex w-full', inputSurface, className)} onKeyDownCapture={handleKeyDown}>
         <TextEditor
           model={model}
           extensions={[tagExtension]}
