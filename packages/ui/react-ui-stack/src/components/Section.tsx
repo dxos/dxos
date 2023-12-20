@@ -3,10 +3,10 @@
 //
 
 import { DotsSixVertical, X, ArrowSquareOut, DotsThreeVertical } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, forwardRef, useState } from 'react';
+import React, { forwardRef, useState, useEffect, type ForwardRefExoticComponent, type RefAttributes } from 'react';
 
-import { Button, DensityProvider, DropdownMenu, ListItem, useTranslation } from '@dxos/react-ui';
-import { type MosaicActiveType, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Button, DensityProvider, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { type MosaicTileComponent, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   fineButtonDimensions,
   focusRing,
@@ -22,110 +22,145 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
+import { type SectionProps, type StackSectionItemWithContext } from './props';
 import { translationKey } from '../translations';
 
-export type SectionProps = PropsWithChildren<{
-  // Data props.
-  id: string;
-  title: string;
+const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
+  HTMLLIElement,
+  SectionProps
+>(({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  // Tile props.
-  active?: MosaicActiveType;
-  draggableProps?: MosaicTileProps['draggableProps'];
-  draggableStyle?: MosaicTileProps['draggableStyle'];
-  onRemove?: MosaicTileProps['onRemove'];
-  onNavigate?: MosaicTileProps['onNavigate'];
-}>;
+  useEffect(() => {
+    return () => {
+      console.log('[ui stack section]', 'unmount');
+    };
+  }, []);
 
-export const Section = forwardRef<HTMLLIElement, SectionProps>(
-  ({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-    const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  return (
+    <DensityProvider density='fine'>
+      <ListItem.Root ref={forwardedRef} id={id} classNames='block pbe-2' style={draggableStyle}>
+        <div
+          role='none'
+          className={mx(
+            surfaceElevation({ elevation: 'group' }),
+            inputSurface,
+            hoverableControls,
+            'flex rounded min-bs-[4rem]',
+            active && staticHoverableControls,
+            (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
+          )}
+        >
+          {/* <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading> */}
 
-    return (
-      <DensityProvider density='fine'>
-        <ListItem.Root ref={forwardedRef} id={id} classNames='block pbe-2' style={draggableStyle}>
+          {/* Drag handle */}
           <div
-            role='none'
             className={mx(
-              surfaceElevation({ elevation: 'group' }),
-              inputSurface,
-              hoverableControls,
-              'flex rounded min-bs-[4rem]',
-              active && staticHoverableControls,
-              (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
+              fineButtonDimensions,
+              focusRing,
+              hoverableFocusedKeyboardControls,
+              'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
+              (active === 'destination' || active === 'overlay') && 'invisible',
             )}
+            {...draggableProps}
           >
-            {/* <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading> */}
-
-            {/* Drag handle */}
-            <div
-              className={mx(
-                fineButtonDimensions,
-                focusRing,
-                hoverableFocusedKeyboardControls,
-                'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-                (active === 'destination' || active === 'overlay') && 'invisible',
-              )}
-              {...draggableProps}
-            >
-              <DotsSixVertical className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
-            </div>
-
-            {/* Main content */}
-            <div role='none' className='flex-1 min-is-0'>
-              {children}
-            </div>
-
-            {/* Menu */}
-            <div>
-              <DropdownMenu.Root
-                {...{
-                  open: optionsMenuOpen,
-                  onOpenChange: (nextOpen: boolean) => {
-                    // if (!nextOpen) {
-                    //   suppressNextTooltip.current = true;
-                    // }
-                    return setOptionsMenuOpen(nextOpen);
-                  },
-                }}
-              >
-                <DropdownMenu.Trigger asChild>
-                  <Button
-                    variant='ghost'
-                    classNames={[
-                      'm-1 shrink-0',
-                      hoverableControlItem,
-                      hoverableFocusedControls,
-                      hoverableOpenControlItem,
-                      active === 'overlay' && 'invisible',
-                    ]}
-                    // data-testid={testId}
-                  >
-                    <DotsThreeVertical className={getSize(4)} />
-                  </Button>
-                </DropdownMenu.Trigger>
-
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content>
-                    <DropdownMenu.Viewport>
-                      <DropdownMenu.Item onClick={onNavigate}>
-                        <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('navigate to section label')}</span>
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={onRemove}>
-                        <X className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('remove section label')}</span>
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Viewport>
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            </div>
+            <DotsSixVertical className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
           </div>
-        </ListItem.Root>
-      </DensityProvider>
+
+          {/* Main content */}
+          <div role='none' className='flex-1 min-is-0'>
+            {children}
+          </div>
+
+          {/* Menu */}
+          <div>
+            <DropdownMenu.Root
+              {...{
+                open: optionsMenuOpen,
+                onOpenChange: (nextOpen: boolean) => {
+                  // if (!nextOpen) {
+                  //   suppressNextTooltip.current = true;
+                  // }
+                  return setOptionsMenuOpen(nextOpen);
+                },
+              }}
+            >
+              <DropdownMenu.Trigger asChild>
+                <Button
+                  variant='ghost'
+                  classNames={[
+                    'm-1 shrink-0',
+                    hoverableControlItem,
+                    hoverableFocusedControls,
+                    hoverableOpenControlItem,
+                    active === 'overlay' && 'invisible',
+                  ]}
+                  // data-testid={testId}
+                >
+                  <DotsThreeVertical className={getSize(4)} />
+                </Button>
+              </DropdownMenu.Trigger>
+
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onClick={onNavigate}>
+                      <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                      <span className='grow'>{t('navigate to section label')}</span>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onClick={onRemove}>
+                      <X className={mx(getSize(5), 'mr-2')} />
+                      <span className='grow'>{t('remove section label')}</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
+        </div>
+      </ListItem.Root>
+    </DensityProvider>
+  );
+});
+
+const SECTION_TILE_NAME = 'SectionTile';
+
+const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
+  ({ path, type, active, draggableStyle, draggableProps, item }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { activeItem } = useMosaic();
+
+    const { transform, onRemoveSection, onNavigateToSection, SectionContent, ...contentItem } = item;
+
+    const transformedItem = transform
+      ? transform(
+          contentItem,
+          // TODO(wittjosiah): `active` doesn't always seem to be accurate here.
+          activeItem?.item.id === contentItem.id ? activeItem?.type : type,
+        )
+      : contentItem;
+
+    const section = (
+      <Section
+        ref={forwardedRef}
+        id={transformedItem.id}
+        title={transformedItem.object.title ?? t('untitled section title')}
+        active={active}
+        draggableProps={draggableProps}
+        draggableStyle={draggableStyle}
+        onRemove={() => onRemoveSection?.(path)}
+        onNavigate={() => onNavigateToSection?.(transformedItem.object.id)}
+      >
+        <SectionContent data={transformedItem.object} />
+      </Section>
     );
+
+    return active === 'overlay' ? <List>{section}</List> : section;
   },
 );
+
+SectionTile.displayName = SECTION_TILE_NAME;
+
+export { Section, SectionTile };

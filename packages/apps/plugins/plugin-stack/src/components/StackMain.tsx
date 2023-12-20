@@ -3,7 +3,7 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import React, { useCallback, type FC } from 'react';
+import React, { useCallback, type FC, useEffect } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
 import {
@@ -31,7 +31,14 @@ import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
-const SectionContent: StackProps['SectionContent'] = ({ data }) => <Surface role='section' data={{ object: data }} />;
+const SectionContent: StackProps['SectionContent'] = ({ data }) => {
+  useEffect(() => {
+    return () => {
+      console.log('[section content]', 'unmount');
+    };
+  }, []);
+  return <Surface role='section' data={{ object: data }} />;
+};
 
 export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
@@ -110,6 +117,12 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
     return parseData ? parseData(item, 'view-object') : item;
   };
+
+  useEffect(() => {
+    return () => {
+      console.log('[stack main]', 'unmount');
+    };
+  }, []);
 
   return (
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
