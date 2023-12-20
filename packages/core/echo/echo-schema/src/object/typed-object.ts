@@ -308,6 +308,8 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   private _convert(visitors: ConvertVisitors = {}) {
     const typeRef = this[base]._getState().type;
     return {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'hypercore',
       '@id': this.id,
       // TODO(mykola): Secondary path is non reachable.
       '@type': typeRef

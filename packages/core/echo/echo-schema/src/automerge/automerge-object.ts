@@ -151,6 +151,8 @@ export class AutomergeObject implements TypedObjectProperties {
     const typeRef = this.__system.type;
 
     return {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'automerge',
       '@id': this._id,
       '@type': typeRef
         ? {
