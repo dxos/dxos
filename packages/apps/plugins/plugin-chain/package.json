@@ -26,6 +26,7 @@
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@codemirror/language": "^6.9.3",
+    "@codemirror/state": "^6.3.3",
     "@dxos/chain": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",

@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { syntaxHighlighting } from '@codemirror/language';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
@@ -11,10 +10,8 @@ import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { nameRegex, promptLanguage, promptHighlightStyles } from './syntax';
+import { nameRegex, promptExtension } from './extension';
 import { CHAIN_PLUGIN } from '../../meta';
-
-// TODO(burdon): Schema.
 
 const inputTypes = [
   {
@@ -113,7 +110,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         <Section title='Template'>
           <TextEditor
             model={model}
-            extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}
+            extensions={[promptExtension]}
             slots={{
               root: {
                 className: 'w-full p-2',
@@ -181,7 +178,7 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   return (
     <TextEditor
       model={model}
-      extensions={[promptLanguage]}
+      extensions={[promptExtension]}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),

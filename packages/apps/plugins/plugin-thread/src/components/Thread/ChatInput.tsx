@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { syntaxHighlighting } from '@codemirror/language';
 import { PaperPlaneRight } from '@phosphor-icons/react';
 import React, { forwardRef, type KeyboardEventHandler, useState } from 'react';
 
@@ -11,7 +10,7 @@ import { Button } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { promptHighlightStyles, promptLanguage } from './syntax';
+import { tagExtension } from './extension';
 
 export type ChatInputProps = {
   className?: string;
@@ -53,7 +52,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
       <div ref={ref} className={mx('flex w-full overflow-hidden', className)} onKeyDownCapture={handleKeyDown}>
         <TextEditor
           model={model}
-          extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}
+          extensions={[tagExtension]}
           slots={{
             root: {
               className: 'flex w-full items-center pl-2 overflow-x-hidden',

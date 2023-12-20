@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StreamLanguage, HighlightStyle } from '@codemirror/language';
+import { StreamLanguage, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { type Extension } from '@codemirror/state';
 
 import { tags } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -11,9 +12,8 @@ import { mx } from '@dxos/react-ui-theme';
  * Simple Monaco language extension.
  * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
  */
-export const promptLanguage = StreamLanguage.define<{ count: number }>({
+const parser = StreamLanguage.define<{ count: number }>({
   startState: () => ({ count: 0 }),
-
   token: (stream, state) => {
     state.count++;
     if (stream.eatSpace()) {
@@ -31,7 +31,7 @@ export const promptLanguage = StreamLanguage.define<{ count: number }>({
  * https://codemirror.net/examples/styling
  * https://lezer.codemirror.net/docs/ref/#highlight
  */
-export const promptHighlightStyles = HighlightStyle.define([
+const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
     class: mx(
@@ -41,3 +41,5 @@ export const promptHighlightStyles = HighlightStyle.define([
     ),
   },
 ]);
+
+export const tagExtension: Extension = [parser, syntaxHighlighting(styles)];

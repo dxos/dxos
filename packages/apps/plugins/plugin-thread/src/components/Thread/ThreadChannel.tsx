@@ -26,7 +26,7 @@ export const ThreadChannel = ({
   thread,
   identityKey,
   propertiesProvider,
-  fullWidth = true,
+  fullWidth = true, // TODO(burdon): Replace with className.
   onCreate,
   onDelete,
 }: ThreadChannelProps) => {
