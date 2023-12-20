@@ -86,6 +86,8 @@ export class TextObject extends AbstractEchoObject<TextModel> {
 
   toJSON() {
     const jsonRepresentation = {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'hypercore',
       '@id': this.id,
       '@model': TextModel.meta.type,
       '@type': LEGACY_TEXT_TYPE,
