@@ -6,11 +6,13 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
+import { log } from '@dxos/log';
 import { Button, Dialog } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: File) => Promise<void> }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  log.info('automerge', { automerge: (window as any).DXOS_FORCE_AUTOMERGE });
 
   return (
     <div className='flex shrink-0 m-2'>
@@ -22,7 +24,7 @@ export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: Fi
         <Dialog.Overlay>
           <Dialog.Content>
             <Dialog.Title>{'Import space'}</Dialog.Title>
-            <p className='mlb-4'>{'Restoring from a backup will create new space from a backup.'}</p>
+            <p className='mlb-4'>{'Importing from a backup will create new space from.'}</p>
             <FileUploader
               types={['json']}
               classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
