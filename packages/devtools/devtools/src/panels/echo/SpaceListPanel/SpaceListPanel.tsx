@@ -124,7 +124,6 @@ export const SpaceListPanel: FC = () => {
 
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
-      
       <DialogRestoreSpace handleFile={handleImport} />
       <Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
     </PanelContainer>
