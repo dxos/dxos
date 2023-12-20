@@ -1,10 +1,10 @@
 import { describe, test } from '@dxos/test';
 import * as S from '@effect/schema/Schema';
 import * as AST from '@effect/schema/AST';
-import { Schema } from './proto';
-import { EchoObject, TypedObject, TypedObjectOptions } from './object';
+import { Schema } from '../proto';
+import { EchoObject, TypedObject, TypedObjectOptions } from '../object';
 import { NoInfer, Simplify } from 'effect/Types';
-import { Filter, OperatorFilter } from './query';
+import { Filter, OperatorFilter } from '../query';
 
 const EchoTypenameId = Symbol.for('dxos.echo.typename');
 
@@ -55,7 +55,7 @@ const createSchema = (typename: string, self: S.Schema<any, any>): Schema => {
   return null as any;
 }
 
-describe.only('@effect/schema', () => {
+describe('@effect/schema #1', () => {
   test('functional', () => {
     const Person = createType(
       'example.com/Person',
