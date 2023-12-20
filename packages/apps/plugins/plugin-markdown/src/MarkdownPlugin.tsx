@@ -250,7 +250,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   },
                 ]),
               properties: {
-                testId: 'markdownPlugin.createDocument',
+                testId: 'markdownPlugin.createObject',
               },
             });
           } else if (parent.data instanceof DocumentType && !parent.data.title) {
@@ -266,7 +266,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-doc',
-            testId: 'markdownPlugin.createSectionSpaceDocument',
+            testId: 'markdownPlugin.createSection',
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <ArticleMedium {...props} />,
             intent: {
