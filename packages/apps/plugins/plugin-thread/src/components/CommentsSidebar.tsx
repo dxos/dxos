@@ -24,7 +24,13 @@ export const CommentsSidebar: FC<{
   const handleSubmit = (thread: ThreadType, text: string) => {
     thread.messages.push(
       new MessageType({
-        blocks: [{ text }],
+        from: { identityKey: identity.identityKey.toHex() },
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            text,
+          },
+        ],
       }),
     );
   };
