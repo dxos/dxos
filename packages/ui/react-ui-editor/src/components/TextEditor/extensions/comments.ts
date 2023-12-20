@@ -4,14 +4,14 @@
 
 import { type Extension } from '@codemirror/state';
 import {
-  Decoration,
-  type DecorationSet,
-  EditorView,
   keymap,
-  MatchDecorator,
+  type DecorationSet,
   type Rect,
-  ViewPlugin,
   type ViewUpdate,
+  Decoration,
+  EditorView,
+  MatchDecorator,
+  ViewPlugin,
   WidgetType,
 } from '@codemirror/view';
 
@@ -67,7 +67,7 @@ const styles = EditorView.baseTheme({
 export type CommentsOptions = {
   key?: string;
   onCreate?: () => string | void;
-  onUpdate?: (info: { active: string; items: { id: string; pos: number; location: Rect | null }[] }) => void;
+  onUpdate?: (info: { active?: string; items: { id: string; pos: number; location: Rect | null }[] }) => void;
 };
 
 // https://www.markdownguide.org/extended-syntax/#footnotes
@@ -135,23 +135,22 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const view = update.view;
       const pos = view.state.selection.main.head;
 
-      // TODO(burdon): Determine when to fire.
+      // TODO(burdon): Determine when to fire -- and range (on screen).
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
-      rangeSet?.between(pos, pos + 1, (from, to, value) => {
-        if (value.spec.widget) {
-          decorations.push({ from, to, value });
+      let active: string | undefined;
+      let distance = Infinity;
+      rangeSet?.between(0, view.state.doc.length, (from, to, value) => {
+        decorations.push({ from, to, value });
+        if (Math.abs(pos - from) < distance) {
+          active = value.spec.id;
+          distance = Math.abs(pos - from);
         }
       });
 
       if (decorations.length) {
-        const {
-          value: {
-            spec: { id },
-          },
-        } = decorations[0];
         options.onUpdate?.({
-          active: id,
+          active,
           items: decorations.map(
             ({
               from,

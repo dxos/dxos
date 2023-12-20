@@ -22,6 +22,7 @@ export default [
         'delete item label': 'Delete item',
         'create thread label': 'Create thread',
         'text placeholder': 'Enter message...',
+        'comment placeholder': 'Enter comment...',
       },
     },
   },

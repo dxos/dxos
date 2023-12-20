@@ -6,10 +6,12 @@ import React, { useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 import { type PublicKey } from '@dxos/client';
+import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ChatInput } from './ChatInput';
 import { type BlockProperties, MessageCard } from './MessageCard';
+import { THREAD_PLUGIN } from '../../meta';
 
 // TODO(burdon): Create storybook.
 
@@ -48,6 +50,7 @@ export const ThreadChannel = ({
   onSubmit,
   onDelete,
 }: ThreadChannelProps) => {
+  const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (text: string) => {
@@ -88,7 +91,7 @@ export const ThreadChannel = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <ChatInput onMessage={handleSubmit} />
+          <ChatInput placeholder={t('text placeholder')} onMessage={handleSubmit} />
         </div>
       )}
     </div>

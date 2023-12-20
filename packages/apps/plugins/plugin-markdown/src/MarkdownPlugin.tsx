@@ -127,7 +127,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         const { items, active } = info;
         void intentPlugin?.provides.intent.dispatch({
           action: ThreadAction.SELECT,
-          data: { items, active },
+          data: { active, threads: items.map(({ id, location }) => ({ id, y: location?.top })) },
         });
       },
     },
