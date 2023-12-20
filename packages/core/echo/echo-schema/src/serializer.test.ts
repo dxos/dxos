@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { sleep } from '@dxos/async';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -225,19 +224,17 @@ describe('Serializer from Hypergraph to Automerge', () => {
               title: 'Subtask 2',
             }),
           ],
+          assignee: new Contact({ name: 'Dmytro Veremchuk' }),
         },
         // { useAutomergeBackend: false },
       );
       db.add(obj);
       await db.flush();
-
-      await sleep(100);
-
-      expect(db.objects).to.have.length(3);
+      expect(db.objects).to.have.length(4);
       expect(db.objects.every((object) => !isActualAutomergeObject(object))).to.be.true;
       expect(db.objects.every((object) => isActualTypedObject(object))).to.be.true;
       serialized = await serializer.export(db);
-      expect(serialized.objects).to.have.length(3);
+      expect(serialized.objects).to.have.length(4);
     }
 
     {
@@ -247,10 +244,11 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await serializer.import(db, serialized);
 
       const { objects } = db.query();
-      expect(objects).to.have.length(3);
+      expect(objects).to.have.length(4);
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;
       expect(main.subtasks).to.have.length(2);
+      expect(main.assignee instanceof Contact).to.be.true;
       expect(db.objects.every((object) => isActualAutomergeObject(object))).to.be.true;
       expect(db.objects.every((object) => !isActualTypedObject(object))).to.be.true;
 
@@ -258,6 +256,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       expect(main.subtasks[0].title).to.eq('Subtask 1');
       expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
       expect(main.subtasks[1].title).to.eq('Subtask 2');
+      expect(main.assignee.name).to.eq('Dmytro Veremchuk');
     }
   });
 });
