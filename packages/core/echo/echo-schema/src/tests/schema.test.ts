@@ -52,6 +52,7 @@ describe('static schema', () => {
     expect(JSON.stringify(task1, null, 4)).to.equal(
       JSON.stringify(
         {
+          '@backend': 'hypercore',
           '@id': task1.id,
           '@type': {
             '@type': 'dxos.echo.model.document.Reference',
@@ -85,6 +86,7 @@ describe('static schema', () => {
     contact.tasks.push(new Task({ title: 'Task 2', assignee: contact }));
 
     expect(contact.toJSON()).to.deep.eq({
+      '@backend': 'hypercore',
       '@id': contact.id,
       '@type': {
         '@type': 'dxos.echo.model.document.Reference',
