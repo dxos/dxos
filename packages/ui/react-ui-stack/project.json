@@ -6,7 +6,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-stack/src/index.ts"
+          "packages/ui/react-ui-stack/src/index.ts",
+          "packages/ui/react-ui-stack/src/testing/index.ts"
         ],
         "platforms": [
           "browser"
