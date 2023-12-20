@@ -12,6 +12,9 @@ import turbosnap from 'vite-plugin-turbosnap';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
+// TODO(burdon): Set auto title (remove need for actual title property).
+//  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
+
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
   turbosnapRootDir?: string,
@@ -55,7 +58,10 @@ export const config = (
           topLevelAwait(),
           ThemePlugin({
             root: __dirname,
-            content: [resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}'],
+            content: [
+              resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              resolve(__dirname, '../../../packages/apps/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
+            ],
           }),
           turbosnap({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
         ],
