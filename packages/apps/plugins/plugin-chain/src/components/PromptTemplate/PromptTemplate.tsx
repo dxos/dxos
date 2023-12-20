@@ -178,7 +178,6 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   return (
     <TextEditor
       model={model}
-      extensions={[promptExtension]}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),

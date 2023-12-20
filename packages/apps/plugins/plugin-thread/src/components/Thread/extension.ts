@@ -9,7 +9,6 @@ import { tags } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 /**
- * Simple Monaco language extension.
  * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
  */
 const parser = StreamLanguage.define<{ count: number }>({

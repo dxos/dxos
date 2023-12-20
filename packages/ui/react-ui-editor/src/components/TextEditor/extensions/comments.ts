@@ -159,7 +159,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
       let closest = Infinity;
       // TODO(burdon): Always shows entire document?
-      const { from, to } = view.visibleRanges[0];
+      const { from, to } = view.visibleRanges?.[0] ?? { from: 0, to: view.state.doc.length };
       rangeSet?.between(from, to, (from, to, value) => {
         decorations.push({ from, to, value });
         const d = Math.min(Math.abs(pos - from), Math.abs(pos - to));

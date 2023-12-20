@@ -11,7 +11,6 @@ import { mx } from '@dxos/react-ui-theme';
 export const nameRegex = /\{([\w_]+)}/;
 
 /**
- * Simple Monaco language extension.
  * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
  */
 const parser = StreamLanguage.define({
