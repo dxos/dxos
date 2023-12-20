@@ -59,6 +59,7 @@ const config: UserConfig = defineUserConfig({
       center: [],
       end: ['Search', 'Outlook', 'Repo'],
     },
+    navTitle: false,
     navbar: [
       {
         text: 'Guide',
