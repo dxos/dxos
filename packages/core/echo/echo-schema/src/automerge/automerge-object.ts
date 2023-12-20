@@ -37,7 +37,7 @@ import { compositeRuntime } from '../util';
 
 export type BindOptions = {
   db: AutomergeDb;
-  docHandle: DocHandle<any>;
+  docHandle: DocHandle<DocStructure>;
   path: string[];
   ignoreCache?: boolean;
 };
@@ -148,7 +148,14 @@ export class AutomergeObject implements TypedObjectProperties {
     for (const key of this[base]._path) {
       value = value?.[key];
     }
-    return value;
+
+    return {
+      '@id': this._id,
+      '@type': this.__typename,
+      ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
+      '@meta': value.meta,
+      ...value.data,
+    };
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
@@ -566,7 +573,7 @@ const encodeReference = (reference: Reference) => ({
 const decodeReference = (value: any) =>
   new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
 
-const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 
 export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {

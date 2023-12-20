@@ -7,6 +7,7 @@ import { inspect } from 'node:util';
 
 import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { Expando, getGlobalAutomergePreference, proxy, TypedObject } from './object';
@@ -246,6 +247,7 @@ describe('Database', () => {
         });
         db.add(task);
         await db.flush();
+        log.info('task', { js: task.toJSON() });
 
         expect(task.toJSON()).toEqual({
           '@id': task.id,
@@ -255,7 +257,8 @@ describe('Database', () => {
           title: 'Main task',
           tags: ['red', 'green'],
           assignee: {
-            '@id': task.assignee.id,
+            '@type': 'dxos.echo.model.document.Reference',
+            itemId: task.assignee.id,
           },
         });
       });
