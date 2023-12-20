@@ -19,7 +19,7 @@ import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import type { MaybePromise } from '@dxos/util';
 
-import { EditorExample } from './examples';
+import EditorExample from './examples/Editor';
 
 const root = createRoot(document.getElementById('root')!);
 
