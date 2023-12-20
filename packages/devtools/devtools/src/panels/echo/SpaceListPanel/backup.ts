@@ -15,7 +15,6 @@ export const exportData = async (space: Space): Promise<Blob> => {
 export const importData = async (space: Space, backup: Blob) => {
   try {
     const backupString = await backup.text();
-    log.info('IMPORTING SPACE', { backupString });
     await new Serializer().import(space.db, JSON.parse(backupString) as SerializedSpace);
     // const folder = space.properties[Folder.schema.typename];
     // folder.name = space.key.toHex();
