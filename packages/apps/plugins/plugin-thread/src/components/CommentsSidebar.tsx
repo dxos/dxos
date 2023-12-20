@@ -35,7 +35,7 @@ export const CommentsSidebar: FC<{
     );
   };
 
-  const handleDelete = (id: string, index: number) => {
+  const handleDelete = (thread: ThreadType, id: string, index: number) => {
     const messageIndex = thread.messages.findIndex((message) => message.id === id);
     if (messageIndex !== -1) {
       const message = thread.messages[messageIndex];
@@ -59,7 +59,7 @@ export const CommentsSidebar: FC<{
               thread={thread}
               onSelect={() => onSelect?.(thread.id)}
               onCreate={thread.id === active ? (text) => handleSubmit(thread, text) : undefined}
-              onDelete={handleDelete}
+              onDelete={(messageId: string, idx: number) => handleDelete(thread, messageId, idx)}
             />
           ))}
 
