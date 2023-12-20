@@ -9,6 +9,7 @@ import { type ItemID } from '@dxos/protocols';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
+import { REFERENCE_TYPE_TAG } from './automerge';
 import { type EchoDatabase } from './database';
 import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject } from './object';
 import { Filter } from './query';
@@ -101,7 +102,10 @@ export class Serializer {
 
       // Handle Space Properties
       // TODO(mykola): move to @dxos/client
-      if (properties && type === TYPE_PROPERTIES) {
+      if (
+        properties &&
+        (type === TYPE_PROPERTIES || (typeof type === 'object' && type !== null && type.itemId === REFERENCE_TYPE_TAG))
+      ) {
         Object.entries(data).forEach(([name, value]) => {
           if (!name.startsWith('@')) {
             properties[name] = value;
