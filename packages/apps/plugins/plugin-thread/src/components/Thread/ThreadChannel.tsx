@@ -9,7 +9,7 @@ import { type PublicKey } from '@dxos/client';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatInputProps } from './ChatInput';
 import { type BlockProperties, MessageCard } from './MessageCard';
 import { THREAD_PLUGIN } from '../../meta';
 
@@ -18,7 +18,7 @@ export type ThreadChannelProps = {
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
   fullWidth?: boolean;
-  onCreate?: (text: string) => boolean | void;
+  onCreate?: ChatInputProps['onMessage'];
   onDelete?: (blockId: string, idx: number) => void;
 };
 
@@ -57,12 +57,7 @@ export const ThreadChannel = ({
               )}
             >
               <div className={mx('flex flex-col', fullWidth ? 'w-full' : 'md:min-w-[400px] max-w-[600px]')}>
-                <MessageCard
-                  message={message}
-                  identityKey={identityKey}
-                  propertiesProvider={propertiesProvider}
-                  onDelete={onDelete}
-                />
+                <MessageCard message={message} propertiesProvider={propertiesProvider} onDelete={onDelete} />
               </div>
             </div>
           ))

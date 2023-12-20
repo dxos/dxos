@@ -5,19 +5,23 @@
 import React, { type FC, useEffect, useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
+import type { PublicKey } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { fixedBorder, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { ChatInput, type ChatInputProps } from './ChatInput';
-import { MessageCard } from './MessageCard';
+import { type BlockProperties, MessageCard } from './MessageCard';
 import { THREAD_PLUGIN } from '../../meta';
 
 // TODO(burdon): Replace with ThreadChannel.
-export const Comments: FC<{ thread: ThreadType; onCreate?: ChatInputProps['onMessage']; onSelect?: () => void }> = ({
-  thread,
-  onCreate,
-  onSelect,
-}) => {
+export const Comments: FC<{
+  thread: ThreadType;
+  identityKey: PublicKey;
+  propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
+  onSelect?: () => void;
+  onCreate?: ChatInputProps['onMessage'];
+  onDelete?: (messageId: string, idx: number) => void;
+}> = ({ thread, identityKey, propertiesProvider, onSelect, onCreate, onDelete }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -33,7 +37,13 @@ export const Comments: FC<{ thread: ThreadType; onCreate?: ChatInputProps['onMes
     >
       {/* TODO(burdon): Don't show avatar/display name if same as previous. */}
       {thread.messages.map((message) => (
-        <MessageCard key={message.id} className='p-1' message={message} />
+        <MessageCard
+          key={message.id}
+          className='p-1'
+          message={message}
+          propertiesProvider={propertiesProvider}
+          onDelete={onDelete}
+        />
       ))}
 
       {onCreate && (

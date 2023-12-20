@@ -2,19 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useEffect } from 'react';
+import React, { type FC } from 'react';
 
 import { Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
+import { type Space, useMembers } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { Comments } from './Thread';
+import { messagePropertiesProvider } from './ThreadContainer';
 
-export const CommentsSidebar: FC<{ active?: string; threads?: ThreadType[]; onSelect?: (id: string) => void }> = ({
-  active,
-  threads = [],
-  onSelect,
-}) => {
-  useEffect(() => {}, [active]);
+export const CommentsSidebar: FC<{
+  space: Space;
+  threads?: ThreadType[];
+  active?: string;
+  onSelect?: (id: string) => void;
+}> = ({ space, threads = [], active, onSelect }) => {
+  const identity = useIdentity()!;
+  const members = useMembers(space.key);
 
   const handleSubmit = (thread: ThreadType, text: string) => {
     thread.messages.push(
@@ -32,6 +37,8 @@ export const CommentsSidebar: FC<{ active?: string; threads?: ThreadType[]; onSe
           {threads.map((thread) => (
             <Comments
               key={thread.id}
+              identityKey={identity.identityKey}
+              propertiesProvider={messagePropertiesProvider(identity, members)}
               thread={thread}
               onCreate={thread.id === active ? (text) => handleSubmit(thread, text) : undefined}
               onSelect={() => onSelect?.(thread.id)}

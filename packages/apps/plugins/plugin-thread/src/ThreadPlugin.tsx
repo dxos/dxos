@@ -117,6 +117,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   const threads = state.threads.map(({ id }) => space!.db.getObjectById(id) as ThreadType);
                   return (
                     <CommentsSidebar
+                      space={space}
                       threads={threads}
                       active={state.active}
                       onSelect={(id: string) => {

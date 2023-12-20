@@ -106,8 +106,8 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
   return (
     <ThreadChannel
       identityKey={identity.identityKey}
-      thread={thread}
       propertiesProvider={messagePropertiesProvider(identity, members)}
+      thread={thread}
       fullWidth={fullWidth}
       onCreate={handleCreate}
       onDelete={handleDelete}

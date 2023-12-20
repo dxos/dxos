@@ -22,16 +22,16 @@ export type BlockProperties = {
 };
 
 export type MessageCardProps = {
+  className?: string;
   message: MessageType;
   propertiesProvider?: (identityKey: PublicKey | undefined) => BlockProperties;
-  className?: string;
-  onDelete?: (blockId: string, idx: number) => void;
+  onDelete?: (messageId: string, idx: number) => void;
 };
 
 export const MessageCard = ({
+  className = mx(inputSurface, 'rounded shadow'),
   message,
   propertiesProvider,
-  className = mx(inputSurface, 'rounded shadow'),
   onDelete,
 }: MessageCardProps) => {
   if (!message.blocks.length) {
