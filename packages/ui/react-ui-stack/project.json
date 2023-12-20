@@ -13,6 +13,19 @@
         ]
       }
     },
+    "e2e": {
+      "options": {
+        "playwrightConfigPath": "packages/ui/react-ui-stack/src/playwright/playwright.config.ts",
+        "serve": "stories:storybook-e2e",
+        "testPatterns": [
+          "packages/ui/react-ui-stack/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "timeout": 60000,
+        "watchPatterns": [
+          "packages/ui/react-ui-stack/src/**/*"
+        ]
+      }
+    },
     "lint": {}
   },
   "implicitDependencies": [
