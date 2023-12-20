@@ -132,12 +132,10 @@ export class Serializer {
         typeRef = Reference.fromLegacyTypename(type);
       }
 
-      obj = new TypedObject(
-        {
-          ...data,
-        },
-        { meta, type: typeRef },
-      );
+      obj = new TypedObject(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))), {
+        meta,
+        type: typeRef,
+      });
     }
 
     obj[base]._id = id;
