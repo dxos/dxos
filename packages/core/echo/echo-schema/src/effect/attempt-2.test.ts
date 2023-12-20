@@ -7,6 +7,13 @@ import { randomUUID } from 'node:crypto';
 
 const EchoSchemaAnnotation = Symbol.for('dxos.echo.effect-schema');
 
+const StrongRefAnnotation = Symbol.for('dxos.echo.strong-ref');
+
+enum RefKind {
+  WEAK = 'weak',
+  STRONG = 'strong',
+}
+
 class SchemaContext {
   public id = randomUUID();
   public typename: string;
@@ -29,6 +36,9 @@ const getSchemaContext = <I, A>(schema: S.Schema<I, A>): SchemaContext =>{
   invariant(annotation, 'Not ECHO object schema.');
   return annotation as any;
 }
+
+const ref = <I, A>(self: S.Schema<I, A>, kind: RefKind = RefKind.WEAK): S.Schema<I, A> =>
+  S.make(AST.setAnnotation(self.ast, StrongRefAnnotation, RefKind.STRONG));
 
 class MockEchoObject {
 
@@ -61,6 +71,17 @@ describe.only('@effect/schema #1', () => {
       S.struct({
         name: S.string,
         age: S.number,
+      }),
+    );
+
+    const task = objectSchema(
+      {
+        typename: 'example.org/Task',
+      },
+      S.struct({
+        title: S.string,
+        description: S.string,
+        creator: ref(contact, RefKind.STRONG),
       }),
     );
 
