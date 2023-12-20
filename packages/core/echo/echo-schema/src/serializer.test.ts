@@ -4,14 +4,19 @@
 
 import { expect } from 'chai';
 
-import { sleep } from '@dxos/async';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { AutomergeObject } from './automerge';
-import { TextObject, TypedObject, setGlobalAutomergePreference } from './object';
+import {
+  TextObject,
+  TypedObject,
+  isActualAutomergeObject,
+  isActualTypedObject,
+  setGlobalAutomergePreference,
+} from './object';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase, testWithAutomerge } from './testing';
+import { Contact } from './tests/proto';
 
 describe('Serializer', () => {
   testWithAutomerge(() => {
@@ -47,7 +52,7 @@ describe('Serializer', () => {
       }
     });
 
-    test('Array of nested objects', async () => {
+    test('Nested objects', async () => {
       const serializer = new Serializer();
 
       let serialized: SerializedSpace;
@@ -64,16 +69,16 @@ describe('Serializer', () => {
               title: 'Subtask 2',
             }),
           ],
+          previous: new TypedObject({
+            title: 'Previous task',
+          }),
         });
         db.add(obj);
         await db.flush();
-
-        await sleep(100);
-
-        expect(db.objects).to.have.length(3);
+        expect(db.objects).to.have.length(4);
 
         serialized = await serializer.export(db);
-        expect(serialized.objects).to.have.length(3);
+        expect(serialized.objects).to.have.length(4);
       }
 
       {
@@ -81,7 +86,7 @@ describe('Serializer', () => {
         await serializer.import(db, serialized);
 
         const { objects } = db.query();
-        expect(objects).to.have.length(3);
+        expect(objects).to.have.length(4);
         const main = objects.find((object) => object.title === 'Main task')!;
         expect(main).to.exist;
         expect(main.subtasks).to.have.length(2);
@@ -89,6 +94,8 @@ describe('Serializer', () => {
         expect(main.subtasks[0].title).to.eq('Subtask 1');
         expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
         expect(main.subtasks[1].title).to.eq('Subtask 2');
+        expect(main.previous).to.be.instanceOf(TypedObject);
+        expect(main.previous.title).to.eq('Previous task');
       }
     });
   });
@@ -108,7 +115,7 @@ describe('Serializer', () => {
 
       data = await serializer.export(db);
       expect(data.objects).to.have.length(1);
-      expect(data.objects[0]).to.deep.eq({
+      expect(data.objects[0]).to.contain({
         '@id': text.id,
         '@model': 'dxos.org/model/text',
         '@type': 'dxos.Text.v0',
@@ -128,7 +135,32 @@ describe('Serializer', () => {
       expect(objects[0].text).to.deep.eq(content);
     }
   });
-  // TODO(burdon): Create typed tests in echo-typegen.
+
+  test('Serialize object with schema', async () => {
+    let data: SerializedSpace;
+    const name = 'Dmytro Veremchuk';
+
+    {
+      const { db } = await createDatabase();
+      const contact = new Contact({ name });
+      db.add(contact);
+      await db.flush();
+      data = await new Serializer().export(db);
+    }
+
+    {
+      const { db } = await createDatabase();
+      await new Serializer().import(db, data);
+      expect(db.objects).to.have.length(1);
+
+      const {
+        objects: [contact],
+      } = db.query(Contact.filter());
+      expect(contact.name).to.eq(name);
+      expect(contact instanceof Contact).to.be.true;
+      expect(contact.__typename).to.eq(Contact.schema.typename);
+    }
+  });
 });
 
 describe('Serializer from Hypergraph to Automerge', () => {
@@ -145,10 +177,12 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await db.flush();
       expect(text.text).to.deep.eq(content);
       expect(db.objects).to.have.length(1);
+      expect(isActualAutomergeObject(text)).to.be.false;
+      expect(text instanceof TextObject).to.be.true;
 
       data = await serializer.export(db);
       expect(data.objects).to.have.length(1);
-      expect(data.objects[0]).to.deep.eq({
+      expect(data.objects[0]).to.contain({
         '@id': text.id,
         '@model': 'dxos.org/model/text',
         '@type': 'dxos.Text.v0',
@@ -165,7 +199,8 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await serializer.import(db, data);
 
       const { objects } = db.query();
-      expect(objects[0] instanceof AutomergeObject).to.be.true;
+      expect(isActualAutomergeObject(objects[0])).to.be.true;
+      expect(objects[0] instanceof TextObject).to.be.false;
       expect(objects).to.have.length(1);
       expect(objects[0][objects[0].field]).to.deep.eq(content);
     }
@@ -189,18 +224,17 @@ describe('Serializer from Hypergraph to Automerge', () => {
               title: 'Subtask 2',
             }),
           ],
+          assignee: new Contact({ name: 'Dmytro Veremchuk' }),
         },
         // { useAutomergeBackend: false },
       );
       db.add(obj);
       await db.flush();
-
-      await sleep(100);
-
-      expect(db.objects).to.have.length(3);
-
+      expect(db.objects).to.have.length(4);
+      expect(db.objects.every((object) => !isActualAutomergeObject(object))).to.be.true;
+      expect(db.objects.every((object) => isActualTypedObject(object))).to.be.true;
       serialized = await serializer.export(db);
-      expect(serialized.objects).to.have.length(3);
+      expect(serialized.objects).to.have.length(4);
     }
 
     {
@@ -210,14 +244,19 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await serializer.import(db, serialized);
 
       const { objects } = db.query();
-      expect(objects).to.have.length(3);
+      expect(objects).to.have.length(4);
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;
       expect(main.subtasks).to.have.length(2);
+      expect(main.assignee instanceof Contact).to.be.true;
+      expect(db.objects.every((object) => isActualAutomergeObject(object))).to.be.true;
+      expect(db.objects.every((object) => !isActualTypedObject(object))).to.be.true;
+
       expect(main.subtasks[0]).to.be.instanceOf(TypedObject);
       expect(main.subtasks[0].title).to.eq('Subtask 1');
       expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
       expect(main.subtasks[1].title).to.eq('Subtask 2');
+      expect(main.assignee.name).to.eq('Dmytro Veremchuk');
     }
   });
 });

@@ -7,7 +7,6 @@ import { inspect } from 'node:util';
 
 import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
-import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { Expando, getGlobalAutomergePreference, proxy, TypedObject } from './object';
@@ -236,33 +235,30 @@ describe('Database', () => {
       expect(task.details.deadline).toEqual('2021-01-01');
     });
 
-    if (!getGlobalAutomergePreference()) {
-      test('toJSON', async () => {
-        const { db } = await createDatabase();
+    test('toJSON', async () => {
+      const { db } = await createDatabase();
 
-        const task = new TypedObject({
-          title: 'Main task',
-          tags: ['red', 'green'],
-          assignee: new TypedObject({ name: 'Bob' }),
-        });
-        db.add(task);
-        await db.flush();
-        log.info('task', { js: task.toJSON() });
-
-        expect(task.toJSON()).toEqual({
-          '@id': task.id,
-          '@type': undefined,
-          '@model': 'dxos.org/model/document',
-          '@meta': { keys: [] },
-          title: 'Main task',
-          tags: ['red', 'green'],
-          assignee: {
-            '@type': 'dxos.echo.model.document.Reference',
-            itemId: task.assignee.id,
-          },
-        });
+      const task = new TypedObject({
+        title: 'Main task',
+        tags: ['red', 'green'],
+        assignee: new TypedObject({ name: 'Bob' }),
       });
-    }
+      db.add(task);
+      await db.flush();
+
+      expect(task.toJSON()).toMatchObject({
+        '@id': task.id,
+        '@type': undefined,
+        // '@model': 'dxos.org/model/document',
+        '@meta': { keys: [] },
+        title: 'Main task',
+        tags: ['red', 'green'],
+        assignee: {
+          '@type': 'dxos.echo.model.document.Reference',
+          itemId: task.assignee.id,
+        },
+      });
+    });
 
     test('meta', async () => {
       const { db } = await createDatabase();

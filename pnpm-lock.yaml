@@ -5605,6 +5605,9 @@ importers:
       '@braneframe/plugin-telemetry':
         specifier: workspace:*
         version: link:../../apps/plugins/plugin-telemetry
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5617,6 +5620,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../../experimental/gem-core
@@ -5710,6 +5716,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      react-drag-drop-files:
+        specifier: ^2.3.8
+        version: 2.3.8(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
       react-json-tree:
         specifier: ^0.18.0
         version: 0.18.0(@types/react@18.0.21)(react@18.2.0)
