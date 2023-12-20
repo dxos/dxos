@@ -46,7 +46,6 @@
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@dxos/storybook-utils": "workspace:*",
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
@@ -57,6 +56,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
