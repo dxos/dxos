@@ -5,7 +5,7 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, type Ref } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, type Ref, useEffect } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -133,27 +133,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     },
   });
 
-  const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
-    const identity = useIdentity();
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
-    if (!model) {
-      return null;
-    }
-
-    return (
-      <EditorSection
-        editorMode={settings.values.editorMode}
-        model={model}
-        extensions={getExtensionsConfig(space!, document)}
-      />
-    );
-  };
-
   const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
+    useEffect(() => {
+      void intentPlugin?.provides.intent.dispatch({
+        action: ThreadAction.SELECT,
+      });
+    }, [document.id]);
+
     if (!model) {
       return null;
     }
@@ -180,6 +169,23 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     }
 
     return <StandaloneMenu properties={document} model={model} editorRef={pluginMutableRef} />;
+  };
+
+  const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
+    const identity = useIdentity();
+    const space = getSpaceForObject(document);
+    const model = useTextModel({ identity, space, text: document?.content });
+    if (!model) {
+      return null;
+    }
+
+    return (
+      <EditorSection
+        editorMode={settings.values.editorMode}
+        model={model}
+        extensions={getExtensionsConfig(space!, document)}
+      />
+    );
   };
 
   return {
