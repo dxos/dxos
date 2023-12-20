@@ -11,7 +11,8 @@ import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperatio
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack, type StackSectionContent, type StackProps, type StackSectionItem } from './Stack';
-import { FullscreenDecorator, TestObjectGenerator } from '../testing';
+import { FullscreenDecorator } from '../testing/decorators';
+import { TestObjectGenerator } from '../testing/generator';
 
 faker.seed(3);
 
