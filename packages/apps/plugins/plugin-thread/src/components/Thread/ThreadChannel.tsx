@@ -66,7 +66,7 @@ export const ThreadChannel = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <ChatInput placeholder={t('text placeholder')} onMessage={handleSubmit} />
+          <ChatInput placeholder={t('message placeholder')} onMessage={handleSubmit} />
         </div>
       )}
     </div>
