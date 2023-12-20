@@ -12,7 +12,7 @@
     "/": "https://github.com/dxos/dxos/issues/4511",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
-  "devDependencies": {
+  "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",

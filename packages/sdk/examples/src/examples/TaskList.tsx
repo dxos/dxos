@@ -3,7 +3,7 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { type KeyboardEventHandler, useRef } from 'react';
+import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } from 'react';
 
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
@@ -16,25 +16,32 @@ import { Task } from '../proto/gen/schema';
 const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);
   const tasks = useQuery(space, Task.filter());
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [value, setValue] = useState('');
 
-  console.log({ id, spaceKey, space, tasks });
+  const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+    setValue(event.currentTarget.value);
+  };
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    const input = inputRef.current;
-    if (event.key === 'Enter' && space && input) {
-      const task = new Task({ title: input.value });
-      input.value = '';
+    if (event.key === 'Enter' && space && value) {
+      const task = new Task({ title: value });
+      setValue('');
       space.db.add(task);
     }
   };
 
   return (
-    <div className='grow max-w-lg mbs-4 place-content-evenly'>
+    <div className='grow max-w-lg mbs-4 mx-1'>
       <h2 className='mbe-2 font-bold'>{`Peer ${id + 1}`}</h2>
       <Input.Root>
         <Input.Label srOnly>Create new item</Input.Label>
-        <Input.TextInput classNames='mbe-2' placeholder='New item' ref={inputRef} onKeyDown={handleKeyDown} />
+        <Input.TextInput
+          classNames='mbe-2'
+          placeholder='New item'
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+        />
       </Input.Root>
       <ul>
         {tasks.map((task) => (

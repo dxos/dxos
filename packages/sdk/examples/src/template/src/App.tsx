@@ -13,7 +13,7 @@ import { Demo } from './components';
 const App = () => {
   return (
     <ThemeProvider tx={defaultTx}>
-      <ClientRepeater className='flex place-content-evenly' Component={Demo} count={2} />
+      <ClientRepeater className='flex place-content-evenly' Component={Demo} count={2} createSpace networkToggle />
     </ThemeProvider>
   );
 };
