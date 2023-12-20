@@ -52,46 +52,79 @@ html[data-theme='light'] {
 /**
  * Hero
  */
-.home.project {
-  .hero-info-wrapper {
-    flex-direction: column;
+.vp-project-home {
+  .vp-hero-info-wrapper {
     align-items: center;
     justify-content: center;
     text-align: center;
     margin-top: 2rem;
 
-    .hero-info {
-      #main-title {
-        // Hide the title (cannot be blank since used in browser title).
-        display: none;
+    // discord button
+    html[data-theme='dark'] & {
+      .vp-hero-action.discord {
+        background-color: #6a5acd;
+        color: var(--white);
+        &:hover {
+          background-color: #7a6bdb;
+        }
       }
+    }
+    html[data-theme='light'] & {
+      .vp-hero-action.discord {
+        background-color: #7289da;
+        color: white;
+        &:hover {
+          background-color: #8b9fe9;
+        }
+      }
+    }
 
-      .description {
+    .vp-hero-info {
+      flex-direction: column;
+
+      .vp-hero-infos {
+        font-family: 'Sharp Sans';
         max-width: 25rem;
         margin-left: auto;
         margin-right: auto;
       }
 
-      .actions {
+      .vp-hero-actions {
+        font-family: 'DM Sans';
         margin: 3rem 0;
       }
     }
   }
 
-  .feature-panel {
-    .feature-item:hover {
-      transform: none;
-      box-shadow: none;
-      background-color: transparent;
+  .vp-feature-wrapper {
+    .vp-feature {
+      padding-top: 0;
 
-      &:before {
-        display: none;
+      .vp-features {
+        margin-top: 0;
+
+        .vp-feature-item {
+          .vp-feature-title {
+            font-family: 'Sharp Sans';
+            font-weight: 400;
+          }
+        }
+
+        .vp-feature-item:hover {
+          transform: none;
+          box-shadow: none;
+          background-color: transparent;
+
+          &:before {
+            display: none;
+          }
+        }
       }
     }
   }
 }
 
-html[data-theme='dark'] .home.project .hero-info-wrapper {
+html[data-theme='dark'] .vp-project-home .vp-hero-info-wrapper {
   img.dark {
     opacity: 0.9 !important;
   }
@@ -100,7 +133,7 @@ html[data-theme='dark'] .home.project .hero-info-wrapper {
   }
 }
 
-html[data-theme='light'] .home.project .hero-info-wrapper {
+html[data-theme='light'] .vp-project-home .vp-hero-info-wrapper {
   img.light {
     opacity: 0.9 !important;
   }
@@ -269,28 +302,6 @@ html[data-theme='dark'] {
 
 .peer-b {
   color: $violet-500;
-}
-
-// discord button
-.home.project .hero-info-wrapper {
-  html[data-theme='dark'] & {
-    .action-button.discord {
-      background-color: #6a5acd;
-      color: var(--white);
-      &:hover {
-        background-color: #7a6bdb;
-      }
-    }
-  }
-  html[data-theme='light'] & {
-    .action-button.discord {
-      background-color: #7289da;
-      color: white;
-      &:hover {
-        background-color: #8b9fe9;
-      }
-    }
-  }
 }
 
 // shell images
