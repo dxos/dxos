@@ -5,7 +5,7 @@
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, Input, type TextInputProps } from '@dxos/react-ui';
+import { Input, type TextInputProps } from '@dxos/react-ui';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
@@ -48,9 +48,9 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
         />
 
         {/* TODO(burdon): Margin should be density specific. */}
-        <Button variant='ghost' classNames='-ml-7 p-0 cursor-pointer' onClick={handleReset}>
+        <div role='button' className='-ml-7 p-0 cursor-pointer' onClick={handleReset}>
           <MagnifyingGlass className={getSize(5)} />
-        </Button>
+        </div>
       </Input.Root>
     </div>
   );

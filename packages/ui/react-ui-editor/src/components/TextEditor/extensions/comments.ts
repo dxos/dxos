@@ -15,6 +15,7 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
+import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
 // 1. TODO(burdon): Make atomic (for tasklist also).
@@ -64,10 +65,15 @@ const styles = EditorView.baseTheme({
   },
 });
 
+type CommentsInfo = {
+  active?: string;
+  items: { id: string; pos: number; location: Rect | null }[];
+};
+
 export type CommentsOptions = {
   key?: string;
   onCreate?: () => string | void;
-  onUpdate?: (info: { active?: string; items: { id: string; pos: number; location: Rect | null }[] }) => void;
+  onUpdate?: (info: CommentsInfo) => void;
 };
 
 // https://www.markdownguide.org/extended-syntax/#footnotes
@@ -105,6 +111,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     },
   );
 
+  const doUpdate = debounce((data: CommentsInfo) => {
+    options.onUpdate?.(data);
+  }, 200);
+
   return [
     keymap.of([
       {
@@ -132,24 +142,29 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
     // Monitor cursor movement.
     EditorView.updateListener.of((update) => {
+      if (!options.onUpdate) {
+        return;
+      }
+
       const view = update.view;
       const pos = view.state.selection.main.head;
 
-      // TODO(burdon): Determine when to fire -- and range (on screen).
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
       let active: string | undefined;
       let distance = Infinity;
+      // TODO(burdon): Determine when to fire -- and range (on screen). Throttle.
       rangeSet?.between(0, view.state.doc.length, (from, to, value) => {
         decorations.push({ from, to, value });
-        if (Math.abs(pos - from) < distance) {
+        const d = Math.min(Math.abs(pos - from), Math.abs(pos - to));
+        if (d < distance) {
           active = value.spec.id;
-          distance = Math.abs(pos - from);
+          distance = d;
         }
       });
 
       if (decorations.length) {
-        options.onUpdate?.({
+        doUpdate({
           active,
           items: decorations.map(
             ({

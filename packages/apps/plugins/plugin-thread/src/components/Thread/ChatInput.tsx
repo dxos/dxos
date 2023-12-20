@@ -50,7 +50,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
     }
 
     return (
-      <div ref={ref} className={mx('flex w-full', className)} onKeyDownCapture={handleKeyDown}>
+      <div ref={ref} className={mx('flex w-full overflow-hidden', className)} onKeyDownCapture={handleKeyDown}>
         <TextEditor
           model={model}
           extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}
@@ -63,9 +63,12 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
             },
           }}
         />
-        <Button variant='ghost' classNames='-ml-7 p-0' onClick={() => handleMessage()}>
-          <PaperPlaneRight className={getSize(5)} />
-        </Button>
+
+        <div role='none' className='flex shrink-0 pr-1'>
+          <Button variant='ghost' classNames='p-1' onClick={() => handleMessage()}>
+            <PaperPlaneRight className={getSize(5)} />
+          </Button>
+        </div>
       </div>
     );
   },

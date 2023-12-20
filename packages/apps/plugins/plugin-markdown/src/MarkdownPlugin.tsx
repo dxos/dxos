@@ -164,6 +164,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
+
     if (!model) {
       return null;
     }
@@ -175,6 +176,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
+    useEffect(() => {
+      void intentPlugin?.provides.intent.dispatch({
+        action: ThreadAction.SELECT,
+      });
+    }, [document.id]);
+
     if (!model) {
       return null;
     }
