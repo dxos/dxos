@@ -111,7 +111,7 @@ const Story = () => {
           thread={thread}
           identityKey={identity.identityKey}
           propertiesProvider={messagePropertiesProvider(identity, members)}
-          onSubmit={handleSubmit}
+          onCreate={handleSubmit}
           onDelete={handleDelete}
         />
       </div>

@@ -13,32 +13,12 @@ import { ChatInput } from './ChatInput';
 import { type BlockProperties, MessageCard } from './MessageCard';
 import { THREAD_PLUGIN } from '../../meta';
 
-// TODO(burdon): Create storybook.
-
-// type DailyBlock = {
-//   date?: Date;
-//   blocks: ThreadType.Block[];
-// };
-
-// TODO(burdon): Review data structure.
-// TODO(burdon): Split into daily buckets (by locale). Reduce.
-// const blockReducer = (dailyBlocks: DailyBlock[], block: ThreadType.Block) => {
-// if (dailyBlocks.length === 0) {
-//   dailyBlocks.push({
-//     date: block.messages[0].timestamp,
-//     blocks: [block],
-//   });
-// }
-
-// return dailyBlocks;
-// };
-
 export type ThreadChannelProps = {
   thread: ThreadType;
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
   fullWidth?: boolean;
-  onSubmit?: (text: string) => boolean | void;
+  onCreate?: (text: string) => boolean | void;
   onDelete?: (blockId: string, idx: number) => void;
 };
 
@@ -47,14 +27,14 @@ export const ThreadChannel = ({
   identityKey,
   propertiesProvider,
   fullWidth = true,
-  onSubmit,
+  onCreate,
   onDelete,
 }: ThreadChannelProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (text: string) => {
-    if (onSubmit?.(text)) {
+    if (onCreate?.(text)) {
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);

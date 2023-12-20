@@ -63,7 +63,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
   const members = useMembers(space.key);
 
   // TODO(burdon): Change to model.
-  const handleSubmit = (text: string) => {
+  const handleCreate = (text: string) => {
     const block = {
       timestamp: new Date().toISOString(),
       text,
@@ -109,7 +109,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
       thread={thread}
       propertiesProvider={messagePropertiesProvider(identity, members)}
       fullWidth={fullWidth}
-      onSubmit={handleSubmit}
+      onCreate={handleCreate}
       onDelete={handleDelete}
     />
   );
