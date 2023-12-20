@@ -11,7 +11,8 @@ import { Thread as ThreadType, Message as MessageType, types } from '@braneframe
 import { PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ThreadChannel } from './ThreadChannel';
 import { messagePropertiesProvider } from '../ThreadContainer';
@@ -27,6 +28,7 @@ const Story = () => {
   const members = useMembers(space?.key);
 
   useEffect(() => {
+    // TODO(burdon): Factor out.
     setTimeout(async () => {
       const space = await client.spaces.create();
       const thread = space.db.add(
@@ -103,20 +105,24 @@ const Story = () => {
   };
 
   return (
-    <ThreadChannel
-      thread={thread}
-      identityKey={identity.identityKey}
-      propertiesProvider={messagePropertiesProvider(identity, members)}
-      onSubmit={handleSubmit}
-      onDelete={handleDelete}
-    />
+    <div className='flex w-full justify-center'>
+      <div className='flex w-[600px] overflow-x-hidden'>
+        <ThreadChannel
+          thread={thread}
+          identityKey={identity.identityKey}
+          propertiesProvider={messagePropertiesProvider(identity, members)}
+          onCreate={handleSubmit}
+          onDelete={handleDelete}
+        />
+      </div>
+    </div>
   );
 };
 
 export default {
   component: ThreadChannel,
-  decorators: [FullscreenDecorator()],
   render: () => <ClientRepeater Component={Story} createSpace types={types} />,
+  decorators: [withTheme],
 };
 
 export const Default = {};

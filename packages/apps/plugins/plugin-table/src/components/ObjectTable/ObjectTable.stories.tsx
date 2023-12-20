@@ -11,6 +11,7 @@ import { Table as TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
 
@@ -41,7 +42,7 @@ const Story = () => {
 export default {
   component: ObjectTable,
   render: () => <ClientRepeater Component={Story} createSpace />,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

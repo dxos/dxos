@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Reference } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
+import { type ItemID } from '@dxos/protocols';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -34,6 +36,13 @@ export type SerializedSpace = {
   objects: SerializedObject[];
 };
 
+export type SerializedReference = {
+  '@type': 'dxos.echo.model.document.Reference';
+  itemId: ItemID;
+  protocol: string;
+  host: string;
+};
+
 export type SerializedObject = {
   /**
    * Unique object identifier.
@@ -41,9 +50,9 @@ export type SerializedObject = {
   '@id': string;
 
   /**
-   * Fully qualified name for the object's type.
+   * Reference to a type.
    */
-  '@type'?: string;
+  '@type'?: SerializedReference | string;
 
   /**
    * Flag to indicate soft-deleted objects.
@@ -91,8 +100,10 @@ export class Serializer {
       const { '@type': type, ...data } = object;
 
       // Handle Space Properties
-      // TODO(mykola): move to @dxos/client
-      if (properties && type === TYPE_PROPERTIES) {
+      if (
+        properties &&
+        (type === TYPE_PROPERTIES || (typeof type === 'object' && type !== null && type.itemId === TYPE_PROPERTIES))
+      ) {
         Object.entries(data).forEach(([name, value]) => {
           if (!name.startsWith('@')) {
             properties[name] = value;
@@ -113,13 +124,18 @@ export class Serializer {
       invariant(data.field);
       obj = new TextObject(data[data.field], data.kind, data.field);
     } else {
-      const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
-      obj = new Prototype(
-        {
-          ...data,
-        },
-        { meta },
-      );
+      let typeRef: Reference | undefined;
+      if (typeof type === 'object' && type !== null) {
+        typeRef = new Reference(type.itemId, type.protocol, type.host);
+      } else if (typeof type === 'string') {
+        // TODO(mykola): Never reached?
+        typeRef = Reference.fromLegacyTypename(type);
+      }
+
+      obj = new TypedObject(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))), {
+        meta,
+        type: typeRef,
+      });
     }
 
     obj[base]._id = id;

@@ -21,7 +21,7 @@ import {
 } from '@dxos/app-framework';
 import { type TypedObject, SpaceProxy } from '@dxos/react-client/echo';
 
-import { ThreadMain, ThreadSidebar } from './components';
+import { CommentsSidebar, ThreadMain, ThreadSidebar } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
@@ -30,11 +30,16 @@ import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[ThreadType.name] = ThreadType;
 
+type CommentThread = {
+  id: string;
+  y: number;
+};
+
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
 
-  const state = deepSignal<{ active?: string | undefined }>({});
+  const state = deepSignal<{ active?: string | undefined; threads?: CommentThread[] }>({});
 
   return {
     meta,
@@ -103,15 +108,27 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
             }
 
-            // TODO(burdon): Better way to get this?
-            // TODO(burdon): Pass in state signal.
             case 'context-thread': {
               const graph = graphPlugin?.provides.graph;
               const layout = layoutPlugin?.provides.layout;
               const space = getActiveSpace(graph!, layout!.active);
               if (space) {
-                const thread = state.active ? (space!.db.getObjectById(state.active) as ThreadType) : undefined;
-                return <ThreadSidebar space={space} thread={thread} />;
+                if (state.threads) {
+                  const threads = state.threads.map(({ id }) => space!.db.getObjectById(id) as ThreadType);
+                  return (
+                    <CommentsSidebar
+                      space={space}
+                      threads={threads}
+                      active={state.active}
+                      onSelect={(id: string) => {
+                        // TODO(burdon): Dispatch to markdown doc (scroll into view).
+                        state.active = id;
+                      }}
+                    />
+                  );
+                } else {
+                  return <ThreadSidebar space={space} />;
+                }
               } else {
                 return null;
               }
@@ -130,6 +147,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
             case ThreadAction.SELECT: {
               state.active = intent.data?.active;
+              state.threads = intent.data?.threads;
               break;
             }
           }

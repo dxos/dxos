@@ -11,6 +11,7 @@ import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { Schema, useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { TableSettings } from './TableSettings';
 
@@ -47,9 +48,7 @@ const Story = () => {
 export default {
   component: TableSettings,
   render: () => <ClientRepeater Component={Story} createSpace />,
-  parameters: {
-    layout: 'fullscreen',
-  },
+  decorators: [withTheme],
 };
 
 export const Default = {
