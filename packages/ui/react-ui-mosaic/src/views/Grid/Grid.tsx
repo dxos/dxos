@@ -62,7 +62,10 @@ const defaultGridOptions: GridOptions = {
 
 export type GridLayout = { [id: string]: Position };
 
-export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicContainerProps<TData, Position> &
+export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = Omit<
+  MosaicContainerProps<TData, Position>,
+  'onSelect'
+> &
   ControlledSelection & {
     items?: TData[];
     layout?: GridLayout;

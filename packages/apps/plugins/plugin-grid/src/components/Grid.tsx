@@ -71,7 +71,7 @@ export type GridDataItem = MosaicDataItem & {
 
 export type GridProps<TData extends GridDataItem = GridDataItem> = Omit<
   MosaicContainerProps<TData, Position>,
-  'Component'
+  'Component' | 'onSelect'
 > &
   ControlledSelection & {
     Component?: MosaicTileComponent<TData, any>;

@@ -63,7 +63,7 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
               'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
               (active === 'destination' || active === 'overlay') && 'invisible',
             )}
-            {...draggableProps}
+            data-testid='section.drag-handle'{...draggableProps}
           >
             <DotsSixVertical className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
           </div>
@@ -96,7 +96,7 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
                     hoverableOpenControlItem,
                     active === 'overlay' && 'invisible',
                   ]}
-                  // data-testid={testId}
+                   data-testid='section.options-menu'
                 >
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
@@ -105,11 +105,11 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
               <DropdownMenu.Portal>
                 <DropdownMenu.Content>
                   <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={onNavigate}>
+                    <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
                       <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
                       <span className='grow'>{t('navigate to section label')}</span>
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={onRemove}>
+                    <DropdownMenu.Item onClick={onRemove} data-testid='section.remove'>
                       <X className={mx(getSize(5), 'mr-2')} />
                       <span className='grow'>{t('remove section label')}</span>
                     </DropdownMenu.Item>
