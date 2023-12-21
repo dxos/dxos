@@ -4,27 +4,55 @@
 
 import '@dxosTheme';
 
+import { faker } from '@faker-js/faker';
 import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { types, Document } from '@braneframe/types';
-import { ClientContext } from '@dxos/react-client';
-import { TextObject } from '@dxos/react-client/echo';
+import { registerSignalFactory } from '@dxos/echo-signals';
+import { Client, ClientContext } from '@dxos/react-client';
+import { type Space, type SpaceProxy, TextObject, type TypeCollection } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { setupPeersInSpace } from '@dxos/react-client/testing';
+import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import type { MaybePromise } from '@dxos/util';
 
-import { EditorExample } from './examples';
+import EditorExample from './examples/Editor';
 
 const root = createRoot(document.getElementById('root')!);
+
+const testBuilder = new TestBuilder();
+
+type PeersInSpaceProps = {
+  count?: number;
+  types?: TypeCollection;
+  registerSignalFactory?: boolean; // TODO(burdon): Document.
+  onCreateSpace?: (space: Space) => MaybePromise<void>;
+};
+
+const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
+  const { count = 1, registerSignalFactory: register = true, types, onCreateSpace } = options;
+  register && registerSignalFactory();
+  const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
+  await Promise.all(clients.map((client) => client.initialize()));
+  await Promise.all(clients.map((client) => client.halo.createIdentity()));
+  types && clients.map((client) => client.spaces.addSchema(types));
+  const space = await clients[0].spaces.create({ name: faker.animal.bird() });
+  await onCreateSpace?.(space);
+  await Promise.all(
+    clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
+  );
+
+  return { spaceKey: space.key, clients };
+};
 
 // TODO(wittjosiah): Migrate to story once chromatic publish is fixed.
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    schema: types,
+    types,
     onCreateSpace: (space) => {
       space.db.add(
         new Document({

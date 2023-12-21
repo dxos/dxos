@@ -4,6 +4,7 @@
 
 import type { Browser, Page } from '@playwright/test';
 
+import { StackManager } from '@dxos/react-ui-stack/testing';
 import { setupPage } from '@dxos/test/playwright';
 import { ShellManager } from '@dxos/vault/testing';
 
@@ -54,9 +55,9 @@ export class AppManager {
     return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
 
-  async createDocument() {
+  async createObject(plugin: string) {
     await this.page.getByTestId('spacePlugin.createObject').last().click();
-    return this.page.getByTestId('markdownPlugin.createDocument').last().click();
+    return this.page.getByTestId(`${plugin}.createObject`).last().click();
   }
 
   async getSpaceItemsCount() {
@@ -70,6 +71,14 @@ export class AppManager {
   getObjectsCount() {
     return this.page.getByTestId('spacePlugin.object').count();
   }
+
+  getObjectLinks() {
+    return this.page.getByTestId('spacePlugin.object');
+  }
+
+  // TODO(wittjosiah): Consider factoring out into plugin packages.
+
+  // Markdown Plugin
 
   getMarkdownTextbox() {
     return this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
@@ -90,11 +99,18 @@ export class AppManager {
     return this.page.getByTestId('composer.documentTitle');
   }
 
-  getObjectLinks() {
-    return this.page.getByTestId('spacePlugin.object');
-  }
-
   getCollaboratorCursors() {
     return this.page.locator('.cm-ySelectionInfo');
+  }
+
+  // Stack Plugin
+
+  getStack() {
+    return new StackManager(this.page.getByTestId('main.stack'));
+  }
+
+  async createSection(plugin: string) {
+    await this.page.getByTestId('stack.createSection').click();
+    return this.page.getByTestId(`${plugin}.createSection`).click();
   }
 }
