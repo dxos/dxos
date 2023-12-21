@@ -64,17 +64,16 @@ jobs:
           NODE_ENV: production
           # TODO(wittjosiah): Remove.
           NODE_OPTIONS: --max_old_space_size=8192
-          DX_ENVIRONMENT: production
+          DX_ENVIRONMENT: staging
           DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           DX_SENTRY_DESTINATION: ${{ secrets.VAULT_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.VAULT_SEGMENT_API_KEY }}
           SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
 
       - name: Publish to NPM
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
-          pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=next
+        run: ./.github/workflows/scripts/publish.sh
         env:
+          DX_ENVIRONMENT: staging
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Monitor Pre-release
