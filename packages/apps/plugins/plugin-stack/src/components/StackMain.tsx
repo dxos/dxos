@@ -79,6 +79,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     const object = parseData?.(active.item, 'object');
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
+      console.log('[splice]', 'todo: find whether over is last');
       stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
     } else if (object && over.path === id) {
       stack.sections.push(new StackType.Section({ object }));

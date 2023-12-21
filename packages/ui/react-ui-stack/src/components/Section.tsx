@@ -129,6 +129,10 @@ const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElemen
 
     const { transform, onRemoveSection, onNavigateToSection, SectionContent, ...contentItem } = item;
 
+    if (!SectionContent) {
+      console.warn('[todo]', 'falsy SectionContent');
+    }
+
     const transformedItem = transform
       ? transform(
           contentItem,
@@ -148,7 +152,7 @@ const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElemen
         onRemove={() => onRemoveSection?.(path)}
         onNavigate={() => onNavigateToSection?.(transformedItem.object.id)}
       >
-        <SectionContent data={transformedItem.object} />
+        {SectionContent && <SectionContent data={transformedItem.object} />}
       </Section>
     );
 
