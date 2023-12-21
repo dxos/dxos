@@ -66,19 +66,20 @@ export const Stack = ({
   );
 
   return (
-    <Mosaic.Container
-      {...{ id, type, Component: SectionTile, getOverlayStyle, onOver, onDrop, modifier: stackModifier }}
-    >
-      <Mosaic.DroppableTile
-        path={id}
-        type={type}
-        classNames={classNames}
-        item={{ id, items: itemsWithPreview, transform, onRemoveSection, onNavigateToSection, SectionContent }}
-        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
-        Component={StackTile}
-        ref={containerRef}
-      />
-    </Mosaic.Container>
+    <div ref={containerRef} {...props}>
+      <Mosaic.Container
+        {...{ id, type, Component: SectionTile, getOverlayStyle, onOver, onDrop, modifier: stackModifier }}
+      >
+        <Mosaic.DroppableTile
+          path={id}
+          type={type}
+          classNames={classNames}
+          item={{ id, items: itemsWithPreview, transform, onRemoveSection, onNavigateToSection, SectionContent }}
+          isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
+          Component={StackTile}
+        />
+      </Mosaic.Container>
+    </div>
   );
 };
 

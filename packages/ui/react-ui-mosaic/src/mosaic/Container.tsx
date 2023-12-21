@@ -3,7 +3,13 @@
 //
 
 import { type Modifier } from '@dnd-kit/core';
-import React, { createContext, useEffect, type CSSProperties, type PropsWithChildren } from 'react';
+import React, {
+  createContext,
+  useEffect,
+  type CSSProperties,
+  type HTMLAttributes,
+  type PropsWithChildren,
+} from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
@@ -46,6 +52,8 @@ export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & 
 };
 
 export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = ThemedClassName<
+  Omit<HTMLAttributes<HTMLElement>, 'onDrop'>
+> &
   PropsWithChildren<{
     id: string;
 
@@ -95,8 +103,7 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
      * Called when a tile is dropped on the container.
      */
     onDrop?: (event: MosaicDropEvent<TPosition>) => void;
-  }>
->;
+  }>;
 
 export type MosaicContainerContextType<
   TData extends MosaicDataItem = MosaicDataItem,
