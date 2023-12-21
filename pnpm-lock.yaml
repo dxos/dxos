@@ -611,6 +611,9 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
+      '@socketsupply/socket':
+        specifier: ^0.5.3
+        version: link:build/mac/composer-dev.app/Contents/Resources/socket
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -654,9 +657,6 @@ importers:
       '@sentry/vite-plugin':
         specifier: ^0.7.2
         version: 0.7.2
-      '@socketsupply/socket':
-        specifier: ^0.5.3
-        version: link:build/mac/composer-dev.app/Contents/Resources/socket
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21

@@ -30,3 +30,10 @@ This will bundle the app and open it.
 To open the app:
 
 `open build/mac/composer-dev.app`
+
+To run against the vite dev server:
+
+```bash
+pnpm nx serve-with-vault composer-app
+ssc build -r --port 5173
+```

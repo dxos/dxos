@@ -20,6 +20,7 @@ export const FileUpload: FC<{
   const ipfsClient = useIpfsClient();
 
   const handleUpdate = async (file: File) => {
+    console.log('>>', file, ipfsClient);
     const info = await ipfsClient?.add(file);
     if (info) {
       const filename = file.name.split('.')[0];

@@ -46,6 +46,7 @@ export const useIpfsClient = ({ timeout = 30_000 }: { timeout?: number } = {}) =
   const config = useConfig();
   const ipfsClient = useMemo(() => {
     const server = config.values.runtime?.services?.ipfs?.server;
+    console.log('>>>>>>>>>>>>>>>', config, config.values, server);
     if (server) {
       return create({ url: server, timeout });
     }
