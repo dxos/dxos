@@ -18,6 +18,7 @@ import {
   hoverableOpenControlItem,
   inputSurface,
   mx,
+  staticFocusRing,
   staticHoverableControls,
   surfaceElevation,
 } from '@dxos/react-ui-theme';
@@ -52,10 +53,9 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
           <div
             className={mx(
               fineButtonDimensions,
-              focusRing,
               hoverableFocusedKeyboardControls,
               'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-              (active === 'destination' || active === 'overlay') && 'invisible',
+              active === 'overlay' && document.body.hasAttribute('data-is-keyboard') ? staticFocusRing : focusRing,
             )}
             data-testid='section.drag-handle'
             {...draggableProps}
@@ -141,7 +141,7 @@ const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElemen
       <Section
         ref={forwardedRef}
         id={transformedItem.id}
-        title={transformedItem.object.title ?? t('untitled section title')}
+        title={transformedItem.object?.title ?? t('untitled section title')}
         active={active}
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}
