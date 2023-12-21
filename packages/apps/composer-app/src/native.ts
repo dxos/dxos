@@ -6,16 +6,33 @@ import { log } from '@dxos/log';
 
 const module = 'socket:application';
 
+const KEY_WINDOW_SIZE = 'dxos.composer.options.window.size';
+
 /**
  * Native code for socketsupply app.
  */
 export const initializeNativeApp = async () => {
   // Dynamic import required. SocketSupply shell will provide the module.
   const app = await import(/* @vite-ignore */ module);
-  const { meta_title: appName } = app.config;
+  const { meta_title: appName } = app;
 
-  // TODO(burdon): Copied from Discord thread
-  //  https://discord.com/channels/775715380089716778/1156997872743628912/1157000028322279577
+  // https://github.com/socketsupply/socket-examples/blob/master/react-dashboard/socket-build/mac/beepboop-dev.app/Contents/Resources/socket/index.d.ts
+  const win = await app.getCurrentWindow();
+  const { width, height } = safeParseJson<{ width?: number; height?: number }>(
+    localStorage.getItem(KEY_WINDOW_SIZE),
+    {},
+  );
+  if (width && height) {
+    await win.setSize({ width, height });
+  }
+
+  window.addEventListener('resize', async () => {
+    const window = await app.getCurrentWindow();
+    const { width, height } = window.getSize();
+    localStorage.setItem(KEY_WINDOW_SIZE, JSON.stringify({ width, height }));
+  });
+
+  // https://github.com/socketsupply/socket-examples/blob/master/react-dashboard/socket-build/mac/beepboop-dev.app/Contents/Resources/socket/application.js#L162
   let itemsMac = '';
   if (process.platform === 'darwin') {
     itemsMac = `
@@ -57,4 +74,14 @@ export const initializeNativeApp = async () => {
   });
 
   log.info('initialized');
+};
+
+// TODO(burdon): Move to util.
+export const safeParseJson = <T extends object>(data: string | undefined | null, defaultValue: T): T => {
+  if (data) {
+    try {
+      return JSON.parse(data);
+    } catch (err) {}
+  }
+  return defaultValue;
 };

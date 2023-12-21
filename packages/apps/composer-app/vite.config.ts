@@ -53,8 +53,6 @@ export default defineConfig({
       },
       external: [
         // Provided at runtime by socket supply shell.
-        // TODO(burdon): Provide reference to docs.
-        // TODO(burdon): Need to disable import-analysis.
         'socket:application',
       ]
     },

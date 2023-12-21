@@ -58,6 +58,11 @@ const main = async () => {
   const services = await createClientServices(config);
   const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
 
+  // Test if socket supply native app.
+  if ((globalThis as any).__args) {
+    void initializeNativeApp();
+  }
+
   const App = createApp({
     fallback: (
       <ThemeProvider tx={defaultTx}>
@@ -188,11 +193,6 @@ const main = async () => {
     ],
     defaults: [MarkdownMeta.id, StackMeta.id],
   });
-
-  // Test if socket supply native app.
-  if ((globalThis as any).__args) {
-    void initializeNativeApp();
-  }
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
