@@ -40,7 +40,7 @@ test.describe('Basic test', () => {
       test.slow();
 
       await host.createSpace();
-      await host.createDocument();
+      await host.createObject('markdownPlugin');
       await perfomInvitation(host, guest);
 
       await guest.waitForMarkdownTextbox();
@@ -59,7 +59,7 @@ test.describe('Basic test', () => {
       test.slow();
 
       await host.createSpace();
-      await host.createDocument();
+      await host.createObject('markdownPlugin');
       await host.waitForMarkdownTextbox();
       await perfomInvitation(host, guest);
 
@@ -85,7 +85,7 @@ test.describe('Basic test', () => {
       test.slow();
 
       await host.createSpace();
-      await host.createDocument();
+      await host.createObject('markdownPlugin');
       await host.waitForMarkdownTextbox();
       await perfomInvitation(host, guest);
 

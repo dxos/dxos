@@ -21,7 +21,7 @@ export default [
         'select editor mode placeholder': 'Select editor mode…',
         'settings editor mode default label': 'Default',
         'settings editor mode vim label': 'Vim',
-        'settings widgets label': 'Show markdown widgets',
+        'settings markdown experimental label': 'Enable markdown widgets',
       },
     },
   },
