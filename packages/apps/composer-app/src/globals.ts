@@ -104,22 +104,21 @@ Migrations.define(appKey, [
     },
     down: () => {},
   },
-  // TODO(wittjosiah): Include this migration once https://github.com/dxos/dxos/pull/4757 is fixed.
-  // {
-  //   version: ,
-  //   up: ({ space }) => {
-  //     const rootFolder = space.properties[Folder.schema.typename] as Folder;
-  //     const { objects } = space.db.query(Folder.filter({ name: space.key.toHex() }));
-  //     if (objects.length <= 1) {
-  //       return;
-  //     }
-  //     rootFolder.objects = objects.flatMap(({ objects }) => objects);
-  //     objects.forEach((object) => {
-  //       if (object !== rootFolder) {
-  //         space.db.remove(object);
-  //       }
-  //     });
-  //   },
-  //   down: () => {},
-  // },
+  {
+    version: 2,
+    up: ({ space }) => {
+      const rootFolder = space.properties[Folder.schema.typename] as Folder;
+      const { objects } = space.db.query(Folder.filter({ name: space.key.toHex() }));
+      if (objects.length <= 1) {
+        return;
+      }
+      rootFolder.objects = objects.flatMap(({ objects }) => Array.from(objects));
+      objects.forEach((object) => {
+        if (object !== rootFolder) {
+          space.db.remove(object);
+        }
+      });
+    },
+    down: () => {},
+  },
 ]);
