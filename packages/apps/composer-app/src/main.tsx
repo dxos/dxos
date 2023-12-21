@@ -167,7 +167,9 @@ const main = async () => {
         config: new Config(Defaults()),
       }),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
-      [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme')),
+      [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
+        appName: 'Composer',
+      }),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
