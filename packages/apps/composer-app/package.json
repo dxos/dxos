@@ -67,6 +67,7 @@
     "@dxos/react-shell": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-navtree": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@faker-js/faker": "^8.0.2",

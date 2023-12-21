@@ -4,7 +4,13 @@
 
 import React, { useEffect, useState } from 'react';
 
-import type { Plugin, PluginDefinition, SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
+import type {
+  IntentResolverProvides,
+  Plugin,
+  PluginDefinition,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
@@ -14,24 +20,29 @@ import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
 import { ClientSettings } from './components/ClientSettings';
-import meta from './meta';
+import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 import { type ClientSettingsProps } from './types';
 
 const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
 
+const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
+export enum ClientAction {
+  SHELL = `${CLIENT_ACTION}/SHELL`,
+}
+
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
 
 export type ClientPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
   TranslationsProvides & {
     client: Client;
+    settings: ClientSettingsProps;
 
     /**
      * True if this is the first time the current app has been used by this identity.
      */
     firstRun: boolean;
-
-    settings: ClientSettingsProps;
   };
 
 export const parseClientPlugin = (plugin?: Plugin) =>
@@ -150,6 +161,17 @@ export const ClientPlugin = ({
             return <ClientSettings />;
           }
           return null;
+        },
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            // TODO(burdon): Add key binding.
+            case ClientAction.SHELL: {
+              void client.shell.open();
+              break;
+            }
+          }
         },
       },
     },

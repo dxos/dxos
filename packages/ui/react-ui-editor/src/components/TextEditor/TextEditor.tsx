@@ -21,8 +21,8 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle } from './extensions';
-import { defaultTheme, textTheme } from './themes';
+import { basicBundle, demo, markdownBundle } from './extensions';
+import { defaultTheme, markdownTheme, textTheme } from './themes';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 
@@ -70,6 +70,11 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
+    const [root, setRoot] = useState<HTMLDivElement | null>(null);
+    const [state, setState] = useState<EditorState>();
+    const [view, setView] = useState<EditorView>();
+    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
+
     // TODO(burdon): Factor out?
     const { awareness, peer } = model;
     useEffect(() => {
@@ -81,11 +86,6 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         });
       }
     }, [awareness, peer, themeMode]);
-
-    const [root, setRoot] = useState<HTMLDivElement | null>(null);
-    const [state, setState] = useState<EditorState>();
-    const [view, setView] = useState<EditorView>();
-    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
     useEffect(() => {
       if (!root) {
@@ -157,7 +157,17 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
-// TODO(burdon): Set default text theme?
+// TODO(burdon): Allow plugins to set extensions (factory).
+const maybeDebug = (): Extension => {
+  // TODO(burdon): Parse JSON script format (with key bindings?)
+  const items = localStorage.getItem('dxos.composer.demo');
+  if (items) {
+    return demo({ items: items.split(',') });
+  }
+
+  return [];
+};
+
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
@@ -165,7 +175,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     return (
       <BaseTextEditor
         ref={forwardedRef}
-        extensions={[basicBundle({ themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
+        extensions={[basicBundle({ themeMode, placeholder: slots?.editor?.placeholder }), maybeDebug(), ...extensions]}
         slots={slots}
         {...props}
       />
@@ -176,11 +186,15 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultSlots);
+    const slots = defaultsDeep({}, _slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
-        extensions={[markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
+        extensions={[
+          markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder }),
+          maybeDebug(),
+          ...extensions,
+        ]}
         slots={slots}
         {...props}
       />
@@ -198,5 +212,12 @@ export const defaultTextSlots: TextEditorSlots = {
   ...defaultSlots,
   editor: {
     theme: textTheme,
+  },
+};
+
+export const defaultMarkdownSlots: TextEditorSlots = {
+  ...defaultSlots,
+  editor: {
+    theme: markdownTheme,
   },
 };

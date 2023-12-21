@@ -159,12 +159,27 @@ export const textTheme: {
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
+  '& .cm-placeholder': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+};
+
+export const markdownTheme: {
+  [selector: string]: StyleSpec;
+} = {
+  // NOTE: Must leave base font family as is (i.e., monospace) due to fenced code blocks.
+  '& .cm-placeholder': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
 };
 
 export const codeTheme: {
   [selector: string]: StyleSpec;
 } = {
   '& .cm-scroller': {
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+  },
+  '& .cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
 };
