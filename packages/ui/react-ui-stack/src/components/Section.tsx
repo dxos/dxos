@@ -3,7 +3,7 @@
 //
 
 import { DotsSixVertical, X, ArrowSquareOut, DotsThreeVertical } from '@phosphor-icons/react';
-import React, { forwardRef, useState, useEffect, type ForwardRefExoticComponent, type RefAttributes } from 'react';
+import React, { forwardRef, useState, type ForwardRefExoticComponent, type RefAttributes } from 'react';
 
 import { Button, DensityProvider, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { type MosaicTileComponent, useMosaic } from '@dxos/react-ui-mosaic';
@@ -31,12 +31,6 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
 >(({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    return () => {
-      console.log('[ui stack section]', 'unmount');
-    };
-  }, []);
 
   return (
     <DensityProvider density='fine'>

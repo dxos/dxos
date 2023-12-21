@@ -16,13 +16,7 @@ import {
 } from '@dxos/app-framework';
 import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
-import {
-  Path,
-  type MosaicDropEvent,
-  type MosaicMoveEvent,
-  type MosaicDataItem,
-  useMosaic,
-} from '@dxos/react-ui-mosaic';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps } from '@dxos/react-ui-stack';
 import {
   baseSurface,
@@ -38,12 +32,6 @@ import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
-  const { activeItem } = useMosaic();
-  useEffect(() => {
-    return () => {
-      console.log('[section content]', 'unmount', data.id, activeItem?.item);
-    };
-  }, []);
   return <Surface role='section' data={{ object: data }} />;
 };
 
