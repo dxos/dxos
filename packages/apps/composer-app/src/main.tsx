@@ -189,7 +189,7 @@ const main = async () => {
     defaults: [MarkdownMeta.id, StackMeta.id],
   });
 
-  // TODO(burdon): Better test?
+  // Test if socket supply native app.
   if ((globalThis as any).__args) {
     void initializeNativeApp();
   }

@@ -2,13 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import { log } from '@dxos/log';
+
+const module = 'socket:application';
+
 /**
  * Native code for socketsupply app.
  */
 export const initializeNativeApp = async () => {
   // @ts-ignore
-  const app = await import('socket:application');
+  const app = await import(/* @vite-ignore */ module);
   console.log('###', app);
+
+  // TODO(burdon): Config.
+  const name = 'Composer';
 
   // TODO(burdon): Copied from Discord thread
   //  https://discord.com/channels/775715380089716778/1156997872743628912/1157000028322279577
@@ -23,7 +30,7 @@ export const initializeNativeApp = async () => {
 
   const menu = `
     App Name:
-      About App Name: _
+      About ${name}: _
       Settings...: , + CommandOrControl
       ---
       ${itemsMac}
@@ -52,5 +59,5 @@ export const initializeNativeApp = async () => {
     }
   });
 
-  console.log('ok');
+  log.info('initialized');
 };
