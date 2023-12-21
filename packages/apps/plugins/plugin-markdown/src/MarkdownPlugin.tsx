@@ -60,7 +60,7 @@ export type MarkdownPluginState = {
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { experimental: false });
 
   // TODO(burdon): Why does this need to be a signal? Race condition?
   const state = deepSignal<MarkdownPluginState>({ onChange: [] });
@@ -91,7 +91,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   // TODO(burdon): Better way for different plugins to configure extensions.
   const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
-    showWidgets: settings.values.showWidgets,
+    experimental: settings.values.experimental,
     // TODO(burdon): Change to passing in config object.
     listener: {
       onChange: (text: string) => {
@@ -200,7 +200,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     ready: async (plugins) => {
       settings
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$showWidgets!, 'show-widgets', LocalStorageStore.bool);
+        .prop(settings.values.$experimental!, 'show-widgets', LocalStorageStore.bool);
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
