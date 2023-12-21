@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { List, useTranslation } from '@dxos/react-ui';
@@ -41,12 +41,6 @@ export const Stack = ({
   const { ref: containerRef, width = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
-
-  useEffect(() => {
-    return () => {
-      console.log('[ui stack]', 'unmount');
-    };
-  }, []);
 
   // TODO(burdon): Create context provider to relay inner section width.
   const getOverlayStyle = useCallback(() => {
@@ -90,12 +84,6 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
   ) => {
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
-
-    useEffect(() => {
-      return () => {
-        console.log('[ui stack tile]', 'unmount');
-      };
-    }, []);
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (

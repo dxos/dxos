@@ -3,7 +3,7 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import React, { useCallback, type FC, useEffect } from 'react';
+import React, { useCallback, type FC } from 'react';
 
 import { Stack as StackType, type File as FileType, Folder } from '@braneframe/types';
 import {
@@ -112,12 +112,6 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
     return parseData ? parseData(item, 'view-object') : item;
   };
-
-  useEffect(() => {
-    return () => {
-      console.log('[stack main]', 'unmount');
-    };
-  }, []);
 
   return (
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
