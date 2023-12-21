@@ -16,10 +16,17 @@ SSC needs to be installed globally:
 
 Before running SSC, Composer must be built using:
 
-`pnpm nx bundle composer-app`
+```bash
+NODE_OPTIONS=--max_old_space_size=8192
+pnpm nx bundle composer-app
+```
 
 Then, to bundle the native app, in this directory, run:
 
 `ssc build -r`
 
 This will bundle the app and open it.
+
+To open the app:
+
+`open build/mac/composer-dev.app`

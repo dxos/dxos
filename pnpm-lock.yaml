@@ -648,6 +648,9 @@ importers:
       '@sentry/vite-plugin':
         specifier: ^0.7.2
         version: 0.7.2
+      '@socketsupply/socket':
+        specifier: ^0.5.3
+        version: 0.5.3
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -18730,6 +18733,59 @@ packages:
     resolution: {integrity: sha512-BPS4ynJW/o92PUR4wgriz2Ud5gpST5vz6GQfMixEDK0Z8ZCUv2M7SkBLykH56T++Xs+8ln9zTGbOvNGIe02/jw==}
     dependencies:
       '@sinonjs/commons': 1.8.3
+    dev: true
+
+  /@socketsupply/socket-darwin-arm64@0.5.3:
+    resolution: {integrity: sha512-+nXFcRjEgDjietEjUYwCTjiuf5MFCUA4EpvI/8XeebhUq6OAoJNUNJZwcrxFShmvsi1EfQmJpCahweULPl93FQ==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@socketsupply/socket-darwin-x64@0.5.3:
+    resolution: {integrity: sha512-Icp26lIjB/zpJZEdR9aDnnFf2T/URTKCG0p5cQusxtcR04YZ4Z+8diZSA7QBZU48qR5YnhWs/b1MjXJEY1gl+g==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@socketsupply/socket-linux-arm64@0.5.3:
+    resolution: {integrity: sha512-BSxQqAZLt0CS9G4RekdjpQCkRDCblkOZLKP2HiUX7f4ojSGjj38xVY0Yak1ahtFfgnTuOh7tQwzcfHeBZldt+Q==}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@socketsupply/socket-linux-x64@0.5.3:
+    resolution: {integrity: sha512-qB/LGXP+LN5W6pPTAO+wI/xaKBmiLCeL1N5gEqyYx5ENDkiFBzRZ+SfEm9rgmOMXlXWCMRKPYTFUHNrXMYUeug==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@socketsupply/socket-win32-x64@0.5.3:
+    resolution: {integrity: sha512-qGDaJImhmNjVSqC2h1s9qd/HWPBCo0Gni8y0GjYwCaetz7tqmrKwPluaAPZeyLuPJb+SLRw8otTWyqN6um311g==}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@socketsupply/socket@0.5.3:
+    resolution: {integrity: sha512-qp0AQbqqSjRKEKya+p4RyWdXoC32KbM3E8/LFhQQ98aM8UzrjlP40MmVj6tPMmer1AC9jmEi9zLkDkmqdd+IOw==}
+    cpu: [arm64, x64]
+    os: [linux, darwin, win32]
+    hasBin: true
+    optionalDependencies:
+      '@socketsupply/socket-darwin-arm64': 0.5.3
+      '@socketsupply/socket-darwin-x64': 0.5.3
+      '@socketsupply/socket-linux-arm64': 0.5.3
+      '@socketsupply/socket-linux-x64': 0.5.3
+      '@socketsupply/socket-win32-x64': 0.5.3
     dev: true
 
   /@stackblitz/sdk@1.9.0:
