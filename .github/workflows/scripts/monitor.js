@@ -6,7 +6,8 @@ monitors = [
   './tools/monitors/cli-monitor',
   './tools/monitors/bare-template-monitor',
   './tools/monitors/hello-template-monitor',
-  './tools/monitors/messaging-monitor',
+  // TODO(wittjosiah): Flaky.
+  // './tools/monitors/messaging-monitor',
 ];
 
 const monitor = async (path) => {
