@@ -63,7 +63,8 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
               'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
               (active === 'destination' || active === 'overlay') && 'invisible',
             )}
-            data-testid='section.drag-handle'{...draggableProps}
+            data-testid='section.drag-handle'
+            {...draggableProps}
           >
             <DotsSixVertical className={mx(getSize(5), hoverableControlItem, 'transition-opacity')} />
           </div>
@@ -96,7 +97,7 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
                     hoverableOpenControlItem,
                     active === 'overlay' && 'invisible',
                   ]}
-                   data-testid='section.options-menu'
+                  data-testid='section.options-menu'
                 >
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
