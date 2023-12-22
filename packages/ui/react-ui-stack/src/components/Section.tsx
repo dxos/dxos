@@ -140,7 +140,7 @@ const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElemen
         )
       : contentItem;
 
-    // TODO(thure): Sometimes `item` is a Graph.Node and does not have `object`.
+    // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
     const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
 
     const section = (
