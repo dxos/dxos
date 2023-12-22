@@ -14,7 +14,7 @@ const KEY_WINDOW_SIZE = 'dxos.composer.options.window.size';
 export const initializeNativeApp = async () => {
   // Dynamic import required. SocketSupply shell will provide the module.
   const app = await import(/* @vite-ignore */ module);
-  const { meta_title: appName } = app;
+  const { meta_title: appName } = app.config;
 
   // https://github.com/socketsupply/socket-examples/blob/master/react-dashboard/socket-build/mac/beepboop-dev.app/Contents/Resources/socket/index.d.ts
   const win = await app.getCurrentWindow();
