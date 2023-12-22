@@ -17,7 +17,7 @@ import {
   type IdentityPanelProps,
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { IdentityActionChooser, ProfileForm } from './steps';
+import { IdentityActionChooser, ProfileForm, AgentForm } from './steps';
 import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 
@@ -56,6 +56,8 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
       case 'device manager':
       case 'device invitation manager':
         return t('choose devices label');
+      case 'agent manager':
+        return 'Manage Agent';
       default:
         return t('identity heading');
     }
@@ -82,6 +84,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               profile={identity.profile}
               onUpdateProfile={onUpdateProfile}
             />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='agent manager'>
+            <AgentForm send={rest.send} active={activeView === 'agent manager'} identity={identity} />
           </Viewport.View>
           {/* <Viewport.View id='signing out'></Viewport.View> */}
         </Viewport.Views>
@@ -128,6 +133,8 @@ export const IdentityPanel = ({
         return 'device invitation manager';
       case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
         return 'update profile form';
+      case [{ managingAgent: 'idle' }, { managingAgent: 'pending' }].some(identityState.matches):
+        return 'agent manager';
       // case identityState.matches('signingOut'):
       //   return 'identity exit';
       default:

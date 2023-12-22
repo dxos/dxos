@@ -4,3 +4,4 @@
 
 export * from './IdentityActionChooser';
 export * from './ProfileForm';
+export * from './AgentPanel';
