@@ -104,11 +104,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
             {items.map((item, index) => (
               <Mosaic.SortableTile
                 key={item.id}
-                item={{
-                  // Spreading doesn’t always get the id if it is a Proxy(TypedObjectImpl)
-                  id: item.id,
-                  object: item.object,
-                }}
+                item={item}
                 itemContext={itemContext}
                 path={path}
                 type={type}
