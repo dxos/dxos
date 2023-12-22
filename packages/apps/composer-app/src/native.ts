@@ -6,17 +6,22 @@ import { log } from '@dxos/log';
 
 const module = 'socket:application';
 
-const KEY_WINDOW_SIZE = 'dxos.composer.options.window.size';
+// TODO(burdon): Reconcile with other properties.
+const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
+
+// TODO(burdon): Configure storage:
+//  import fs from 'socket:fs/promises'
 
 /**
  * Native code for socketsupply app.
+ * https://www.npmjs.com/package/@socketsupply/socket
+ * https://github.com/socketsupply/socket-examples
  */
 export const initializeNativeApp = async () => {
   // Dynamic import required. SocketSupply shell will provide the module.
   const app = await import(/* @vite-ignore */ module);
   const { meta_title: appName } = app.config;
 
-  // https://github.com/socketsupply/socket-examples/blob/master/react-dashboard/socket-build/mac/beepboop-dev.app/Contents/Resources/socket/index.d.ts
   const win = await app.getCurrentWindow();
   const { width, height } = safeParseJson<{ width?: number; height?: number }>(
     localStorage.getItem(KEY_WINDOW_SIZE),
@@ -32,7 +37,6 @@ export const initializeNativeApp = async () => {
     localStorage.setItem(KEY_WINDOW_SIZE, JSON.stringify({ width, height }));
   });
 
-  // https://github.com/socketsupply/socket-examples/blob/master/react-dashboard/socket-build/mac/beepboop-dev.app/Contents/Resources/socket/application.js#L162
   let itemsMac = '';
   if (process.platform === 'darwin') {
     itemsMac = `
