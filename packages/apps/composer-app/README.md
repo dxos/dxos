@@ -37,3 +37,4 @@ To run against the vite dev server:
 pnpm nx serve-with-vault composer-app
 ssc build -r --port 5173
 ```
+To reset the app, inspect and delete local storage properties.

@@ -7,9 +7,6 @@ import { log } from '@dxos/log';
 // TODO(burdon): Reconcile with other properties.
 const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
 
-// TODO(burdon): Configure storage:
-//  import fs from 'socket:fs/promises'
-
 /**
  * Native code for socketsupply app.
  * https://www.npmjs.com/package/@socketsupply/socket
@@ -20,6 +17,7 @@ export const initializeNativeApp = async () => {
   const module = 'socket:application';
   const app = await import(/* @vite-ignore */ module);
   const { meta_title: appName } = app.config;
+  // console.log(JSON.stringify(app.config, undefined, 2));
 
   //
   // Window size.
@@ -83,6 +81,7 @@ export const initializeNativeApp = async () => {
     }
   });
 
+  // TODO(burdon): Initial url has index.html, which must be caught/redirected.
   log.info('initialized');
 };
 
