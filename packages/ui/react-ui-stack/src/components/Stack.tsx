@@ -47,6 +47,10 @@ export const Stack = ({
     return { width: Math.min(width, 59 * 16) };
   }, [width]);
 
+  const getOverlayProps = useCallback(() => {
+    return { itemContext: { SectionContent } };
+  }, [SectionContent]);
+
   // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
   //  in particular is unknown, so this solution may may backfire in unforeseeable cases.
   const stackModifier = useCallback<Exclude<MosaicContainerProps['modifier'], undefined>>(
@@ -62,13 +66,23 @@ export const Stack = ({
   return (
     <div ref={containerRef} {...props}>
       <Mosaic.Container
-        {...{ id, type, Component: SectionTile, getOverlayStyle, onOver, onDrop, modifier: stackModifier }}
+        {...{
+          id,
+          type,
+          Component: SectionTile,
+          getOverlayStyle,
+          getOverlayProps,
+          onOver,
+          onDrop,
+          modifier: stackModifier,
+        }}
       >
         <Mosaic.DroppableTile
           path={id}
           type={type}
           classNames={classNames}
-          item={{ id, items: itemsWithPreview, transform, onRemoveSection, onNavigateToSection, SectionContent }}
+          item={{ id, items: itemsWithPreview }}
+          itemContext={{ transform, onRemoveSection, onNavigateToSection, SectionContent }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />
@@ -78,10 +92,7 @@ export const Stack = ({
 };
 
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
-  (
-    { classNames, path, isOver, item: { items, transform, onRemoveSection, onNavigateToSection, SectionContent } },
-    forwardedRef,
-  ) => {
+  ({ classNames, path, isOver, item: { items }, itemContext }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
 
@@ -97,11 +108,8 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
                   // Spreading doesn’t always get the id if it is a Proxy(TypedObjectImpl)
                   id: item.id,
                   object: item.object,
-                  transform,
-                  onRemoveSection,
-                  onNavigateToSection,
-                  SectionContent,
                 }}
+                itemContext={itemContext}
                 path={path}
                 type={type}
                 position={index}

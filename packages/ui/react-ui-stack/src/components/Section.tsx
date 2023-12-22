@@ -23,7 +23,7 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
-import { type SectionProps, type StackSectionItemWithContext } from './props';
+import { type SectionProps, type StackSectionContent, type StackSectionItemWithContext } from './props';
 import { translationKey } from '../translations';
 
 const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
@@ -123,15 +123,14 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
 const SECTION_TILE_NAME = 'SectionTile';
 
 const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
-  ({ path, type, active, draggableStyle, draggableProps, item }, forwardedRef) => {
+  ({ path, type, active, draggableStyle, draggableProps, item, itemContext }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { activeItem } = useMosaic();
 
-    const { transform, onRemoveSection, onNavigateToSection, SectionContent, ...contentItem } = item;
-
-    if (!SectionContent) {
-      console.warn('[todo]', 'falsy SectionContent');
-    }
+    const { transform, onRemoveSection, onNavigateToSection, SectionContent, ...contentItem } = {
+      ...itemContext,
+      ...item,
+    };
 
     const transformedItem = transform
       ? transform(
@@ -141,18 +140,21 @@ const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElemen
         )
       : contentItem;
 
+    // TODO(thure): Sometimes `item` is a Graph.Node and does not have `object`.
+    const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
+
     const section = (
       <Section
         ref={forwardedRef}
         id={transformedItem.id}
-        title={transformedItem.object?.title ?? t('untitled section title')}
+        title={itemObject?.title ?? t('untitled section title')}
         active={active}
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}
         onRemove={() => onRemoveSection?.(path)}
-        onNavigate={() => onNavigateToSection?.(transformedItem.object.id)}
+        onNavigate={() => onNavigateToSection?.(itemObject.id)}
       >
-        {SectionContent && <SectionContent data={transformedItem.object} />}
+        {SectionContent && <SectionContent data={itemObject} />}
       </Section>
     );
 

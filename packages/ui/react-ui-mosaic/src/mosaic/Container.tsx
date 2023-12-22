@@ -28,6 +28,7 @@ export const DEFAULT_TYPE = 'unknown';
 export type MosaicTileOverlayProps = {
   grow?: boolean;
   debug?: boolean;
+  itemContext?: Record<string, unknown>;
 };
 
 /**
