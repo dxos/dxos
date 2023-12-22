@@ -13,19 +13,19 @@ import { useExtensions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 // TODO(burdon): Reconcile types.
-type EditorSectionProps = Pick<EditorMainProps, 'showWidgets'> & Pick<TextEditorProps, 'model' | 'editorMode'>;
+type EditorSectionProps = Pick<EditorMainProps, 'extensions'> & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
-export const EditorSection = ({ model, editorMode, showWidgets }: EditorSectionProps) => {
+export const EditorSection = ({ model, editorMode, extensions: _extensions }: EditorSectionProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const editorRef = useRef<TextEditorRef>(null);
-  const extensions = useExtensions({ showWidgets });
+  const extensions = useExtensions(_extensions);
 
   return (
     <MarkdownEditor
       ref={editorRef}
       model={model}
-      extensions={extensions}
       editorMode={editorMode}
+      extensions={extensions}
       slots={{
         root: {
           role: 'none',

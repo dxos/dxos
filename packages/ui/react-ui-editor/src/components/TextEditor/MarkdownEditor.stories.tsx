@@ -10,11 +10,21 @@ import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
-import { autocomplete, listener, link, tasklist, tooltip, type TooltipOptions, type LinkOptions } from './extensions';
+import {
+  autocomplete,
+  listener,
+  link,
+  tasklist,
+  tooltip,
+  type TooltipOptions,
+  type LinkOptions,
+  comments,
+} from './extensions';
 import { useTextModel } from '../../hooks';
 
 // TODO(burdon): Read-only render mode (presentation).
@@ -31,9 +41,11 @@ const text = {
   tasks: str(
     '## Tasks',
     '',
-    '- [x] parsing',
-    '- [ ] styling',
-    '- [ ] rendering',
+    '- [x] decorator',
+    '- [ ] checkbox',
+    '  - [ ] state',
+    '  - [ ] indent',
+    '  - [x] style',
   ),
 
   list: str(
@@ -80,6 +92,8 @@ const text = {
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
   ),
+
+  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat())
 };
 
 const document = str(
@@ -180,7 +194,7 @@ export const Default = {
         tooltip({ onHover }),
         tasklist(),
         autocomplete({
-          getOptions: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
       ]}
     />
@@ -205,8 +219,10 @@ export const TaskList = {
       text={str(text.tasks, '', text.list)}
       extensions={[
         tasklist(),
-        listener((text) => {
-          console.log(text);
+        listener({
+          onChange: (text) => {
+            console.log(text);
+          },
         }),
       ]}
     />
@@ -220,7 +236,24 @@ export const Autocomplete = {
       extensions={[
         link({ onRender }),
         autocomplete({
-          getOptions: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+        }),
+      ]}
+    />
+  ),
+};
+
+const mark = () => `[^${PublicKey.random().toHex()}]`;
+export const Comments = {
+  render: () => (
+    <Story
+      text={str(mark(), '', text.paragraphs, mark(), '', mark(), '')}
+      extensions={[
+        comments({
+          onCreate: () => PublicKey.random().toHex(),
+          onUpdate: (info) => {
+            console.log('update', info);
+          },
         }),
       ]}
     />

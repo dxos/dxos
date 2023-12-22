@@ -49,9 +49,9 @@ export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & 
   operation: MosaicOperation;
 };
 
-export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
-  HTMLAttributes<HTMLDivElement>,
-  'className'
+export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Omit<
+  HTMLAttributes<HTMLElement>,
+  'onDrop'
 > &
   PropsWithChildren<{
     id: string;

@@ -12,13 +12,16 @@ import {
   tasklist,
   tooltip,
   type Extension,
-  type TextListener,
   listener,
   type TooltipOptions,
   autocomplete,
   type AutocompleteOptions,
+  comments,
+  type CommentsOptions,
+  type ListenerOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 // TODO(burdon): Factor out style.
 const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
@@ -36,8 +39,8 @@ const onRender = (dispatch: DispatchIntent) => (el: Element, url: string) => {
       }
     : {
         href: url,
-        target: '_blank',
         rel: 'noreferrer',
+        target: '_blank',
       };
 
   createRoot(el).render(
@@ -61,20 +64,34 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
   );
 };
 
-type UseExtensionsOptions = {
-  showWidgets?: boolean;
-  onSearch?: AutocompleteOptions['getOptions'];
-  onChange?: TextListener;
+// TODO(burdon): Make markdown plugins separately configurable.
+export type UseExtensionsOptions = {
+  experimental?: boolean;
+  listener?: ListenerOptions;
+  autocomplete?: AutocompleteOptions;
+  comments?: CommentsOptions;
 };
 
-export const useExtensions = ({ showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
+export const useExtensions = ({
+  experimental,
+  listener: _listener,
+  autocomplete: _autocomplete,
+  comments: _comments,
+}: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
+  const extensions: Extension[] = [];
+  if (experimental) {
+    extensions.push(
+      ...[
+        link({ onRender: onRender(dispatch) }),
+        tooltip({ onHover }),
+        tasklist(),
+        _listener && listener(_listener),
+        _autocomplete && autocomplete(_autocomplete),
+        _comments && comments(_comments),
+      ].filter(nonNullable),
+    );
+  }
 
-  return [
-    link({ onRender: onRender(dispatch) }),
-    tooltip({ onHover }),
-    onSearch && autocomplete({ getOptions: onSearch }),
-    onChange && listener(onChange),
-    showWidgets && [tasklist()],
-  ].filter(Boolean) as Extension[];
+  return extensions;
 };

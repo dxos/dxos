@@ -4,12 +4,13 @@
 
 import { StateField } from '@codemirror/state';
 
-export type TextListener = (text: string) => void;
+export type ListenerOptions = { onChange: (text: string) => void };
 
 /**
  * Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
  */
-export const listener = (onChange: TextListener) =>
+// TODO(burdon): Expose options.
+export const listener = ({ onChange }: ListenerOptions) =>
   StateField.define({
     create: () => null,
     update: (_value, transaction) => {

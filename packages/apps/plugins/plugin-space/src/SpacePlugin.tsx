@@ -86,7 +86,6 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
     meta,
@@ -199,22 +198,6 @@ export const SpacePlugin = ({
           });
         }).unsubscribe,
       );
-
-      // Keyboard shortcuts for opening shell.
-      //   `Ctrl+.`: Share active space
-      //   `Ctrl+Shift+.`: Open identity dialog
-      handleKeyDown = (event) => {
-        const modifier = event.ctrlKey || event.metaKey;
-        if (event.key === '>' && event.shiftKey && modifier) {
-          void client.shell.open();
-        } else if (event.key === '.' && modifier) {
-          const space = getActiveSpace(graph, layout.active);
-          if (space) {
-            void client.shell.shareSpace({ spaceKey: space.key });
-          }
-        }
-      };
-      window.addEventListener('keydown', handleKeyDown);
     },
     unload: async () => {
       settings.close();
@@ -222,7 +205,6 @@ export const SpacePlugin = ({
       subscriptions.clear();
       graphSubscriptions.forEach((cb) => cb());
       graphSubscriptions.clear();
-      window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
       space: state as RevertDeepSignal<PluginState>,

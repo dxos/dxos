@@ -13,11 +13,11 @@ export const baseSurface = 'base-surface';
 
 // Sidebars, main heading (“topbar”), and nothing else.
 export const fixedSurface = 'fixed-surface backdrop-blur-md dark:backdrop-blur-lg';
-export const fixedBorder = 'border-neutral-50 dark:border-neutral-800';
+export const fixedBorder = 'border-neutral-50 dark:border-neutral-800 divide-neutral-50 dark:divide-neutral-800';
 
 // Cards, dialogs, other such groups.
 export const groupSurface = 'group-surface';
-export const groupBorder = 'border-neutral-50 dark:border-neutral-800';
+export const groupBorder = 'border-neutral-50 dark:border-neutral-800 divide-neutral-50 dark:divide-neutral-800';
 
 // Tooltips, popovers, menus, etc. – not dialogs.
 export const chromeSurface = 'chrome-surface';
