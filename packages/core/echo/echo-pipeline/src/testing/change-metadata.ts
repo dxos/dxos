@@ -4,8 +4,9 @@
 
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
+import type { Storage } from '@dxos/random-access-storage';
 
-import { type MetadataStore } from '../metadata';
+import { MetadataStore } from '../metadata';
 
 const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 
@@ -14,8 +15,9 @@ const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
  * This will break your storage and make it unusable.
  * Use this only for testing purposes.
  */
-export const changeStorageVersionInMetadata = async (metadata: MetadataStore, version: number) => {
-  log.info('Changing storage version in metadata. USE ONLY FOR TESTING');
+export const changeStorageVersionInMetadata = async (storage: Storage, version: number) => {
+  log.info('Changing storage version in metadata. USE ONLY FOR TESTING.');
+  const metadata = new MetadataStore(storage.createDirectory('metadata'));
   await metadata.load();
   const echoMetadata = metadata.metadata;
   echoMetadata.version = version;

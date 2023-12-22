@@ -997,15 +997,18 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/client':
+      '@dxos/client-services':
         specifier: workspace:*
-        version: link:../../../sdk/client
+        version: link:../../../sdk/client-services
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../../devtools/devtools
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-pipeline
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
