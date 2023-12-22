@@ -4,8 +4,6 @@
 
 import { log } from '@dxos/log';
 
-const module = 'socket:application';
-
 // TODO(burdon): Reconcile with other properties.
 const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
 
@@ -18,9 +16,14 @@ const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
  * https://github.com/socketsupply/socket-examples
  */
 export const initializeNativeApp = async () => {
-  // Dynamic import required. SocketSupply shell will provide the module.
+  // SocketSupply implements the dynamic import.
+  const module = 'socket:application';
   const app = await import(/* @vite-ignore */ module);
   const { meta_title: appName } = app.config;
+
+  //
+  // Window size.
+  //
 
   const win = await app.getCurrentWindow();
   const { width, height } = safeParseJson<{ width?: number; height?: number }>(
@@ -36,6 +39,10 @@ export const initializeNativeApp = async () => {
     const { width, height } = window.getSize();
     localStorage.setItem(KEY_WINDOW_SIZE, JSON.stringify({ width, height }));
   });
+
+  //
+  // System menu.
+  //
 
   let itemsMac = '';
   if (process.platform === 'darwin') {
@@ -67,7 +74,6 @@ export const initializeNativeApp = async () => {
   await app.setSystemMenu({ index: 0, value: menu });
 
   window.addEventListener('menuItemSelected', async (event: any) => {
-    console.log(event);
     const id = `${event.detail.parent}:${event.detail.title}`;
     switch (id) {
       case 'App Name:Quit': {
