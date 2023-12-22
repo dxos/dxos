@@ -9,7 +9,7 @@ import React, { type FC, useEffect } from 'react';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { type Schema } from '@dxos/echo-schema';
 import { useSpaces } from '@dxos/react-client/echo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
 
 import { SchemaList } from './SchemaList';
 
@@ -29,8 +29,7 @@ const Story: FC = () => {
 
 export default {
   component: SchemaList,
-  render: Story,
-  decorators: [ClientSpaceDecorator()],
+  render: () => <ClientRepeater Component={Story} createSpace />,
   parameters: {
     layout: 'fullscreen',
   },

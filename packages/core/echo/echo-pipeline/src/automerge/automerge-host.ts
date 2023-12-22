@@ -205,6 +205,15 @@ class MeshNetworkAdapter extends NetworkAdapter {
       },
       {
         onStartReplication: async (info) => {
+          // Note: We store only one extension per peer.
+          //       There can be a case where two connected peers have more than one teleport connection between them
+          //       and each of them uses different teleport connections to send messages.
+          //       It works because we receive messages from all teleport connections and Automerge Repo dedup them.
+          // TODO(mykola): Use only one teleport connection per peer.
+          if (this._extensions.has(info.id)) {
+            return;
+          }
+
           peerInfo = info;
           // TODO(mykola): Fix race condition?
           this._extensions.set(info.id, extension);
@@ -214,6 +223,7 @@ class MeshNetworkAdapter extends NetworkAdapter {
         },
         onSyncMessage: async ({ payload }) => {
           const message = cbor.decode(payload) as Message;
+          // Note: automerge Repo dedup messages.
           this.emit('message', message);
         },
         onClose: async () => {

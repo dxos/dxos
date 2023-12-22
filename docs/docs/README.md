@@ -1,6 +1,7 @@
 ---
 home: true
 title: Documentation
+heroText: false
 heroImage: /images/logotype/dxos-hero.svg
 heroImageDark: /images/logotype/dxos-hero-white.svg
 actions:
@@ -29,7 +30,7 @@ footer: MIT Licensed | Copyright © DXOS.org
 ## ECHO in Action
 
 This demonstrates how two peers would synchronize over ECHO (The Eventually Consistent Hierarhical Object store), a peer-to-peer graph database written in TypeScript.
-
+s
 Type in the boxes below to create new list items and experiment with the replication toggle to see how clients reconcile when returning from offline mode. [Learn more about ECHO](/guide/).
 
 ```tsx{41} file=../node_modules/@dxos/examples/src/examples/TaskList.tsx#L5-L56 showcase peers=2 controls=fork

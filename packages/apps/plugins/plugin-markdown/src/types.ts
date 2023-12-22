@@ -13,7 +13,6 @@ import type {
 import type { ObjectMeta } from '@dxos/react-client/echo';
 import type { EditorMode } from '@dxos/react-ui-editor';
 
-import { type EditorMainProps } from './components';
 import { MARKDOWN_PLUGIN } from './meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
@@ -33,7 +32,7 @@ export type MarkdownProperties = {
 export type MarkdownProvides = {
   markdown: {
     filter?: (document: Document) => boolean;
-    onChange?: EditorMainProps['onChange'];
+    onChange?: (text: string) => void;
   };
 };
 
@@ -41,19 +40,16 @@ export type MarkdownProvides = {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[DocumentType.name] = DocumentType;
 
-// TODO(burdon): Hack to avoid circular dependency (stack stories depend on markdown plugin).
-// TODO(burdon): Review with @thure.
 // TODO(wittjosiah): Factor out to graph plugin?
 type StackProvides = {
   stack: {
     creators?: Record<string, any>[];
-    choosers?: Record<string, any>[];
   };
 };
 
 export type MarkdownSettingsProps = {
   editorMode?: EditorMode;
-  showWidgets?: boolean; // TODO(burdon): Flip.
+  experimental?: boolean; // TODO(burdon): Flip.
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &

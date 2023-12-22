@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, surfaceElevation, groupSurface, dialogMotion, groupBorder } from '../fragments';
+import { descriptionText, focusRing, surfaceElevation, dialogMotion, groupBorder, chromeSurface } from '../fragments';
 
 export type DialogStyleProps = {
   srOnly?: boolean;
@@ -26,7 +26,7 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     'is-[95vw] md:is-full max-is-[20rem] rounded-xl p-4',
     dialogMotion,
     surfaceElevation({ elevation }),
-    groupSurface,
+    chromeSurface,
     groupBorder,
     focusRing,
     ...etc,

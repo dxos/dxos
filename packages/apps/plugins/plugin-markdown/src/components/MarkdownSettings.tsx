@@ -50,10 +50,10 @@ export const MarkdownSettings = () => {
       <div role='none' className='flex items-center gap-2'>
         <Input.Root>
           <Input.Checkbox
-            checked={settings.showWidgets}
-            onCheckedChange={(checked) => (settings.showWidgets = !!checked)}
+            checked={settings.experimental}
+            onCheckedChange={(checked) => (settings.experimental = !!checked)}
           />
-          <Input.Label>{t('settings widgets label')}</Input.Label>
+          <Input.Label>{t('settings markdown experimental label')}</Input.Label>
         </Input.Root>
       </div>
     </div>

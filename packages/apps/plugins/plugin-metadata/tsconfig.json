@@ -22,6 +22,9 @@
   "references": [
     {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../ui/storybook-utils"
     }
   ]
 }
