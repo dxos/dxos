@@ -29,7 +29,7 @@ import {
   PatInput,
   UrlDialog,
 } from './components';
-import { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
+import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
 import type { ExportViewState, GhIdentifier } from './props';
 import translations from './translations';
 
@@ -133,7 +133,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 />
               ) : null;
             case 'settings':
-              return <PatInput />;
+              return data.plugin === meta.id ? <PatInput /> : null;
             default:
               return null;
           }

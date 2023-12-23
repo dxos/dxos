@@ -180,7 +180,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           const { active } = data;
           switch (role) {
             case 'settings':
-              return <DebugSettings />;
+              return data.plugin === meta.id ? <DebugSettings /> : null;
           }
 
           if (!settings.values.debug) {

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { usePlugin } from '@dxos/app-framework';
+import { SettingsValue, usePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { DEBUG_PLUGIN } from '../meta';
@@ -20,20 +20,13 @@ export const DebugSettings = () => {
   const settings = debugPlugin.provides.settings.values;
 
   return (
-    <div role='none' className='space-b-2'>
-      <h3 className='text-base font-system-medium'>{t('plugin settings heading')}</h3>
-      <div role='none' className='flex items-center gap-2'>
-        <Input.Root>
-          <Input.Checkbox checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
-          <Input.Label>{t('show debug panel')}</Input.Label>
-        </Input.Root>
-      </div>
-      <div role='none' className='flex items-center gap-2'>
-        <Input.Root>
-          <Input.Checkbox checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
-          <Input.Label>{t('show devtools panel')}</Input.Label>
-        </Input.Root>
-      </div>
-    </div>
+    <>
+      <SettingsValue label={t('show debug panel')}>
+        <Input.Checkbox checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
+      </SettingsValue>
+      <SettingsValue label={t('show devtools panel')}>
+        <Input.Checkbox checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
+      </SettingsValue>
+    </>
   );
 };

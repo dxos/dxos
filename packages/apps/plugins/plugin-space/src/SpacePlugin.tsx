@@ -261,7 +261,7 @@ export const SpacePlugin = ({
             case 'presence':
               return isTypedObject(data.object) ? <SpacePresence object={data.object} /> : null;
             case 'settings':
-              return <SpaceSettings />;
+              return data.plugin === meta.id ? <SpaceSettings /> : null;
             default:
               return null;
           }

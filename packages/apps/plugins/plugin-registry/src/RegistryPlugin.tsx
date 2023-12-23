@@ -18,10 +18,10 @@ export const RegistryPlugin = (): PluginDefinition<RegistryPluginProvides> => {
     provides: {
       translations,
       surface: {
-        component: ({ role }) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'settings':
-              return <Settings />;
+              return data.plugin === meta.id ? <Settings /> : null;
           }
 
           return null;

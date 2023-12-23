@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
+import { SettingsValue, parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { type LayoutState } from '../LayoutContext';
@@ -20,21 +20,18 @@ export const LayoutSettings = () => {
 
   return (
     <>
-      <div role='none' className='flex items-center gap-2'>
-        <Input.Root>
-          <Input.Checkbox
-            checked={layoutPlugin.provides.layout.enableComplementarySidebar}
-            onCheckedChange={(checked) =>
-              intentPlugin.provides.intent.dispatch({
-                plugin: LAYOUT_PLUGIN,
-                action: 'dxos.org/plugin/layout/enable-complementary-sidebar',
-                data: { state: !!checked },
-              })
-            }
-          />
-          <Input.Label>{t('enable complementary sidebar label')}</Input.Label>
-        </Input.Root>
-      </div>
+      <SettingsValue label={t('enable complementary sidebar label')}>
+        <Input.Checkbox
+          checked={layoutPlugin.provides.layout.enableComplementarySidebar}
+          onCheckedChange={(checked) =>
+            intentPlugin.provides.intent.dispatch({
+              plugin: LAYOUT_PLUGIN,
+              action: 'dxos.org/plugin/layout/enable-complementary-sidebar',
+              data: { state: !!checked },
+            })
+          }
+        />
+      </SettingsValue>
     </>
   );
 };

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
+import { SettingsValue, parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -22,21 +22,18 @@ export const SpaceSettings = () => {
 
   return (
     <>
-      <div role='none' className='flex items-center gap-2'>
-        <Input.Root>
-          <Input.Checkbox
-            checked={showHidden}
-            onCheckedChange={(checked) =>
-              intentPlugin.provides.intent.dispatch({
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.TOGGLE_HIDDEN,
-                data: { state: !!checked },
-              })
-            }
-          />
-          <Input.Label>{t('show hidden spaces label')}</Input.Label>
-        </Input.Root>
-      </div>
+      <SettingsValue label={t('show hidden spaces label')}>
+        <Input.Checkbox
+          checked={showHidden}
+          onCheckedChange={(checked) =>
+            intentPlugin.provides.intent.dispatch({
+              plugin: SPACE_PLUGIN,
+              action: SpaceAction.TOGGLE_HIDDEN,
+              data: { state: !!checked },
+            })
+          }
+        />
+      </SettingsValue>
     </>
   );
 };

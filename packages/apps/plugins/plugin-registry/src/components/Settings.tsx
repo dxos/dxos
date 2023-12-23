@@ -17,7 +17,6 @@ export const Settings = () => {
 
   return (
     <div role='none' className='space-b-2'>
-      <h3 className='text-base font-system-medium'>{t('plugin registry label')}</h3>
       <div>
         <PluginList
           plugins={sortedPlugins}

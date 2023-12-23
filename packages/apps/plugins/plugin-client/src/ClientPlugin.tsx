@@ -172,10 +172,10 @@ export const ClientPlugin = ({
       settings: { meta, values: settings.values },
       translations,
       surface: {
-        component: ({ role }) => {
+        component: ({ data, role }) => {
           switch (role) {
             case 'settings':
-              return <ClientSettings />;
+              return data.plugin === meta.id ? <ClientSettings /> : null;
           }
 
           return null;

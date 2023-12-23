@@ -338,7 +338,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'settings': {
-              return <MarkdownSettings settings={settings.values} />;
+              return data.plugin === meta.id ? <MarkdownSettings settings={settings.values} /> : null;
             }
 
             // TODO(burdon): Remove.

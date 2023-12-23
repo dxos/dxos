@@ -9,15 +9,16 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
-  Surface,
   findPlugin,
-  resolvePlugin,
-  useIntent,
-  usePlugins,
   parseGraphPlugin,
   parseIntentPlugin,
   parseSurfacePlugin,
+  resolvePlugin,
+  useIntent,
+  usePlugins,
   LayoutAction,
+  SettingsDialogContent,
+  Surface,
   type Plugin,
   type PluginDefinition,
   type LayoutProvides,
@@ -33,7 +34,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, PreferencesDialogContent } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -204,7 +205,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
         component: ({ data, role }) => {
           switch (data.component) {
             case `${LAYOUT_PLUGIN}/ProfileSettings`:
-              return <PreferencesDialogContent />;
+              return <SettingsDialogContent />;
 
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
@@ -223,7 +224,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
           switch (role) {
             case 'settings':
-              return <LayoutSettings />;
+              return data.plugin === meta.id ? <LayoutSettings /> : null;
           }
 
           return null;
