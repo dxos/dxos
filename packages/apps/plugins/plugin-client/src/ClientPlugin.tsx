@@ -21,7 +21,7 @@ import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { Client, ClientContext, PublicKey, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { Client, ClientContext, type ClientOptions, PublicKey, type SystemStatus } from '@dxos/react-client';
 import { TypedObject, type TypeCollection, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { ClientSettings } from './components/ClientSettings';

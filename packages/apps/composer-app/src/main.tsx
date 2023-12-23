@@ -49,6 +49,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 
 import { appKey } from './globals';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
+import { initializeNativeApp } from './native';
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -56,6 +57,11 @@ const main = async () => {
   const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
   const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
+
+  // Test if socket supply native app.
+  if ((globalThis as any).__args) {
+    void initializeNativeApp();
+  }
 
   const App = createApp({
     fallback: (

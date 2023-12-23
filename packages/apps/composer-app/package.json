@@ -9,7 +9,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
+    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
+    "socket": "bundle"
   },
   "dependencies": {
     "@braneframe/plugin-chain": "workspace:*",
@@ -72,6 +73,7 @@
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@sentry/vite-plugin": "^0.7.2",
+    "@socketsupply/socket": "^0.5.4",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
