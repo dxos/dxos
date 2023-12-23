@@ -33,7 +33,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, type LayoutState, useLayout } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './components';
+import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, PreferencesDialogContent } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -202,11 +202,10 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          if (role === 'settings') {
-            return <LayoutSettings />;
-          }
-
           switch (data.component) {
+            case `${LAYOUT_PLUGIN}/ProfileSettings`:
+              return <PreferencesDialogContent />;
+
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
@@ -220,10 +219,14 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextPanel />;
-
-            default:
-              return null;
           }
+
+          switch (role) {
+            case 'settings':
+              return <LayoutSettings />;
+          }
+
+          return null;
         },
       },
       intent: {

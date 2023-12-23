@@ -8,3 +8,4 @@ export * from './ContextPanel';
 export * from './Fallback';
 export * from './LayoutSettings';
 export * from './MainLayout';
+export * from './PreferencesDialog';

@@ -140,25 +140,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
           <DensityProvider density='fine'>
             <Dialog.Overlay>
-              {/* TODO(burdon): Move (thure)[ProfileSettings dialog in particular] dialog to settings-plugin. */}
-              {dialogContent.component === 'dxos.org/plugin/layout/ProfileSettings' ? (
-                <Dialog.Content classNames='max-is-[32rem]'>
-                  <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
-                  {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
-                  <div className='mlb-4 space-b-4'>
-                    <Surface role='settings' data={dialogContent} />
-                  </div>
-                  <Dialog.Close asChild>
-                    <Button variant='primary' classNames='mbs-2'>
-                      {t('done label', { ns: 'os' })}
-                    </Button>
-                  </Dialog.Close>
-                </Dialog.Content>
-              ) : (
-                <Dialog.Content>
-                  <Surface role='dialog' data={dialogContent} />
-                </Dialog.Content>
-              )}
+              <Surface role='dialog' data={dialogContent} />
             </Dialog.Overlay>
           </DensityProvider>
         </Dialog.Root>

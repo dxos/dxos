@@ -88,7 +88,7 @@ export const ExportDialog = ({
   }, [octokit, docGhId, content, ghBranchValue, ghMessageValue, t]);
 
   return (
-    <>
+    <Dialog.Content>
       <Dialog.Title>{t('confirm export title')}</Dialog.Title>
       {exportViewState === 'response' ? (
         <>
@@ -154,6 +154,6 @@ export const ExportDialog = ({
           </div>
         </div>
       )}
-    </>
+    </Dialog.Content>
   );
 };
