@@ -32,10 +32,9 @@ export type TraversalOptions = {
 };
 
 /**
- * The Graph represents...
+ * The Graph represents the structure of the application constructed via plugins.
  */
 export class Graph {
-  // TODO(burdon): Document.
   // TODO(wittjosiah): Should this support multiple paths to the same node?
   private readonly _index = deepSignal<{ [key: string]: string[] }>({});
 

@@ -107,7 +107,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         </Main.Content>
 
         {/* Status info. */}
-        {/* TODO(burdon): Currently covered by complementary sidebar. */}
+        {/* TODO(burdon): Currently obscured by complementary sidebar. */}
         <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]')}>
           <Surface role='status' />
         </div>
@@ -116,11 +116,9 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         <Main.Overlay />
 
         {/* Main content surface. */}
-        {/* TODO(wittjosiah): Check if anything fulfills this Surface, if not, show 404. */}
         <Surface role='main' limit={1} fallback={Fallback} contentFallback={ContentFallback} />
 
         {/* Global popovers. */}
-        {/* TODO(burdon): Doesn't allow client to control the popover. */}
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'

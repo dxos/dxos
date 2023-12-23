@@ -17,15 +17,15 @@ export const ClientSettings = () => {
     return null;
   }
 
-  const settings = debugPlugin.provides.settings;
+  const debugSettings = debugPlugin.provides.settings;
 
   return (
     <div role='none' className='space-b-2'>
       <div role='none' className='flex items-center gap-2'>
         <Input.Root>
           <Input.Checkbox
-            checked={settings.automerge}
-            onCheckedChange={(checked) => (settings.automerge = !!checked)}
+            checked={debugSettings.automerge}
+            onCheckedChange={(checked) => (debugSettings.automerge = !!checked)}
           />
           <Input.Label>{t('enable experimental automerge backend')}</Input.Label>
         </Input.Root>

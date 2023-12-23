@@ -34,15 +34,10 @@ import type { ExportViewState, GhIdentifier } from './props';
 import translations from './translations';
 
 export type GithubSettingsProps = {
-  pat: string;
+  pat?: string;
 };
 
-export type GithubPluginProvides = SurfaceProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  MarkdownProvides & {
-    settings: GithubSettingsProps;
-  };
+export type GithubPluginProvides = SurfaceProvides & GraphBuilderProvides & TranslationsProvides & MarkdownProvides;
 
 // TODO(dmaretskyi): Meta filters?.
 const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
@@ -62,7 +57,6 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       settings.close();
     },
     provides: {
-      settings: settings.values,
       translations,
       markdown: {
         filter: (obj) => !filter(obj),
@@ -96,7 +90,9 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
           });
         },
       },
-      context: (props) => <OctokitProvider {...props} />,
+      context: (props) => (
+        <OctokitProvider pat={settings.values.pat} onPatChanged={(pat) => (settings.values.pat = pat)} {...props} />
+      ),
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
