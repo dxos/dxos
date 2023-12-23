@@ -19,7 +19,7 @@ export const PreferencesDialogContent = ({ data }: Pick<SurfaceProps, 'data'>) =
       <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
       <div className='mlb-4 space-b-4'>
         11
-        <Surface role='settings' component='xxx' />
+        <Surface role='settings' />
         22
       </div>
       <Dialog.Close asChild>
