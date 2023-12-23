@@ -9,7 +9,7 @@ import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 
 import { LAYOUT_PLUGIN } from '../meta';
 
-// TODO(burdon): Plugins should register ts-effect object to describe settings.
+// TODO(burdon): Plugins should register ts-effect object to configure settings.
 
 export const PreferencesDialogContent = () => {
   const { t } = useTranslation(LAYOUT_PLUGIN);

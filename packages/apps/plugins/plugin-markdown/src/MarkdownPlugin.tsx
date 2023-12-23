@@ -216,7 +216,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       metadata: {
         records: {
           [DocumentType.schema.typename]: {
@@ -338,7 +338,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'settings': {
-              return <MarkdownSettings />;
+              return <MarkdownSettings settings={settings.values} />;
             }
 
             // TODO(burdon): Remove.

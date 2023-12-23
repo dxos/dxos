@@ -46,7 +46,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       settings.close();
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();

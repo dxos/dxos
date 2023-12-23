@@ -17,7 +17,8 @@ export const ClientSettings = () => {
     return null;
   }
 
-  const debugSettings = debugPlugin.provides.settings;
+  // TODO(burdon): Move to client.
+  const debugSettings = debugPlugin.provides.settings.values;
 
   return (
     <div role='none' className='space-b-2'>

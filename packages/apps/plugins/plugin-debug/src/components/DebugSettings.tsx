@@ -17,7 +17,7 @@ export const DebugSettings = () => {
     return null;
   }
 
-  const settings = debugPlugin.provides.settings;
+  const settings = debugPlugin.provides.settings.values;
 
   return (
     <div role='none' className='space-b-2'>

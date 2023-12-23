@@ -10,6 +10,7 @@ import {
   type IntentResolverProvides,
   type Plugin,
   type PluginDefinition,
+  type SettingsProvides,
   type SurfaceProvides,
   type TranslationsProvides,
   parseIntentPlugin,
@@ -47,9 +48,9 @@ export type ClientSettingsProps = {
 export type ClientPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  SettingsProvides<ClientSettingsProps> &
   TranslationsProvides & {
     client: Client;
-    settings: ClientSettingsProps;
 
     /**
      * True if this is the first time the current app has been used by this identity.
@@ -168,7 +169,7 @@ export const ClientPlugin = ({
       await client.destroy();
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       surface: {
         component: ({ role }) => {

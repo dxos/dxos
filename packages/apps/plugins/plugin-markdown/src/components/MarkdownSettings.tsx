@@ -4,21 +4,14 @@
 
 import React from 'react';
 
-import { usePlugin } from '@dxos/app-framework';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { EditorModes } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from '../meta';
-import type { MarkdownPluginProvides } from '../types';
+import { type MarkdownSettingsProps } from '../types';
 
-export const MarkdownSettings = () => {
+export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
-  const markdownPlugin = usePlugin<MarkdownPluginProvides>(MARKDOWN_PLUGIN);
-  if (!markdownPlugin) {
-    return null;
-  }
-
-  const settings = markdownPlugin.provides.settings;
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (

@@ -208,7 +208,7 @@ export const SpacePlugin = ({
     },
     provides: {
       space: state as RevertDeepSignal<PluginState>,
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {

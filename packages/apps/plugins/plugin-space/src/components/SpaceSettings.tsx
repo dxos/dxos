@@ -18,14 +18,14 @@ export const SpaceSettings = () => {
     return null;
   }
 
-  const settings = spacePlugin.provides.settings;
+  const { showHidden } = spacePlugin.provides.settings.values;
 
   return (
     <>
       <div role='none' className='flex items-center gap-2'>
         <Input.Root>
           <Input.Checkbox
-            checked={settings.showHidden}
+            checked={showHidden}
             onCheckedChange={(checked) =>
               intentPlugin.provides.intent.dispatch({
                 plugin: SPACE_PLUGIN,
