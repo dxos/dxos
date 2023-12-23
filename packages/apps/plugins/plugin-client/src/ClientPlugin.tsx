@@ -171,11 +171,12 @@ export const ClientPlugin = ({
       settings: settings.values,
       translations,
       surface: {
-        component: ({ data, role }) => {
-          const { component } = data;
-          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
-            return <ClientSettings />;
+        component: ({ role }) => {
+          switch (role) {
+            case 'settings':
+              return <ClientSettings />;
           }
+
           return null;
         },
       },

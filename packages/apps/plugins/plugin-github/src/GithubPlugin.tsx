@@ -133,7 +133,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 />
               ) : null;
             case 'settings':
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <PatInput /> : null;
+              return <PatInput />;
             default:
               return null;
           }

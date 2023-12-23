@@ -261,7 +261,7 @@ export const SpacePlugin = ({
             case 'presence':
               return isTypedObject(data.object) ? <SpacePresence object={data.object} /> : null;
             case 'settings':
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <SpaceSettings /> : null;
+              return <SpaceSettings />;
             default:
               return null;
           }

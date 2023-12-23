@@ -338,10 +338,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'settings': {
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <MarkdownSettings /> : null;
+              return <MarkdownSettings />;
             }
 
-            // TODO(burdon): Review with @thure.
+            // TODO(burdon): Remove.
             case 'dialog': {
               if (data.subject === 'dxos.org/plugin/stack/chooser' && data.id === 'choose-stack-section-doc') {
                 // return <SpaceMarkdownChooser />;
