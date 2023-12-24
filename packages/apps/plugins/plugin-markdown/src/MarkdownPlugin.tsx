@@ -204,6 +204,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
+      // TODO(burdon): Remove?
       const filters: ((document: DocumentType) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {

@@ -10,7 +10,7 @@ import { type TextEditorRef } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
-import type { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
+import type { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../types';
 
 export const ImportDialog = ({
   docGhId,

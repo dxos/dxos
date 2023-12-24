@@ -5,6 +5,7 @@
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
+import { SettingsValue } from '@dxos/app-framework';
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -27,7 +28,8 @@ const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export const PatInput = () => {
+// TODO(burdon): Pass in settings.
+export const GitHubSettings = () => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
@@ -41,11 +43,21 @@ export const PatInput = () => {
   }, [patValue]);
 
   return (
-    <Input.Root>
-      <div role='none' className='text-start'>
-        <Input.Label classNames='text-base font-system-medium' asChild>
-          <h3>{t('github pat label')}</h3>
-        </Input.Label>
+    <>
+      <SettingsValue
+        label={t('github pat label')}
+        description={
+          <Trans
+            {...{
+              t,
+              i18nKey: 'github pat description',
+              components: {
+                docsLink: <ExternalLink />,
+              },
+            }}
+          />
+        }
+      >
         <Input.TextInput
           autoFocus
           spellCheck={false}
@@ -53,20 +65,7 @@ export const PatInput = () => {
           value={patValue ?? ''}
           onChange={({ target: { value } }) => setPatValue(value)}
         />
-        <Input.DescriptionAndValidation classNames='mbs-0.5'>
-          <Input.Description>
-            <Trans
-              {...{
-                t,
-                i18nKey: 'github pat description',
-                components: {
-                  docsLink: <ExternalLink />,
-                },
-              }}
-            />
-          </Input.Description>
-        </Input.DescriptionAndValidation>
-      </div>
-    </Input.Root>
+      </SettingsValue>
+    </>
   );
 };

@@ -4,20 +4,14 @@
 
 import React from 'react';
 
-import { SettingsValue, usePlugin } from '@dxos/app-framework';
+import { SettingsValue } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { DEBUG_PLUGIN } from '../meta';
-import type { DebugPluginProvides } from '../props';
+import { type DebugSettingsProps } from '../types';
 
-export const DebugSettings = () => {
+export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) => {
   const { t } = useTranslation(DEBUG_PLUGIN);
-  const debugPlugin = usePlugin<DebugPluginProvides>(DEBUG_PLUGIN);
-  if (!debugPlugin) {
-    return null;
-  }
-
-  const settings = debugPlugin.provides.settings.values;
 
   return (
     <>

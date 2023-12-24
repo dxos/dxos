@@ -10,7 +10,7 @@ import { type EditorModel } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
-import type { ExportViewState, GhFileIdentifier, GhIdentifier } from '../props';
+import type { ExportViewState, GhFileIdentifier, GhIdentifier } from '../types';
 
 export const ExportDialog = ({
   type,
