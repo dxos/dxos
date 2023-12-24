@@ -51,8 +51,6 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
           const labelId = `${id}-label`;
           const descriptionId = `${id}-description`;
 
-          console.log(id, homePage);
-
           return (
             <Input.Root key={id} id={inputId}>
               <ListItem.Root
