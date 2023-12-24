@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/keyboard",
+  "version": "0.3.9",
+  "description": "Keyboard bindings",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/invariant": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-dom": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

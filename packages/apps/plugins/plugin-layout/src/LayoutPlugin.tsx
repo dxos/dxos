@@ -52,6 +52,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
     active: undefined,
     previous: undefined,
+
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
       return this.active && graphPlugin.provides.graph.findNode(this.active);

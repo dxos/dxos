@@ -2005,6 +2005,9 @@ importers:
 
   packages/apps/plugins/plugin-navtree:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -2017,6 +2020,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -3626,6 +3632,28 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
+
+  packages/common/keyboard:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/common/keys:
     dependencies:
@@ -7066,6 +7094,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -7084,6 +7115,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7099,9 +7133,6 @@ importers:
       lodash.set:
         specifier: ^4.3.2
         version: 4.3.2
-      mousetrap:
-        specifier: ^1.6.5
-        version: 1.6.5
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*
@@ -7127,9 +7158,6 @@ importers:
       '@types/lodash.set':
         specifier: ^4.3.7
         version: 4.3.7
-      '@types/mousetrap':
-        specifier: ^1.6.11
-        version: 1.6.12
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -21595,10 +21623,6 @@ packages:
 
   /@types/mocha@8.2.3:
     resolution: {integrity: sha512-ekGvFhFgrc2zYQoX4JeZPmVzZxw6Dtllga7iGHzfbYIYkAMUx/sAFP2GdFpLff+vdHXu5fl7WX9AT+TtqYcsyw==}
-    dev: true
-
-  /@types/mousetrap@1.6.12:
-    resolution: {integrity: sha512-tzXGzMbvXt815z0Z7FE45wmRVRitMTaPgfVcdGhOS6LtEOWBZBokFJxEdatVA8cj+cQxvdFLmlMC4c12TNqv9A==}
     dev: true
 
   /@types/ms@0.7.31:
@@ -36269,10 +36293,6 @@ packages:
       monaco-editor: '*'
     dependencies:
       monaco-editor: 0.44.0
-    dev: false
-
-  /mousetrap@1.6.5:
-    resolution: {integrity: sha512-QNo4kEepaIBwiT8CDhP98umTetp+JNfQYBWvC1pc6/OAibuXtRcxZ58Qz8skvEHYvURne/7R8T5VoOI7rDsEUA==}
     dev: false
 
   /mri@1.2.0:

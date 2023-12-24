@@ -4,13 +4,14 @@
 
 import React from 'react';
 
-import type {
-  MetadataRecordsProvides,
-  PluginDefinition,
-  SurfaceProvides,
-  TranslationsProvides,
+import {
+  type MetadataRecordsProvides,
+  type PluginDefinition,
+  type SurfaceProvides,
+  type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Graph, type Node } from '@dxos/app-graph';
+import { Keyboard } from '@dxos/keyboard';
 
 import { NODE_TYPE, TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';
 import meta from './meta';
@@ -21,6 +22,15 @@ export type NavTreePluginProvides = SurfaceProvides & MetadataRecordsProvides & 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   return {
     meta,
+    ready: async () => {
+      console.log('ready');
+      Keyboard.singleton.bind({
+        binding: 'meta+k',
+        handler: () => {
+          console.log('@@@');
+        },
+      });
+    },
     provides: {
       metadata: {
         records: {

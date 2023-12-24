@@ -1,0 +1,25 @@
+{
+  "sourceRoot": "packages/common/react-async/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/common/react-async/src/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {
+      "options": {
+        "domRequired": true,
+        "forceExit": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}
