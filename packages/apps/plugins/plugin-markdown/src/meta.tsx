@@ -13,5 +13,6 @@ export default pluginMeta({
   id: MARKDOWN_PLUGIN,
   name: 'Editor',
   description: 'Markdown text editor.',
+  homePage: 'https://github.com/dxos/dxos/tree/main/packages/apps/plugins/plugin-markdown',
   iconComponent: (props: IconProps) => <ArticleMedium {...props} />,
 });

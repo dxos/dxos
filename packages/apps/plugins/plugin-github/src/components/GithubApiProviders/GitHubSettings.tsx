@@ -12,6 +12,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { useOctokitContext } from './OctokitProvider';
 import { GITHUB_PLUGIN } from '../../meta';
 
+// TODO(burdon): Factor out with PluginList.
 const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const descriptionId = useId('link--external');
