@@ -43,11 +43,12 @@ export const PluginHost = ({
     enabled: [...defaults],
     plugins: [],
     available: order.filter(({ id }) => !core.includes(id)),
-    enablePlugin: (id: string) => {
-      state.values.enabled = [...state.values.enabled, id];
-    },
-    disablePlugin: (id: string) => {
-      state.values.enabled = state.values.enabled.filter((enabled) => enabled !== id);
+    setPlugin: (id: string, enabled: boolean) => {
+      if (enabled) {
+        state.values.enabled = [...state.values.enabled, id];
+      } else {
+        state.values.enabled = state.values.enabled.filter((enabled) => enabled !== id);
+      }
     },
   });
 

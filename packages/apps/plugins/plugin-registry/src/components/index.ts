@@ -3,4 +3,4 @@
 //
 
 export * from './PluginList';
-export * from './Settings';
+export * from './PluginSettings';

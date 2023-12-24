@@ -14,7 +14,6 @@ import {
   ListItem,
   type NeutralPalette,
   Tag,
-  useId,
   useTranslation,
 } from '@dxos/react-ui';
 import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
@@ -34,11 +33,10 @@ export type PluginListProps = {
   plugins?: Plugin['meta'][];
   loaded?: string[];
   enabled?: string[];
-  className?: string;
   onChange?: (id: string, enabled: boolean) => void;
 };
 
-export const PluginList = ({ plugins = [], loaded = [], enabled = [], className, onChange }: PluginListProps) => {
+export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }: PluginListProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
 
   return (
@@ -48,9 +46,9 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], className,
           const isEnabled = enabled.includes(id);
           const isLoaded = loaded.includes(id);
           const reloadRequired = isEnabled !== isLoaded;
-          const inputId = useId('plugin');
-          const labelId = useId('pluginName');
-          const descriptionId = useId('pluginDescription');
+          const inputId = `${id}-input`;
+          const labelId = `${id}-label`;
+          const descriptionId = `${id}-description`;
 
           return (
             <Input.Root key={id} id={inputId}>

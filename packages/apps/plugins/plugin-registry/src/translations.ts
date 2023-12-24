@@ -10,6 +10,7 @@ export default [
       [REGISTRY_PLUGIN]: {
         'plugin name': 'Registry',
         'reload required message': 'Reload required',
+        'settings show experimental': 'Show experimental plugins',
       },
     },
   },

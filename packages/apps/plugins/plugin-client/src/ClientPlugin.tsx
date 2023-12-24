@@ -5,6 +5,9 @@
 import React, { useEffect, useState } from 'react';
 
 import {
+  parseGraphPlugin,
+  parseIntentPlugin,
+  parseLayoutPlugin,
   resolvePlugin,
   type GraphBuilderProvides,
   type IntentResolverProvides,
@@ -13,9 +16,6 @@ import {
   type SettingsProvides,
   type SurfaceProvides,
   type TranslationsProvides,
-  parseIntentPlugin,
-  parseLayoutPlugin,
-  parseGraphPlugin,
 } from '@dxos/app-framework';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';

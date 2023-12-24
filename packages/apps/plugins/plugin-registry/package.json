@@ -22,7 +22,9 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/local-storage": "workspace:*"
+  },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",

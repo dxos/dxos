@@ -13,6 +13,5 @@ export default pluginMeta({
   id: MARKDOWN_PLUGIN,
   name: 'Editor',
   description: 'Markdown text editor.',
-  tags: ['stable'],
   iconComponent: (props: IconProps) => <ArticleMedium {...props} />,
 });

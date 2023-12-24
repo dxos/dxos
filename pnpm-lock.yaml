@@ -2269,6 +2269,10 @@ importers:
         version: 4.3.9(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
+    dependencies:
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
