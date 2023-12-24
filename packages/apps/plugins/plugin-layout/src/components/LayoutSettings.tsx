@@ -18,7 +18,7 @@ export const LayoutSettings = ({ settings }: { settings: LayoutSettingsProps }) 
     <>
       {intentPlugin && (
         <SettingsValue label={t('enable complementary sidebar label')}>
-          <Input.Checkbox
+          <Input.Switch
             checked={settings.enableComplementarySidebar}
             onCheckedChange={(checked) =>
               intentPlugin.provides.intent.dispatch({

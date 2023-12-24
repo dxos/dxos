@@ -16,10 +16,10 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   return (
     <>
       <SettingsValue label={t('show debug panel')}>
-        <Input.Checkbox checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
+        <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
       </SettingsValue>
       <SettingsValue label={t('show devtools panel')}>
-        <Input.Checkbox checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
+        <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
       </SettingsValue>
     </>
   );

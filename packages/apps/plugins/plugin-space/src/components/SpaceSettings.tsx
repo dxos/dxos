@@ -18,7 +18,7 @@ export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) =>
     <>
       {intentPlugin && (
         <SettingsValue label={t('show hidden spaces label')}>
-          <Input.Checkbox
+          <Input.Switch
             checked={settings.showHidden}
             onCheckedChange={(checked) =>
               intentPlugin.provides.intent.dispatch({

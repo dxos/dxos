@@ -16,7 +16,7 @@ export const ClientSettings = ({ settings }: { settings: ClientSettingsProps }) 
   return (
     <>
       <SettingsValue label={t('enable experimental automerge backend')}>
-        <Input.Checkbox checked={settings.automerge} onCheckedChange={(checked) => (settings.automerge = !!checked)} />
+        <Input.Switch checked={settings.automerge} onCheckedChange={(checked) => (settings.automerge = !!checked)} />
       </SettingsValue>
     </>
   );

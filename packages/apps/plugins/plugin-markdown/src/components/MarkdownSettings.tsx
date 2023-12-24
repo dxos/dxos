@@ -39,7 +39,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
         </Select.Root>
       </SettingsValue>
       <SettingsValue label={t('settings markdown experimental label')}>
-        <Input.Checkbox
+        <Input.Switch
           checked={settings.experimental}
           onCheckedChange={(checked) => (settings.experimental = !!checked)}
         />

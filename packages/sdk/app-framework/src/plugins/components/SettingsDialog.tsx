@@ -11,7 +11,8 @@ import { type Plugin, usePlugins } from '../PluginHost';
 import { Surface } from '../SurfacePlugin';
 
 export const SettingsDialogContent = () => {
-  const [plugin, setPlugin] = useState<string>();
+  // TODO(burdon): Store preview tab.
+  const [plugin, setPlugin] = useState<string>('dxos.org/plugin/registry');
   const { t } = useTranslation('os');
   const { plugins, enabled } = usePlugins();
 
