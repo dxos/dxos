@@ -56,7 +56,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], className,
             <Input.Root key={id} id={inputId}>
               <ListItem.Root
                 labelId={labelId}
-                classNames={['flex gap-2 cursor-pointer plb-1 pli-2 -mli-2 rounded', ghostHover]}
+                classNames={['flex gap-2 cursor-pointer plb-2 pli-2 -mli-2 rounded', ghostHover]}
                 onClick={() => onChange?.(id, !isEnabled)}
                 aria-describedby={descriptionId}
               >

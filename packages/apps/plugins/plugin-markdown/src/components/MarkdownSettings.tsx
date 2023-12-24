@@ -24,7 +24,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
             settings.editorMode = value === 'vim' ? 'vim' : 'default';
           }}
         >
-          <Select.TriggerButton classNames='mbs-0.5' placeholder={t('select editor mode placeholder')} />
+          <Select.TriggerButton placeholder={t('select editor mode placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
