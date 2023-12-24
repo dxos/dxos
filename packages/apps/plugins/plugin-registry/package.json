@@ -23,7 +23,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/local-storage": "workspace:*"
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
