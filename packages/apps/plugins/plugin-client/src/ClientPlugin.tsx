@@ -5,9 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import {
-  parseGraphPlugin,
   parseIntentPlugin,
-  parseLayoutPlugin,
   resolvePlugin,
   type GraphBuilderProvides,
   type IntentResolverProvides,
@@ -184,9 +182,6 @@ export const ClientPlugin = ({
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-          // TODO(wittjosiah): Pass graph to builders?
-          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           if (parent.id === 'root') {
             parent.addAction({
