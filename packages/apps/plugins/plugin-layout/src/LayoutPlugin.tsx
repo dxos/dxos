@@ -241,15 +241,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
-            case `${LAYOUT_PLUGIN}/Settings`:
-              return <SettingsDialogContent />;
-
-            case `${LAYOUT_PLUGIN}/Commands`:
-              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
-
-            case `${LAYOUT_PLUGIN}/Shortcuts`:
-              return <ShortcutsDialogContent />;
-
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
@@ -263,6 +254,15 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextPanel />;
+
+            case `${LAYOUT_PLUGIN}/Settings`:
+              return <SettingsDialogContent />;
+
+            case `${LAYOUT_PLUGIN}/Commands`:
+              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
+
+            case `${LAYOUT_PLUGIN}/Shortcuts`:
+              return <ShortcutsDialogContent />;
           }
 
           switch (role) {
