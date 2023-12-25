@@ -58,7 +58,7 @@ export class Keyboard {
   private readonly _root = new KeyboardContext();
   private readonly _keyMap = new Map<string, KeyboardContext>([[ROOT, this._root]]);
   private readonly _contexts: string[] = [ROOT];
-  private readonly _keyHandler = this._onKeyDown.bind(this);
+  private readonly _keyHandler = this.handleKeyDown.bind(this);
   private _path = ROOT;
 
   initialize() {
@@ -102,7 +102,7 @@ export class Keyboard {
     return context;
   }
 
-  _onKeyDown(event: KeyboardEvent) {
+  handleKeyDown(event: KeyboardEvent) {
     const { altKey, ctrlKey, metaKey, shiftKey, key } = event;
 
     if (key !== 'Alt' && key !== 'Control' && key !== 'Meta' && key !== 'Shift') {
@@ -126,6 +126,7 @@ export class Keyboard {
           if (handler) {
             const result = handler({ context: path, binding: str, data, event });
             if (result !== false) {
+              // TODO(burdon): Doesn't prevent actions in markdown editor.
               event.preventDefault();
               event.stopPropagation();
             }

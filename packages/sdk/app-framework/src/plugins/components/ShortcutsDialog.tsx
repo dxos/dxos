@@ -52,7 +52,7 @@ export const ShortcutsDialogContent = () => {
 
         <Dialog.Close asChild>
           <Button variant='primary' classNames='mbs-2'>
-            {t('done label', { ns: 'os' })}
+            {t('close label', { ns: 'os' })}
           </Button>
         </Dialog.Close>
       </Dialog.Content>
