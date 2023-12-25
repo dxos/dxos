@@ -19,6 +19,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
   const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   // Traverse graph.
+  // TODO(burdon): Factor out commonality with shortcuts.
   const actions = useMemo(() => {
     // TODO(burdon): Get from navtree (not keyboard).
     const current = Keyboard.singleton.getCurrentContext();

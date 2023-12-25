@@ -111,17 +111,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             // TODO(burdon): Move special handlers to separate plugin (LayoutPlugin is optional).
 
             parent.addAction({
-              id: LayoutAction.OPEN_COMMANDS,
-              label: ['open commands label', { ns: LAYOUT_PLUGIN }],
-              keyBinding: 'meta+k',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.OPEN_COMMANDS,
-                }),
-            });
-
-            parent.addAction({
               id: LayoutAction.OPEN_SETTINGS,
               label: ['open settings label', { ns: LAYOUT_PLUGIN }],
               keyBinding: 'meta+,',
@@ -129,6 +118,17 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
                   action: LayoutAction.OPEN_SETTINGS,
+                }),
+            });
+
+            parent.addAction({
+              id: LayoutAction.OPEN_COMMANDS,
+              label: ['open commands label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+k',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_COMMANDS,
                 }),
             });
 
@@ -241,11 +241,11 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
-            case `${LAYOUT_PLUGIN}/Commands`:
-              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
-
             case `${LAYOUT_PLUGIN}/Settings`:
               return <SettingsDialogContent />;
+
+            case `${LAYOUT_PLUGIN}/Commands`:
+              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
 
             case `${LAYOUT_PLUGIN}/Shortcuts`:
               return <ShortcutsDialogContent />;
@@ -329,17 +329,17 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               return true;
             }
 
-            // TODO(burdon): Move to SettingsPlugin? How should plugins coordinate with the root dialog?
-
-            case LayoutAction.OPEN_COMMANDS: {
-              state.values.dialogOpen = true;
-              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Commands' };
-              return true;
-            }
+            // TODO(burdon): Move system commands to app framework plugin?
 
             case LayoutAction.OPEN_SETTINGS: {
               state.values.dialogOpen = true;
               state.values.dialogContent = { component: 'dxos.org/plugin/layout/Settings' };
+              return true;
+            }
+
+            case LayoutAction.OPEN_COMMANDS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Commands' };
               return true;
             }
 
