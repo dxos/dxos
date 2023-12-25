@@ -7,13 +7,20 @@
 // https://www.npmjs.com/package/mousetrap
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
 // https://www.w3.org/TR/DOM-Level-3-Events/#events-keyboardevents
-// TODO(burdon): Mac/Windows.
+// TODO(burdon): Show Mac/Windows/Linux variants.
 const symbols: Record<string, string> = {
+  // Mods.
   ctrl: '⌃',
   shift: '⇧',
   alt: '⌥',
   meta: '⌘',
+
+  // Special keys.
   Backspace: '⌫',
+  Enter: '⏎',
+  Escape: '⎋',
+  Space: '␣',
+  Tab: '⇥',
 };
 
 export type KeyBinding = {
