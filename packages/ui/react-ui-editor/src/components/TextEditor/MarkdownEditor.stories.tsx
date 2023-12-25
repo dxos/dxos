@@ -24,17 +24,14 @@ import {
   type TooltipOptions,
   type LinkOptions,
   comments,
+  table,
+  image,
 } from './extensions';
 import { useTextModel } from '../../hooks';
 
-// TODO(burdon): Read-only render mode (presentation).
-// TODO(burdon): Slides.
-// TODO(burdon): Autocomplete.
-// TODO(burdon): Block quote.
-// TODO(burdon): Images.
-// TODO(burdon): Tables.
-
 const str = (...lines: string[]) => lines.join('\n');
+
+const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 // prettier-ignore
 const text = {
@@ -93,7 +90,17 @@ const text = {
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
   ),
 
-  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat())
+  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+
+  table: str(
+    `| ${faker.lorem.word()} | ${faker.lorem.word()} | ${faker.lorem.word()} |`,
+    '|---|---|---|',
+    `| ${num()} | ${num()} | ${num()} |`,
+    `| ${num()} | ${num()} | ${num()} |`,
+    `| ${num()} | ${num()} | ${num()} |`,
+  ),
+
+  image: str('![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
 };
 
 const document = str(
@@ -215,6 +222,16 @@ export const Tooltips = {
 
 export const Links = {
   render: () => <Story text={text.links} extensions={[link({ onRender })]} />,
+};
+
+export const Table = {
+  render: () => (
+    <Story text={str('This is a table', '', text.table, '', text.table, '', '')} readonly extensions={[table()]} />
+  ),
+};
+
+export const Image = {
+  render: () => <Story text={str('This is an image', '', text.image, '', '')} readonly extensions={[image()]} />,
 };
 
 export const TaskList = {

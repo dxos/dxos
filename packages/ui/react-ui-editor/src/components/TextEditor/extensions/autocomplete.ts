@@ -2,14 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Automcomplete: https://codemirror.net/5/doc/manual.html#addon_runmode
-// TODO(burdon): Modes: parallel parsing and decoration (e.g., associated with language).
-// TODO(burdon): Add-on: runmode: run lexer over content (with rendering codemirror).
-//  https://codemirror.net/5/doc/manual.html#addon_runmode
-// TODO(burdon): Add-on: dialog.
-// TODO(burdon): Comments: https://codemirror.net/5/doc/manual.html#setBookmark
-// TODO(burdon): Split view: https://codemirror.net/examples/split
-
 // https://codemirror.net/examples/autocompletion
 // https://codemirror.net/docs/ref/#autocomplete.autocompletion
 // https://codemirror.net/docs/ref/#autocomplete.Completion

@@ -140,6 +140,28 @@ export const defaultTheme: {
   // '& .cm-tooltip-autocomplete': {},
 
   //
+  // widgets
+  //
+  '& .cm-widgetBuffer': {
+    display: 'block',
+    height: '4px',
+  },
+
+  //
+  // table
+  //
+  '& .cm-table-head': {
+    padding: '2px 16px 2px 0px',
+    borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.500')}`,
+    fontWeight: 100,
+    textAlign: 'left',
+    color: get(tokens, 'extend.colors.neutral.500'),
+  },
+  '& .cm-table-cell': {
+    padding: '2px 16px 2px 0px',
+  },
+
+  //
   // font size
   // TODO(thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
   //
