@@ -42,6 +42,7 @@ const update = (state: EditorState, options: ImageOptions) => {
       }
     },
   });
+
   return builder.finish();
 };
 
