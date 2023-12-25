@@ -17,9 +17,11 @@ import {
   useIntent,
   usePlugins,
   LayoutAction,
+  CommandsDialogContent,
   SettingsDialogContent,
   ShortcutsDialogContent,
   Surface,
+  type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
   type GraphProvides,
@@ -39,6 +41,9 @@ import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
 export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
+  // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+
   const state = new LocalStorageStore<LayoutState & LayoutSettingsProps>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
@@ -68,13 +73,18 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
+
+      // TODO(burdon): Create context and plugin.
+      Keyboard.singleton.initialize();
     },
     unload: async () => {
+      Keyboard.singleton.destroy();
       state.close();
     },
     provides: {
@@ -84,7 +94,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
         builder: ({ parent, plugins }) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
@@ -99,7 +108,19 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 }),
             });
 
-            // TODO(burdon): Move to NavTree? Or separate plugin? Layout is optional for other apps.
+            // TODO(burdon): Move special handlers to separate plugin (LayoutPlugin is optional).
+
+            parent.addAction({
+              id: LayoutAction.OPEN_COMMANDS,
+              label: ['open commands label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+k',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_COMMANDS,
+                }),
+            });
+
             parent.addAction({
               id: LayoutAction.OPEN_SETTINGS,
               label: ['open settings label', { ns: LAYOUT_PLUGIN }],
@@ -220,6 +241,9 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
+            case `${LAYOUT_PLUGIN}/Commands`:
+              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
+
             case `${LAYOUT_PLUGIN}/Settings`:
               return <SettingsDialogContent />;
 
@@ -306,13 +330,19 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             }
 
             // TODO(burdon): Move to SettingsPlugin? How should plugins coordinate with the root dialog?
+
+            case LayoutAction.OPEN_COMMANDS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Commands' };
+              return true;
+            }
+
             case LayoutAction.OPEN_SETTINGS: {
               state.values.dialogOpen = true;
               state.values.dialogContent = { component: 'dxos.org/plugin/layout/Settings' };
               return true;
             }
 
-            // TODO(burdon): Move to SettingsPlugin? How should plugins coordinate with the root dialog?
             case LayoutAction.OPEN_SHORTCUTS: {
               state.values.dialogOpen = true;
               state.values.dialogContent = { component: 'dxos.org/plugin/layout/Shortcuts' };
@@ -323,7 +353,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               const id = (intent.data as LayoutAction.Activate).id;
               const path = graphPlugin?.provides.graph.getPath(id);
               if (path) {
-                Keyboard.singleton.setContext(path.join('/'));
+                Keyboard.singleton.setCurrentContext(path.join('/'));
               }
 
               batch(() => {

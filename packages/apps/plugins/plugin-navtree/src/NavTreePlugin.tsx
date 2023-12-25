@@ -11,7 +11,6 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Graph, type Node } from '@dxos/app-graph';
-import { Keyboard } from '@dxos/keyboard';
 
 import { NODE_TYPE, TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';
 import meta from './meta';
@@ -22,21 +21,6 @@ export type NavTreePluginProvides = SurfaceProvides & MetadataRecordsProvides & 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   return {
     meta,
-    ready: async () => {
-      // TODO(burdon): Create context and plugin.
-      Keyboard.singleton.initialize();
-      // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
-      Keyboard.singleton.bind({
-        binding: 'meta+k',
-        handler: () => {
-          console.log('meta');
-        },
-        data: 'Command menu',
-      });
-    },
-    unload: async () => {
-      Keyboard.singleton.destroy();
-    },
     provides: {
       metadata: {
         records: {
