@@ -143,7 +143,7 @@ export class GraphBuilder {
             if (action.keyBinding) {
               // TODO(burdon): Set path as context. Set context when navigate.
               const context = path.join('/');
-              console.log('>>>', action.keyBinding, context);
+              // console.log('>>>', action.keyBinding, context);
               Keyboard.singleton.getContext(context).bind({
                 binding: action.keyBinding!,
                 handler: () => {

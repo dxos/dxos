@@ -1,22 +1,18 @@
 {
-  "sourceRoot": "packages/common/react-async/src",
+  "sourceRoot": "packages/common/keyboard/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/react-async/src/index.ts"
-        ]
+          "packages/common/keyboard/src/index.ts"
+        ],
+        "injectGlobals": true
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "domRequired": true,
-        "forceExit": true
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

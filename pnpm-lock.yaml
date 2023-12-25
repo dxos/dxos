@@ -3638,6 +3638,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*

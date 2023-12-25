@@ -96,6 +96,20 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   action: 'toggle-fullscreen',
                 }),
             });
+
+            parent.addAction({
+              id: LayoutAction.OPEN_SETTINGS,
+              label: ['open settings label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+,',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_SETTINGS,
+                }),
+            });
+
+            // TODO(burdon): Add settings.
+            // TODO(burdon): Add command+k.
           }
         },
       },
@@ -195,7 +209,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
-            case `${LAYOUT_PLUGIN}/ProfileSettings`:
+            case `${LAYOUT_PLUGIN}/Settings`:
               return <SettingsDialogContent />;
 
             case `${LAYOUT_PLUGIN}/MainLayout`:
@@ -274,6 +288,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = false;
               state.values.popoverContent = null;
               state.values.popoverAnchorId = undefined;
+              return true;
+            }
+
+            case LayoutAction.OPEN_SETTINGS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Settings' };
               return true;
             }
 

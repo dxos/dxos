@@ -4,7 +4,12 @@
 
 import { invariant } from '@dxos/invariant';
 
-export type KeyHandler = (props: { context: string; binding: string; data?: any; event: KeyboardEvent }) => void;
+export type KeyHandler = (props: {
+  context: string;
+  binding: string;
+  data?: any;
+  event: KeyboardEvent;
+}) => boolean | void;
 
 export type KeyBinding = {
   binding: string;
@@ -23,17 +28,18 @@ class KeyboardContext {
     return this._keyMap.get(binding);
   }
 
-  bind(_binding: KeyBinding) {
+  bind(config: KeyBinding) {
     // Normalize order of modifiers.
-    const { binding } = _binding;
-    const parts = binding.toLowerCase().split('+');
+    const { binding } = config;
+    const parts = binding.split('+');
     const mods = parts.filter((key) => ['alt', 'ctrl', 'meta', 'shift'].includes(key)).sort();
     invariant(mods.length === 0 || mods.length === parts.length - 1);
     if (mods.length) {
-      _binding.binding = [...mods, parts[parts.length - 1]].join('+');
+      config.binding = [...mods, parts[parts.length - 1]].join('+');
     }
 
-    this._keyMap.set(binding, _binding);
+    // console.log('bind', config);
+    this._keyMap.set(config.binding, config);
   }
 
   unbind(binding: string) {
@@ -111,13 +117,21 @@ export class Keyboard {
         .filter(Boolean)
         .join('+');
 
+      console.log(str);
+
       // Scan matching contexts.
       for (let i = 0; i < this._contexts.length; ++i) {
         const path = this._contexts[i];
         if (this._path.startsWith(path)) {
           const { data, handler } = this.getContext(path).get(str) ?? {};
+          // console.log('>>>', path, str, handler);
           if (handler) {
-            handler({ context: path, binding: str, data, event });
+            const result = handler({ context: path, binding: str, data, event });
+            if (result !== false) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+
             return;
           }
         }

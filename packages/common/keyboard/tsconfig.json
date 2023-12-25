@@ -24,6 +24,9 @@
     },
     {
       "path": "../invariant"
+    },
+    {
+      "path": "../node-std"
     }
   ]
 }

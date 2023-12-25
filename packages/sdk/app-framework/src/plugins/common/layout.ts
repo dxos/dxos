@@ -64,6 +64,7 @@ export enum LayoutAction {
   CLOSE_DIALOG = `${LAYOUT_ACTION}/close-dialog`,
   OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
   CLOSE_POPOVER = `${LAYOUT_ACTION}/close-popover`,
+  OPEN_SETTINGS = `${LAYOUT_ACTION}/open-settings`,
   ACTIVATE = `${LAYOUT_ACTION}/activate`,
 }
 

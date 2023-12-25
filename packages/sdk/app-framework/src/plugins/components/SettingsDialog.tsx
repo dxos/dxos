@@ -10,6 +10,7 @@ import { ghostHover, ghostSelected, groupBorder, mx } from '@dxos/react-ui-theme
 import { type Plugin, usePlugins } from '../PluginHost';
 import { Surface } from '../SurfacePlugin';
 
+// TODO(burdon): Move into separate plugin.
 export const SettingsDialogContent = () => {
   // TODO(burdon): Store preview tab.
   const [plugin, setPlugin] = useState<string>('dxos.org/plugin/registry');

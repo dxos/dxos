@@ -23,13 +23,17 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   return {
     meta,
     ready: async () => {
-      console.log('ready');
+      // TODO(burdon): Create context.
+      Keyboard.singleton.initialize();
       Keyboard.singleton.bind({
         binding: 'meta+k',
         handler: () => {
           console.log('@@@');
         },
       });
+    },
+    unload: async () => {
+      Keyboard.singleton.destroy();
     },
     provides: {
       metadata: {

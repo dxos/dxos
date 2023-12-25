@@ -13,6 +13,7 @@ const symbols: Record<string, string> = {
   shift: '⇧',
   alt: '⌥',
   meta: '⌘',
+  Backspace: '⌫',
 };
 
 export type KeyBinding = {
