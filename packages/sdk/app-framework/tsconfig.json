@@ -39,6 +39,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-searchlist"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {

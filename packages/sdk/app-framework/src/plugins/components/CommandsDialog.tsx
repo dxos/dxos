@@ -2,11 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useRef } from 'react';
 
 import { type Action, type Graph, type Label } from '@dxos/app-graph';
-import { Keyboard } from '@dxos/keyboard';
+import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
+import { SearchList } from '@dxos/react-ui-searchlist';
+import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
   const { t } = useTranslation('os');
@@ -17,14 +20,18 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
 
   // Traverse graph.
   const actions = useMemo(() => {
-    // TODO(burdon): Get from navtree (not keybaord).
+    // TODO(burdon): Get from navtree (not keyboard).
     const current = Keyboard.singleton.getCurrentContext();
+    const actionMap = new Set<string>();
     const actions: Action[] = [];
     graph?.traverse({
       visitor: (node, path) => {
         if (current.startsWith(path.join('/'))) {
           node.actions.forEach((action) => {
-            actions.push(action);
+            if (!actionMap.has(action.id)) {
+              actionMap.add(action.id);
+              actions.push(action);
+            }
           });
         }
       },
@@ -41,24 +48,49 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
     <Dialog.Content classNames={['h-[50%] md:max-is-[30rem] overflow-hidden']}>
       <Dialog.Title>{t('commands dialog title', { ns: 'os' })}</Dialog.Title>
 
-      <div className='flex flex-col grow overflow-y-auto my-2'>
-        {/* TODO(burdon): Action id isn't unique. */}
-        {actions.map((action, i) => (
-          <div
-            key={i}
-            onClick={() => {
-              // TODO(burdon): Close dialog (via hook?)
-              buttonRef.current?.click();
-              setTimeout(() => {
-                void action.invoke();
-              });
-            }}
-          >
-            {getLabel(action.label)}
-          </div>
-        ))}
-      </div>
+      <SearchList.Root label={t('commandlist input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
+        <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-3 my-2')} />
+        <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
+          {actions?.map((action) => {
+            const label = getLabel(action.label);
+            const Icon = action.icon ?? DotOutline;
+            return (
+              <SearchList.Item
+                value={label}
+                key={action.id}
+                onSelect={() => {
+                  if (action.properties.disabled) {
+                    return;
+                  }
 
+                  // TODO(burdon): Remove hack to close dialog (via hook?)
+                  buttonRef.current?.click();
+                  setTimeout(() => {
+                    void action.invoke();
+                  });
+
+                  // TODO(burdon): Reconcile with NavTreeItemAction.
+                  // suppressNextTooltip.current = true;
+                  // setOptionsMenuOpen(false);
+                  // onAction?.(action);
+                }}
+                classNames='flex items-center gap-2 pli-2'
+                disabled={action.properties.disabled}
+                {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+              >
+                <Icon className={mx(getSize(4), 'shrink-0', !action.icon && 'invisible')} />
+                <span className='grow truncate'>{label}</span>
+                {action.keyBinding && (
+                  <span className={mx('shrink-0', descriptionText)}>{keySymbols(action.keyBinding).join('')}</span>
+                )}
+              </SearchList.Item>
+            );
+          })}
+        </SearchList.Content>
+        {/* <div role='none' className='flex items-center plb-2 pli-3'> */}
+        {/*  <span className={descriptionText}>{label}</span> */}
+        {/* </div> */}
+      </SearchList.Root>
       <Dialog.Close asChild>
         <Button ref={buttonRef} variant='primary' classNames='mbs-2'>
           {t('close label', { ns: 'os' })}

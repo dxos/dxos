@@ -70,5 +70,6 @@ export const os = {
   'commands dialog title': 'Commands',
   'settings dialog title': 'Settings',
   'shortcuts dialog title': 'Shortcuts',
+  'commandlist input placeholder': 'Search for commands…',
   'target blank description': 'Link opens in a new tab.',
 };
