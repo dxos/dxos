@@ -23,7 +23,7 @@ import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, PublicKey, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 
-import { ClientSettings } from './components/ClientSettings';
+import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -33,8 +33,9 @@ const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export enum ClientAction {
   OPEN_SHELL = `${CLIENT_ACTION}/SHELL`,
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
-  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
+  // TODO(burdon): Reconcile with SpacePlugin.
   JOIN_SPACE = `${CLIENT_ACTION}/JOIN_SPACE`,
+  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
 }
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
@@ -206,15 +207,17 @@ export const ClientPlugin = ({
             case ClientAction.SHARE_IDENTITY:
               return client.shell.shareIdentity();
 
+            // TODO(burdon): Remove.
+            case ClientAction.JOIN_SPACE:
+              return typeof intent.data?.invitationCode === 'string'
+                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
+                : false;
+
+            // TODO(burdon): Remove.
             case ClientAction.SHARE_SPACE:
               return intent.data?.spaceKey instanceof PublicKey &&
                 !intent.data?.spaceKey.equals(client.spaces.default.key)
                 ? client.shell.shareSpace({ spaceKey: intent.data.spaceKey })
-                : false;
-
-            case ClientAction.JOIN_SPACE:
-              return typeof intent.data?.invitationCode === 'string'
-                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
                 : false;
           }
         },

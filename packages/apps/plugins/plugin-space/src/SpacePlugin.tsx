@@ -404,6 +404,11 @@ export const SpacePlugin = ({
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
+            case SpaceAction.WAIT_FOR_OBJECT: {
+              state.awaiting = intent.data.id;
+              return true;
+            }
+
             case SpaceAction.CREATE: {
               if (!client) {
                 return;
@@ -420,20 +425,13 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.JOIN: {
-              if (!client) {
-                return;
-              }
-
-              const { space } = await client.shell.joinSpace();
-              if (space) {
-                return { space, id: space.key.toHex() };
+              if (client) {
+                const { space } = await client.shell.joinSpace();
+                if (space) {
+                  return { space, id: space.key.toHex() };
+                }
               }
               break;
-            }
-
-            case SpaceAction.WAIT_FOR_OBJECT: {
-              state.awaiting = intent.data.id;
-              return true;
             }
 
             case SpaceAction.SHARE: {
