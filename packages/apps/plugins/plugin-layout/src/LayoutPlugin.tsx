@@ -18,6 +18,7 @@ import {
   usePlugins,
   LayoutAction,
   SettingsDialogContent,
+  ShortcutsDialogContent,
   Surface,
   type Plugin,
   type PluginDefinition,
@@ -98,7 +99,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 }),
             });
 
-            // TODO(burdon): Move to NavTree?
+            // TODO(burdon): Move to NavTree? Or separate plugin? Layout is optional for other apps.
             parent.addAction({
               id: LayoutAction.OPEN_SETTINGS,
               label: ['open settings label', { ns: LAYOUT_PLUGIN }],
@@ -110,14 +111,15 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 }),
             });
 
-            // TODO(burdon): Shortcuts dialog.
             parent.addAction({
               id: LayoutAction.OPEN_SHORTCUTS,
               label: ['open shortcuts label', { ns: LAYOUT_PLUGIN }],
               keyBinding: 'meta+/',
-              invoke: () => {
-                console.log(JSON.stringify(Keyboard.singleton.getBindings(), undefined, 2));
-              },
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_SHORTCUTS,
+                }),
             });
           }
         },
@@ -221,6 +223,9 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             case `${LAYOUT_PLUGIN}/Settings`:
               return <SettingsDialogContent />;
 
+            case `${LAYOUT_PLUGIN}/Shortcuts`:
+              return <ShortcutsDialogContent />;
+
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
@@ -300,9 +305,17 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               return true;
             }
 
+            // TODO(burdon): Move to SettingsPlugin? How should plugins coordinate with the root dialog?
             case LayoutAction.OPEN_SETTINGS: {
               state.values.dialogOpen = true;
               state.values.dialogContent = { component: 'dxos.org/plugin/layout/Settings' };
+              return true;
+            }
+
+            // TODO(burdon): Move to SettingsPlugin? How should plugins coordinate with the root dialog?
+            case LayoutAction.OPEN_SHORTCUTS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Shortcuts' };
               return true;
             }
 

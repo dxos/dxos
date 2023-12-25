@@ -77,17 +77,17 @@ export class Keyboard {
   }
 
   getBindings() {
-    const bindings: { [key: string]: any } = {};
+    const bindings = new Map<string, KeyBinding>();
     for (let i = 0; i < this._contexts.length; ++i) {
       const path = this._contexts[i];
       if (this._path.startsWith(path)) {
         this.getContext(path).bindings.forEach((binding) => {
-          bindings[binding.binding] = binding.data ?? true;
+          bindings.set(binding.binding, binding);
         });
       }
     }
 
-    return bindings;
+    return Array.from(bindings.values());
   }
 
   getContext(path = ROOT): KeyboardContext {

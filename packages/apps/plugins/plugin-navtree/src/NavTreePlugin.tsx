@@ -31,6 +31,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         handler: () => {
           console.log('meta');
         },
+        data: 'Command menu',
       });
     },
     unload: async () => {

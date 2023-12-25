@@ -149,6 +149,7 @@ export class GraphBuilder {
                 handler: () => {
                   action.invoke();
                 },
+                data: action.label,
               });
             }
 

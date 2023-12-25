@@ -4,3 +4,4 @@
 
 export * from './SettingsDialog';
 export * from './SettingsValue';
+export * from './ShortcutsDialog';
