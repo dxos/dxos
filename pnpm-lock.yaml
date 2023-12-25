@@ -1709,6 +1709,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage

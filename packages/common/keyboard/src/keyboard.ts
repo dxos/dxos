@@ -117,10 +117,8 @@ export class Keyboard {
         .filter(Boolean)
         .join('+');
 
-      console.log(str);
-
       // Scan matching contexts.
-      for (let i = 0; i < this._contexts.length; ++i) {
+      for (let i = this._contexts.length - 1; i >= 0; --i) {
         const path = this._contexts[i];
         if (this._path.startsWith(path)) {
           const { data, handler } = this.getContext(path).get(str) ?? {};

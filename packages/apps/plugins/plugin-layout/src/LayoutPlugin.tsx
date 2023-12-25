@@ -25,6 +25,7 @@ import {
   type SurfaceProps,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -97,6 +98,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 }),
             });
 
+            // TODO(burdon): Move to NavTree?
             parent.addAction({
               id: LayoutAction.OPEN_SETTINGS,
               label: ['open settings label', { ns: LAYOUT_PLUGIN }],
@@ -108,8 +110,15 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 }),
             });
 
-            // TODO(burdon): Add settings.
-            // TODO(burdon): Add command+k.
+            // TODO(burdon): Shortcuts dialog.
+            parent.addAction({
+              id: LayoutAction.OPEN_SHORTCUTS,
+              label: ['open shortcuts label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+/',
+              invoke: () => {
+                console.log(JSON.stringify(Keyboard.singleton.getBindings(), undefined, 2));
+              },
+            });
           }
         },
       },
@@ -298,9 +307,15 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             }
 
             case LayoutAction.ACTIVATE: {
+              const id = (intent.data as LayoutAction.Activate).id;
+              const path = graphPlugin?.provides.graph.getPath(id);
+              if (path) {
+                Keyboard.singleton.setContext(path.join('/'));
+              }
+
               batch(() => {
                 state.values.previous = state.values.active;
-                state.values.active = (intent.data as LayoutAction.Activate).id;
+                state.values.active = id;
               });
               return true;
             }

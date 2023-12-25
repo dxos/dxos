@@ -16,6 +16,7 @@ import { getTreeItemLabel } from '../util';
 export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
+
   const { graph } = useGraph();
   const context = graph.getPath(activeNode.id)?.join('/');
   Keyboard.singleton.setContext(context);
