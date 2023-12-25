@@ -17,7 +17,7 @@ class CheckboxWidget extends WidgetType {
     private readonly _pos: number,
     private _checked: boolean,
     private readonly _indent: number,
-    private readonly _onCheck: (check: boolean) => void,
+    private readonly _onCheck?: (check: boolean) => void,
   ) {
     super();
   }
@@ -35,10 +35,13 @@ class CheckboxWidget extends WidgetType {
     const input = wrap.appendChild(document.createElement('input'));
     input.type = 'checkbox';
     input.checked = this._checked;
-    input.onchange = (event: Event) => {
-      this._onCheck((event.target as any).checked);
-      return true;
-    };
+    input.setAttribute('disabled', this._onCheck ? 'false' : 'true');
+    if (this._onCheck) {
+      input.onchange = (event: Event) => {
+        this._onCheck?.((event.target as any).checked);
+        return true;
+      };
+    }
 
     return wrap;
   }
@@ -56,7 +59,9 @@ const styles = EditorView.baseTheme({
   },
 });
 
-export const tasklist = () => {
+export type TasklistOptions = {};
+
+export const tasklist = (options: TasklistOptions = {}) => {
   // TODO(burdon): Matcher isn't as precise as syntax tree.
   //  Allows for indents to be greater than AST would allow.
   const taskMatcher = new MatchDecorator({
@@ -65,20 +70,27 @@ export const tasklist = () => {
       const indent = Math.floor(match[1].length / 2);
       const checked = match[2] === 'x' || match[2] === 'X';
       return Decoration.replace({
-        widget: new CheckboxWidget(pos, checked, indent, (checked) => {
-          const idx = pos + match[0].indexOf('[') + 1;
-          view.dispatch({
-            changes: {
-              from: idx,
-              to: idx + 1,
-              insert: checked ? 'x' : ' ',
-            },
-            // TODO(burdon): Restore cursor position? More useful to move to end of line (can indent).
-            selection: {
-              anchor: idx + 3,
-            },
-          });
-        }),
+        widget: new CheckboxWidget(
+          pos,
+          checked,
+          indent,
+          view.state.readOnly
+            ? undefined
+            : (checked) => {
+                const idx = pos + match[0].indexOf('[') + 1;
+                view.dispatch({
+                  changes: {
+                    from: idx,
+                    to: idx + 1,
+                    insert: checked ? 'x' : ' ',
+                  },
+                  // TODO(burdon): Restore cursor position? More useful to move to end of line (can indent).
+                  selection: {
+                    anchor: idx + 3,
+                  },
+                });
+              },
+        ),
       });
     },
   });

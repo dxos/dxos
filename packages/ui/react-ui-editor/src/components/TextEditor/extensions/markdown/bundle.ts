@@ -28,11 +28,16 @@ import type { ThemeMode } from '@dxos/react-ui';
 import { markdownHighlightStyle, markdownTagsExtension } from './highlight';
 
 export type MarkdownBundleOptions = {
+  readonly?: boolean;
   themeMode?: ThemeMode;
   placeholder?: string;
 };
 
-export const markdownBundle = ({ themeMode, placeholder: _placeholder }: MarkdownBundleOptions): Extension[] => {
+export const markdownBundle = ({
+  readonly,
+  themeMode,
+  placeholder: _placeholder,
+}: MarkdownBundleOptions): Extension[] => {
   // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
   // https://codemirror.net/docs/ref/#codemirror.basicSetup
   return [
@@ -90,7 +95,7 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     }),
 
     // Custom styles.
-    syntaxHighlighting(markdownHighlightStyle),
+    syntaxHighlighting(markdownHighlightStyle(readonly)),
 
     // TODO(thure): All but one rule here apply to both themes; rename or refactor.
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),

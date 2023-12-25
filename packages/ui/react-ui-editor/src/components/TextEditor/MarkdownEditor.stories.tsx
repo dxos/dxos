@@ -158,7 +158,7 @@ const Story = ({
   text,
   automerge,
   ...props
-}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'extensions' | 'slots'>) => {
+}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>) => {
   const ref = useRef<TextEditorRef>(null);
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
   const model = useTextModel({ text: item.text });
@@ -199,6 +199,10 @@ export const Default = {
       ]}
     />
   ),
+};
+
+export const Readonly = {
+  render: () => <Story text={document} readonly extensions={[link({ onRender }), tooltip({ onHover }), tasklist()]} />,
 };
 
 export const Simple = {
