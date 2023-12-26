@@ -26,6 +26,8 @@ import {
   comments,
   table,
   image,
+  mention,
+  blast,
 } from './extensions';
 import { useTextModel } from '../../hooks';
 
@@ -268,6 +270,21 @@ export const Autocomplete = {
   ),
 };
 
+const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
+
+export const Mention = {
+  render: () => (
+    <Story
+      text={str('# Mention', '', '', '', '', '', '')}
+      extensions={[
+        mention({
+          onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
+        }),
+      ]}
+    />
+  ),
+};
+
 const mark = () => `[^${PublicKey.random().toHex()}]`;
 export const Comments = {
   render: () => (
@@ -297,4 +314,8 @@ export const Diagnostics = {
       ]}
     />
   ),
+};
+
+export const Blast = {
+  render: () => <Story text={text.paragraphs} extensions={[blast({ effect: 2 })]} />,
 };

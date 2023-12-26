@@ -141,8 +141,26 @@ export const defaultTheme: {
   '& .cm-tooltip': {
     border: 'none',
   },
-  // '& .cm-tooltip-below': {},
-  // '& .cm-tooltip-autocomplete': {},
+  '& .cm-tooltip-below': {},
+
+  //
+  // autocomplete
+  //
+  '& .cm-tooltip-autocomplete': {
+    marginTop: '4px',
+    marginLeft: '-3px',
+  },
+  '& .cm-tooltip-autocomplete ul li': {},
+  '& .cm-tooltip-autocomplete ul li[aria-selected]': {},
+  '& .cm-completionIcon': {
+    display: 'none',
+  },
+  '& .cm-completionLabel': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+  '& .cm-completionMatchedText': {
+    textDecoration: 'none',
+  },
 
   //
   // widgets
