@@ -1,5 +1,8 @@
 //
 // Copyright 2023 DXOS.org
+// Based on Joel Besada's lovely experiment
+// https://twitter.com/JoelBesada/status/670343885655293952
+// https://github.com/chinchang/code-blast-codemirror/blob/master/code-blast.js
 //
 
 import '@dxosTheme';
