@@ -8,10 +8,10 @@ import React from 'react';
 import { pluginMeta } from '@dxos/app-framework';
 
 // TODO(burdon): Rename Guide? Help?
-export const TOUR_PLUGIN = 'dxos.org/plugin/tour';
+export const HELP_PLUGIN = 'dxos.org/plugin/help';
 
 export default pluginMeta({
-  id: TOUR_PLUGIN,
-  name: 'Tour',
+  id: HELP_PLUGIN,
+  name: 'Help',
   iconComponent: (props: IconProps) => <Info {...props} />,
 });

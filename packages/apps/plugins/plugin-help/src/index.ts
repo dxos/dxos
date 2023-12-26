@@ -9,4 +9,4 @@ export { Joyride };
 export * from './components';
 export * from './hooks';
 
-export * from './TourPlugin';
+export * from './HelpPlugin';

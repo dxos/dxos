@@ -84,6 +84,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-help/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-inbox/package.json",
           "jsonpath": "$.version"
         },
@@ -195,11 +200,6 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-thread/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/plugins/plugin-tour/package.json",
           "jsonpath": "$.version"
         },
         {

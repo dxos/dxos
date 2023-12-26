@@ -1,6 +1,6 @@
-# @braneframe/plugin-tour
+# @braneframe/plugin-help
 
-Plugin tour.
+Help plugin.
 
 ## DXOS Resources
 

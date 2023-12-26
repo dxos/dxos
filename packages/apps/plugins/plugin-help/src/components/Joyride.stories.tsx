@@ -13,12 +13,12 @@ import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
 import { floaterProps, Tooltip } from './Tooltip';
-import { useTour } from '../hooks';
+import { useJoyride } from '../hooks';
 
 export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
 
 const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
-  const { running, step, callback, start } = useTour(true);
+  const { running, step, callback, start } = useJoyride(true);
 
   return (
     <div className='app'>
@@ -64,7 +64,7 @@ const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
  * IMPORTANT: Storybook must be run in separate tab.
  */
 const meta: Meta = {
-  title: 'plugin-tour/Joyride',
+  title: 'plugin-help/Joyride',
   render: (args) => <Story {...args} />,
   decorators: [withTheme],
 };
