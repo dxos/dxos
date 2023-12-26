@@ -4,6 +4,11 @@
 
 import { type PluginDefinition } from '@dxos/app-framework';
 
+import meta from './meta';
+
 export const TourPlugin = (): PluginDefinition => {
-  return {};
+  return {
+    meta,
+    provides: {},
+  };
 };

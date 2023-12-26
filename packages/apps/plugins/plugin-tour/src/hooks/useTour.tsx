@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
-
 import { useEffect, useState } from 'react';
 import type Joyride from 'react-joyride';
 import { ACTIONS, EVENTS } from 'react-joyride';

@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
-
 import { CaretLeft, CaretRight, X } from '@phosphor-icons/react';
 import React from 'react';
 import { type TooltipRenderProps } from 'react-joyride';
