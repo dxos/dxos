@@ -4,49 +4,18 @@
 
 import '@dxosTheme';
 
-import React, { type FC, useState } from 'react';
-import Joyride, { ACTIONS, EVENTS, type Step, type TooltipProps } from 'react-joyride';
+import { faker } from '@faker-js/faker';
+import React, { type FC } from 'react';
+import Joyride, { type Step } from 'react-joyride';
 
 import { Button } from '@dxos/react-ui';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
-// TODO(burdon): Custom tooltip.
-const Tooltip = ({ step: { title } }: TooltipProps) => <div>{title}</div>;
+import { Tooltip } from './Tooltip';
+import { useTour } from '../hooks';
 
 const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
-  const [running, setRunning] = useState(false);
-  const [step, setStep] = useState(0);
-
-  // https://docs.react-joyride.com/callback
-  const handleTour: Joyride['callback'] = ({ action, type, index, size, ...rest }) => {
-    // console.log('handleTour', { type, action, index, size, rest });
-
-    switch (type) {
-      case EVENTS.STEP_AFTER:
-        switch (action) {
-          case ACTIONS.NEXT:
-            if (index < size - 1) {
-              setStep(index + 1);
-            }
-            break;
-          case ACTIONS.PREV:
-            if (index > 0) {
-              setStep(index - 1);
-            }
-            break;
-          case ACTIONS.CLOSE:
-            setRunning(false);
-            setStep(0);
-            break;
-        }
-        break;
-
-      case EVENTS.TOUR_END:
-        setRunning(false);
-        setStep(0);
-        break;
-    }
-  };
+  const { running, step, callback, start } = useTour();
 
   // IMPORTANT: Storybook must be run in separate tab.
   return (
@@ -57,13 +26,13 @@ const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
         run={running}
         steps={steps}
         stepIndex={step}
-        callback={handleTour}
-        // tooltipComponent={Tooltip}
+        callback={callback}
+        tooltipComponent={Tooltip}
       />
 
       <div className='flex flex-col space-y-8'>
         <div className='flex items-center gap-2 py-2' data-joyride='basic/1'>
-          <Button data-joyride='basic/2' onClick={() => setRunning(true)}>
+          <Button data-joyride='basic/2' onClick={() => start()}>
             Start
           </Button>
           <div>{String(running)}</div>
@@ -93,18 +62,24 @@ export default meta;
 
 export const Default = {
   args: {
+    // https://docs.react-joyride.com/step#options
     steps: [
       {
         target: '[data-joyride="basic/1"]',
-        content: 'Step 1',
+        title: 'Step 1',
+        content: faker.lorem.paragraph(),
+        disableBeacon: true,
       },
       {
         target: '[data-joyride="basic/2"]',
-        content: 'Step 2',
+        title: 'Step 2',
+        content: faker.lorem.paragraph(),
       },
       {
         target: '[data-joyride="basic/3"]',
-        content: 'Step 3',
+        title: 'Step 3',
+        content: faker.lorem.paragraph(),
+        placement: 'right',
       },
     ],
   },
