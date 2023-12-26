@@ -1,0 +1,22 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-tour/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-tour/src/index.ts",
+          "packages/apps/plugins/plugin-tour/src/meta.tsx"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

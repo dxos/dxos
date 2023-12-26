@@ -199,6 +199,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-tour/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-wildcard/package.json",
           "jsonpath": "$.version"
         },
