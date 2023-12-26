@@ -43,7 +43,7 @@ export const blockquote = mx('pl-1 mr-1 border-is-4 border-primary-500/70 dark:b
 
 // TODO(burdon): Replace with widget.
 export const horizontalRule =
-  'flex mlb-4 border-b text-neutral-100 dark:text-neutral-900 border-neutral-500/20 dark:border-neutral-500/80';
+  'flex mlb-4 border-b text-neutral-100 dark:text-neutral-900 border-neutral-200 dark:border-neutral-800';
 
 // TODO(thure): Tailwind was not seeing `[&>li:before]:content-["•"]` as a utility class, but it would work if instead of `"•"` it was `"X"`… why?
 export const unorderedList =

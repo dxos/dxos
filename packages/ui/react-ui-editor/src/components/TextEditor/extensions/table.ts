@@ -44,7 +44,7 @@ const update = (state: EditorState, options: TableOptions) => {
     // TODO(burdon): Use remark?: https://www.npmjs.com/package/remark-gfm
     syntaxTree(state).iterate({
       enter: (node) => {
-        console.log(node.name);
+        // console.log(node.name);
         // Check if cursor is inside text.
         switch (node.name) {
           case 'Table': {

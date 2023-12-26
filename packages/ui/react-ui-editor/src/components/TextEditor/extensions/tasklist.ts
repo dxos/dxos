@@ -35,7 +35,9 @@ class CheckboxWidget extends WidgetType {
     const input = wrap.appendChild(document.createElement('input'));
     input.type = 'checkbox';
     input.checked = this._checked;
-    input.setAttribute('disabled', this._onCheck ? 'false' : 'true');
+    if (!this._onCheck) {
+      input.setAttribute('disabled', 'true');
+    }
     if (this._onCheck) {
       input.onchange = (event: Event) => {
         this._onCheck?.((event.target as any).checked);

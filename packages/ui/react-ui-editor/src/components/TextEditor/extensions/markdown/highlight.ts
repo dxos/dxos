@@ -27,6 +27,8 @@ import {
 // TODO(burdon): Style table in monospace.
 //  https://discuss.codemirror.net/t/markdown-table-highlighting/658
 
+// TODO(burdon): Readonly: use remark rather than hiding markup chars (which cursor can still move into).
+
 /**
  * Custom tags defined and processed by the GFM lezer extension.
  * https://github.com/lezer-parser/markdown
