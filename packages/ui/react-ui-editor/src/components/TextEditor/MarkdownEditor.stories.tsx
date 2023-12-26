@@ -31,6 +31,7 @@ import {
   image,
   mention,
   blast,
+  demo,
 } from './extensions';
 import { useTextModel } from '../../hooks';
 
@@ -211,6 +212,7 @@ const extensions = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
+  blast({ effect: 2 }),
 ];
 
 export const Default = {
@@ -319,6 +321,10 @@ export const Diagnostics = {
   ),
 };
 
+export const Demo = {
+  render: () => <Story text={text.paragraphs} extensions={[demo()]} />,
+};
+
 export const Blast = {
-  render: () => <Story text={text.paragraphs} extensions={[blast({ effect: 2 })]} />,
+  render: () => <Story text={str(text.paragraphs, text.paragraphs)} extensions={[blast({ effect: 2 })]} />,
 };

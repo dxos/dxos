@@ -1,88 +1,111 @@
 //
 // Copyright 2023 DXOS.org
+// https://github.com/chinchang/code-blast-codemirror/blob/master/code-blast.js
 //
 
 import { type Extension, StateField } from '@codemirror/state';
-import { EditorView, type Rect } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { invariant } from '@dxos/invariant';
 
 export type BlastOptions = {
-  effect: 1 | 2;
+  effect?: number;
+  maxParticles: number;
   particleGravity: number;
   particleAlphaFadeout: number;
   particleNumRange: { min: number; max: number };
   particleVelocityRange: { x: [number, number]; y: [number, number] };
-  maxParticles: number;
+  particleShrinkRate: number;
   shakeIntensity: number;
+  color?: 'random' | 'blood';
 };
 
-const defaultOptions: BlastOptions = {
-  effect: 1,
+const defaultOptions1: BlastOptions = {
+  maxParticles: 200,
   particleGravity: 0.08,
-  particleAlphaFadeout: 0.96,
+  particleAlphaFadeout: 0.996,
   particleNumRange: { min: 5, max: 10 },
   particleVelocityRange: { x: [-1, 1], y: [-3.5, -1.5] },
-  maxParticles: 500,
+  particleShrinkRate: 0.95,
   shakeIntensity: 5,
 };
 
-// https://github.com/chinchang/code-blast-codemirror/blob/master/code-blast.js
+const defaultOptions2: BlastOptions = {
+  maxParticles: 200,
+  particleGravity: 0.2,
+  particleAlphaFadeout: 0.995,
+  particleNumRange: { min: 5, max: 10 },
+  particleVelocityRange: { x: [-1, 1], y: [-3.5, -1.5] },
+  particleShrinkRate: 0.995,
+  shakeIntensity: 5,
+  color: 'blood',
+};
 
-export const blast = (options: Partial<BlastOptions> = defaultOptions): Extension => {
+export const blast = (options: Partial<BlastOptions>): Extension => {
   let blaster: Blaster | undefined;
   let view: EditorView | undefined;
+  let last = 0;
 
   return [
+    // Cursor moved.
     EditorView.updateListener.of((update) => {
       if (!blaster) {
         view = update.view;
-        blaster = new Blaster(view.contentDOM, defaultsDeep({}, options, defaultOptions));
+        blaster = new Blaster(view.contentDOM, defaultsDeep({}, options, defaultOptions1));
         blaster.initialize();
         blaster.start();
+        return;
+      } else {
+        blaster.resize(update.view);
       }
 
-      blaster.shake(0.3);
-      const rect = update.view.coordsForChar(update.view.state.selection.main.head);
-      if (rect) {
-        blaster.spawn(rect);
+      const current = update.view.state.selection.main.head;
+      if (current !== last) {
+        last = current;
+        // TODO(burdon): Null if end of line.
+        const point = getPoint(update.view, current);
+        if (point) {
+          blaster.spawn(point);
+        }
       }
     }),
 
+    // Document changed.
     StateField.define({
       create: () => null,
       update: (_value, transaction) => {
-        if (transaction.docChanged) {
-          blaster?.shake(0.3);
-          const rect = view?.coordsForChar(transaction.selection!.main.head);
-          if (rect) {
-            blaster?.spawn(rect);
+        if (blaster && view && transaction.docChanged) {
+          // TODO(burdon): On delete.
+          const point = getPoint(view, transaction.selection!.main.head);
+          if (point) {
+            blaster.spawn(point);
           }
         }
 
         return null;
       },
     }),
-  ];
-};
 
-type Particle = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  alpha: number;
-  theta: number;
-  drag: number;
-  wander: number;
-  size: number;
-  color: (string | number)[];
+    keymap.of([
+      {
+        any: (view, event) => {
+          if (blaster && event.key === 'Enter' && event.shiftKey) {
+            blaster.shake(0.4);
+          }
+
+          return false;
+        },
+      },
+    ]),
+  ];
 };
 
 class Blaster {
   _canvas: HTMLCanvasElement | undefined;
   _ctx: CanvasRenderingContext2D | undefined | null;
+
+  private readonly _effect: Effect;
 
   _running = false;
   _lastTime: number | undefined;
@@ -92,7 +115,9 @@ class Blaster {
   _particles: Particle[] = [];
   _particlePointer = 0;
 
-  constructor(private readonly _node: HTMLElement, private readonly _options: BlastOptions) {}
+  constructor(private _node: HTMLElement, private readonly _options: BlastOptions) {
+    this._effect = this._options.effect === 1 ? new Effect1(_options) : new Effect2(_options);
+  }
 
   initialize() {
     console.log('initialize');
@@ -100,8 +125,6 @@ class Blaster {
 
     this._canvas = document.createElement('canvas');
     this._canvas.id = 'code-blast-canvas';
-    this._canvas.width = this._node.offsetWidth;
-    this._canvas.height = this._node.offsetHeight;
     this._canvas.style.position = 'absolute';
     this._canvas.style.top = '0';
     this._canvas.style.left = '0';
@@ -109,15 +132,32 @@ class Blaster {
     this._canvas.style.pointerEvents = 'none';
 
     this._ctx = this._canvas.getContext('2d');
-    document.body.appendChild(this._canvas);
+
+    const parent = this._node.parentElement?.parentElement?.parentElement;
+    parent?.appendChild(this._canvas);
   }
 
   destroy() {
+    this.stop();
     console.log('destroy');
     if (this._canvas) {
       this._canvas.remove();
       this._canvas = undefined;
       this._ctx = undefined;
+    }
+  }
+
+  // TODO(burdon): Get view from DOM: EditorView.findFromDOM(this._node)
+  //  - View port changes on scroll.
+  resize(view: EditorView) {
+    this._node = view.contentDOM;
+    const node = this._node.parentElement?.parentElement?.parentElement;
+    if (node && this._canvas) {
+      const { offsetLeft: x, offsetTop: y, offsetWidth: width, offsetHeight: height } = node;
+      this._canvas.style.top = `${y}px`;
+      this._canvas.style.left = `${x}px`;
+      this._canvas.width = width;
+      this._canvas.height = height;
     }
   }
 
@@ -131,7 +171,7 @@ class Blaster {
   stop() {
     console.log('stop');
     this._running = false;
-    this._node.style.transform = 'translate(0px, 0px)';
+    // this._node.style.transform = 'translate(0px, 0px)';
   }
 
   loop() {
@@ -152,7 +192,7 @@ class Blaster {
       const magnitude = (this._shakeTime / this._shakeTimeMax) * this._options.shakeIntensity;
       const shakeX = random(-magnitude, magnitude);
       const shakeY = random(-magnitude, magnitude);
-      this._node.style.transform = `translate(${shakeX}px, ${shakeY}px)`;
+      this._node!.style.transform = `translate(${shakeX}px,${shakeY}px)`;
     }
 
     this.drawParticles();
@@ -161,24 +201,18 @@ class Blaster {
   }
 
   shake = throttle((time: number) => {
-    this._shakeTime = time;
+    this._shakeTime = this._shakeTimeMax;
     this._shakeTimeMax = time;
   }, 100);
 
-  spawn = throttle((rect: Rect) => {
-    const node = document.elementFromPoint(rect.left - 5, rect.top + 5);
-
-    // const cursorPos = cm.getCursor();
-    // type = cm.getTokenAt(cursorPos);
-    // if (type) {
-    //   type = type.type;
-    // }
-
+  spawn = throttle(({ x, y }: { x: number; y: number }) => {
+    const node = document.elementFromPoint(x, y);
     if (node) {
+      const color = getRGBComponents(node, this._options.color);
       const numParticles = random(this._options.particleNumRange.min, this._options.particleNumRange.max);
-      const color = getRGBComponents(node);
       for (let i = numParticles; i--; i > 0) {
-        this._particles[this._particlePointer] = this.createParticle(rect.left + 10, rect.top, color);
+        // TODO(burdon): Delta should be based on direction.
+        this._particles[this._particlePointer] = this._effect.create(x - 16, y, color);
         this._particlePointer = (this._particlePointer + 1) % this._options.maxParticles;
       }
     }
@@ -187,88 +221,108 @@ class Blaster {
   drawParticles() {
     for (let i = this._particles.length; i--; i > 0) {
       const particle = this._particles[i];
-      if (!particle || particle.alpha < 0.01 || particle.size <= 0.5) {
+      if (!particle) {
         continue;
       }
 
-      switch (this._options.effect) {
-        case 1: {
-          effect1(this._ctx!, particle, this._options);
-          break;
-        }
-        case 2: {
-          effect2(this._ctx!, particle, this._options);
-          break;
-        }
+      if (particle.alpha < 0.01 || particle.size <= 0.5) {
+        continue;
       }
+
+      this._effect.update(this._ctx!, particle);
     }
-  }
-
-  createParticle(x: number, y: number, color: Particle['color']): Particle {
-    const particle: Partial<Particle> = {
-      x,
-      y: y + 10,
-      alpha: 1,
-      color,
-    };
-
-    switch (this._options.effect) {
-      case 1: {
-        return {
-          ...particle,
-          size: random(2, 4),
-          vx:
-            this._options.particleVelocityRange.x[0] +
-            Math.random() * (this._options.particleVelocityRange.x[1] - this._options.particleVelocityRange.x[0]),
-          vy:
-            this._options.particleVelocityRange.y[0] +
-            Math.random() * (this._options.particleVelocityRange.y[1] - this._options.particleVelocityRange.y[0]),
-        } as Particle;
-      }
-
-      case 2: {
-        return {
-          ...particle,
-          size: random(2, 8),
-          drag: 0.92,
-          vx: random(-3, 3),
-          vy: random(-3, 3),
-          wander: 0.15,
-          theta: (random(0, 360) * Math.PI) / 180,
-        } as Particle;
-      }
-    }
-
-    throw new Error();
   }
 }
 
-const effect1 = (ctx: CanvasRenderingContext2D, particle: Particle, options: BlastOptions) => {
-  particle.vy += options.particleGravity;
-  particle.x += particle.vx;
-  particle.y += particle.vy;
-  particle.alpha *= options.particleAlphaFadeout;
+//
+// Effects
+//
 
-  ctx.fillStyle = `rgba(${particle.color[0]},${particle.color[1]},${particle.color[2]},${particle.alpha})`;
-  ctx.fillRect(Math.round(particle.x - 1), Math.round(particle.y - 1), particle.size, particle.size);
+type Particle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: (string | number)[];
+  alpha: number;
+  theta?: number;
+  drag?: number;
+  wander?: number;
 };
 
-// Based on Soulwire's demo: http://codepen.io/soulwire/pen/foktm
-const effect2 = (ctx: CanvasRenderingContext2D, particle: Particle, options: BlastOptions) => {
-  particle.x += particle.vx;
-  particle.y += particle.vy;
-  particle.vx *= particle.drag;
-  particle.vy *= particle.drag;
-  particle.theta += random(-0.5, 0.5);
-  particle.vx += Math.sin(particle.theta) * 0.1;
-  particle.vy += Math.cos(particle.theta) * 0.1;
-  particle.size *= 0.96;
+abstract class Effect {
+  constructor(protected readonly _options: BlastOptions) {}
+  abstract create(x: number, y: number, color: Particle['color']): Particle;
+  abstract update(ctx: CanvasRenderingContext2D, particle: Particle): void;
+}
 
-  ctx.fillStyle = `rgba(${particle.color[0]},${particle.color[1]},${particle.color[2]},${particle.alpha})`;
-  ctx.beginPath();
-  ctx.arc(Math.round(particle.x - 1), Math.round(particle.y - 1), particle.size, 0, 2 * Math.PI);
-  ctx.fill();
-};
+class Effect1 extends Effect {
+  create(x: number, y: number, color: Particle['color']) {
+    return {
+      x,
+      y: y + 10,
+      vx:
+        this._options.particleVelocityRange.x[0] +
+        Math.random() * (this._options.particleVelocityRange.x[1] - this._options.particleVelocityRange.x[0]),
+      vy:
+        this._options.particleVelocityRange.y[0] +
+        Math.random() * (this._options.particleVelocityRange.y[1] - this._options.particleVelocityRange.y[0]),
+      color,
+      size: random(2, 4),
+      alpha: 1,
+    };
+  }
+
+  update(ctx: CanvasRenderingContext2D, particle: Particle) {
+    particle.vy += this._options.particleGravity;
+    particle.x += particle.vx;
+    particle.y += particle.vy;
+    particle.alpha *= this._options.particleAlphaFadeout;
+
+    ctx.fillStyle = `rgba(${particle.color[0]},${particle.color[1]},${particle.color[2]},${particle.alpha})`;
+    ctx.fillRect(Math.round(particle.x - 1), Math.round(particle.y - 1), particle.size, particle.size);
+  }
+}
+
+/**
+ * Based on Soulwire's demo.
+ * http://codepen.io/soulwire/pen/foktm
+ */
+class Effect2 extends Effect {
+  create(x: number, y: number, color: Particle['color']) {
+    return {
+      x,
+      y: y + 10,
+      vx: random(-3, 3),
+      vy: random(-3, 3),
+      color,
+      size: random(2, 8),
+      alpha: 1,
+      theta: (random(0, 360) * Math.PI) / 180,
+      drag: 0.92,
+      wander: 0.15,
+    };
+  }
+
+  update(ctx: CanvasRenderingContext2D, particle: Particle) {
+    particle.vy += this._options.particleGravity;
+    particle.x += particle.vx;
+    particle.y += particle.vy;
+    particle.vx *= particle.drag!;
+    particle.vy *= particle.drag!;
+    particle.theta! += random(-0.5, 0.5);
+    particle.vx += Math.sin(particle.theta!) * 0.1;
+    particle.vy += Math.cos(particle.theta!) * 0.1;
+    particle.size *= this._options.particleShrinkRate;
+    particle.alpha *= this._options.particleAlphaFadeout;
+
+    ctx.fillStyle = `rgba(${particle.color[0]},${particle.color[1]},${particle.color[2]},${particle.alpha})`;
+    ctx.beginPath();
+    ctx.arc(Math.round(particle.x - 1), Math.round(particle.y - 1), particle.size, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}
 
 //
 // Utils
@@ -297,15 +351,30 @@ const random = (min: number, max: number) => {
   return min + ~~(Math.random() * (max - min + 1));
 };
 
-const getRGBComponents = (node: Element): Particle['color'] => {
-  const color = getComputedStyle(node).color;
-  if (color) {
-    try {
-      return color.match(/(\d+), (\d+), (\d+)/)?.slice(1) ?? [255, 255, 255];
-    } catch (err) {
-      return [255, 255, 255];
+const getPoint = (view: EditorView, pos: number) => {
+  const top = view.coordsAtPos(0);
+  const rect = view.coordsForChar(pos);
+  return top && rect ? { x: rect.left - top.left, y: rect.top - top.top } : undefined;
+};
+
+const getRGBComponents = (node: Element, color: BlastOptions['color']): Particle['color'] => {
+  switch (color) {
+    case 'random':
+      return [Math.random() * 256, Math.random() * 256, Math.random() * 256];
+
+    case 'blood':
+      return [random(100, 200), 0, 0];
+
+    default: {
+      const color = getComputedStyle(node).color;
+      if (color) {
+        const x = color.match(/(\d+), (\d+), (\d+)/)?.slice(1);
+        if (x) {
+          return x;
+        }
+      }
     }
-  } else {
-    return [255, 255, 255];
   }
+
+  return [50, 50, 50];
 };

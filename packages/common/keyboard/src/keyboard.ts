@@ -18,6 +18,8 @@ export type KeyBinding = {
   data?: any;
 };
 
+// TODO(burdon): Reference https://codemirror.net/docs/ref/#view.KeyBinding
+
 const modifiers = ['alt', 'ctrl', 'shift', 'meta'];
 
 class KeyboardContext {

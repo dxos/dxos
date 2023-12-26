@@ -6,6 +6,9 @@ import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type RangeSet, RangeSetBuilder, StateField, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
+// TODO(burdon): Snippet to create basic table.
+//  https://codemirror.net/docs/ref/#autocomplete.snippet
+
 export type TableOptions = {};
 
 /**
