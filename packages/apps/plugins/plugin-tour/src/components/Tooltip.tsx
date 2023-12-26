@@ -10,7 +10,7 @@ import { type TooltipRenderProps } from 'react-joyride';
 
 import { Button, DensityProvider } from '@dxos/react-ui';
 
-export const Tooltip = ({ step, primaryProps, backProps, closeProps }: TooltipRenderProps) => {
+export const Tooltip = ({ index, isLastStep, step, primaryProps, backProps, closeProps }: TooltipRenderProps) => {
   const { title, content } = step;
 
   return (
@@ -24,14 +24,21 @@ export const Tooltip = ({ step, primaryProps, backProps, closeProps }: TooltipRe
         </div>
         <div className='flex grow px-4'>{content}</div>
         <div className='flex p-2 items-center justify-between'>
-          {backProps && (
+          {index > 0 && backProps && (
             <Button variant='ghost' onClick={backProps.onClick} title={backProps['aria-label']}>
               <CaretLeft />
             </Button>
           )}
-          <Button variant='ghost' onClick={primaryProps.onClick} title={primaryProps['aria-label']}>
-            <CaretRight />
-          </Button>
+          <div className='grow' />
+          {isLastStep ? (
+            <Button variant='primary' onClick={closeProps.onClick} title={closeProps['aria-label']}>
+              Done
+            </Button>
+          ) : (
+            <Button variant='ghost' onClick={primaryProps.onClick} title={primaryProps['aria-label']}>
+              <CaretRight />
+            </Button>
+          )}
         </div>
       </div>
     </DensityProvider>

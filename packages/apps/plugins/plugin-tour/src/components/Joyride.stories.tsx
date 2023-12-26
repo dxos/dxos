@@ -17,12 +17,13 @@ import { useTour } from '../hooks';
 const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
   const { running, step, callback, start } = useTour();
 
-  // IMPORTANT: Storybook must be run in separate tab.
   return (
     <div className='app'>
       {/* https://docs.react-joyride.com/custom-components */}
       <Joyride
         continuous={true}
+        disableOverlay={true}
+        disableOverlayClose={true}
         run={running}
         steps={steps}
         stepIndex={step}
@@ -31,27 +32,33 @@ const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
       />
 
       <div className='flex flex-col space-y-8'>
-        <div className='flex items-center gap-2 py-2' data-joyride='basic/1'>
-          <Button data-joyride='basic/2' onClick={() => start()}>
+        <div className='flex items-center gap-2 py-2'>
+          <Button data-joyride='basic/1' onClick={() => start()}>
             Start
           </Button>
+          <div className='grow' />
           <div>{String(running)}</div>
         </div>
         <div>
-          <ul className='p-2'>
-            <li>Step 1</li>
-            <li>Step 2</li>
-            <li>Step 3</li>
+          <ul className='p-2 border border-blue-500 rounded-md' data-joyride='basic/2'>
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
+            <li>Item 4</li>
+            <li>Item 5</li>
           </ul>
-          <div className='flex items-center gap-2 py-2'>
-            <Button data-joyride='basic/3'>Add</Button>
-          </div>
+        </div>
+        <div className='flex items-center gap-2 py-2'>
+          <Button data-joyride='basic/3'>Add</Button>
         </div>
       </div>
     </div>
   );
 };
 
+/**
+ * IMPORTANT: Storybook must be run in separate tab.
+ */
 const meta: Meta = {
   title: 'plugin-tour/Joyride',
   render: (args) => <Story {...args} />,
@@ -69,6 +76,7 @@ export const Default = {
         title: 'Step 1',
         content: faker.lorem.paragraph(),
         disableBeacon: true,
+        placement: 'right',
       },
       {
         target: '[data-joyride="basic/2"]',
