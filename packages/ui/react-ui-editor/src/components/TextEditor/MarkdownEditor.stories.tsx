@@ -80,6 +80,7 @@ const text = {
     '  const x = 100;',
     '  return () => <div>Test</div>;',
     '};',
+    '',
     '```'
   ),
 
@@ -212,7 +213,6 @@ const extensions = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
-  blast({ effect: 2 }),
 ];
 
 export const Default = {
@@ -326,5 +326,5 @@ export const Demo = {
 };
 
 export const Blast = {
-  render: () => <Story text={str(text.paragraphs, text.paragraphs)} extensions={[blast({ effect: 2 })]} />,
+  render: () => <Story text={str(text.paragraphs, text.code, text.paragraphs)} extensions={[blast({ effect: 2 })]} />,
 };

@@ -44,29 +44,41 @@ const defaultOptions2: BlastOptions = {
 
 export const blast = (options: Partial<BlastOptions>): Extension => {
   let blaster: Blaster | undefined;
-  let view: EditorView | undefined;
   let last = 0;
+
+  const getPoint = (view: EditorView, pos: number) => {
+    const { left: x = 0, top: y = 0 } = view.coordsForChar(pos) ?? {};
+    const element = document.elementFromPoint(x, y);
+
+    const { offsetLeft: left = 0, offsetTop: top = 0 } = view.scrollDOM.parentElement ?? {};
+    const point = { x: x - left, y: y - top };
+
+    return { element, point };
+  };
 
   return [
     // Cursor moved.
     EditorView.updateListener.of((update) => {
-      if (!blaster) {
-        view = update.view;
-        blaster = new Blaster(view.contentDOM, defaultsDeep({}, options, defaultOptions1));
+      // NOTE: The MarkdownEditor may recreated the EditorView.
+      if (blaster?.node !== update.view.scrollDOM) {
+        if (blaster) {
+          blaster.destroy();
+        }
+
+        blaster = new Blaster(update.view.scrollDOM, defaultsDeep({}, options, defaultOptions1));
         blaster.initialize();
-        blaster.start();
-        return;
+        blaster.start(); // TODO(burdon): Stop/clean-up.
       } else {
-        blaster.resize(update.view);
+        blaster.resize();
       }
 
       const current = update.view.state.selection.main.head;
       if (current !== last) {
         last = current;
         // TODO(burdon): Null if end of line.
-        const point = getPoint(update.view, current);
-        if (point) {
-          blaster.spawn(point);
+        const { element, point } = getPoint(update.view, current);
+        if (element && point) {
+          blaster.spawn({ element, point });
         }
       }
     }),
@@ -75,11 +87,12 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
     StateField.define({
       create: () => null,
       update: (_value, transaction) => {
-        if (blaster && view && transaction.docChanged) {
-          // TODO(burdon): On delete.
-          const point = getPoint(view, transaction.selection!.main.head);
-          if (point) {
-            blaster.spawn(point);
+        if (blaster && transaction.docChanged) {
+          // TODO(burdon): Only on delete.
+          const view = EditorView.findFromDOM(blaster.node)!;
+          const { element, point } = getPoint(view, transaction.selection!.main.head);
+          if (element && point) {
+            blaster.spawn({ element, point });
           }
         }
 
@@ -91,7 +104,7 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
       {
         any: (view, event) => {
           if (blaster && event.key === 'Enter' && event.shiftKey) {
-            blaster.shake(0.4);
+            blaster.shake({ time: 0.4 });
           }
 
           return false;
@@ -100,6 +113,10 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
     ]),
   ];
 };
+
+//
+// Blaster (no CM deps).
+//
 
 class Blaster {
   _canvas: HTMLCanvasElement | undefined;
@@ -115,31 +132,36 @@ class Blaster {
   _particles: Particle[] = [];
   _particlePointer = 0;
 
-  constructor(private _node: HTMLElement, private readonly _options: BlastOptions) {
+  constructor(private readonly _node: HTMLElement, private readonly _options: BlastOptions) {
     this._effect = this._options.effect === 1 ? new Effect1(_options) : new Effect2(_options);
   }
 
+  get node() {
+    return this._node;
+  }
+
   initialize() {
-    console.log('initialize');
+    // console.log('initialize');
     invariant(!this._canvas && !this._ctx);
 
     this._canvas = document.createElement('canvas');
     this._canvas.id = 'code-blast-canvas';
     this._canvas.style.position = 'absolute';
-    this._canvas.style.top = '0';
-    this._canvas.style.left = '0';
     this._canvas.style.zIndex = '0';
     this._canvas.style.pointerEvents = 'none';
+    // this._canvas.style.border = '2px solid red';
 
     this._ctx = this._canvas.getContext('2d');
 
-    const parent = this._node.parentElement?.parentElement?.parentElement;
+    const parent = this._node.parentElement?.parentElement;
     parent?.appendChild(this._canvas);
+
+    this.resize();
   }
 
   destroy() {
     this.stop();
-    console.log('destroy');
+    // console.log('destroy');
     if (this._canvas) {
       this._canvas.remove();
       this._canvas = undefined;
@@ -147,13 +169,9 @@ class Blaster {
     }
   }
 
-  // TODO(burdon): Get view from DOM: EditorView.findFromDOM(this._node)
-  //  - View port changes on scroll.
-  resize(view: EditorView) {
-    this._node = view.contentDOM;
-    const node = this._node.parentElement?.parentElement?.parentElement;
-    if (node && this._canvas) {
-      const { offsetLeft: x, offsetTop: y, offsetWidth: width, offsetHeight: height } = node;
+  resize() {
+    if (this._node.parentElement && this._canvas) {
+      const { offsetLeft: x, offsetTop: y, offsetWidth: width, offsetHeight: height } = this._node.parentElement;
       this._canvas.style.top = `${y}px`;
       this._canvas.style.left = `${x}px`;
       this._canvas.width = width;
@@ -162,16 +180,16 @@ class Blaster {
   }
 
   start() {
-    console.log('start');
+    // console.log('start');
     invariant(this._canvas && this._ctx);
     this._running = true;
     this.loop();
   }
 
   stop() {
-    console.log('stop');
+    // console.log('stop');
     this._running = false;
-    // this._node.style.transform = 'translate(0px, 0px)';
+    this._node.style.transform = 'translate(0px, 0px)';
   }
 
   loop() {
@@ -200,21 +218,18 @@ class Blaster {
     requestAnimationFrame(this.loop.bind(this));
   }
 
-  shake = throttle((time: number) => {
+  shake = throttle<{ time: number }>(({ time }) => {
     this._shakeTime = this._shakeTimeMax;
     this._shakeTimeMax = time;
   }, 100);
 
-  spawn = throttle(({ x, y }: { x: number; y: number }) => {
-    const node = document.elementFromPoint(x, y);
-    if (node) {
-      const color = getRGBComponents(node, this._options.color);
-      const numParticles = random(this._options.particleNumRange.min, this._options.particleNumRange.max);
-      for (let i = numParticles; i--; i > 0) {
-        // TODO(burdon): Delta should be based on direction.
-        this._particles[this._particlePointer] = this._effect.create(x - 16, y, color);
-        this._particlePointer = (this._particlePointer + 1) % this._options.maxParticles;
-      }
+  spawn = throttle<{ element: Element; point: { x: number; y: number } }>(({ element, point }) => {
+    const color = getRGBComponents(element, this._options.color);
+    const numParticles = random(this._options.particleNumRange.min, this._options.particleNumRange.max);
+    for (let i = numParticles; i--; i > 0) {
+      // TODO(burdon): Delta should be based on direction.
+      this._particles[this._particlePointer] = this._effect.create(point.x - 16, point.y, color);
+      this._particlePointer = (this._particlePointer + 1) % this._options.maxParticles;
     }
   }, 100);
 
@@ -328,7 +343,7 @@ class Effect2 extends Effect {
 // Utils
 //
 
-function throttle(callback: (...args: any[]) => void, limit: number) {
+function throttle<T>(callback: (arg: T) => void, limit: number): (arg: T) => void {
   let wait = false;
   return function (...args: any[]) {
     if (!wait) {
@@ -349,12 +364,6 @@ const random = (min: number, max: number) => {
   }
 
   return min + ~~(Math.random() * (max - min + 1));
-};
-
-const getPoint = (view: EditorView, pos: number) => {
-  const top = view.coordsAtPos(0);
-  const rect = view.coordsForChar(pos);
-  return top && rect ? { x: rect.left - top.left, y: rect.top - top.top } : undefined;
 };
 
 const getRGBComponents = (node: Element, color: BlastOptions['color']): Particle['color'] => {
