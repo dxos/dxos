@@ -25,6 +25,9 @@ export const image = (options: ImageOptions = {}): Extension => {
 
 const update = (state: EditorState, options: ImageOptions) => {
   const builder = new RangeSetBuilder();
+
+  // TODO(burdon): If not-readonly then show text.
+  // if (state.readOnly) {
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'Image') {
@@ -32,9 +35,9 @@ const update = (state: EditorState, options: ImageOptions) => {
         if (urlNode) {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
           builder.add(
-            node.from,
+            state.readOnly ? node.from : node.to,
             node.to,
-            Decoration.replace({
+            Decoration.widget({
               widget: new ImageWidget(url),
             }),
           );
@@ -42,6 +45,7 @@ const update = (state: EditorState, options: ImageOptions) => {
       }
     },
   });
+  // }
 
   return builder.finish();
 };
@@ -58,6 +62,7 @@ class ImageWidget extends WidgetType {
   toDOM(view: EditorView) {
     const img = document.createElement('img');
     img.setAttribute('src', this._url);
+    img.setAttribute('class', 'cm-image');
     return img;
   }
 }

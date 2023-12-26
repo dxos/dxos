@@ -93,14 +93,17 @@ const text = {
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
 
   table: str(
+    '# Table',
+    '',
     `| ${faker.lorem.word()} | ${faker.lorem.word()} | ${faker.lorem.word()} |`,
     '|---|---|---|',
     `| ${num()} | ${num()} | ${num()} |`,
     `| ${num()} | ${num()} | ${num()} |`,
     `| ${num()} | ${num()} | ${num()} |`,
+    '', // TODO(burdon): Possible GFM parsing bug if no newline?
   ),
 
-  image: str('![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
+  image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
 };
 
 const document = str(
@@ -110,9 +113,7 @@ const document = str(
   '',
   'This is all about https://dxos.org and related technologies.',
   '',
-  'This this is **bold**, __underlined__, _italic_, and `f(INLINE)`.',
-  '',
-  '__NOTE__: Fenced code uses the base font.',
+  'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
   '',
   '---',
   text.links,
@@ -126,6 +127,10 @@ const document = str(
   text.code,
   '---',
   text.headings,
+  '---',
+  text.table,
+  '---',
+  text.image,
 );
 
 const links = [
@@ -192,24 +197,23 @@ export default {
   render: Story,
 };
 
+const extensions = [
+  link({ onRender }),
+  tooltip({ onHover }),
+  tasklist(),
+  table(),
+  image(),
+  autocomplete({
+    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+  }),
+];
+
 export const Default = {
-  render: () => (
-    <Story
-      text={document}
-      extensions={[
-        link({ onRender }),
-        tooltip({ onHover }),
-        tasklist(),
-        autocomplete({
-          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-        }),
-      ]}
-    />
-  ),
+  render: () => <Story text={document} extensions={extensions} />,
 };
 
 export const Readonly = {
-  render: () => <Story text={document} readonly extensions={[link({ onRender }), tooltip({ onHover }), tasklist()]} />,
+  render: () => <Story text={document} extensions={extensions} readonly />,
 };
 
 export const Simple = {

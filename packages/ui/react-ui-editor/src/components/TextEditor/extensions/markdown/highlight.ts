@@ -24,6 +24,9 @@ import {
   tokens,
 } from '../../../../styles';
 
+// TODO(burdon): Style table in monospace.
+//  https://discuss.codemirror.net/t/markdown-table-highlighting/658
+
 /**
  * Custom tags defined and processed by the GFM lezer extension.
  * https://github.com/lezer-parser/markdown
@@ -52,7 +55,11 @@ export const markdownTagsExtension: MarkdownConfig = {
  * Styling based on `lezer` parser tags.
  * https://codemirror.net/examples/styling
  * https://github.com/lezer-parser/highlight
- * https://lezer.codemirror.net/docs/ref/#highlight (list of tags)
+ * https://lezer.codemirror.net/docs/ref/#highlight.tags (list of tags)
+ *
+ * Examples:
+ * - https://github.com/codemirror/language/blob/main/src/highlight.ts#L194
+ * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts#L115
  */
 export const markdownHighlightStyle = (readonly?: boolean) =>
   HighlightStyle.define(

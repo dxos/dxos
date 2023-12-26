@@ -8,6 +8,10 @@ import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 export type TableOptions = {};
 
+/**
+ * GFM tables.
+ * https://github.github.com/gfm/#tables-extension
+ */
 export const table = (options: TableOptions = {}) => {
   return StateField.define<RangeSet<any>>({
     create: (state) => update(state, options),
@@ -37,6 +41,7 @@ const update = (state: EditorState, options: TableOptions) => {
     // TODO(burdon): Use remark?: https://www.npmjs.com/package/remark-gfm
     syntaxTree(state).iterate({
       enter: (node) => {
+        console.log(node.name);
         // Check if cursor is inside text.
         switch (node.name) {
           case 'Table': {

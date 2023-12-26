@@ -94,10 +94,10 @@ export const markdownBundle = ({
       ],
     }),
 
+    // https://github.com/codemirror/theme-one-dark
+    themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
+
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle(readonly)),
-
-    // TODO(thure): All but one rule here apply to both themes; rename or refactor.
-    themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
   ].filter(Boolean) as Extension[];
 };
