@@ -9,13 +9,16 @@ import React, { type FC } from 'react';
 import Joyride, { type Step } from 'react-joyride';
 
 import { Button } from '@dxos/react-ui';
+import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
-import { Tooltip } from './Tooltip';
+import { floaterProps, Tooltip } from './Tooltip';
 import { useTour } from '../hooks';
 
+export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+
 const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
-  const { running, step, callback, start } = useTour();
+  const { running, step, callback, start } = useTour(true);
 
   return (
     <div className='app'>
@@ -28,6 +31,7 @@ const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
         steps={steps}
         stepIndex={step}
         callback={callback}
+        floaterProps={floaterProps}
         tooltipComponent={Tooltip}
       />
 

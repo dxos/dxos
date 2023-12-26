@@ -10,6 +10,17 @@ import { type TooltipRenderProps } from 'react-joyride';
 
 import { Button, DensityProvider } from '@dxos/react-ui';
 
+// https://github.com/gilbarbara/react-floater
+export const floaterProps = {
+  styles: {
+    floater: {
+      // TODO(burdon): Get tokens from tailwind.
+      filter: 'drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.1))',
+    },
+  },
+};
+
+// TODO(burdon): Add info link.
 export const Tooltip = ({ index, isLastStep, step, primaryProps, backProps, closeProps }: TooltipRenderProps) => {
   const { title, content } = step;
 
@@ -22,7 +33,7 @@ export const Tooltip = ({ index, isLastStep, step, primaryProps, backProps, clos
             <X />
           </Button>
         </div>
-        <div className='flex grow px-4'>{content}</div>
+        <div className='flex grow px-4 py-2'>{content}</div>
         <div className='flex p-2 items-center justify-between'>
           {index > 0 && backProps && (
             <Button variant='ghost' onClick={backProps.onClick} title={backProps['aria-label']}>
