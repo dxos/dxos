@@ -28,6 +28,8 @@ export type SectionProps = PropsWithChildren<{
   // Data props.
   id: string;
   title: string;
+  index: number;
+  count: number;
 
   // Tile props.
   active?: MosaicActiveType;
@@ -38,20 +40,25 @@ export type SectionProps = PropsWithChildren<{
 }>;
 
 export const Section = forwardRef<HTMLLIElement, SectionProps>(
-  ({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
+  (
+    { id, title, index, count, active, draggableProps, draggableStyle, onRemove, onNavigate, children },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(translationKey);
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
     return (
       <DensityProvider density='fine'>
-        <ListItem.Root ref={forwardedRef} id={id} classNames='pbe-2 block' style={draggableStyle}>
+        <ListItem.Root ref={forwardedRef} id={id} classNames='block  __pbe-2' style={draggableStyle}>
           <div
             role='none'
             className={mx(
               surfaceElevation({ elevation: 'group' }),
               inputSurface,
               hoverableControls,
-              'flex rounded',
+              'flex',
+              index === 0 && 'rounded-t',
+              index === count - 1 && 'rounded-b',
               active && staticHoverableControls,
               active === 'destination' && 'opacity-50',
               (active === 'origin' || active === 'rearrange') && 'opacity-0',
@@ -65,7 +72,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 fineButtonDimensions,
                 focusRing,
                 hoverableFocusedKeyboardControls,
-                'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
+                'self-stretch flex items-center justify-center bs-auto is-auto',
                 active === 'destination' && 'invisible',
                 active === 'overlay' && 'text-primary-600 dark:text-primary-300',
               )}

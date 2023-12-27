@@ -65,7 +65,7 @@ export const Stack = ({
 
   const Component: MosaicTileComponent<StackSectionItem, HTMLLIElement> = useMemo(
     () =>
-      forwardRef(({ path, type, active, draggableStyle, draggableProps, item }, forwardRef) => {
+      forwardRef(({ path, type, active, draggableStyle, draggableProps, item, position }, forwardRef) => {
         const { t } = useTranslation(translationKey);
         const transformedItem = transform
           ? transform(
@@ -74,10 +74,13 @@ export const Stack = ({
               activeItem?.item.id === item.id ? activeItem?.type : type,
             )
           : item;
+
         const section = (
           <Section
             ref={forwardRef}
             id={transformedItem.id}
+            index={position as number}
+            count={items?.length ?? 0}
             title={transformedItem.object.title ?? t('untitled section title')}
             active={active}
             draggableProps={draggableProps}
