@@ -5,6 +5,10 @@
 import { type Context, createContext } from 'react';
 import { type Step } from 'react-joyride';
 
+import { type GraphBuilderProvides, type IntentResolverProvides } from '@dxos/app-framework';
+
+import { HELP_PLUGIN } from './meta';
+
 export type HelpContextType = {
   running: boolean;
   steps: Step[];
@@ -22,3 +26,10 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
   start: () => {},
   stop: () => {},
 });
+
+export type HelpPluginProvides = GraphBuilderProvides & IntentResolverProvides;
+
+const HELP_ACTION = `${HELP_PLUGIN}/action`;
+export enum HelpAction {
+  START = `${HELP_ACTION}/start`,
+}

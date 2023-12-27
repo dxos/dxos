@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import Joyride from 'react-joyride';
-
-export { Joyride };
+import { HelpPlugin } from './HelpPlugin';
 
 export * from './components';
 export * from './hooks';
 
 export * from './HelpPlugin';
+
+export default HelpPlugin;

@@ -130,7 +130,9 @@ export class GraphBuilder {
             const action = this._createAction(partial);
             if (action.keyBinding) {
               // TODO(burdon): Last writer wins.
-              Mousetrap.bind(action.keyBinding, () => {
+              Mousetrap.bind(action.keyBinding, (event) => {
+                event.stopPropagation();
+                event.preventDefault();
                 action.invoke();
               });
             }

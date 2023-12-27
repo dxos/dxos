@@ -12,6 +12,8 @@ import type {
 } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
 
+import { DEBUG_PLUGIN } from './meta';
+
 export type DebugContextType = {
   running: boolean;
   start: (cb: TimerCallback, options: TimerOptions) => void;
@@ -32,3 +34,8 @@ export type DebugPluginProvides = SurfaceProvides &
   TranslationsProvides & {
     settings: DebugSettingsProps;
   };
+
+const DEBUG_ACTION = `${DEBUG_PLUGIN}/action`;
+export enum DebugAction {
+  OPEN_DEVTOOLS = `${DEBUG_ACTION}/open-devtools`,
+}

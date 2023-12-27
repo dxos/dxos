@@ -2,17 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useState } from 'react';
+import get from 'lodash.get';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 import Joyride, { ACTIONS, EVENTS, type Step, type StoreHelpers } from 'react-joyride';
+
+import { useThemeContext } from '@dxos/react-ui';
+import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 
 import { floaterProps, Tooltip } from './Tooltip';
 import { HelpContext } from '../types';
 
-export const HelpContextProvider = ({ children, steps: initialSteps }: PropsWithChildren<{ steps: Step[] }>) => {
+export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+
+export const HelpContextProvider = ({
+  children,
+  steps: initialSteps,
+  running: initialRunning = false,
+}: PropsWithChildren<{ steps: Step[]; running?: boolean }>) => {
   const [stepIndex, setStepIndex] = useState(0);
-  const [running, setRunning] = useState(false);
+  const [running, setRunning] = useState(initialRunning);
   const [steps, setSteps] = useState(initialSteps);
   const [helpers, setHelpers] = useState<StoreHelpers>();
+  useEffect(() => setRunning(initialRunning), [initialRunning]);
+  const { themeMode } = useThemeContext();
 
   const handleGo = (index: number) => {
     setRunning(false);
@@ -65,7 +77,7 @@ export const HelpContextProvider = ({ children, steps: initialSteps }: PropsWith
         continuous={true}
         // spotlightClicks={true}
         disableOverlay={true}
-        disableOverlayClose={true}
+        // disableOverlayClose={true}
         steps={steps}
         stepIndex={stepIndex}
         run={running}
@@ -73,8 +85,16 @@ export const HelpContextProvider = ({ children, steps: initialSteps }: PropsWith
         floaterProps={floaterProps}
         tooltipComponent={Tooltip}
         getHelpers={(helpers) => setHelpers(helpers)}
+        styles={{
+          options: {
+            // TODO(burdon): Better way to normalize theme?
+            arrowColor: get(tokens, themeMode === 'dark' ? 'extend.colors.neutral.925' : 'extend.colors.white'),
+          },
+        }}
       />
       {children}
     </HelpContext.Provider>
   );
 };
+
+console.log(tokens);

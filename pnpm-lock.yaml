@@ -509,6 +509,9 @@ importers:
       '@braneframe/plugin-grid':
         specifier: workspace:*
         version: link:../plugins/plugin-grid
+      '@braneframe/plugin-help':
+        specifier: workspace:*
+        version: link:../plugins/plugin-help
       '@braneframe/plugin-inbox':
         specifier: workspace:*
         version: link:../plugins/plugin-inbox
@@ -1523,6 +1526,9 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      react-floater:
+        specifier: ^0.9.3
+        version: 0.9.3(react-dom@18.2.0)(react@18.2.0)
       react-joyride:
         specifier: ^2.7.2
         version: 2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -16643,6 +16649,10 @@ packages:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
     dev: true
 
+  /@popperjs/core@2.11.8:
+    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
+    dev: false
+
   /@preact/signals-core@1.5.0:
     resolution: {integrity: sha512-U2diO1Z4i1n2IoFgMYmRdHWGObNrcuTRxyNEn7deSq2cru0vj0583HYQZHsAqcs7FE+hQyX3mjIV7LAfHCvy8w==}
 
@@ -26975,6 +26985,11 @@ packages:
     dependencies:
       type-detect: 4.0.8
     dev: true
+
+  /deepmerge-ts@5.1.0:
+    resolution: {integrity: sha512-eS8dRJOckyo9maw9Tu5O5RUi/4inFLrnoLkBe3cPfDMx3WZioXtmOew4TXQaxq7Rhl4xjDtR7c6x8nNTxOvbFw==}
+    engines: {node: '>=16.0.0'}
+    dev: false
 
   /deepmerge@4.3.1:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
@@ -39245,6 +39260,20 @@ packages:
       tree-changes: 0.9.3
     dev: false
 
+  /react-floater@0.9.3(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-nyblYb8WXAjnP64Rf6AiwcTL6YpfmPuAVkrMTUKoU7S2jVYv+HRIfJN3Amty7QIERNBmbUZtP9PVKajalwGzcw==}
+    peerDependencies:
+      react: 16.8 - 18
+      react-dom: 16.8 - 18
+    dependencies:
+      '@popperjs/core': 2.11.8
+      deepmerge-ts: 5.1.0
+      is-lite: 1.2.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      tree-changes-hook: 0.11.2(react@18.2.0)
+    dev: false
+
   /react-i18next@11.18.6(i18next@21.10.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
     peerDependencies:
@@ -42643,6 +42672,16 @@ packages:
 
   /traverse@0.3.9:
     resolution: {integrity: sha512-iawgk0hLP3SxGKDfnDJf8wTz4p2qImnyihM5Hh/sGvQ3K37dPi/w8sRhdNIxYA1TwFwc5mDhIJq+O0RsvXBKdQ==}
+    dev: false
+
+  /tree-changes-hook@0.11.2(react@18.2.0):
+    resolution: {integrity: sha512-Zsgkp1zjEE9F1BLCGv/QKNInikIZVOI97MJhuEMIGyaW/0K46N35el0/aMBnFkQexJYFza6VBElgpZ77zFjLtw==}
+    peerDependencies:
+      react: 16.8 - 18
+    dependencies:
+      '@gilbarbara/deep-equal': 0.3.1
+      react: 18.2.0
+      tree-changes: 0.11.2
     dev: false
 
   /tree-changes@0.11.2:

@@ -99,6 +99,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269

@@ -12,12 +12,12 @@ import { SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import {
   getPlugin,
+  parseGraphPlugin,
+  parseIntentPlugin,
   resolvePlugin,
   type Plugin,
   type PluginDefinition,
   type IntentPluginProvides,
-  parseGraphPlugin,
-  parseIntentPlugin,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -26,7 +26,7 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
-import { DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './types';
+import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
@@ -115,7 +115,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   invoke: () =>
                     intentPlugin?.provides.intent.dispatch({
                       plugin: DEBUG_PLUGIN,
-                      action: 'open-devtools', // TODO(burdon): Definition.
+                      action: DebugAction.OPEN_DEVTOOLS,
                     }),
                   keyBinding: 'shift+meta+\\',
                   properties: {
@@ -153,7 +153,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       intent: {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
-            case 'open-devtools': {
+            case DebugAction.OPEN_DEVTOOLS: {
               const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
