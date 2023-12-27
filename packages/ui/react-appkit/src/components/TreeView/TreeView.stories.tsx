@@ -6,10 +6,13 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { TreeView, mapJsonToHierarchy } from './TreeView';
 
 export default {
   component: TreeView,
+  decorators: [withTheme],
 };
 
 const data = {

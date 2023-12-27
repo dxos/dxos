@@ -5,9 +5,13 @@
 import '@dxosTheme';
 
 import { Tag } from './Tag';
+import { withTheme } from '../../testing';
 
 export default {
+  title: 'DXOS UI/Tag',
   component: Tag,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
   argTypes: {
     palette: {
       control: 'select',

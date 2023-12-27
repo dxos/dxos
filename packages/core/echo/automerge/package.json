@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -77,10 +77,11 @@
   },
   "files": [
     "dist",
+    "exports",
     "src"
   ],
   "scripts": {
-    "compile": "ts-node-esm scripts/compile.mts"
+    "compile": "tsx scripts/compile.mts"
   },
   "dependencies": {
     "@automerge/automerge": "^2.1.7",

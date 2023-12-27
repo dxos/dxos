@@ -37,7 +37,8 @@
     // https://nx.dev/more-concepts/customizing-inputs#global-settings.
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
-      "{workspaceRoot}/.eslintrc*.js"
+      "{workspaceRoot}/.eslintrc*.js",
+      { "runtime": "node --version" }
     ],
     "production": [
       "default",
@@ -109,12 +110,6 @@
         //   Some experimental/deprecated projects still depend on build for transpiling.
         "^build",
         "prebuild"
-      ]
-    },
-    "chromatic": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "storybook-build"
       ]
     },
     "compile": {
@@ -190,20 +185,6 @@
       ]
     },
     "serve-with-vault": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
-    },
-    "storybook": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
-    },
-    "storybook-build": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",

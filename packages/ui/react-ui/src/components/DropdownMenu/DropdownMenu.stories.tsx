@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { DropdownMenu } from './DropdownMenu';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 const StorybookDropdownMenu = () => {
@@ -91,7 +92,10 @@ const StorybookDropdownMenu = () => {
 };
 
 export default {
+  title: 'DXOS UI/Dropdown menu',
   component: StorybookDropdownMenu,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

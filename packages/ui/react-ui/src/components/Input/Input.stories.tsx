@@ -10,6 +10,7 @@ import { baseSurface, chromeSurface, groupSurface, mx, surfaceElevation } from '
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import { Input } from './Input';
+import { withTheme } from '../../testing';
 
 type StoryInputProps = Partial<{
   label: string;
@@ -71,6 +72,7 @@ const StoryInput = (props: StoryInputProps) => {
 };
 
 export default {
+  title: 'DXOS UI/Input',
   component: StoryInput,
   // TODO(thure): Refactor
   argTypes: {
@@ -86,6 +88,8 @@ export default {
       options: ['default', 'textarea', 'pin'],
     },
   },
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

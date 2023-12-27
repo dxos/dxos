@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Tree, TreeItem } from './Tree';
+import { withTheme } from '../../testing';
 
 type StorybookTreeProps = {
   data: any;
@@ -55,7 +56,10 @@ const StorybookTree = ({ data }: StorybookTreeProps) => {
 };
 
 export default {
+  title: 'DXOS UI/Tree',
   component: StorybookTree,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

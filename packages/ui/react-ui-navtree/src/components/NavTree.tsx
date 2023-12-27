@@ -43,7 +43,7 @@ export type NavTreeProps = {
   onSelect?: NavTreeProviderProps['onSelect'];
   isOver?: NavTreeProviderProps['isOver'];
   renderPresence?: NavTreeProviderProps['renderPresence'];
-} & Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component' | 'id'>;
+} & Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
 
 export const NavTree = ({
   node,

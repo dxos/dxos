@@ -11,6 +11,7 @@ import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
+import { useExtensions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 export type EditorCardProps = {
@@ -25,7 +26,11 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
     forwardRef,
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
-    const content = useTextModel({ text: object.content });
+    const extensions = useExtensions();
+    const model = useTextModel({ text: object.content });
+    if (!model) {
+      return null;
+    }
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
@@ -53,7 +58,8 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
           </Card.Header>
           <Card.Body>
             <MarkdownEditor
-              model={content}
+              model={model}
+              extensions={extensions}
               slots={{
                 root: {
                   className: mx(

@@ -16,5 +16,5 @@ export const EditorMainEmbedded = ({
   composer: EditorModel;
   properties: MarkdownProperties;
 }) => {
-  return <EditorMain model={composer} properties={properties} layout='embedded' editorRefCb={() => {}} />;
+  return <EditorMain model={composer} properties={properties} layout='embedded' />;
 };

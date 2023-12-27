@@ -46,7 +46,7 @@ export default [
           'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'missing object message': 'Object not available.',
         'missing object description':
-          'TThe requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'create folder label': 'Create folder',
         'unnamed object label': 'New object',
         'unnamed folder label': 'New folder',

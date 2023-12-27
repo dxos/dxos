@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,9 +15,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "chromatic": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -36,11 +33,11 @@
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "chromatic": "^7.5.0",
     "deepsignal": "1.4.0-shallow.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

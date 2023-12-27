@@ -8,6 +8,7 @@ import { ArrowClockwise, Bug, FileJs, FileTs, TextB, TextItalic, TextUnderline }
 import React from 'react';
 
 import { Toolbar } from './Toolbar';
+import { withTheme } from '../../testing';
 import { Toggle } from '../Buttons';
 import { Select } from '../Select';
 
@@ -69,7 +70,10 @@ const StorybookToolbar = (props: StorybookToolbarProps) => {
 };
 
 export default {
+  title: 'DXOS UI/Toolbar',
   component: StorybookToolbar,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

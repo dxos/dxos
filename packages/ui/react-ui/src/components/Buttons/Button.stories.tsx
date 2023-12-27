@@ -10,11 +10,15 @@ import React, { type PropsWithChildren } from 'react';
 import { chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
+import { withTheme } from '../../testing';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 
 export default {
+  title: 'DXOS UI/Button',
   component: Button,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => (

@@ -13,9 +13,13 @@ import React, { type FC, type ReactNode, useState } from 'react';
 import { getSize, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { List, ListItem, type ListProps, type ListScopedProps } from './List';
+import { withTheme } from '../../testing';
 
 export default {
+  title: 'DXOS UI/List',
   component: List as FC<ListProps>,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 const UniformListItem = ({ id, text }: { id: string; text: string }) => {

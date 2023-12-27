@@ -115,6 +115,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
+        data-testid='main.stack'
         SectionContent={SectionContent}
         type={StackType.Section.schema.typename}
         items={items}
@@ -129,7 +130,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
-              <Button variant='ghost'>
+              <Button variant='ghost' data-testid='stack.createSection'>
                 <Plus className={getSize(5)} />
               </Button>
             </DropdownMenu.Trigger>

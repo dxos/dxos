@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -91,6 +91,7 @@
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",

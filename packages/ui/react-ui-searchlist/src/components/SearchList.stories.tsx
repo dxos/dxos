@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { type FC } from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { SearchList } from './SearchList';
 
 type StoryItems = Record<string, string>;
@@ -35,7 +37,9 @@ const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) =>
 };
 
 export default {
+  title: 'react-ui-searchlist/SearchList',
   component: SearchListStory,
+  decorators: [withTheme],
 };
 
 export const Default = {

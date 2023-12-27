@@ -484,6 +484,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mesh/teleport-extension-automerge-replicator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/teleport-extension-gossip/package.json",
           "jsonpath": "$.version"
         },
@@ -559,27 +564,12 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/kai-sandbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/kodama/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/labs-functions/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/experimental/metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/mosaic/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -749,6 +739,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
@@ -820,6 +815,11 @@
         {
           "type": "json",
           "path": "tools/ridoculous/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/stories/package.json",
           "jsonpath": "$.version"
         },
         {

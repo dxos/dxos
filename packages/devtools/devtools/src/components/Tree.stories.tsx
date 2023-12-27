@@ -6,10 +6,13 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Tree } from './Tree';
 
 export default {
   component: Tree,
+  decorators: [withTheme],
   argTypes: {},
 };
 

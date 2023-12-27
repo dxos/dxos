@@ -25,7 +25,7 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
-import { AutomergeObject } from '../automerge';
+import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -235,7 +235,12 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description
    */
   toJSON() {
-    return this[base]._convert();
+    return this[base]._convert({
+      onRef: (id, obj) => ({
+        '@type': REFERENCE_TYPE_TAG,
+        itemId: id,
+      }),
+    });
   }
 
   /**
@@ -301,11 +306,20 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   private _convert(visitors: ConvertVisitors = {}) {
+    const typeRef = this[base]._getState().type;
     return {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'hypercore',
       '@id': this.id,
       // TODO(mykola): Secondary path is non reachable.
-      '@type': this.__typename ?? (this.__schema ? { '@id': this.__schema!.id } : undefined),
-      // '@schema': this.__schema,
+      '@type': typeRef
+        ? {
+            '@type': REFERENCE_TYPE_TAG,
+            itemId: typeRef.itemId,
+            protocol: typeRef.protocol,
+            host: typeRef.host,
+          }
+        : undefined,
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
@@ -384,7 +398,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
           if (item instanceof AbstractEchoObject) {
             return this._linkObject(item);
           } else if (isReferenceLike(item)) {
+            // Old reference format.
             return new Reference(item['@id']);
+          } else if (typeof item === 'object' && item !== null && item['@type'] === REFERENCE_TYPE_TAG) {
+            return new Reference(item.itemId, item.protocol, item.host);
           } else {
             return item;
           }
@@ -398,7 +415,13 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       } else if (typeof value === 'object' && value !== null) {
         if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
           // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+          // Old reference format.
           this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
+        } else if (value['@type'] === REFERENCE_TYPE_TAG) {
+          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+          this._mutate(
+            this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
+          );
         } else {
           const sub = this._createProxy({}, key);
           this._mutate(this._model.builder().set(key, {}).build(meta));
@@ -552,7 +575,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
         return new Reference(obj.id);
       } else {
         if (obj[base]._database !== this._database) {
-          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
         } else {
           return new Reference(obj.id);
         }
@@ -650,10 +673,16 @@ const getSchemaProto = (): typeof Schema => {
 // TODO(dmaretskyi): Remove once migration is complete.
 let globalAutomergePreference: boolean | undefined;
 
+/**
+ * @deprecated Temporary.
+ */
 export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
   globalAutomergePreference = useAutomerge;
 };
 
+/**
+ * @deprecated Temporary.
+ */
 export const getGlobalAutomergePreference = () => {
   return (
     globalAutomergePreference ??
@@ -663,10 +692,16 @@ export const getGlobalAutomergePreference = () => {
   );
 };
 
+/**
+ * @deprecated Temporary.
+ */
 export const isActualTypedObject = (object: unknown): object is TypedObject => {
   return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
 };
 
+/**
+ * @deprecated Temporary.
+ */
 export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
   return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

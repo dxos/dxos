@@ -8,9 +8,11 @@ import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack, type StackSectionContent, type StackProps, type StackSectionItem } from './Stack';
-import { FullscreenDecorator, TestObjectGenerator } from '../testing';
+import { FullscreenDecorator } from '../testing/decorators';
+import { TestObjectGenerator } from '../testing/generator';
 
 faker.seed(3);
 
@@ -28,6 +30,7 @@ const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string;
 
 export default {
   component: Stack,
+  decorators: [withTheme],
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
       <Mosaic.Root debug={debug}>
@@ -72,7 +75,7 @@ export const Transfer = {
     return (
       <Mosaic.Root debug={debug}>
         <Mosaic.DragOverlay />
-        <div className='flex grow justify-center p-4'>
+        <div className='flex grow justify-center p-4' data-testid='stack-transfer'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
             <DemoStack {...args} id='stack-2' />
@@ -94,7 +97,7 @@ export const Copy = {
     return (
       <Mosaic.Root debug={debug}>
         <Mosaic.DragOverlay debug={debug} />
-        <div className='flex grow justify-center p-4'>
+        <div className='flex grow justify-center p-4' data-testid='stack-copy'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
             <DemoStack {...args} id='stack-2' operation='copy' count={0} />
@@ -122,7 +125,7 @@ const DemoStack = ({
 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count }).map((object) => ({ id: faker.datatype.uuid(), object }));
+    return generator.createObjects({ length: count }).map((object) => ({ id: faker.string.uuid(), object }));
   });
 
   const itemsRef = useRef(items);
@@ -175,6 +178,7 @@ const DemoStack = ({
     <Stack
       id={id}
       className={className}
+      data-testid={id}
       SectionContent={SectionContent}
       items={items}
       onOver={handleOver}

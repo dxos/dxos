@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { syntaxHighlighting } from '@codemirror/language';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
@@ -11,10 +10,8 @@ import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { nameRegex, promptLanguage, promptHighlightStyles } from './syntax';
+import { nameRegex, promptExtension } from './extension';
 import { CHAIN_PLUGIN } from '../../meta';
-
-// TODO(burdon): Schema.
 
 const inputTypes = [
   {
@@ -87,6 +84,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     }
   }, [text]);
 
+  if (!model) {
+    return null;
+  }
+
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
@@ -109,7 +110,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         <Section title='Template'>
           <TextEditor
             model={model}
-            extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}
+            extensions={[promptExtension]}
             slots={{
               root: {
                 className: 'w-full p-2',
@@ -170,11 +171,13 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: input.value });
+  if (!model) {
+    return null;
+  }
 
   return (
     <TextEditor
       model={model}
-      extensions={[promptLanguage]}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),
@@ -189,8 +192,10 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
 
 const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
   return (
-    <div className='border border-neutral-100 rounded-md'>
-      <div className='flex h-[32px] items-center bg-neutral-50 rounded-t border-b'>
+    <div className={mx('border rounded-md', groupBorder)}>
+      <div
+        className={mx('flex h-[32px] items-center bg-neutral-50 dark:bg-neutral-800 rounded-t border-b', groupBorder)}
+      >
         <h2 className='px-2 text-xs'>{title}</h2>
         <div className='grow' />
         {actions}

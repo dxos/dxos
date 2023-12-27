@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 
 import { createScenarios } from './helpers';
 import { Input, Select, Toggle, Toolbar } from '../components';
+import { withTheme } from '../testing';
 
 const Story = () => {
   const [checked, setChecked] = useState<boolean>(false);
@@ -82,7 +83,10 @@ const Story = () => {
 };
 
 export default {
+  title: 'DXOS UI/Scenarios/Controls',
   component: Story,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {
