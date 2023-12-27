@@ -46,7 +46,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       settings.close();
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
@@ -112,12 +112,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   id: 'open-devtools',
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
                   icon: (props) => <Bug {...props} />,
+                  keyBinding: 'shift+meta+\\',
                   invoke: () =>
                     intentPlugin?.provides.intent.dispatch({
                       plugin: DEBUG_PLUGIN,
                       action: DebugAction.OPEN_DEVTOOLS,
                     }),
-                  keyBinding: 'shift+meta+\\',
                   properties: {
                     testId: 'spacePlugin.openDevtools',
                   },
@@ -177,9 +177,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const { component, active } = data;
-          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
-            return <DebugSettings />;
+          const { active } = data;
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
           }
 
           if (!settings.values.debug) {

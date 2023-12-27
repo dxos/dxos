@@ -12,7 +12,7 @@ import { ClientRepeater, textGenerator, useDataGenerator } from '@dxos/react-cli
 import { useId, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor } from './TextEditor';
+import { MarkdownEditor } from '../../components';
 import { Replicator, useYjsModel } from '../../testing';
 
 export default {

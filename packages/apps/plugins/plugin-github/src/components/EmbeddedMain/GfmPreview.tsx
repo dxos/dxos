@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { GITHUB_PLUGIN } from '../../meta';
-import { PatInput, useOctokitContext } from '../GithubApiProviders';
+import { GitHubSettings, useOctokitContext } from '../GithubApiProviders';
 import { Loading } from '../Loading';
 
 const defaultOptions: Parameters<typeof DOMPurify.sanitize>[1] = {
@@ -104,7 +104,7 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
   ) : (
     <div role='none' className='mli-auto max-is-md pli-2 text-center'>
       {!octokit && <p className='mlb-4 text-lg font-system-medium'>{t('empty github pat message')}</p>}
-      {octokit ? <Loading label={t('loading preview message')} /> : <PatInput />}
+      {octokit ? <Loading label={t('loading preview message')} /> : <GitHubSettings />}
     </div>
   );
 };

@@ -9,26 +9,26 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
-  Surface,
   findPlugin,
-  resolvePlugin,
-  useIntent,
-  usePlugins,
   parseGraphPlugin,
   parseIntentPlugin,
   parseSurfacePlugin,
+  resolvePlugin,
+  useIntent,
+  usePlugins,
   LayoutAction,
+  CommandsDialogContent,
+  SettingsDialogContent,
+  ShortcutsDialogContent,
+  Surface,
+  type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
-  type LayoutProvides,
-  type IntentResolverProvides,
   type GraphProvides,
-  type GraphBuilderProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
   type SurfaceProps,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -37,16 +37,14 @@ import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './compon
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
-
-export type LayoutPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  LayoutProvides;
+import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
 export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
+  // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+
+  const state = new LocalStorageStore<LayoutState & LayoutSettingsProps>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
@@ -61,6 +59,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
     active: undefined,
     previous: undefined,
+
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
       return this.active && graphPlugin.provides.graph.findNode(this.active);
@@ -74,23 +73,27 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
+
+      // TODO(burdon): Create context and plugin.
+      Keyboard.singleton.initialize();
     },
     unload: async () => {
+      Keyboard.singleton.destroy();
       state.close();
     },
     provides: {
       layout: state.values as RevertDeepSignal<LayoutState>,
+      settings: { meta, values: state.values },
       translations,
       // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
         builder: ({ parent, plugins }) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
@@ -102,6 +105,41 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
                   action: 'toggle-fullscreen',
+                }),
+            });
+
+            // TODO(burdon): Move special handlers to separate plugin (LayoutPlugin is optional).
+
+            parent.addAction({
+              id: LayoutAction.OPEN_SETTINGS,
+              label: ['open settings label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+,',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_SETTINGS,
+                }),
+            });
+
+            parent.addAction({
+              id: LayoutAction.OPEN_COMMANDS,
+              label: ['open commands label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+k',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_COMMANDS,
+                }),
+            });
+
+            parent.addAction({
+              id: LayoutAction.OPEN_SHORTCUTS,
+              label: ['open shortcuts label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+/',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_SHORTCUTS,
                 }),
             });
           }
@@ -202,10 +240,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          if (role === 'settings') {
-            return <LayoutSettings />;
-          }
-
           switch (data.component) {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
@@ -221,9 +255,22 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextPanel />;
 
-            default:
-              return null;
+            case `${LAYOUT_PLUGIN}/Settings`:
+              return <SettingsDialogContent />;
+
+            case `${LAYOUT_PLUGIN}/Commands`:
+              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
+
+            case `${LAYOUT_PLUGIN}/Shortcuts`:
+              return <ShortcutsDialogContent />;
           }
+
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
+          }
+
+          return null;
         },
       },
       intent: {
@@ -282,10 +329,36 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               return true;
             }
 
+            // TODO(burdon): Move system commands to app framework plugin?
+
+            case LayoutAction.OPEN_SETTINGS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Settings' };
+              return true;
+            }
+
+            case LayoutAction.OPEN_COMMANDS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Commands' };
+              return true;
+            }
+
+            case LayoutAction.OPEN_SHORTCUTS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Shortcuts' };
+              return true;
+            }
+
             case LayoutAction.ACTIVATE: {
+              const id = (intent.data as LayoutAction.Activate).id;
+              const path = graphPlugin?.provides.graph.getPath(id);
+              if (path) {
+                Keyboard.singleton.setCurrentContext(path.join('/'));
+              }
+
               batch(() => {
                 state.values.previous = state.values.active;
-                state.values.active = (intent.data as LayoutAction.Activate).id;
+                state.values.active = id;
               });
               return true;
             }

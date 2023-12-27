@@ -3,7 +3,7 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, indentWithTab } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
 import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
@@ -28,11 +28,16 @@ import type { ThemeMode } from '@dxos/react-ui';
 import { markdownHighlightStyle, markdownTagsExtension } from './highlight';
 
 export type MarkdownBundleOptions = {
+  readonly?: boolean;
   themeMode?: ThemeMode;
   placeholder?: string;
 };
 
-export const markdownBundle = ({ themeMode, placeholder: _placeholder }: MarkdownBundleOptions): Extension[] => {
+export const markdownBundle = ({
+  readonly,
+  themeMode,
+  placeholder: _placeholder,
+}: MarkdownBundleOptions): Extension[] => {
   // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
   // https://codemirror.net/docs/ref/#codemirror.basicSetup
   return [
@@ -54,14 +59,17 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     indentOnInput(),
     rectangularSelection(),
 
-    // TODO(burdon): Review.
+    // https://codemirror.net/docs/ref/#view.keymap
     keymap.of([
-      ...closeBracketsKeymap,
+      // https://codemirror.net/docs/ref/#commands.defaultKeymap
       ...defaultKeymap,
-      // ...foldKeymap,
-      // ...historyKeymap,
-      // ...lintKeymap,
+      // https://codemirror.net/docs/ref/#commands.historyKeymap
+      ...historyKeymap,
+      // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
+      ...closeBracketsKeymap,
+      // https://codemirror.net/docs/ref/#search.searchKeymap
       ...searchKeymap,
+      // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
     ]),
 
@@ -86,10 +94,10 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
       ],
     }),
 
-    // Custom styles.
-    syntaxHighlighting(markdownHighlightStyle),
-
-    // TODO(thure): All but one rule here apply to both themes; rename or refactor.
+    // https://github.com/codemirror/theme-one-dark
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
+
+    // Custom styles.
+    syntaxHighlighting(markdownHighlightStyle(readonly)),
   ].filter(Boolean) as Extension[];
 };

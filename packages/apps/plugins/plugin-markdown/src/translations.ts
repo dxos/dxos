@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [MARKDOWN_PLUGIN]: {
-        'plugin name': 'Markdown',
+        'plugin name': 'Editor',
         'create stack section label': 'Create document',
         'document title placeholder': 'New document',
         'choose markdown from space dialog title': 'Choose one or more documents to add',
@@ -17,11 +17,11 @@ export default [
         'chooser done label': 'Add selected',
         'create document label': 'Create document',
         'editor placeholder': 'New document…',
-        'editor mode label': 'Editor mode',
+        'editor mode label': 'Editor mode:',
         'select editor mode placeholder': 'Select editor mode…',
         'settings editor mode default label': 'Default',
         'settings editor mode vim label': 'Vim',
-        'settings markdown experimental label': 'Enable markdown widgets',
+        'settings markdown experimental label': 'Enable experimental features.',
       },
     },
   },

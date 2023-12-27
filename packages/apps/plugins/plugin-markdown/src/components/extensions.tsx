@@ -8,17 +8,19 @@ import { createRoot } from 'react-dom/client';
 
 import { useIntent, type DispatchIntent, LayoutAction } from '@dxos/app-framework';
 import {
-  link,
-  tasklist,
-  tooltip,
+  type AutocompleteOptions,
+  type CommentsOptions,
   type Extension,
-  listener,
+  type ListenerOptions,
   type TooltipOptions,
   autocomplete,
-  type AutocompleteOptions,
   comments,
-  type CommentsOptions,
-  type ListenerOptions,
+  image,
+  link,
+  listener,
+  table,
+  tasklist,
+  tooltip,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -74,21 +76,23 @@ export type UseExtensionsOptions = {
 
 export const useExtensions = ({
   experimental,
-  listener: _listener,
-  autocomplete: _autocomplete,
-  comments: _comments,
+  listener: listenerOption,
+  autocomplete: autoCompleteOption,
+  comments: commentsOptions,
 }: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
   const extensions: Extension[] = [];
   if (experimental) {
     extensions.push(
       ...[
+        image(),
         link({ onRender: onRender(dispatch) }),
-        tooltip({ onHover }),
+        table(),
         tasklist(),
-        _listener && listener(_listener),
-        _autocomplete && autocomplete(_autocomplete),
-        _comments && comments(_comments),
+        tooltip({ onHover }),
+        autoCompleteOption && autocomplete(autoCompleteOption),
+        commentsOptions && comments(commentsOptions),
+        listenerOption && listener(listenerOption),
       ].filter(nonNullable),
     );
   }

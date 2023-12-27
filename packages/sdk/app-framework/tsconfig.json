@@ -27,10 +27,25 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keyboard"
+    },
+    {
       "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-searchlist"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/storybook-utils"
     },
     {
       "path": "../app-graph"

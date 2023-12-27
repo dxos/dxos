@@ -7,6 +7,7 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -49,14 +50,13 @@ type StackProvides = {
 
 export type MarkdownSettingsProps = {
   editorMode?: EditorMode;
-  experimental?: boolean; // TODO(burdon): Flip.
+  experimental?: boolean;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
-  StackProvides & {
-    settings: MarkdownSettingsProps;
-  };
+  StackProvides;

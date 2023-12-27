@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import type {
-  MetadataRecordsProvides,
-  PluginDefinition,
-  SurfaceProvides,
-  TranslationsProvides,
+import {
+  type MetadataRecordsProvides,
+  type PluginDefinition,
+  type SurfaceProvides,
+  type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Graph, type Node } from '@dxos/app-graph';
 
