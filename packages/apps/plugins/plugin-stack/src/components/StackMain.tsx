@@ -31,7 +31,9 @@ import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
-const SectionContent: StackProps['SectionContent'] = ({ data }) => <Surface role='section' data={{ object: data }} />;
+const SectionContent: StackProps['SectionContent'] = ({ data }) => {
+  return <Surface role='section' data={{ object: data }} />;
+};
 
 export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
