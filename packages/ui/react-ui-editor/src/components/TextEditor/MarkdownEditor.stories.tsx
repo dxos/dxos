@@ -1,8 +1,5 @@
 //
 // Copyright 2023 DXOS.org
-// Based on Joel Besada's lovely experiment
-// https://twitter.com/JoelBesada/status/670343885655293952
-// https://github.com/chinchang/code-blast-codemirror/blob/master/code-blast.js
 //
 
 import '@dxosTheme';
@@ -326,5 +323,22 @@ export const Demo = {
 };
 
 export const Blast = {
-  render: () => <Story text={str(text.paragraphs, text.code, text.paragraphs)} extensions={[blast({ effect: 2 })]} />,
+  render: () => (
+    <Story
+      text={str(text.paragraphs, text.code, text.paragraphs)}
+      extensions={[
+        blast({
+          effect: 2,
+          maxParticles: 200,
+          particleGravity: 0.2,
+          particleAlphaFadeout: 0.995,
+          particleNumRange: { min: 5, max: 10 },
+          particleVelocityRange: { x: [-1, 1], y: [-3.5, -1.5] },
+          particleShrinkRate: 0.995,
+          shakeIntensity: 5,
+          color: 'blood',
+        }),
+      ]}
+    />
+  ),
 };

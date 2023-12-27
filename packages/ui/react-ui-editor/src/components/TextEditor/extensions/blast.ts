@@ -1,5 +1,7 @@
 //
 // Copyright 2023 DXOS.org
+// Based on a demo by Joel Besada and Kushagra Gour.
+// https://twitter.com/JoelBesada/status/670343885655293952
 // https://github.com/chinchang/code-blast-codemirror/blob/master/code-blast.js
 //
 
@@ -21,7 +23,7 @@ export type BlastOptions = {
   color?: 'random' | 'blood';
 };
 
-const defaultOptions1: BlastOptions = {
+export const defaultOptions: BlastOptions = {
   maxParticles: 200,
   particleGravity: 0.08,
   particleAlphaFadeout: 0.996,
@@ -29,17 +31,6 @@ const defaultOptions1: BlastOptions = {
   particleVelocityRange: { x: [-1, 1], y: [-3.5, -1.5] },
   particleShrinkRate: 0.95,
   shakeIntensity: 5,
-};
-
-const defaultOptions2: BlastOptions = {
-  maxParticles: 200,
-  particleGravity: 0.2,
-  particleAlphaFadeout: 0.995,
-  particleNumRange: { min: 5, max: 10 },
-  particleVelocityRange: { x: [-1, 1], y: [-3.5, -1.5] },
-  particleShrinkRate: 0.995,
-  shakeIntensity: 5,
-  color: 'blood',
 };
 
 export const blast = (options: Partial<BlastOptions>): Extension => {
@@ -65,7 +56,7 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
           blaster.destroy();
         }
 
-        blaster = new Blaster(update.view.scrollDOM, defaultsDeep({}, options, defaultOptions1));
+        blaster = new Blaster(update.view.scrollDOM, defaultsDeep({}, options, defaultOptions));
         blaster.initialize();
         blaster.start(); // TODO(burdon): Stop/clean-up.
       } else {
