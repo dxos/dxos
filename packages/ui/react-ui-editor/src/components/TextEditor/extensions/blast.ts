@@ -16,6 +16,7 @@ export type BlastOptions = {
   maxParticles: number;
   particleGravity: number;
   particleAlphaFadeout: number;
+  particleSize: { min: number; max: number };
   particleNumRange: { min: number; max: number };
   particleVelocityRange: { x: [number, number]; y: [number, number] };
   particleShrinkRate: number;
@@ -27,6 +28,7 @@ export const defaultOptions: BlastOptions = {
   maxParticles: 200,
   particleGravity: 0.08,
   particleAlphaFadeout: 0.996,
+  particleSize: { min: 2, max: 8 },
   particleNumRange: { min: 5, max: 10 },
   particleVelocityRange: { x: [-1, 1], y: [-3.5, -1.5] },
   particleShrinkRate: 0.95,
@@ -271,14 +273,10 @@ class Effect1 extends Effect {
     return {
       x,
       y: y + 10,
-      vx:
-        this._options.particleVelocityRange.x[0] +
-        Math.random() * (this._options.particleVelocityRange.x[1] - this._options.particleVelocityRange.x[0]),
-      vy:
-        this._options.particleVelocityRange.y[0] +
-        Math.random() * (this._options.particleVelocityRange.y[1] - this._options.particleVelocityRange.y[0]),
+      vx: random(this._options.particleVelocityRange.x[0], this._options.particleVelocityRange.x[1]),
+      vy: random(this._options.particleVelocityRange.y[0], this._options.particleVelocityRange.y[1]),
+      size: random(this._options.particleSize.min, this._options.particleSize.max),
       color,
-      size: random(2, 4),
       alpha: 1,
     };
   }
@@ -303,14 +301,10 @@ class Effect2 extends Effect {
     return {
       x,
       y: y + 10,
-      vx:
-        this._options.particleVelocityRange.x[0] +
-        Math.random() * (this._options.particleVelocityRange.x[1] - this._options.particleVelocityRange.x[0]),
-      vy:
-        this._options.particleVelocityRange.y[0] +
-        Math.random() * (this._options.particleVelocityRange.y[1] - this._options.particleVelocityRange.y[0]),
+      vx: random(this._options.particleVelocityRange.x[0], this._options.particleVelocityRange.x[1]),
+      vy: random(this._options.particleVelocityRange.y[0], this._options.particleVelocityRange.y[1]),
+      size: random(this._options.particleSize.min, this._options.particleSize.max),
       color,
-      size: random(2, 8),
       alpha: 1,
       theta: (random(0, 360) * Math.PI) / 180,
       drag: 0.92,
@@ -355,15 +349,6 @@ function throttle<T>(callback: (arg: T) => void, limit: number): (arg: T) => voi
   };
 }
 
-const random = (min: number, max: number) => {
-  if (!max) {
-    max = min;
-    min = 0;
-  }
-
-  return min + ~~(Math.random() * (max - min + 1));
-};
-
 const getRGBComponents = (node: Element, color: BlastOptions['color']): Particle['color'] => {
   if (typeof color === 'function') {
     return color();
@@ -378,4 +363,13 @@ const getRGBComponents = (node: Element, color: BlastOptions['color']): Particle
   }
 
   return [50, 50, 50];
+};
+
+const random = (min: number, max: number) => {
+  if (!max) {
+    max = min;
+    min = 0;
+  }
+
+  return min + ~~(Math.random() * (max - min + 1));
 };
