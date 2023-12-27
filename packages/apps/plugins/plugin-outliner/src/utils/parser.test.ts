@@ -1,8 +1,16 @@
-import { describe, test } from '@dxos/test';
-import { tryParseOutline } from './parser';
-import { Tree } from '@braneframe/types';
+//
+// Copyright 2023 DXOS.org
+//
+
+/* eslint no-tabs: 0 */
+
 import { expect } from 'chai';
+
+import { Tree } from '@braneframe/types';
 import { TextObject } from '@dxos/client/echo';
+import { describe, test } from '@dxos/test';
+
+import { tryParseOutline } from './parser';
 
 describe('outline parser', () => {
   test('should parse outline', () => {
@@ -15,7 +23,7 @@ describe('outline parser', () => {
     const outline = tryParseOutline('plain text\n- bullet');
 
     expect(outline).to.be.undefined;
-  })
+  });
 });
 
 // NOTE: Keep tabs intact.
@@ -53,18 +61,20 @@ const EXPECTED = [
 ];
 
 const equivalent = (a: Tree.Item[], b: Tree.Item[]) => {
-  if(a.length !== b.length) {
-    console.log('length mismatch', a.length, b.length)
+  if (a.length !== b.length) {
+    console.log('length mismatch', a.length, b.length);
     return false;
   }
 
-  for(let i = 0; i < a.length; i++) {
-    if(a[i].text.text !== b[i].text.text) {
-      console.log('text mismatch', a[i].text.text, b[i].text.text)
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].text.text !== b[i].text.text) {
+      console.log('text mismatch', a[i].text.text, b[i].text.text);
       return false;
     }
-    if(!equivalent(a[i].items, b[i].items)) return false;
+    if (!equivalent(a[i].items, b[i].items)) {
+      return false;
+    }
   }
 
   return true;
-}
+};

@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type KeyboardEventHandler, useEffect, useRef, useState } from 'react';
-import { EditorView } from '@codemirror/view';
 
+import { type Tree } from '@braneframe/types';
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel, type CursorInfo, type TextEditorRef, type YText } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -13,7 +14,6 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
 import { tryParseOutline } from '../../utils';
-import { Tree } from '@braneframe/types';
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
@@ -180,21 +180,21 @@ const OutlinerItem = ({
           model={model}
           extensions={[
             EditorView.domEventHandlers({
-              paste(event, view) { 
-                const text = event.clipboardData?.getData('text/plain')
-                if(!text) {
+              paste: (event, view) => {
+                const text = event.clipboardData?.getData('text/plain');
+                if (!text) {
                   return;
                 }
 
                 const outline = tryParseOutline(text);
-                if(!outline || outline.length === 0) {
+                if (!outline || outline.length === 0) {
                   return;
                 }
 
                 event.preventDefault();
                 onPaste?.(outline);
-              }
-            })
+              },
+            }),
           ]}
           slots={{
             root: {
@@ -266,13 +266,13 @@ const OutlinerBranch = ({
     const idx = root.items!.findIndex(({ id }) => id === target.id);
     const replaceTarget = target.text?.text.length === 0;
 
-    root.items?.splice(replaceTarget ? idx : (idx + 1), replaceTarget ? 1 : 0, ...items as any); // TODO(dmaretskyi): Type mismatch.
+    root.items?.splice(replaceTarget ? idx : idx + 1, replaceTarget ? 1 : 0, ...(items as any)); // TODO(dmaretskyi): Type mismatch.
 
     // Save children of the replaced item
-    if(replaceTarget) {
-      items[0].items.splice(0, 0, ...(target.items ?? []) as any);
+    if (replaceTarget) {
+      items[0].items.splice(0, 0, ...((target.items ?? []) as any));
     }
-  }
+  };
 
   return (
     <div className={className}>
@@ -288,7 +288,7 @@ const OutlinerBranch = ({
             onDelete={(...args) => onItemDelete?.(root, item, ...args)}
             onIndent={(...args) => onItemIndent?.(root, item, ...args)}
             onShift={(...args) => onItemShift?.(root, item, ...args)}
-            onPaste={items => handlePaste(item, items)}
+            onPaste={(items) => handlePaste(item, items)}
             {...props}
           />
           {(item.items?.length ?? 0) > 0 && (
