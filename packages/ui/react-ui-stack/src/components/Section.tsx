@@ -49,7 +49,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
 
     return (
       <DensityProvider density='fine'>
-        <ListItem.Root ref={forwardedRef} id={id} classNames='block  __pbe-2' style={draggableStyle}>
+        <ListItem.Root ref={forwardedRef} id={id} classNames='block' style={draggableStyle}>
           <div
             role='none'
             className={mx(
