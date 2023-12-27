@@ -26,7 +26,7 @@ import {
 import { type SectionProps, type StackSectionContent, type StackSectionItemWithContext } from './props';
 import { translationKey } from '../translations';
 
-const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
+export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
   SectionProps
 >(({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
@@ -47,7 +47,7 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
             (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
           )}
         >
-          {/* <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading> */}
+          <ListItem.Heading classNames='sr-only'>{title}</ListItem.Heading>
 
           {/* Drag handle */}
           <div
@@ -74,9 +74,6 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
               {...{
                 open: optionsMenuOpen,
                 onOpenChange: (nextOpen: boolean) => {
-                  // if (!nextOpen) {
-                  //   suppressNextTooltip.current = true;
-                  // }
                   return setOptionsMenuOpen(nextOpen);
                 },
               }}
@@ -120,9 +117,7 @@ const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElem
   );
 });
 
-const SECTION_TILE_NAME = 'SectionTile';
-
-const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
+export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
   ({ path, type, active, draggableStyle, draggableProps, item, itemContext }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { activeItem } = useMosaic();
@@ -161,7 +156,3 @@ const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElemen
     return active === 'overlay' ? <List>{section}</List> : section;
   },
 );
-
-SectionTile.displayName = SECTION_TILE_NAME;
-
-export { Section, SectionTile };

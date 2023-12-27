@@ -42,17 +42,12 @@ export const Stack = ({
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
-  // TODO(burdon): Create context provider to relay inner section width.
-  const getOverlayStyle = useCallback(() => {
-    return { width: Math.min(width, 59 * 16) };
-  }, [width]);
+  const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
 
-  const getOverlayProps = useCallback(() => {
-    return { itemContext: { SectionContent } };
-  }, [SectionContent]);
+  const getOverlayProps = useCallback(() => ({ itemContext: { SectionContent } }), [SectionContent]);
 
   // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
-  //  in particular is unknown, so this solution may may backfire in unforeseeable cases.
+  //  in particular is not yet known, so this solution may may backfire in unforeseeable cases.
   const stackModifier = useCallback<Exclude<MosaicContainerProps['modifier'], undefined>>(
     (_activeItem, { transform, activeNodeRect, overlayNodeRect }) => {
       if (activeNodeRect && overlayNodeRect) {
