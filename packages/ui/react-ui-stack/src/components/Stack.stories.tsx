@@ -10,7 +10,8 @@ import React, { useRef, useState } from 'react';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Stack, type StackSectionContent, type StackProps, type StackSectionItem } from './Stack';
+import { type StackSectionContent, type StackSectionItem } from './Section';
+import { Stack, type StackProps } from './Stack';
 import { FullscreenDecorator } from '../testing/decorators';
 import { TestObjectGenerator } from '../testing/generator';
 
@@ -121,7 +122,7 @@ const DemoStack = ({
   types,
   count = 8,
   operation = 'transfer',
-  className,
+  classNames,
 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
@@ -177,7 +178,7 @@ const DemoStack = ({
   return (
     <Stack
       id={id}
-      className={className}
+      classNames={classNames}
       data-testid={id}
       SectionContent={SectionContent}
       items={items}
