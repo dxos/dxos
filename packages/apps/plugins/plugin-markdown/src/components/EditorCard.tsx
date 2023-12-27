@@ -11,22 +11,32 @@ import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { useExtensions } from './extensions';
+import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 export type EditorCardProps = {
   id: string;
   object: DocumentType;
   color?: string;
+  extensions?: UseExtensionsOptions;
 };
 
 export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, object, color }, grow, onSelect, onAction },
+    {
+      className,
+      isDragging,
+      draggableStyle,
+      draggableProps,
+      item: { id, object, color, extensions: _extensions },
+      grow,
+      onSelect,
+      onAction,
+    },
     forwardRef,
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
-    const extensions = useExtensions();
+    const extensions = useExtensions(_extensions);
     const model = useTextModel({ text: object.content });
     if (!model) {
       return null;
