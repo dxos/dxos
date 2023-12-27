@@ -71,6 +71,8 @@ const meta: Meta = {
 
 export default meta;
 
+// TODO(burdon): Tour should prompt user to create a Stack -- and respond to it being created.
+
 export const Default = {
   args: {
     // https://docs.react-joyride.com/step#options
