@@ -3,10 +3,23 @@
 //
 
 import { DotsSixVertical, X, ArrowSquareOut, DotsThreeVertical } from '@phosphor-icons/react';
-import React, { forwardRef, useState, type ForwardRefExoticComponent, type RefAttributes } from 'react';
+import React, {
+  forwardRef,
+  useState,
+  type ForwardRefExoticComponent,
+  type RefAttributes,
+  type FC,
+  type PropsWithChildren,
+} from 'react';
 
 import { Button, DensityProvider, DropdownMenu, List, ListItem, useTranslation } from '@dxos/react-ui';
-import { type MosaicTileComponent, useMosaic } from '@dxos/react-ui-mosaic';
+import {
+  type MosaicActiveType,
+  type MosaicDataItem,
+  type MosaicTileComponent,
+  type MosaicTileProps,
+  useMosaic,
+} from '@dxos/react-ui-mosaic';
 import {
   fineButtonDimensions,
   focusRing,
@@ -23,8 +36,40 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
-import { type SectionProps, type StackSectionContent, type StackSectionItemWithContext } from './props';
 import { translationKey } from '../translations';
+
+export type SectionProps = PropsWithChildren<{
+  // Data props.
+  id: string;
+  title: string;
+
+  // Tile props.
+  active?: MosaicActiveType;
+  draggableProps?: MosaicTileProps['draggableProps'];
+  draggableStyle?: MosaicTileProps['draggableStyle'];
+  onRemove?: MosaicTileProps['onRemove'];
+  onNavigate?: MosaicTileProps['onNavigate'];
+}>;
+
+export type StackSectionContent = MosaicDataItem & { title?: string };
+
+export type StackContextValue<TData extends StackSectionContent = StackSectionContent> = {
+  SectionContent: FC<{ data: TData }>;
+  transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
+  onRemoveSection?: (path: string) => void;
+  onNavigateToSection?: (id: string) => void;
+};
+
+export type StackItem = MosaicDataItem &
+  StackContextValue & {
+    items: StackSectionItem[];
+  };
+
+export type StackSectionItem = MosaicDataItem & {
+  object: StackSectionContent;
+};
+
+export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,

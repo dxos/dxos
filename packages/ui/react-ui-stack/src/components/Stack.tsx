@@ -17,11 +17,24 @@ import {
 } from '@dxos/react-ui-mosaic';
 import { dropRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
-import { SectionTile } from './Section';
-import { type StackItem, type StackProps } from './props';
+import {
+  SectionTile,
+  type StackContextValue,
+  type StackItem,
+  type StackSectionContent,
+  type StackSectionItem,
+} from './Section';
 import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
+
+export type StackProps<TData extends StackSectionContent = StackSectionContent> = Omit<
+  MosaicContainerProps<TData, number>,
+  'debug' | 'Component'
+> &
+  StackContextValue<TData> & {
+    items?: StackSectionItem[];
+  };
 
 export const DEFAULT_TYPE = 'stack-section';
 

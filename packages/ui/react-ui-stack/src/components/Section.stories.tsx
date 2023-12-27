@@ -10,8 +10,7 @@ import { List } from '@dxos/react-ui';
 import { groupSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Section } from './Section';
-import { type SectionProps } from './props';
+import { Section, type SectionProps } from './Section';
 
 export default {
   component: Section as any,
