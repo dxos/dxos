@@ -337,7 +337,6 @@ export const Blast = {
               particleGravity: 0.2,
               particleShrinkRate: 0.995,
               color: () => [faker.number.int({ min: 100, max: 200 }), 0, 0],
-              // color: () => [0, faker.number.int({ min: 0, max: 100 }), 0],
               // color: () => [faker.number.int(256), faker.number.int(256), faker.number.int(256)],
             },
             defaultOptions,
