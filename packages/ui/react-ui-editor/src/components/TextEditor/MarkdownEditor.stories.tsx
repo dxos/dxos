@@ -3,9 +3,11 @@
 //
 
 import '@dxosTheme';
+
 import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
+import defaultsDeep from 'lodash.defaultsdeep';
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -29,6 +31,7 @@ import {
   mention,
   blast,
   demo,
+  defaultOptions,
 } from './extensions';
 import { useTextModel } from '../../hooks';
 
@@ -327,17 +330,19 @@ export const Blast = {
     <Story
       text={str(text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        blast({
-          effect: 2,
-          maxParticles: 200,
-          particleGravity: 0.2,
-          particleAlphaFadeout: 0.995,
-          particleNumRange: { min: 5, max: 10 },
-          particleVelocityRange: { x: [-1, 1], y: [-3.5, -1.5] },
-          particleShrinkRate: 0.995,
-          shakeIntensity: 5,
-          color: 'blood',
-        }),
+        blast(
+          defaultsDeep(
+            {
+              effect: 2,
+              particleGravity: 0.2,
+              particleShrinkRate: 0.995,
+              color: () => [faker.number.int({ min: 100, max: 200 }), 0, 0],
+              // color: () => [0, faker.number.int({ min: 0, max: 100 }), 0],
+              // color: () => [faker.number.int(256), faker.number.int(256), faker.number.int(256)],
+            },
+            defaultOptions,
+          ),
+        ),
       ]}
     />
   ),

@@ -20,7 +20,7 @@ export type BlastOptions = {
   particleVelocityRange: { x: [number, number]; y: [number, number] };
   particleShrinkRate: number;
   shakeIntensity: number;
-  color?: 'random' | 'blood';
+  color?: () => number[];
 };
 
 export const defaultOptions: BlastOptions = {
@@ -123,6 +123,8 @@ class Blaster {
   _particles: Particle[] = [];
   _particlePointer = 0;
 
+  _lastPoint = { x: 0, y: 0 };
+
   constructor(private readonly _node: HTMLElement, private readonly _options: BlastOptions) {
     this._effect = this._options.effect === 1 ? new Effect1(_options) : new Effect2(_options);
   }
@@ -217,9 +219,10 @@ class Blaster {
   spawn = throttle<{ element: Element; point: { x: number; y: number } }>(({ element, point }) => {
     const color = getRGBComponents(element, this._options.color);
     const numParticles = random(this._options.particleNumRange.min, this._options.particleNumRange.max);
+    const dir = this._lastPoint.x === point.x ? 0 : this._lastPoint.x < point.x ? 1 : -1;
+    this._lastPoint = point;
     for (let i = numParticles; i--; i > 0) {
-      // TODO(burdon): Delta should be based on direction.
-      this._particles[this._particlePointer] = this._effect.create(point.x - 16, point.y, color);
+      this._particles[this._particlePointer] = this._effect.create(point.x - dir * 16, point.y, color);
       this._particlePointer = (this._particlePointer + 1) % this._options.maxParticles;
     }
   }, 100);
@@ -300,8 +303,12 @@ class Effect2 extends Effect {
     return {
       x,
       y: y + 10,
-      vx: random(-3, 3),
-      vy: random(-3, 3),
+      vx:
+        this._options.particleVelocityRange.x[0] +
+        Math.random() * (this._options.particleVelocityRange.x[1] - this._options.particleVelocityRange.x[0]),
+      vy:
+        this._options.particleVelocityRange.y[0] +
+        Math.random() * (this._options.particleVelocityRange.y[1] - this._options.particleVelocityRange.y[0]),
       color,
       size: random(2, 8),
       alpha: 1,
@@ -358,21 +365,15 @@ const random = (min: number, max: number) => {
 };
 
 const getRGBComponents = (node: Element, color: BlastOptions['color']): Particle['color'] => {
-  switch (color) {
-    case 'random':
-      return [Math.random() * 256, Math.random() * 256, Math.random() * 256];
+  if (typeof color === 'function') {
+    return color();
+  }
 
-    case 'blood':
-      return [random(100, 200), 0, 0];
-
-    default: {
-      const color = getComputedStyle(node).color;
-      if (color) {
-        const x = color.match(/(\d+), (\d+), (\d+)/)?.slice(1);
-        if (x) {
-          return x;
-        }
-      }
+  const bgColor = getComputedStyle(node).color;
+  if (bgColor) {
+    const x = bgColor.match(/(\d+), (\d+), (\d+)/)?.slice(1);
+    if (x) {
+      return x;
     }
   }
 
