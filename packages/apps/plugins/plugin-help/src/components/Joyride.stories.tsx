@@ -18,7 +18,7 @@ import { useJoyride } from '../hooks';
 export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
 
 const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
-  const { running, step, callback, start } = useJoyride(true);
+  const { stepIndex, running, callback, start } = useJoyride(true);
 
   return (
     <div className='app'>
@@ -27,9 +27,9 @@ const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => {
         continuous={true}
         disableOverlay={true}
         disableOverlayClose={true}
-        run={running}
         steps={steps}
-        stepIndex={step}
+        stepIndex={stepIndex}
+        run={running}
         callback={callback}
         floaterProps={floaterProps}
         tooltipComponent={Tooltip}

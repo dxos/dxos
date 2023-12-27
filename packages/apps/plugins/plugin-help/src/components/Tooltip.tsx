@@ -8,6 +8,7 @@ import { type TooltipRenderProps } from 'react-joyride';
 
 import { Button, DensityProvider } from '@dxos/react-ui';
 
+// https://docs.react-joyride.com/styling
 // https://github.com/gilbarbara/react-floater
 export const floaterProps = {
   styles: {
