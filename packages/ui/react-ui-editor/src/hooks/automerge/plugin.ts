@@ -78,6 +78,7 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
       return result;
     },
   });
+
   const semaphore = new PatchSemaphore(stateField);
 
   const viewPlugin = ViewPlugin.fromClass(
