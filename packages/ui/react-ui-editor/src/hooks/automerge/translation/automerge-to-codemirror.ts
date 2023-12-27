@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Additional copyright?
+
 import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
@@ -14,9 +16,14 @@ import {
   type SpliceTextPatch,
 } from '@dxos/automerge/automerge';
 
-import { reconcileAnnotationType } from './plugin';
+import { reconcileAnnotationType } from '../plugin';
 
-export default (view: EditorView, selection: EditorSelection, target: Prop[], patches: Patch[]) => {
+export const automergeToCodemirror = (
+  view: EditorView,
+  selection: EditorSelection,
+  target: Prop[],
+  patches: Patch[],
+) => {
   for (const patch of patches) {
     const changeSpec = handlePatch(patch, target, view.state);
     if (changeSpec != null) {
@@ -28,6 +35,7 @@ export default (view: EditorView, selection: EditorSelection, target: Prop[], pa
       });
     }
   }
+
   view.dispatch({
     selection,
     annotations: reconcileAnnotationType.of({}),
