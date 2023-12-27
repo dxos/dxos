@@ -6,6 +6,7 @@ import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { AbstractEchoObject } from './object';
 import { type AutomergeOptions, type TypedObject, getGlobalAutomergePreference } from './typed-object';
@@ -101,6 +102,17 @@ export class TextObject extends AbstractEchoObject<TextModel> {
     return jsonRepresentation;
   }
 
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} { ${inspect(this.text)} }`;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'TextObject';
+  }
   protected override _afterBind() {
     log('_afterBind', { id: this.id });
     this._model.initialize();
