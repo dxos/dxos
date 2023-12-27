@@ -38,6 +38,7 @@
       <w>kodama</w>
       <w>langchain</w>
       <w>latlng</w>
+      <w>lezer</w>
       <w>libsodium</w>
       <w>lichess</w>
       <w>localizer</w>
@@ -95,6 +96,7 @@
       <w>tabster</w>
       <w>tasklist</w>
       <w>testbench</w>
+      <w>testid</w>
       <w>testutils</w>
       <w>textbox</w>
       <w>tldraw</w>

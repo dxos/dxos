@@ -1,6 +1,7 @@
 FROM cimg/base:2022.04
 
-ENV NODE_VERSION 18.12.1
+# TODO(nf): ensure KUBE publish works on 18.19.0
+ENV NODE_VERSION 18.19.0
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#global-npm-dependencies
 ENV NPM_CONFIG_PREFIX=/home/circleci/.npm-global
 ENV PATH=$PATH:/home/circleci/.npm-global/bin

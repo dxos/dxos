@@ -93,7 +93,9 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
 /**
  * Typed object generator.
+ * @deprecated
  */
+// TODO(wittjosiah): Remove.
 export class TestObjectGenerator {
   public readonly factories: ObjectFactoryMap;
 

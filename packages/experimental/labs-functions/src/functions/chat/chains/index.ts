@@ -3,21 +3,24 @@
 //
 
 import * as chess from './chess';
-import * as knowledge from './knowledge';
 import * as list from './list';
+import * as rag from './rag';
 import { type SequenceGenerator, type SequenceTest } from '../request';
 
-export const sequences: { test: SequenceTest; generator: SequenceGenerator }[] = [
+export const sequences: { id: string; test: SequenceTest; generator: SequenceGenerator }[] = [
   {
+    id: 'chess',
     test: chess.test,
     generator: chess.generator,
   },
   {
+    id: 'list',
     test: list.test,
     generator: list.generator,
   },
   {
-    test: knowledge.test,
-    generator: knowledge.generator,
+    id: 'RAG',
+    test: rag.test,
+    generator: rag.generator,
   },
 ];

@@ -66,9 +66,11 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
             const context = createContext(space, message.context);
             const sequence = createSequence(space, resources, context, { command });
-
             const response = await sequence.invoke(text);
+            log.info('response', { response });
+
             blocks = createResponse(space, context, response);
+            log.info('response', { blocks });
           } catch (error) {
             log.error('processing message', error);
             blocks = [{ text: 'There was an error generating the response.' }];

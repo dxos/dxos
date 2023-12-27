@@ -2,5 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './hyperlink';
-export * from './hyperlinkTooltip';
+export * from './autocomplete';
+export * from './basic';
+export * from './demo';
+export * from './comments';
+export * from './link';
+export * from './listener';
+export * from './markdown';
+export * from './tasklist';
+export * from './tooltip';

@@ -156,6 +156,7 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
 };
 
 export default {
+  title: 'react-ui-navtree/NavTree',
   component: NavTree,
   parameters: {
     layout: 'fullscreen',
@@ -188,7 +189,7 @@ export const Copy = {
     return (
       <Mosaic.Root debug={debug}>
         <div className='flex'>
-          <StorybookNavTree className='w-[250px]' />
+          <StorybookNavTree classNames='w-[250px]' />
           <DropZone />
         </div>
         <Mosaic.DragOverlay />

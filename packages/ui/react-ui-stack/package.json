@@ -1,16 +1,23 @@
 {
   "name": "@dxos/react-ui-stack",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "A stack component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./testing": "./dist/lib/browser/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
@@ -22,6 +29,7 @@
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@faker-js/faker": "^8.0.2",
@@ -34,6 +42,9 @@
     "vite-plugin-turbosnap": "^1.0.2"
   },
   "peerDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

@@ -8,13 +8,12 @@ import React, { useState } from 'react';
 
 import { Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type BlockProperties, MessageCard } from './MessageCard';
 
-// TODO(burdon): Translation provider (decorator?)
-
 const getBlockProperties = (identityKey: PublicKey | undefined): BlockProperties => ({
-  displayName: identityKey?.toHex() ?? 'Unknown',
+  displayName: identityKey?.toHex() ?? 'anonymous',
 });
 
 const Story = () => {
@@ -32,15 +31,17 @@ const Story = () => {
     }),
   );
 
-  return <MessageCard message={message} identityKey={identityKey} propertiesProvider={getBlockProperties} />;
+  return (
+    <div className='flex w-[400px]'>
+      <MessageCard message={message} propertiesProvider={getBlockProperties} />
+    </div>
+  );
 };
 
 export default {
   component: MessageCard,
   render: Story,
-  parameters: {
-    layout: 'fullscreen',
-  },
+  decorators: [withTheme],
 };
 
 export const Default = {};

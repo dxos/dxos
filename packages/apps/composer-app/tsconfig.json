@@ -15,10 +15,14 @@
     "vite.config.ts"
   ],
   "include": [
+    "demos",
     "script-frame",
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/log"
+    },
     {
       "path": "../../core/echo/echo-schema"
     },
@@ -57,6 +61,9 @@
     },
     {
       "path": "../../ui/react-ui-navtree"
+    },
+    {
+      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-theme"

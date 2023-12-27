@@ -184,6 +184,6 @@ describe('database', () => {
     database.add(task);
 
     expect(task.todos[0].__typename).to.eq('example.test.Task.Todo');
-    expect(task.todos[0].toJSON()['@type']).to.eq('example.test.Task.Todo');
+    expect(task.todos[0].toJSON()['@type'].itemId).to.eq('example.test.Task.Todo');
   });
 });

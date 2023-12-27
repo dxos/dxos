@@ -6,7 +6,7 @@ import React, { type RefObject, useCallback } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
-import { type MarkdownEditorRef } from '@dxos/react-ui-editor';
+import { type TextEditorRef } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
@@ -17,7 +17,7 @@ export const ImportDialog = ({
   editorRef,
 }: {
   docGhId: GhIdentifier;
-  editorRef: RefObject<MarkdownEditorRef>;
+  editorRef: RefObject<TextEditorRef>;
 }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { octokit } = useOctokitContext();

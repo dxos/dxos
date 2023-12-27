@@ -83,6 +83,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'DXOS UI/Scenarios/Controls',
   component: Story,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

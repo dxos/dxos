@@ -19,16 +19,6 @@ export const MarkdownSettings = () => {
   }
 
   const settings = markdownPlugin.provides.settings;
-  const handleValueChange = (value: string) => {
-    switch (value) {
-      case 'vim':
-        settings.editorMode = 'vim';
-        break;
-
-      default:
-        settings.editorMode = 'default';
-    }
-  };
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
@@ -37,14 +27,19 @@ export const MarkdownSettings = () => {
         <Input.Label classNames='text-base font-system-medium' asChild>
           <h3>{t('editor mode label')}</h3>
         </Input.Label>
-        <Select.Root value={settings.editorMode} onValueChange={handleValueChange}>
+        <Select.Root
+          value={settings.editorMode}
+          onValueChange={(value) => {
+            settings.editorMode = value === 'vim' ? 'vim' : 'default';
+          }}
+        >
           <Select.TriggerButton classNames='mbs-0.5' placeholder={t('select editor mode placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
                 {EditorModes.map((mode) => (
                   <Select.Option key={mode} value={mode}>
-                    {t(`${mode} editor mode label`)}
+                    {t(`settings editor mode ${mode} label`)}
                   </Select.Option>
                 ))}
               </Select.Viewport>
@@ -52,6 +47,15 @@ export const MarkdownSettings = () => {
           </Select.Portal>
         </Select.Root>
       </Input.Root>
+      <div role='none' className='flex items-center gap-2'>
+        <Input.Root>
+          <Input.Checkbox
+            checked={settings.experimental}
+            onCheckedChange={(checked) => (settings.experimental = !!checked)}
+          />
+          <Input.Label>{t('settings markdown experimental label')}</Input.Label>
+        </Input.Root>
+      </div>
     </div>
   );
 };

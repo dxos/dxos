@@ -1,6 +1,6 @@
 {
   "name": "@dxos/apidoc",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Generate nice API documentation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,7 +24,7 @@
     "@types/minimatch": "^5.1.2",
     "@types/recursive-readdir": "^2.2.1",
     "lodash.memoize": "^4.1.2",
-    "markdown-it": "^13.0.1",
+    "markdown-it": "^13.0.2",
     "minimatch": "^5.1.0",
     "prettier": "^2.8.8",
     "recursive-readdir": "^2.2.3",

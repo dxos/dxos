@@ -71,7 +71,7 @@ export type GridDataItem = MosaicDataItem & {
 
 export type GridProps<TData extends GridDataItem = GridDataItem> = Omit<
   MosaicContainerProps<TData, Position>,
-  'Component'
+  'Component' | 'onSelect'
 > &
   ControlledSelection & {
     Component?: MosaicTileComponent<TData, any>;
@@ -97,7 +97,7 @@ export const Grid = ({
   debug,
   selected: controlledSelected,
   Component,
-  className,
+  classNames,
   onDrop,
   onOver,
   onSelect,
@@ -168,7 +168,7 @@ export const Grid = ({
         onDrop,
       }}
     >
-      <div className={mx('flex grow overflow-auto', className)}>
+      <div className={mx('flex grow overflow-auto', classNames)}>
         {/* TODO(burdon): Tailwind classes aren't currently processed by labs. */}
         <div ref={containerRef} className={mx('grow overflow-auto snap-x md:snap-none snap-mandatory')}>
           <div className='group block relative' style={{ ...bounds, margin: marginSize }}>

@@ -46,8 +46,17 @@ export default template.define.script({
       }
     },
     `;
+    // TODO(wittjosiah): Why is target esnext needed here but not composer?
+    //  Why does dev server target need to be set to the default?
+    //  https://github.com/vitejs/vite/issues/13756#issuecomment-1646981372
     const basicConfig = plate`
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'esnext',
+      },
+    },
     build: {
+      target: 'esnext',
       outDir: 'out/${name}'
     },
     `;

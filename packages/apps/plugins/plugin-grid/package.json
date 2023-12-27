@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-grid",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,6 +40,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",

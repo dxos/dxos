@@ -24,7 +24,13 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../../core/echo/text-model"
@@ -51,6 +57,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../../types"
     },
     {
@@ -67,6 +76,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }
