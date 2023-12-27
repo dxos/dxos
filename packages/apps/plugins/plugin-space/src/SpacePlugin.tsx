@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Folder as FolderIcon, Plus, type IconProps, Intersect } from '@phosphor-icons/react';
+import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -316,7 +316,7 @@ export const SpacePlugin = ({
               {
                 id: 'join-space',
                 label: ['join space label', { ns: 'os' }],
-                icon: (props) => <Intersect {...props} />,
+                icon: (props) => <SignIn {...props} />,
                 properties: {
                   testId: 'spacePlugin.joinSpace',
                 },
