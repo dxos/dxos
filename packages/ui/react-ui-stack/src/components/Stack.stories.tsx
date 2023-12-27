@@ -8,15 +8,18 @@ import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { Stack, type StackProps, type StackSectionItem } from './Stack';
-import { FullscreenDecorator, TestObjectGenerator } from '../testing';
+import { type StackSectionContent, type StackSectionItem } from './Section';
+import { Stack, type StackProps } from './Stack';
+import { FullscreenDecorator } from '../testing/decorators';
+import { TestObjectGenerator } from '../testing/generator';
 
 faker.seed(3);
 
-const SimpleContent = ({ data }: { data: StackSectionItem }) => <div className='p-4 text-center'>{data.title}</div>;
+const SimpleContent = ({ data }: { data: StackSectionContent }) => <div className='p-4 text-center'>{data.title}</div>;
 
-const ComplexContent = ({ data }: { data: StackSectionItem & { body?: string; image?: string } }) => (
+const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string; image?: string } }) => (
   <div className='flex'>
     <div className='grow p-4'>
       <h1>{data.title ?? data.id}</h1>
@@ -28,6 +31,7 @@ const ComplexContent = ({ data }: { data: StackSectionItem & { body?: string; im
 
 export default {
   component: Stack,
+  decorators: [withTheme],
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
       <Mosaic.Root debug={debug}>
@@ -40,14 +44,14 @@ export default {
 
 export const Empty = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     count: 0,
   },
 };
 
 export const Simple = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     types: ['document'],
     debug: true,
   },
@@ -55,7 +59,7 @@ export const Simple = {
 
 export const Complex = {
   args: {
-    Component: ComplexContent,
+    SectionContent: ComplexContent,
     types: ['document', 'image'],
     debug: true,
   },
@@ -63,7 +67,7 @@ export const Complex = {
 
 export const Transfer = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     types: ['document'],
     count: 8,
     className: 'w-[400px]',
@@ -72,7 +76,7 @@ export const Transfer = {
     return (
       <Mosaic.Root debug={debug}>
         <Mosaic.DragOverlay />
-        <div className='flex grow justify-center p-4'>
+        <div className='flex grow justify-center p-4' data-testid='stack-transfer'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
             <DemoStack {...args} id='stack-2' />
@@ -86,15 +90,15 @@ export const Transfer = {
 
 export const Copy = {
   args: {
-    Component: SimpleContent,
+    SectionContent: SimpleContent,
     types: ['document'],
     className: 'w-[400px]',
   },
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
       <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay />
-        <div className='flex grow justify-center p-4'>
+        <Mosaic.DragOverlay debug={debug} />
+        <div className='flex grow justify-center p-4' data-testid='stack-copy'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
             <DemoStack {...args} id='stack-2' operation='copy' count={0} />
@@ -114,15 +118,15 @@ export type DemoStackProps = StackProps & {
 
 const DemoStack = ({
   id = 'stack',
-  Component,
+  SectionContent,
   types,
   count = 8,
   operation = 'transfer',
-  className,
+  classNames,
 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count });
+    return generator.createObjects({ length: count }).map((object) => ({ id: faker.string.uuid(), object }));
   });
 
   const itemsRef = useRef(items);
@@ -174,8 +178,9 @@ const DemoStack = ({
   return (
     <Stack
       id={id}
-      className={className}
-      Component={Component}
+      classNames={classNames}
+      data-testid={id}
+      SectionContent={SectionContent}
       items={items}
       onOver={handleOver}
       onDrop={handleDrop}

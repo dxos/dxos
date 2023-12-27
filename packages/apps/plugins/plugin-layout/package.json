@@ -1,15 +1,23 @@
 {
   "name": "@braneframe/plugin-layout",
-  "version": "0.3.4",
+  "version": "0.3.9",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
@@ -28,6 +36,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

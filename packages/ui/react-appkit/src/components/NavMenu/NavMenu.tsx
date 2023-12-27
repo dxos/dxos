@@ -8,12 +8,12 @@ import React, { type ComponentProps, type ForwardedRef, forwardRef, type ReactNo
 import { Tooltip, type TooltipContentProps } from '@dxos/react-ui';
 import {
   focusRing,
-  hoverColors,
   inlineSeparator,
   mx,
-  defaultAppButtonColors,
-  primaryAppButtonColors,
+  defaultButtonColors,
+  primaryButtonColors,
   surfaceElevation,
+  ghostHover,
 } from '@dxos/react-ui-theme';
 
 interface NavMenuItemSharedProps {
@@ -67,9 +67,9 @@ const NavMenuInvokerItem = forwardRef(
         <NavigationMenuPrimitive.Trigger
           className={mx(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
-            active ? primaryAppButtonColors : defaultAppButtonColors,
+            active ? primaryButtonColors : defaultButtonColors,
             focusRing,
-            hoverColors,
+            ghostHover,
           )}
         >
           {children}
@@ -98,10 +98,10 @@ const NavMenuLinkItem = forwardRef(
         active={active}
         className={mx(
           'px-3 py-2 text-sm rounded-md transition-color',
-          active ? primaryAppButtonColors : defaultAppButtonColors,
+          active ? primaryButtonColors : defaultButtonColors,
           active ? 'font-medium' : 'font-normal',
           focusRing,
-          hoverColors,
+          ghostHover,
           triggerLinkProps.className,
         )}
       >
@@ -123,10 +123,10 @@ const NavMenuTooltipLinkItem = forwardRef(
             active={active}
             className={mx(
               'px-3 py-2 text-sm rounded-md transition-color',
-              active ? primaryAppButtonColors : defaultAppButtonColors,
+              active ? primaryButtonColors : defaultButtonColors,
               active ? 'font-medium' : 'font-normal',
               focusRing,
-              hoverColors,
+              ghostHover,
               triggerLinkProps.className,
             )}
           >

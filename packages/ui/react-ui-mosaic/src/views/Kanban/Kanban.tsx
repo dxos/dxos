@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import {
@@ -124,7 +124,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
                     path={path}
                     position={index}
                     Component={Component!}
-                    className='m-1'
+                    classNames='m-1'
                     // debug={debug}
                   />
                 ))}

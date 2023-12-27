@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ERROR_PLUGIN } from './constants';
+import { ERROR_PLUGIN } from './meta';
 
 export default [
   {

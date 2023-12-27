@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Main, useSidebars } from './Main';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 type StoryMainArgs = {};
@@ -44,7 +45,12 @@ const StoryMain = (_args: StoryMainArgs) => {
   );
 };
 
-export default { component: StoryMain };
+export default {
+  title: 'DXOS UI/Main',
+  component: StoryMain,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
+};
 
 export const Default = {
   args: {},

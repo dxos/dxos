@@ -9,6 +9,7 @@ import { describe, test } from '@dxos/test';
 import { Contact, Container, Task, types } from './proto';
 import { immutable, Expando } from '../object';
 import { Schema } from '../proto';
+import { Filter } from '../query';
 import { TestBuilder, createDatabase } from '../testing';
 
 // TODO(burdon): Test with database.
@@ -41,18 +42,37 @@ describe('static schema', () => {
 
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
-    expect(task1.toJSON()).to.deep.contain({ title: 'Task 1', assignee: { '@id': contact.id } });
+    expect(task1.toJSON()).to.deep.contain({
+      title: 'Task 1',
+      assignee: {
+        '@type': 'dxos.echo.model.document.Reference',
+        itemId: contact.id,
+      },
+    });
     expect(JSON.stringify(task1, null, 4)).to.equal(
       JSON.stringify(
         {
+          '@backend': 'hypercore',
           '@id': task1.id,
-          '@type': task1.__typename,
+          '@type': {
+            '@type': 'dxos.echo.model.document.Reference',
+            itemId: task1.__typename,
+            protocol: 'protobuf',
+            host: 'dxos.org',
+          },
           '@model': 'dxos.org/model/document',
           '@meta': { keys: [] },
           subTasks: [],
-          description: { '@id': task1.description.id },
+          description: {
+            '@type': 'dxos.echo.model.document.Reference',
+            itemId: task1.description.id,
+          },
+          todos: [],
           title: 'Task 1',
-          assignee: { '@id': contact.id },
+          assignee: {
+            '@type': 'dxos.echo.model.document.Reference',
+            itemId: contact.id,
+          },
         },
         null,
         4,
@@ -66,17 +86,25 @@ describe('static schema', () => {
     contact.tasks.push(new Task({ title: 'Task 2', assignee: contact }));
 
     expect(contact.toJSON()).to.deep.eq({
+      '@backend': 'hypercore',
       '@id': contact.id,
-      '@type': contact.__typename,
+      '@type': {
+        '@type': 'dxos.echo.model.document.Reference',
+        host: 'dxos.org',
+        itemId: contact.__typename,
+        protocol: 'protobuf',
+      },
       '@model': 'dxos.org/model/document',
       '@meta': { keys: [] },
       name: 'User 1',
       tasks: [
         {
-          '@id': contact.tasks[0].id,
+          '@type': 'dxos.echo.model.document.Reference',
+          itemId: contact.tasks[0].id,
         },
         {
-          '@id': contact.tasks[1].id,
+          '@type': 'dxos.echo.model.document.Reference',
+          itemId: contact.tasks[1].id,
         },
       ],
     });
@@ -124,6 +152,9 @@ describe('static schema', () => {
     expect(org.website).to.eq('dxos.org');
     expect(org.__schema).to.eq(orgSchema);
     expect(org.__schema?.[immutable]).to.eq(false);
+    expect(org.__typename).to.eq('example.Org');
+
+    expect(database.query(Filter.typename('example.Org')).objects).to.deep.eq([org]);
   });
 
   test('restart with static schema', async () => {

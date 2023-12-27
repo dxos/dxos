@@ -7,110 +7,193 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ClientPlugin } from '@braneframe/plugin-client';
-import { DebugPlugin } from '@braneframe/plugin-debug';
-import { ErrorPlugin } from '@braneframe/plugin-error';
-import { FilesPlugin } from '@braneframe/plugin-files';
-import { GithubPlugin } from '@braneframe/plugin-github';
-import { GraphPlugin } from '@braneframe/plugin-graph';
-import { IpfsPlugin } from '@braneframe/plugin-ipfs';
-import { LayoutPlugin } from '@braneframe/plugin-layout';
-import { MarkdownPlugin } from '@braneframe/plugin-markdown';
-import { MetadataPlugin } from '@braneframe/plugin-metadata';
-import { NavTreePlugin } from '@braneframe/plugin-navtree';
-import { PresenterPlugin } from '@braneframe/plugin-presenter';
-import { PwaPlugin } from '@braneframe/plugin-pwa';
-import { SketchPlugin } from '@braneframe/plugin-sketch';
-import { SpacePlugin } from '@braneframe/plugin-space';
-import { StackPlugin } from '@braneframe/plugin-stack';
-import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
-import { ThemePlugin } from '@braneframe/plugin-theme';
-import { types, Document, Folder, File, Table, Sketch, Stack } from '@braneframe/types';
-import { createApp, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy, Text, TypedObject } from '@dxos/client/echo';
-import { createClientServices } from '@dxos/client/services';
-import { Config, Defaults, Envs, Local } from '@dxos/config';
-import { EchoDatabase } from '@dxos/echo-schema';
-import { ProgressBar } from '@dxos/react-ui';
+import ChainMeta from '@braneframe/plugin-chain/meta';
+import ChessMeta from '@braneframe/plugin-chess/meta';
+import ClientMeta from '@braneframe/plugin-client/meta';
+import DebugMeta from '@braneframe/plugin-debug/meta';
+import ErrorMeta from '@braneframe/plugin-error/meta';
+import ExplorerMeta from '@braneframe/plugin-explorer/meta';
+import FilesMeta from '@braneframe/plugin-files/meta';
+import GithubMeta from '@braneframe/plugin-github/meta';
+import GraphMeta from '@braneframe/plugin-graph/meta';
+import GridMeta from '@braneframe/plugin-grid/meta';
+import InboxMeta from '@braneframe/plugin-inbox/meta';
+import IpfsMeta from '@braneframe/plugin-ipfs/meta';
+import KanbanMeta from '@braneframe/plugin-kanban/meta';
+import LayoutMeta from '@braneframe/plugin-layout/meta';
+import MapMeta from '@braneframe/plugin-map/meta';
+import MarkdownMeta from '@braneframe/plugin-markdown/meta';
+import MermaidMeta from '@braneframe/plugin-mermaid/meta';
+import MetadataMeta from '@braneframe/plugin-metadata/meta';
+import NavTreeMeta from '@braneframe/plugin-navtree/meta';
+import OutlinerMeta from '@braneframe/plugin-outliner/meta';
+import PresenterMeta from '@braneframe/plugin-presenter/meta';
+import PwaMeta from '@braneframe/plugin-pwa/meta';
+import RegistryMeta from '@braneframe/plugin-registry/meta';
+import ScriptMeta from '@braneframe/plugin-script/meta';
+import SearchMeta from '@braneframe/plugin-search/meta';
+import SketchMeta from '@braneframe/plugin-sketch/meta';
+import SpaceMeta from '@braneframe/plugin-space/meta';
+import StackMeta from '@braneframe/plugin-stack/meta';
+import TableMeta from '@braneframe/plugin-table/meta';
+import TelemetryMeta from '@braneframe/plugin-telemetry/meta';
+import ThemeMeta from '@braneframe/plugin-theme/meta';
+import ThreadMeta from '@braneframe/plugin-thread/meta';
+import WildcardMeta from '@braneframe/plugin-wildcard/meta';
+import { types, Document } from '@braneframe/types';
+import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
+import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
+import { TextObject } from '@dxos/react-client/echo';
+import { Status, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
+import { appKey } from './globals';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TypedObject.name] = TypedObject;
-(globalThis as any)[EchoDatabase.name] = EchoDatabase;
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-
-// TODO(wittjosiah): Remove. Used to be able to access types from the console.
-(window as any).dxos_types = {
-  Document,
-  File,
-  Folder,
-  Sketch,
-  Stack,
-  Table,
-};
-
-const APP = 'composer.dxos.org';
+import { initializeNativeApp } from './native';
 
 const main = async () => {
-  const config = new Config(Envs(), Local(), Defaults());
+  const searchParams = new URLSearchParams(window.location.search);
+  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
+  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
+  const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
+
+  // Test if socket supply native app.
+  if ((globalThis as any).__args) {
+    void initializeNativeApp();
+  }
+
   const App = createApp({
     fallback: (
-      <div className='flex h-screen justify-center items-center'>
-        <ProgressBar indeterminate />
-      </div>
+      <ThemeProvider tx={defaultTx}>
+        <div className='flex bs-[100dvh] justify-center items-center'>
+          <Status indeterminate aria-label='Initializing' />
+        </div>
+      </ThemeProvider>
     ),
-    plugins: [
+    order: [
       // Needs to run ASAP on startup (but not blocking).
-      // TODO(burdon): Normalize namespace across apps (composer.dxos.org).
-      TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
-
+      TelemetryMeta,
       // Outside of error boundary so error dialog is styled.
-      ThemePlugin({ appName: 'Composer' }),
-
+      ThemeMeta,
       // Outside of error boundary so that updates are not blocked by errors.
-      PwaPlugin(),
-
-      // Core framework.
+      PwaMeta,
       // TODO(wittjosiah): Factor out to app framework.
-      ErrorPlugin(),
+      ErrorMeta,
 
-      // Core UX.
-      LayoutPlugin(),
-      NavTreePlugin(),
+      // UX
+      LayoutMeta,
+      NavTreeMeta,
 
-      // Application data integrations.
-      ClientPlugin({ appKey: APP, config, services, types }),
-      SpacePlugin({
+      // Data integrations
+      ClientMeta,
+      SpaceMeta,
+      DebugMeta,
+      FilesMeta,
+      GithubMeta,
+      IpfsMeta,
+
+      // Framework extensions
+      // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
+      //  Root folder needs to be created before the graph is built or else it's not ordered first.
+      GraphMeta,
+      MetadataMeta,
+      RegistryMeta,
+
+      // Presentation
+      ChainMeta,
+      StackMeta,
+      PresenterMeta,
+      MarkdownMeta,
+      MermaidMeta,
+      SketchMeta,
+      GridMeta,
+      InboxMeta,
+      KanbanMeta,
+      MapMeta,
+      OutlinerMeta,
+      ScriptMeta,
+      TableMeta,
+      ThreadMeta,
+      ExplorerMeta,
+      ChessMeta,
+      WildcardMeta,
+      // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
+      SearchMeta,
+    ],
+    plugins: {
+      [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
+      [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
+      [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
+        appKey,
+        config,
+        services,
+        types,
+        debugIdentity,
+      }),
+      [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
+      [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
+      [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
+      [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
+      [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
+      [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
+      [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
+      [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
+      [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
+      [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
+      [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout')),
+      [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
+      [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
+      [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
+      [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
+      [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
+      [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
+      [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
+      [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')),
+      [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
+      [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
+        containerUrl: '/script-frame/index.html',
+      }),
+      [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
+      [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
+      [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
+        version: '1',
         onFirstRun: ({ personalSpaceFolder, dispatch }) => {
-          const document = new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) });
+          const document = new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) });
           personalSpaceFolder.objects.push(document);
-
           void dispatch({
             action: LayoutAction.ACTIVATE,
             data: { id: document.id },
           });
         },
       }),
-      DebugPlugin(),
-      FilesPlugin(),
-      GithubPlugin(),
-      IpfsPlugin(),
-
-      // Presentation plugins.
-      MarkdownPlugin(),
-      PresenterPlugin(), // Before Stack.
-      StackPlugin(),
-      SketchPlugin(),
-
-      // App framework extensions.
-      // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
-      //  Root folder needs to be created before the graph is built or else it's not ordered first.
-      GraphPlugin(),
-      MetadataPlugin(),
+      [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
+      [TelemetryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-telemetry'), {
+        namespace: appKey,
+        config: new Config(Defaults()),
+      }),
+      [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
+      [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
+        appName: 'Composer',
+      }),
+      [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
+      [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
+    },
+    core: [
+      ClientMeta.id,
+      ErrorMeta.id,
+      GraphMeta.id,
+      LayoutMeta.id,
+      MetadataMeta.id,
+      NavTreeMeta.id,
+      PwaMeta.id,
+      RegistryMeta.id,
+      SpaceMeta.id,
+      ThemeMeta.id,
+      TelemetryMeta.id,
+      WildcardMeta.id,
     ],
+    defaults: [MarkdownMeta.id, StackMeta.id],
   });
 
   createRoot(document.getElementById('root')!).render(

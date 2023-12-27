@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/todomvc/src/index.ts",
         "outputPath": "packages/apps/todomvc/dist",
@@ -11,10 +10,7 @@
           "@dxos/log-hook/transformer"
         ],
         "tsConfig": "packages/apps/todomvc/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "bundle": {
       "executor": "@nx/vite:build",
@@ -26,12 +22,8 @@
       ]
     },
     "e2e": {
-      "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/todomvc",
-        "outputPath": "tmp/playwright/packages/apps/todomvc",
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/apps/todomvc",
         "serve": "todomvc:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
@@ -42,26 +34,9 @@
         "watchPatterns": [
           "packages/apps/todomvc/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/todomvc/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {

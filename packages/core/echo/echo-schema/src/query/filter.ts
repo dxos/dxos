@@ -7,16 +7,30 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { base, getDatabaseFromObject, isTypedObject, type EchoObject, type Expando, type TypedObject } from '../object';
+import { AutomergeObject } from '../automerge';
+import {
+  base,
+  getDatabaseFromObject,
+  isTypedObject,
+  type EchoObject,
+  type Expando,
+  type TypedObject,
+  immutable,
+} from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
+
+export const hasType =
+  <T extends TypedObject>(schema: Schema) =>
+  (object: TypedObject | undefined): object is T =>
+    object?.__typename === schema.typename;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
 
 export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
 
-export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
+export type FilterSource<T extends EchoObject = EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
@@ -77,13 +91,8 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
-  // TODO(burdon): Remove and reconcile with below.
-  static _typename(typename: string) {
-    return Filter.from((object) => object.__typename === typename);
-  }
-
-  static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>) {
-    const type = Reference.fromLegacyTypename(typename); // TODO(burdon): ???
+  static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
+    const type = Reference.fromLegacyTypename(typename);
 
     switch (typeof filter) {
       case 'function':
@@ -199,7 +208,7 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   if (!(filter.options.models && filter.options.models.includes('*'))) {
     // TODO(burdon): Expose default options that are merged if not null.
     const models = filter.options.models ?? [DocumentModel.meta.type];
-    if (!models.includes(object[base]._modelConstructor.meta.type)) {
+    if (!(object[base] instanceof AutomergeObject) && !models.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }
   }
@@ -214,25 +223,28 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     return false;
   }
 
-  // TODO(burdon): Should match by default?
-  let match = true;
-
   if (filter.type) {
     if (!isTypedObject(object)) {
       return false;
     }
 
-    const type = object[base]._getType();
-    if (!type) {
-      return false;
-    }
+    // Separate branch for objects with dynamic schema and typename filters.
+    // TODO(dmaretskyi): Better way to check if schema is dynamic.
+    if (filter.type.protocol === 'protobuf' && object.__schema && !object.__schema[immutable]) {
+      if (object.__schema.typename !== filter.type.itemId) {
+        return false;
+      }
+    } else {
+      const type = object[base]._getType();
+      if (!type) {
+        return false;
+      }
 
-    // TODO(burdon): Comment.
-    if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend.spaceKey)) {
-      return false;
+      // TODO(burdon): Comment.
+      if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend?.spaceKey)) {
+        return false;
+      }
     }
-
-    match = true;
   }
 
   if (filter.properties) {
@@ -243,8 +255,6 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
         return false;
       }
     }
-
-    match = true;
   }
 
   if (filter.text !== undefined) {
@@ -256,8 +266,6 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     if (!JSON.stringify(object.toJSON()).toLowerCase().includes(text)) {
       return false;
     }
-
-    match = true;
   }
 
   if (filter.predicate && !filter.predicate(object)) {
@@ -268,11 +276,9 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     if (!filterMatch(andFilter, object)) {
       return false;
     }
-
-    match = true;
   }
 
-  return match;
+  return true;
 };
 
 // Type comparison is a bit weird due to backwards compatibility requirements.

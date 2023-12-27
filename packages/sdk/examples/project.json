@@ -1,17 +1,7 @@
 {
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/examples/src/index.ts",
-        "outputPath": "packages/sdk/examples/dist/types",
-        "tsConfig": "packages/sdk/examples/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
@@ -22,7 +12,6 @@
       ]
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -45,32 +34,6 @@
       "options": {
         "buildTarget": "examples:bundle"
       }
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/sdk/examples/.storybook"
-      }
-    },
-    "storybook-build": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:build",
-      "options": {
-        "configDir": "packages/sdk/examples/.storybook",
-        "outputDir": "packages/sdk/examples/out"
-      },
-      "outputs": [
-        "{options.outputDir}"
-      ]
     }
   },
   "$schema": "../node_modules/nx/schemas/project-schema.json",

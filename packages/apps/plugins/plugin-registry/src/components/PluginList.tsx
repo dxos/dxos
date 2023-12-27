@@ -5,48 +5,90 @@
 import { Circle } from '@phosphor-icons/react';
 import React from 'react';
 
-import { DensityProvider, Input, List, ListItem } from '@dxos/react-ui';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import type { Plugin } from '@dxos/app-framework';
+import {
+  type ChromaticPalette,
+  DensityProvider,
+  Input,
+  List,
+  ListItem,
+  type NeutralPalette,
+  Tag,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
+import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { type PluginDef } from './types';
+import { REGISTRY_PLUGIN } from '../meta';
 
-// TODO(burdon): Factor out.
-const styles = {
-  hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
+const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
+  default: 'neutral',
+  new: 'green',
+  beta: 'cyan',
+  alpha: 'purple',
+  experimental: 'indigo',
+  新発売: 'red',
 };
 
 export type PluginListProps = {
-  plugins?: PluginDef[];
+  plugins?: Plugin['meta'][];
+  loaded?: string[];
+  enabled?: string[];
+  className?: string;
   onChange?: (id: string, enabled: boolean) => void;
 };
 
-export const PluginList = ({ plugins = [], onChange }: PluginListProps) => {
+export const PluginList = ({ plugins = [], loaded = [], enabled = [], className, onChange }: PluginListProps) => {
+  const { t } = useTranslation(REGISTRY_PLUGIN);
+
   return (
-    <div className={mx('flex flex-col w-full overflow-x-hidden overflow-y-scroll', inputSurface)}>
-      <DensityProvider density={'fine'}>
-        <List classNames='divide-y'>
-          {plugins.map(({ id, name, description, enabled, Icon = Circle }) => (
-            <ListItem.Root
-              key={id}
-              classNames={mx('flex is-full cursor-pointer p-1', styles.hover)}
-              onClick={() => onChange?.(id, !enabled)}
-            >
-              <ListItem.Endcap classNames={'items-center mr-4'}>
-                <Icon className={getSize(6)} />
-              </ListItem.Endcap>
-              <div className='flex flex-col grow'>
-                <ListItem.Heading classNames='flex grow truncate items-center'>{name ?? id}</ListItem.Heading>
-                {description && <div className='text-sm pb-1 font-thin'>{description}</div>}
-              </div>
-              <ListItem.Endcap classNames='items-center'>
-                <Input.Root>
-                  <Input.Checkbox checked={!!enabled} onCheckedChange={() => onChange?.(id, !enabled)} />
-                </Input.Root>
-              </ListItem.Endcap>
-            </ListItem.Root>
-          ))}
-        </List>
-      </DensityProvider>
-    </div>
+    <DensityProvider density='fine'>
+      <List classNames='select-none'>
+        {plugins.map(({ id, name, description, tags, iconComponent: Icon = Circle }) => {
+          const isEnabled = enabled.includes(id);
+          const isLoaded = loaded.includes(id);
+          const reloadRequired = isEnabled !== isLoaded;
+          const inputId = useId('plugin');
+          const labelId = useId('pluginName');
+          const descriptionId = useId('pluginDescription');
+
+          return (
+            <Input.Root key={id} id={inputId}>
+              <ListItem.Root
+                labelId={labelId}
+                classNames={['flex gap-2 cursor-pointer plb-1 pli-2 -mli-2 rounded', ghostHover]}
+                onClick={() => onChange?.(id, !isEnabled)}
+                aria-describedby={descriptionId}
+              >
+                <Icon weight='duotone' className={mx('shrink-0 mbs-1', getSize(6))} />
+                <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
+                  <label htmlFor={inputId} id={labelId} className='truncate'>
+                    {name ?? id}
+                  </label>
+                  {(description || reloadRequired) && (
+                    <div id={descriptionId} className='space-b-1 pbs-1 pbe-1'>
+                      <p className={descriptionText}>{description}</p>
+                      {reloadRequired && <p className='text-sm font-system-medium'>{t('reload required message')}</p>}
+                    </div>
+                  )}
+                  {tags?.length && (
+                    <div className='flex my-1'>
+                      {tags.map((tag) => (
+                        <Tag key={tag} palette={palette[tag] ?? palette.default}>
+                          {tag}
+                        </Tag>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className='pbs-1'>
+                  <Input.Switch classNames='self-center' checked={!!isEnabled} />
+                </div>
+              </ListItem.Root>
+            </Input.Root>
+          );
+        })}
+      </List>
+    </DensityProvider>
   );
 };

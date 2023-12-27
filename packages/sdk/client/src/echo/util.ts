@@ -3,6 +3,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Space } from '@dxos/client-protocol';
 import { DocumentModel } from '@dxos/document-model';
 import { type EchoObject, getDatabaseFromObject } from '@dxos/echo-schema';
 import { ModelFactory } from '@dxos/model-factory';
@@ -14,17 +15,19 @@ export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
 };
 
-export const getSpaceForObject = (object: EchoObject): SpaceProxy | undefined => {
+/**
+ * @deprecated
+ */
+// TODO(burdon): Normalize API getters.
+export const getSpaceForObject = (object: EchoObject): Space | undefined => {
   const db = getDatabaseFromObject(object);
-  const key = db?._backend.spaceKey;
-  if (!key) {
-    return undefined;
+  const key = db?.spaceKey;
+  if (key) {
+    const owner = db.graph._getOwningObject(key);
+    if (owner instanceof SpaceProxy) {
+      return owner;
+    }
   }
 
-  const owner = db?.graph._getOwningObject(key);
-  if (owner instanceof SpaceProxy) {
-    return owner;
-  } else {
-    return undefined;
-  }
+  return undefined;
 };

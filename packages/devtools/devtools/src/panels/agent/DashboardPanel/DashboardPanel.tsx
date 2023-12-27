@@ -12,7 +12,6 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
 import { AgentStat } from './AgentStat';
-import { PluginList } from './PluginList';
 import { DashboardProxy } from './dashboard-proxy';
 import { PanelContainer } from '../../../components';
 
@@ -20,7 +19,6 @@ const RETRY_IN_IF_FAILURE = 1000; // [ms]
 
 export const DashboardPanel = () => {
   const client = useClient();
-  const [dashboard, setDashboard] = useState<DashboardProxy>();
   const [agentState, setAgentState] = useState<AgentStatus>({ status: AgentStatus.Status.OFF });
 
   useAsyncEffect(async () => {
@@ -29,7 +27,6 @@ export const DashboardPanel = () => {
 
     const dashboard = new DashboardProxy({ client });
     await dashboard.open();
-    setDashboard(dashboard);
 
     const context = new Context();
     const subscribe = () => {
@@ -63,31 +60,11 @@ export const DashboardPanel = () => {
     };
   }, []);
 
-  const togglePlugin = async (pluginId: string) => {
-    const config = agentState?.plugins?.find((plugin) => plugin.id === pluginId)?.config;
-    if (!config || !dashboard) {
-      log.info('skip toggle');
-      return;
-    }
-
-    log.info('toggle plugin', { pluginId, config });
-
-    await dashboard?.services.DashboardService.changePluginConfig({
-      id: pluginId,
-      config: { ...config, enabled: !config.enabled },
-    });
-  };
-
   return (
-    <PanelContainer className='flex-1 flex-row'>
+    <PanelContainer classNames='flex-1 flex-row'>
       <div className='flex-1 flex-col w-50%'>
         <AgentStat status={agentState} />
       </div>
-      {agentState.plugins ? (
-        <PluginList plugins={agentState.plugins} togglePlugin={togglePlugin} />
-      ) : (
-        <div>No plugins are running in agent</div>
-      )}
     </PanelContainer>
   );
 };

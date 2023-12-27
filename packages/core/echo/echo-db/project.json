@@ -2,70 +2,28 @@
   "sourceRoot": "packages/core/echo/echo-db/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/core/echo/echo-db/src/index.ts",
-        "outputPath": "packages/core/echo/echo-db/dist/types",
-        "tsConfig": "packages/core/echo/echo-db/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/core/echo/echo-db/src/index.ts",
           "packages/core/echo/echo-db/src/testing/index.ts"
         ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/echo/echo-db/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        "injectGlobals": true
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/echo/echo-db/src/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/echo-db",
         "envVariables": {
           "SIGNAL_PORT": 12000
         },
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/echo/echo-db",
-        "resultsPath": "test-results/packages/core/echo/echo-db",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
           "port": 12000
-        },
-        "testPatterns": [
-          "packages/core/echo/echo-db/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/core/echo/echo-db/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
+        }
+      }
     }
   },
   "implicitDependencies": [

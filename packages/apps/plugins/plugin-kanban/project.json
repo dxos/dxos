@@ -2,45 +2,19 @@
   "sourceRoot": "packages/apps/plugins/plugin-kanban/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-kanban/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-kanban/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-kanban/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-kanban/src/index.ts"
+          "packages/apps/plugins/plugin-kanban/src/index.ts",
+          "packages/apps/plugins/plugin-kanban/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-kanban/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-kanban/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "storybook": {
       "configurations": {
         "ci": {
@@ -49,28 +23,11 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-kanban/.storybook"
+        "configDir": "tools/stories/.storybook",
+        "stories": []
       }
     },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-kanban",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-kanban",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-kanban",
-        "testPatterns": [
-          "packages/apps/plugins/plugin-kanban/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-kanban/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

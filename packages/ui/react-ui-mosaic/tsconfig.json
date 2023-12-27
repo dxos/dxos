@@ -44,10 +44,16 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-card"
+    },
+    {
       "path": "../react-ui-theme"
     },
     {
       "path": "../react-ui-types"
+    },
+    {
+      "path": "../storybook-utils"
     }
   ]
 }

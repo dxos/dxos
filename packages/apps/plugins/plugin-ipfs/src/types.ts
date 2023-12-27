@@ -3,10 +3,10 @@
 //
 
 import { File as FileType } from '@braneframe/types';
-import type { SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
-import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
+import type { MetadataRecordsProvides, SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
+import { isTypedObject } from '@dxos/react-client/echo';
 
-export const IPFS_PLUGIN = 'dxos.org/plugin/template';
+import { IPFS_PLUGIN } from './meta';
 
 const IPFS_ACTION = `${IPFS_PLUGIN}/action`;
 
@@ -16,8 +16,8 @@ export enum IpfsAction {
 
 export type IpfsProvides = {};
 
-export type IpfsPluginProvides = SurfaceProvides & TranslationsProvides;
+export type IpfsPluginProvides = SurfaceProvides & MetadataRecordsProvides & TranslationsProvides;
 
-export const isFile = (object: unknown): object is TypedObject => {
+export const isFile = (object: unknown): object is FileType => {
   return isTypedObject(object) && FileType.schema.typename === object.__typename;
 };

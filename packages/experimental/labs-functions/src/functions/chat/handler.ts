@@ -2,73 +2,87 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Thread } from '@braneframe/types';
+import { join } from 'node:path';
+
+import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
-import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
-import { PublicKey } from '@dxos/keys';
+import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { Chat } from './chat';
-import { createRequest } from './request';
+import { createContext, createSequence } from './request';
 import { createResponse } from './response';
+import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
 
-// TODO(burdon): https://platform.openai.com/docs/plugins/examples
+export const handler = subscriptionHandler(async ({ event, context, response }) => {
+  const { client, dataDir } = context;
+  const { space, objects } = event;
+  if (!space || !objects?.length) {
+    return response.status(400);
+  }
 
-const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
-
-export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
-  event: { space: spaceKey, objects: blockIds },
-  context: { client, status },
-}) => {
   const config = client.config;
-  const chat = new Chat({
-    // TODO(burdon): Normalize env.
-    orgId: process.env.COM_OPENAI_ORG_ID ?? getKey(config, 'openai.com/org_id')!,
-    apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
+  const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
+    baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
+    apiKey: getKey(config, 'openai.com/api_key'),
   });
+  await resources.store.initialize();
 
-  // TODO(burdon): Logging (filename missing).
-  const space = client.spaces.get(PublicKey.from(spaceKey))!;
-  log.info('chatgpt', { space: space.key });
+  // TODO(burdon): The handler is called before the mutation is processed!
+  await sleep(500);
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
-  const { objects: threads } = space.db.query(Thread.filter());
-  const activeThreads = blockIds.reduce((activeThreads, blockId) => {
-    const thread = threads.find((thread) => thread.blocks.some((block) => block.id === blockId));
+  const { objects: threads } = space.db.query(ThreadType.filter());
+  const activeThreads = objects.reduce((activeThreads, message) => {
+    const thread = threads.find((thread) => thread.messages.some((m) => m.id === message.id));
     if (thread) {
       activeThreads.add(thread);
     }
 
     return activeThreads;
-  }, new Set<Thread>());
+  }, new Set<ThreadType>());
 
   // Process threads.
-  await Promise.all(
-    Array.from(activeThreads).map(async (thread) => {
-      // TODO(burdon): Wait for block to be added.
-      await sleep(500);
+  if (activeThreads) {
+    await Promise.all(
+      Array.from(activeThreads).map(async (thread) => {
+        const message = thread.messages[thread.messages.length - 1];
+        if (message.__meta.keys.length === 0) {
+          let blocks: MessageType.Block[];
+          try {
+            let text = message.blocks
+              .map((message) => message.text)
+              .filter(Boolean)
+              .join('\n');
 
-      // TODO(burdon): Create set of messages.
-      const block = thread.blocks[thread.blocks.length - 1];
-      if (block.__meta.keys.length === 0) {
-        const messages = createRequest(client, space, block);
-        log.info('request', { messages });
-        console.log(JSON.stringify(messages, null, 2));
+            // Check for command.
+            let command: string | undefined;
+            const match = text.match(/\/(\w+)\s*(.+)?/);
+            if (match) {
+              command = match[1];
+              text = match[2];
+            }
 
-        // TODO(burdon): Error handling (e.g., 401);
-        const { content } = (await chat.request(messages)) ?? {};
-        log.info('response', { content });
-        if (content) {
-          const messages = createResponse(client, content);
-          console.log('response', { messages });
+            const context = createContext(space, message.context);
+            const sequence = createSequence(space, resources, context, { command });
+            const response = await sequence.invoke(text);
+            log.info('response', { response });
 
-          thread.blocks.push(
-            new Thread.Block(
+            blocks = createResponse(space, context, response);
+            log.info('response', { blocks });
+          } catch (error) {
+            log.error('processing message', error);
+            blocks = [{ text: 'There was an error generating the response.' }];
+          }
+
+          thread.messages.push(
+            new MessageType(
               {
-                identityKey,
-                messages,
+                from: {
+                  identityKey: resources.identityKey,
+                },
+                blocks,
               },
               {
                 meta: {
@@ -78,9 +92,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
             ),
           );
         }
-      }
-    }),
-  );
-
-  return status(200).succeed();
-};
+      }),
+    );
+  }
+});

@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
 import { type EchoObject, type TypedObject } from '../object';
-import { createSignal } from '../util';
+import { compositeRuntime } from '../util';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
@@ -18,6 +18,9 @@ export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
+
+// TODO(burdon): Fix garbage collection.
+const queries: Query<any>[] = [];
 
 export type QueryResult<T extends EchoObject> = {
   id: string;
@@ -91,11 +94,12 @@ export class Query<T extends TypedObject = TypedObject> {
   });
 
   private readonly _filter: Filter;
-  private _sources = new Set<QuerySource>();
+  private readonly _sources = new Set<QuerySource>();
+  private readonly _signal = compositeRuntime.createSignal();
+  private readonly _event = new Event<Query<T>>();
+
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: T[] | undefined = undefined;
-  private _signal = createSignal?.();
-  private _event = new Event<Query<T>>();
 
   constructor(private readonly _queryContext: QueryContext, filter: Filter) {
     this._filter = filter;
@@ -105,14 +109,16 @@ export class Query<T extends TypedObject = TypedObject> {
       source.changed.on(this._ctx, () => {
         this._resultCache = undefined;
         this._objectCache = undefined;
-        this._signal?.notifyWrite();
+        this._signal.notifyWrite();
         this._event.emit(this);
       });
       source.update(this._filter);
     });
+
     this._queryContext.removed.on((source) => {
       this._sources.delete(source);
     });
+
     this._queryContext.start();
   }
 
@@ -121,13 +127,13 @@ export class Query<T extends TypedObject = TypedObject> {
   }
 
   get results(): QueryResult<T>[] {
-    this._signal?.notifyRead();
+    this._signal.notifyRead();
     this._ensureCachePresent();
     return this._resultCache!;
   }
 
   get objects(): T[] {
-    this._signal?.notifyRead();
+    this._signal.notifyRead();
     this._ensureCachePresent();
     return this._objectCache!;
   }
@@ -148,13 +154,20 @@ export class Query<T extends TypedObject = TypedObject> {
     }
   }
 
-  // TODO(burdon): Change to SubscriptionHandle.
+  // TODO(burdon): Change to SubscriptionHandle (make uniform).
   subscribe(callback: (query: Query<T>) => void, fire = false): Subscription {
+    queries.push(this);
+    log('subscribe', queries.length); // TODO(burdon): Assign id?
+
     const subscription = this._event.on(callback);
     if (fire) {
       callback(this);
     }
 
-    return subscription;
+    return () => {
+      queries.splice(queries.indexOf(this), 1);
+      log('unsubscribe', queries.length);
+      subscription();
+    };
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { KANBAN_PLUGIN } from './types';
+import { KANBAN_PLUGIN } from './meta';
 
 export default [
   {

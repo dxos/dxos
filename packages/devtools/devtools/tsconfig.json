@@ -22,6 +22,9 @@
       "path": "../../apps/plugins/plugin-telemetry"
     },
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -50,6 +53,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/mesh/messaging"
@@ -95,6 +101,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/storybook-utils"
     }
   ]
 }

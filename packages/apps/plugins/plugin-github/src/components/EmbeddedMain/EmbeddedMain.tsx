@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import './embedded.css';
+
 import {
   ArrowSquareOut,
   CaretDown,
@@ -35,7 +37,8 @@ import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
-import { type EditorViewState, GITHUB_PLUGIN } from '../../props';
+import { GITHUB_PLUGIN } from '../../meta';
+import type { EditorViewState } from '../../props';
 import {
   DocumentResolverProvider,
   DocumentResolverContext,
@@ -43,7 +46,6 @@ import {
   SpaceResolverProvider,
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
-import './embedded.css';
 
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
@@ -84,7 +86,7 @@ const EmbeddedLayoutImpl = () => {
 
   const spaceJdenticon = useJdenticonHref(space?.key.toHex() ?? '', 6);
 
-  const textModel = useTextModel({
+  const model = useTextModel({
     identity,
     space: space ?? undefined,
     text: document ? document.content : undefined,
@@ -248,7 +250,7 @@ const EmbeddedLayoutImpl = () => {
               />
             </Main.Content>
           ) : (
-            <Surface role='main' data={{ composer: textModel, properties: document, view: 'embedded' }} />
+            <Surface role='main' data={{ composer: model, properties: document, view: 'embedded' }} />
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>

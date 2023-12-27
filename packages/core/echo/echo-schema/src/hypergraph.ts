@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
+import { type AutomergeDb } from './automerge';
 import { type EchoDatabase } from './database';
 import { type EchoObject, type TypedObject } from './object';
 import {
@@ -24,6 +25,7 @@ import {
   type QuerySource,
 } from './query';
 import { TypeCollection } from './type-collection';
+import { compositeRuntime } from './util';
 
 /**
  * Manages cross-space database interactions.
@@ -51,6 +53,7 @@ export class Hypergraph {
    * Register a database in hyper-graph.
    * @param owningObject Database owner, usually a space.
    */
+  // TODO(burdon): When is the owner not a space?
   _register(spaceKey: PublicKey, database: EchoDatabase, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
@@ -74,8 +77,8 @@ export class Hypergraph {
   }
 
   _unregister(spaceKey: PublicKey) {
-    this._databases.delete(spaceKey);
     // TODO(dmaretskyi): Remove db from query contexts.
+    this._databases.delete(spaceKey);
   }
 
   _getOwningObject(spaceKey: PublicKey): unknown | undefined {
@@ -95,7 +98,11 @@ export class Hypergraph {
    * @internal
    * @param onResolve will be weakly referenced.
    */
-  _lookupLink(ref: Reference, from: EchoDatabase, onResolve: (obj: EchoObject) => void): EchoObject | undefined {
+  _lookupLink(
+    ref: Reference,
+    from: EchoDatabase | AutomergeDb,
+    onResolve: (obj: EchoObject) => void,
+  ): EchoObject | undefined {
     if (ref.host === undefined) {
       const local = from.getObjectById(ref.itemId);
       if (local) {
@@ -137,24 +144,26 @@ export class Hypergraph {
   private _onUpdate(updateEvent: UpdateEvent) {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {
-      // TODO(dmaretskyi): We only care about created items.
-      for (const item of updateEvent.itemsUpdated) {
-        const listeners = listenerMap.get(item.id);
-        if (!listeners) {
-          continue;
+      compositeRuntime.batch(() => {
+        // TODO(dmaretskyi): We only care about created items.
+        for (const item of updateEvent.itemsUpdated) {
+          const listeners = listenerMap.get(item.id);
+          if (!listeners) {
+            continue;
+          }
+          const db = this._databases.get(updateEvent.spaceKey);
+          if (!db) {
+            continue;
+          }
+          const obj = db.getObjectById(item.id);
+          if (!obj) {
+            continue;
+          }
+          log('resolve', { spaceKey: updateEvent.spaceKey, itemId: obj.id });
+          listeners.emit(obj);
+          listenerMap.delete(item.id);
         }
-        const db = this._databases.get(updateEvent.spaceKey);
-        if (!db) {
-          continue;
-        }
-        const obj = db.getObjectById(item.id);
-        if (!obj) {
-          continue;
-        }
-        log('resolve', { spaceKey: updateEvent.spaceKey, itemId: obj.id });
-        listeners.emit(obj);
-        listenerMap.delete(item.id);
-      }
+      });
     }
 
     this._updateEvent.emit(updateEvent);
@@ -203,10 +212,10 @@ class SpaceQuerySource implements QuerySource {
   constructor(private readonly _database: EchoDatabase) {}
 
   get spaceKey() {
-    return this._database._backend.spaceKey;
+    return this._database.spaceKey;
   }
 
-  private _onUpdate = (updateEvent: UpdateEvent) => {
+  private _onUpdate = (updateEvent: { spaceKey: PublicKey; itemsUpdated: { id: string }[] }) => {
     if (!this._filter) {
       return;
     }
@@ -216,7 +225,10 @@ class SpaceQuerySource implements QuerySource {
       return (
         !this._results ||
         this._results.find((result) => result.id === object.id) ||
-        (this._database._objects.has(object.id) && filterMatch(this._filter!, this._database._objects.get(object.id)!))
+        (this._database._objects.has(object.id) &&
+          filterMatch(this._filter!, this._database._objects.get(object.id)!)) ||
+        (this._database.automerge._objects.has(object.id) &&
+          filterMatch(this._filter!, this._database.automerge._objects.get(object.id)!))
       );
     });
 
@@ -232,7 +244,7 @@ class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      this._results = Array.from(this._database._objects.values())
+      this._results = [...this._database._objects.values(), ...this._database.automerge._objects.values()]
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,
@@ -265,6 +277,7 @@ class SpaceQuerySource implements QuerySource {
 
     // TODO(dmaretskyi): Allow to specify a retainer.
     this._database._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+    this._database.automerge._updateEvent.on(new Context(), this._onUpdate, { weak: true });
 
     this._results = undefined;
     this.changed.emit();

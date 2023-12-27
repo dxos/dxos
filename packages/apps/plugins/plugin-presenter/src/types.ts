@@ -11,8 +11,6 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
-export const PRESENTER_PLUGIN = 'dxos.org/plugin/presenter';
-
 export type PresenterContextType = {
   running: boolean;
   start: () => void;

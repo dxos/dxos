@@ -15,9 +15,9 @@ import {
   type StateOf,
 } from '@dxos/model-factory';
 
-import { type EchoObject, base, db, subscribe } from './types';
+import { type EchoObject, base, debug, db, subscribe } from './types';
 import { type EchoDatabase } from '../database';
-import { createSignal } from '../util';
+import { compositeRuntime } from '../util/signal';
 
 /**
  * Base class for all echo objects.
@@ -58,7 +58,7 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
 
   private readonly _callbacks = new Set<(value: any) => void>();
 
-  protected readonly _signal = createSignal?.();
+  protected readonly _signal = compositeRuntime.createSignal();
 
   protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;
@@ -85,14 +85,23 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
   /** Proxied object. */
   [base]: this = this;
 
-  /** ID accessor. */
-  get id(): string {
-    return this[base]._id;
+  get [debug]() {
+    return `EchoObject(${JSON.stringify({ id: this[base]._id.slice(0, 8) })})`;
   }
 
   /** Database reference if bound. */
   get [db](): EchoDatabase | undefined {
     return this[base]._database;
+  }
+
+  [subscribe](callback: (value: any) => void) {
+    this[base]._callbacks.add(callback);
+    return () => this[base]._callbacks.delete(callback);
+  }
+
+  /** ID accessor. */
+  get id(): string {
+    return this[base]._id;
   }
 
   /**
@@ -119,11 +128,6 @@ export abstract class AbstractEchoObject<T extends Model = any> implements EchoO
     for (const callback of this._callbacks) {
       callback(this);
     }
-  }
-
-  [subscribe](callback: (value: any) => void) {
-    this[base]._callbacks.add(callback);
-    return () => this[base]._callbacks.delete(callback);
   }
 
   /**

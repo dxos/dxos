@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { Chessboard, type ChessModel, type ChessMove, type Game } from '@dxos/chess-app';
 import { invariant } from '@dxos/invariant';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 export const ChessMain = ({ game }: { game: Game }) => {
   const [model, setModel] = useState<ChessModel>();
@@ -37,7 +37,7 @@ export const ChessMain = ({ game }: { game: Game }) => {
   }
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <div className='flex grow justify-center items-center md:m-8'>
         <div className='flex md:min-w-[600px] md:min-h-[600px]'>
           <Chessboard model={model} onUpdate={handleUpdate} />

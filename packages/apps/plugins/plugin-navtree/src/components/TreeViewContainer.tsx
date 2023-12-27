@@ -31,8 +31,10 @@ import { arrayMove } from '@dxos/util';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
-import { NAVTREE_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../meta';
 import { getPersistenceParent } from '../util';
+
+export const NODE_TYPE = 'dxos/app-graph/node';
 
 const getMosaicPath = (graph: Graph, id: string) => {
   const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
@@ -176,25 +178,22 @@ export const TreeViewContainer = ({
 
   return (
     <ElevationProvider elevation='chrome'>
-      <DensityProvider density='fine'>
-        <div role='none' className='flex flex-col bs-full'>
+      <div role='none' className='flex flex-col bs-full'>
+        <DensityProvider density='coarse'>
           {identity && (
             <>
-              <div
-                role='none'
-                className='shrink-0 flex items-center gap-1 pis-4 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1 bs-10'
-              >
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
                 <HaloButton
                   size={6}
                   identityKey={identity?.identityKey.toHex()}
                   onClick={() => client.shell.shareIdentity()}
                 />
-                <div className='grow' />
+                <div role='none' className='grow' />
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <Button
                       variant='ghost'
-                      classNames='pli-2 pointer-fine:pli-1'
+                      classNames='pli-2.5'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
@@ -242,10 +241,13 @@ export const TreeViewContainer = ({
               {/* <Separator orientation='horizontal' /> */}
             </>
           )}
+        </DensityProvider>
+        <DensityProvider density='fine'>
           <div role='none' className='grow min-bs-0 overflow-y-auto p-0.5'>
             <NavTree
               node={graph.root}
               current={currentPath}
+              type={NODE_TYPE}
               onSelect={handleSelect}
               isOver={isOver}
               onOver={handleOver}
@@ -255,8 +257,8 @@ export const TreeViewContainer = ({
             />
           </div>
           <VersionInfo config={config} />
-        </div>
-      </DensityProvider>
+        </DensityProvider>
+      </div>
     </ElevationProvider>
   );
 };

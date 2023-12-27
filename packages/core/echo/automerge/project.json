@@ -1,0 +1,24 @@
+{
+  "sourceRoot": "packages/core/echo/automerge/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "executor": "nx:run-script",
+      "inputs": [
+        "{projectRoot}/scripts/**/*",
+        "{projectRoot}/src/**/*"
+      ],
+      "options": {
+        "script": "compile"
+      },
+      "outputs": [
+        "packages/core/echo/automerge/dist/lib"
+      ]
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SPACE_PLUGIN } from './types';
+import { SPACE_PLUGIN } from './meta';
 
 export default [
   {
@@ -20,8 +20,9 @@ export default [
         'object name label': 'Object name',
         'close space label': 'Close space',
         'open space label': 'Open space',
-        'download all docs in space label': 'Download backup',
-        'upload all docs in space label': 'Upload backup',
+        'export data label': 'Export data',
+        'import data label': 'Import data',
+        'migrate space label': 'Migrate space',
         'share space': 'Share space',
         'confirm restore title': 'Overwrite files in this space?',
         'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',
@@ -45,8 +46,8 @@ export default [
           'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'missing object message': 'Object not available.',
         'missing object description':
-          'TThe requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
-        'add folder label': 'Add folder',
+          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+        'create folder label': 'Create folder',
         'unnamed object label': 'New object',
         'unnamed folder label': 'New folder',
         'create object group label': 'Add to space',

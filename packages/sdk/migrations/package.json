@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/migrations",
+  "version": "0.3.9",
+  "description": "",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -6,6 +6,8 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Action } from './Action';
 import { Actions } from './Actions';
 import { Heading } from './Heading';
@@ -15,6 +17,7 @@ import { StorybookDialog } from '../StorybookDialog';
 export default {
   component: StorybookDialog,
   actions: { argTypesRegex: '^on.*' },
+  decorators: [withTheme],
 };
 
 export const Normal = (props: any) => {

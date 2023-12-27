@@ -11,7 +11,7 @@ import { type SignalStatus } from '@dxos/messaging';
 import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 const states = {
   [SignalState.CONNECTING]: {
@@ -83,10 +83,12 @@ export const SignalStatusTable = () => {
     helper.accessor((status) => new URL(status.host).origin, {
       id: 'host',
       cell: (props) => <div className='font-mono'>{props.getValue()}</div>,
+      meta: { cell: { classNames: textPadding } },
       size: 240,
     }),
     helper.accessor((status) => states[status.state].label, {
       id: 'status',
+      meta: { cell: { classNames: textPadding } },
       size: 140,
       cell: (cell) => <div className={states[cell.row.original.state]?.className}>{cell.getValue().toUpperCase()}</div>,
     }),
@@ -99,14 +101,15 @@ export const SignalStatusTable = () => {
               addSuffix: true,
             })}`;
       },
-      { id: 'connected', size: 240, cell: (props) => <div className='text-xs'>{props.getValue()}</div> },
+      {
+        id: 'connected',
+        size: 240,
+        meta: { cell: { classNames: textPadding } },
+        cell: (props) => <div className='text-xs'>{props.getValue()}</div>,
+      },
     ),
     helper.accessor('error', {}),
   ];
 
-  return (
-    <div>
-      <Table<SignalStatus> columns={columns} data={status} />
-    </div>
-  );
+  return <Table<SignalStatus> columns={columns} data={status} />;
 };

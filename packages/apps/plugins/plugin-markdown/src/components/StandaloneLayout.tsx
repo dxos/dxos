@@ -5,40 +5,28 @@
 import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/react-ui';
-import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-editor';
-import {
-  baseSurface,
-  coarseBlockPaddingStart,
-  inputSurface,
-  mx,
-  surfaceElevation,
-  textBlockWidth,
-} from '@dxos/react-ui-theme';
+import { type EditorModel, type TextEditorRef } from '@dxos/react-ui-editor';
+import { baseSurface, topbarBlockPaddingStart, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 
 export const StandaloneLayout = ({
   children,
 }: PropsWithChildren<{
-  model: ComposerModel;
+  model: EditorModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
-  editorRef?: MutableRefObject<MarkdownComposerRef>;
+  editorRef?: MutableRefObject<TextEditorRef>;
 }>) => {
   return (
-    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div
-          role='none'
-          className={mx(
-            inputSurface,
-            surfaceElevation({ elevation: 'group' }),
-            'mbs-2 mbe-6 pli-6 rounded',
-            'min-bs-[calc(100dvh-5rem)] flex flex-col',
-          )}
-        >
+        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] plb-4'>
           {children}
         </div>
+
+        {/* Overscroll area. */}
+        <div role='none' className='bs-[50dvh]' />
       </div>
     </Main.Content>
   );

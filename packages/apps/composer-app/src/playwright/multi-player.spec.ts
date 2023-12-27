@@ -40,15 +40,13 @@ test.describe('Basic test', () => {
       test.slow();
 
       await host.createSpace();
-      await host.createDocument();
+      await host.createObject('markdownPlugin');
       await perfomInvitation(host, guest);
 
-      // TODO(wittjosiah): Currently the guest lands on the space folder, not the document.
-      //  Consider whether this is the desired behavior before removing this check.
-      // await guest.waitForMarkdownTextbox();
-      // await waitForExpect(async () => {
-      //   expect(await host.page.url()).to.include(await guest.page.url());
-      // });
+      await guest.waitForMarkdownTextbox();
+      await waitForExpect(async () => {
+        expect(await host.page.url()).to.include(await guest.page.url());
+      });
 
       await waitForExpect(async () => {
         const hostLink = await host.getObjectLinks().last().getAttribute('data-itemid');
@@ -61,10 +59,11 @@ test.describe('Basic test', () => {
       test.slow();
 
       await host.createSpace();
-      await host.createDocument();
+      await host.createObject('markdownPlugin');
       await host.waitForMarkdownTextbox();
       await perfomInvitation(host, guest);
 
+      await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
         expect(await guest.getObjectsCount()).to.equal(2);
       });
@@ -82,11 +81,11 @@ test.describe('Basic test', () => {
       });
     });
 
-    test.only('host and guest can see each others’ changes in same document', async () => {
+    test('host and guest can see each others’ changes in same document', async () => {
       test.slow();
 
       await host.createSpace();
-      await host.createDocument();
+      await host.createObject('markdownPlugin');
       await host.waitForMarkdownTextbox();
       await perfomInvitation(host, guest);
 
@@ -97,6 +96,7 @@ test.describe('Basic test', () => {
       ];
       const allParts = parts.join('');
 
+      await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
         expect(await guest.getObjectsCount()).to.equal(2);
       });

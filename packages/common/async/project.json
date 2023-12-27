@@ -2,61 +2,16 @@
   "sourceRoot": "packages/common/async/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/common/async/src/index.ts",
-        "outputPath": "packages/common/async/dist/types",
-        "tsConfig": "packages/common/async/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/async/src/index.ts"
-        ],
-        "outputPath": "packages/common/async/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/common/async/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/common/async",
-        "outputPath": "tmp/mocha/packages/common/async",
-        "resultsPath": "test-results/packages/common/async",
-        "testPatterns": [
-          "packages/common/async/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/async/src/**/*"
         ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+      }
+    },
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

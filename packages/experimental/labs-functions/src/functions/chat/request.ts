@@ -2,154 +2,118 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ChatCompletionRequestMessage } from 'openai';
+import { PromptTemplate } from 'langchain/prompts';
+import { StringOutputParser } from 'langchain/schema/output_parser';
+import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
+import { formatDocumentsAsString } from 'langchain/util/document';
 
-import { type Thread } from '@braneframe/types';
-import { type Client } from '@dxos/client';
+import { Chain as ChainType } from '@braneframe/types';
+import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { type Schema, type TypedObject } from '@dxos/echo-schema';
+import { Schema, type TypedObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
-export type SchemaConfig = {
-  typename: string;
-  fields: string[];
+import { sequences } from './chains';
+import type { ChainResources } from '../../chain';
+
+export type PromptContext = {
+  object?: TypedObject;
+  schema?: Schema;
 };
 
-// TODO(burdon): Get schema from client.
-const schemaConfigs: SchemaConfig[] = [
-  {
-    typename: 'braneframe.Grid.Item',
-    fields: ['title', 'content'],
-  },
-];
-
-const formatSchema = (schema: Schema) => {
-  console.log(JSON.stringify(schema, undefined, 2));
-  // const props =
-  //   !config || config.fields.length === 0
-  //     ? schema.props
-  //     : schema.props.filter((prop) => config?.fields.includes(prop.id!));
-
-  return `
-    @type: ${schema.typename}
-    fields:
-      ${schema.props.map((prop) => `${prop.id}: ${prop.type}`).join('\n')}
-    \n
-  `;
-};
-
-// TODO(burdon): Request builder.
-export const createRequest = (client: Client, space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
-  let contextObject: TypedObject | undefined;
-  if (block?.context.object) {
-    const { objects } = space.db.query({ id: block.context.object });
-    contextObject = objects[0];
+export const createContext = (space: Space, messageContext: MessageType.Context | undefined): PromptContext => {
+  let object: TypedObject | undefined;
+  if (messageContext?.object) {
+    const { objects } = space.db.query({ id: messageContext?.object });
+    object = objects[0];
   }
 
-  const messages: ChatCompletionRequestMessage[] = [
-    {
-      role: 'system',
-      content: 'you are a helpful assistant.',
-    },
-  ];
+  // TODO(burdon): How to infer schema from message/context/prompt.
+  let schema: Schema | undefined;
+  if (object?.__typename === 'braneframe.Grid') {
+    const { objects: schemas } = space.db.query(Schema.filter());
+    schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
+  }
 
-  block.messages.forEach((message) => {
-    if (message.text) {
-      messages.push({ role: 'user', content: message.text });
-    }
+  return {
+    object,
+    schema,
+  };
+};
+
+export type SequenceTest = (context: PromptContext) => boolean;
+
+type SequenceOptions = {
+  command?: string;
+  noVectorStore?: boolean;
+  noTrainingData?: boolean;
+};
+
+export type SequenceGenerator = (
+  resources: ChainResources,
+  getContext: () => PromptContext,
+  options?: SequenceOptions,
+) => RunnableSequence;
+
+// TODO(burdon): Create registry class.
+export const createSequence = (
+  space: Space,
+  resources: ChainResources,
+  context: PromptContext,
+  options: SequenceOptions = {},
+): RunnableSequence => {
+  log.info('create sequence', {
+    context: {
+      object: { id: context.object?.id, schema: context.object?.__typename },
+      schema: context.schema?.typename,
+    },
+    options,
   });
 
-  return messages;
+  // Create sequence from command.
+  if (options.command) {
+    const { objects: chains = [] } = space.db.query(ChainType.filter());
+    for (const chain of chains) {
+      for (const prompt of chain.prompts) {
+        if (prompt.command === options.command) {
+          return createSequenceFromPrompt(resources, prompt);
+        }
+      }
+    }
+  }
+
+  // TODO(burdon): Return meta -- e.g., ID.
+  // Create sequence from predicates.
+  const { id, generator } = sequences.find(({ test }) => test(context))!;
+  log.info('sequence', { id });
+  return generator(resources, () => context, options);
 };
 
-// TODO(burdon): Plugin rules.
-export class RequestBuilder {
-  private readonly _messages: ChatCompletionRequestMessage[] = [
-    {
-      role: 'system',
-      content: 'you are a helpful assistant.',
-    },
-  ];
+const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.Prompt) => {
+  const inputs = prompt.inputs.reduce<{ [name: string]: any }>((inputs, { type, name, value }) => {
+    switch (type) {
+      case ChainType.Input.Type.VALUE: {
+        inputs[name] = () => value.text;
+        break;
+      }
+      case ChainType.Input.Type.PASS_THROUGH: {
+        inputs[name] = new RunnablePassthrough();
+        break;
+      }
+      case ChainType.Input.Type.RETRIEVER: {
+        const retriever = resources.store.vectorStore.asRetriever({});
+        inputs[name] = retriever.pipe(formatDocumentsAsString);
+        break;
+      }
+    }
 
-  constructor(private readonly _client: Client) {}
+    return inputs;
+  }, {});
 
-  // TODO(burdon): https://js.langchain.com/docs/get_started/introduction
-  //  https://www.npmjs.com/package/langchain
-  //  https://js.langchain.com/docs/integrations/chat/openai
-
-  // TODO(burdon): Get schema from context.
-  setContext(schema: Schema) {
-    //
-    // Schema
-    // https://community.openai.com/t/getting-response-data-as-a-fixed-consistent-json-response/28471/23?page=2
-    //
-    // if (contextObject.__typename === 'braneframe.Grid') {
-    // const example = {
-    //   '@types': 'project.Example.Type',
-    //   title: 'hypercore',
-    //   content: 'hypercore is a protocol and network for distributing and replicating static feeds',
-    // };
-
-    const content = [
-      'Respond by formatting a list of JSON objects conforming to the provided schema.',
-      'Do not include any other text in your replies, just a single JSON block.',
-      'Include a "@type" field with the exact name of one of the provided schema.',
-      'Try to fill all fields if reasonable data can be provided.',
-      'Available schema types:',
-      formatSchema(schema),
-    ].join('\n');
-
-    console.log(JSON.stringify(schema));
-
-    this._messages.push({
-      role: 'system',
-      content,
-    });
-
-    // messages.push({
-    //   role: 'system',
-    //   content: `
-    //   In your replies you can choose to output lists and only lists in a structured format.
-    //   Structured data is formatted as an array of JSON objects conforming to the schema.
-    //   Include "@type" field with the exact name of one of the provided schema types.
-    //   In structured mode do not include any other text in your replies, just a single JSON block.
-    //   Include real data in your replies, not just the schema.
-    //   Try to fill all fields if reasonable data can be provided.
-    //   Example:
-    //   [{
-    //     "@type": "project.Example.Type",
-    //     "title": "hypercore",
-    //     "content": "hypercore is a protocol and network for distributing and replicating static feeds"
-    //   }]
-    //
-    //   Available schema types:
-    //   ${schemaConfigs
-    //     .map((config) => {
-    //       // TODO(burdon): ???
-    //       const schema = client.experimental.types.getSchema(config.typename);
-    //       if (schema) {
-    //         return formatSchema(config, schema);
-    //       }
-    //
-    //       return undefined;
-    //     })
-    //     .filter(Boolean)
-    //     .join('\n')}
-    //   `,
-    // });
-    // }
-
-    //
-    // Chess
-    //
-    // if (contextObject.__typename === 'dxos.experimental.chess.Game') {
-    //   this._messages.push({
-    //     role: 'user',
-    //     content: `I am playing chess and the current game history is: [${contextObject.pgn}]`,
-    //   });
-    // }
-  }
-
-  build(): ChatCompletionRequestMessage[] {
-    return this._messages;
-  }
-}
+  return RunnableSequence.from([
+    inputs,
+    PromptTemplate.fromTemplate(prompt.source.text),
+    resources.chat,
+    new StringOutputParser(),
+  ]);
+};

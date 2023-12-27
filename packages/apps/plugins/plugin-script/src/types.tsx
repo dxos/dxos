@@ -11,7 +11,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
-export const SCRIPT_PLUGIN = 'dxos.org/plugin/script';
+import { SCRIPT_PLUGIN } from './meta';
 
 export enum ScriptAction {
   CREATE = `${SCRIPT_PLUGIN}/create`,

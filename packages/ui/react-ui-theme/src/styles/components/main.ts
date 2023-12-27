@@ -7,6 +7,9 @@ import { type ComponentFunction } from '@dxos/react-ui-types/src';
 import { mx } from '../../util';
 import { bounceLayout, fixedBorder, fixedSurface } from '../fragments';
 
+// Padding to apply to in-flow elements which need to clear the fixed topbar.
+export const topbarBlockPaddingStart = 'pbs-[--topbar-size] sticky-top-from-topbar-bottom';
+
 export type MainStyleProps = Partial<{
   isLg: boolean;
   inlineStartSidebarOpen: boolean;

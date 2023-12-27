@@ -8,6 +8,7 @@ import { TextB, TextItalic } from '@phosphor-icons/react';
 import React from 'react';
 
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
+import { withTheme } from '../../testing';
 
 type StorybookToggleGroupProps = {
   type: ToggleGroupProps['type'];
@@ -28,7 +29,10 @@ const StorybookToggleGroup = (props: StorybookToggleGroupProps) => {
 };
 
 export default {
+  title: 'DXOS UI/Toggle button group',
   component: StorybookToggleGroup,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

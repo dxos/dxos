@@ -8,7 +8,7 @@ import { useIntent } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
 
-import { NAVTREE_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../meta';
 import { getTreeItemLabel } from '../util';
 
 export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
@@ -30,7 +30,7 @@ export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
           <>
             <Breadcrumb.ListItem>
               <Breadcrumb.Link asChild onClick={() => activeNode.parent && handleActivate(activeNode.parent)}>
-                <Button variant='ghost' classNames='shrink text-sm pli-0 gap-1 overflow-hidden'>
+                <Button variant='ghost' classNames='shrink text-sm pli-1 -mli-1 gap-1 overflow-hidden'>
                   {activeNode.parent.icon && <activeNode.parent.icon className='shrink-0' />}
                   <span className='min-is-0  flex-1 truncate'>{getTreeItemLabel(activeNode.parent, t)}</span>
                 </Button>

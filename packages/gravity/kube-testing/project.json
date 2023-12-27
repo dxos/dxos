@@ -3,30 +3,26 @@
   "projectType": "library",
   "targets": {
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/gravity/kube-testing/src/index.ts",
           "packages/gravity/kube-testing/src/main.ts"
-        ],
-        "outputPath": "packages/gravity/kube-testing/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
+    "e2e": {
       "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/gravity/kube-testing/**/*.{ts,tsx,js,jsx}"
+        "ciEnvironments": [
+          "nodejs"
         ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    }
+        "testPatterns": [
+          "packages/gravity/kube-testing/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gravity/kube-testing/src/**/*"
+        ]
+      }
+    },
+    "lint": {}
   }
 }

@@ -12,11 +12,13 @@ import { ClientProvider, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ProfileInitializer } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SpaceList } from './SpaceList';
 
 export default {
   component: SpaceList,
+  decorators: [withTheme],
 };
 
 export const Default = {

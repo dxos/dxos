@@ -16,7 +16,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
-export const STACK_PLUGIN = 'dxos.org/plugin/stack';
+import { STACK_PLUGIN } from './meta';
 
 const STACK_ACTION = `${STACK_PLUGIN}/action`;
 export enum StackAction {

@@ -50,8 +50,29 @@ message FlushRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
+// Automerge specific.
+message HostInfo {
+  string peer_id = 1;
+}
+
+message SyncRepoRequest {
+  string id = 1;
+
+  optional bytes sync_message = 2;
+}
+
+message SyncRepoResponse {
+  optional bytes sync_message = 1;
+}
+
 service DataService {
   rpc Subscribe(SubscribeRequest) returns (stream EchoEvent);
   rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
   rpc Flush(FlushRequest) returns (google.protobuf.Empty);
+
+  // Automerge specific.
+
+  rpc GetHostInfo(google.protobuf.Empty) returns (HostInfo);
+  rpc SyncRepo(SyncRepoRequest) returns (stream SyncRepoResponse);
+  rpc SendSyncMessage(SyncRepoRequest) returns (google.protobuf.Empty); // TODO(dmaretskyi): Bidirectional streams.
 }

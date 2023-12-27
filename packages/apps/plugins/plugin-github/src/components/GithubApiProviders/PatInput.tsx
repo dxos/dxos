@@ -9,7 +9,7 @@ import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './OctokitProvider';
-import { GITHUB_PLUGIN } from '../../props';
+import { GITHUB_PLUGIN } from '../../meta';
 
 const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
@@ -42,8 +42,10 @@ export const PatInput = () => {
 
   return (
     <Input.Root>
-      <div role='none' className='max-is-md text-start'>
-        <Input.Label>{t('github pat label')}</Input.Label>
+      <div role='none' className='text-start'>
+        <Input.Label classNames='text-base font-system-medium' asChild>
+          <h3>{t('github pat label')}</h3>
+        </Input.Label>
         <Input.TextInput
           autoFocus
           spellCheck={false}

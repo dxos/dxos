@@ -36,5 +36,4 @@ message PluginState {
 
 service DashboardService {
   rpc status(google.protobuf.Empty) returns (stream AgentStatus);
-  rpc changePluginConfig(PluginState) returns (google.protobuf.Empty);
 }

@@ -179,7 +179,7 @@ export const configColors = Object.keys(paletteConfigs).reduce(
       }
     };
     acc[palette] = (isBroad ? broadShadeNumbers : shadeNumbers).reduce((acc: Record<string, string>, shadeNumber) => {
-      acc[`${shadeNumber}`] = renderCssValue(shadeNumber);
+      acc[shadeNumber] = renderCssValue(shadeNumber);
       return acc;
     }, {});
 
@@ -199,9 +199,11 @@ export const tailwindConfig = ({
 }): TailwindConfig => ({
   darkMode: 'class',
   theme: {
+    // Configure fonts in theme.css and package.json.
     fontFamily: {
       body: ['Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
       display: ['Space GroteskVariable', 'Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
+      // TODO(burdon): Change monospace font (baseline is off from regular text).
       mono: ['Fira CodeVariable', ...defaultConfig.theme.fontFamily.mono],
     },
     extend: merge(

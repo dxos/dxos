@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Mosaic, type MosaicTileComponent } from '../mosaic';
@@ -16,7 +16,7 @@ export type SimpleCardProps = { id: string; title?: string; body?: string; image
 
 export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    { className, active, draggableStyle, draggableProps, item: { id, title }, path, position, grow, debug, onSelect },
+    { classNames, active, draggableStyle, draggableProps, item: { id, title }, path, position, grow, debug, onSelect },
     forwardRef,
   ) => {
     const full = !title;
@@ -25,10 +25,10 @@ export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
         <Card.Root
           noPadding={full}
           classNames={mx(
-            className,
             'w-full snap-center',
             (active === 'origin' || active === 'rearrange') && 'opacity-0',
             active === 'destination' && 'opacity-20',
+            classNames,
           )}
           grow={grow}
         >
@@ -52,7 +52,7 @@ SimpleCard.displayName = 'SimpleCard';
 
 export const ComplexCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, title, body, image }, grow, debug, onSelect },
+    { classNames, isDragging, draggableStyle, draggableProps, item: { id, title, body, image }, grow, debug, onSelect },
     forwardRef,
   ) => {
     const full = !title;
@@ -60,7 +60,7 @@ export const ComplexCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
         <Card.Root
           noPadding={full}
-          classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')}
+          classNames={mx('w-full snap-center', isDragging && 'opacity-20', classNames)}
           grow={grow}
         >
           <Card.Header floating={full} onDoubleClick={() => onSelect?.()}>

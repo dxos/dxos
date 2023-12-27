@@ -2,31 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useEffect } from 'react';
+import React, { forwardRef, type FC } from 'react';
 
 import { Document as DocumentType, Grid as GridType } from '@braneframe/types';
-import { Expando, getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
+import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { getSpaceForObject, isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import {
-  Grid,
-  type MosaicDropEvent,
-  type MosaicOperation,
-  type MosaicTileAction,
-  type Position,
-} from '@dxos/react-ui-mosaic';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { colors, getObject, GridCard } from './GridCard';
+import { Grid, type GridDataItem } from './Grid';
+import type { Position } from './layout';
+
+// TODO(wittjosiah): Factor out to theme.
+export const colors: Record<string, string> = {
+  gray: '!bg-neutral-50',
+  red: '!bg-rose-50',
+  indigo: '!bg-indigo-50',
+  yellow: '!bg-orange-50',
+  green: '!bg-teal-50',
+  blue: '!bg-cyan-50',
+  // gray: '!bg-neutral-50 border-neutral-200 border shadow-none',
+  // red: '!bg-rose-50 border-rose-200 border shadow-none',
+  // indigo: '!bg-indigo-50 border-indigo-200 border shadow-none',
+  // yellow: '!bg-yellow-50 border-yellow-200 border shadow-none',
+  // green: '!bg-teal-50 border-teal-200 border shadow-none',
+  // blue: '!bg-cyan-50 border-cyan-200 border shadow-none',
+};
+
+// TODO(burdon): Need lenses (which should be normalized outside of card).
+export const getObject = (item: any): TypedObject => item.node?.data ?? item.object ?? item;
 
 export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const space = getSpaceForObject(grid);
-
-  useEffect(() => {
-    if (!grid.layout) {
-      // TODO(burdon): Support expando values in protobuf.
-      grid.layout = new Expando({ position: {} });
-    }
-  }, []);
+  const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
 
   if (!space) {
     return null;
@@ -54,30 +63,28 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const handleOver = (): MosaicOperation => 'copy';
 
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
-    if (grid.items.includes(active.item as any)) {
-      grid.layout.position[active.item.id] = over.position;
+    const gridItem = active.item as GridType.Item;
+    if (grid.items.includes(gridItem) && over.position) {
+      gridItem.position = over.position;
     } else {
-      const object: TypedObject = getObject(active.item);
-      const item = new GridType.Item({ object });
-
-      grid.items.push(item);
-      grid.layout.position[item.id] = over.position;
+      const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
+      const object = parseData ? parseData(active.item, 'object') : undefined;
+      isTypedObject(object) && grid.items.push(new GridType.Item({ object, position: over.position }));
     }
   };
 
   const handleCreate = (position: Position) => {
-    const item = new GridType.Item({ object: new DocumentType() });
-    grid.layout.position[item.id] = position;
-    grid.items.push(item);
+    grid.items.push(new GridType.Item({ object: new DocumentType(), position }));
   };
 
   // TODO(burdon): Accessor to get card values.
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <Grid
         id='grid' // TODO(burdon): Namespace.
-        items={grid.items}
-        layout={grid.layout?.position}
+        // TODO(wittjosiah): Cast is needed because subtypes are currently always optional.
+        items={grid.items as GridDataItem[]}
+        type={GridType.Item.schema.typename}
         onAction={handleAction}
         onCreate={handleCreate}
         onDrop={handleDrop}
@@ -87,3 +94,11 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
     </Main.Content>
   );
 };
+
+const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props }, forwardRef) => {
+  const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
+  const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
+  const content = parseData ? parseData(item, 'view-object') : item;
+
+  return <Surface role='card' ref={forwardRef} limit={1} data={{ content }} {...props} />;
+});

@@ -168,7 +168,6 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   },
 );
 
-// TODO(burdon): Input width is overridden by default 'is-full' style.
 // TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
 
 type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
@@ -176,10 +175,12 @@ type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
   ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
-    const { tx } = useThemeContext();
+    const themeContextValue = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+    const { tx } = themeContextValue;
 
     return (
       <TextInputPrimitive
@@ -302,19 +303,21 @@ const Switch: ForwardRefExoticComponent<SwitchProps> = forwardRef<HTMLButtonElem
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
-      size,
+      size = 5,
       classNames,
       ...props
     },
     forwardedRef,
   ) => {
+    const { tx } = useThemeContext();
+
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
       defaultProp: propsDefaultChecked,
       onChange: propsOnCheckedChange,
     });
+
     const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
-    // const { tx } = useThemeContext();
     return (
       <SwitchPrimitive
         {...{
@@ -327,15 +330,13 @@ const Switch: ForwardRefExoticComponent<SwitchProps> = forwardRef<HTMLButtonElem
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          // className: tx('input.checkbox', 'input--checkbox', { size }, 'shrink-0', classNames),
-          className:
-            'w-[56px] h-[32px] bg-transparent rounded-full px-[4px] border-2 border-neutral-500 relative data-[state=checked]:border-primary-500 data-[state=checked]:bg-primary-500 outline-none cursor-default',
+          className: tx('input.switch', 'input--switch', { size }, classNames),
         }}
         ref={forwardedRef}
       >
         {/* TODO(wittjosiah): Embed icons/text for on/off states.
              e.g., https://codepen.io/alvarotrigo/pen/oNoJePo (#13) */}
-        <SwitchThumbPrimitive className='block w-[22px] h-[22px] bg-neutral-500 rounded-full border-neutral-100 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[22px] data-[state=checked]:bg-white'></SwitchThumbPrimitive>
+        <SwitchThumbPrimitive className={tx('input.switchThumb', 'input--switch__thumb', { size })} />
       </SwitchPrimitive>
     );
   },

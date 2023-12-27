@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.3.4",
+  "version": "0.3.9",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -25,9 +25,9 @@
   "scripts": {
     "api-keys": "node ./scripts/inject_api_keys.js",
     "bin": "./bin/run",
-    "prepack": "oclif manifest && oclif readme",
+    "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",
-    "readme": "oclif readme"
+    "readme": "oclif readme --multi"
   },
   "dependencies": {
     "@dxos/agent": "workspace:*",
@@ -71,7 +71,7 @@
     "pkg-up": "^3.1.0",
     "react": "^18.2.0",
     "uuid": "^8.3.2",
-    "ws": "^7.4.4"
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@oclif/test": "^2.3.31",
@@ -105,7 +105,7 @@
     "topicSeparator": " ",
     "topics": {
       "agent": {
-        "description": "DXOS Daemon with client services, which is constantly backuping your data. Agent can be extended with plugins (e.g. search plugin, epoch monitor). Also agent has an ability to run functions."
+        "description": "Long-running agent extended with plugins (e.g., functions, search, epoch management)."
       },
       "app": {
         "description": "Control apps that are published to KUBE specified in DXOS config."
@@ -117,7 +117,7 @@
         "description": "Devices in your HALO."
       },
       "function": {
-        "description": "Runtime plugable code with data/event specific triggers."
+        "description": "Runtime pluggable code with data/event specific triggers."
       },
       "halo": {
         "description": "HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements."

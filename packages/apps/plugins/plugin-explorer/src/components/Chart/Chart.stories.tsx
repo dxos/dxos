@@ -5,39 +5,23 @@
 import '@dxosTheme';
 
 import * as Plot from '@observablehq/plot';
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { types } from '@braneframe/types';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { mx } from '@dxos/react-ui-theme';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Chart } from './Chart';
-
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
-      <Story />
-    </div>
-  );
-};
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
 
 export default {
   component: Plot,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
+  decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => {
+export const Default = () => <ClientRepeater Component={DefaultStory} types={types} />;
+const DefaultStory = () => {
   const [data, setData] = useState<{ cities: any }>();
   useEffect(() => {
     setTimeout(async () => {

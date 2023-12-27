@@ -12,6 +12,8 @@ import {
   type MetadataRecordsProvides,
 } from '@dxos/app-framework';
 
+import meta from './meta';
+
 /**
  * Plugin for collecting and resolving type metadata.
  */
@@ -19,9 +21,7 @@ export const MetadataPlugin = (): PluginDefinition<MetadataResolverProvides> => 
   const state = deepSignal<MetadataRecordsProvides['metadata']>({ records: {} });
 
   return {
-    meta: {
-      id: 'dxos.org/plugin/metadata',
-    },
+    meta,
     ready: async (plugins) => {
       filterPlugins(plugins, parseMetadataRecordsPlugin).forEach((plugin) => {
         Object.entries(plugin.provides.metadata.records).forEach(([key, value]) => {

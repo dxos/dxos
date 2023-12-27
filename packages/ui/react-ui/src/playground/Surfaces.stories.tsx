@@ -17,6 +17,8 @@ import {
   inputSurface,
 } from '@dxos/react-ui-theme';
 
+import { withTheme } from '../testing';
+
 const Surface = ({
   children,
   level,
@@ -56,7 +58,10 @@ const SurfacesStory = () => {
 };
 
 export default {
+  title: 'DXOS UI/Scenarios/Surfaces',
   component: SurfacesStory,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

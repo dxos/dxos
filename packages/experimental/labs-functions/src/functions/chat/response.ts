@@ -2,56 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Thread as ThreadType } from '@braneframe/types';
-import { type Client } from '@dxos/client';
-import { TextObject } from '@dxos/echo-schema';
+import { type Message as MessageType, Mermaid as MermaidType, Stack as StackType } from '@braneframe/types';
+import { Expando, type Space } from '@dxos/client/echo';
+import { Schema, TextObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { parseMessage } from './parser';
+import { type PromptContext } from './request';
 
-export const createResponse = (client: Client, content: string) => {
-  const messages = [];
+// TODO(burdon): Create test.
+
+// TODO(burdon): Create variant of StringOutputParser.
+//  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
+export const createResponse = (space: Space, context: PromptContext, content: string): MessageType.Block[] => {
   const timestamp = new Date().toISOString();
 
-  const result = parseMessage(content, 'json');
+  const r = parseMessage(content);
+  log.info('parse', { r, content });
+
+  const blocks: MessageType.Block[] = [];
+  const result = parseMessage(content);
   if (result) {
-    const { pre, data, post } = result;
-    pre && messages.push({ timestamp, text: pre });
-    const dataArray = Array.isArray(data) ? data : [data];
-    messages.push(
-      ...dataArray.map((data): ThreadType.Message => {
-        if (typeof data['@type'] === 'string') {
-          // TODO(burdon): Experimental?
-          console.log(JSON.stringify({ types: client.experimental.types }, undefined, 2));
-          const Proto = client.experimental.types.getPrototype(data['@type']);
-          const schema = client.experimental.types.getSchema(data['@type']);
-          if (Proto && schema) {
-            // Pre-processing according to schema.
-            delete data['@type'];
-            for (const prop of schema.props) {
-              if (data[prop.id!]) {
-                if (prop.refModelType === 'dxos.org/model/text' && typeof data[prop.id!] === 'string') {
-                  data[prop.id!] = new TextObject(data[prop.id!]);
+    const { pre, data, content, post } = result;
+    pre && blocks.push({ timestamp, text: pre });
+
+    switch (result.type) {
+      case 'json': {
+        const dataArray = Array.isArray(data) ? data : [data];
+        blocks.push(
+          ...dataArray.map((data): MessageType.Block => {
+            // Create object.
+            if (context.schema) {
+              const { objects: schemas } = space.db.query(Schema.filter());
+              const schema = schemas.find((schema) => schema.typename === context.schema!.typename);
+              if (schema) {
+                data['@type'] = context.schema.typename;
+                for (const prop of schema.props) {
+                  if (data[prop.id!]) {
+                    if (typeof data[prop.id!] === 'string') {
+                      data[prop.id!] = new TextObject(data[prop.id!]);
+                    }
+                  }
                 }
+
+                const object = new Expando(data, { schema });
+                return { timestamp, object };
               }
             }
 
-            const ref = new Proto(data);
-            return { timestamp, ref };
-          }
+            // TODO(burdon): Create ref?
+            return { timestamp, data: JSON.stringify(data) };
+          }),
+        );
+        break;
+      }
+
+      case 'mermaid': {
+        // TODO(burdon): Insert based on prompt config.
+        if (context.object?.__typename === StackType.schema.typename) {
+          log.info('adding mermaid diagram to stack', { stack: context.object.id });
+          context.object.sections.push(
+            new StackType.Section({
+              object: new MermaidType({ source: new TextObject(content.trim()) }),
+            }),
+          );
         }
+        break;
+      }
+    }
 
-        // TODO(burdon): Create ref?
-        return { timestamp, data: JSON.stringify(data) };
-      }),
-    );
-
-    post && messages.push({ timestamp, text: post }); // TODO(burdon): Skip TS.
+    post && blocks.push({ timestamp, text: post });
   } else {
-    messages.push({
+    blocks.push({
       timestamp,
       text: content,
     });
   }
 
-  return messages;
+  return blocks;
 };

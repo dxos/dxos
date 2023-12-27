@@ -5,9 +5,13 @@
 import '@dxosTheme';
 
 import { Link } from './Link';
+import { withTheme } from '../../testing';
 
 export default {
+  title: 'DXOS UI/Link',
   component: Link,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 } as any;
 
 export const Default = { args: { children: 'Hello', href: '#' } };

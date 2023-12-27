@@ -24,6 +24,12 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../core/echo/automerge"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -34,6 +40,9 @@
     },
     {
       "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../../ui/storybook-utils"
     },
     {
       "path": "../../types"

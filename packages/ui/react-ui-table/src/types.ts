@@ -4,6 +4,10 @@
 
 import { type ColumnDef, type RowData } from '@tanstack/react-table';
 
+import { type ClassNameValue } from '@dxos/react-ui-types';
+
+import { type SearchListQueryModel, type ValueUpdater } from './helpers';
+
 // Define custom meta definitions.
 declare module '@tanstack/react-table' {
   // Access via table.options.meta.
@@ -14,20 +18,21 @@ declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     expand?: boolean;
     resizable?: boolean;
-    slots?: {
-      header?: {
-        className?: string;
-      };
-      footer?: {
-        className?: string;
-      };
-      cell?: {
-        className?: string;
-      };
+    model?: SearchListQueryModel<TData>;
+    onUpdate?: ValueUpdater<TData, any>;
+    digits?: number;
+    header?: {
+      classNames?: ClassNameValue;
+    };
+    footer?: {
+      classNames?: ClassNameValue;
+    };
+    cell?: {
+      classNames?: ClassNameValue;
     };
   }
 }
 
 export type KeyValue<TData extends RowData> = (row: TData) => string;
 
-export type TableColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
+export type TableColumnDef<TData extends RowData, TValue = any> = ColumnDef<TData, TValue>;

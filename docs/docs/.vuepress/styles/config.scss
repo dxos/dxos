@@ -1,7 +1,52 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
 
-$font-family-fancy: "DM Sans";
-$font-family: "DM Sans";
+/* sharp-sans-400normal */
+@font-face {
+  font-family: 'Sharp Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: local('Sharp Sans Regular '), local('Sharp Sans-Regular'),
+    url('/fonts/sharp-sans/sharp-sans-display-400.woff2') format('woff2'),
+    /* Super Modern Browsers */
+      url('/fonts/sharp-sans/sharp-sans-display-400.woff') format('woff'); /* Modern Browsers */
+}
+
+/* sharp-sans-400italic */
+@font-face {
+  font-family: 'Sharp Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: local('Sharp Sans Regular italic'), local('Sharp Sans-Regularitalic'),
+    url('/fonts/sharp-sans/sharp-sans-display-400italic.woff2') format('woff2'),
+    /* Super Modern Browsers */
+      url('/fonts/sharp-sans/sharp-sans-display-400italic.woff') format('woff'); /* Modern Browsers */
+}
+
+/* sharp-sans-700normal */
+@font-face {
+  font-family: 'Sharp Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: local('Sharp Sans Bold '), local('Sharp Sans-Bold'),
+    url('/fonts/sharp-sans/sharp-sans-display-700.woff2') format('woff2'),
+    /* Super Modern Browsers */
+      url('/fonts/sharp-sans/sharp-sans-display-700.woff') format('woff'); /* Modern Browsers */
+}
+
+/* sharp-sans-700italic */
+@font-face {
+  font-family: 'Sharp Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 700;
+  src: local('Sharp Sans Bold italic'), local('Sharp Sans-Bolditalic'),
+    url('/fonts/sharp-sans/sharp-sans-display-700italic.woff2') format('woff2'),
+    /* Super Modern Browsers */
+      url('/fonts/sharp-sans/sharp-sans-display-700italic.woff') format('woff'); /* Modern Browsers */
+}
 
 // $code-dark-theme: 'coldark-dark';
 // $code-dark-theme: 'atom-dark';
@@ -32,7 +77,7 @@ $font-family: "DM Sans";
 // $code-dark-theme: 'tomorrow';
 $code-dark-theme: 'vsc-dark-plus';
 
-$code-light-theme: 'duotone-light'
+$code-light-theme: 'duotone-light';
 // $code-light-theme: 'ateliersulphurpool-light'
 // $code-light-theme: 'coldark-cold'
 // $code-light-theme: 'coy'

@@ -8,9 +8,9 @@ import { useSearch } from '@braneframe/plugin-search';
 import { type View } from '@braneframe/types';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { Explorer } from './Explorer';
+import { Graph } from './Graph';
 
 export const ExplorerMain = ({ view }: { view: View }) => {
   const space = getSpaceForObject(view);
@@ -20,8 +20,8 @@ export const ExplorerMain = ({ view }: { view: View }) => {
   }
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <Explorer space={space} match={match} />
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+      <Graph space={space} match={match} />
     </Main.Content>
   );
 };

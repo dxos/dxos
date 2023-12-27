@@ -4,7 +4,8 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/react-ui';
+import { Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-card';
 import { dropRing, mx } from '@dxos/react-ui-theme';
 
 import {
@@ -72,17 +73,17 @@ const TreeRoot = ({ items }: { items: TreeData[] }) => {
  * Pure component that is used by the mosaic overlay.
  */
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
-  ({ path, draggableStyle, draggableProps, item, operation, active, isOver, isDragging, className }, forwardedRef) => {
+  ({ path, draggableStyle, draggableProps, item, operation, active, isOver, isDragging, classNames }, forwardedRef) => {
     return (
       <div
         ref={forwardedRef}
         style={draggableStyle}
         className={mx(
           'flex flex-col rounded',
-          className,
           (active === 'rearrange' || active === 'origin') && 'opacity-0',
           active === 'destination' && 'opacity-20',
           isOver && dropRing,
+          classNames,
         )}
       >
         <Card.Header>

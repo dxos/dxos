@@ -56,8 +56,6 @@ export default defineConfig({
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269

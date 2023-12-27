@@ -5,42 +5,27 @@
 import '@dxosTheme';
 
 import * as Plot from '@observablehq/plot';
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
 import * as d3 from 'd3';
 import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
 import { types } from '@braneframe/types';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { mx } from '@dxos/react-ui-theme';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Globe } from './Globe';
-
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
-      <Story />
-    </div>
-  );
-};
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
 
 export default {
   component: Plot,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
+  decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => {
+export const Default = () => <ClientRepeater Component={DefaultStory} types={types} createSpace />;
+
+const DefaultStory = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   useEffect(() => {
     setTimeout(async () => {
@@ -65,7 +50,8 @@ export const Default = () => {
   return <Globe items={cities} />;
 };
 
-export const Extended = () => {
+export const Extended = () => <ClientRepeater Component={ExtendedStory} types={types} createSpace />;
+const ExtendedStory = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   useEffect(() => {

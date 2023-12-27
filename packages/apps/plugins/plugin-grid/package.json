@@ -1,34 +1,49 @@
 {
   "name": "@braneframe/plugin-grid",
-  "version": "0.3.4",
+  "version": "0.3.9",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
+    "@dnd-kit/core": "^6.0.5",
     "@dxos/react-client": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
-    "react-markdown": "^8.0.5"
+    "lodash.defaultsdeep": "^4.6.1",
+    "react-markdown": "^8.0.5",
+    "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-generator": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",

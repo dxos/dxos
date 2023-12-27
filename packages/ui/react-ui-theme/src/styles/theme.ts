@@ -7,11 +7,10 @@ import get from 'lodash.get';
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 
 import {
+  anchoredOverflowTheme,
   avatarTheme,
   breadcrumbTheme,
   buttonTheme,
-  cardTheme,
-  comboboxTheme,
   dialogTheme,
   dropdownMenuTheme,
   inputTheme,
@@ -23,6 +22,7 @@ import {
   scrollAreaTheme,
   selectTheme,
   separatorTheme,
+  statusTheme,
   toastTheme,
   toolbarTheme,
   tooltipTheme,
@@ -32,11 +32,10 @@ import {
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
 
+  anchoredOverflow: anchoredOverflowTheme,
   avatar: avatarTheme,
   breadcrumb: breadcrumbTheme,
   button: buttonTheme,
-  card: cardTheme,
-  combobox: comboboxTheme,
   dialog: dialogTheme,
   dropdownMenu: dropdownMenuTheme,
   input: inputTheme,
@@ -48,6 +47,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   select: selectTheme,
   scrollArea: scrollAreaTheme,
   separator: separatorTheme,
+  status: statusTheme,
   tag: tagTheme,
   toast: toastTheme,
   toolbar: toolbarTheme,

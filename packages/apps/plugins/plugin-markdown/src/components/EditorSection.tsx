@@ -4,32 +4,46 @@
 
 import React, { type HTMLAttributes, useRef } from 'react';
 
-import { type ComposerModel, MarkdownComposer, type MarkdownComposerRef } from '@dxos/react-ui-editor';
+import { useTranslation } from '@dxos/react-ui';
+import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-export const EditorSection = ({ content: document }: { content: ComposerModel }) => {
-  const editorRef = useRef<MarkdownComposerRef>(null);
+import { type EditorMainProps } from './EditorMain';
+import { useExtensions } from './extensions';
+import { MARKDOWN_PLUGIN } from '../meta';
+
+// TODO(burdon): Reconcile types.
+type EditorSectionProps = Pick<EditorMainProps, 'extensions'> & Pick<TextEditorProps, 'model' | 'editorMode'>;
+
+export const EditorSection = ({ model, editorMode, extensions: _extensions }: EditorSectionProps) => {
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
+  const editorRef = useRef<TextEditorRef>(null);
+  const extensions = useExtensions(_extensions);
 
   return (
-    <MarkdownComposer
+    <MarkdownEditor
       ref={editorRef}
-      model={document}
+      model={model}
+      editorMode={editorMode}
+      extensions={extensions}
       slots={{
         root: {
           role: 'none',
-          className: mx(focusRing, 'min-bs-[10rem] shrink-0 grow flex flex-col'),
+          className: mx(focusRing, 'is-[calc(100%-4px)] m-0.5 py-2'),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {
-          markdownTheme: {
+          placeholder: t('editor placeholder'),
+          theme: {
             '&, & .cm-scroller': {
-              display: 'flex',
-              flexDirection: 'column',
-              flex: '1 0 auto',
               inlineSize: '100%',
             },
-            '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-            '& .cm-line': { paddingInline: '0' },
+            '& .cm-content': {
+              paddingBlock: '1rem',
+            },
+            '& .cm-line': {
+              paddingInline: '0',
+            },
           },
         },
       }}

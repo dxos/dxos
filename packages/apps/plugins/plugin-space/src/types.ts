@@ -12,8 +12,7 @@ import type {
 import type { PublicKey } from '@dxos/react-client';
 import type { ItemID } from '@dxos/react-client/echo';
 
-export const SPACE_PLUGIN = 'dxos.org/plugin/space';
-export const SPACE_PLUGIN_SHORT_ID = 'space';
+import { SPACE_PLUGIN } from './meta';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -23,14 +22,13 @@ export enum SpaceAction {
   RENAME = `${SPACE_ACTION}/rename`,
   OPEN = `${SPACE_ACTION}/open`,
   CLOSE = `${SPACE_ACTION}/close`,
-  BACKUP = `${SPACE_ACTION}/backup`,
-  RESTORE = `${SPACE_ACTION}/restore`,
+  MIGRATE = `${SPACE_ACTION}/migrate`,
+  EXPORT = `${SPACE_ACTION}/export`,
+  IMPORT = `${SPACE_ACTION}/import`,
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
-  ADD_TO_FOLDER = `${SPACE_ACTION}/add-to-folder`,
-  REMOVE_FROM_FOLDER = `${SPACE_ACTION}/remove-from-folder`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
 }
 

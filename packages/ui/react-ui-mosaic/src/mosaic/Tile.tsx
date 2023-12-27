@@ -7,7 +7,9 @@ import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
 import React from 'react';
 import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
-import type { MosaicOperation, MosaicTileOverlayProps } from './Container';
+import { type ThemedClassName } from '@dxos/react-ui';
+
+import { DEFAULT_TYPE, type MosaicOperation, type MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useContainer, useMosaic } from './hooks';
 import type { MosaicDataItem, MosaicDraggedItem } from './types';
@@ -15,20 +17,19 @@ import { getTransformCSS, Path } from './util';
 
 export type MosaicActiveType = 'overlay' | 'rearrange' | 'origin' | 'destination';
 
+// TODO(wittjosiah): `id` should be `path` and `data` should be a `MosaicDataItem`.
 export type MosaicTileAction = { id: string; action: string; data?: any };
 
 /**
  * Props passed to mosaic tile.
  */
-export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
-  HTMLAttributes<HTMLDivElement>,
-  'className'
-> &
+export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = ThemedClassName<{}> &
   MosaicTileOverlayProps & {
     path: string;
     item: TData;
     Component?: MosaicTileComponent<TData, any>;
     position?: TPosition;
+    type?: string;
     operation?: MosaicOperation;
     active?: MosaicActiveType; // TODO(burdon): Rename state?
 
@@ -43,8 +44,14 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     // TODO(burdon): Generalize events via onAction?
     onSelect?: () => void;
     onRemove?: () => void;
+    onNavigate?: () => void;
     onAction?: (action: MosaicTileAction) => void;
   };
+
+export type MosaicTileComponentProps<TData extends MosaicDataItem = MosaicDataItem> = Omit<
+  MosaicTileProps<TData>,
+  'Component' | 'operation'
+> & { operation: MosaicOperation };
 
 /**
  * Mosaic Tile component.
@@ -52,15 +59,14 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
 export type MosaicTileComponent<
   TData extends MosaicDataItem = MosaicDataItem,
   TElement extends HTMLElement = HTMLDivElement,
-> = ForwardRefExoticComponent<
-  RefAttributes<TElement> & Omit<MosaicTileProps<TData>, 'Component' | 'operation'> & { operation: MosaicOperation }
->;
+> = ForwardRefExoticComponent<RefAttributes<TElement> & MosaicTileComponentProps<TData>>;
 
 /**
  * Basic draggable mosaic tile.
  */
 export const DraggableTile = ({
   path: parentPath,
+  type = DEFAULT_TYPE,
   item,
   Component = DefaultComponent,
   position,
@@ -71,7 +77,7 @@ export const DraggableTile = ({
   const path = Path.create(parentPath, item.id);
   const { setNodeRef, attributes, listeners, /* transform, */ isDragging } = useDraggable({
     id: path,
-    data: { path, item, position } satisfies MosaicDraggedItem,
+    data: { path, type, item, position } satisfies MosaicDraggedItem,
   });
 
   return (
@@ -79,6 +85,7 @@ export const DraggableTile = ({
       ref={setNodeRef}
       item={item}
       path={path}
+      type={type}
       position={position}
       operation={operation}
       isDragging={isDragging}
@@ -98,6 +105,7 @@ export const DraggableTile = ({
  */
 export const DroppableTile = ({
   path: parentPath,
+  type = DEFAULT_TYPE,
   item,
   Component = DefaultComponent,
   position,
@@ -110,7 +118,7 @@ export const DroppableTile = ({
       : Path.create(parentPath, item.id);
   const { setNodeRef, isOver } = useDroppable({
     id: path,
-    data: { path, item, position } satisfies MosaicDraggedItem,
+    data: { path, type, item, position } satisfies MosaicDraggedItem,
   });
 
   return (
@@ -118,6 +126,7 @@ export const DroppableTile = ({
       ref={setNodeRef}
       item={item}
       path={path}
+      type={type}
       position={position}
       operation={operation}
       isOver={isOver}
@@ -131,6 +140,7 @@ export const DroppableTile = ({
  */
 export const SortableTile = ({
   path: parentPath,
+  type = DEFAULT_TYPE,
   item,
   Component: OverrideComponent,
   position,
@@ -153,7 +163,7 @@ export const SortableTile = ({
 
   const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
     id: isPreview ? activeItem.path : path,
-    data: { path, item, position } satisfies MosaicDraggedItem,
+    data: { path, type, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) =>
       defaultAnimateLayoutChanges({ ...args, wasDragging: item.id !== activeItem?.item.id }),
   });
@@ -176,6 +186,7 @@ export const SortableTile = ({
       ref={setNodeRef}
       item={item}
       path={path}
+      type={type}
       position={position}
       operation={operation}
       active={active}

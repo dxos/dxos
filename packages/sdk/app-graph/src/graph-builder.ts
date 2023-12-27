@@ -110,7 +110,7 @@ export class GraphBuilder {
             const childPath = [...path, 'childrenMap', partial.id];
             const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, builders);
             node.childrenMap[child.id] = child;
-            // TOOD(burdon): Defer triggering recursive updates until task has completed.
+            // TODO(burdon): Defer triggering recursive updates until task has completed.
             this._build(getGraph(), child, childPath, builders);
             return child;
           });
@@ -129,6 +129,7 @@ export class GraphBuilder {
           return partials.map((partial) => {
             const action = this._createAction(partial);
             if (action.keyBinding) {
+              // TODO(burdon): Last writer wins.
               Mousetrap.bind(action.keyBinding, () => {
                 action.invoke();
               });

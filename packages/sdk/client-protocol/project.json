@@ -2,42 +2,15 @@
   "sourceRoot": "packages/sdk/client-protocol/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/sdk/client-protocol/src/index.ts",
-        "outputPath": "packages/sdk/client-protocol/dist/types",
-        "tsConfig": "packages/sdk/client-protocol/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/sdk/client-protocol/src/index.ts"
-        ],
-        "outputPath": "packages/sdk/client-protocol/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+        ]
+      }
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/sdk/client-protocol/**/*.{ts,tsx,js,jsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {
@@ -47,25 +20,7 @@
         "packages/sdk/client-protocol/src/proto/gen"
       ]
     },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/sdk/client-protocol",
-        "outputPath": "tmp/mocha/packages/sdk/client-protocol",
-        "resultsPath": "test-results/packages/sdk/client-protocol",
-        "testPatterns": [
-          "packages/sdk/client-protocol/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/client-protocol/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

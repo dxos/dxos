@@ -1,5 +1,5 @@
 # Type `ClientOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:16]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:17]()</sub>
 
 
 This options object configures the DXOS Client.
@@ -21,6 +21,12 @@ Custom model factory.
 Type: <code>MaybePromise&lt;[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)&gt;</code>
 
 Custom services provider.
+
+
+### [types]()
+Type: <code>TypeCollection</code>
+
+Types.
 
 
 

@@ -34,6 +34,7 @@
   "exclude": [
     "dist",
     "node_modules",
-    "out"
+    "out",
+    "**/*.mts"
   ]
 }

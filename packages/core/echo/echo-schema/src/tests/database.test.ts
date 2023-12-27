@@ -169,4 +169,21 @@ describe('database', () => {
 
     expect(database.query(Task.filter((task) => task.title.startsWith('foo'))).objects).to.have.length(2);
   });
+
+  test('typenames of nested objects', async () => {
+    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+
+    const task = new Task({
+      title: 'Main task',
+      todos: [
+        new Task.Todo({
+          name: 'Sub task',
+        }),
+      ],
+    });
+    database.add(task);
+
+    expect(task.todos[0].__typename).to.eq('example.test.Task.Todo');
+    expect(task.todos[0].toJSON()['@type'].itemId).to.eq('example.test.Task.Todo');
+  });
 });

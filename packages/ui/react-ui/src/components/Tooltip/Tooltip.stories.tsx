@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Tooltip } from './Tooltip';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 type StoryTooltipProps = {
@@ -28,7 +29,10 @@ const StoryTooltip = ({ content }: StoryTooltipProps) => (
 );
 
 export default {
+  title: 'DXOS UI/Tooltip',
   component: StoryTooltip,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

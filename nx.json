@@ -37,7 +37,8 @@
     // https://nx.dev/more-concepts/customizing-inputs#global-settings.
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
-      "{workspaceRoot}/.eslintrc*.js"
+      "{workspaceRoot}/.eslintrc*.js",
+      { "runtime": "node --version" }
     ],
     "production": [
       "default",
@@ -50,7 +51,16 @@
   },
   "targetDefaults": {
     "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist/types",
+        "tsConfig": "{projectRoot}/tsconfig.json"
+      },
       "inputs": ["production", "^production"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "dependsOn": [
         "^build",
         "prebuild",
@@ -86,6 +96,12 @@
           "env": "REMOTE_SOURCE"
         },
         {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PREFIX"
+        },
+        {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"
         }
       ],
@@ -96,20 +112,27 @@
         "prebuild"
       ]
     },
-    "chromatic": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "storybook-build"
-      ]
-    },
     "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "outputPath": "{projectRoot}/dist/lib"
+      },
       "inputs": ["production", "^production"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "dependsOn": [
         "^compile",
         "prebuild"
       ]
     },
     "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/{projectRoot}",
+        "outputPath": "tmp/playwright/{projectRoot}",
+        "resultsPath": "test-results/{projectRoot}"
+      },
       "inputs": [
         "default",
         "^production",
@@ -129,7 +152,15 @@
       ]
     },
     "lint": {
-      "inputs": ["default"]
+      "executor": "@nx/linter:eslint",
+      "inputs": ["default"],
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}"
+        ],
+        "quiet": true
+      }
     },
     "prebuild": {
       "inputs": ["production", "^production"],
@@ -160,21 +191,19 @@
         "prebuild"
       ]
     },
-    "storybook": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
-    },
-    "storybook-build": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
-    },
     "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/{projectRoot}",
+        "outputPath": "tmp/mocha/{projectRoot}",
+        "resultsPath": "test-results/{projectRoot}",
+        "testPatterns": [
+          "{projectRoot}/{src,test}/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "watchPatterns": [
+          "{projectRoot}/{src,test}/**/*"
+        ]
+      },
       "inputs": [
         "default",
         "^production",
@@ -187,6 +216,11 @@
         {
           "env": "LOG_PROCESSOR"
         }
+      ],
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ],
       "dependsOn": [
         "prebuild",

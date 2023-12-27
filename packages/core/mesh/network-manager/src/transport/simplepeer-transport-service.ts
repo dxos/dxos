@@ -16,6 +16,10 @@ import {
   type BridgeEvent,
   ConnectionState,
   type CloseRequest,
+  type DetailsRequest,
+  type DetailsResponse,
+  type StatsRequest,
+  type StatsResponse,
 } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
 
@@ -111,6 +115,16 @@ export class SimplePeerTransportService implements BridgeService {
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
     invariant(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.transport.signal(signal);
+  }
+
+  async getDetails({ proxyId }: DetailsRequest): Promise<DetailsResponse> {
+    invariant(this.transports.has(proxyId));
+    return { details: await this.transports.get(proxyId)!.transport.getDetails() };
+  }
+
+  async getStats({ proxyId }: StatsRequest): Promise<StatsResponse> {
+    invariant(this.transports.has(proxyId));
+    return { stats: await this.transports.get(proxyId)!.transport.getStats() };
   }
 
   async sendData({ proxyId, payload }: DataRequest): Promise<void> {

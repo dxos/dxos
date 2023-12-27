@@ -36,10 +36,19 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-card"
+    },
+    {
+      "path": "../../../ui/react-ui-editor"
+    },
+    {
       "path": "../../../ui/react-ui-mosaic"
     },
     {
       "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../../ui/storybook-utils"
     },
     {
       "path": "../../types"

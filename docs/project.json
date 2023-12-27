@@ -11,19 +11,15 @@
         "script": "apidoc"
       },
       "outputs": [
-        "{options.outputFile}"
+        "docs/docs/api"
       ]
     },
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "docs/src/index.ts",
         "outputPath": "docs/dist",
         "tsConfig": "docs/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      }
     },
     "bundle": {
       "dependsOn": [
@@ -37,11 +33,10 @@
         "script": "bundle"
       },
       "outputs": [
-        "{options.outputFile}"
+        "docs/docs/.vuepress/dist"
       ]
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -56,8 +51,8 @@
         "script": "prerelease"
       },
       "outputs": [
-        "docs/docs",
-        "docs/docs/.vuepress/dist"
+        "docs/apidoc.json",
+        "docs/docs/api"
       ]
     },
     "serve": {
@@ -81,7 +76,7 @@
         "script": "typedoc"
       },
       "outputs": [
-        "{options.outputFile}"
+        "docs/apidoc.json"
       ]
     }
   },

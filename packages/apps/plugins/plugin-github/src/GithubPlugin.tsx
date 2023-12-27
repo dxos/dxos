@@ -17,7 +17,7 @@ import {
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
-import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
+import { type TextEditorRef } from '@dxos/react-ui-editor';
 
 import {
   EmbeddedMain,
@@ -29,7 +29,8 @@ import {
   PatInput,
   UrlDialog,
 } from './components';
-import { type ExportViewState, GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID, type GhIdentifier } from './props';
+import { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
+import type { ExportViewState, GhIdentifier } from './props';
 import translations from './translations';
 
 export type GithubSettingsProps = {
@@ -97,7 +98,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       },
       context: (props) => <OctokitProvider {...props} />,
       surface: {
-        component: (data, role) => {
+        component: ({ data, role }) => {
           switch (data.component) {
             case `${GITHUB_PLUGIN}/embedded`:
               return <EmbeddedMain />;
@@ -121,7 +122,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return (
                     <ImportDialog
                       docGhId={data.docGhId as GhIdentifier}
-                      editorRef={data.editorRef as RefObject<MarkdownComposerRef>}
+                      editorRef={data.editorRef as RefObject<TextEditorRef>}
                     />
                   );
                 default:
@@ -132,7 +133,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 <MarkdownActions
                   model={data.model}
                   properties={data.properties}
-                  editorRef={data.editorRef as RefObject<MarkdownComposerRef>}
+                  editorRef={data.editorRef as RefObject<TextEditorRef>}
                 />
               ) : null;
             case 'settings':

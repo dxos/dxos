@@ -5,61 +5,73 @@
 import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import {
-  type ComposerModel,
-  MarkdownComposer,
-  type MarkdownComposerProps,
-  type MarkdownComposerRef,
-} from '@dxos/react-ui-editor';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
+import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { MARKDOWN_PLUGIN, type MarkdownProperties } from '../types';
+import { useExtensions, type UseExtensionsOptions } from './extensions';
+import { MARKDOWN_PLUGIN } from '../meta';
+import type { MarkdownProperties } from '../types';
+
+export type SearchResult = {
+  text: string;
+  url: string;
+};
+
+export type EditorMainProps = {
+  editorRefCb?: RefCallback<TextEditorRef>;
+  properties: MarkdownProperties;
+  layout: 'standalone' | 'embedded';
+  extensions?: UseExtensionsOptions;
+} & Pick<TextEditorProps, 'model' | 'editorMode'>;
 
 export const EditorMain = ({
+  editorRefCb,
   model,
   properties,
   layout,
   editorMode,
-  onChange,
-  editorRefCb,
-}: {
-  model: ComposerModel;
-  properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  editorMode?: MarkdownComposerProps['editorMode'];
-  onChange?: MarkdownComposerProps['onChange'];
-  editorRefCb: RefCallback<MarkdownComposerRef>;
-}) => {
+  extensions: _extensions,
+}: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
+  const extensions = useExtensions(_extensions);
 
   return (
     <Root properties={properties} model={model}>
-      <MarkdownComposer
+      <MarkdownEditor
         ref={editorRefCb}
         model={model}
         editorMode={editorMode}
-        onChange={onChange}
+        extensions={extensions}
         slots={{
           root: {
             role: 'none',
-            className: mx(focusRing, 'shrink-0 grow flex flex-col'),
+            className: mx(
+              focusRing,
+              inputSurface,
+              surfaceElevation({ elevation: 'group' }),
+              layout !== 'embedded' && 'rounded',
+              'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
+            ),
             'data-testid': 'composer.markdownRoot',
           } as HTMLAttributes<HTMLDivElement>,
           editor: {
-            markdownTheme: {
+            placeholder: t('editor placeholder'),
+            theme: {
               '&, & .cm-scroller': {
                 display: 'flex',
                 flexDirection: 'column',
                 flex: '1 0 auto',
                 inlineSize: '100%',
               },
-              '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-              '& .cm-line': { paddingInline: '1rem' },
+              '& .cm-content': {
+                flex: '1 0 auto',
+                inlineSize: '100%',
+                paddingBlock: '1rem',
+              },
             },
-            placeholder: t('editor placeholder'),
           },
         }}
       />

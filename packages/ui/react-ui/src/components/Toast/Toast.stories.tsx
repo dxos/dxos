@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { type ReactNode, useState } from 'react';
 
 import { Toast } from './Toast';
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
@@ -44,7 +45,10 @@ const StorybookToast = (props: StorybookToastProps) => {
 };
 
 export default {
+  title: 'DXOS UI/Toast',
   component: StorybookToast,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

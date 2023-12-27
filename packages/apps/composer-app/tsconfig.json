@@ -15,11 +15,19 @@
     "vite.config.ts"
   ],
   "include": [
+    "demos",
+    "script-frame",
     "src"
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
     },
     {
       "path": "../../sdk/app-framework"
@@ -29,6 +37,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/migrations"
     },
     {
       "path": "../../sdk/react-client"
@@ -52,7 +63,19 @@
       "path": "../../ui/react-ui-navtree"
     },
     {
+      "path": "../../ui/react-ui-stack"
+    },
+    {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugins/plugin-chain"
+    },
+    {
+      "path": "../plugins/plugin-chess"
     },
     {
       "path": "../plugins/plugin-client"
@@ -64,6 +87,9 @@
       "path": "../plugins/plugin-error"
     },
     {
+      "path": "../plugins/plugin-explorer"
+    },
+    {
       "path": "../plugins/plugin-files"
     },
     {
@@ -73,13 +99,28 @@
       "path": "../plugins/plugin-graph"
     },
     {
+      "path": "../plugins/plugin-grid"
+    },
+    {
+      "path": "../plugins/plugin-inbox"
+    },
+    {
       "path": "../plugins/plugin-ipfs"
+    },
+    {
+      "path": "../plugins/plugin-kanban"
     },
     {
       "path": "../plugins/plugin-layout"
     },
     {
+      "path": "../plugins/plugin-map"
+    },
+    {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-mermaid"
     },
     {
       "path": "../plugins/plugin-metadata"
@@ -88,10 +129,22 @@
       "path": "../plugins/plugin-navtree"
     },
     {
+      "path": "../plugins/plugin-outliner"
+    },
+    {
       "path": "../plugins/plugin-presenter"
     },
     {
       "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-registry"
+    },
+    {
+      "path": "../plugins/plugin-script"
+    },
+    {
+      "path": "../plugins/plugin-search"
     },
     {
       "path": "../plugins/plugin-sketch"
@@ -103,10 +156,22 @@
       "path": "../plugins/plugin-stack"
     },
     {
+      "path": "../plugins/plugin-table"
+    },
+    {
       "path": "../plugins/plugin-telemetry"
     },
     {
+      "path": "../plugins/plugin-template"
+    },
+    {
       "path": "../plugins/plugin-theme"
+    },
+    {
+      "path": "../plugins/plugin-thread"
+    },
+    {
+      "path": "../plugins/plugin-wildcard"
     },
     {
       "path": "../types"

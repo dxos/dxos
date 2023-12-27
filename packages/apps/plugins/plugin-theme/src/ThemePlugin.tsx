@@ -10,6 +10,7 @@ import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@
 import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import meta from './meta';
 import compositeEnUs from './translations/en-US';
 
 export type ThemePluginOptions = {
@@ -18,9 +19,9 @@ export type ThemePluginOptions = {
 };
 
 export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
-  let modeQuery: MediaQueryList | undefined;
   const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  let modeQuery: MediaQueryList | undefined;
 
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
     document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
@@ -28,9 +29,7 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
   };
 
   return {
-    meta: {
-      id: 'dxos.org/plugin/theme',
-    },
+    meta,
     ready: async (plugins) => {
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setTheme({ matches: modeQuery.matches });

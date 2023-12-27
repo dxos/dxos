@@ -2,69 +2,22 @@
   "sourceRoot": "packages/apps/plugins/plugin-script/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/apps/plugins/plugin-script/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-script/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-script/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
+    "build": {},
     "compile": {
-      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-script/src/index.ts"
+          "packages/apps/plugins/plugin-script/src/index.ts",
+          "packages/apps/plugins/plugin-script/src/meta.tsx"
         ],
-        "outputPath": "packages/apps/plugins/plugin-script/dist/lib",
         "platforms": [
           "browser"
         ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-script/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/apps/plugins/plugin-script/.storybook"
       }
     },
+    "lint": {},
     "test": {
-      "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-script",
-        "forceExit": true,
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-script",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-script",
-        "testPatterns": [
-          "packages/apps/plugins/plugin-script/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-script/src/**/*"
-        ]
+        "forceExit": true
       }
     }
   },
