@@ -5,7 +5,7 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, type Ref } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, type Ref, useEffect } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -60,7 +60,7 @@ export type MarkdownPluginState = {
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { showWidgets: false });
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { experimental: false });
 
   // TODO(burdon): Why does this need to be a signal? Race condition?
   const state = deepSignal<MarkdownPluginState>({ onChange: [] });
@@ -91,11 +91,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   // TODO(burdon): Better way for different plugins to configure extensions.
   const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
+    experimental: settings.values.experimental,
     // TODO(burdon): Change to passing in config object.
-    onChange: (text: string) => {
-      state.onChange.forEach((onChange) => onChange(text));
+    listener: {
+      onChange: (text: string) => {
+        state.onChange.forEach((onChange) => onChange(text));
+      },
     },
-    showWidgets: settings.values.showWidgets,
     autocomplete: {
       onSearch: (text: string) => {
         // TODO(burdon): Specify filter (e.g., stack).
@@ -125,33 +127,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         const { items, active } = info;
         void intentPlugin?.provides.intent.dispatch({
           action: ThreadAction.SELECT,
-          data: { items, active },
+          data: { active, threads: items.map(({ id, location }) => ({ id, y: location?.top })) },
         });
       },
     },
   });
 
-  const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
-    const identity = useIdentity();
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
-    if (!model) {
-      return null;
-    }
-
-    return (
-      <EditorSection
-        editorMode={settings.values.editorMode}
-        model={model}
-        extensions={getExtensionsConfig(space!, document)}
-      />
-    );
-  };
-
   const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
+    useEffect(() => {
+      void intentPlugin?.provides.intent.dispatch({
+        action: ThreadAction.SELECT,
+      });
+    }, [document.id]);
+
     if (!model) {
       return null;
     }
@@ -173,6 +164,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     // TODO(wittjosiah): Should this be a hook?
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
+
     if (!model) {
       return null;
     }
@@ -180,12 +172,35 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     return <StandaloneMenu properties={document} model={model} editorRef={pluginMutableRef} />;
   };
 
+  const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
+    const identity = useIdentity();
+    const space = getSpaceForObject(document);
+    const model = useTextModel({ identity, space, text: document?.content });
+    useEffect(() => {
+      void intentPlugin?.provides.intent.dispatch({
+        action: ThreadAction.SELECT,
+      });
+    }, [document.id]);
+
+    if (!model) {
+      return null;
+    }
+
+    return (
+      <EditorSection
+        editorMode={settings.values.editorMode}
+        model={model}
+        extensions={getExtensionsConfig(space!, document)}
+      />
+    );
+  };
+
   return {
     meta,
     ready: async (plugins) => {
       settings
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$showWidgets!, 'show-widgets', LocalStorageStore.bool);
+        .prop(settings.values.$experimental!, 'show-widgets', LocalStorageStore.bool);
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
@@ -235,7 +250,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   },
                 ]),
               properties: {
-                testId: 'markdownPlugin.createDocument',
+                testId: 'markdownPlugin.createObject',
               },
             });
           } else if (parent.data instanceof DocumentType && !parent.data.title) {
@@ -251,7 +266,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-doc',
-            testId: 'markdownPlugin.createSectionSpaceDocument',
+            testId: 'markdownPlugin.createSection',
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <ArticleMedium {...props} />,
             intent: {

@@ -51,6 +51,10 @@ export default defineConfig({
           editor: ['@dxos/react-ui-editor'],
         },
       },
+      external: [
+        // Provided at runtime by socket supply shell.
+        'socket:application',
+      ]
     },
   },
   resolve: {
@@ -70,11 +74,10 @@ export default defineConfig({
           tag: 'script',
           injectTo: 'head-prepend', // Inject before vite's built-in scripts.
           children: `
-            if(window.location.hash.includes('importMap')) {
+            if (window.location.hash.includes('importMap')) {
               const urlParams = new URLSearchParams(window.location.hash.slice(1));
-              if(urlParams.get('importMap')) {
+              if (urlParams.get('importMap')) {
                 const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
-                
                 const mapElement = document.createElement('script');
                 mapElement.type = 'importmap';
                 mapElement.textContent = JSON.stringify(importMap, null, 2);
@@ -174,16 +177,16 @@ function chunkFileNames (chunkInfo) {
   if(chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
     let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
-    if(nodeModulesIdx !== -1) {
+    if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);
-    } 
+    }
     const ignoredNames = [
       'dist',
       'lib',
       'browser'
     ]
     const significantSegment = segments.find(segment => !ignoredNames.includes(segment));
-    if(significantSegment) {
+    if (significantSegment) {
       return `assets/${significantSegment}-[hash].js`;
     }
   }
