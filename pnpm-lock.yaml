@@ -1511,6 +1511,9 @@ importers:
 
   packages/apps/plugins/plugin-help:
     dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

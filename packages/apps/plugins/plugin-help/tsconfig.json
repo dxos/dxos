@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/debug"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

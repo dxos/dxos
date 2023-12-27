@@ -8,7 +8,7 @@ import { usePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { DEBUG_PLUGIN } from '../meta';
-import type { DebugPluginProvides } from '../props';
+import type { DebugPluginProvides } from '../types';
 
 export const DebugSettings = () => {
   const { t } = useTranslation(DEBUG_PLUGIN);

@@ -25,8 +25,8 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
-import { DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
 import translations from './translations';
+import { DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './types';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
