@@ -679,42 +679,6 @@ importers:
         specifier: ^6.5.4
         version: 6.5.4
 
-  packages/apps/composer-app/build/mac/Composer-dev.app/Contents/Resources/socket:
-    optionalDependencies:
-      '@socketsupply/socket-darwin-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-darwin-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-win32-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-
-  packages/apps/composer-app/tmp/build/mac/tmp-dev.app/Contents/Resources/socket:
-    optionalDependencies:
-      '@socketsupply/socket-darwin-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-darwin-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-win32-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-
   packages/apps/composer-extension:
     devDependencies:
       '@types/webextension-polyfill':
@@ -2093,6 +2057,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@codemirror/view':
+        specifier: ^6.22.2
+        version: 6.22.2
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -18952,28 +18919,12 @@ packages:
       '@sinonjs/commons': 1.8.3
     dev: true
 
-  /@socketsupply/socket-darwin-arm64@0.5.3:
-    resolution: {integrity: sha512-+nXFcRjEgDjietEjUYwCTjiuf5MFCUA4EpvI/8XeebhUq6OAoJNUNJZwcrxFShmvsi1EfQmJpCahweULPl93FQ==}
-    cpu: [arm64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-darwin-arm64@0.5.4:
     resolution: {integrity: sha512-YAR9PPU1pb2R9QMLzh0LSQzDg2oFJoykOgXxew9zmdZ8NbVZPSrPgiMzV8EXbNhd8wPjtcbUuZWeQD76w3S7wA==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: true
-    optional: true
-
-  /@socketsupply/socket-darwin-x64@0.5.3:
-    resolution: {integrity: sha512-Icp26lIjB/zpJZEdR9aDnnFf2T/URTKCG0p5cQusxtcR04YZ4Z+8diZSA7QBZU48qR5YnhWs/b1MjXJEY1gl+g==}
-    cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
     optional: true
 
   /@socketsupply/socket-darwin-x64@0.5.4:
@@ -18984,14 +18935,6 @@ packages:
     dev: true
     optional: true
 
-  /@socketsupply/socket-linux-arm64@0.5.3:
-    resolution: {integrity: sha512-BSxQqAZLt0CS9G4RekdjpQCkRDCblkOZLKP2HiUX7f4ojSGjj38xVY0Yak1ahtFfgnTuOh7tQwzcfHeBZldt+Q==}
-    cpu: [arm64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-linux-arm64@0.5.4:
     resolution: {integrity: sha512-9Ql9NBXwVaJZTbrsKKoiwAe26PNZKAPivaVL2O2cpWfg3OsWC1wFcwyuImIgOotN4BM10LcwTaTi3Q5cG2corw==}
     cpu: [arm64]
@@ -19000,28 +18943,12 @@ packages:
     dev: true
     optional: true
 
-  /@socketsupply/socket-linux-x64@0.5.3:
-    resolution: {integrity: sha512-qB/LGXP+LN5W6pPTAO+wI/xaKBmiLCeL1N5gEqyYx5ENDkiFBzRZ+SfEm9rgmOMXlXWCMRKPYTFUHNrXMYUeug==}
-    cpu: [x64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-linux-x64@0.5.4:
     resolution: {integrity: sha512-AfVfYZ2QUdMOkLLjjsPCJXb2Kk/lxr3gOGFtHVTM41q7VzeieqiKQx07PCseA4D8IOu6qvJuKgPc0dVAlx95Rw==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: true
-    optional: true
-
-  /@socketsupply/socket-win32-x64@0.5.3:
-    resolution: {integrity: sha512-qGDaJImhmNjVSqC2h1s9qd/HWPBCo0Gni8y0GjYwCaetz7tqmrKwPluaAPZeyLuPJb+SLRw8otTWyqN6um311g==}
-    cpu: [x64]
-    os: [win32]
-    requiresBuild: true
-    dev: false
     optional: true
 
   /@socketsupply/socket-win32-x64@0.5.4:
