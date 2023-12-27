@@ -96,5 +96,3 @@ export const HelpContextProvider = ({
     </HelpContext.Provider>
   );
 };
-
-console.log(tokens);

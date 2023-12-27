@@ -18,8 +18,7 @@ export type KeyBinding = {
   data?: any;
 };
 
-// TODO(burdon): Reference https://codemirror.net/docs/ref/#view.KeyBinding
-
+// Keybinding is normalized to this order.
 const modifiers = ['alt', 'ctrl', 'shift', 'meta'];
 
 class KeyboardContext {
@@ -37,13 +36,12 @@ class KeyboardContext {
     // Normalize order of modifiers.
     const { binding } = config;
     const parts = binding.split('+');
-    const mods = parts.filter((key) => modifiers.includes(key)).sort();
+    const mods = modifiers.filter((key) => parts.includes(key));
     invariant(mods.length === 0 || mods.length === parts.length - 1);
     if (mods.length) {
       config.binding = [...mods, parts[parts.length - 1]].join('+');
     }
 
-    // console.log('bind', config);
     this._keyMap.set(config.binding, config);
   }
 
@@ -130,11 +128,11 @@ export class Keyboard {
         const path = this._contexts[i];
         if (this._path.startsWith(path)) {
           const { data, handler, disableInput } = this.getContext(path).get(str) ?? {};
-          // console.log('>>>', path, str, handler);
           if (handler && (!isInput || !disableInput)) {
             const result = handler({ context: path, binding: str, data, event });
             if (result !== false) {
-              // TODO(burdon): Doesn't prevent actions in markdown editor.
+              // TODO(burdon): This doesn't prevent actions in markdown editor.
+              //  Reference: https://codemirror.net/docs/ref/#view.KeyBinding
               event.preventDefault();
               event.stopPropagation();
             }

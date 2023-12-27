@@ -181,6 +181,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           switch (role) {
             case 'settings':
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
+            case 'status':
+              return <DebugStatus />;
           }
 
           if (!settings.values.debug) {
@@ -216,8 +218,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               ) : 'graph' in active && active.graph instanceof Graph ? (
                 <DebugGlobal graph={active.graph} />
               ) : null;
-            case 'status':
-              return <DebugStatus />;
           }
 
           return null;
