@@ -32,11 +32,12 @@ export const SettingsDialogContent = () => {
     .sort(({ name: a }, { name: b }) => a?.localeCompare(b ?? '') ?? 0);
 
   // TODO(burdon): Vertical layout if mobile (pattern).
+  // TODO(burdon): BUG: Dialogs do not compress if screen height is shrunk.
   return (
-    <Dialog.Content classNames={['h-[90%] md:max-is-[40rem] overflow-hidden']}>
+    <Dialog.Content classNames={['md:max-is-[40rem] overflow-hidden']}>
       <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
 
-      <div className='flex grow mlb-4 overflow-hidden'>
+      <div className='flex grow mlb-4 overflow-hidden max-bs-[40rem]'>
         <div className={mx('flex flex-col w-[200px] space-y-4 pr-4 border-r overflow-y-auto', groupBorder)}>
           <PluginList
             title='Options'

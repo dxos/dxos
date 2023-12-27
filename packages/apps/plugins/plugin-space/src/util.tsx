@@ -69,6 +69,7 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
+        keyBinding: 'ctrl+n', // TODO(burdon): Not working since invoke is no-op.
         invoke: () => {
           // No-op.
         },

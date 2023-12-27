@@ -46,12 +46,13 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <Dialog.Content classNames={['h-[50%] md:max-is-[30rem] overflow-hidden']}>
+    <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden']}>
       <Dialog.Title>{t('commands dialog title', { ns: 'os' })}</Dialog.Title>
 
+      {/* TODO(burdon): BUG: Overscrolls container. */}
       <SearchList.Root label={t('commandlist input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
         <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-3 my-2')} />
-        <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
+        <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
             const label = getLabel(action.label);
             const Icon = action.icon ?? DotOutline;
