@@ -17,6 +17,7 @@ import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
 import GridMeta from '@braneframe/plugin-grid/meta';
+import HelpMeta from '@braneframe/plugin-help/meta';
 import InboxMeta from '@braneframe/plugin-inbox/meta';
 import IpfsMeta from '@braneframe/plugin-ipfs/meta';
 import KanbanMeta from '@braneframe/plugin-kanban/meta';
@@ -84,6 +85,7 @@ const main = async () => {
       // UX
       LayoutMeta,
       NavTreeMeta,
+      HelpMeta,
 
       // Data integrations
       ClientMeta,
@@ -138,6 +140,7 @@ const main = async () => {
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
+      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help')),
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
@@ -183,6 +186,7 @@ const main = async () => {
       ClientMeta.id,
       ErrorMeta.id,
       GraphMeta.id,
+      HelpMeta.id,
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,

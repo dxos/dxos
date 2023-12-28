@@ -19,7 +19,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
   const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   // Traverse graph.
-  // TODO(burdon): Factor out commonality with shortcuts.
+  // TODO(burdon): Factor out commonality with shortcut dialog.
   const actions = useMemo(() => {
     // TODO(burdon): Get from navtree (not keyboard).
     const current = Keyboard.singleton.getCurrentContext();
@@ -46,12 +46,13 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <Dialog.Content classNames={['h-[50%] md:max-is-[30rem] overflow-hidden']}>
+    <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden']}>
       <Dialog.Title>{t('commands dialog title', { ns: 'os' })}</Dialog.Title>
 
+      {/* TODO(burdon): BUG: Overscrolls container. */}
       <SearchList.Root label={t('commandlist input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
         <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-3 my-2')} />
-        <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
+        <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
             const label = getLabel(action.label);
             const Icon = action.icon ?? DotOutline;
@@ -69,11 +70,6 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
                   setTimeout(() => {
                     void action.invoke();
                   });
-
-                  // TODO(burdon): Reconcile with NavTreeItemAction.
-                  // suppressNextTooltip.current = true;
-                  // setOptionsMenuOpen(false);
-                  // onAction?.(action);
                 }}
                 classNames='flex items-center gap-2 pli-2'
                 disabled={action.properties.disabled}
@@ -88,9 +84,6 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
             );
           })}
         </SearchList.Content>
-        {/* <div role='none' className='flex items-center plb-2 pli-3'> */}
-        {/*  <span className={descriptionText}>{label}</span> */}
-        {/* </div> */}
       </SearchList.Root>
       <Dialog.Close asChild>
         <Button ref={buttonRef} variant='primary' classNames='mbs-2'>

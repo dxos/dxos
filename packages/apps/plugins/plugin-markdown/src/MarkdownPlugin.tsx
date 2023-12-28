@@ -328,6 +328,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
+                    // TODO(burdon): Pass in space.
+                    // extensions: getExtensionsConfig(space, document),
+                    extensions: {
+                      experimental: settings.values.experimental,
+                    },
                   },
                 };
 
