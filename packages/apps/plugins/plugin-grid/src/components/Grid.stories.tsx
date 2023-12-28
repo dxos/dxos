@@ -20,7 +20,6 @@ import {
   type MosaicTileProps,
   type MosaicOperation,
 } from '@dxos/react-ui-mosaic';
-import { mx } from '@dxos/react-ui-theme';
 
 import { Grid, type GridProps, type GridDataItem } from './Grid';
 import type { Position } from './layout';
@@ -44,7 +43,7 @@ const DemoGrid = ({
   initialItems,
   types = { [TestSchemaType.document]: 12 },
   debug,
-  className,
+  classNames,
   generator = createTestObjectGenerator(),
 }: DemoGridProps) => {
   const [selected, setSelected] = useState<string>();
@@ -106,7 +105,7 @@ const DemoGrid = ({
       items={items}
       options={options}
       Component={Component}
-      className={className}
+      classNames={classNames}
       debug={debug}
       selected={selected}
       onSelect={setSelected}
@@ -121,7 +120,7 @@ type DemoCardProps = GridDataItem & { object?: { title?: string; content?: strin
 
 const DemoCard: MosaicTileComponent<DemoCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, object }, grow, debug, onSelect },
+    { classNames, isDragging, draggableStyle, draggableProps, item: { id, object }, grow, debug, onSelect },
     forwardRef,
   ) => {
     const { title, content, image } = object ?? {};
@@ -130,7 +129,7 @@ const DemoCard: MosaicTileComponent<DemoCardProps> = forwardRef(
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
         <Card.Root
           noPadding={full}
-          classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')}
+          classNames={['w-full snap-center', isDragging && 'opacity-20', classNames]}
           grow={grow}
         >
           <Card.Header floating={full} onDoubleClick={() => onSelect?.()}>
