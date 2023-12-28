@@ -28,7 +28,7 @@ export type TraversalOptions = {
   /**
    * A callback which is called for each node visited during traversal.
    */
-  visitor?: (node: Node) => void;
+  visitor?: (node: Node, path: string[]) => void;
 };
 
 /**
@@ -97,7 +97,7 @@ export class Graph {
    */
   traverse({ node = this._root, direction = 'down', filter, visitor }: TraversalOptions, depth = 0): void {
     if (!filter || filter(node)) {
-      visitor?.(node);
+      visitor?.(node, this.getPath(node.id)!);
     }
 
     if (direction === 'down') {

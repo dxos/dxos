@@ -32,7 +32,7 @@ const Story = () => {
   }, []);
 
   const handleChange = (path: string) => {
-    Keyboard.singleton.setContext(path);
+    Keyboard.singleton.setCurrentContext(path);
     setContext(path);
     setBindings(Keyboard.singleton.getBindings());
   };
