@@ -33,7 +33,7 @@ export default [
         'personal space label': 'Personal Space',
         'shared spaces label': 'Shared Spaces',
         'hidden spaces label': 'Hidden Spaces',
-        'show hidden spaces label': 'Show closed spaces',
+        'show hidden spaces label': 'Show closed spaces.',
         'rename object label': 'Rename',
         'delete object label': 'Delete',
         'go to object label': 'Open',

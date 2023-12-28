@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';

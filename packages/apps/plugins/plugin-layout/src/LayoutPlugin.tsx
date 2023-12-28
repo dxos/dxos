@@ -18,6 +18,7 @@ import {
   usePlugins,
   LayoutAction,
   SettingsDialogContent,
+  ShortcutsDialogContent,
   Surface,
   type Plugin,
   type PluginDefinition,
@@ -25,6 +26,7 @@ import {
   type SurfaceProps,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -52,6 +54,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
     active: undefined,
     previous: undefined,
+
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
       return this.active && graphPlugin.provides.graph.findNode(this.active);
@@ -93,6 +96,29 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
                   action: 'toggle-fullscreen',
+                }),
+            });
+
+            // TODO(burdon): Move to NavTree? Or separate plugin? Layout is optional for other apps.
+            parent.addAction({
+              id: LayoutAction.OPEN_SETTINGS,
+              label: ['open settings label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+,',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_SETTINGS,
+                }),
+            });
+
+            parent.addAction({
+              id: LayoutAction.OPEN_SHORTCUTS,
+              label: ['open shortcuts label', { ns: LAYOUT_PLUGIN }],
+              keyBinding: 'meta+/',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: LAYOUT_PLUGIN,
+                  action: LayoutAction.OPEN_SHORTCUTS,
                 }),
             });
           }
@@ -194,8 +220,11 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
-            case `${LAYOUT_PLUGIN}/ProfileSettings`:
+            case `${LAYOUT_PLUGIN}/Settings`:
               return <SettingsDialogContent />;
+
+            case `${LAYOUT_PLUGIN}/Shortcuts`:
+              return <ShortcutsDialogContent />;
 
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
@@ -276,10 +305,30 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               return true;
             }
 
+            // TODO(burdon): Move to SettingsPlugin? How should plugins coordinate with the root dialog?
+            case LayoutAction.OPEN_SETTINGS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Settings' };
+              return true;
+            }
+
+            // TODO(burdon): Move to SettingsPlugin? How should plugins coordinate with the root dialog?
+            case LayoutAction.OPEN_SHORTCUTS: {
+              state.values.dialogOpen = true;
+              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Shortcuts' };
+              return true;
+            }
+
             case LayoutAction.ACTIVATE: {
+              const id = (intent.data as LayoutAction.Activate).id;
+              const path = graphPlugin?.provides.graph.getPath(id);
+              if (path) {
+                Keyboard.singleton.setContext(path.join('/'));
+              }
+
               batch(() => {
                 state.values.previous = state.values.active;
-                state.values.active = (intent.data as LayoutAction.Activate).id;
+                state.values.active = id;
               });
               return true;
             }

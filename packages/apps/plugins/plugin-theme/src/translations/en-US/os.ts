@@ -68,5 +68,6 @@ export const os = {
   'welcome message': 'Welcome',
   'selecting identity heading': 'Selecting identity',
   'settings dialog title': 'Settings',
+  'shortcuts dialog title': 'Shortcuts',
   'target blank description': 'Link opens in a new tab.',
 };
