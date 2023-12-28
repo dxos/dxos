@@ -11,6 +11,8 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
+
 import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
 import { type MosaicDataItem, type MosaicDraggedItem } from './types';
@@ -26,6 +28,7 @@ export const DEFAULT_TYPE = 'unknown';
 export type MosaicTileOverlayProps = {
   grow?: boolean;
   debug?: boolean;
+  itemContext?: Record<string, unknown>;
 };
 
 /**
@@ -49,9 +52,8 @@ export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & 
   operation: MosaicOperation;
 };
 
-export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Omit<
-  HTMLAttributes<HTMLElement>,
-  'onDrop'
+export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = ThemedClassName<
+  Omit<HTMLAttributes<HTMLElement>, 'onDrop'>
 > &
   PropsWithChildren<{
     id: string;

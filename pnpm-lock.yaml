@@ -679,42 +679,6 @@ importers:
         specifier: ^6.5.4
         version: 6.5.4
 
-  packages/apps/composer-app/build/mac/Composer-dev.app/Contents/Resources/socket:
-    optionalDependencies:
-      '@socketsupply/socket-darwin-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-darwin-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-win32-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-
-  packages/apps/composer-app/tmp/build/mac/tmp-dev.app/Contents/Resources/socket:
-    optionalDependencies:
-      '@socketsupply/socket-darwin-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-darwin-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-win32-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-
   packages/apps/composer-extension:
     devDependencies:
       '@types/webextension-polyfill':
@@ -1709,9 +1673,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -2008,9 +1969,6 @@ importers:
 
   packages/apps/plugins/plugin-navtree:
     dependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -2023,9 +1981,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../../common/keyboard
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -2278,13 +2233,6 @@ importers:
         version: 4.3.9(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
-    dependencies:
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../../common/local-storage
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -3635,31 +3583,6 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
-
-  packages/common/keyboard:
-    dependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../invariant
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../node-std
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../ui/storybook-utils
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
 
   packages/common/keys:
     dependencies:
@@ -7075,18 +6998,12 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui-searchlist':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7100,15 +7017,6 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../ui/storybook-utils
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -7127,9 +7035,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7145,6 +7050,9 @@ importers:
       lodash.set:
         specifier: ^4.3.2
         version: 4.3.2
+      mousetrap:
+        specifier: ^1.6.5
+        version: 1.6.5
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*
@@ -7170,6 +7078,9 @@ importers:
       '@types/lodash.set':
         specifier: ^4.3.7
         version: 4.3.7
+      '@types/mousetrap':
+        specifier: ^1.6.11
+        version: 1.6.12
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8572,9 +8483,6 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -19008,28 +18916,12 @@ packages:
       '@sinonjs/commons': 1.8.3
     dev: true
 
-  /@socketsupply/socket-darwin-arm64@0.5.3:
-    resolution: {integrity: sha512-+nXFcRjEgDjietEjUYwCTjiuf5MFCUA4EpvI/8XeebhUq6OAoJNUNJZwcrxFShmvsi1EfQmJpCahweULPl93FQ==}
-    cpu: [arm64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-darwin-arm64@0.5.4:
     resolution: {integrity: sha512-YAR9PPU1pb2R9QMLzh0LSQzDg2oFJoykOgXxew9zmdZ8NbVZPSrPgiMzV8EXbNhd8wPjtcbUuZWeQD76w3S7wA==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: true
-    optional: true
-
-  /@socketsupply/socket-darwin-x64@0.5.3:
-    resolution: {integrity: sha512-Icp26lIjB/zpJZEdR9aDnnFf2T/URTKCG0p5cQusxtcR04YZ4Z+8diZSA7QBZU48qR5YnhWs/b1MjXJEY1gl+g==}
-    cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
     optional: true
 
   /@socketsupply/socket-darwin-x64@0.5.4:
@@ -19040,14 +18932,6 @@ packages:
     dev: true
     optional: true
 
-  /@socketsupply/socket-linux-arm64@0.5.3:
-    resolution: {integrity: sha512-BSxQqAZLt0CS9G4RekdjpQCkRDCblkOZLKP2HiUX7f4ojSGjj38xVY0Yak1ahtFfgnTuOh7tQwzcfHeBZldt+Q==}
-    cpu: [arm64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-linux-arm64@0.5.4:
     resolution: {integrity: sha512-9Ql9NBXwVaJZTbrsKKoiwAe26PNZKAPivaVL2O2cpWfg3OsWC1wFcwyuImIgOotN4BM10LcwTaTi3Q5cG2corw==}
     cpu: [arm64]
@@ -19056,28 +18940,12 @@ packages:
     dev: true
     optional: true
 
-  /@socketsupply/socket-linux-x64@0.5.3:
-    resolution: {integrity: sha512-qB/LGXP+LN5W6pPTAO+wI/xaKBmiLCeL1N5gEqyYx5ENDkiFBzRZ+SfEm9rgmOMXlXWCMRKPYTFUHNrXMYUeug==}
-    cpu: [x64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-linux-x64@0.5.4:
     resolution: {integrity: sha512-AfVfYZ2QUdMOkLLjjsPCJXb2Kk/lxr3gOGFtHVTM41q7VzeieqiKQx07PCseA4D8IOu6qvJuKgPc0dVAlx95Rw==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: true
-    optional: true
-
-  /@socketsupply/socket-win32-x64@0.5.3:
-    resolution: {integrity: sha512-qGDaJImhmNjVSqC2h1s9qd/HWPBCo0Gni8y0GjYwCaetz7tqmrKwPluaAPZeyLuPJb+SLRw8otTWyqN6um311g==}
-    cpu: [x64]
-    os: [win32]
-    requiresBuild: true
-    dev: false
     optional: true
 
   /@socketsupply/socket-win32-x64@0.5.4:
@@ -21638,6 +21506,10 @@ packages:
 
   /@types/mocha@8.2.3:
     resolution: {integrity: sha512-ekGvFhFgrc2zYQoX4JeZPmVzZxw6Dtllga7iGHzfbYIYkAMUx/sAFP2GdFpLff+vdHXu5fl7WX9AT+TtqYcsyw==}
+    dev: true
+
+  /@types/mousetrap@1.6.12:
+    resolution: {integrity: sha512-tzXGzMbvXt815z0Z7FE45wmRVRitMTaPgfVcdGhOS6LtEOWBZBokFJxEdatVA8cj+cQxvdFLmlMC4c12TNqv9A==}
     dev: true
 
   /@types/ms@0.7.31:
@@ -36308,6 +36180,10 @@ packages:
       monaco-editor: '*'
     dependencies:
       monaco-editor: 0.44.0
+    dev: false
+
+  /mousetrap@1.6.5:
+    resolution: {integrity: sha512-QNo4kEepaIBwiT8CDhP98umTetp+JNfQYBWvC1pc6/OAibuXtRcxZ58Qz8skvEHYvURne/7R8T5VoOI7rDsEUA==}
     dev: false
 
   /mri@1.2.0:

@@ -25,7 +25,7 @@ export const DemoGrid = ({
   initialLayout,
   types,
   debug,
-  className,
+  classNames,
 }: DemoGridProps) => {
   const [selected, setSelected] = useState<string>();
   const [items, setItems] = useState<MosaicDataItem[]>(
@@ -80,7 +80,7 @@ export const DemoGrid = ({
       layout={layout}
       options={options}
       Component={Component}
-      className={className}
+      classNames={classNames}
       debug={debug}
       selected={selected}
       onSelect={setSelected}
