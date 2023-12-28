@@ -121,19 +121,27 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         if (space) {
           // TODO(burdon): Set back ref from thread to this object.
           const thread = space.db.add(new ThreadType());
-          void intentPlugin?.provides.intent.dispatch({
-            action: ThreadAction.SELECT,
-            data: { active: thread.id, threads: [{ id: thread.id }] },
-          });
+          void intentPlugin?.provides.intent.dispatch([
+            {
+              action: ThreadAction.SELECT,
+              data: { active: thread.id, threads: [{ id: thread.id }] },
+            },
+            {
+              action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
+              data: { state: true },
+            },
+          ]);
           return thread.id;
         }
       },
       onUpdate: (info) => {
         const { active, items } = info;
-        void intentPlugin?.provides.intent.dispatch({
-          action: ThreadAction.SELECT,
-          data: { active, threads: items?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }] },
-        });
+        void intentPlugin?.provides.intent.dispatch([
+          {
+            action: ThreadAction.SELECT,
+            data: { active, threads: items?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }] },
+          },
+        ]);
       },
     },
   });
