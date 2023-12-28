@@ -25,19 +25,19 @@ export const image = (options: ImageOptions = {}): Extension => {
 
 const update = (state: EditorState, options: ImageOptions) => {
   const builder = new RangeSetBuilder();
+  const cursor = state.selection.main.head;
 
-  // TODO(burdon): If not-readonly then show text.
-  // if (state.readOnly) {
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'Image') {
         const urlNode = node.node.getChild('URL');
         if (urlNode) {
+          const hide = state.readOnly || cursor < node.from || cursor > node.to;
           const url = state.sliceDoc(urlNode.from, urlNode.to);
           builder.add(
-            state.readOnly ? node.from : node.to,
+            hide ? node.from : node.to,
             node.to,
-            Decoration.widget({
+            Decoration.replace({
               widget: new ImageWidget(url),
             }),
           );
@@ -45,7 +45,6 @@ const update = (state: EditorState, options: ImageOptions) => {
       }
     },
   });
-  // }
 
   return builder.finish();
 };

@@ -21,7 +21,7 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, demo, markdownBundle } from './extensions';
+import { basicBundle, markdownBundle } from './extensions';
 import { defaultTheme, markdownTheme, textTheme } from './themes';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
@@ -160,17 +160,6 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
-// TODO(burdon): Allow plugins to set extensions (factory).
-const maybeDebug = (): Extension => {
-  // TODO(burdon): Parse JSON script format (with key bindings?)
-  const items = localStorage.getItem('dxos.composer.demo');
-  if (items) {
-    return demo({ items: items.split(',') });
-  }
-
-  return [];
-};
-
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
@@ -179,11 +168,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[
-          basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }),
-          maybeDebug(),
-          ...extensions,
-        ]}
+        extensions={[basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
         slots={slots}
         {...props}
       />
@@ -199,11 +184,7 @@ export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[
-          markdownBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }),
-          maybeDebug(),
-          ...extensions,
-        ]}
+        extensions={[markdownBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
         slots={slots}
         {...props}
       />

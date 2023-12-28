@@ -48,7 +48,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
-    enableComplementarySidebar: false,
+    enableComplementarySidebar: true,
 
     dialogContent: 'never',
     dialogOpen: false,

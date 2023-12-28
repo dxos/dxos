@@ -51,6 +51,7 @@ type StackProvides = {
 export type MarkdownSettingsProps = {
   editorMode?: EditorMode;
   experimental?: boolean;
+  debug?: boolean;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &

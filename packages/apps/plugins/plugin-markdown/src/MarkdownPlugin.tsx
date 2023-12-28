@@ -89,8 +89,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
-  // TODO(burdon): Better way for different plugins to configure extensions.
-  const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
+  // TODO(burdon): Factor out space dependency.
+  const getExtensionsConfig = (space?: Space, document?: DocumentType): UseExtensionsOptions => ({
+    debug: settings.values.debug,
     experimental: settings.values.experimental,
     // TODO(burdon): Change to passing in config object.
     listener: {
@@ -98,13 +99,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         state.onChange.forEach((onChange) => onChange(text));
       },
     },
-    autocomplete: {
+    autocomplete: space && {
       onSearch: (text: string) => {
         // TODO(burdon): Specify filter (e.g., stack).
         const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
         return objects
           .map<AutocompleteResult | undefined>((object) =>
-            object.title?.length && object.id !== document.id
+            object.title?.length && object.id !== document?.id
               ? {
                   label: object.title,
                   // TODO(burdon): Factor out URL builder.
@@ -115,19 +116,23 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           .filter(nonNullable);
       },
     },
-    comments: {
+    comments: space && {
       onCreate: () => {
         if (space) {
-          // TODO(burdon): Set back ref to object.
+          // TODO(burdon): Set back ref from thread to this object.
           const thread = space.db.add(new ThreadType());
+          void intentPlugin?.provides.intent.dispatch({
+            action: ThreadAction.SELECT,
+            data: { active: thread.id, threads: [{ id: thread.id }] },
+          });
           return thread.id;
         }
       },
       onUpdate: (info) => {
-        const { items, active } = info;
+        const { active, items } = info;
         void intentPlugin?.provides.intent.dispatch({
           action: ThreadAction.SELECT,
-          data: { active, threads: items.map(({ id, location }) => ({ id, y: location?.top })) },
+          data: { active, threads: items?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }] },
         });
       },
     },
@@ -200,7 +205,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     ready: async (plugins) => {
       settings
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$experimental!, 'show-widgets', LocalStorageStore.bool);
+        .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
+        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool);
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
@@ -328,11 +334,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                    // TODO(burdon): Pass in space.
-                    // extensions: getExtensionsConfig(space, document),
-                    extensions: {
-                      experimental: settings.values.experimental,
-                    },
+                    extensions: getExtensionsConfig(),
                   },
                 };
 

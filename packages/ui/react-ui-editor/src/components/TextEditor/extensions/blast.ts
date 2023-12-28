@@ -25,6 +25,7 @@ export type BlastOptions = {
 };
 
 export const defaultOptions: BlastOptions = {
+  effect: 2,
   maxParticles: 200,
   particleGravity: 0.08,
   particleAlphaFadeout: 0.996,
@@ -35,7 +36,7 @@ export const defaultOptions: BlastOptions = {
   shakeIntensity: 5,
 };
 
-export const blast = (options: Partial<BlastOptions>): Extension => {
+export const blast = (options: Partial<BlastOptions> = defaultOptions): Extension => {
   let blaster: Blaster | undefined;
   let last = 0;
 
@@ -49,6 +50,8 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
     return { element, point };
   };
 
+  console.log(options);
+
   return [
     // Cursor moved.
     EditorView.updateListener.of((update) => {
@@ -58,7 +61,18 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
           blaster.destroy();
         }
 
-        blaster = new Blaster(update.view.scrollDOM, defaultsDeep({}, options, defaultOptions));
+        blaster = new Blaster(
+          update.view.scrollDOM,
+          defaultsDeep(
+            {
+              particleGravity: 0.2,
+              particleShrinkRate: 0.995,
+              color: () => [100 + Math.random() * 100, 0, 0],
+            },
+            options,
+            defaultOptions,
+          ),
+        );
         blaster.initialize();
         blaster.start(); // TODO(burdon): Stop/clean-up.
       } else {
