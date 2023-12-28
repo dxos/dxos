@@ -51,7 +51,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
       <SearchList.Root label={t('commandlist input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
-        <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-3 my-2')} />
+        <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-2 my-2')} />
         <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
             const label = getLabel(action.label);
@@ -71,7 +71,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
                     void action.invoke();
                   });
                 }}
-                classNames='flex items-center gap-2 pli-2'
+                classNames='flex items-center gap-2'
                 disabled={action.properties.disabled}
                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
               >

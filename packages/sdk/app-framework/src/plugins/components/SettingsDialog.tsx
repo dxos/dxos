@@ -31,13 +31,12 @@ export const SettingsDialogContent = () => {
     .map((plugin) => plugin!.meta)
     .sort(({ name: a }, { name: b }) => a?.localeCompare(b ?? '') ?? 0);
 
-  // TODO(burdon): Vertical layout if mobile (pattern).
-  // TODO(burdon): BUG: Dialogs do not compress if screen height is shrunk.
+  // TODO(burdon): Common treatment for dialogs (e.g., shrink height to fit, mobile, etc.)
   return (
-    <Dialog.Content classNames={['md:max-is-[40rem] overflow-hidden']}>
+    <Dialog.Content classNames={['h-full md:max-is-[40rem] overflow-hidden']}>
       <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
 
-      <div className='flex grow mlb-4 overflow-hidden max-bs-[40rem]'>
+      <div className='flex grow mlb-4 overflow-hidden'>
         <div className={mx('flex flex-col w-[200px] space-y-4 pr-4 border-r overflow-y-auto', groupBorder)}>
           <PluginList
             title='Options'
@@ -60,7 +59,7 @@ export const SettingsDialogContent = () => {
       </div>
 
       <Dialog.Close asChild>
-        <Button variant='primary' classNames='mbs-2'>
+        <Button variant='primary' classNames='mbs-2' autoFocus>
           {t('done label', { ns: 'os' })}
         </Button>
       </Dialog.Close>
