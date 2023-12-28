@@ -20,6 +20,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { type TypedObject, SpaceProxy } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 import { CommentsSidebar, ThreadMain, ThreadSidebar } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
@@ -114,7 +115,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const space = getActiveSpace(graph!, layout!.active);
               if (space) {
                 if (state.threads) {
-                  const threads = state.threads.map(({ id }) => space!.db.getObjectById(id) as ThreadType);
+                  const threads = state.threads
+                    .map(({ id }) => space.db.getObjectById(id) as ThreadType)
+                    .filter(nonNullable);
                   return (
                     <CommentsSidebar
                       space={space}
