@@ -15,6 +15,7 @@ export const ghostSelectedCurrent =
 export const ghostHighlighted =
   'data-[highlighted]:bg-primary-100 dark:data-[highlighted]:bg-primary-850 hover:data-[highlighted]:bg-primary-150 hover:dark:data-[highlighted]:bg-primary-800';
 
+// TODO(burdon): Doesn't work well in dark mode.
 export const ghostSelected = 'aria-selected:bg-primary-100 dark:aria-selected:bg-primary-850';
 
 export type SelectedStyleProps = {
