@@ -957,6 +957,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*

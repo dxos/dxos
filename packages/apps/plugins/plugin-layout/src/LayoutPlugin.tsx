@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut } from '@phosphor-icons/react';
+import { ArrowsOut, Gear, Keyboard as KeyboardIcon, MagnifyingGlass } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
 import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
@@ -113,6 +113,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             parent.addAction({
               id: LayoutAction.OPEN_SETTINGS,
               label: ['open settings label', { ns: LAYOUT_PLUGIN }],
+              icon: (props) => <Gear {...props} />,
               keyBinding: 'meta+,',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
@@ -124,6 +125,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             parent.addAction({
               id: LayoutAction.OPEN_COMMANDS,
               label: ['open commands label', { ns: LAYOUT_PLUGIN }],
+              icon: (props) => <MagnifyingGlass {...props} />,
               keyBinding: 'meta+k',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
@@ -135,6 +137,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             parent.addAction({
               id: LayoutAction.OPEN_SHORTCUTS,
               label: ['open shortcuts label', { ns: LAYOUT_PLUGIN }],
+              icon: (props) => <KeyboardIcon {...props} />,
               keyBinding: 'meta+/',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
