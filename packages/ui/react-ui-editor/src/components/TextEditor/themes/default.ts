@@ -10,6 +10,11 @@ import { tokens } from '../../../styles';
 /**
  * Minimal styles.
  * https://codemirror.net/examples/styling
+ *
+ * Examples:
+ * - https://github.com/codemirror/view/blob/main/src/theme.ts
+ * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts
+ *
  * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  */
@@ -136,8 +141,55 @@ export const defaultTheme: {
   '& .cm-tooltip': {
     border: 'none',
   },
-  // '& .cm-tooltip-below': {},
-  // '& .cm-tooltip-autocomplete': {},
+  '& .cm-tooltip-below': {},
+
+  //
+  // autocomplete
+  //
+  '& .cm-tooltip-autocomplete': {
+    marginTop: '4px',
+    marginLeft: '-3px',
+  },
+  '& .cm-tooltip-autocomplete ul li': {},
+  '& .cm-tooltip-autocomplete ul li[aria-selected]': {},
+  '& .cm-completionIcon': {
+    display: 'none',
+  },
+  '& .cm-completionLabel': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+  '& .cm-completionMatchedText': {
+    textDecoration: 'none',
+  },
+
+  //
+  // widgets
+  //
+  '& .cm-widgetBuffer': {
+    display: 'none',
+    height: 0,
+  },
+
+  //
+  // table
+  //
+  '& .cm-table-head': {
+    padding: '2px 16px 2px 0px',
+    borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.500')}`,
+    fontWeight: 100,
+    textAlign: 'left',
+    color: get(tokens, 'extend.colors.neutral.500'),
+  },
+  '& .cm-table-cell': {
+    padding: '2px 16px 2px 0px',
+  },
+
+  //
+  // image
+  //
+  '& .cm-image': {
+    margin: '0.5rem 0',
+  },
 
   //
   // font size
