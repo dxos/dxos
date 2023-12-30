@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [SEARCH_PLUGIN]: {
         'plugin name': 'Search',
-        'search action label': 'Search',
+        'search action label': 'Search spaces',
         'search placeholder': 'Search...',
       },
     },

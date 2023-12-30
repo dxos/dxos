@@ -9,5 +9,5 @@ export const contentElevation: ComponentFragment<{ elevation?: Elevation }> = ({
 ];
 
 export const surfaceElevation: ComponentFragment<{ elevation?: Elevation }> = ({ elevation }) => [
-  elevation === 'group' ? 'shadow' : elevation === 'chrome' ? 'shadow-xl' : 'shadow-none',
+  elevation === 'group' ? 'shadow' : elevation === 'chrome' ? 'shadow-lg' : 'shadow-none',
 ];

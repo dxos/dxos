@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { AddressBook } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -188,6 +189,7 @@ export const ClientPlugin = ({
             parent.addAction({
               id: `${CLIENT_PLUGIN}/open-shell`,
               label: ['open shell label', { ns: CLIENT_PLUGIN }],
+              icon: (props) => <AddressBook {...props} />,
               keyBinding: 'meta+shift+.',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),

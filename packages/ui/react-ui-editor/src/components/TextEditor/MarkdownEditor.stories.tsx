@@ -330,6 +330,9 @@ export const Blast = {
     <Story
       text={str(text.paragraphs, text.code, text.paragraphs)}
       extensions={[
+        demo({
+          items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
+        }),
         blast(
           defaultsDeep(
             {
