@@ -208,7 +208,7 @@ export const SpacePlugin = ({
     },
     provides: {
       space: state as RevertDeepSignal<PluginState>,
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
@@ -261,7 +261,7 @@ export const SpacePlugin = ({
             case 'presence':
               return isTypedObject(data.object) ? <SpacePresence object={data.object} /> : null;
             case 'settings':
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <SpaceSettings /> : null;
+              return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             default:
               return null;
           }
