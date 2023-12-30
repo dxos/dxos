@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Button, DensityProvider, Dialog, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { ghostHover, ghostSelected, groupBorder, mx } from '@dxos/react-ui-theme';
 
 import { type Plugin, usePlugins } from '../PluginHost';
@@ -33,39 +33,37 @@ export const SettingsDialogContent = () => {
 
   // TODO(burdon): Vertical layout if mobile (pattern).
   return (
-    <DensityProvider density='fine'>
-      <Dialog.Content classNames={['h-[90%] md:max-is-[40rem] overflow-hidden']}>
-        <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
+    <Dialog.Content classNames={['h-[90%] md:max-is-[40rem] overflow-hidden']}>
+      <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
 
-        <div className='flex grow mlb-4 overflow-hidden'>
-          <div className={mx('flex flex-col w-[200px] space-y-4 pr-4 border-r overflow-y-auto', groupBorder)}>
-            <PluginList
-              title='Options'
-              plugins={core.map((id) => plugins.find((p) => p.meta.id === id)!.meta)}
-              selected={plugin}
-              onSelect={(plugin) => setPlugin(plugin)}
-            />
+      <div className='flex grow mlb-4 overflow-hidden'>
+        <div className={mx('flex flex-col w-[200px] space-y-4 pr-4 border-r overflow-y-auto', groupBorder)}>
+          <PluginList
+            title='Options'
+            plugins={core.map((id) => plugins.find((p) => p.meta.id === id)!.meta)}
+            selected={plugin}
+            onSelect={(plugin) => setPlugin(plugin)}
+          />
 
-            <PluginList
-              title='Plugins'
-              plugins={filteredPlugins}
-              selected={plugin}
-              onSelect={(plugin) => setPlugin(plugin)}
-            />
-          </div>
-
-          <div className={mx('flex flex-col w-full md:px-4 divide-y overflow-y-auto', groupBorder)}>
-            <Surface role='settings' data={{ plugin }} />
-          </div>
+          <PluginList
+            title='Plugins'
+            plugins={filteredPlugins}
+            selected={plugin}
+            onSelect={(plugin) => setPlugin(plugin)}
+          />
         </div>
 
-        <Dialog.Close asChild>
-          <Button variant='primary' classNames='mbs-2'>
-            {t('done label', { ns: 'os' })}
-          </Button>
-        </Dialog.Close>
-      </Dialog.Content>
-    </DensityProvider>
+        <div className={mx('flex flex-col w-full md:px-4 divide-y overflow-y-auto', groupBorder)}>
+          <Surface role='settings' data={{ plugin }} />
+        </div>
+      </div>
+
+      <Dialog.Close asChild>
+        <Button variant='primary' classNames='mbs-2'>
+          {t('done label', { ns: 'os' })}
+        </Button>
+      </Dialog.Close>
+    </Dialog.Content>
   );
 };
 

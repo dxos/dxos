@@ -19,7 +19,7 @@ export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
 
   const { graph } = useGraph();
   const context = graph.getPath(activeNode.id)?.join('/');
-  Keyboard.singleton.setContext(context);
+  Keyboard.singleton.setCurrentContext(context);
 
   const handleActivate = (node: Node) => {
     void dispatch({

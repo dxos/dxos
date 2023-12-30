@@ -8,6 +8,7 @@ export default [
   {
     'en-US': {
       [CLIENT_PLUGIN]: {
+        'open shell label': 'HALO dialog',
         'enable experimental automerge backend': 'Automerge backend (reload required).',
       },
     },
