@@ -3,4 +3,5 @@
 //
 
 export * from './HelpContextProvider';
+export * from './ShortcutsDialog';
 export * from './Tooltip';

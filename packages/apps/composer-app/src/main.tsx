@@ -49,6 +49,7 @@ import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { appKey } from './globals';
+import { steps } from './help';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import { initializeNativeApp } from './native';
 
@@ -129,9 +130,9 @@ const main = async () => {
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
         appKey,
         config,
+        debugIdentity,
         services,
         types,
-        debugIdentity,
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
@@ -140,7 +141,9 @@ const main = async () => {
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
-      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help')),
+      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {
+        steps,
+      }),
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),

@@ -19,7 +19,7 @@ export const HaloButton = (props: HaloButtonProps) => {
     <Avatar.Root size={size} variant='circle' status='active'>
       <Avatar.Frame
         data-testid='treeView.haloButton'
-        data-joyride='welcome/1'
+        data-joyride='welcome/halo'
         classNames='cursor-pointer'
         onClick={onClick}
       >

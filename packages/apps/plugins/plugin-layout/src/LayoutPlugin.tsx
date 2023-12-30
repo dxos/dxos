@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut, Gear, Keyboard as KeyboardIcon, MagnifyingGlass } from '@phosphor-icons/react';
+import { ArrowsOut, Gear, MagnifyingGlass } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
 import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
@@ -19,7 +19,6 @@ import {
   LayoutAction,
   CommandsDialogContent,
   SettingsDialogContent,
-  ShortcutsDialogContent,
   Surface,
   type IntentPluginProvides,
   type Plugin,
@@ -108,7 +107,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 }),
             });
 
-            // TODO(burdon): Move special handlers to separate plugin (LayoutPlugin is optional).
+            // TODO(burdon): Move special handlers to separate plugin (decouple LayoutPlugin).
 
             parent.addAction({
               id: LayoutAction.OPEN_SETTINGS,
@@ -131,18 +130,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
                   action: LayoutAction.OPEN_COMMANDS,
-                }),
-            });
-
-            parent.addAction({
-              id: LayoutAction.OPEN_SHORTCUTS,
-              label: ['open shortcuts label', { ns: LAYOUT_PLUGIN }],
-              icon: (props) => <KeyboardIcon {...props} />,
-              keyBinding: 'meta+/',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.OPEN_SHORTCUTS,
                 }),
             });
           }
@@ -263,9 +250,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case `${LAYOUT_PLUGIN}/Commands`:
               return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
-
-            case `${LAYOUT_PLUGIN}/Shortcuts`:
-              return <ShortcutsDialogContent />;
           }
 
           switch (role) {
@@ -343,12 +327,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             case LayoutAction.OPEN_COMMANDS: {
               state.values.dialogOpen = true;
               state.values.dialogContent = { component: 'dxos.org/plugin/layout/Commands' };
-              return true;
-            }
-
-            case LayoutAction.OPEN_SHORTCUTS: {
-              state.values.dialogOpen = true;
-              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Shortcuts' };
               return true;
             }
 
