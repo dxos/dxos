@@ -60,7 +60,7 @@ export type MarkdownPluginState = {
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { experimental: false });
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
 
   // TODO(burdon): Why does this need to be a signal? Race condition?
   const state = deepSignal<MarkdownPluginState>({ onChange: [] });
@@ -146,7 +146,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     },
   });
 
-  const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
+  const MarkdownMain: FC<{ content: DocumentType; readonly: boolean }> = ({ content: document, readonly }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
@@ -162,6 +162,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
     return (
       <EditorMain
+        readonly={readonly}
         editorMode={settings.values.editorMode}
         model={model}
         extensions={getExtensionsConfig(space!, document)}
@@ -268,12 +269,31 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 testId: 'markdownPlugin.createObject',
               },
             });
-          } else if (parent.data instanceof DocumentType && !parent.data.title) {
-            return effect(() => {
-              const document = parent.data;
-              parent.label = document.title ||
-                getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+          } else if (parent.data instanceof DocumentType) {
+            parent.addAction({
+              id: `${MARKDOWN_PLUGIN}/toggle-readonly`,
+              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <ArticleMedium {...props} />,
+              keyBinding: 'shift+F5',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: MARKDOWN_PLUGIN,
+                    action: MarkdownAction.TOGGLE_VIEW,
+                    data: {
+                      objectId: parent.data.id,
+                    },
+                  },
+                ]),
             });
+
+            if (!parent.data.title) {
+              effect(() => {
+                const document = parent.data;
+                parent.label = document.title ||
+                  getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+              });
+            }
           }
         },
       },
@@ -297,7 +317,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             case 'main': {
               if (isDocument(data.active)) {
-                return <MarkdownMain content={data.active} />;
+                const readonly = settings.values.viewMode[data.active.id];
+                return <MarkdownMain content={data.active} readonly={readonly} />;
               } else if (
                 'composer' in data &&
                 isMarkdown(data.composer) &&
@@ -371,10 +392,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
+        resolver: ({ action, data }) => {
+          switch (action) {
             case MarkdownAction.CREATE: {
               return { object: new DocumentType() };
+            }
+
+            // TODO(burdon): Generalize for every object.
+            case MarkdownAction.TOGGLE_VIEW: {
+              const { objectId } = data;
+              settings.values.viewMode[objectId as string] = !settings.values.viewMode[objectId];
+              break;
             }
           }
         },

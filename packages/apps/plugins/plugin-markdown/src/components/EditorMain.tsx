@@ -24,15 +24,16 @@ export type EditorMainProps = {
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
   extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'model' | 'editorMode'>;
+} & Pick<TextEditorProps, 'readonly' | 'model' | 'editorMode'>;
 
 export const EditorMain = ({
   editorRefCb,
-  model,
   properties,
   layout,
-  editorMode,
   extensions: _extensions,
+  readonly,
+  model,
+  editorMode,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
@@ -43,6 +44,7 @@ export const EditorMain = ({
       <MarkdownEditor
         ref={editorRefCb}
         model={model}
+        readonly={readonly}
         editorMode={editorMode}
         extensions={extensions}
         slots={{

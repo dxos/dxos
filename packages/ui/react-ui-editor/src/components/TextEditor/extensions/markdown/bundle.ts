@@ -25,7 +25,7 @@ import {
 
 import type { ThemeMode } from '@dxos/react-ui';
 
-import { markdownHighlightStyle, markdownTagsExtension } from './highlight';
+import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
 export type MarkdownBundleOptions = {
   readonly?: boolean;
@@ -78,7 +78,7 @@ export const markdownBundle = ({
       // Parser extensions.
       extensions: [
         // GFM provided by default.
-        markdownTagsExtension,
+        markdownTagsExtensions,
       ],
     }),
 
