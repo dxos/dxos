@@ -25,61 +25,60 @@ export const table = (options: TableOptions = {}) => {
 
 type Table = {
   from: number;
-  to?: number;
+  to: number;
   header?: string[];
   rows?: string[][];
 };
 
 const update = (state: EditorState, options: TableOptions) => {
   const builder = new RangeSetBuilder();
-  if (state.readOnly) {
-    const tables: Table[] = [];
-    const getTable = () => tables[tables.length - 1];
-    const getRow = () => {
-      const table = getTable();
-      return table.rows?.[table.rows.length - 1];
-    };
+  const cursor = state.selection.main.head;
 
-    // Parse table.
-    // TODO(burdon): Use remark?: https://www.npmjs.com/package/remark-gfm
-    syntaxTree(state).iterate({
-      enter: (node) => {
-        // console.log(node.name);
-        // Check if cursor is inside text.
-        switch (node.name) {
-          case 'Table': {
-            tables.push({ from: node.from });
-            break;
-          }
-          case 'TableHeader': {
-            getTable().header = [];
-            break;
-          }
-          case 'TableRow': {
-            (getTable().rows ??= []).push([]);
-            break;
-          }
-          case 'TableCell': {
-            const row = getRow();
-            if (row) {
-              row.push(state.sliceDoc(node.from, node.to));
-            } else {
-              getTable().header?.push(state.sliceDoc(node.from, node.to));
-            }
-            break;
-          }
-          case 'TableDelimiter': {
-            getTable().to = node.to;
-            break;
-          }
+  const tables: Table[] = [];
+  const getTable = () => tables[tables.length - 1];
+  const getRow = () => {
+    const table = getTable();
+    return table.rows?.[table.rows.length - 1];
+  };
+
+  // Parse table.
+  // TODO(burdon): Use remark?: https://www.npmjs.com/package/remark-gfm
+  // TODO(burdon): Style in monospace:
+  //  https://discuss.codemirror.net/t/markdown-table-highlighting/658
+  //  https://github.com/lezer-parser/markdown/blob/main/src/extension.ts
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      // Check if cursor is inside text.
+      switch (node.name) {
+        case 'Table': {
+          tables.push({ from: node.from, to: node.to });
+          break;
         }
-      },
-    });
+        case 'TableHeader': {
+          getTable().header = [];
+          break;
+        }
+        case 'TableRow': {
+          (getTable().rows ??= []).push([]);
+          break;
+        }
+        case 'TableCell': {
+          const row = getRow();
+          if (row) {
+            row.push(state.sliceDoc(node.from, node.to));
+          } else {
+            getTable().header?.push(state.sliceDoc(node.from, node.to));
+          }
+          break;
+        }
+      }
+    },
+  });
 
-    tables.forEach((table) =>
-      builder.add(table.from, table.to!, Decoration.replace({ widget: new TableWidget(table) })),
-    );
-  }
+  tables.forEach((table) => {
+    const hide = state.readOnly || cursor < table.from || cursor > table.to;
+    hide && builder.add(table.from, table.to!, Decoration.replace({ widget: new TableWidget(table) }));
+  });
 
   return builder.finish();
 };
@@ -98,11 +97,11 @@ class TableWidget extends WidgetType {
 
     {
       const header = table.appendChild(document.createElement('thead'));
-      const row = header.appendChild(document.createElement('tr'));
+      const tr = header.appendChild(document.createElement('tr'));
       this._table.header?.forEach((cell) => {
         const th = document.createElement('th');
         th.setAttribute('class', 'cm-table-head');
-        row.appendChild(th).textContent = cell;
+        tr.appendChild(th).textContent = cell;
       });
     }
 

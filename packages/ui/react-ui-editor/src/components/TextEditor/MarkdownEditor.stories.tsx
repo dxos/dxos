@@ -93,12 +93,6 @@ const text = {
     '',
   ),
 
-  headings: str(
-    ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
-  ),
-
-  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
-
   table: str(
     '# Table',
     '',
@@ -111,6 +105,12 @@ const text = {
   ),
 
   image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
+
+  headings: str(
+    ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+  ),
+
+  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
 };
 
 const document = str(
@@ -138,6 +138,7 @@ const document = str(
   text.table,
   '---',
   text.image,
+  '',
 );
 
 const links = [
@@ -228,21 +229,19 @@ export const Simple = {
 };
 
 export const Tooltips = {
-  render: () => <Story text={text.links} extensions={[tooltip({ onHover })]} />,
+  render: () => <Story text={str(text.links, '')} extensions={[tooltip({ onHover })]} />,
 };
 
 export const Links = {
-  render: () => <Story text={text.links} extensions={[link({ onRender })]} />,
+  render: () => <Story text={str(text.links, '')} extensions={[link({ onRender })]} />,
 };
 
 export const Table = {
-  render: () => (
-    <Story text={str('This is a table', '', text.table, '', text.table, '', '')} readonly extensions={[table()]} />
-  ),
+  render: () => <Story text={str(text.table, '')} extensions={[table()]} />,
 };
 
 export const Image = {
-  render: () => <Story text={str('This is an image', '', text.image, '', '')} readonly extensions={[image()]} />,
+  render: () => <Story text={str(text.image, '', '')} readonly extensions={[image()]} />,
 };
 
 export const TaskList = {
