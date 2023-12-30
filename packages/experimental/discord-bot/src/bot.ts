@@ -32,12 +32,11 @@ export class DiscordBot {
 
     // Ensure bot has permission to channel.
     client.on('messageCreate', async (message) => {
-      console.log(message);
-      if (message.author.bot) {
+      const { value: channelId } = this._config.find('runtime.keys', { name: 'discord.com/channel' }) ?? {};
+      if (channelId && message.channel.id !== channelId) {
         return;
       }
-      const { value: channelId } = this._config.find('runtime.keys', { name: 'discord.com/channelId' });
-      if (channelId && message.channel.id !== channelId) {
+      if (message.author.bot) {
         return;
       }
       if (message.content.startsWith('!')) {
@@ -52,7 +51,11 @@ export class DiscordBot {
         author: { username },
         content,
       } = message;
-      console.log(`> ${username} says "${content}"`);
+      log('message', { username, content });
+
+      // TODO(burdon): Search spaces.
+      // TODO(burdon): Add comment.
+      // TODO(burdon): Summarize thread.
       await message.reply(`hello ${username}`);
     });
 
