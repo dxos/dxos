@@ -138,6 +138,7 @@ const document = str(
   text.table,
   '---',
   text.image,
+  '',
 );
 
 const links = [
