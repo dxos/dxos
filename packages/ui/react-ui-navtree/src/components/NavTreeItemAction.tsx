@@ -191,6 +191,7 @@ export const NavTreeItemActionSearchList = ({
                         if (action.properties.disabled) {
                           return;
                         }
+
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
                         onAction?.(action);
