@@ -17,7 +17,12 @@ export const HaloButton = (props: HaloButtonProps) => {
   const jdenticon = useJdenticonHref(identityKey ?? '', 24);
   return (
     <Avatar.Root size={size} variant='circle' status='active'>
-      <Avatar.Frame data-testid='treeView.haloButton' classNames='cursor-pointer' onClick={onClick}>
+      <Avatar.Frame
+        data-testid='treeView.haloButton'
+        data-joyride='welcome/1'
+        classNames='cursor-pointer'
+        onClick={onClick}
+      >
         <Avatar.Fallback href={jdenticon} />
       </Avatar.Frame>
     </Avatar.Root>

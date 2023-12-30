@@ -141,10 +141,7 @@ export class GraphBuilder {
           return partials.map((partial) => {
             const action = this._createAction(partial);
             if (action.keyBinding) {
-              // TODO(burdon): Set path as context. Set context when navigate.
-              const context = path.join('/');
-              // console.log('>>>', action.keyBinding, context);
-              Keyboard.singleton.getContext(context).bind({
+              Keyboard.singleton.getContext(path.join('/')).bind({
                 binding: action.keyBinding!,
                 handler: () => {
                   action.invoke();
