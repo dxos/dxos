@@ -204,6 +204,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
+      // TODO(burdon): Remove?
       const filters: ((document: DocumentType) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
@@ -216,7 +217,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       metadata: {
         records: {
           [DocumentType.schema.typename]: {
@@ -338,10 +339,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'settings': {
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <MarkdownSettings /> : null;
+              return data.plugin === meta.id ? <MarkdownSettings settings={settings.values} /> : null;
             }
 
-            // TODO(burdon): Review with @thure.
+            // TODO(burdon): Remove.
             case 'dialog': {
               if (data.subject === 'dxos.org/plugin/stack/chooser' && data.id === 'choose-stack-section-doc') {
                 // return <SpaceMarkdownChooser />;

@@ -5,16 +5,17 @@
 import React, { useEffect, useState } from 'react';
 
 import {
+  parseGraphPlugin,
+  parseIntentPlugin,
+  parseLayoutPlugin,
   resolvePlugin,
   type GraphBuilderProvides,
   type IntentResolverProvides,
   type Plugin,
   type PluginDefinition,
+  type SettingsProvides,
   type SurfaceProvides,
   type TranslationsProvides,
-  parseIntentPlugin,
-  parseLayoutPlugin,
-  parseGraphPlugin,
 } from '@dxos/app-framework';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
@@ -47,9 +48,9 @@ export type ClientSettingsProps = {
 export type ClientPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  SettingsProvides<ClientSettingsProps> &
   TranslationsProvides & {
     client: Client;
-    settings: ClientSettingsProps;
 
     /**
      * True if this is the first time the current app has been used by this identity.
@@ -168,14 +169,15 @@ export const ClientPlugin = ({
       await client.destroy();
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       surface: {
         component: ({ data, role }) => {
-          const { component } = data;
-          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
-            return <ClientSettings />;
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <ClientSettings settings={settings.values} /> : null;
           }
+
           return null;
         },
       },

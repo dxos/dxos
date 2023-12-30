@@ -9,23 +9,19 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
-  Surface,
   findPlugin,
-  resolvePlugin,
-  useIntent,
-  usePlugins,
   parseGraphPlugin,
   parseIntentPlugin,
   parseSurfacePlugin,
+  resolvePlugin,
+  useIntent,
+  usePlugins,
   LayoutAction,
+  SettingsDialogContent,
+  Surface,
   type Plugin,
   type PluginDefinition,
-  type LayoutProvides,
-  type IntentResolverProvides,
   type GraphProvides,
-  type GraphBuilderProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
   type SurfaceProps,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
@@ -37,16 +33,11 @@ import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './compon
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
-
-export type LayoutPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  LayoutProvides;
+import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
 export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
+  const state = new LocalStorageStore<LayoutState & LayoutSettingsProps>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
@@ -75,7 +66,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
@@ -86,6 +76,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     },
     provides: {
       layout: state.values as RevertDeepSignal<LayoutState>,
+      settings: { meta, values: state.values },
       translations,
       // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
@@ -202,11 +193,10 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          if (role === 'settings') {
-            return <LayoutSettings />;
-          }
-
           switch (data.component) {
+            case `${LAYOUT_PLUGIN}/ProfileSettings`:
+              return <SettingsDialogContent />;
+
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
@@ -220,10 +210,14 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextPanel />;
-
-            default:
-              return null;
           }
+
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
+          }
+
+          return null;
         },
       },
       intent: {

@@ -7,6 +7,7 @@ import { type Context, createContext } from 'react';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -29,6 +30,5 @@ export type DebugSettingsProps = { devtools?: boolean; debug?: boolean };
 export type DebugPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
-  TranslationsProvides & {
-    settings: DebugSettingsProps;
-  };
+  SettingsProvides<DebugSettingsProps> &
+  TranslationsProvides;

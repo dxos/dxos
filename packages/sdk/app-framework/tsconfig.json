@@ -33,6 +33,12 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
       "path": "../app-graph"
     }
   ],

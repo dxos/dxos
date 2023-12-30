@@ -4,27 +4,21 @@
 
 import React from 'react';
 
-import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
+import { SettingsValue, parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
-import { SpaceAction, type SpacePluginProvides } from '../types';
+import { SpaceAction, type SpaceSettingsProps } from '../types';
 
-export const SpaceSettings = () => {
+export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
-  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
-  if (!spacePlugin || !intentPlugin) {
-    return null;
-  }
-
-  const settings = spacePlugin.provides.settings;
 
   return (
     <>
-      <div role='none' className='flex items-center gap-2'>
-        <Input.Root>
-          <Input.Checkbox
+      {intentPlugin && (
+        <SettingsValue label={t('show hidden spaces label')}>
+          <Input.Switch
             checked={settings.showHidden}
             onCheckedChange={(checked) =>
               intentPlugin.provides.intent.dispatch({
@@ -34,9 +28,8 @@ export const SpaceSettings = () => {
               })
             }
           />
-          <Input.Label>{t('show hidden spaces label')}</Input.Label>
-        </Input.Root>
-      </div>
+        </SettingsValue>
+      )}
     </>
   );
 };
