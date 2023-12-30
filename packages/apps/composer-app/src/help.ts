@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Step } from '@react-joyride';
+import { type Step } from 'react-joyride';
 
 // TODO(burdon): Move text to translation object.
 export const steps: Step[] = [
