@@ -22,6 +22,7 @@ export default [
         'settings editor mode default label': 'Default',
         'settings editor mode vim label': 'Vim',
         'settings markdown experimental label': 'Enable experimental features.',
+        'settings markdown debug label': 'Enable debugging features.',
       },
     },
   },

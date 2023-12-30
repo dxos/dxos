@@ -3,7 +3,7 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
 import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
@@ -59,19 +59,7 @@ export const markdownBundle = ({
     indentOnInput(),
     rectangularSelection(),
 
-    // https://codemirror.net/docs/ref/#view.keymap
-    keymap.of([
-      // https://codemirror.net/docs/ref/#commands.defaultKeymap
-      ...defaultKeymap,
-      // https://codemirror.net/docs/ref/#commands.historyKeymap
-      ...historyKeymap,
-      // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
-      ...closeBracketsKeymap,
-      // https://codemirror.net/docs/ref/#search.searchKeymap
-      ...searchKeymap,
-      // https://codemirror.net/docs/ref/#commands.indentWithTab
-      indentWithTab,
-    ]),
+    customkeymap(),
 
     // Main extension.
     // https://github.com/codemirror/lang-markdown
@@ -89,7 +77,7 @@ export const markdownBundle = ({
 
       // Parser extensions.
       extensions: [
-        // GFM, // TODO(burdon): Provided by default?
+        // GFM provided by default.
         markdownTagsExtension,
       ],
     }),
@@ -101,3 +89,18 @@ export const markdownBundle = ({
     syntaxHighlighting(markdownHighlightStyle(readonly)),
   ].filter(Boolean) as Extension[];
 };
+
+// https://codemirror.net/docs/ref/#view.keymap
+const customkeymap = () =>
+  keymap.of([
+    // https://codemirror.net/docs/ref/#commands.indentWithTab
+    indentWithTab,
+    // https://codemirror.net/docs/ref/#commands.standardKeymap
+    ...standardKeymap,
+    // https://codemirror.net/docs/ref/#commands.historyKeymap
+    ...historyKeymap,
+    // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
+    ...closeBracketsKeymap,
+    // https://codemirror.net/docs/ref/#search.searchKeymap
+    ...searchKeymap,
+  ]);

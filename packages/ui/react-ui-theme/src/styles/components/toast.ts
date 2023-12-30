@@ -19,7 +19,7 @@ export const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc
 
 export const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'rounded-xl flex p-2 gap-2',
+    'rounded-lg flex p-2 gap-2',
     chromeSurface,
     surfaceElevation({ elevation: 'chrome' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',

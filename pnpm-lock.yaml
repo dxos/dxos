@@ -957,6 +957,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -8850,6 +8853,9 @@ importers:
       '@fontsource/fira-code':
         specifier: ^4.5.12
         version: 4.5.12
+      '@fontsource/inter':
+        specifier: ^5.0.16
+        version: 5.0.16
       '@fontsource/roboto-flex':
         specifier: ^4.5.2
         version: 4.5.2
@@ -13870,6 +13876,10 @@ packages:
 
   /@fontsource/fira-code@4.5.12:
     resolution: {integrity: sha512-dAVGsgiVR6jslpuXosHH4/Jf8bsAIKL1RWqjVq4WpmxL7CFHfg9hT5bAv/Y3xsEj8kDTibEgpuC3eMfr9kb02g==}
+    dev: false
+
+  /@fontsource/inter@5.0.16:
+    resolution: {integrity: sha512-qF0aH5UiZvCmneX5orJbVRoc2VTyLTV3X/7laMp03Qt28L+B9tFlZODOGUL64wDWc69YVdi1LeJB0cIgd51lvw==}
     dev: false
 
   /@fontsource/roboto-flex@4.5.2:

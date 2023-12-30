@@ -15,6 +15,7 @@ import {
   type TooltipOptions,
   autocomplete,
   comments,
+  demo,
   image,
   link,
   listener,
@@ -68,6 +69,7 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
 
 // TODO(burdon): Make markdown plugins separately configurable.
 export type UseExtensionsOptions = {
+  debug?: boolean;
   experimental?: boolean;
   listener?: ListenerOptions;
   autocomplete?: AutocompleteOptions;
@@ -75,26 +77,31 @@ export type UseExtensionsOptions = {
 };
 
 export const useExtensions = ({
+  debug,
   experimental,
   listener: listenerOption,
-  autocomplete: autoCompleteOption,
+  autocomplete: autocompleteOption,
   comments: commentsOptions,
 }: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
-  const extensions: Extension[] = [];
+  const extensions: Extension[] = [
+    image(),
+    link({ onRender: onRender(dispatch) }),
+    table(),
+    tasklist(),
+    tooltip({ onHover }),
+    autocompleteOption && autocomplete(autocompleteOption),
+    commentsOptions && comments(commentsOptions),
+    listenerOption && listener(listenerOption),
+  ].filter(nonNullable);
+
+  if (debug) {
+    const items = localStorage.getItem('dxos.composer.extension.demo');
+    extensions.push(...[items ? demo({ items: items!.split(',') }) : undefined].filter(nonNullable));
+  }
+
   if (experimental) {
-    extensions.push(
-      ...[
-        image(),
-        link({ onRender: onRender(dispatch) }),
-        table(),
-        tasklist(),
-        tooltip({ onHover }),
-        autoCompleteOption && autocomplete(autoCompleteOption),
-        commentsOptions && comments(commentsOptions),
-        listenerOption && listener(listenerOption),
-      ].filter(nonNullable),
-    );
+    extensions.push(...[].filter(nonNullable));
   }
 
   return extensions;

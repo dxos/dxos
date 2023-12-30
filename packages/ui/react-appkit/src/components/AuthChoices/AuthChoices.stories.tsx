@@ -31,7 +31,7 @@ export const Default = {
           className: 'mb-4 text-3xl',
           children: t('auth choices label'),
         }}
-        className='p-5 rounded-xl max-w-md mx-auto my-4'
+        className='p-5 rounded-lg max-w-md mx-auto my-4'
       >
         <AuthChoices {...args} />
       </Group>

@@ -36,7 +36,7 @@ import { invariant } from '@dxos/invariant';
 //  https://discuss.codemirror.net/t/easily-track-remove-content-with-decorations/4606
 
 class BookmarkWidget extends WidgetType {
-  constructor(private readonly _pos: number, private readonly _id: string) {
+  constructor(private readonly _pos: number, private readonly _id: string, private readonly _handleClick: () => void) {
     super();
     invariant(this._id);
   }
@@ -51,6 +51,7 @@ class BookmarkWidget extends WidgetType {
     // TODO(burdon): Call out to react?
     // https://emojifinder.com/comment
     span.textContent = '💬';
+    span.onclick = () => this._handleClick();
     return span;
   }
 }
@@ -70,7 +71,7 @@ const styles = EditorView.baseTheme({
 
 type CommentsInfo = {
   active?: string;
-  items: { id: string; pos: number; location: Rect | null }[];
+  items?: { id: string; pos: number; location: Rect | null }[];
 };
 
 export type CommentsOptions = {
@@ -91,7 +92,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const id = match[1];
       return Decoration.replace({
         id,
-        widget: new BookmarkWidget(pos, id),
+        widget: new BookmarkWidget(pos, id, () => handleUpdate({ active: id })),
       });
     },
   });
@@ -116,7 +117,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     },
   );
 
-  const doUpdate = debounce((data: CommentsInfo) => {
+  const handleUpdate = debounce((data: CommentsInfo) => {
     options.onUpdate?.(data);
   }, 200);
 
@@ -158,8 +159,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
       let closest = Infinity;
-      // TODO(burdon): Always shows entire document?
-      const { from, to } = view.visibleRanges?.[0] ?? { from: 0, to: view.state.doc.length };
+      // TODO(burdon): Handle multiple visible ranges in large documents.
+      const { from, to } = /* view.visibleRanges?.[0] ?? */ { from: 0, to: view.state.doc.length };
       rangeSet?.between(from, to, (from, to, value) => {
         decorations.push({ from, to, value });
         const d = Math.min(Math.abs(pos - from), Math.abs(pos - to));
@@ -171,7 +172,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       });
 
       if (decorations.length) {
-        doUpdate({
+        handleUpdate({
           active,
           items: decorations.map(
             ({

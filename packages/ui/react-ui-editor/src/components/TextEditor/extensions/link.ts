@@ -94,6 +94,7 @@ class LinkText extends WidgetType {
 const update = (state: EditorState, options: LinkOptions) => {
   const builder = new RangeSetBuilder();
   const cursor = state.selection.main.head;
+
   syntaxTree(state).iterate({
     enter: (node) => {
       // Check if cursor is inside text.
