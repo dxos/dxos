@@ -20,6 +20,7 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
 export enum MarkdownAction {
   CREATE = `${MARKDOWN_ACTION}/create`,
+  TOGGLE_VIEW = `${MARKDOWN_ACTION}/toggle-view`,
 }
 
 export type MarkdownProperties = {
@@ -27,7 +28,7 @@ export type MarkdownProperties = {
 
   // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
   __meta: ObjectMeta;
-  readOnly?: boolean;
+  readonly?: boolean;
 };
 
 export type MarkdownProvides = {
@@ -49,6 +50,7 @@ type StackProvides = {
 };
 
 export type MarkdownSettingsProps = {
+  viewMode: { [key: string]: boolean };
   editorMode?: EditorMode;
   experimental?: boolean;
   debug?: boolean;

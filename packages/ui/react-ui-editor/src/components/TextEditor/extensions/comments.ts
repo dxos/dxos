@@ -18,22 +18,18 @@ import {
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-// 1. TODO(burdon): Make atomic (for tasklist also).
-//    - https://discuss.codemirror.net/t/easily-track-remove-content-with-decorations/4606
-//    - https://discuss.codemirror.net/t/creating-atomic-replace-decorations/2961
-//    - https://codemirror.net/docs/ref/#state.EditorState%5EtransactionFilter (transaction filter: move, delete).
-// 2. TODO(burdon): Create/track threads in composer (change global state). Select/follow. Scroll with page.
-//    - Separate from chat/search.
-// 3. TODO(burdon): Support multiple threads in sidebar?
-// 4. TODO(burdon): Anchor AI thread when creating section.
-// 5. TODO(burdon): Button to resolve thread to close comments.
-
-// 6. TODO(burdon): Perf: Update existing rangeset.
-//  https://discuss.codemirror.net/t/rangeset-with-metadata-and-different-decorations/3874
-
-// TODO(burdon): Import note (performance):
-//  Easily track & remove content with decorations
-//  https://discuss.codemirror.net/t/easily-track-remove-content-with-decorations/4606
+// TODO(burdon): Reconcile with theme.
+const styles = EditorView.baseTheme({
+  '& .cm-bookmark': {
+    cursor: 'pointer',
+    margin: '4px',
+    padding: '4px',
+    backgroundColor: 'yellow',
+  },
+  '& .cm-bookmark-selected': {
+    backgroundColor: 'orange',
+  },
+});
 
 class BookmarkWidget extends WidgetType {
   constructor(private readonly _pos: number, private readonly _id: string, private readonly _handleClick: () => void) {
@@ -48,26 +44,11 @@ class BookmarkWidget extends WidgetType {
   override toDOM() {
     const span = document.createElement('span');
     span.className = 'cm-bookmark';
-    // TODO(burdon): Call out to react?
-    // https://emojifinder.com/comment
-    span.textContent = '💬';
+    span.textContent = '§';
     span.onclick = () => this._handleClick();
     return span;
   }
 }
-
-// TODO(burdon): Reconcile with theme.
-const styles = EditorView.baseTheme({
-  '& .cm-bookmark': {
-    cursor: 'pointer',
-    margin: '4px',
-    padding: '4px',
-    backgroundColor: 'yellow',
-  },
-  '& .cm-bookmark-selected': {
-    backgroundColor: 'orange',
-  },
-});
 
 type CommentsInfo = {
   active?: string;
