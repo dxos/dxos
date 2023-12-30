@@ -5,7 +5,7 @@
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { HighlightStyle } from '@codemirror/language';
 import { tags, styleTags, Tag } from '@lezer/highlight';
-import { type MarkdownConfig } from '@lezer/markdown';
+import { type MarkdownConfig, Table } from '@lezer/markdown';
 import get from 'lodash.get';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -23,11 +23,6 @@ import {
   strikethrough,
   tokens,
 } from '../../../../styles';
-
-// TODO(burdon): Style table in monospace.
-//  https://discuss.codemirror.net/t/markdown-table-highlighting/658
-
-// TODO(burdon): Readonly: use remark rather than hiding markup chars (which cursor can still move into).
 
 /**
  * Custom tags defined and processed by the GFM lezer extension.
@@ -47,24 +42,42 @@ export const markdownTags = {
   ListMark: Tag.define(),
   QuoteMark: Tag.define(),
   URL: Tag.define(),
+
+  // Custom.
+  TableCell: Tag.define(),
 };
 
-export const markdownTagsExtension: MarkdownConfig = {
-  props: [styleTags(markdownTags)],
-};
+// TODO(burdon): Customize table parser (make all content monospace).
+//  https://github.com/lezer-parser/markdown/blob/main/src/extension.ts
+Table.defineNodes?.forEach((node: any) => {
+  switch (node?.name) {
+    case 'TableCell': {
+      node.style = markdownTags.TableCell;
+      break;
+    }
+  }
+});
+
+export const markdownTagsExtensions: MarkdownConfig[] = [
+  Table,
+  {
+    props: [styleTags(markdownTags)],
+  },
+];
 
 /**
  * Styling based on `lezer` parser tags.
  * https://codemirror.net/examples/styling
  * https://github.com/lezer-parser/highlight
+ * https://github.com/lezer-parser/highlight/blob/main/src/highlight.ts#L427
  * https://lezer.codemirror.net/docs/ref/#highlight.tags (list of tags)
  *
  * Examples:
  * - https://github.com/codemirror/language/blob/main/src/highlight.ts#L194
  * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts#L115
  */
-export const markdownHighlightStyle = (readonly?: boolean) =>
-  HighlightStyle.define(
+export const markdownHighlightStyle = (readonly?: boolean) => {
+  return HighlightStyle.define(
     [
       {
         tag: [
@@ -129,6 +142,11 @@ export const markdownHighlightStyle = (readonly?: boolean) =>
         class: readonly ? 'hidden' : codeMark,
       },
 
+      {
+        tag: [tags.monospace],
+        class: 'font-mono',
+      },
+
       // Headings.
       { tag: tags.heading1, class: heading(1, readonly) },
       { tag: tags.heading2, class: heading(2, readonly) },
@@ -168,6 +186,12 @@ export const markdownHighlightStyle = (readonly?: boolean) =>
         class: mx(horizontalRule, readonly && '-indent-[100rem]'),
       },
 
+      // TODO(burdon): Only if being edited.
+      {
+        tag: [markdownTags.TableCell],
+        class: 'font-mono',
+      },
+
       // Main content, paragraphs, etc.
       // {
       //   tag: [tags.content],
@@ -179,3 +203,4 @@ export const markdownHighlightStyle = (readonly?: boolean) =>
       all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') },
     },
   );
+};
