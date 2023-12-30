@@ -69,8 +69,6 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
-        // TODO(burdon): Need to bind based on context.
-        keyBinding: 'meta+k',
         invoke: () => {
           // No-op.
         },
@@ -203,13 +201,14 @@ export const spaceToGraphNode = ({
           id: 'rename-space',
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
+          keyBinding: 'shift+F6',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space } }),
         },
         {
           id: 'share-space',
           label: ['share space', { ns: SPACE_PLUGIN }],
           icon: (props) => <Users {...props} />,
-          keyBinding: 'shift+meta+.',
+          keyBinding: 'meta+.',
           invoke: () =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
         },
@@ -308,6 +307,7 @@ export const objectToGraphNode = ({
         id: 'rename',
         label: ['rename object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
+        keyBinding: 'shift+F6',
         invoke: () =>
           dispatch({
             action: SpaceAction.RENAME_OBJECT,
@@ -318,6 +318,7 @@ export const objectToGraphNode = ({
         id: 'delete',
         label: ['delete object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Trash {...props} />,
+        keyBinding: 'meta+Backspace',
         invoke: () =>
           dispatch([
             {
