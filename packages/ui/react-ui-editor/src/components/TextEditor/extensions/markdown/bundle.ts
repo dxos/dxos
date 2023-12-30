@@ -3,7 +3,7 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, indentWithTab } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
 import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
@@ -54,14 +54,17 @@ export const markdownBundle = ({ themeMode, placeholder: _placeholder }: Markdow
     indentOnInput(),
     rectangularSelection(),
 
-    // TODO(burdon): Review.
+    // https://codemirror.net/docs/ref/#view.keymap
     keymap.of([
-      ...closeBracketsKeymap,
+      // https://codemirror.net/docs/ref/#commands.defaultKeymap
       ...defaultKeymap,
-      // ...foldKeymap,
-      // ...historyKeymap,
-      // ...lintKeymap,
+      // https://codemirror.net/docs/ref/#commands.historyKeymap
+      ...historyKeymap,
+      // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
+      ...closeBracketsKeymap,
+      // https://codemirror.net/docs/ref/#search.searchKeymap
       ...searchKeymap,
+      // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
     ]),
 

@@ -10,10 +10,12 @@ import { ghostHover, ghostSelected, groupBorder, mx } from '@dxos/react-ui-theme
 import { type Plugin, usePlugins } from '../PluginHost';
 import { Surface } from '../SurfacePlugin';
 
+// TODO(burdon): Move into separate plugin.
 export const SettingsDialogContent = () => {
+  const { t } = useTranslation('os');
+
   // TODO(burdon): Store preview tab.
   const [plugin, setPlugin] = useState<string>('dxos.org/plugin/registry');
-  const { t } = useTranslation('os');
   const { plugins, enabled } = usePlugins();
 
   const core = [
@@ -29,7 +31,7 @@ export const SettingsDialogContent = () => {
     .map((plugin) => plugin!.meta)
     .sort(({ name: a }, { name: b }) => a?.localeCompare(b ?? '') ?? 0);
 
-  // TODO(burdon): Vertical layout if mobile.
+  // TODO(burdon): Vertical layout if mobile (pattern).
   return (
     <DensityProvider density='fine'>
       <Dialog.Content classNames={['h-[90%] md:max-is-[40rem] overflow-hidden']}>
