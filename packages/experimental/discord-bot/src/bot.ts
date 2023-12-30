@@ -11,8 +11,7 @@ export class DiscordBot {
   constructor(private readonly _config: Config) {}
 
   async start() {
-    const { token } = this._config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
-    console.log(':::', token);
+    const { value: token } = this._config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
     if (!token) {
       throw new Error('Missing token.');
     }
@@ -37,7 +36,7 @@ export class DiscordBot {
       if (message.author.bot) {
         return;
       }
-      const channelId = this._config.find('runtime.keys', { name: 'discord.com/channelId' });
+      const { value: channelId } = this._config.find('runtime.keys', { name: 'discord.com/channelId' });
       if (channelId && message.channel.id !== channelId) {
         return;
       }

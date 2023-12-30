@@ -154,14 +154,13 @@ export class Config {
   /**
    * Get unique key.
    */
-  find(path: string, test: object) {
-    const values = this._config.get(path);
+  find<T = any>(path: string, test: object): T | undefined {
+    const values = get(this._config, path);
     if (!Array.isArray(values)) {
       return;
     }
 
-    const key = values?.find((value) => isMatch(value, test));
-    return key?.value;
+    return values.find((value) => isMatch(value, test));
   }
 
   /**
