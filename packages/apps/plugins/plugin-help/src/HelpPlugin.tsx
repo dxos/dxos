@@ -31,7 +31,7 @@ export const HelpPlugin = (): PluginDefinition<HelpPluginProvides> => {
       },
     },
     {
-      // TODO(burdon): HACK: Extend Graph Node type to include this?
+      // TODO(burdon): HACK: Extend Graph Node type to support joyride targets (similar to test ids).
       target: '[data-testid="navtree.treeItem.heading"]',
       title: 'Personal space',
       content: 'Your personal space contains data that will be synchronized across your devices.',

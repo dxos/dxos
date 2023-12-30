@@ -36,7 +36,7 @@ export const defaultOptions: BlastOptions = {
   shakeIntensity: 5,
 };
 
-export const blast = (options: Partial<BlastOptions> = defaultOptions): Extension => {
+export const blast = (options: Partial<BlastOptions>): Extension => {
   let blaster: Blaster | undefined;
   let last = 0;
 
@@ -49,8 +49,6 @@ export const blast = (options: Partial<BlastOptions> = defaultOptions): Extensio
 
     return { element, point };
   };
-
-  console.log(options);
 
   return [
     // Cursor moved.

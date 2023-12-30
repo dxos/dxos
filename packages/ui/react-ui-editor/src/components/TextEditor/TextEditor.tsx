@@ -168,7 +168,9 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
+        extensions={[basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }),
+          ...extensions,
+        ]}
         slots={slots}
         {...props}
       />
