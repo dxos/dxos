@@ -47,7 +47,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => Boolean(object));
   const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
+  const [folder] = useQuery(space, Folder.filter());
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;

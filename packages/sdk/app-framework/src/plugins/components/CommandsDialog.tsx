@@ -16,7 +16,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
 
   // TODO(burdon): Factor out.
   // TODO(burdon): How to access all translations across plugins?
-  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
+  const toString = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   // Traverse graph.
   // TODO(burdon): Factor out commonality with shortcut dialog.
@@ -38,6 +38,10 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
       },
     });
 
+    actions.sort(({ label: a }, { label: b }) => {
+      return toString(a)?.toLowerCase().localeCompare(toString(b)?.toLowerCase());
+    });
+
     // console.log(JSON.stringify(actions, undefined, 2));
     return actions;
   }, [graph]);
@@ -51,10 +55,10 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
       <SearchList.Root label={t('commandlist input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
-        <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-3 my-2')} />
+        <SearchList.Input placeholder={t('commandlist input placeholder')} classNames={mx('px-1 my-2')} />
         <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
-            const label = getLabel(action.label);
+            const label = toString(action.label);
             const Icon = action.icon ?? DotOutline;
             return (
               <SearchList.Item
@@ -71,7 +75,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
                     void action.invoke();
                   });
                 }}
-                classNames='flex items-center gap-2 pli-2'
+                classNames='flex items-center gap-2'
                 disabled={action.properties.disabled}
                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
               >
@@ -85,6 +89,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
           })}
         </SearchList.Content>
       </SearchList.Root>
+
       <Dialog.Close asChild>
         <Button ref={buttonRef} variant='primary' classNames='mbs-2'>
           {t('close label', { ns: 'os' })}
