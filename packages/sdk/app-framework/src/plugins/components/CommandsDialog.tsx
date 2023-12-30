@@ -19,7 +19,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
   const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   // Traverse graph.
-  // TODO(burdon): Factor out commonality with shortcuts.
+  // TODO(burdon): Factor out commonality with shortcut dialog.
   const actions = useMemo(() => {
     // TODO(burdon): Get from navtree (not keyboard).
     const current = Keyboard.singleton.getCurrentContext();
@@ -69,11 +69,6 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
                   setTimeout(() => {
                     void action.invoke();
                   });
-
-                  // TODO(burdon): Reconcile with NavTreeItemAction.
-                  // suppressNextTooltip.current = true;
-                  // setOptionsMenuOpen(false);
-                  // onAction?.(action);
                 }}
                 classNames='flex items-center gap-2 pli-2'
                 disabled={action.properties.disabled}
@@ -88,9 +83,6 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
             );
           })}
         </SearchList.Content>
-        {/* <div role='none' className='flex items-center plb-2 pli-3'> */}
-        {/*  <span className={descriptionText}>{label}</span> */}
-        {/* </div> */}
       </SearchList.Root>
       <Dialog.Close asChild>
         <Button ref={buttonRef} variant='primary' classNames='mbs-2'>

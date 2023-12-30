@@ -56,9 +56,10 @@ export type TextEditorSlots = {
 
 export type TextEditorProps = {
   model: EditorModel;
+  readonly?: boolean;
+  editorMode?: EditorMode;
   extensions?: Extension[];
   slots?: TextEditorSlots;
-  editorMode?: EditorMode;
 };
 
 /**
@@ -66,7 +67,7 @@ export type TextEditorProps = {
  * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
 export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, extensions = [], slots = defaultSlots, editorMode }, forwardedRef) => {
+  ({ model, readonly, editorMode, extensions = [], slots = defaultSlots }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
@@ -95,6 +96,8 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       const state = EditorState.create({
         doc: model.text(),
         extensions: [
+          readonly && EditorState.readOnly.of(readonly),
+
           // TODO(burdon): Factor out VIM mode?
           editorMode === 'vim' && vim(),
 
@@ -124,7 +127,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         setView(undefined);
         setState(undefined);
       };
-    }, [root, model, themeMode, editorMode]);
+    }, [root, model, themeMode, readonly, editorMode]);
 
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
@@ -169,13 +172,18 @@ const maybeDebug = (): Extension => {
 };
 
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const slots = defaultsDeep({}, _slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
-        extensions={[basicBundle({ themeMode, placeholder: slots?.editor?.placeholder }), maybeDebug(), ...extensions]}
+        readonly={readonly}
+        extensions={[
+          basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }),
+          maybeDebug(),
+          ...extensions,
+        ]}
         slots={slots}
         {...props}
       />
@@ -184,14 +192,15 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 );
 
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const slots = defaultsDeep({}, _slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
+        readonly={readonly}
         extensions={[
-          markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder }),
+          markdownBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }),
           maybeDebug(),
           ...extensions,
         ]}

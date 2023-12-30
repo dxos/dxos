@@ -11,11 +11,12 @@ import { EditorView, placeholder } from '@codemirror/view';
 import type { ThemeMode } from '@dxos/react-ui';
 
 export type BasicBundleOptions = {
+  readonly?: boolean;
   themeMode?: ThemeMode;
   placeholder?: string;
 };
 
-export const basicBundle = ({ themeMode, placeholder: _placeholder }: BasicBundleOptions): Extension[] =>
+export const basicBundle = ({ readonly, themeMode, placeholder: _placeholder }: BasicBundleOptions): Extension[] =>
   [
     // TODO(burdon): Compare with minimalSetup.
     // https://codemirror.net/docs/ref/#codemirror.minimalSetup
