@@ -24,7 +24,7 @@ export type EditorCardProps = {
 export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
   (
     {
-      className,
+      classNames,
       isDragging,
       draggableStyle,
       draggableProps,
@@ -44,7 +44,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
-        <Card.Root classNames={mx(className, 'w-full snap-center', color, isDragging && 'opacity-20')} grow={grow}>
+        <Card.Root classNames={mx('w-full snap-center', color, isDragging && 'opacity-20', classNames)} grow={grow}>
           <Card.Header onDoubleClick={() => onSelect?.()}>
             <Card.DragHandle {...draggableProps} />
             <Input.Root>

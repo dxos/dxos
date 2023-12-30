@@ -24,7 +24,7 @@ import pick from 'lodash.pick';
 import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DEFAULT_TRANSITION, type MosaicContainerProps, type MosaicMoveEvent, type MosaicOperation } from './Container';
+import { DEFAULT_TRANSITION, type MosaicContainerProps, type MosaicOperation } from './Container';
 import { Debug } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -144,6 +144,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     // If the over item is the same as the active item, do nothing.
     // This happens when moving between containers where a placeholder of itself is rendered where it will be dropped.
     if (overItem?.item?.id === activeItem?.item.id) {
+      setOverItem(overItem);
       return;
     }
 
@@ -155,17 +156,14 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       return;
     }
 
-    const onOver = ({ active, over }: MosaicMoveEvent) => {
-      if (Path.parent(active.path) === Path.parent(over.path)) {
-        return 'rearrange';
-      } else if (overContainer.onOver) {
-        return overContainer.onOver({ active, over });
-      } else {
-        return 'reject';
-      }
-    };
+    let operation: MosaicOperation = 'reject' as const;
+    if (Path.parent(activeItem.path) === Path.parent(overItem.path)) {
+      operation = 'rearrange' as const;
+    } else if (overContainer.onOver) {
+      operation = overContainer.onOver({ active: activeItem, over: overItem });
+    }
 
-    setOperation(onOver({ active: activeItem, over: overItem }));
+    setOperation(operation);
     setOverItem(overItem);
   };
 
