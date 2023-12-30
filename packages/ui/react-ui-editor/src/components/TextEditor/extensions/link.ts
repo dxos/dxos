@@ -101,14 +101,13 @@ const update = (state: EditorState, options: LinkOptions) => {
       if (node.name === 'Link') {
         const marks = node.node.getChildren('LinkMark');
         const text = marks.length >= 2 ? state.sliceDoc(marks[0].to, marks[1].from) : '';
-
         const urlNode = node.node.getChild('URL');
         const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
         if (!url) {
           return false;
         }
 
-        if (cursor < node.from || cursor > node.to) {
+        if (state.readOnly || cursor < node.from || cursor > node.to) {
           builder.add(
             node.from,
             node.to,

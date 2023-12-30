@@ -109,7 +109,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return null;
               }
             case 'menuitem':
-              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readOnly ? (
+              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
                 <MarkdownActions
                   model={data.model}
                   properties={data.properties}
