@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { Laptop, Planet, Plus, PlusCircle, SignIn, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
@@ -80,7 +80,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
           <Button onClick={() => setPanel('join')} data-testid='invitations.open-join-space'>
-            <Intersect weight='fill' className={getSize(6)} />
+            <SignIn weight='fill' className={getSize(6)} />
           </Button>
           {/* </Tooltip> */}
         </ButtonGroup>

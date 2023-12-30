@@ -13,6 +13,13 @@ import type {
 } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
 
+import { DEBUG_PLUGIN } from './meta';
+
+const DEBUG_ACTION = `${DEBUG_PLUGIN}/action`;
+export enum DebugAction {
+  OPEN_DEVTOOLS = `${DEBUG_ACTION}/open-devtools`,
+}
+
 export type DebugContextType = {
   running: boolean;
   start: (cb: TimerCallback, options: TimerOptions) => void;
