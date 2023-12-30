@@ -564,6 +564,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/discord-bot/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/gem-core/package.json",
           "jsonpath": "$.version"
         },

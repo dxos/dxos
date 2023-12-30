@@ -21,6 +21,7 @@ export const UPDATE_INTERVAL = 5_000;
 export type ServiceBundle = {
   DashboardService: DashboardService;
 };
+
 export class DashboardPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/dashboard';
 

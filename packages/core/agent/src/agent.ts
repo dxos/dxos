@@ -116,6 +116,7 @@ export class Agent {
     }
 
     // Open plugins.
+    // TODO(burdon): Spawn new process for each plugin?
     for (const plugin of this._plugins) {
       const config = getPluginConfig(this._client.config, plugin.id);
       if (config) {

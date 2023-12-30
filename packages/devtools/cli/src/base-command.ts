@@ -289,6 +289,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
     }
 
+    // TODO(burdon): Use Profile()?
     this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
   }
 

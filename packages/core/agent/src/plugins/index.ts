@@ -4,6 +4,7 @@
 
 export * from './chain';
 export * from './dashboard';
+export * from './discord';
 export * from './echo-proxy';
 export * from './epoch-monitor';
 export * from './functions';

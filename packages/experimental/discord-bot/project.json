@@ -1,0 +1,18 @@
+{
+  "sourceRoot": "packages/experimental/discord-bot/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/experimental/discord-bot/src/index.ts"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "test"
+  ]
+}

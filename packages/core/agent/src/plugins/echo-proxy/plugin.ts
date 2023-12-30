@@ -7,12 +7,12 @@ import express from 'express';
 import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { type EchoProxyConfig } from '@dxos/protocols/proto/dxos/agent/echoproxy';
+import { type Config } from '@dxos/protocols/proto/dxos/agent/echoproxy';
 
 import { Plugin } from '../plugin';
 
-const DEFAULT_OPTIONS: Required<EchoProxyConfig> & { '@type': string } = {
-  '@type': 'dxos.agent.echoproxy.EchoProxyConfig',
+const DEFAULT_OPTIONS: Required<Config> & { '@type': string } = {
+  '@type': 'dxos.agent.echoproxy.Config',
   port: 7001, // TODO(burdon): Move all ports to constants (collisions).
 };
 

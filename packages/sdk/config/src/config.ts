@@ -5,6 +5,7 @@
 import { boolean } from 'boolean';
 import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
+import isMatch from 'lodash.ismatch';
 import set from 'lodash.set';
 
 import { InvalidConfigError, schema } from '@dxos/protocols';
@@ -124,7 +125,6 @@ export class Config {
   /**
    * Creates an immutable instance.
    * @constructor
-   * @param objects
    */
   constructor(config: ConfigProto = {}, ...objects: ConfigProto[]) {
     this._config = validateConfig(defaultsDeep(config, ...objects, { version: 1 }));
@@ -149,6 +149,19 @@ export class Config {
     defaultValue?: DeepIndex<ConfigProto, ParseKey<K>>,
   ): DeepIndex<ConfigProto, ParseKey<K>> {
     return get(this._config, key, defaultValue);
+  }
+
+  /**
+   * Get unique key.
+   */
+  find(path: string, test: object) {
+    const values = this._config.get(path);
+    if (!Array.isArray(values)) {
+      return;
+    }
+
+    const key = values?.find((value) => isMatch(value, test));
+    return key?.value;
   }
 
   /**
