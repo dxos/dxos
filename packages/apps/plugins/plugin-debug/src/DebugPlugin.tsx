@@ -25,8 +25,8 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
-import { DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
 import translations from './translations';
+import { DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './types';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
@@ -46,7 +46,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       settings.close();
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
@@ -177,9 +177,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const { component, active } = data;
-          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
-            return <DebugSettings />;
+          const { active } = data;
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
           }
 
           if (!settings.values.debug) {

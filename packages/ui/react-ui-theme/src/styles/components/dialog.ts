@@ -23,7 +23,7 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     // todo(thure): `flex` should not be default.
     'flex flex-col',
     !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
-    'is-[95vw] md:is-full max-is-[20rem] rounded-xl p-4',
+    'is-[95vw] md:is-full max-is-[20rem] border rounded-xl p-4',
     dialogMotion,
     surfaceElevation({ elevation }),
     chromeSurface,

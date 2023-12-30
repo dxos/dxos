@@ -9,14 +9,7 @@ import { type Label } from '@dxos/app-graph';
 import { Button, Dialog, DropdownMenu, Popover, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import {
-  descriptionText,
-  getSize,
-  groupBorder,
-  hoverableControlItem,
-  hoverableOpenControlItem,
-  mx,
-} from '@dxos/react-ui-theme';
+import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 import type { TreeNodeAction } from '../types';
@@ -183,7 +176,7 @@ export const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] p-0 border', groupBorder]}>
+          <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] p-0']}>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
               <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
               <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
