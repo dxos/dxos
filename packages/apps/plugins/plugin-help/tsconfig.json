@@ -27,6 +27,9 @@
       "path": "../../../common/keyboard"
     },
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

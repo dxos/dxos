@@ -26,6 +26,7 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
     "lodash.get": "^4.4.2",

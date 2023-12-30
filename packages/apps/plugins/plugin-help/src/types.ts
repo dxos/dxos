@@ -5,7 +5,12 @@
 import { type Context, createContext } from 'react';
 import { type Step } from 'react-joyride';
 
-import { type GraphBuilderProvides, type IntentResolverProvides, type SurfaceProvides } from '@dxos/app-framework';
+import {
+  type GraphBuilderProvides,
+  type IntentResolverProvides,
+  type SurfaceProvides,
+  type TranslationsProvides,
+} from '@dxos/app-framework';
 
 import { HELP_PLUGIN } from './meta';
 
@@ -27,7 +32,7 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
   stop: () => {},
 });
 
-export type HelpPluginProvides = GraphBuilderProvides & IntentResolverProvides & SurfaceProvides;
+export type HelpPluginProvides = GraphBuilderProvides & IntentResolverProvides & SurfaceProvides & TranslationsProvides;
 
 const HELP_ACTION = `${HELP_PLUGIN}/action`;
 export enum HelpAction {

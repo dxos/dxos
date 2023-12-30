@@ -119,7 +119,8 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         </div>
 
         {/* Help hints. */}
-        <div className='fixed bottom-0 left-0 right-0 z-[1] flex justify-center pointer-events-none'>
+        {/* TODO(burdon): Make surface roles/names fully-qualified. */}
+        <div className='fixed bottom-0 left-0 right-0 z-[1] flex justify-center __pointer-events-none'>
           <Surface role='hints' limit={1} />
         </div>
 

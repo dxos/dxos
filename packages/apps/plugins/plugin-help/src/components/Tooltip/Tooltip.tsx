@@ -9,7 +9,7 @@ import { type TooltipRenderProps, type Props } from 'react-joyride';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { useHelp } from '../hooks';
+import { useHelp } from '../../hooks';
 
 // https://docs.react-joyride.com/styling
 // https://github.com/gilbarbara/react-floater

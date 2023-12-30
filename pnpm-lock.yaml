@@ -1511,6 +1511,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../../common/keyboard
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
