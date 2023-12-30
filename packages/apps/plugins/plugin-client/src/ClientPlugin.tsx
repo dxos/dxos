@@ -5,9 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import {
-  parseGraphPlugin,
   parseIntentPlugin,
-  parseLayoutPlugin,
   resolvePlugin,
   type GraphBuilderProvides,
   type IntentResolverProvides,
@@ -23,9 +21,9 @@ import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, PublicKey, type SystemStatus } from '@dxos/react-client';
-import { TypedObject, type TypeCollection, getSpaceForObject } from '@dxos/react-client/echo';
+import { type TypeCollection } from '@dxos/react-client/echo';
 
-import { ClientSettings } from './components/ClientSettings';
+import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -35,8 +33,9 @@ const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export enum ClientAction {
   OPEN_SHELL = `${CLIENT_ACTION}/SHELL`,
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
-  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
+  // TODO(burdon): Reconcile with SpacePlugin.
   JOIN_SPACE = `${CLIENT_ACTION}/JOIN_SPACE`,
+  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
 }
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
@@ -184,50 +183,18 @@ export const ClientPlugin = ({
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-          // TODO(wittjosiah): Pass graph to builders?
-          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           if (parent.id === 'root') {
-            parent.addAction(
-              {
-                id: `${CLIENT_PLUGIN}/open-shell`,
-                label: ['open shell label', { ns: CLIENT_PLUGIN }],
-                invoke: () =>
-                  intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
-                properties: {
-                  testId: 'clientPlugin.openShell',
-                },
-                keyBinding: 'meta+shift+.',
+            parent.addAction({
+              id: `${CLIENT_PLUGIN}/open-shell`,
+              label: ['open shell label', { ns: CLIENT_PLUGIN }],
+              keyBinding: 'meta+shift+.',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
+              properties: {
+                testId: 'clientPlugin.openShell',
               },
-              // TODO(wittjosiah): This action is likely unnecessary once keybindings can be context aware.
-              //   Each space has its own version of this action.
-              {
-                id: `${CLIENT_PLUGIN}/share-space`,
-                label: ['share space label', { ns: CLIENT_PLUGIN }],
-                invoke: () => {
-                  const active = layoutPlugin?.provides.layout.active;
-                  const graph = graphPlugin?.provides.graph;
-                  if (!active || !graph) {
-                    return;
-                  }
-
-                  const node = graph.findNode(active);
-                  if (!node || !(node.data instanceof TypedObject)) {
-                    return;
-                  }
-
-                  const space = getSpaceForObject(node.data);
-                  return intentPlugin?.provides.intent.dispatch([
-                    { plugin: CLIENT_PLUGIN, action: ClientAction.SHARE_SPACE, data: { spaceKey: space?.key } },
-                  ]);
-                },
-                properties: {
-                  testId: 'clientPlugin.shareSpace',
-                },
-                keyBinding: 'meta+.',
-              },
-            );
+            });
           }
         },
       },
@@ -240,15 +207,17 @@ export const ClientPlugin = ({
             case ClientAction.SHARE_IDENTITY:
               return client.shell.shareIdentity();
 
+            // TODO(burdon): Remove.
+            case ClientAction.JOIN_SPACE:
+              return typeof intent.data?.invitationCode === 'string'
+                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
+                : false;
+
+            // TODO(burdon): Remove.
             case ClientAction.SHARE_SPACE:
               return intent.data?.spaceKey instanceof PublicKey &&
                 !intent.data?.spaceKey.equals(client.spaces.default.key)
                 ? client.shell.shareSpace({ spaceKey: intent.data.spaceKey })
-                : false;
-
-            case ClientAction.JOIN_SPACE:
-              return typeof intent.data?.invitationCode === 'string'
-                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
                 : false;
           }
         },

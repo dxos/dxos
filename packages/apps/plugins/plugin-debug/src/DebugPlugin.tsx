@@ -112,12 +112,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   id: 'open-devtools',
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
                   icon: (props) => <Bug {...props} />,
+                  keyBinding: 'shift+meta+\\',
                   invoke: () =>
                     intentPlugin?.provides.intent.dispatch({
                       plugin: DEBUG_PLUGIN,
                       action: 'open-devtools', // TODO(burdon): Definition.
                     }),
-                  keyBinding: 'shift+meta+\\',
                   properties: {
                     testId: 'spacePlugin.openDevtools',
                   },

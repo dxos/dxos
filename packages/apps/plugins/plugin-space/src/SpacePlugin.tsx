@@ -404,6 +404,11 @@ export const SpacePlugin = ({
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
+            case SpaceAction.WAIT_FOR_OBJECT: {
+              state.awaiting = intent.data.id;
+              return true;
+            }
+
             case SpaceAction.CREATE: {
               if (!client) {
                 return;
@@ -413,27 +418,20 @@ export const SpacePlugin = ({
                 objects: [sharedSpacesFolder],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data);
-              const folder = new Folder({ name: space.key.toHex() }); // TODO(burdon): Will show up in search results.
+              const folder = new Folder({ name: space.key.toHex() }); // TODO(burdon): Remove: show up in search results.
               space.properties[Folder.schema.typename] = folder;
               sharedSpacesFolder?.objects.push(folder);
               return { space, id: space.key.toHex() };
             }
 
             case SpaceAction.JOIN: {
-              if (!client) {
-                return;
-              }
-
-              const { space } = await client.shell.joinSpace();
-              if (space) {
-                return { space, id: space.key.toHex() };
+              if (client) {
+                const { space } = await client.shell.joinSpace();
+                if (space) {
+                  return { space, id: space.key.toHex() };
+                }
               }
               break;
-            }
-
-            case SpaceAction.WAIT_FOR_OBJECT: {
-              state.awaiting = intent.data.id;
-              return true;
             }
 
             case SpaceAction.SHARE: {

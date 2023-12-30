@@ -197,8 +197,7 @@ export const TreeViewContainer = ({
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
-                          action: LayoutAction.OPEN_DIALOG,
-                          data: { component: 'dxos.org/plugin/layout/ProfileSettings' },
+                          action: LayoutAction.OPEN_SETTINGS,
                         });
                       }}
                     >
