@@ -697,24 +697,6 @@ importers:
         specifier: 0.5.3
         version: 0.5.3
 
-  packages/apps/composer-app/tmp/build/mac/tmp-dev.app/Contents/Resources/socket:
-    optionalDependencies:
-      '@socketsupply/socket-darwin-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-darwin-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-win32-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-
   packages/apps/composer-extension:
     devDependencies:
       '@types/webextension-polyfill':
@@ -7084,9 +7066,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui-searchlist':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
