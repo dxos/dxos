@@ -95,11 +95,13 @@ export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLI
 
 export type NavTreeItemData = TreeNode & { level: number };
 
+// TODO(burdon): Disabled until working.
+const presence = false;
+
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, active, path, position }, forwardedRef) => {
     const { level, ...node } = item;
     const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
-
     const [primaryAction, ...secondaryActions] = [...node.actions].sort((a, b) =>
       a.properties.disposition === 'toolbar' ? -1 : 1,
     );
@@ -207,7 +209,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   testId={`navtree.treeItem.actionsLevel${level}`}
                 />
               )}
-              {renderPresence?.(node)}
+              {presence && renderPresence?.(node)}
             </div>
             {!active &&
               isBranch &&
