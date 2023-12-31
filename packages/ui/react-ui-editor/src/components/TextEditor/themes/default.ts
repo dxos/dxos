@@ -203,6 +203,43 @@ export const defaultTheme: {
     acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
     return acc;
   }, {}),
+
+  /**
+   * Panels
+   * https://github.com/codemirror/search/blob/main/src/search.ts#L745
+   *
+   * Find/replace panel.
+   * <div class="cm-announced">...</div>
+   * <div class="cm-scroller">...</div>
+   * <div class="cm-panels cm-panels-bottom">
+   *   <div class="cm-search cm-panel">
+   *     <input class="cm-textfield" />
+   *     <button class="cm-button">...</button>
+   *     <label><input type="checkbox" />...</label>
+   *   </div>
+   * </div
+   */
+  '& .cm-panels': {
+    border: `1px solid ${get(tokens, 'extend.colors.neutral.200')}`,
+    borderBottom: 'none',
+  },
+  '& .cm-panel': {
+    background: get(tokens, 'extend.colors.neutral.50'),
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+  '& .cm-button': {
+    margin: '4px',
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    background: get(tokens, 'extend.colors.neutral.100'),
+    border: 'none',
+  },
+
+  '& .cm-searchMatch': {
+    backgroundColor: get(tokens, 'extend.colors.yellow.100'),
+  },
+  '& .cm-searchMatch.cm-searchMatch-selected': {
+    backgroundColor: get(tokens, 'extend.colors.primary.100'),
+  },
 };
 
 export const textTheme: {

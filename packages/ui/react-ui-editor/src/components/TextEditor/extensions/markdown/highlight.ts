@@ -181,6 +181,7 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
         class: blockquote,
       },
 
+      // TODO(burdon): Replace with extension.
       {
         tag: [markdownTags.HorizontalRule],
         class: mx(horizontalRule, readonly && '-indent-[100rem]'),
