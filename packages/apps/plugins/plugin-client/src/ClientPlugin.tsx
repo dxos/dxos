@@ -39,7 +39,7 @@ export enum ClientAction {
   SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
 }
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
+export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
 
 export type ClientSettingsProps = {
   automerge?: boolean;

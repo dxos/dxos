@@ -13,7 +13,7 @@ import { Button } from '@dxos/react-ui';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
 import { HelpContextProvider } from './HelpContextProvider';
-import { useHelp } from '../hooks';
+import { useHelp } from '../../hooks';
 
 const App = () => {
   const { running, start } = useHelp();

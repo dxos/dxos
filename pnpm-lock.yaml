@@ -623,6 +623,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      react-joyride:
+        specifier: ^2.7.2
+        version: 2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-graph':
         specifier: workspace:*
@@ -1499,9 +1502,18 @@ importers:
 
   packages/apps/plugins/plugin-help:
     dependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

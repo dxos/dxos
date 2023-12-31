@@ -116,6 +116,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           .filter(nonNullable);
       },
     },
+    // TODO(burdon): Update position in editor: EditorView.scrollIntoView
     comments: space && {
       onCreate: () => {
         if (space) {

@@ -335,7 +335,6 @@ export const SpacePlugin = ({
             properties: {
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
-              // TODO(burdon): Factor out palette constants.
               palette: 'pink',
               childrenPersistenceClass: 'folder',
               onRearrangeChildren: (nextOrder: Space[]) => {
