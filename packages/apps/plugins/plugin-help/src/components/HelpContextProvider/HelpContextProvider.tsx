@@ -9,8 +9,8 @@ import Joyride, { ACTIONS, EVENTS, type Step, type StoreHelpers } from 'react-jo
 import { useThemeContext } from '@dxos/react-ui';
 import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 
-import { floaterProps, Tooltip } from './Tooltip';
-import { HelpContext } from '../types';
+import { HelpContext } from '../../types';
+import { floaterProps, Tooltip } from '../Tooltip';
 
 export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
 

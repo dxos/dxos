@@ -7,21 +7,10 @@ import { history, historyKeymap, indentWithTab, standardKeymap } from '@codemirr
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
 import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
+import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import {
-  crosshairCursor,
-  drawSelection,
-  dropCursor,
-  EditorView,
-  highlightActiveLine,
-  highlightActiveLineGutter,
-  highlightSpecialChars,
-  keymap,
-  placeholder,
-  rectangularSelection,
-} from '@codemirror/view';
+import { crosshairCursor, drawSelection, dropCursor, EditorView, keymap, placeholder } from '@codemirror/view';
 
 import type { ThemeMode } from '@dxos/react-ui';
 
@@ -33,33 +22,34 @@ export type MarkdownBundleOptions = {
   placeholder?: string;
 };
 
+/**
+ * Markdown bundle.
+ * Refs:
+ * https://github.com/codemirror/basic-setup
+ * https://codemirror.net/docs/community
+ * https://codemirror.net/docs/ref/#codemirror.basicSetup
+ */
+// TODO(burdon): Add Composer here: https://codemirror.net/docs/community
 export const markdownBundle = ({
   readonly,
   themeMode,
   placeholder: _placeholder,
 }: MarkdownBundleOptions): Extension[] => {
-  // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
-  // https://codemirror.net/docs/ref/#codemirror.basicSetup
   return [
-    bracketMatching(),
-    closeBrackets(),
-    _placeholder && placeholder(_placeholder),
-
     EditorState.allowMultipleSelections.of(true),
+    EditorState.tabSize.of(2),
     EditorView.lineWrapping,
 
+    customKeymap(),
+
+    bracketMatching(),
+    closeBrackets(),
     crosshairCursor(),
     dropCursor(),
     drawSelection(),
-    highlightActiveLine(),
-    highlightActiveLineGutter(),
-    highlightSelectionMatches(),
-    highlightSpecialChars(),
     history(),
     indentOnInput(),
-    rectangularSelection(),
-
-    customkeymap(),
+    _placeholder && placeholder(_placeholder),
 
     // Main extension.
     // https://github.com/codemirror/lang-markdown
@@ -91,7 +81,7 @@ export const markdownBundle = ({
 };
 
 // https://codemirror.net/docs/ref/#view.keymap
-const customkeymap = () =>
+const customKeymap = () =>
   keymap.of([
     // https://codemirror.net/docs/ref/#commands.indentWithTab
     indentWithTab,
