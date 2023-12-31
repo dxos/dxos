@@ -233,10 +233,6 @@ export const Readonly = {
   render: () => <Story text={document} extensions={extensions} readonly />,
 };
 
-export const Simple = {
-  render: () => <Story text={document} />,
-};
-
 export const Tooltips = {
   render: () => <Story text={str(text.links, '')} extensions={[tooltip({ onHover })]} />,
 };
@@ -361,4 +357,8 @@ export const Blast = {
       ]}
     />
   ),
+};
+
+export const NoExtensions = {
+  render: () => <Story text={document} />,
 };
