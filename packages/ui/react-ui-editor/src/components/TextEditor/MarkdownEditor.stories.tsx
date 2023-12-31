@@ -245,6 +245,10 @@ export const Links = {
   render: () => <Story text={str(text.links, '')} extensions={[link({ onRender })]} />,
 };
 
+export const Code = {
+  render: () => <Story text={str(text.code, '')} extensions={[code()]} readonly />,
+};
+
 export const Table = {
   render: () => <Story text={str(text.table, '')} extensions={[table()]} />,
 };
