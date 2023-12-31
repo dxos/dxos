@@ -23,8 +23,13 @@ const CODE_REGEX = /```[\s\S]*?```/gs;
 const styles = EditorView.baseTheme({
   '& .cm-code-block': {
     display: 'block',
-    background: get(tokens, 'extend.colors.neutral.50'),
     paddingInline: '4px !important',
+  },
+  '&light .cm-code-block': {
+    background: get(tokens, 'extend.colors.neutral.50'),
+  },
+  '&dark .cm-code-block': {
+    background: get(tokens, 'extend.colors.neutral.850'),
   },
   '& .cm-code-block-first': {
     paddingTop: '4px !important',
