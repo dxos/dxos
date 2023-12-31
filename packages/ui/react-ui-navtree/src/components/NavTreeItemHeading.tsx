@@ -27,7 +27,7 @@ export type NavTreeItemHeadingProps = {
   disabled?: boolean;
   error?: boolean;
   modified?: boolean;
-  // TODO(burdon): Theme.
+  // TODO(burdon): Change to semantic classes that are customizable.
   palette?: string;
   onSelect: () => void;
 };

@@ -13,7 +13,6 @@ export default [
         'open complementary sidebar label': 'Open complementary sidebar.',
         'open commands label': 'Search commands',
         'open settings label': 'Show settings',
-        'open shortcuts label': 'Show shortcuts',
         'plugin error message': 'Content failed to render.',
         'first run message': 'Nothing selected.',
         'content fallback message': 'Unsupported',

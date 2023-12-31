@@ -177,7 +177,7 @@ export const spaceToGraphNode = ({
       properties: {
         ...partials.properties,
         disabled: space.state.get() === SpaceState.INACTIVE,
-        // TODO(burdon): Factor out palette constants.
+        // TODO(burdon): Change to semantic classes that are customizable.
         palette: isPersonalSpace ? 'teal' : undefined,
         testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       },

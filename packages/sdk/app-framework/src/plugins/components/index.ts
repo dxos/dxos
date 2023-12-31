@@ -5,4 +5,3 @@
 export * from './CommandsDialog';
 export * from './SettingsDialog';
 export * from './SettingsValue';
-export * from './ShortcutsDialog';

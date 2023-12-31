@@ -102,6 +102,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           editorMode === 'vim' && vim(),
 
           // Theme.
+          // TODO(burdon): Make optional.
           EditorView.baseTheme(defaultTheme),
           EditorView.theme(slots?.editor?.theme ?? {}),
           // TODO(burdon): themeMode doesn't change in storybooks.

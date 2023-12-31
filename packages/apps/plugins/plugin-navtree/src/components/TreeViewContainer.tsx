@@ -191,7 +191,9 @@ export const TreeViewContainer = ({
                 <div role='none' className='grow' />
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
+                    {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
                     <Button
+                      data-joyride='welcome/settings'
                       variant='ghost'
                       classNames='pli-2.5'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}

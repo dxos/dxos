@@ -21,6 +21,7 @@ import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/r
 
 import { REGISTRY_PLUGIN } from '../meta';
 
+// TODO(burdon): Reconcile with theme.
 const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
   default: 'neutral',
   new: 'green',
