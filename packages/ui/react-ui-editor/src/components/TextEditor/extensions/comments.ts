@@ -57,7 +57,7 @@ type CommentsInfo = {
 
 export type CommentsOptions = {
   key?: string;
-  onCreate?: () => string | void;
+  onCreate?: (from: number, to: number) => string | void;
   onUpdate?: (info: CommentsInfo) => void;
 };
 
@@ -108,13 +108,15 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         key: options?.key ?? 'shift-meta-c',
         run: (view) => {
           // Insert footnote.
-          const id = options.onCreate?.();
+          const { from, to, head } = view.state.selection.main;
+          const id = options.onCreate?.(from, to);
           if (id) {
-            const pos = view.state.selection.main.head;
+            console.log(head, from, to);
             const tag = `[^${id}]`;
+            // TODO(burdon): Add selection.
             view.dispatch({
-              changes: { from: pos, insert: tag },
-              selection: { anchor: pos + tag.length },
+              changes: { from: head, insert: tag },
+              selection: { anchor: head + tag.length },
             });
 
             return true;
@@ -134,14 +136,14 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         return;
       }
 
-      const view = update.view;
-      const pos = view.state.selection.main.head;
+      const { view, state } = update;
+      const pos = state.selection.main.head;
 
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
       let closest = Infinity;
       // TODO(burdon): Handle multiple visible ranges in large documents.
-      const { from, to } = /* view.visibleRanges?.[0] ?? */ { from: 0, to: view.state.doc.length };
+      const { from, to } = /* view.visibleRanges?.[0] ?? */ { from: 0, to: state.doc.length };
       rangeSet?.between(from, to, (from, to, value) => {
         decorations.push({ from, to, value });
         const d = Math.min(Math.abs(pos - from), Math.abs(pos - to));

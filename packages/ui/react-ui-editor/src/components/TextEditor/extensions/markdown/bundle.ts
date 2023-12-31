@@ -28,6 +28,7 @@ export type MarkdownBundleOptions = {
  * https://github.com/codemirror/basic-setup
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
+ * https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts#L50
  */
 // TODO(burdon): Add Composer here: https://codemirror.net/docs/community
 export const markdownBundle = ({

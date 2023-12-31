@@ -169,6 +169,7 @@ export class Replicator {
       id: doc.guid,
       text: () => content.toString(),
       content,
+      ranges: [],
       awareness: provider.awareness,
       peer: { id },
     };

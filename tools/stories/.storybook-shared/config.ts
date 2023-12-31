@@ -54,6 +54,12 @@ export const config = (
             //   '/Users/dmaretskyi/Projects/protocols/packages/core/echo/automerge/dist/lib/browser/automerge-repo.js',
           },
         },
+        // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
+        server: {
+          hmr: {
+            overlay: false,
+          }
+        },
         plugins: [
           topLevelAwait(),
           ThemePlugin({

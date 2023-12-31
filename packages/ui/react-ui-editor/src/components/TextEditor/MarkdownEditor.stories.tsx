@@ -32,8 +32,14 @@ import {
   blast,
   demo,
   defaultOptions,
+  highlight,
+  code,
 } from './extensions';
 import { useTextModel } from '../../hooks';
+
+// Extensions:
+// TODO(burdon): Table of contents.
+// TODO(burdon): Front-matter
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -78,6 +84,7 @@ const text = {
     '```tsx',
     'const Component = () => {',
     '  const x = 100;',
+    '',
     '  return () => <div>Test</div>;',
     '};',
     '',
@@ -96,11 +103,11 @@ const text = {
   table: str(
     '# Table',
     '',
-    `| ${faker.lorem.word()} | ${faker.lorem.word()} | ${faker.lorem.word()} |`,
-    '|---|---|---|',
-    `| ${num()} | ${num()} | ${num()} |`,
-    `| ${num()} | ${num()} | ${num()} |`,
-    `| ${num()} | ${num()} | ${num()} |`,
+    `| ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} |`,
+    '|----------|----------|----------|',
+    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
     '', // TODO(burdon): Possible GFM parsing bug if no newline?
   ),
 
@@ -174,6 +181,7 @@ const onRender: LinkOptions['onRender'] = (el, url) => {
   );
 };
 
+// TODO(burdon): Pass in model.
 const Story = ({
   text,
   automerge,
@@ -206,14 +214,15 @@ export default {
 };
 
 const extensions = [
-  link({ onRender }),
-  tooltip({ onHover }),
-  tasklist(),
-  table(),
-  image(),
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
+  code(),
+  image(),
+  link({ onRender }),
+  table(),
+  tasklist(),
+  tooltip({ onHover }),
 ];
 
 export const Default = {
@@ -293,14 +302,15 @@ const mark = () => `[^${PublicKey.random().toHex()}]`;
 export const Comments = {
   render: () => (
     <Story
-      text={str(mark(), '', text.paragraphs, mark(), '', mark(), '')}
+      text={str(text.paragraphs, mark(), '', mark(), '')}
       extensions={[
         comments({
           onCreate: () => PublicKey.random().toHex(),
           onUpdate: (info) => {
-            console.log('update', info);
+            // console.log('update', info);
           },
         }),
+        highlight(),
       ]}
     />
   ),

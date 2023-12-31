@@ -77,7 +77,7 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
         blaster.resize();
       }
 
-      const current = update.view.state.selection.main.head;
+      const current = update.state.selection.main.head;
       if (current !== last) {
         last = current;
         // TODO(burdon): Null if end of line.
