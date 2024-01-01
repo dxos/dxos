@@ -58,7 +58,7 @@ export const config = (
         server: {
           hmr: {
             overlay: false,
-          }
+          },
         },
         plugins: [
           topLevelAwait(),
