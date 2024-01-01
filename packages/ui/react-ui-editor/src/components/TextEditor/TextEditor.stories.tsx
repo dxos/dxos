@@ -59,6 +59,17 @@ export default {
 export const Default = {
   render: () => (
     <Story
+      slots={defaultsDeep(
+        { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
+        defaultSlots,
+      )}
+    />
+  ),
+};
+
+export const Text = {
+  render: () => (
+    <Story
       text={initialText}
       slots={defaultsDeep(
         { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
@@ -71,12 +82,12 @@ export const Default = {
 export const Automerge = {
   render: () => (
     <Story
+      automerge
       text={initialText}
       slots={defaultsDeep(
         { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
         defaultSlots,
       )}
-      automerge
     />
   ),
 };

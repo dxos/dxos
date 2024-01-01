@@ -88,6 +88,12 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       }
     }, [awareness, peer, themeMode]);
 
+    // TODO(burdon): Get from model.
+    // useHighlights(view, [
+    //   { id: 'c-1', from: 0, to: 20 },
+    //   { id: 'c-2', from: 100, to: 120 },
+    // ]);
+
     useEffect(() => {
       if (!root) {
         return;
@@ -120,7 +126,17 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
       // Ideally this should not be hit except when changing between text objects.
       view?.destroy();
-      setView(new EditorView({ state, parent: root }));
+      setView(
+        new EditorView({
+          state,
+          parent: root,
+          // NOTE: Uncomment to spy on all transactions.
+          // https://codemirror.net/docs/ref/#view.EditorView.dispatch
+          // dispatch: (transaction, view) => {
+          //   view.update([transaction]);
+          // },
+        }),
+      );
       setState(state);
 
       return () => {

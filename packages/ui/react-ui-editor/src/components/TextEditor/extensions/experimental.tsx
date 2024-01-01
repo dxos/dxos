@@ -92,7 +92,7 @@ export function hyperLinkExtension() {
       }
     },
     {
-      decorations: (view) => view.decorations,
+      decorations: (value) => value.decorations,
       eventHandlers: {
         // TODO(burdon): CLick to expand link.
         // https://discuss.codemirror.net/t/decorator-iteration-on-click-event/4226/2

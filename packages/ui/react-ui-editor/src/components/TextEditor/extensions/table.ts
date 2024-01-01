@@ -42,10 +42,6 @@ const update = (state: EditorState, options: TableOptions) => {
   };
 
   // Parse table.
-  // TODO(burdon): Use remark?: https://www.npmjs.com/package/remark-gfm
-  // TODO(burdon): Style in monospace:
-  //  https://discuss.codemirror.net/t/markdown-table-highlighting/658
-  //  https://github.com/lezer-parser/markdown/blob/main/src/extension.ts
   syntaxTree(state).iterate({
     enter: (node) => {
       // Check if cursor is inside text.
@@ -77,7 +73,8 @@ const update = (state: EditorState, options: TableOptions) => {
 
   tables.forEach((table) => {
     const hide = state.readOnly || cursor < table.from || cursor > table.to;
-    hide && builder.add(table.from, table.to!, Decoration.replace({ widget: new TableWidget(table) }));
+    hide && builder.add(table.from, table.to, Decoration.replace({ widget: new TableWidget(table) }));
+    builder.add(table.from, table.to, Decoration.mark({ class: 'cm-table' }));
   });
 
   return builder.finish();

@@ -103,7 +103,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
-                  action: 'toggle-fullscreen',
+                  action: LayoutAction.TOGGLE_FULLSCREEN,
                 }),
             });
 

@@ -55,10 +55,10 @@ export const defaultTheme: {
   //
   // Cursor
   //
-  '&light .cm-cursor': {
+  '&light .cm-cursor, &light .cm-dropCursor': {
     borderLeft: '2px solid black',
   },
-  '&dark .cm-cursor': {
+  '&dark .cm-cursor, &dark .cm-dropCursor': {
     borderLeft: '2px solid white',
   },
   '& .cm-placeholder': {
@@ -173,6 +173,10 @@ export const defaultTheme: {
   //
   // table
   //
+  '& .cm-table *': {
+    fontFamily: `${get(tokens, 'fontFamily.mono', []).join(',')} !important`,
+    textDecoration: 'none !important',
+  },
   '& .cm-table-head': {
     padding: '2px 16px 2px 0px',
     borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.500')}`,
