@@ -26,11 +26,14 @@ import { SpaceAwarenessProvider } from './yjs';
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
 
-export type DocumentRange = {
-  id: string;
+export type Range = {
   from: number;
   to: number;
 };
+
+export type DocumentRange = {
+  id: string;
+} & Range;
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type EditorModel = {

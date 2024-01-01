@@ -6,13 +6,14 @@ import '@dxosTheme';
 
 import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { ArrowSquareOut, Plus } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { Button } from '@dxos/react-ui';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -34,6 +35,7 @@ import {
   defaultOptions,
   highlight,
   code,
+  type HighlightOptions,
 } from './extensions';
 import { useTextModel } from '../../hooks';
 
@@ -162,7 +164,7 @@ const links = [
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onHover: TooltipOptions['onHover'] = (el, url) => {
+const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -174,12 +176,26 @@ const onHover: TooltipOptions['onHover'] = (el, url) => {
   );
 };
 
-const onRender: LinkOptions['onRender'] = (el, url) => {
+const onLinkRender: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
         <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-1')} />
       </a>
+    </StrictMode>,
+  );
+};
+
+// TODO(burdon): Show shortcut.
+const onHighlightMenu: HighlightOptions['onMenu'] = (el) => {
+  createRoot(el).render(
+    <StrictMode>
+      <Button variant='ghost' classNames='p-0'>
+        <div role='none' className='flex p-0 items-center gap-2'>
+          <Plus />
+          <span>Create comment.</span>
+        </div>
+      </Button>
     </StrictMode>,
   );
 };
@@ -222,10 +238,10 @@ const extensions = [
   }),
   code(),
   image(),
-  link({ onRender }),
+  link({ onRender: onLinkRender }),
   table(),
   tasklist(),
-  tooltip({ onHover }),
+  tooltip({ onHover: onTooltipHover }),
 ];
 
 export const Default = {
@@ -237,11 +253,11 @@ export const Readonly = {
 };
 
 export const Tooltips = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover: onTooltipHover })]} />,
 };
 
 export const Links = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender: onLinkRender })]} />,
 };
 
 export const Code = {
@@ -277,7 +293,7 @@ export const Autocomplete = {
     <Story
       text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
       extensions={[
-        link({ onRender }),
+        link({ onRender: onLinkRender }),
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
@@ -313,7 +329,22 @@ export const Comments = {
             // console.log('update', info);
           },
         }),
-        highlight(),
+      ]}
+    />
+  ),
+};
+
+export const Highlight = {
+  render: () => (
+    <Story
+      text={str(text.paragraphs, text.footer)}
+      extensions={[
+        highlight({
+          onMenu: onHighlightMenu,
+          onChange: (id) => {
+            console.log(id);
+          },
+        }),
       ]}
     />
   ),

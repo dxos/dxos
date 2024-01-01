@@ -3,11 +3,13 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, EditorView } from '@codemirror/view';
+import { Decoration, EditorView, hoverTooltip } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
-import { type DocumentRange } from '../../../hooks';
+import { tooltipContent } from '@dxos/react-ui-theme';
+
+import { type DocumentRange, type Range } from '../../../hooks';
 
 // TODO(burdon): Detect click, or cursor proximity.
 
@@ -88,20 +90,24 @@ export const highlightDecorations = EditorView.decorations.compute([highlightSta
 // TODO(burdon): Use current range to create comment.
 // TODO(burdon): Allow/prevent overlapping?
 
-/**
- * Track cursor entering and existing ranges.
- */
-const listener = (options: HighlightOptions) => {
-  return EditorView.updateListener.of((update) => {
-    const { view, state } = update;
-    const { /* from, to, */ head } = state.selection.main;
-    const ranges = state.field(highlightStateField);
+export type HighlightOptions = {
+  onMenu?: (el: Element) => void;
+  onChange?: (active?: string) => void;
+};
 
-    // TODO(burdon): Modify range if editing.
-    // console.log('::::', update);
+export const highlight = (options: HighlightOptions = {}): Extension => {
+  let selection: Range | undefined;
+
+  /**
+   * Track cursor entering and existing ranges.
+   */
+  const listener = EditorView.updateListener.of((update) => {
+    const { view, state } = update;
+    const { from, to, head } = state.selection.main;
 
     // Set active.
     let mod = false;
+    const ranges = state.field(highlightStateField);
     const newRanges = ranges.map((range) => {
       const active = head >= range.from && head <= range.to;
       if (active !== range.active) {
@@ -112,17 +118,45 @@ const listener = (options: HighlightOptions) => {
       }
     });
 
+    if (from !== to) {
+      // TODO(burdon): Trigger tooltip.
+      selection = { from, to };
+    } else {
+      selection = undefined;
+    }
+
+    // TODO(burdon): Modify range if editing.
     if (mod) {
       view.dispatch({ effects: setHighlights.of(newRanges) });
       options?.onChange?.(newRanges.find((range) => range.active)?.id);
     }
   });
-};
 
-export type HighlightOptions = {
-  onChange?: (active?: string) => {};
-};
+  // TODO(burdon): Problem if near edge of viewport.
+  const tooltip = hoverTooltip((view, pos) => {
+    if (selection && pos >= selection.from && pos <= selection.to) {
+      return {
+        pos: selection.from,
+        end: selection.to,
+        above: true,
+        create: () => {
+          const el = document.createElement('div');
+          el.className = tooltipContent({}, 'cursor-pointer');
+          options.onMenu?.(el);
+          return { dom: el, offset: { x: 0, y: 4 } };
+        },
+      };
+    }
 
-export const highlight = (options: HighlightOptions = {}): Extension => {
-  return [highlightStateField, highlightDecorations, listener(options), styles];
+    return null;
+  });
+
+  return [
+    //
+    highlightStateField,
+    highlightDecorations,
+    listener,
+    tooltip,
+    styles,
+  ];
 };
