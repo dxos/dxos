@@ -38,6 +38,7 @@ const update = (state: EditorState, options: ImageOptions) => {
             hide ? node.from : node.to,
             node.to,
             Decoration.replace({
+              block: true, // Prevent cursor from entering.
               widget: new ImageWidget(url),
             }),
           );

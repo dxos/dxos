@@ -186,13 +186,13 @@ const onLinkRender: LinkOptions['onRender'] = (el, url) => {
   );
 };
 
-// TODO(burdon): Show shortcut.
+// TODO(burdon): Show shortcut (see Superhuman).
 const onHighlightMenu: HighlightOptions['onMenu'] = (el) => {
   createRoot(el).render(
     <StrictMode>
       <Button variant='ghost' classNames='p-0'>
-        <div role='none' className='flex p-0 items-center gap-2'>
-          <Plus />
+        <div role='none' className='flex px-2 items-center gap-2'>
+          <Plus className={mx(getSize(4))} />
           <span>Create comment.</span>
         </div>
       </Button>

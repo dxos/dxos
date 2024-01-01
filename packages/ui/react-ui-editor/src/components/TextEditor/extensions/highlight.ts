@@ -3,11 +3,9 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, EditorView, hoverTooltip } from '@codemirror/view';
+import { closeHoverTooltips, Decoration, EditorView, hoverTooltip } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
-
-import { tooltipContent } from '@dxos/react-ui-theme';
 
 import { type DocumentRange, type Range } from '../../../hooks';
 
@@ -118,11 +116,14 @@ export const highlight = (options: HighlightOptions = {}): Extension => {
       }
     });
 
+    // TODO(burdon): https://codemirror.net/examples/inverted-effect
+
     if (from !== to) {
-      // TODO(burdon): Trigger tooltip.
+      // TODO(burdon): Trigger hoverTooltip.
       selection = { from, to };
-    } else {
+    } else if (selection) {
       selection = undefined;
+      view.dispatch({ effects: [closeHoverTooltips] });
     }
 
     // TODO(burdon): Modify range if editing.
@@ -133,7 +134,7 @@ export const highlight = (options: HighlightOptions = {}): Extension => {
   });
 
   // TODO(burdon): Problem if near edge of viewport.
-  const tooltip = hoverTooltip((view, pos) => {
+  const tooltip = hoverTooltip((_, pos) => {
     if (selection && pos >= selection.from && pos <= selection.to) {
       return {
         pos: selection.from,
@@ -141,9 +142,9 @@ export const highlight = (options: HighlightOptions = {}): Extension => {
         above: true,
         create: () => {
           const el = document.createElement('div');
-          el.className = tooltipContent({}, 'cursor-pointer');
           options.onMenu?.(el);
-          return { dom: el, offset: { x: 0, y: 4 } };
+          // TODO(burdon): If y > 0 disappears if on top line.
+          return { dom: el, offset: { x: 0, y: 0 } };
         },
       };
     }

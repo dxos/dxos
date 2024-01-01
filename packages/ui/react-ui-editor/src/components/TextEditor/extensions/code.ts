@@ -43,6 +43,7 @@ const styles = EditorView.baseTheme({
   },
 });
 
+// TODO(burdon): Start from EditorView.lineBlockAt(pos).
 const getLineRange = (lines: BlockInfo[], from: number, to: number) => {
   const start = lines.findIndex((line) => line.from >= from);
   const end = lines.findIndex((line) => line.to >= to);
