@@ -12,12 +12,13 @@ import { SpaceMemberListImpl } from './SpaceMemberList';
 import { alice } from '../../testing';
 
 export default {
+  title: 'react-shell/SpaceMemberList',
   component: SpaceMemberListImpl,
   actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
 
-export const Normal = (props: any) => {
+export const Default = (props: any) => {
   return <SpaceMemberListImpl {...props} members={[alice]} />;
 };

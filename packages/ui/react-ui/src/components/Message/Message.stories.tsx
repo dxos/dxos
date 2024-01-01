@@ -28,7 +28,7 @@ const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
 );
 
 export default {
-  title: 'DXOS UI/Message',
+  title: 'react-ui/Message',
   component: StoryMessage,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

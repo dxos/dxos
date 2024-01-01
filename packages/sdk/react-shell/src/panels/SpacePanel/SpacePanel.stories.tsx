@@ -28,6 +28,7 @@ const noOpProps: SpacePanelImplProps = {
 };
 
 export default {
+  title: 'react-shell/SpacePanel',
   component: SpacePanelImpl,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

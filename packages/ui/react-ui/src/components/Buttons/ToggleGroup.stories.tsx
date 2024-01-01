@@ -29,7 +29,7 @@ const StorybookToggleGroup = (props: StorybookToggleGroupProps) => {
 };
 
 export default {
-  title: 'DXOS UI/Toggle button group',
+  title: 'react-ui/Toggle button group',
   component: StorybookToggleGroup,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

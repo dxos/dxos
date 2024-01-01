@@ -92,7 +92,7 @@ const StorybookDropdownMenu = () => {
 };
 
 export default {
-  title: 'DXOS UI/Dropdown menu',
+  title: 'react-ui/Dropdown menu',
   component: StorybookDropdownMenu,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

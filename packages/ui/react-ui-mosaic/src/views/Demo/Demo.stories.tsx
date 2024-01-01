@@ -19,7 +19,7 @@ import { DemoTree } from '../Tree/testing';
 faker.seed(5);
 
 export default {
-  title: 'Views/Demo',
+  title: 'react-ui-mosaic/Demo',
   decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

@@ -94,7 +94,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'Icon',
+  title: 'plugin-registry/Icon',
   render: Story,
   parameters: {
     layout: 'centered',

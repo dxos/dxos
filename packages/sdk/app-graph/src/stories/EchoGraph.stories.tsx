@@ -23,7 +23,7 @@ import { GraphBuilder } from '../graph-builder';
 import { type Node } from '../node';
 
 export default {
-  title: 'Echo Graph',
+  title: 'app-graph/EchoGraph',
   decorators: [withTheme],
 };
 
@@ -230,6 +230,6 @@ const EchoGraphStory = () => {
   );
 };
 
-export const EchoGraph = {
+export const Default = {
   render: () => <ClientRepeater Component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
 };

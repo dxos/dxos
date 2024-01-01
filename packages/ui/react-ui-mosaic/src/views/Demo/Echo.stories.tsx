@@ -42,7 +42,7 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
 };
 
 export default {
-  title: 'Views/Demo',
+  title: 'react-ui-mosaic/Demo',
   render: () => (
     <ClientRepeater
       Component={Story}

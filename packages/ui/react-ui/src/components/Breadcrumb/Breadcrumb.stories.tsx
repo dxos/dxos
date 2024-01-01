@@ -39,7 +39,7 @@ const StorybookBreadcrumb = () => {
 };
 
 export default {
-  title: 'DXOS UI/Breadcrumb',
+  title: 'react-ui/Breadcrumb',
   component: StorybookBreadcrumb,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

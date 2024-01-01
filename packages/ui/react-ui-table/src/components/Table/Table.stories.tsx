@@ -128,6 +128,7 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
 //
 
 export default {
+  title: 'react-ui-table/Table',
   component: Table,
   args: {
     header: true,

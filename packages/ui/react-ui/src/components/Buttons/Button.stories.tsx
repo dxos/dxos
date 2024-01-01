@@ -15,7 +15,7 @@ import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 
 export default {
-  title: 'DXOS UI/Button',
+  title: 'react-ui/Button',
   component: Button,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

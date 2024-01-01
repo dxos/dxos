@@ -39,7 +39,7 @@ const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger }
 };
 
 export default {
-  title: 'DXOS UI/Dialog',
+  title: 'react-ui/Dialog',
   component: StorybookDialog,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

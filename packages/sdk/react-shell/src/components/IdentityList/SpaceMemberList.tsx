@@ -12,10 +12,13 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { IdentityListItem } from './IdentityListItem';
 
+// TODO(burdon): Consolidate into single component?
+
 export interface SpaceMemberListImplProps {
   members: SpaceMember[];
   onSelect?: (member: SpaceMember) => void;
 }
+
 export interface SpaceMemberListProps extends Partial<SpaceMemberListImplProps> {
   spaceKey: PublicKey;
   includeSelf?: boolean;
@@ -27,8 +30,8 @@ export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMember
   const members = useMemo(
     () =>
       includeSelf
-        ? allUnsortedMembers.sort((a) =>
-            a.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1,
+        ? allUnsortedMembers.sort((member) =>
+            member.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1,
           )
         : allUnsortedMembers.filter(
             (member) => !member.identity.identityKey.equals(client.halo.identity.get()!.identityKey),

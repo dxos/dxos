@@ -195,6 +195,7 @@ const EditableCardStory = () => {
 };
 
 export default {
+  title: 'react-ui-card/Card',
   component: Card,
   decorators: [
     withTheme,

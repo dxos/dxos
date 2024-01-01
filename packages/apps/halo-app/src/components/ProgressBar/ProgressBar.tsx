@@ -10,6 +10,7 @@ export type ProgressBarProps = {
   className?: string;
 };
 
+// TODO(burdon): Move to react-ui?
 export const ProgressBar = (props: ProgressBarProps) => {
   const { className, indeterminate = false, progress = 0 } = props;
   return (

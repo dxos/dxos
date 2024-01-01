@@ -45,6 +45,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-registry/PluginList',
   component: PluginList,
   render: Story,
   parameters: {

@@ -1,7 +1,9 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Minus, Plus } from '@phosphor-icons/react';
 import React from 'react';
@@ -111,7 +113,9 @@ export const Demo = {
   },
 };
 
+// TODO(burdon): Move to react-ui-navtree?
 export default {
+  title: 'composer-app/StorybookNavtreePresence',
   component: StorybookNavtreePresence,
   decorators: [withTheme],
   parameters: { translations },

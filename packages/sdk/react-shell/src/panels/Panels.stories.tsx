@@ -39,7 +39,7 @@ const StoryRow = ({ components }: { components: React.FC[] }) => {
   );
 };
 
-export const AllPanels = (props: any) => {
+export const Default = (props: any) => {
   return (
     <table className='bg-body'>
       <tbody>
@@ -51,10 +51,10 @@ export const AllPanels = (props: any) => {
   );
 };
 
-AllPanels.parameters = { layout: 'fullscreen' };
+Default.parameters = { layout: 'fullscreen' };
 
 export default {
-  title: 'Panels/All',
+  title: 'react-shell/All',
   decorators: [withTheme],
   component: StoryRow,
   parameters: { chromatic: { disableSnapshot: false } },

@@ -35,7 +35,7 @@ const Story = ({
 };
 
 export default {
-  title: 'Views/Kanban',
+  title: 'react-ui-mosaic/Kanban',
   component: Kanban,
   render: () => (
     <ClientRepeater
