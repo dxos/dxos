@@ -5,7 +5,7 @@
 // https://github.com/chinchang/code-blast-codemirror/blob/master/code-blast.js
 //
 
-import { type Extension, StateField } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
@@ -36,7 +36,7 @@ export const defaultOptions: BlastOptions = {
   shakeIntensity: 5,
 };
 
-export const blast = (options: Partial<BlastOptions>): Extension => {
+export const blast = (options: Partial<BlastOptions> = defaultOptions): Extension => {
   let blaster: Blaster | undefined;
   let last = 0;
 
@@ -77,39 +77,25 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
         blaster.resize();
       }
 
-      const current = update.view.state.selection.main.head;
+      const current = update.state.selection.main.head;
       if (current !== last) {
         last = current;
         // TODO(burdon): Null if end of line.
-        const { element, point } = getPoint(update.view, current);
+        const { element, point } = getPoint(update.view, current - 1);
         if (element && point) {
           blaster.spawn({ element, point });
         }
       }
     }),
 
-    // Document changed.
-    StateField.define({
-      create: () => null,
-      update: (_value, transaction) => {
-        if (blaster && transaction.docChanged) {
-          // TODO(burdon): Only on delete.
-          const view = EditorView.findFromDOM(blaster.node)!;
-          const { element, point } = getPoint(view, transaction.selection!.main.head);
-          if (element && point) {
-            blaster.spawn({ element, point });
-          }
-        }
-
-        return null;
-      },
-    }),
-
     keymap.of([
       {
-        any: (view, event) => {
-          if (blaster && event.key === 'Enter' && event.shiftKey) {
-            blaster.shake({ time: 0.4 });
+        any: (_, event) => {
+          if (blaster) {
+            if (event.key === 'Enter' && event.shiftKey) {
+              blaster.shake({ time: 0.8 });
+              return true;
+            }
           }
 
           return false;
@@ -124,10 +110,10 @@ export const blast = (options: Partial<BlastOptions>): Extension => {
 //
 
 class Blaster {
+  private readonly _effect: Effect;
+
   _canvas: HTMLCanvasElement | undefined;
   _ctx: CanvasRenderingContext2D | undefined | null;
-
-  private readonly _effect: Effect;
 
   _running = false;
   _lastTime: number | undefined;
@@ -156,7 +142,7 @@ class Blaster {
     this._canvas.style.position = 'absolute';
     this._canvas.style.zIndex = '0';
     this._canvas.style.pointerEvents = 'none';
-    // this._canvas.style.border = '2px solid red';
+    // this._canvas.style.border = '2px dashed red';
 
     this._ctx = this._canvas.getContext('2d');
 
@@ -226,7 +212,7 @@ class Blaster {
   }
 
   shake = throttle<{ time: number }>(({ time }) => {
-    this._shakeTime = this._shakeTimeMax;
+    this._shakeTime = this._shakeTimeMax || time;
     this._shakeTimeMax = time;
   }, 100);
 

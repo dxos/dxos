@@ -118,7 +118,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     },
     // TODO(burdon): Update position in editor: EditorView.scrollIntoView
     comments: space && {
-      onCreate: () => {
+      onCreate: (from: number, to: number) => {
         if (space) {
           // TODO(burdon): Set back ref from thread to this object.
           const thread = space.db.add(new ThreadType());
