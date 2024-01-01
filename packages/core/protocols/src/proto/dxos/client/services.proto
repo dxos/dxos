@@ -174,10 +174,10 @@ message SpaceMember {
 /// Runtime state of the space object.
 enum SpaceState {
   ///
-  /// Persitent states.
+  /// Persistent states.
   ///
 
-  /// Space is inactive. No swarming or repication will be done.
+  /// Space is inactive. No swarming or replication will be done.
   INACTIVE = 2;
 
   /// Space is active. Swarming and replication will be done.
