@@ -118,6 +118,8 @@ const text = {
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+
+  footer: str('', '', '', '', '')
 };
 
 const document = str(
@@ -146,6 +148,7 @@ const document = str(
   '---',
   text.image,
   '',
+  text.footer,
 );
 
 const links = [
@@ -234,29 +237,29 @@ export const Readonly = {
 };
 
 export const Tooltips = {
-  render: () => <Story text={str(text.links, '')} extensions={[tooltip({ onHover })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover })]} />,
 };
 
 export const Links = {
-  render: () => <Story text={str(text.links, '')} extensions={[link({ onRender })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender })]} />,
 };
 
 export const Code = {
-  render: () => <Story text={str(text.code, '')} extensions={[code()]} readonly />,
+  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
 };
 
 export const Table = {
-  render: () => <Story text={str(text.table, '')} extensions={[table()]} />,
+  render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
 };
 
 export const Image = {
-  render: () => <Story text={str(text.image, '', '')} readonly extensions={[image()]} />,
+  render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
 
 export const TaskList = {
   render: () => (
     <Story
-      text={str(text.tasks, '', text.list)}
+      text={str(text.tasks, '', text.list, text.footer)}
       extensions={[
         tasklist(),
         listener({
@@ -272,7 +275,7 @@ export const TaskList = {
 export const Autocomplete = {
   render: () => (
     <Story
-      text={str('# Autocomplete', '', '', '', '', '', '')}
+      text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
       extensions={[
         link({ onRender }),
         autocomplete({
@@ -288,7 +291,7 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 export const Mention = {
   render: () => (
     <Story
-      text={str('# Mention', '', '', '', '', '', '')}
+      text={str('# Mention', '', 'Type @...', text.footer)}
       extensions={[
         mention({
           onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
@@ -302,7 +305,7 @@ const mark = () => `[^${PublicKey.random().toHex()}]`;
 export const Comments = {
   render: () => (
     <Story
-      text={str(text.paragraphs, mark(), '', mark(), '')}
+      text={str(text.paragraphs, mark(), '', mark(), text.footer)}
       extensions={[
         comments({
           onCreate: () => PublicKey.random().toHex(),
@@ -331,7 +334,7 @@ export const Diagnostics = {
 };
 
 export const Demo = {
-  render: () => <Story text={text.paragraphs} extensions={[demo()]} />,
+  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[demo()]} />,
 };
 
 export const Blast = {

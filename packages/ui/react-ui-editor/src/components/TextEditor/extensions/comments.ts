@@ -111,7 +111,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
           const { from, to, head } = view.state.selection.main;
           const id = options.onCreate?.(from, to);
           if (id) {
-            console.log(head, from, to);
             const tag = `[^${id}]`;
             // TODO(burdon): Add selection.
             view.dispatch({
