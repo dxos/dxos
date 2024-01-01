@@ -109,7 +109,7 @@ export const tasklist = (options: TasklistOptions = {}) => {
       }
     },
     {
-      decorations: (instance) => instance.tasks,
+      decorations: (value) => value.tasks,
       provide: (plugin) =>
         EditorView.atomicRanges.of((view) => {
           return view.plugin(plugin)?.tasks || Decoration.none;
