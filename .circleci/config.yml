@@ -18,8 +18,11 @@ parameters:
     default: false
 
 aliases:
-  - &docker_image
-    image: ghcr.io/dxos/circleci-node:latest
+  # https://github.com/dxos/dxos/issues/4946
+  # - &node-version [ "18.19.0", "20.10.0", "21.4.0" ]
+  - &node-version [ "18.19.0", "20.10.0"]
+  - &docker_image_default
+    image: ghcr.io/dxos/circleci-node:18.19.0
     auth:
       username: dxos-bot
       password: $GH_TOKEN
@@ -75,7 +78,7 @@ jobs:
   #
   check:
     docker:
-      - *docker_image
+      - *docker_image_default
     # https://circleci.com/docs/configuration-reference/#docker-execution-environment
     resource_class: xlarge
     environment:
@@ -113,8 +116,14 @@ jobs:
   # End-to-end playwright UI testing.
   #
   e2e:
+    parameters:
+      node-version:
+        type: string
     docker:
-      - *docker_image
+      - image: ghcr.io/dxos/circleci-node:<< parameters.node-version >>
+        auth:
+          username: dxos-bot
+          password: $GH_TOKEN
     # TODO(wittjosiah): Using because of kai bundling memory usage.
     resource_class: xlarge
     steps:
@@ -155,7 +164,7 @@ jobs:
   #
   flaky:
     docker:
-      - *docker_image
+      - *docker_image_default
     steps:
       - checkout
       - *cache_restore
@@ -172,7 +181,7 @@ jobs:
   #
   publish:
     docker:
-      - *docker_image
+      - *docker_image_default
     # TODO(wittjosiah): Using because of kai bundling memory usage.
     resource_class: xlarge
     steps:
@@ -206,8 +215,12 @@ workflows:
                 - /^rc-.*/
                 - /^hotfix-.*/
                 - /^release-please-.*/
+                - nf/circleci-docker
           context:
             - Github
+          matrix:
+            parameters:
+              node-version: *node-version
 
   e2e:
     when: << pipeline.parameters.e2e >>
@@ -215,6 +228,9 @@ workflows:
       - e2e:
           context:
             - Github
+          matrix:
+            parameters:
+              node-version: *node-version
 
   deploy:
     jobs:
