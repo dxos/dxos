@@ -37,6 +37,7 @@ export const defaultTheme: {
   },
   '& .cm-scroller': {
     overflow: 'visible',
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
   '& .cm-content': {
     padding: 0,
