@@ -16,7 +16,7 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/dxos/circleci-node
-  DEFAULT_NODE_VERSION: 18.19.0
+  DEFAULT_NODE_VERSION: 20.10.0 # 21.4.0 broken, see https://github.com/dxos/dxos/issues/4946
 
 jobs:
   build_and_publish_matrix:
@@ -39,9 +39,9 @@ jobs:
         run: |
           docker buildx create --use
           if [[ "${NODE_VERSION}" = "${DEFAULT_NODE_VERSION}" ]]; then
-            docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}-${NODE_VERSION}:latest -t ${IMAGE_NAME}:latest .circleci
+            docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION} -t ${IMAGE_NAME}:latest .circleci
           else
-            docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}-${NODE_VERSION}:latest .circleci
+            docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION} .circleci
           fi
         env:
           NODE_VERSION: ${{ matrix.node_version }}

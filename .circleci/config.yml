@@ -22,7 +22,7 @@ aliases:
   # - &node-version [ "18.19.0", "20.10.0", "21.4.0" ]
   - &node-version [ "18.19.0", "20.10.0"]
   - &docker_image_default
-    image: ghcr.io/dxos/circleci-node:latest
+    image: ghcr.io/dxos/circleci-node:18.19.0
     auth:
       username: dxos-bot
       password: $GH_TOKEN
@@ -120,7 +120,7 @@ jobs:
       node-version:
         type: string
     docker:
-      - image: ghcr.io/dxos/circleci-node-<< parameters.node-version >>:latest
+      - image: ghcr.io/dxos/circleci-node:<< parameters.node-version >>
         auth:
           username: dxos-bot
           password: $GH_TOKEN
