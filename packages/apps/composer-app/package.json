@@ -66,8 +66,10 @@
     "react-joyride": "^2.7.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.13",
     "@dxos/app-graph": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-navtree": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -85,5 +87,9 @@
     "vite": "^4.3.9",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
+  },
+  "peerDependencies": {
+    "@babel/core": ">=7.0.0 <8.0.0-0",
+    "@dxos/react-ui-card": "workspace:*"
   }
 }
