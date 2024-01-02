@@ -26,7 +26,7 @@ export const fromWorker = async (
   return new WorkerClientServices({
     config,
     createWorker: () =>
-      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+      new SharedWorker(new URL('./worker/shared-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),

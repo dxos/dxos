@@ -1,5 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { Trigger } from '@dxos/async';
@@ -8,8 +8,8 @@ import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-import { mountDevtoolsHooks } from './devtools';
-import { LOCK_KEY } from './lock-key';
+import { mountDevtoolsHooks } from '../devtools';
+import { LOCK_KEY } from '../lock-key';
 
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
@@ -44,7 +44,7 @@ void workerRuntime.start().then(
   },
 );
 
-addEventListener('connect', async (event) => {
+export const onconnect = async (event: MessageEvent<any>) => {
   log.info('onconnect', { event });
   const port = event.ports[0];
 
@@ -67,4 +67,4 @@ addEventListener('connect', async (event) => {
     systemPort: createWorkerPort({ port: systemChannel.port2 }),
     appPort: createWorkerPort({ port: appChannel.port2 }),
   });
-});
+};
