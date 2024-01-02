@@ -114,7 +114,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     });
 
     if (typeof this._shell === 'string') {
-      this._shellManager = new ShellManager(this._iframeManager);
+      this._shellManager = new ShellManager(this._iframeManager, DEFAULT_SHELL_CHANNEL, 'deprecated-dxos-shell');
     }
   }
 

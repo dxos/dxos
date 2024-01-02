@@ -9,6 +9,7 @@ import {
   DEFAULT_VAULT_URL,
   DEFAULT_INTERNAL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
+  DEFAULT_SHELL_CHANNEL,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
@@ -101,7 +102,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
       },
     });
 
-    this._shellManager = new ShellManager(this._iframeManager);
+    this._shellManager = new ShellManager(this._iframeManager, DEFAULT_SHELL_CHANNEL, 'deprecated-dxos-shell');
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
