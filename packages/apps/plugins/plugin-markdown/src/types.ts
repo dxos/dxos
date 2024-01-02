@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Document } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -33,7 +32,6 @@ export type MarkdownProperties = {
 
 export type MarkdownProvides = {
   markdown: {
-    filter?: (document: Document) => boolean;
     onChange?: (text: string) => void;
   };
 };

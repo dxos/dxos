@@ -7,7 +7,7 @@ import { closeHoverTooltips, Decoration, EditorView, hoverTooltip } from '@codem
 import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
-import { type DocumentRange, type Range } from '../../../hooks';
+import { type DocumentRange, type EditorModel, type Range } from '../../../hooks';
 
 // TODO(burdon): Detect click, or cursor proximity.
 
@@ -37,6 +37,7 @@ const setHighlights = StateEffect.define<HighlightRange[]>();
 /**
  * Update field set.
  */
+// TODO(burdon): Extension: https://www.npmjs.com/package/yjs#relative-positions
 // TODO(burdon): Reconcile range from data model, vs. in-markdown characters.
 export const useHighlights = (view: EditorView | undefined, ranges: HighlightRange[] = []) => {
   useEffect(() => {
@@ -88,8 +89,11 @@ export const highlightDecorations = EditorView.decorations.compute([highlightSta
 // TODO(burdon): Use current range to create comment.
 // TODO(burdon): Allow/prevent overlapping?
 
+// TODO(burdon): Can we remove the Model dependency? Or move this functionality into the extensions provided by the model?
+
 export type HighlightOptions = {
-  onMenu?: (el: Element) => void;
+  model?: EditorModel;
+  onMenu?: (el: Element, selection: Range) => void;
   onChange?: (active?: string) => void;
 };
 
@@ -121,6 +125,8 @@ export const highlight = (options: HighlightOptions = {}): Extension => {
     if (from !== to) {
       // TODO(burdon): Trigger hoverTooltip.
       selection = { from, to };
+      const relPos = options.model?.getRelative?.(selection);
+      console.log(relPos);
     } else if (selection) {
       selection = undefined;
       view.dispatch({ effects: [closeHoverTooltips] });
@@ -142,7 +148,7 @@ export const highlight = (options: HighlightOptions = {}): Extension => {
         above: true,
         create: () => {
           const el = document.createElement('div');
-          options.onMenu?.(el);
+          options.onMenu?.(el, selection);
           // TODO(burdon): If y > 0 disappears if on top line.
           return { dom: el, offset: { x: 0, y: 0 } };
         },

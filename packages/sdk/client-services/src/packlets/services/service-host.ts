@@ -357,7 +357,7 @@ export class ClientServicesHost {
     // Setup default space.
     await this._serviceContext.initialized.wait();
     const space = await this._serviceContext.dataSpaceManager!.createSpace();
-    const obj: TypedObject = new Properties(undefined, { useAutomergeBackend: false });
+    const obj: TypedObject = new Properties(undefined, { automerge: false });
     obj[defaultKey] = identity.identityKey.toHex();
     await this._serviceRegistry.services.DataService!.write({
       spaceKey: space.key,

@@ -21,7 +21,7 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle } from './extensions';
+import { basicBundle, markdownBundle, useHighlights } from './extensions';
 import { defaultTheme, markdownTheme, textTheme } from './themes';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
@@ -89,10 +89,10 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     }, [awareness, peer, themeMode]);
 
     // TODO(burdon): Get from model.
-    // useHighlights(view, [
-    //   { id: 'c-1', from: 0, to: 20 },
-    //   { id: 'c-2', from: 100, to: 120 },
-    // ]);
+    useHighlights(view, [
+      { id: 'c-1', from: 0, to: 20 },
+      { id: 'c-2', from: 100, to: 120 },
+    ]);
 
     useEffect(() => {
       if (!root) {

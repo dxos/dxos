@@ -17,8 +17,8 @@ import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '
 import * as automerge from '@dxos/automerge/automerge';
 import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
-import { PatchSemaphore } from './PatchSemaphore';
 import { type IDocHandle } from './handle';
+import { PatchSemaphore } from './semaphore';
 
 export type Value = {
   lastHeads: Heads;

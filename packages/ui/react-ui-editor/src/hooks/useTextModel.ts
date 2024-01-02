@@ -7,6 +7,7 @@ import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
 import type * as awarenessProtocol from 'y-protocols/awareness';
+import * as Y from 'yjs';
 
 import { invariant } from '@dxos/invariant';
 import {
@@ -42,6 +43,9 @@ export type EditorModel = {
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
   ranges: DocumentRange[];
+  // TODO(burdon): Move into extension?
+  getRelative?: (value: Range) => Uint8Array;
+  getAbsolute?: (value: Uint8Array) => Range;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -91,7 +95,13 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     content: text.content,
     text: () => text.content!.toString(),
     ranges: [],
-    extension: yCollab(text.content as YText, provider?.awareness),
+    getRelative: (value: Range): Uint8Array => {
+      return Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content, value.from, value.to));
+    },
+    getAbsolute: (value: Uint8Array): Range => {
+      return Y.createAbsolutePositionFromRelativePosition(Y.decodeRelativePosition(value), text.doc);
+    },
+    extension: yCollab(text.content, provider?.awareness),
     awareness: provider?.awareness,
     peer: identity
       ? {

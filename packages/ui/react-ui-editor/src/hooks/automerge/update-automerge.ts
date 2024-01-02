@@ -8,10 +8,10 @@ import { type EditorState, type Text, type Transaction } from '@codemirror/state
 
 import { next as am, type Heads } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from '../handle';
-import { type Field } from '../plugin';
+import { type IDocHandle } from './handle';
+import { type Field } from './plugin';
 
-export const codemirrorToAutomerge = (
+export const updateAutomerge = (
   field: Field,
   handle: IDocHandle,
   transactions: Transaction[],

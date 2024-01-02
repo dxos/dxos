@@ -4,11 +4,12 @@
 
 import '@dxosTheme';
 
+import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut, Plus } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { StrictMode, useRef, useState } from 'react';
+import React, { StrictMode, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -37,7 +38,7 @@ import {
   code,
   type HighlightOptions,
 } from './extensions';
-import { useTextModel } from '../../hooks';
+import { type EditorModel, useTextModel } from '../../hooks';
 
 // Extensions:
 // TODO(burdon): Table of contents.
@@ -200,15 +201,23 @@ const onHighlightMenu: HighlightOptions['onMenu'] = (el) => {
   );
 };
 
-// TODO(burdon): Pass in model.
+// TODO(burdon): Pass in model?
 const Story = ({
   text,
   automerge,
+  extensions: _extensions = [],
   ...props
-}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>) => {
+}: { text?: string; extensions: Extension[] | ((model: EditorModel) => Extension[]); automerge?: boolean } & Pick<
+  TextEditorProps,
+  'readonly' | 'slots'
+>) => {
   const ref = useRef<TextEditorRef>(null);
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
+  const extensions = useMemo(
+    () => (typeof _extensions === 'function' ? _extensions(model) : _extensions),
+    [model, _extensions],
+  );
   if (!model) {
     return null;
   }
@@ -217,7 +226,7 @@ const Story = ({
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor ref={ref} model={model} {...props} />
+          <MarkdownEditor ref={ref} model={model} extensions={extensions} {...props} />
           <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
@@ -338,8 +347,9 @@ export const Highlight = {
   render: () => (
     <Story
       text={str(text.paragraphs, text.footer)}
-      extensions={[
+      extensions={(model) => [
         highlight({
+          model,
           onMenu: onHighlightMenu,
           onChange: (id) => {
             console.log(id);

@@ -26,7 +26,7 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   constructor(text?: string, kind?: TextKind, field?: string, opts?: TextObjectOptions) {
     super(TextModel);
 
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    if (opts?.automerge ?? getGlobalAutomergePreference()) {
       const defaultedField = field ?? 'content';
       return new AutomergeObject(
         {

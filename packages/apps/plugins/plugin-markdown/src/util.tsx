@@ -54,7 +54,7 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
 type MarkdownPlugin = Plugin<MarkdownProvides>;
 
 export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
-  return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
+  return (plugins as MarkdownPlugin[]).filter((plugin) => Boolean(plugin.provides?.markdown));
 };
 
 const nonTitleChars = /[^\w ]/g;

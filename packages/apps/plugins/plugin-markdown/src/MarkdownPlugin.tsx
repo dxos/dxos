@@ -136,6 +136,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
       },
       onUpdate: (info) => {
+        console.log('::>', info);
         const { active, items } = info;
         void intentPlugin?.provides.intent.dispatch([
           {
@@ -220,15 +221,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-      // TODO(burdon): Remove?
-      const filters: ((document: DocumentType) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
           state.onChange.push(plugin.provides.markdown.onChange);
-        }
-
-        if (plugin.provides.markdown.filter) {
-          filters.push(plugin.provides.markdown.filter);
         }
       });
     },

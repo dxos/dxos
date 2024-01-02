@@ -172,7 +172,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
 
     {
       const { db } = await createDatabase();
-      const text = new TextObject(content, undefined, undefined, { useAutomergeBackend: false });
+      const text = new TextObject(content, undefined, undefined, { automerge: false });
       db.add(text);
       await db.flush();
       expect(text.text).to.deep.eq(content);
@@ -226,7 +226,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
           ],
           assignee: new Contact({ name: 'Dmytro Veremchuk' }),
         },
-        // { useAutomergeBackend: false },
+        // { automerge: false },
       );
       db.add(obj);
       await db.flush();
