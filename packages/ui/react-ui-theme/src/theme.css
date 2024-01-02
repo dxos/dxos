@@ -11,9 +11,8 @@
 @tailwind components;
 
 @layer utilities {
-  /* Font weights & `italic` handling, since Inter uses the `slnt` variable instead of the italic font-style. */
+  /* Font weights & `italic` handling */
   .not-italic {
-    font-style: normal;
     font-variation-settings: 'wght' 400, 'slnt' 0;
   }
   .font-thin, .not-italic.font-thin, .not-italic .font-thin, .font-thin .not-italic {
@@ -44,7 +43,6 @@
     font-variation-settings: 'wght' 900, 'slnt' 0;
   }
   .italic {
-    font-style: normal;
     font-variation-settings: 'wght' 400, 'slnt' -10;
   }
   .italic.font-thin, .italic .font-thin, .font-thin .italic {
