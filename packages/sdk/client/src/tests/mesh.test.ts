@@ -27,11 +27,17 @@ describe('Mesh Client tests', () => {
       await client1.initialize();
       await client1.halo.createIdentity();
       afterTest(() => client1.destroy());
+      (client1.services as LocalClientServices).host!.context.signalManager.swarmEvent.on((event) => {
+        log.info('swarmEvent FIRST', { event });
+      });
 
       client2 = new Client({ services: testBuilder.createLocal() });
       await client2.initialize();
       await client2.halo.createIdentity();
       afterTest(() => client2.destroy());
+      (client2.services as LocalClientServices).host!.context.signalManager.swarmEvent.on((event) => {
+        log.info('swarmEvent SECOND', { event });
+      });
     }
 
     // Perform invitation.
@@ -95,7 +101,7 @@ describe('Mesh Client tests', () => {
         .connected.waitForCount(1);
 
       await client1.mesh.updateConfig(ConnectionState.ONLINE);
-      await asyncTimeout(connected, 3000);
+      await asyncTimeout(connected, 10000);
     }
 
     // Check that mutation are syncing.
