@@ -3,17 +3,15 @@
  * https://fontsource.org/?category=sans-serif&variable=true
  */
 
-@import '@fontsource/fira-code/variable.css';
-@import '@fontsource/inter/index.css';
-@import '@fontsource/roboto-flex/variable-full.css';
-@import '@fontsource/space-grotesk/variable.css';
+@import '@fontsource-variable/fira-code/index.css';
+@import '@fontsource-variable/inter/slnt.css';
 
 @tailwind base;
 @tailwind utilities;
 @tailwind components;
 
 @layer utilities {
-  /* Font weights */
+  /* Font weights & italic */
   .font-thin {
     font-variation-settings: 'wght' 100;
   }
@@ -41,33 +39,32 @@
   .font-black {
     font-variation-settings: 'wght' 900;
   }
-  /* System font weights */
-  .font-system-thin {
-    font-variation-settings: 'wght' 100, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-thin {
+    font-variation-settings: 'wght' 100, 'slnt' -10;
   }
-  .font-system-extralight {
-    font-variation-settings: 'wght' 200, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-extralight {
+    font-variation-settings: 'wght' 200, 'slnt' -10;
   }
-  .font-system-light {
-    font-variation-settings: 'wght' 300, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-light {
+    font-variation-settings: 'wght' 300, 'slnt' -10;
   }
-  .font-system-normal {
-    font-variation-settings: 'wght' 400, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-normal {
+    font-variation-settings: 'wght' 400, 'slnt' -10;
   }
-  .font-system-medium {
-    font-variation-settings: 'wght' 500, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-medium {
+    font-variation-settings: 'wght' 500, 'slnt' -10;
   }
-  .font-system-semibold {
-    font-variation-settings: 'wght' 600, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-semibold {
+    font-variation-settings: 'wght' 600, 'slnt' -10;
   }
-  .font-system-bold {
-    font-variation-settings: 'wght' 700, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-bold {
+    font-variation-settings: 'wght' 700, 'slnt' -10;
   }
-  .font-system-extrabold {
-    font-variation-settings: 'wght' 800, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-extrabold {
+    font-variation-settings: 'wght' 800, 'slnt' -10;
   }
-  .font-system-black {
-    font-variation-settings: 'wght' 900, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  .italic.font-black {
+    font-variation-settings: 'wght' 900, 'slnt' -10;
   }
 }
 

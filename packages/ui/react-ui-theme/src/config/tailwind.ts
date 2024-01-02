@@ -201,10 +201,8 @@ export const tailwindConfig = ({
   theme: {
     // Configure fonts in theme.css and package.json.
     fontFamily: {
-      body: ['Inter', ...defaultConfig.theme.fontFamily.sans],
-      // body: ['Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
-      display: ['Space GroteskVariable', 'Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
-      mono: ['Fira CodeVariable', ...defaultConfig.theme.fontFamily.mono],
+      body: ['Inter Variable', ...defaultConfig.theme.fontFamily.sans],
+      mono: ['Fira Code Variable', ...defaultConfig.theme.fontFamily.mono],
     },
     extend: merge(
       {

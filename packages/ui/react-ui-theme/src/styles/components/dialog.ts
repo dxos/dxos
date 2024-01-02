@@ -33,7 +33,7 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
   );
 
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
-  mx('rounded shrink-0 text-xl font-system-medium text-neutral-900 dark:text-neutral-100', srOnly && 'sr-only', ...etc);
+  mx('rounded shrink-0 text-xl font-medium text-neutral-900 dark:text-neutral-100', srOnly && 'sr-only', ...etc);
 
 export const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('mlb-2', descriptionText, srOnly && 'sr-only', ...etc);
