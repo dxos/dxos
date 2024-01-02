@@ -207,7 +207,7 @@ const Story = ({
   automerge,
   extensions: _extensions = [],
   ...props
-}: { text?: string; extensions: Extension[] | ((model: EditorModel) => Extension[]); automerge?: boolean } & Pick<
+}: { text?: string; extensions?: Extension[] | ((model: EditorModel) => Extension[]); automerge?: boolean } & Pick<
   TextEditorProps,
   'readonly' | 'slots'
 >) => {
@@ -215,7 +215,7 @@ const Story = ({
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
   const extensions = useMemo(
-    () => (typeof _extensions === 'function' ? _extensions(model) : _extensions),
+    () => (typeof _extensions === 'function' ? _extensions(model!) : _extensions),
     [model, _extensions],
   );
   if (!model) {

@@ -93,7 +93,7 @@ export const highlightDecorations = EditorView.decorations.compute([highlightSta
 
 export type HighlightOptions = {
   model?: EditorModel;
-  onMenu?: (el: Element, selection: Range) => void;
+  onMenu?: (el: Element, selection?: Range) => void;
   onChange?: (active?: string) => void;
 };
 

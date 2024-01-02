@@ -45,7 +45,7 @@ export type EditorModel = {
   ranges: DocumentRange[];
   // TODO(burdon): Move into extension?
   getRelative?: (value: Range) => Uint8Array;
-  getAbsolute?: (value: Uint8Array) => Range;
+  getAbsolute?: (value: Uint8Array) => Range | undefined;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -95,13 +95,16 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     content: text.content,
     text: () => text.content!.toString(),
     ranges: [],
-    getRelative: (value: Range): Uint8Array => {
-      return Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content, value.from, value.to));
+    getRelative: (value: Range) => {
+      return Y.encodeRelativePosition(
+        Y.createRelativePositionFromTypeIndex(text.content as YText, value.from, value.to),
+      );
     },
-    getAbsolute: (value: Uint8Array): Range => {
-      return Y.createAbsolutePositionFromRelativePosition(Y.decodeRelativePosition(value), text.doc);
+    getAbsolute: (value: Uint8Array) => {
+      const x = Y.createAbsolutePositionFromRelativePosition(Y.decodeRelativePosition(value), text.doc!);
+      return x ? { from: x.index!, to: x.assoc ?? x.index } : undefined;
     },
-    extension: yCollab(text.content, provider?.awareness),
+    extension: yCollab(text.content as YText, provider?.awareness),
     awareness: provider?.awareness,
     peer: identity
       ? {
