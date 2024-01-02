@@ -8,9 +8,8 @@ export default [
   {
     'en-US': {
       [MARKDOWN_PLUGIN]: {
-        'plugin name': 'Markdown',
+        'plugin name': 'Editor',
         'create stack section label': 'Create document',
-        'choose stack section label': 'Select document from this Space',
         'document title placeholder': 'New document',
         'choose markdown from space dialog title': 'Choose one or more documents to add',
         // TODO(burdon): Style-guide for user-facing text (e.g., hints, questions, capitalization, etc.)
@@ -18,11 +17,13 @@ export default [
         'chooser done label': 'Add selected',
         'create document label': 'Create document',
         'editor placeholder': 'New document…',
-        'editor mode label': 'Editor mode',
+        'editor mode label': 'Editor mode:',
         'select editor mode placeholder': 'Select editor mode…',
         'settings editor mode default label': 'Default',
         'settings editor mode vim label': 'Vim',
-        'settings widgets label': 'Show markdown widgets',
+        'settings markdown experimental label': 'Enable experimental features.',
+        'settings markdown debug label': 'Enable debugging features.',
+        'toggle view mode label': 'Toggle read-only',
       },
     },
   },

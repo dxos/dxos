@@ -9,6 +9,7 @@ import { basicSetup } from 'codemirror';
 import get from 'lodash.get';
 import React, { useEffect, useRef, useState } from 'react';
 
+// TODO(burdon): Why separate imports?
 import { type Prop } from '@dxos/automerge/automerge';
 import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
 
@@ -82,9 +83,10 @@ const Story = () => {
 };
 
 export default {
-  title: 'Automerge',
+  title: 'react-ui-editor/Automerge',
+  component: Editor,
 };
 
-export const AutomergeRepo = {
+export const Default = {
   render: () => <Story />,
 };

@@ -2,11 +2,11 @@
 order: 15
 ---
 
-# Shell
+<!-- TODO(wittjosiah): Dedupe with ../typescript/shell.md -->
 
 The shell is a set of components and pre-built workflows for managing [ECHO](../platform) spaces, invitations, and identity.
 
-It runs as part of the vault and renders within the vault iframe controlled by DXOS client.
+It runs and renders within an iframe managed by the DXOS client.
 
 The shell can be invoked via the client API.
 
@@ -30,10 +30,72 @@ The shell appears overtop the calling UI and looks like a full screen dialog pan
 
 ## Installation
 
-Shell is part of the DXOS client:
-
 ```bash
-npm i @dxos/react-client
+npm i @dxos/shell
+```
+
+## Setup
+
+`vite.config.ts`
+
+```ts
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, './index.html'),
+        shell: resolve(__dirname, './shell.html'),
+      },
+    },
+  },
+});
+```
+
+`shell.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <style>
+      html, body {
+        background: transparent !important;
+      }
+    </style>
+    <script>
+      function setTheme(darkMode) {
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+      }
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+        setTheme(e.matches)
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/shell.ts"></script>
+  </body>
+</html>
+```
+
+`src/shell.ts`
+
+```ts
+import '@dxos/shell/style.css';
+
+import { runShell } from '@dxos/shell';
+
+import { getConfig } from './config';
+
+const main = async () => {
+  const config = await getConfig();
+  await runShell(config);
+};
+
+main();
 ```
 
 ## Usage

@@ -8,17 +8,23 @@ import { createRoot } from 'react-dom/client';
 
 import { useIntent, type DispatchIntent, LayoutAction } from '@dxos/app-framework';
 import {
-  link,
-  tasklist,
-  tooltip,
+  type AutocompleteOptions,
+  type CommentsOptions,
   type Extension,
-  type TextListener,
-  listener,
+  type ListenerOptions,
   type TooltipOptions,
   autocomplete,
-  type AutocompleteOptions,
+  comments,
+  demo,
+  image,
+  link,
+  listener,
+  table,
+  tasklist,
+  tooltip,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 // TODO(burdon): Factor out style.
 const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
@@ -36,8 +42,8 @@ const onRender = (dispatch: DispatchIntent) => (el: Element, url: string) => {
       }
     : {
         href: url,
-        target: '_blank',
         rel: 'noreferrer',
+        target: '_blank',
       };
 
   createRoot(el).render(
@@ -61,20 +67,42 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
   );
 };
 
-type UseExtensionsOptions = {
-  showWidgets?: boolean;
-  onSearch?: AutocompleteOptions['getOptions'];
-  onChange?: TextListener;
+// TODO(burdon): Make markdown plugins separately configurable.
+export type UseExtensionsOptions = {
+  debug?: boolean;
+  experimental?: boolean;
+  listener?: ListenerOptions;
+  autocomplete?: AutocompleteOptions;
+  comments?: CommentsOptions;
 };
 
-export const useExtensions = ({ showWidgets, onSearch, onChange }: UseExtensionsOptions = {}): Extension[] => {
+export const useExtensions = ({
+  debug,
+  experimental,
+  listener: listenerOption,
+  autocomplete: autocompleteOption,
+  comments: commentsOptions,
+}: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
-
-  return [
+  const extensions: Extension[] = [
+    image(),
     link({ onRender: onRender(dispatch) }),
+    table(),
+    tasklist(),
     tooltip({ onHover }),
-    onSearch && autocomplete({ getOptions: onSearch }),
-    onChange && listener(onChange),
-    showWidgets && [tasklist()],
-  ].filter(Boolean) as Extension[];
+    autocompleteOption && autocomplete(autocompleteOption),
+    commentsOptions && comments(commentsOptions),
+    listenerOption && listener(listenerOption),
+  ].filter(nonNullable);
+
+  if (debug) {
+    const items = localStorage.getItem('dxos.composer.extension.demo');
+    extensions.push(...[items ? demo({ items: items!.split(',') }) : undefined].filter(nonNullable));
+  }
+
+  if (experimental) {
+    extensions.push(...[].filter(nonNullable));
+  }
+
+  return extensions;
 };

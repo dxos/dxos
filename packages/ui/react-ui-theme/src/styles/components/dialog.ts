@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, surfaceElevation, groupSurface, dialogMotion, groupBorder } from '../fragments';
+import { descriptionText, focusRing, surfaceElevation, dialogMotion, groupBorder, chromeSurface } from '../fragments';
 
 export type DialogStyleProps = {
   srOnly?: boolean;
@@ -20,13 +20,13 @@ export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...et
 
 export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
   mx(
-    // todo(thure): `flex` should not be default.
+    // TODO(thure): `flex` should not be default.
     'flex flex-col',
     !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
-    'is-[95vw] md:is-full max-is-[20rem] rounded-xl p-4',
+    'is-[95vw] md:is-full max-is-[20rem] border rounded-lg p-4',
     dialogMotion,
     surfaceElevation({ elevation }),
-    groupSurface,
+    chromeSurface,
     groupBorder,
     focusRing,
     ...etc,

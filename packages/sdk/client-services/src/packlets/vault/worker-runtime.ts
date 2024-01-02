@@ -94,10 +94,15 @@ export class WorkerRuntime {
       readySignal: this._ready,
     });
 
-    // When tab is closed.
+    // When tab is closed or client is destroyed.
     session.onClose.set(async () => {
       this._sessions.delete(session);
-      this._reconnectWebrtc();
+      if (this._sessions.size === 0) {
+        // Terminate the worker when all sessions are closed.
+        self.close();
+      } else {
+        this._reconnectWebrtc();
+      }
     });
 
     await session.open();
@@ -107,7 +112,7 @@ export class WorkerRuntime {
   }
 
   /**
-   * Selects one of the existing session fro WebRTC networking.
+   * Selects one of the existing session for WebRTC networking.
    */
   private _reconnectWebrtc() {
     log('reconnecting webrtc...');

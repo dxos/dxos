@@ -27,7 +27,7 @@ export type NavTreeItemHeadingProps = {
   disabled?: boolean;
   error?: boolean;
   modified?: boolean;
-  // TODO(burdon): Theme.
+  // TODO(burdon): Change to semantic classes that are customizable.
   palette?: string;
   onSelect: () => void;
 };
@@ -64,7 +64,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
           </TreeItem.OpenTrigger>
         )}
-        <TreeItem.Heading data-testid='navtree.treeItem.heading' title={id} asChild>
+        <TreeItem.Heading data-testid='navtree.treeItem.heading' asChild>
           <Button
             role='link'
             {...(level > 1 && { 'data-testid': 'navtree.treeItem.link' })}

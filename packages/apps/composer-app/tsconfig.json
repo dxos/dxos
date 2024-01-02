@@ -64,6 +64,9 @@
       "path": "../../ui/react-ui-navtree"
     },
     {
+      "path": "../../ui/react-ui-stack"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {
@@ -101,6 +104,9 @@
     },
     {
       "path": "../plugins/plugin-grid"
+    },
+    {
+      "path": "../plugins/plugin-help"
     },
     {
       "path": "../plugins/plugin-inbox"

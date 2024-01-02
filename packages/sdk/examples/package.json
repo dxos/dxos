@@ -12,15 +12,18 @@
     "/": "https://github.com/dxos/dxos/issues/4511",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
-  "devDependencies": {
+  "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

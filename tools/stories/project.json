@@ -157,11 +157,26 @@
       },
       "dependsOn": [
         "react-client:compile",
-        "react-shell:compile"
+        "react-shell:compile",
+        "react-ui-stack:compile"
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "tools/stories/e2e-stories"
+      }
+    },
+    "storybook-examples": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "react-client:compile"
+      ],
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/stories/examples-stories"
       }
     }
   }

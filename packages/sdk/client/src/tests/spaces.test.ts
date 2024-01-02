@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando, subscribe, AutomergeObject } from '@dxos/echo-schema';
+import { Expando, subscribe } from '@dxos/echo-schema';
 import { testWithAutomerge } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -254,7 +254,6 @@ describe('Spaces', () => {
       const space = await client.spaces.create();
       await space.waitUntilReady();
       const trigger = new Trigger();
-      log.info('prop', { properties: space.properties instanceof AutomergeObject });
       space.properties[subscribe](() => {
         trigger.wake();
       });

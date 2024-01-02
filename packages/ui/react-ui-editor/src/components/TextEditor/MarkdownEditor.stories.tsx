@@ -3,37 +3,58 @@
 //
 
 import '@dxosTheme';
+
 import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
+import defaultsDeep from 'lodash.defaultsdeep';
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
-import { autocomplete, listener, link, tasklist, tooltip, type TooltipOptions, type LinkOptions } from './extensions';
+import {
+  autocomplete,
+  listener,
+  link,
+  tasklist,
+  tooltip,
+  type TooltipOptions,
+  type LinkOptions,
+  comments,
+  table,
+  image,
+  mention,
+  blast,
+  demo,
+  defaultOptions,
+  highlight,
+  code,
+} from './extensions';
 import { useTextModel } from '../../hooks';
 
-// TODO(burdon): Read-only render mode (presentation).
-// TODO(burdon): Slides.
-// TODO(burdon): Autocomplete.
-// TODO(burdon): Block quote.
-// TODO(burdon): Images.
-// TODO(burdon): Tables.
+// Extensions:
+// TODO(burdon): Table of contents.
+// TODO(burdon): Front-matter
 
 const str = (...lines: string[]) => lines.join('\n');
+
+const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 // prettier-ignore
 const text = {
   tasks: str(
     '## Tasks',
     '',
-    '- [x] parsing',
-    '- [ ] styling',
-    '- [ ] rendering',
+    '- [x] decorator',
+    '- [ ] checkbox',
+    '  - [ ] state',
+    '  - [ ] indent',
+    '  - [x] style',
   ),
 
   list: str(
@@ -63,8 +84,10 @@ const text = {
     '```tsx',
     'const Component = () => {',
     '  const x = 100;',
+    '',
     '  return () => <div>Test</div>;',
     '};',
+    '',
     '```'
   ),
 
@@ -77,9 +100,26 @@ const text = {
     '',
   ),
 
+  table: str(
+    '# Table',
+    '',
+    `| ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} |`,
+    '|----------|----------|----------|',
+    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    '', // TODO(burdon): Possible GFM parsing bug if no newline?
+  ),
+
+  image: str('# Image', '', '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)'),
+
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
   ),
+
+  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+
+  footer: str('', '', '', '', '')
 };
 
 const document = str(
@@ -89,9 +129,7 @@ const document = str(
   '',
   'This is all about https://dxos.org and related technologies.',
   '',
-  'This this is **bold**, __underlined__, _italic_, and `f(INLINE)`.',
-  '',
-  '__NOTE__: Fenced code uses the base font.',
+  'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
   '',
   '---',
   text.links,
@@ -105,6 +143,12 @@ const document = str(
   text.code,
   '---',
   text.headings,
+  '---',
+  text.table,
+  '---',
+  text.image,
+  '',
+  text.footer,
 );
 
 const links = [
@@ -140,11 +184,12 @@ const onRender: LinkOptions['onRender'] = (el, url) => {
   );
 };
 
+// TODO(burdon): Pass in model.
 const Story = ({
   text,
   automerge,
   ...props
-}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'extensions' | 'slots'>) => {
+}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>) => {
   const ref = useRef<TextEditorRef>(null);
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
   const model = useTextModel({ text: item.text });
@@ -171,42 +216,56 @@ export default {
   render: Story,
 };
 
+const extensions = [
+  autocomplete({
+    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+  }),
+  code(),
+  image(),
+  link({ onRender }),
+  table(),
+  tasklist(),
+  tooltip({ onHover }),
+];
+
 export const Default = {
-  render: () => (
-    <Story
-      text={document}
-      extensions={[
-        link({ onRender }),
-        tooltip({ onHover }),
-        tasklist(),
-        autocomplete({
-          getOptions: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-        }),
-      ]}
-    />
-  ),
+  render: () => <Story text={document} extensions={extensions} />,
 };
 
-export const Simple = {
-  render: () => <Story text={document} />,
+export const Readonly = {
+  render: () => <Story text={document} extensions={extensions} readonly />,
 };
 
 export const Tooltips = {
-  render: () => <Story text={text.links} extensions={[tooltip({ onHover })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover })]} />,
 };
 
 export const Links = {
-  render: () => <Story text={text.links} extensions={[link({ onRender })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender })]} />,
+};
+
+export const Code = {
+  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
+};
+
+export const Table = {
+  render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
+};
+
+export const Image = {
+  render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
 
 export const TaskList = {
   render: () => (
     <Story
-      text={str(text.tasks, '', text.list)}
+      text={str(text.tasks, '', text.list, text.footer)}
       extensions={[
         tasklist(),
-        listener((text) => {
-          console.log(text);
+        listener({
+          onChange: (text) => {
+            console.log(text);
+          },
         }),
       ]}
     />
@@ -216,12 +275,45 @@ export const TaskList = {
 export const Autocomplete = {
   render: () => (
     <Story
-      text={str('# Autocomplete', '', '', '', '', '', '')}
+      text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
       extensions={[
         link({ onRender }),
         autocomplete({
-          getOptions: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
+      ]}
+    />
+  ),
+};
+
+const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
+
+export const Mention = {
+  render: () => (
+    <Story
+      text={str('# Mention', '', 'Type @...', text.footer)}
+      extensions={[
+        mention({
+          onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
+        }),
+      ]}
+    />
+  ),
+};
+
+const mark = () => `[^${PublicKey.random().toHex()}]`;
+export const Comments = {
+  render: () => (
+    <Story
+      text={str(text.paragraphs, mark(), '', mark(), text.footer)}
+      extensions={[
+        comments({
+          onCreate: () => PublicKey.random().toHex(),
+          onUpdate: (info) => {
+            // console.log('update', info);
+          },
+        }),
+        highlight(),
       ]}
     />
   ),
@@ -239,4 +331,37 @@ export const Diagnostics = {
       ]}
     />
   ),
+};
+
+export const Demo = {
+  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[demo()]} />,
+};
+
+export const Blast = {
+  render: () => (
+    <Story
+      text={str(text.paragraphs, text.code, text.paragraphs)}
+      extensions={[
+        demo({
+          items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
+        }),
+        blast(
+          defaultsDeep(
+            {
+              effect: 2,
+              particleGravity: 0.2,
+              particleShrinkRate: 0.995,
+              color: () => [faker.number.int({ min: 100, max: 200 }), 0, 0],
+              // color: () => [faker.number.int(256), faker.number.int(256), faker.number.int(256)],
+            },
+            defaultOptions,
+          ),
+        ),
+      ]}
+    />
+  ),
+};
+
+export const NoExtensions = {
+  render: () => <Story text={document} />,
 };

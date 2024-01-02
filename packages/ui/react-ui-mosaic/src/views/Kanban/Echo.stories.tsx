@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Kanban } from './Kanban';
@@ -16,31 +16,30 @@ import { FullscreenDecorator, TestObjectGenerator, range } from '../../testing';
 
 const generator = new TestObjectGenerator();
 
+const Story = ({
+  // TODO(wittjosiah): Can't use id because of ClientSpaceDecorator.
+  basePath = 'projects',
+  spaceKey,
+  debug,
+}: {
+  basePath: string;
+  spaceKey: PublicKey;
+  debug: boolean;
+}) => {
+  return (
+    <Mosaic.Root debug={debug}>
+      <Mosaic.DragOverlay />
+      <EchoKanban id={basePath} spaceKey={spaceKey} generator={generator} debug={debug} />
+    </Mosaic.Root>
+  );
+};
+
 export default {
   title: 'Views/Kanban',
   component: Kanban,
-  render: ({
-    // TODO(wittjosiah): Can't use id because of ClientSpaceDecorator.
-    basePath = 'projects',
-    spaceKey,
-    debug,
-  }: {
-    basePath: string;
-    spaceKey: PublicKey;
-    debug: boolean;
-  }) => {
-    return (
-      <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay />
-        <EchoKanban id={basePath} spaceKey={spaceKey} generator={generator} debug={debug} />
-      </Mosaic.Root>
-    );
-  },
-  decorators: [
-    withTheme,
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      onCreateSpace: async (space) => {
+  render: () => (
+    <ClientRepeater
+      onCreateSpace={async (space) => {
         const factory = generator.factories.project;
         const objects = [
           factory.schema,
@@ -58,9 +57,12 @@ export default {
 
         // TODO(burdon): Batch API.
         objects.forEach((object) => space.db.add(object));
-      },
-    }),
-  ],
+      }}
+      Component={Story}
+      createSpace
+    />
+  ),
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -2,112 +2,120 @@
 // Copyright 2023 DXOS.org
 //
 
-import { syntaxTree } from '@codemirror/language';
 import {
-  type EditorState,
-  type Extension,
-  type RangeSet,
-  RangeSetBuilder,
-  StateField,
-  type Transaction,
-} from '@codemirror/state';
-import { EditorView, Decoration, WidgetType } from '@codemirror/view';
+  EditorView,
+  Decoration,
+  WidgetType,
+  MatchDecorator,
+  ViewPlugin,
+  type DecorationSet,
+  type ViewUpdate,
+} from '@codemirror/view';
+
+// TODO(burdon): Reconcile with theme.
+const styles = EditorView.baseTheme({
+  '& .cm-task-item': {
+    paddingLeft: '4px',
+    paddingRight: '8px',
+  },
+});
 
 class CheckboxWidget extends WidgetType {
-  constructor(private readonly _pos: number, private readonly _getCursor: () => number, private _checked: boolean) {
+  constructor(
+    private readonly _pos: number,
+    private _checked: boolean,
+    private readonly _indent: number,
+    private readonly _onCheck?: (check: boolean) => void,
+  ) {
     super();
   }
 
   override eq(other: CheckboxWidget) {
-    // Uniqueness based on position; also checks state.
-    // TODO(burdon): Is this efficient? Check life-cycle.
-    return this._pos === other._pos && this._checked === other._checked;
+    return this._pos === other._pos && this._checked === other._checked && this._indent === other._indent;
   }
 
   toDOM(view: EditorView) {
-    // console.log('toDom', this._pos);
     const wrap = document.createElement('span');
-    wrap.setAttribute('aria-hidden', 'true');
     wrap.className = 'cm-task-item';
+    wrap.setAttribute('aria-hidden', 'true');
+    wrap.style.setProperty('margin-left', this._indent * 24 + 'px');
 
-    const box = wrap.appendChild(document.createElement('input'));
-    box.type = 'checkbox';
-    box.checked = this._checked;
-    box.onclick = (event) => {
-      this._checked = !isChecked(view.state, this._pos);
-      view.dispatch({
-        changes: {
-          from: this._pos + 1,
-          to: this._pos + 2,
-          insert: this._checked ? 'x' : ' ',
-        },
-        // TODO(burdon): Restore cursor position? More useful to move to end of line (can indent).
-        selection: {
-          anchor: this._pos + 4,
-          // anchor: this._getCursor(),
-        },
-      });
-      return true;
-    };
+    const input = wrap.appendChild(document.createElement('input'));
+    input.type = 'checkbox';
+    input.checked = this._checked;
+    if (!this._onCheck) {
+      input.setAttribute('disabled', 'true');
+    }
+    if (this._onCheck) {
+      input.onchange = (event: Event) => {
+        this._onCheck?.((event.target as any).checked);
+        return true;
+      };
+    }
 
     return wrap;
   }
-
-  // TODO(burdon): Remove listener?
-  // override destroy() {
-  // console.log('destroy', this._pos);
-  // }
 
   override ignoreEvent() {
     return false;
   }
 }
 
-const isChecked = (state: EditorState, pos: number) => {
-  return state.sliceDoc(pos, pos + 3).toLowerCase() === '[x]';
-};
+export type TasklistOptions = {};
 
-export const statefield = (): Extension => {
-  let lastPosition: number = 0;
-  const listener = EditorView.updateListener.of((update) => {
-    lastPosition = update.startState.selection.main.head;
+export const tasklist = (options: TasklistOptions = {}) => {
+  // TODO(burdon): Matcher isn't as precise as syntax tree.
+  //  Allows for indents to be greater than AST would allow.
+  const taskMatcher = new MatchDecorator({
+    regexp: /^(\s*)- \[([ xX])\]\s/g,
+    decoration: (match, view, pos) => {
+      const indent = Math.floor(match[1].length / 2);
+      const checked = match[2] === 'x' || match[2] === 'X';
+      return Decoration.replace({
+        widget: new CheckboxWidget(
+          pos,
+          checked,
+          indent,
+          view.state.readOnly
+            ? undefined
+            : (checked) => {
+                const idx = pos + match[0].indexOf('[') + 1;
+                view.dispatch({
+                  changes: {
+                    from: idx,
+                    to: idx + 1,
+                    insert: checked ? 'x' : ' ',
+                  },
+                  // TODO(burdon): Restore cursor position? More useful to move to end of line (can indent).
+                  selection: {
+                    anchor: idx + 3,
+                  },
+                });
+              },
+        ),
+      });
+    },
   });
 
-  const checkbox = (state: EditorState) => {
-    const builder = new RangeSetBuilder();
-    syntaxTree(state).iterate({
-      enter: (node) => {
-        // console.log(node.name, node.from, node.to);
-        if (node.name === 'TaskMarker') {
-          builder.add(
-            node.from,
-            node.to,
-            Decoration.replace({
-              widget: new CheckboxWidget(node.from, () => lastPosition, isChecked(state, node.from)),
-            }),
-          );
-        }
-      },
-    });
+  const tasks = ViewPlugin.fromClass(
+    class {
+      tasks: DecorationSet;
+      constructor(view: EditorView) {
+        this.tasks = taskMatcher.createDeco(view);
+      }
 
-    return builder.finish();
-  };
+      update(update: ViewUpdate) {
+        this.tasks = taskMatcher.updateDeco(update, this.tasks);
+      }
+    },
+    {
+      decorations: (value) => value.tasks,
+      provide: (plugin) =>
+        EditorView.atomicRanges.of((view) => {
+          return view.plugin(plugin)?.tasks || Decoration.none;
+        }),
+    },
+  );
 
-  return [
-    listener,
-    StateField.define<RangeSet<any>>({
-      create: (state) => checkbox(state),
-      update: (_: RangeSet<any>, tr: Transaction) => checkbox(tr.state),
-      provide: (field) => EditorView.decorations.from(field),
-    }),
-  ];
+  return [tasks, styles];
 };
-
-// TODO(burdon): Reconcile with theme.
-export const styles = EditorView.baseTheme({
-  '& .cm-task-item': {
-    padding: '0 4px',
-  },
-});
-
-export const tasklist = () => [statefield(), styles];

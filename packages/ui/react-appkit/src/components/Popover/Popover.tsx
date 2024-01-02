@@ -56,7 +56,7 @@ export const Popover = ({
       {...slots.content}
       className={mx(
         'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
-        'rounded-lg p-4 shadow-xl elevated-buttons',
+        'rounded-lg p-4 shadow-lg elevated-buttons',
         'bg-white dark:bg-neutral-800',
         focusRing,
         slots.content?.className,

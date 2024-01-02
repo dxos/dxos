@@ -1,4 +1,10 @@
+/**
+ * Variable fonts:
+ * https://fontsource.org/?category=sans-serif&variable=true
+ */
+
 @import '@fontsource/fira-code/variable.css';
+@import '@fontsource/inter/index.css';
 @import '@fontsource/roboto-flex/variable-full.css';
 @import '@fontsource/space-grotesk/variable.css';
 

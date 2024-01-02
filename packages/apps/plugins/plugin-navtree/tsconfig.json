@@ -27,6 +27,9 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/keyboard"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -54,7 +57,13 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-theme"

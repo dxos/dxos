@@ -49,7 +49,7 @@ export const KanbanCardComponent: FC<{
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
         </button>
-        <div className='flex flex-col grow'>
+        <div className='flex flex-col grow pt-1'>
           {model && (
             <MarkdownEditor
               model={model}

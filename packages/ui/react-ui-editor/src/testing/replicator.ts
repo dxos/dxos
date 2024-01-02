@@ -163,16 +163,18 @@ export class Replicator {
       colorLight: cursorColor.light,
     });
 
+    const field = 'content';
+    const content = this._kind === TextKind.PLAIN ? doc.getText(field) : doc.getXmlFragment(field);
     const model: EditorModel = {
       id: doc.guid,
-      content: this._kind === TextKind.PLAIN ? doc.getText('content') : doc.getXmlFragment('content'),
-      text: () => model.content.toString(),
+      text: () => content.toString(),
+      content,
+      ranges: [],
       awareness: provider.awareness,
       peer: { id },
     };
 
     this._peers.push(model);
-
     return model;
   };
 }
@@ -184,6 +186,5 @@ export type UseYjsModelOptions = {
 };
 
 export const useYjsModel = ({ replicator, id, doc }: UseYjsModelOptions): EditorModel => {
-  const peer = useMemo(() => replicator.createPeer(id, doc), [doc]);
-  return peer;
+  return useMemo(() => replicator.createPeer(id, doc), [doc]);
 };

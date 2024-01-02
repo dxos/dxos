@@ -14,7 +14,7 @@ const Component = () => {
     <div
       onClick={async () => {
         // open the profile panel
-        client.shell.open();
+        await client.shell.open();
 
         // join another device using an invitation
         const { identity: id1 } = await client.shell.initializeIdentity({
