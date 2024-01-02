@@ -26,3 +26,4 @@ export {
 } from '@dxos/protocols';
 
 export { Client, type ClientOptions } from './client';
+export { DXOS_VERSION } from './version';

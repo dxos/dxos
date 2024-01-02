@@ -14,8 +14,7 @@ import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { ClientServicesProxy } from './service-proxy';
-
-export const LOCK_KEY = 'dxos-client-worker';
+import { LOCK_KEY } from '../lock-key';
 
 /**
  * Creates services provider connected via worker.

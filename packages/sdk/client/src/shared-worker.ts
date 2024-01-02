@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { mountDevtoolsHooks } from './devtools';
-import { LOCK_KEY } from './services/worker-client-services';
+import { LOCK_KEY } from './lock-key';
 
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
