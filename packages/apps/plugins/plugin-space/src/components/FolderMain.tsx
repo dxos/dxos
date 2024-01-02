@@ -23,7 +23,7 @@ export const FolderMain = ({ folder }: { folder: Folder }) => {
         role='alert'
         className={mx(
           descriptionText,
-          'border border-dashed border-neutral-400/50 rounded-lg p-8 font-system-normal text-lg max-is-[24rem] break-words',
+          'border border-dashed border-neutral-400/50 rounded-lg p-8 font-normal text-lg max-is-[24rem] break-words',
         )}
       >
         {folder.name ?? t('unnamed folder label')}

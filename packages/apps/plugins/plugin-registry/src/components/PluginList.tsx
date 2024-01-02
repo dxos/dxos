@@ -79,7 +79,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange }
                           <ArrowSquareOut weight='bold' className={mx(getSize(3), 'inline-block leading-none mli-1')} />
                         </Link>
                       )}
-                      {reloadRequired && <p className='text-sm font-system-medium'>{t('reload required message')}</p>}
+                      {reloadRequired && <p className='text-sm font-medium'>{t('reload required message')}</p>}
                     </div>
                   )}
                   {tags?.length && (

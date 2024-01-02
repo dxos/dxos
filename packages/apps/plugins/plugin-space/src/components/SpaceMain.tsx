@@ -41,7 +41,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
         role='alert'
         className={mx(
           descriptionText,
-          'border border-dashed border-neutral-400/50 rounded-lg flex items-center justify-center p-8 font-system-normal text-lg',
+          'border border-dashed border-neutral-400/50 rounded-lg flex items-center justify-center p-8 font-normal text-lg',
         )}
       >
         {t('first run message')}

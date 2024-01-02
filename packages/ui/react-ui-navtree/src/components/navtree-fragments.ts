@@ -23,7 +23,7 @@ export const navTreeHeading = 'flex-1 is-0 truncate text-start';
 
 export const topLevelCollapsibleSpacing = 'mbs-2.5 pointer-fine:mbs-1.5';
 
-export const topLevelText = 'text-sm font-system-medium';
+export const topLevelText = 'text-sm font-medium';
 
 export const treeItemText = 'text-sm font-normal';
 

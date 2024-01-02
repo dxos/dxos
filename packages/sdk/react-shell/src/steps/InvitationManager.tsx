@@ -67,7 +67,7 @@ export const InvitationManager = ({
       <Viewport.Root activeView={activeView} classNames='grow plb-1'>
         <Viewport.Views>
           <InvitationManagerView id='showing qr' emoji={emoji}>
-            <p className='text-sm mlb-1 font-system-normal text-center'>
+            <p className='text-sm mlb-1 font-normal text-center'>
               {t(type === Invitation.Type.MULTIUSE ? 'invite many qr label' : 'invite one qr label')}
             </p>
             <div role='none' className={mx(descriptionText, 'is-full max-is-[14rem] relative')}>

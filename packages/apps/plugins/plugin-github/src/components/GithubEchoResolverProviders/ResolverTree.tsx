@@ -67,7 +67,7 @@ export const ResolverTree = () => {
     </>
   ) : (
     <>
-      <h1 className='text-lg font-system-normal' id={treeLabel}>
+      <h1 className='text-lg font-normal' id={treeLabel}>
         {t('resolver no spaces message')}
       </h1>
       <div role='separator' className='bs-px bg-neutral-500/20 mlb-2' />

@@ -103,7 +103,7 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
     </>
   ) : (
     <div role='none' className='mli-auto max-is-md pli-2 text-center'>
-      {!octokit && <p className='mlb-4 text-lg font-system-medium'>{t('empty github pat message')}</p>}
+      {!octokit && <p className='mlb-4 text-lg font-medium'>{t('empty github pat message')}</p>}
       {octokit ? <Loading label={t('loading preview message')} /> : <GitHubSettings />}
     </div>
   );

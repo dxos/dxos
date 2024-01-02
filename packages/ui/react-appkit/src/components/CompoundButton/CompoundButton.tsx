@@ -71,9 +71,8 @@ export const CompoundButton = ({
             id={descriptionId}
             {...slots.description}
             className={mx(
-              'text-xs mbe-1',
+              'text-xs mbe-1 font-normal',
               variant === 'primary' ? descriptionTextPrimary : descriptionText,
-              isOs ? 'font-system-normal' : 'font-normal',
               slots.description?.className,
             )}
           >

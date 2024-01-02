@@ -82,7 +82,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;
 };
 
-const headingFragment = 'pis-3 pie-1 plb-1 mbe-1 font-system-medium';
+const headingFragment = 'pis-3 pie-1 plb-1 mbe-1 font-medium';
 
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {
