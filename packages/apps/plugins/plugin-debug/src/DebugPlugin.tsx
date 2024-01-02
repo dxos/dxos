@@ -12,12 +12,12 @@ import { SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import {
   getPlugin,
+  parseGraphPlugin,
+  parseIntentPlugin,
   resolvePlugin,
   type Plugin,
   type PluginDefinition,
   type IntentPluginProvides,
-  parseGraphPlugin,
-  parseIntentPlugin,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -25,8 +25,8 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
-import { DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
 import translations from './translations';
+import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
@@ -46,7 +46,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       settings.close();
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
@@ -112,12 +112,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   id: 'open-devtools',
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
                   icon: (props) => <Bug {...props} />,
+                  keyBinding: 'shift+meta+\\',
                   invoke: () =>
                     intentPlugin?.provides.intent.dispatch({
                       plugin: DEBUG_PLUGIN,
-                      action: 'open-devtools', // TODO(burdon): Definition.
+                      action: DebugAction.OPEN_DEVTOOLS,
                     }),
-                  keyBinding: 'shift+meta+\\',
                   properties: {
                     testId: 'spacePlugin.openDevtools',
                   },
@@ -153,7 +153,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       intent: {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
-            case 'open-devtools': {
+            case DebugAction.OPEN_DEVTOOLS: {
               const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
@@ -177,9 +177,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const { component, active } = data;
-          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
-            return <DebugSettings />;
+          const { active } = data;
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
+            case 'status':
+              return <DebugStatus />;
           }
 
           if (!settings.values.debug) {
@@ -215,8 +218,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               ) : 'graph' in active && active.graph instanceof Graph ? (
                 <DebugGlobal graph={active.graph} />
               ) : null;
-            case 'status':
-              return <DebugStatus />;
           }
 
           return null;

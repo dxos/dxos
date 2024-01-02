@@ -10,6 +10,11 @@ import { tokens } from '../../../styles';
 /**
  * Minimal styles.
  * https://codemirror.net/examples/styling
+ *
+ * Examples:
+ * - https://github.com/codemirror/view/blob/main/src/theme.ts
+ * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts
+ *
  * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  */
@@ -50,10 +55,10 @@ export const defaultTheme: {
   //
   // Cursor
   //
-  '&light .cm-cursor': {
+  '&light .cm-cursor, &light .cm-dropCursor': {
     borderLeft: '2px solid black',
   },
-  '&dark .cm-cursor': {
+  '&dark .cm-cursor, &dark .cm-dropCursor': {
     borderLeft: '2px solid white',
   },
   '& .cm-placeholder': {
@@ -136,8 +141,59 @@ export const defaultTheme: {
   '& .cm-tooltip': {
     border: 'none',
   },
-  // '& .cm-tooltip-below': {},
-  // '& .cm-tooltip-autocomplete': {},
+  '& .cm-tooltip-below': {},
+
+  //
+  // autocomplete
+  //
+  '& .cm-tooltip-autocomplete': {
+    marginTop: '4px',
+    marginLeft: '-3px',
+  },
+  '& .cm-tooltip-autocomplete ul li': {},
+  '& .cm-tooltip-autocomplete ul li[aria-selected]': {},
+  '& .cm-completionIcon': {
+    display: 'none',
+  },
+  '& .cm-completionLabel': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+  '& .cm-completionMatchedText': {
+    textDecoration: 'none',
+  },
+
+  //
+  // widgets
+  //
+  '& .cm-widgetBuffer': {
+    display: 'none',
+    height: 0,
+  },
+
+  //
+  // table
+  //
+  '& .cm-table *': {
+    fontFamily: `${get(tokens, 'fontFamily.mono', []).join(',')} !important`,
+    textDecoration: 'none !important',
+  },
+  '& .cm-table-head': {
+    padding: '2px 16px 2px 0px',
+    borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.500')}`,
+    fontWeight: 100,
+    textAlign: 'left',
+    color: get(tokens, 'extend.colors.neutral.500'),
+  },
+  '& .cm-table-cell': {
+    padding: '2px 16px 2px 0px',
+  },
+
+  //
+  // image
+  //
+  '& .cm-image': {
+    margin: '0.5rem 0',
+  },
 
   //
   // font size
@@ -151,6 +207,43 @@ export const defaultTheme: {
     acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
     return acc;
   }, {}),
+
+  /**
+   * Panels
+   * https://github.com/codemirror/search/blob/main/src/search.ts#L745
+   *
+   * Find/replace panel.
+   * <div class="cm-announced">...</div>
+   * <div class="cm-scroller">...</div>
+   * <div class="cm-panels cm-panels-bottom">
+   *   <div class="cm-search cm-panel">
+   *     <input class="cm-textfield" />
+   *     <button class="cm-button">...</button>
+   *     <label><input type="checkbox" />...</label>
+   *   </div>
+   * </div
+   */
+  '& .cm-panels': {
+    border: `1px solid ${get(tokens, 'extend.colors.neutral.200')}`,
+    borderBottom: 'none',
+  },
+  '& .cm-panel': {
+    background: get(tokens, 'extend.colors.neutral.50'),
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+  '& .cm-button': {
+    margin: '4px',
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    background: get(tokens, 'extend.colors.neutral.100'),
+    border: 'none',
+  },
+
+  '& .cm-searchMatch': {
+    backgroundColor: get(tokens, 'extend.colors.yellow.100'),
+  },
+  '& .cm-searchMatch.cm-searchMatch-selected': {
+    backgroundColor: get(tokens, 'extend.colors.primary.100'),
+  },
 };
 
 export const textTheme: {

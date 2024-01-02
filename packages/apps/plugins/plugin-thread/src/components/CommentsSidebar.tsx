@@ -51,7 +51,7 @@ export const CommentsSidebar: FC<{
     <DensityProvider density='fine'>
       <div role='none' className='flex flex-col grow w-[400px] overflow-y-auto'>
         <div role='none' className='flex flex-col w-full p-2 gap-4'>
-          {threads.map((thread) => (
+          {threads?.map((thread) => (
             <Comments
               key={thread.id}
               identityKey={identity.identityKey}

@@ -67,6 +67,9 @@ export const os = {
   'close sidebar label': 'Close sidebar',
   'welcome message': 'Welcome',
   'selecting identity heading': 'Selecting identity',
+  'commands dialog title': 'Commands',
   'settings dialog title': 'Settings',
+  'shortcuts dialog title': 'Shortcuts',
+  'commandlist input placeholder': 'Search for commands…',
   'target blank description': 'Link opens in a new tab.',
 };

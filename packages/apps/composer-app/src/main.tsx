@@ -17,6 +17,7 @@ import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
 import GridMeta from '@braneframe/plugin-grid/meta';
+import HelpMeta from '@braneframe/plugin-help/meta';
 import InboxMeta from '@braneframe/plugin-inbox/meta';
 import IpfsMeta from '@braneframe/plugin-ipfs/meta';
 import KanbanMeta from '@braneframe/plugin-kanban/meta';
@@ -49,11 +50,18 @@ import { defaultTx } from '@dxos/react-ui-theme';
 
 import { setupConfig } from './config';
 import { appKey } from './globals';
+import { steps } from './help';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
+import { initializeNativeApp } from './native';
 
 const main = async () => {
   const config = await setupConfig();
   const services = await createClientServices(config);
+
+  // Test if socket supply native app.
+  if ((globalThis as any).__args) {
+    void initializeNativeApp();
+  }
 
   const App = createApp({
     fallback: (
@@ -76,6 +84,7 @@ const main = async () => {
       // UX
       LayoutMeta,
       NavTreeMeta,
+      HelpMeta,
 
       // Data integrations
       ClientMeta,
@@ -129,6 +138,9 @@ const main = async () => {
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
+      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {
+        steps,
+      }),
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
@@ -174,6 +186,7 @@ const main = async () => {
       ClientMeta.id,
       ErrorMeta.id,
       GraphMeta.id,
+      HelpMeta.id,
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,

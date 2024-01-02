@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
+
+// TODO(burdon): Review https://github.com/sergeche/codemirror-movie?tab=readme-ov-file
 
 export type DemoOptions = {
   delay?: number;
@@ -15,7 +18,7 @@ const defaultItems = ['hello world!', 'this is a test.', 'this is [DXOS](https:/
  * Demo script.
  * Configurable plugin that let's user cycle through pre-configured input script.
  */
-export const demo = ({ delay = 75, items = defaultItems }: DemoOptions = {}) => {
+export const demo = ({ delay = 75, items = defaultItems }: DemoOptions = {}): Extension => {
   let t: any;
   let idx = 0;
 

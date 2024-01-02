@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Folder as FolderIcon, Plus, type IconProps, Intersect } from '@phosphor-icons/react';
+import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -208,7 +208,7 @@ export const SpacePlugin = ({
     },
     provides: {
       space: state as RevertDeepSignal<PluginState>,
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       translations,
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
@@ -261,7 +261,7 @@ export const SpacePlugin = ({
             case 'presence':
               return isTypedObject(data.object) ? <SpacePresence object={data.object} /> : null;
             case 'settings':
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <SpaceSettings /> : null;
+              return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             default:
               return null;
           }
@@ -316,7 +316,7 @@ export const SpacePlugin = ({
               {
                 id: 'join-space',
                 label: ['join space label', { ns: 'os' }],
-                icon: (props) => <Intersect {...props} />,
+                icon: (props) => <SignIn {...props} />,
                 properties: {
                   testId: 'spacePlugin.joinSpace',
                 },
@@ -335,7 +335,6 @@ export const SpacePlugin = ({
             properties: {
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
-              // TODO(burdon): Factor out palette constants.
               palette: 'pink',
               childrenPersistenceClass: 'folder',
               onRearrangeChildren: (nextOrder: Space[]) => {
@@ -404,6 +403,11 @@ export const SpacePlugin = ({
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
+            case SpaceAction.WAIT_FOR_OBJECT: {
+              state.awaiting = intent.data.id;
+              return true;
+            }
+
             case SpaceAction.CREATE: {
               if (!client) {
                 return;
@@ -420,20 +424,13 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.JOIN: {
-              if (!client) {
-                return;
-              }
-
-              const { space } = await client.shell.joinSpace();
-              if (space) {
-                return { space, id: space.key.toHex() };
+              if (client) {
+                const { space } = await client.shell.joinSpace();
+                if (space) {
+                  return { space, id: space.key.toHex() };
+                }
               }
               break;
-            }
-
-            case SpaceAction.WAIT_FOR_OBJECT: {
-              state.awaiting = intent.data.id;
-              return true;
             }
 
             case SpaceAction.SHARE: {

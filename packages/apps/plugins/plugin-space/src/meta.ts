@@ -8,4 +8,5 @@ export const SPACE_PLUGIN_SHORT_ID = 'space';
 export default {
   id: SPACE_PLUGIN,
   shortId: SPACE_PLUGIN_SHORT_ID,
+  name: 'Spaces',
 };

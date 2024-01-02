@@ -106,6 +106,9 @@
       "path": "../plugins/plugin-grid"
     },
     {
+      "path": "../plugins/plugin-help"
+    },
+    {
       "path": "../plugins/plugin-inbox"
     },
     {

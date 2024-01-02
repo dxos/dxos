@@ -189,7 +189,7 @@ export const Copy = {
     return (
       <Mosaic.Root debug={debug}>
         <div className='flex'>
-          <StorybookNavTree className='w-[250px]' />
+          <StorybookNavTree classNames='w-[250px]' />
           <DropZone />
         </div>
         <Mosaic.DragOverlay />

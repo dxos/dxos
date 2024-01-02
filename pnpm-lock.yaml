@@ -506,6 +506,9 @@ importers:
       '@braneframe/plugin-grid':
         specifier: workspace:*
         version: link:../plugins/plugin-grid
+      '@braneframe/plugin-help':
+        specifier: workspace:*
+        version: link:../plugins/plugin-help
       '@braneframe/plugin-inbox':
         specifier: workspace:*
         version: link:../plugins/plugin-inbox
@@ -620,6 +623,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      react-joyride:
+        specifier: ^2.7.2
+        version: 2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-graph':
         specifier: workspace:*
@@ -648,6 +654,9 @@ importers:
       '@sentry/vite-plugin':
         specifier: ^0.7.2
         version: 0.7.2
+      '@socketsupply/socket':
+        specifier: ^0.5.4
+        version: link:build/mac/composer-dev.app/Contents/Resources/socket
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -669,6 +678,24 @@ importers:
       workbox-window:
         specifier: ^6.5.4
         version: 6.5.4
+
+  packages/apps/composer-app/build/mac/composer-dev.app/Contents/Resources/socket:
+    optionalDependencies:
+      '@socketsupply/socket-darwin-arm64':
+        specifier: 0.5.4
+        version: 0.5.4
+      '@socketsupply/socket-darwin-x64':
+        specifier: 0.5.4
+        version: 0.5.4
+      '@socketsupply/socket-linux-arm64':
+        specifier: 0.5.4
+        version: 0.5.4
+      '@socketsupply/socket-linux-x64':
+        specifier: 0.5.4
+        version: 0.5.4
+      '@socketsupply/socket-win32-x64':
+        specifier: 0.5.4
+        version: 0.5.4
 
   packages/apps/composer-extension:
     devDependencies:
@@ -942,6 +969,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -1479,6 +1509,73 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-help:
+    dependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      react-joyride:
+        specifier: ^2.7.2
+        version: 2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.3.1
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-inbox:
     dependencies:
       '@dxos/app-graph':
@@ -1679,6 +1776,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -1975,6 +2075,9 @@ importers:
 
   packages/apps/plugins/plugin-navtree:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1987,6 +2090,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -2239,6 +2345,13 @@ importers:
         version: 4.3.9(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
+    dependencies:
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -3583,6 +3696,31 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
+
+  packages/common/keyboard:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/common/keys:
     dependencies:
@@ -6998,12 +7136,18 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-searchlist
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7017,6 +7161,15 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -7035,6 +7188,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7050,9 +7206,6 @@ importers:
       lodash.set:
         specifier: ^4.3.2
         version: 4.3.2
-      mousetrap:
-        specifier: ^1.6.5
-        version: 1.6.5
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*
@@ -7078,9 +7231,6 @@ importers:
       '@types/lodash.set':
         specifier: ^4.3.7
         version: 4.3.7
-      '@types/mousetrap':
-        specifier: ^1.6.11
-        version: 1.6.12
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8207,6 +8357,9 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      lodash.sortby:
+        specifier: ^4.7.0
+        version: 4.7.0
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
@@ -8250,6 +8403,9 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
+      '@types/lodash.sortby':
+        specifier: ^4.7.7
+        version: 4.7.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8377,6 +8533,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -8609,6 +8768,9 @@ importers:
       '@fontsource/fira-code':
         specifier: ^4.5.12
         version: 4.5.12
+      '@fontsource/inter':
+        specifier: ^5.0.16
+        version: 5.0.16
       '@fontsource/roboto-flex':
         specifier: ^4.5.2
         version: 4.5.2
@@ -13587,6 +13749,10 @@ packages:
     resolution: {integrity: sha512-dAVGsgiVR6jslpuXosHH4/Jf8bsAIKL1RWqjVq4WpmxL7CFHfg9hT5bAv/Y3xsEj8kDTibEgpuC3eMfr9kb02g==}
     dev: false
 
+  /@fontsource/inter@5.0.16:
+    resolution: {integrity: sha512-qF0aH5UiZvCmneX5orJbVRoc2VTyLTV3X/7laMp03Qt28L+B9tFlZODOGUL64wDWc69YVdi1LeJB0cIgd51lvw==}
+    dev: false
+
   /@fontsource/roboto-flex@4.5.2:
     resolution: {integrity: sha512-GYG8WbC9K8HdIYwIzgPb7dc4CrMMb0QUOP6IYPeuVvd33PyZRvVvu1CvRzXhqbI+trV37Ti3WBCfJJl9RvsVTQ==}
     dev: false
@@ -13598,6 +13764,27 @@ packages:
   /@gar/promisify@1.1.3:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: true
+
+  /@gilbarbara/deep-equal@0.1.2:
+    resolution: {integrity: sha512-jk+qzItoEb0D0xSSmrKDDzf9sheQj/BAPxlgNxgmOaA3mxpUa6ndJLYGZKsJnIVEQSD8zcTbyILz7I0HcnBCRA==}
+    dev: false
+
+  /@gilbarbara/deep-equal@0.3.1:
+    resolution: {integrity: sha512-I7xWjLs2YSVMc5gGx1Z3ZG1lgFpITPndpi8Ku55GeEIKpACCPQNS/OTqQbxgTCfq0Ncvcc+CrFov96itVh6Qvw==}
+    dev: false
+
+  /@gilbarbara/helpers@0.9.1:
+    resolution: {integrity: sha512-B6q4qruzaurfbpmdGK85SSgnI36pFuJlewTul9hWHUv7u8VGxDwjj8anxSfuPyDZ3ovXF1H6ifCVFHQqRV2+Gg==}
+    dependencies:
+      '@gilbarbara/types': 0.2.2
+      is-lite: 1.2.1
+    dev: false
+
+  /@gilbarbara/types@0.2.2:
+    resolution: {integrity: sha512-QuQDBRRcm1Q8AbSac2W1YElurOhprj3Iko/o+P1fJxUWS4rOGKMVli98OXS7uo4z+cKAif6a+L9bcZFSyauQpQ==}
+    dependencies:
+      type-fest: 4.9.0
+    dev: false
 
   /@griffel/core@1.12.0:
     resolution: {integrity: sha512-QGmAv0vU0LpTgxqO5yZP/MDcqgvDUDvD3Y3d5GZ3OHuEQrFdyS0dOH2PD/scynuxAfE/wf0whsrvIO7WPFrwnQ==}
@@ -18761,6 +18948,46 @@ packages:
       '@sinonjs/commons': 1.8.3
     dev: true
 
+  /@socketsupply/socket-darwin-arm64@0.5.4:
+    resolution: {integrity: sha512-YAR9PPU1pb2R9QMLzh0LSQzDg2oFJoykOgXxew9zmdZ8NbVZPSrPgiMzV8EXbNhd8wPjtcbUuZWeQD76w3S7wA==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-darwin-x64@0.5.4:
+    resolution: {integrity: sha512-asLVhqwnBSMKnXAo6bEnoMBu+uMNx4kA4R2OhKqO7SbROD0WB2aPnhdv0xxn+FrAB7509UGJEwmwl4blyUUfVg==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-linux-arm64@0.5.4:
+    resolution: {integrity: sha512-9Ql9NBXwVaJZTbrsKKoiwAe26PNZKAPivaVL2O2cpWfg3OsWC1wFcwyuImIgOotN4BM10LcwTaTi3Q5cG2corw==}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-linux-x64@0.5.4:
+    resolution: {integrity: sha512-AfVfYZ2QUdMOkLLjjsPCJXb2Kk/lxr3gOGFtHVTM41q7VzeieqiKQx07PCseA4D8IOu6qvJuKgPc0dVAlx95Rw==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-win32-x64@0.5.4:
+    resolution: {integrity: sha512-SmefD8JzEVFvPZQVrHysjfeoXS+PZeJ1s01N9N9fv1mXGnHPk0pWRPbiSh22W0eT6+7ywGXHPqYoNisOPjhziw==}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
+
   /@stackblitz/sdk@1.9.0:
     resolution: {integrity: sha512-3m6C7f8pnR5KXys/Hqx2x6ylnpqOak6HtnZI6T5keEO0yT+E4Spkw37VEbdwuC+2oxmjdgq6YZEgiKX7hM1GmQ==}
     dev: true
@@ -21298,10 +21525,6 @@ packages:
 
   /@types/mocha@8.2.3:
     resolution: {integrity: sha512-ekGvFhFgrc2zYQoX4JeZPmVzZxw6Dtllga7iGHzfbYIYkAMUx/sAFP2GdFpLff+vdHXu5fl7WX9AT+TtqYcsyw==}
-    dev: true
-
-  /@types/mousetrap@1.6.12:
-    resolution: {integrity: sha512-tzXGzMbvXt815z0Z7FE45wmRVRitMTaPgfVcdGhOS6LtEOWBZBokFJxEdatVA8cj+cQxvdFLmlMC4c12TNqv9A==}
     dev: true
 
   /@types/ms@0.7.31:
@@ -26533,6 +26756,10 @@ packages:
     resolution: {integrity: sha512-Q6fKUPqnAHAyhiUgFU7BUzLiv0kd8saH9al7tnu5Q/okj6dnupxyTgFIBjVzJATdfIAm9NAsvXNzjaKa+bxVyA==}
     dev: true
 
+  /deep-diff@1.0.2:
+    resolution: {integrity: sha512-aWS3UIVH+NPGCD1kki+DCU9Dua032iSsO43LqQpcs4R3+dVv7tX0qBGjiVHJHjplsoUM2XRO/KB92glqc68awg==}
+    dev: false
+
   /deep-eql@4.1.3:
     resolution: {integrity: sha512-WaEtAOpRA1MQ0eohqZjpGD8zdI0Ovsm8mmFhaDN8dvDZzyoUMcYDnf5Y6iu7HTXxf8JDS23qWa4a+hKCDyOPzw==}
     engines: {node: '>=6'}
@@ -31586,6 +31813,14 @@ packages:
     resolution: {integrity: sha512-z7CMFGNrENq5iFB9Bqo64Xk6Y9sg+epq1myIcdHaGnbMTYOxvzsEtdYqQUylB7LxfkvgrrjP32T6Ywciio9UIQ==}
     dev: true
 
+  /is-lite@0.8.2:
+    resolution: {integrity: sha512-JZfH47qTsslwaAsqbMI3Q6HNNjUuq6Cmzzww50TdP5Esb6e1y2sK2UAaZZuzfAzpoI2AkxoPQapZdlDuP6Vlsw==}
+    dev: false
+
+  /is-lite@1.2.1:
+    resolution: {integrity: sha512-pgF+L5bxC+10hLBgf6R2P4ZZUBOQIIacbdo8YvuCP8/JvsWxG7aZ9p10DYuLtifFci4l3VITphhMlMV4Y+urPw==}
+    dev: false
+
   /is-map@2.0.2:
     resolution: {integrity: sha512-cOZFQQozTha1f4MxLFzlgKYPTyj26picdZTx82hbc/Xf4K/tZOOXSCkMvU4pKioRXGDLJRn0GM7Upe7kR721yg==}
     dev: false
@@ -35870,10 +36105,6 @@ packages:
       monaco-editor: 0.44.0
     dev: false
 
-  /mousetrap@1.6.5:
-    resolution: {integrity: sha512-QNo4kEepaIBwiT8CDhP98umTetp+JNfQYBWvC1pc6/OAibuXtRcxZ58Qz8skvEHYvURne/7R8T5VoOI7rDsEUA==}
-    dev: false
-
   /mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
@@ -37738,6 +37969,11 @@ packages:
       '@babel/runtime': 7.22.15
     dev: true
 
+  /popper.js@1.16.1:
+    resolution: {integrity: sha512-Wb4p1J4zyFTbM+u6WuO4XstYx4Ky9Cewe4DWrel7B0w6VVICvPwdOpotjzcf6eD8TsckVnIMNONQyPIUFOUbCQ==}
+    deprecated: You can find the new Popper v2 at @popperjs/core, this package is dedicated to the legacy v1
+    dev: false
+
   /portfinder@1.0.32:
     resolution: {integrity: sha512-on2ZJVVDXRADWE6jnQaX0ioEylzgBpQk8r55NE4wjXW1ZxO+BgDlY6DXwj20i0V8eB4SenDQ00WEaxfiIQPcxg==}
     engines: {node: '>= 0.12.0'}
@@ -38749,6 +38985,21 @@ packages:
       react-is: 18.1.0
     dev: true
 
+  /react-floater@0.7.9(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-NXqyp9o8FAXOATOEo0ZpyaQ2KPb4cmPMXGWkx377QtJkIXHlHRAGer7ai0r0C1kG5gf+KJ6Gy+gdNIiosvSicg==}
+    peerDependencies:
+      react: 15 - 18
+      react-dom: 15 - 18
+    dependencies:
+      deepmerge: 4.3.1
+      is-lite: 0.8.2
+      popper.js: 1.16.1
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      tree-changes: 0.9.3
+    dev: false
+
   /react-i18next@11.18.6(i18next@21.10.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
     peerDependencies:
@@ -38769,6 +39020,16 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /react-innertext@1.1.5(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-PWAqdqhxhHIv80dT9znP2KvS+hfkbRovFp4zFYHFFlOoQLRiawIic81gKb3U1wEyJZgMwgs3JoLtwryASRWP3Q==}
+    peerDependencies:
+      '@types/react': '>=0.0.0 <=99'
+      react: '>=0.0.0 <=99'
+    dependencies:
+      '@types/react': 18.0.21
+      react: 18.2.0
+    dev: false
+
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -38782,6 +39043,30 @@ packages:
 
   /react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
+
+  /react-joyride@2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-AVzEweJxjQMc6hXUbJlH6St987GCmw0pkCSoz+X3XBMQmrk57FCMOrh1LvyMvW5GaT95C4D5oZpoaVjaOsgptg==}
+    peerDependencies:
+      react: 15 - 18
+      react-dom: 15 - 18
+    dependencies:
+      '@gilbarbara/deep-equal': 0.3.1
+      '@gilbarbara/helpers': 0.9.1
+      deep-diff: 1.0.2
+      deepmerge: 4.3.1
+      is-lite: 1.2.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      react-floater: 0.7.9(react-dom@18.2.0)(react@18.2.0)
+      react-innertext: 1.1.5(@types/react@18.0.21)(react@18.2.0)
+      react-is: 16.13.1
+      scroll: 3.0.1
+      scrollparent: 2.1.0
+      tree-changes: 0.11.2
+      type-fest: 4.9.0
+    transitivePeerDependencies:
+      - '@types/react'
+    dev: false
 
   /react-json-tree@0.18.0(@types/react@18.0.21)(react@18.2.0):
     resolution: {integrity: sha512-Qe6HKSXrr++n9Y31nkRJ3XvQMATISpqigH1vEKhLwB56+nk5thTP0ITThpjxY6ZG/ubpVq/aEHIcyLP/OPHxeA==}
@@ -40110,6 +40395,14 @@ packages:
     resolution: {integrity: sha512-g3WxHrqSWCZHGHlSrF51VXFdjImhwvH8ZO/pryFH56Qi0cDsZfylQa/t0jCzVQFNbNvM00HfHjkDPEuarKDSWQ==}
     engines: {node: '>=8'}
     dev: true
+
+  /scroll@3.0.1:
+    resolution: {integrity: sha512-pz7y517OVls1maEzlirKO5nPYle9AXsFzTMNJrRGmT951mzpIBy7sNHOg5o/0MQd/NqliCiWnAi0kZneMPFLcg==}
+    dev: false
+
+  /scrollparent@2.1.0:
+    resolution: {integrity: sha512-bnnvJL28/Rtz/kz2+4wpBjHzWoEzXhVg/TE8BeVGJHUqE8THNIRnDxDWMktwM+qahvlRdvlLdsQfYe+cuqfZeA==}
+    dev: false
 
   /section-matter@1.0.0:
     resolution: {integrity: sha512-vfD3pmTzGpufjScBh50YHKzEu2lxBWhVEHsNGoEXmCmn2hKGfeNLYMzCJpe8cD7gqX7TJluOVpBkAequ6dgMmA==}
@@ -42084,6 +42377,20 @@ packages:
     resolution: {integrity: sha512-iawgk0hLP3SxGKDfnDJf8wTz4p2qImnyihM5Hh/sGvQ3K37dPi/w8sRhdNIxYA1TwFwc5mDhIJq+O0RsvXBKdQ==}
     dev: false
 
+  /tree-changes@0.11.2:
+    resolution: {integrity: sha512-4gXlUthrl+RabZw6lLvcCDl6KfJOCmrC16BC5CRdut1EAH509Omgg0BfKLY+ViRlzrvYOTWR0FMS2SQTwzumrw==}
+    dependencies:
+      '@gilbarbara/deep-equal': 0.3.1
+      is-lite: 1.2.1
+    dev: false
+
+  /tree-changes@0.9.3:
+    resolution: {integrity: sha512-vvvS+O6kEeGRzMglTKbc19ltLWNtmNt1cpBoSYLj/iEcPVvpJasemKOlxBrmZaCtDJoF+4bwv3m01UKYi8mukQ==}
+    dependencies:
+      '@gilbarbara/deep-equal': 0.1.2
+      is-lite: 0.8.2
+    dev: false
+
   /tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
@@ -42328,6 +42635,11 @@ packages:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
     dev: true
+
+  /type-fest@4.9.0:
+    resolution: {integrity: sha512-KS/6lh/ynPGiHD/LnAobrEFq3Ad4pBzOlJ1wAnJx9N4EYoqFhMfLIBjUT2UEx4wg5ZE+cC1ob6DCSpppVo+rtg==}
+    engines: {node: '>=16'}
+    dev: false
 
   /type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}

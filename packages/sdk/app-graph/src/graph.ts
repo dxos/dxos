@@ -28,14 +28,13 @@ export type TraversalOptions = {
   /**
    * A callback which is called for each node visited during traversal.
    */
-  visitor?: (node: Node) => void;
+  visitor?: (node: Node, path: string[]) => void;
 };
 
 /**
- * The Graph represents...
+ * The Graph represents the structure of the application constructed via plugins.
  */
 export class Graph {
-  // TODO(burdon): Document.
   // TODO(wittjosiah): Should this support multiple paths to the same node?
   private readonly _index = deepSignal<{ [key: string]: string[] }>({});
 
@@ -98,7 +97,7 @@ export class Graph {
    */
   traverse({ node = this._root, direction = 'down', filter, visitor }: TraversalOptions, depth = 0): void {
     if (!filter || filter(node)) {
-      visitor?.(node);
+      visitor?.(node, this.getPath(node.id)!);
     }
 
     if (direction === 'down') {

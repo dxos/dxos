@@ -18,6 +18,7 @@ import { TestBuilder } from '../testing';
 
 chai.use(chaiAsPromised);
 
+// TODO(burdon): Flaky: https://cloud.nx.app/runs/7BZ7WKaZPA
 const setup = (getConfig: Provider<MaybePromise<Config>>) => {
   const workerRuntime = new WorkerRuntime(getConfig);
 
