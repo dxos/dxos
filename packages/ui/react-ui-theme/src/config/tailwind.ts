@@ -202,7 +202,7 @@ export const tailwindConfig = ({
     // Configure fonts in theme.css and package.json.
     fontFamily: {
       body: ['Inter Variable', ...defaultConfig.theme.fontFamily.sans],
-      mono: ['Fira Code Variable', ...defaultConfig.theme.fontFamily.mono],
+      mono: ['JetBrains Mono Variable', ...defaultConfig.theme.fontFamily.mono],
     },
     extend: merge(
       {

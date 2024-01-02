@@ -14,7 +14,7 @@ const TypographyStory = () => {
       <h1 className='text-4xl font-medium'>
         Việc <span className='italic'>thừa</span> nhận{' '}
         <span className='font-mono bg-neutral-500/10'>
-          nhân <span className='italic'>phẩm</span> vốn
+          nhân <span className='italic'>phẩm ~~&gt;</span> vốn
         </span>{' '}
         có, các quyền
       </h1>
@@ -24,8 +24,8 @@ const TypographyStory = () => {
         hoặc bất cứ một lời buộc tội nào đối với người đó.
       </p>
       <h2 className='text-xl font-semibold'>
-        Mọi người đều có quyền nghỉ ngơi và giải trí, kể cả quyền được hạn chế hợp lý về số giờ làm việc và hưởng những
-        ngày nghỉ định kỳ được trả lương.
+        Mọi <span className='font-mono'>Mọi</span> người đều có quyền nghỉ ngơi và giải trí, kể cả quyền được hạn chế
+        hợp lý về số giờ làm việc và hưởng những ngày nghỉ định kỳ được trả lương.
       </h2>
       <p className='font-mono bg-neutral-500/10'>
         Mọi người đều có quyền được hưởng trật tự xã hội và trật tự quốc tế trong đó các quyền và tự do nêu trong Bản
