@@ -5,6 +5,12 @@
 import { type Dispatch, type SetStateAction } from 'react';
 
 import { type Document } from '@braneframe/types';
+import {
+  type GraphBuilderProvides,
+  type TranslationsProvides,
+  type SettingsProvides,
+  type SurfaceProvides,
+} from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 
 export type EditorViewState = 'editor' | 'preview';
@@ -34,3 +40,12 @@ export type GhIssueIdentifier = GhSharedProps & {
 export type GhIdentifier = GhFileIdentifier | GhIssueIdentifier;
 
 export type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
+
+export type GithubSettingsProps = {
+  pat?: string;
+};
+
+export type GithubPluginProvides = SurfaceProvides &
+  GraphBuilderProvides &
+  SettingsProvides<GithubSettingsProps> &
+  TranslationsProvides;

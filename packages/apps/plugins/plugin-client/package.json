@@ -30,7 +30,8 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*"
+    "@dxos/react-ui": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

@@ -13,17 +13,19 @@ import type { Plugin } from '../PluginHost';
 /**
  * Basic state provided by a layout plugin.
  */
+// TODO(burdon): Josiah: why do we use zod here?
 export const Layout = z.object({
   fullscreen: z.boolean(),
   sidebarOpen: z.boolean(),
   complementarySidebarOpen: z.boolean(),
 
-  dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
+  // TODO(burdon): Why do we have a single root?
   dialogOpen: z.boolean(),
+  dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
 
-  popoverAnchorId: z.string().optional(),
-  popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
   popoverOpen: z.boolean(),
+  popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
+  popoverAnchorId: z.string().optional(),
 
   // TODO(wittjosiah): Array?
   active: z.string().optional().describe('Id of the currently active item.'),
@@ -63,6 +65,11 @@ export enum LayoutAction {
   OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
   CLOSE_POPOVER = `${LAYOUT_ACTION}/close-popover`,
   ACTIVATE = `${LAYOUT_ACTION}/activate`,
+
+  // TODO(burdon): Move to new plugin.
+  OPEN_COMMANDS = `${LAYOUT_ACTION}/open-commands`,
+  OPEN_SETTINGS = `${LAYOUT_ACTION}/open-settings`,
+  OPEN_SHORTCUTS = `${LAYOUT_ACTION}/open-shortcuts`,
 }
 
 /**

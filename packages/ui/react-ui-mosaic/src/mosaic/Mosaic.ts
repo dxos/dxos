@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FC } from 'react';
+import { type FC, type RefAttributes } from 'react';
 
 import {
   MosaicContainer,
@@ -46,7 +46,7 @@ export const Mosaic = {
   DragOverlay: FC<MosaicOverlayProps>;
   SortableContext: FC<MosaicSortableProps>;
   DraggableTile: FC<MosaicTileProps<any, any>>;
-  DroppableTile: FC<MosaicTileProps<any, any>>;
+  DroppableTile: FC<RefAttributes<HTMLDivElement> & MosaicTileProps<any, any>>;
   SortableTile: FC<MosaicTileProps<any, number>>;
 
   DefaultComponent: MosaicTileComponent;

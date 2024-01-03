@@ -27,6 +27,9 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/keyboard"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -58,6 +61,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-theme"

@@ -60,7 +60,7 @@ export type MarkdownPluginState = {
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { experimental: false });
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
 
   // TODO(burdon): Why does this need to be a signal? Race condition?
   const state = deepSignal<MarkdownPluginState>({ onChange: [] });
@@ -89,8 +89,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
-  // TODO(burdon): Better way for different plugins to configure extensions.
-  const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
+  // TODO(burdon): Factor out space dependency.
+  const getExtensionsConfig = (space?: Space, document?: DocumentType): UseExtensionsOptions => ({
+    debug: settings.values.debug,
     experimental: settings.values.experimental,
     // TODO(burdon): Change to passing in config object.
     listener: {
@@ -98,13 +99,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         state.onChange.forEach((onChange) => onChange(text));
       },
     },
-    autocomplete: {
+    autocomplete: space && {
       onSearch: (text: string) => {
         // TODO(burdon): Specify filter (e.g., stack).
         const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
         return objects
           .map<AutocompleteResult | undefined>((object) =>
-            object.title?.length && object.id !== document.id
+            object.title?.length && object.id !== document?.id
               ? {
                   label: object.title,
                   // TODO(burdon): Factor out URL builder.
@@ -115,25 +116,38 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           .filter(nonNullable);
       },
     },
-    comments: {
-      onCreate: () => {
+    // TODO(burdon): Update position in editor: EditorView.scrollIntoView
+    comments: space && {
+      onCreate: (from: number, to: number) => {
         if (space) {
-          // TODO(burdon): Set back ref to object.
+          // TODO(burdon): Set back ref from thread to this object.
           const thread = space.db.add(new ThreadType());
+          void intentPlugin?.provides.intent.dispatch([
+            {
+              action: ThreadAction.SELECT,
+              data: { active: thread.id, threads: [{ id: thread.id }] },
+            },
+            {
+              action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
+              data: { state: true },
+            },
+          ]);
           return thread.id;
         }
       },
       onUpdate: (info) => {
-        const { items, active } = info;
-        void intentPlugin?.provides.intent.dispatch({
-          action: ThreadAction.SELECT,
-          data: { active, threads: items.map(({ id, location }) => ({ id, y: location?.top })) },
-        });
+        const { active, items } = info;
+        void intentPlugin?.provides.intent.dispatch([
+          {
+            action: ThreadAction.SELECT,
+            data: { active, threads: items?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }] },
+          },
+        ]);
       },
     },
   });
 
-  const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
+  const MarkdownMain: FC<{ content: DocumentType; readonly: boolean }> = ({ content: document, readonly }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
     const model = useTextModel({ identity, space, text: document?.content });
@@ -149,6 +163,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
     return (
       <EditorMain
+        readonly={readonly}
         editorMode={settings.values.editorMode}
         model={model}
         extensions={getExtensionsConfig(space!, document)}
@@ -200,10 +215,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     ready: async (plugins) => {
       settings
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$experimental!, 'show-widgets', LocalStorageStore.bool);
+        .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
+        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool);
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
+      // TODO(burdon): Remove?
       const filters: ((document: DocumentType) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
@@ -216,7 +233,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
     },
     provides: {
-      settings: settings.values,
+      settings: { meta, values: settings.values },
       metadata: {
         records: {
           [DocumentType.schema.typename]: {
@@ -253,12 +270,31 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 testId: 'markdownPlugin.createObject',
               },
             });
-          } else if (parent.data instanceof DocumentType && !parent.data.title) {
-            return effect(() => {
-              const document = parent.data;
-              parent.label = document.title ||
-                getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+          } else if (parent.data instanceof DocumentType) {
+            parent.addAction({
+              id: `${MARKDOWN_PLUGIN}/toggle-readonly`,
+              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <ArticleMedium {...props} />,
+              keyBinding: 'shift+F5',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: MARKDOWN_PLUGIN,
+                    action: MarkdownAction.TOGGLE_VIEW,
+                    data: {
+                      objectId: parent.data.id,
+                    },
+                  },
+                ]),
             });
+
+            if (!parent.data.title) {
+              effect(() => {
+                const document = parent.data;
+                parent.label = document.title ||
+                  getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+              });
+            }
           }
         },
       },
@@ -282,7 +318,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             case 'main': {
               if (isDocument(data.active)) {
-                return <MarkdownMain content={data.active} />;
+                const readonly = settings.values.viewMode[data.active.id];
+                return <MarkdownMain content={data.active} readonly={readonly} />;
               } else if (
                 'composer' in data &&
                 isMarkdown(data.composer) &&
@@ -327,6 +364,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
+                    extensions: getExtensionsConfig(),
                   },
                 };
 
@@ -338,10 +376,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'settings': {
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <MarkdownSettings /> : null;
+              return data.plugin === meta.id ? <MarkdownSettings settings={settings.values} /> : null;
             }
 
-            // TODO(burdon): Review with @thure.
+            // TODO(burdon): Remove.
             case 'dialog': {
               if (data.subject === 'dxos.org/plugin/stack/chooser' && data.id === 'choose-stack-section-doc') {
                 // return <SpaceMarkdownChooser />;
@@ -355,10 +393,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
+        resolver: ({ action, data }) => {
+          switch (action) {
             case MarkdownAction.CREATE: {
               return { object: new DocumentType() };
+            }
+
+            // TODO(burdon): Generalize for every object.
+            case MarkdownAction.TOGGLE_VIEW: {
+              const { objectId } = data;
+              settings.values.viewMode[objectId as string] = !settings.values.viewMode[objectId];
+              break;
             }
           }
         },

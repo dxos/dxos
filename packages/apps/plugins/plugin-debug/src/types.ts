@@ -7,10 +7,18 @@ import { type Context, createContext } from 'react';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
+
+import { DEBUG_PLUGIN } from './meta';
+
+const DEBUG_ACTION = `${DEBUG_PLUGIN}/action`;
+export enum DebugAction {
+  OPEN_DEVTOOLS = `${DEBUG_ACTION}/open-devtools`,
+}
 
 export type DebugContextType = {
   running: boolean;
@@ -29,6 +37,5 @@ export type DebugSettingsProps = { devtools?: boolean; debug?: boolean };
 export type DebugPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
-  TranslationsProvides & {
-    settings: DebugSettingsProps;
-  };
+  SettingsProvides<DebugSettingsProps> &
+  TranslationsProvides;

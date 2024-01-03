@@ -18,43 +18,6 @@ import {
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-// 1. TODO(burdon): Make atomic (for tasklist also).
-//    - https://discuss.codemirror.net/t/easily-track-remove-content-with-decorations/4606
-//    - https://discuss.codemirror.net/t/creating-atomic-replace-decorations/2961
-//    - https://codemirror.net/docs/ref/#state.EditorState%5EtransactionFilter (transaction filter: move, delete).
-// 2. TODO(burdon): Create/track threads in composer (change global state). Select/follow. Scroll with page.
-//    - Separate from chat/search.
-// 3. TODO(burdon): Support multiple threads in sidebar?
-// 4. TODO(burdon): Anchor AI thread when creating section.
-// 5. TODO(burdon): Button to resolve thread to close comments.
-
-// 6. TODO(burdon): Perf: Update existing rangeset.
-//  https://discuss.codemirror.net/t/rangeset-with-metadata-and-different-decorations/3874
-
-// TODO(burdon): Import note (performance):
-//  Easily track & remove content with decorations
-//  https://discuss.codemirror.net/t/easily-track-remove-content-with-decorations/4606
-
-class BookmarkWidget extends WidgetType {
-  constructor(private readonly _pos: number, private readonly _id: string) {
-    super();
-    invariant(this._id);
-  }
-
-  override eq(other: BookmarkWidget) {
-    return this._id === other._id;
-  }
-
-  override toDOM() {
-    const span = document.createElement('span');
-    span.className = 'cm-bookmark';
-    // TODO(burdon): Call out to react?
-    // https://emojifinder.com/comment
-    span.textContent = '💬';
-    return span;
-  }
-}
-
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
   '& .cm-bookmark': {
@@ -68,14 +31,33 @@ const styles = EditorView.baseTheme({
   },
 });
 
+class BookmarkWidget extends WidgetType {
+  constructor(private readonly _pos: number, private readonly _id: string, private readonly _handleClick: () => void) {
+    super();
+    invariant(this._id);
+  }
+
+  override eq(other: BookmarkWidget) {
+    return this._id === other._id;
+  }
+
+  override toDOM() {
+    const span = document.createElement('span');
+    span.className = 'cm-bookmark';
+    span.textContent = '§';
+    span.onclick = () => this._handleClick();
+    return span;
+  }
+}
+
 type CommentsInfo = {
   active?: string;
-  items: { id: string; pos: number; location: Rect | null }[];
+  items?: { id: string; pos: number; location: Rect | null }[];
 };
 
 export type CommentsOptions = {
   key?: string;
-  onCreate?: () => string | void;
+  onCreate?: (from: number, to: number) => string | void;
   onUpdate?: (info: CommentsInfo) => void;
 };
 
@@ -91,7 +73,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const id = match[1];
       return Decoration.replace({
         id,
-        widget: new BookmarkWidget(pos, id),
+        widget: new BookmarkWidget(pos, id, () => handleUpdate({ active: id })),
       });
     },
   });
@@ -116,7 +98,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     },
   );
 
-  const doUpdate = debounce((data: CommentsInfo) => {
+  const handleUpdate = debounce((data: CommentsInfo) => {
     options.onUpdate?.(data);
   }, 200);
 
@@ -126,13 +108,14 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         key: options?.key ?? 'shift-meta-c',
         run: (view) => {
           // Insert footnote.
-          const id = options.onCreate?.();
+          const { from, to, head } = view.state.selection.main;
+          const id = options.onCreate?.(from, to);
           if (id) {
-            const pos = view.state.selection.main.head;
             const tag = `[^${id}]`;
+            // TODO(burdon): Add selection.
             view.dispatch({
-              changes: { from: pos, insert: tag },
-              selection: { anchor: pos + tag.length },
+              changes: { from: head, insert: tag },
+              selection: { anchor: head + tag.length },
             });
 
             return true;
@@ -152,14 +135,14 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         return;
       }
 
-      const view = update.view;
-      const pos = view.state.selection.main.head;
+      const { view, state } = update;
+      const pos = state.selection.main.head;
 
       const decorations: { from: number; to: number; value: Decoration }[] = [];
       const rangeSet = view.plugin(bookmarks)?.bookmarks;
       let closest = Infinity;
-      // TODO(burdon): Always shows entire document?
-      const { from, to } = view.visibleRanges?.[0] ?? { from: 0, to: view.state.doc.length };
+      // TODO(burdon): Handle multiple visible ranges in large documents.
+      const { from, to } = /* view.visibleRanges?.[0] ?? */ { from: 0, to: state.doc.length };
       rangeSet?.between(from, to, (from, to, value) => {
         decorations.push({ from, to, value });
         const d = Math.min(Math.abs(pos - from), Math.abs(pos - to));
@@ -171,7 +154,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       });
 
       if (decorations.length) {
-        doUpdate({
+        handleUpdate({
           active,
           items: decorations.map(
             ({

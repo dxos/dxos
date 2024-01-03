@@ -6,14 +6,20 @@ import { mx } from '@dxos/react-ui-theme';
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
+// TODO(burdon): Better way to align vertically than negative margin? Font-specific?
 // https://tailwindcss.com/docs/font-weight
-export const heading: Record<HeadingLevel, string> = {
-  1: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-4xl',
-  2: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-3xl',
-  3: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-2xl',
-  4: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-xl',
-  5: 'mbs-4 mbe-2 font-medium text-inherit no-underline text-lg',
-  6: 'mbs-4 mbe-2 font-medium text-inherit no-underline',
+export const headings: Record<HeadingLevel, string[]> = {
+  1: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-4xl', '-ml-[10px]'],
+  2: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-3xl', '-ml-[8px]'],
+  3: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-2xl', '-ml-[7px]'],
+  4: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-xl', '-ml-[6px]'],
+  5: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-lg', '-ml-[5px]'],
+  6: ['mbs-4 mbe-2 font-medium text-inherit no-underline', '-ml-[4px]'],
+};
+
+export const heading = (level: HeadingLevel, readonly?: boolean) => {
+  const [style, offset] = headings[level];
+  return mx(style, readonly && offset);
 };
 
 export const text = 'text-neutral-800 dark:text-neutral-200';
@@ -37,7 +43,8 @@ export const inlineUrl = mx(code, 'px-1');
 export const blockquote = mx('pl-1 mr-1 border-is-4 border-primary-500/70 dark:border-primary-500/30', light);
 
 // TODO(burdon): Replace with widget.
-export const horizontalRule = 'flex mlb-4 border-b text-neutral-100 dark:text-neutral-900 border-neutral-500/50';
+export const horizontalRule =
+  'flex mlb-4 border-b text-neutral-100 dark:text-neutral-900 border-neutral-200 dark:border-neutral-800';
 
 // TODO(thure): Tailwind was not seeing `[&>li:before]:content-["•"]` as a utility class, but it would work if instead of `"•"` it was `"X"`… why?
 export const unorderedList =

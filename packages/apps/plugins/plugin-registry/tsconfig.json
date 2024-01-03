@@ -21,6 +21,12 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

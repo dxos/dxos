@@ -191,14 +191,15 @@ export const TreeViewContainer = ({
                 <div role='none' className='grow' />
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
+                    {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
                     <Button
+                      data-joyride='welcome/settings'
                       variant='ghost'
                       classNames='pli-2.5'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
-                          action: LayoutAction.OPEN_DIALOG,
-                          data: { component: 'dxos.org/plugin/layout/ProfileSettings' },
+                          action: LayoutAction.OPEN_SETTINGS,
                         });
                       }}
                     >

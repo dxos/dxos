@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Additional copyright?
+
 import { type EditorState, type Text, type Transaction } from '@codemirror/state';
 
 import { next as am, type Heads } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from './handle';
-import { type Field } from './plugin';
+import { type IDocHandle } from '../handle';
+import { type Field } from '../plugin';
 
-export default (
+export const codemirrorToAutomerge = (
   field: Field,
   handle: IDocHandle,
   transactions: Transaction[],
@@ -18,7 +20,7 @@ export default (
   const { lastHeads, path } = state.field(field);
 
   // We don't want to call `automerge.updateAt` if there are no changes.
-  // Otherwise later on `automerge.diff` will return empty patches that result in a no-op but still mess up the selection.
+  // Otherwise, later on `automerge.diff` will return empty patches that result in a no-op but still mess up the selection.
   let hasChanges = false;
   for (const tr of transactions) {
     tr.changes.iterChanges(() => {
@@ -37,5 +39,6 @@ export default (
       });
     }
   });
+
   return newHeads ?? undefined;
 };

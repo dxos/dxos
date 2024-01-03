@@ -12,10 +12,11 @@ import { ClientRepeater, textGenerator, useDataGenerator } from '@dxos/react-cli
 import { useId, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor } from './TextEditor';
+import { MarkdownEditor } from '../../components';
 import { Replicator, useYjsModel } from '../../testing';
 
 export default {
+  title: 'react-ui-editor/YJS',
   component: MarkdownEditor,
   decorators: [withTheme],
 };
@@ -50,7 +51,6 @@ const Story = () => {
 };
 
 export const Default = {
-  title: 'react-ui-editor/YJS',
   // TODO(wittjosiah): Decorator for doing this without clients being initialized?
   render: () => <ClientRepeater count={2} Component={Story} />,
 };

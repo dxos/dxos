@@ -2,20 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Additional copyright?
+
 import { type EditorView } from '@codemirror/view';
 
 import { next as automerge } from '@dxos/automerge/automerge';
 
-import amToCodemirror from './amToCodemirror';
-import codeMirrorToAm from './codeMirrorToAm';
 import { type IDocHandle } from './handle';
 import { type Field, isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads } from './plugin';
+import { automergeToCodemirror, codemirrorToAutomerge } from './translation';
 
 type Doc<T> = automerge.Doc<T>;
 type Heads = automerge.Heads;
 
 type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads | undefined;
 
+/**
+ * TODO(burdon): Comment.
+ */
 export class PatchSemaphore {
   _field!: Field;
   _inReconcile = false;
@@ -39,7 +43,7 @@ export class PatchSemaphore {
 
     const transactions = view.state.field(this._field).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
 
-    // First undo all the unreconciled transactions
+    // First undo all the unreconciled transactions.
     const toInvert = transactions.slice().reverse();
     for (const tx of toInvert) {
       const inverted = tx.changes.invert(tx.startState.doc);
@@ -50,19 +54,18 @@ export class PatchSemaphore {
       });
     }
 
-    // now apply the unreconciled transactions to the document
-    let newHeads = codeMirrorToAm(this._field, handle, transactions, view.state);
+    // Apply the unreconciled transactions to the document.
+    let newHeads = codemirrorToAutomerge(this._field, handle, transactions, view.state);
 
-    // NOTE: null and undefined each come from automerge and repo respectively
+    // NOTE: null and undefined each come from automerge and repo respectively.
     if (newHeads === null || newHeads === undefined) {
       // TODO: @alexjg this is the call that's resetting the editor state on click
       newHeads = automerge.getHeads(handle.docSync()!);
     }
 
-    // now get the diff between the updated state of the document and the heads
-    // and apply that to the codemirror doc
+    // Now get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
     const diff = automerge.equals(oldHeads, newHeads) ? [] : automerge.diff(handle.docSync()!, oldHeads, newHeads);
-    amToCodemirror(view, selection, path, diff);
+    automergeToCodemirror(view, selection, path, diff);
 
     view.dispatch({
       effects: updateHeads(newHeads),

@@ -12,17 +12,17 @@ export default [
         'markdown actions label': 'GitHub actions',
         'unbind to file in github label': 'Disconnect from GitHub',
         'bind to file in github label': 'Connect to issue or file in GitHub',
-        'github pat label': 'GitHub personal access token',
+        'github pat label': 'GitHub personal access token:',
         'github pat description':
           'Composer needs this in order to communicate with GitHub. <docsLink>GitHub’s documentation describes how to create a token.</docsLink> Composer only needs write access to issues, contents, and pull requests.',
         'github pat description href':
           'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens',
-        'empty github pat message': 'Set a GitHub personal access token to continue',
+        'empty github pat message': 'Set a GitHub personal access token to continue.',
         'set github pat label': 'Set GitHub token',
         'error github pat message':
-          'There was a problem authenticating with GitHub using the personal access token provided',
+          'There was a problem authenticating with GitHub using the personal access token provided.',
         'error github markdown path message': 'This is not a valid path to a Markdown file or Issue in GitHub.',
-        'paste url to file in github label': 'Paste the URL to the Issue or Markdown file in GitHub',
+        'paste url to file in github label': 'Paste the URL to the Issue or Markdown file in GitHub.',
         'paste url to file in github description':
           'Navigate to the issue or file in GitHub, then copy the URL in your browser and paste it here.',
         'paste url to file in github placeholder': 'https://github.com/owner/repo/blob/main/path/to/README.md',
