@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types",
     "types": [
       "node"
@@ -16,16 +17,9 @@
   ],
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
+    "src/**/*.tsx"
   ],
   "references": [
-    {
-      "path": "../../../common/local-storage"
-    },
-    {
-      "path": "../../../common/util"
-    },
     {
       "path": "../../../sdk/app-framework"
     },
@@ -33,16 +27,10 @@
       "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/react-ui-mosaic"
-    },
-    {
       "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../../ui/storybook-utils"
-    },
-    {
-      "path": "../plugin-settings"
     }
   ]
 }

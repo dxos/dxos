@@ -2,27 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
+  type GraphBuilderProvides,
+  resolvePlugin,
   type MetadataRecordsProvides,
   type PluginDefinition,
   type SurfaceProvides,
   type TranslationsProvides,
+  type Plugin,
+  parseIntentPlugin,
+  LayoutAction,
+  type GraphProvides,
+  parseGraphPlugin,
 } from '@dxos/app-framework';
 import { Graph, type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 
-import { NODE_TYPE, TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';
-import meta from './meta';
+import {
+  CommandsDialogContent,
+  NODE_TYPE,
+  TreeItemMainHeading,
+  TreeViewContainer,
+  TreeViewDocumentTitle,
+} from './components';
+import meta, { NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 
-export type NavTreePluginProvides = SurfaceProvides & MetadataRecordsProvides & TranslationsProvides;
+export type NavTreePluginProvides = SurfaceProvides &
+  MetadataRecordsProvides &
+  GraphBuilderProvides &
+  TranslationsProvides;
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
+  let graphPlugin: Plugin<GraphProvides> | undefined;
+
   return {
     meta,
-    ready: async () => {
+    ready: async (plugins) => {
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
       // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
@@ -56,6 +77,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
+          switch (data.component) {
+            case `${NAVTREE_PLUGIN}/Commands`:
+              // TODO(wittjosiah): Pass graph in data.
+              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
+          }
+
           switch (role) {
             case 'navigation':
               if ('graph' in data && data.graph instanceof Graph) {
@@ -85,6 +112,26 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           }
 
           return null;
+        },
+      },
+      graph: {
+        builder: ({ parent, plugins }) => {
+          if (parent.id !== 'root') {
+            return;
+          }
+
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          parent.addAction({
+            id: 'dxos.org/plugin/navtree/open-commands',
+            label: ['open commands label', { ns: NAVTREE_PLUGIN }],
+            icon: (props) => <MagnifyingGlass {...props} />,
+            keyBinding: 'meta+k',
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_DIALOG,
+                data: { component: `${NAVTREE_PLUGIN}/Commands` },
+              }),
+          });
         },
       },
       translations,

@@ -4,15 +4,15 @@
 
 import React, { useState } from 'react';
 
+import { type Plugin, Surface, usePlugins } from '@dxos/app-framework';
 import { Button, Dialog, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { ghostHover, ghostSelected, groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { type Plugin, usePlugins } from '../PluginHost';
-import { Surface } from '../SurfacePlugin';
+import { SETTINGS_PLUGIN } from '../meta';
 
 // TODO(burdon): Move into separate plugin.
 export const SettingsDialogContent = () => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(SETTINGS_PLUGIN);
 
   // TODO(burdon): Store preview tab.
   const [plugin, setPlugin] = useState<string>('dxos.org/plugin/registry');
@@ -34,7 +34,7 @@ export const SettingsDialogContent = () => {
   // TODO(burdon): Common treatment for dialogs (e.g., shrink height to fit, mobile, etc.)
   return (
     <Dialog.Content classNames={['h-full md:max-is-[40rem] overflow-hidden']}>
-      <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
+      <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
       <div className='flex grow mlb-4 overflow-hidden'>
         <div className={mx('flex flex-col w-[200px] space-y-4 pr-4 border-r overflow-y-auto', groupBorder)}>
