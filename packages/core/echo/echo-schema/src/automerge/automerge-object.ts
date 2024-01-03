@@ -254,6 +254,9 @@ export class AutomergeObject implements TypedObjectProperties {
       has: (_, key) => {
         if (!isValidKey(key)) {
           return Reflect.has(this, key);
+        } else if (typeof key === 'symbol') {
+          // TODO(mykola): Copied from TypedObject, do we need this?
+          return false;
         } else {
           return key in this._get(path);
         }
