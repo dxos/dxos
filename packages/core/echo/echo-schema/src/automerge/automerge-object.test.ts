@@ -54,7 +54,7 @@ describe('AutomergeObject', () => {
     expect(task2.previous).to.eq(task1);
   });
 
-  test.only('destructuring', () => {
+  test('destructuring', () => {
     setGlobalAutomergePreference(true);
     afterTest(() => setGlobalAutomergePreference(false));
 
