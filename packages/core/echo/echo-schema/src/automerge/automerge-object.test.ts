@@ -53,4 +53,16 @@ describe('AutomergeObject', () => {
     expect(contact.tasks[1]).to.eq(task2);
     expect(task2.previous).to.eq(task1);
   });
+
+  test.only('destructuring', () => {
+    setGlobalAutomergePreference(true);
+    afterTest(() => setGlobalAutomergePreference(false));
+
+    const obj = new Task({ title: 'Task' });
+    const { title } = obj;
+    expect(title).to.eq('Task');
+
+    const { ...copy } = { ...obj };
+    expect(copy.title).to.eq('Task');
+  });
 });
