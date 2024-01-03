@@ -182,6 +182,8 @@ export const TreeViewContainer = ({
         <DensityProvider density='coarse'>
           {identity && (
             <>
+              {/* TODO(wittjosiah): HALO button and settings button are not specific to the navtree plugin.
+                    They should probably be rendered via surfaces or exposed as root graph actions instead. */}
               <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
                 <HaloButton
                   size={6}

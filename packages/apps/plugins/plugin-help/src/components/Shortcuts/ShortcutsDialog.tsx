@@ -24,7 +24,7 @@ export const Key = ({ binding }: { binding: string }) => {
 };
 
 export const ShortcutsDialogContent = () => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(HELP_PLUGIN);
 
   // TODO(burdon): Factor out.
   const toString = (label: Label) => (Array.isArray(label) ? t(...label) : label);
@@ -37,7 +37,7 @@ export const ShortcutsDialogContent = () => {
 
   return (
     <Dialog.Content classNames={['max-bs-[40rem] md:max-is-[30rem] overflow-hidden']}>
-      <Dialog.Title>{t('shortcuts dialog title', { ns: HELP_PLUGIN })}</Dialog.Title>
+      <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
 
       <div className='grow overflow-y-auto py-2'>
         <table className='table-fixed border-collapse my-4'>
