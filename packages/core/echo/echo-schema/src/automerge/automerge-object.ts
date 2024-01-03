@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type InspectOptionsStylized, inspect } from 'node:util';
+
 import { Event, Trigger } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -166,6 +168,19 @@ export class AutomergeObject implements TypedObjectProperties {
       '@meta': value.meta,
       ...value.data,
     };
+  }
+
+  get [Symbol.toStringTag]() {
+    return this.__schema?.typename ?? 'Expando';
+  }
+
+  // TODO(dmaretskyi): Always prints root even for nested proxies.
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
