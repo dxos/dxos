@@ -46,7 +46,7 @@ export type Range = {
 export type CommentRange = {
   id: string;
   relPos: string;
-  location?: Rect;
+  location?: Rect | null;
 } & Range;
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?

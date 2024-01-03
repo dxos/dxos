@@ -138,12 +138,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           return thread.id;
         }
       },
-      onUpdate: (info) => {
-        const { active, items } = info;
+      onSelect: (state) => {
+        const { active, ranges } = state;
         void intentPlugin?.provides.intent.dispatch([
           {
             action: ThreadAction.SELECT,
-            data: { active, threads: items?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }] },
+            data: {
+              active,
+              threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
+            },
           },
         ]);
       },

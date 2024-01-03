@@ -322,7 +322,11 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
         if (next.active !== active || next.closest !== closest) {
           view.dispatch({ effects: setCommentsEffect.of(next) });
-          handleSelect(next);
+
+          handleSelect({
+            ...next,
+            ranges: next.ranges.map((range) => ({ ...range, location: view.coordsAtPos(range.from) })),
+          });
         }
       }
 
