@@ -30,7 +30,8 @@ export const isMarkdown = (data: unknown): data is EditorModel =>
     ? 'id' in data &&
       typeof data.id === 'string' &&
       (typeof (data as { [key: string]: any }).content === 'string' ||
-        (data as { [key: string]: any }).content instanceof YText)
+        (data as { [key: string]: any }).content instanceof YText ||
+        typeof (data as { [key: string]: any })?.[(data as { [key: string]: any }).field] === 'string')
     : false;
 
 export const isMarkdownContent = (data: unknown): data is { content: EditorModel } =>

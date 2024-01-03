@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type InspectOptionsStylized, inspect } from 'node:util';
+
 import { Event, Trigger } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -168,6 +170,19 @@ export class AutomergeObject implements TypedObjectProperties {
     };
   }
 
+  get [Symbol.toStringTag]() {
+    return this.__schema?.typename ?? 'Expando';
+  }
+
+  // TODO(dmaretskyi): Always prints root even for nested proxies.
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
+  }
+
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
     const listener = (event: DocHandleChangePayload<DocStructure>) => {
       if (objectIsUpdated(this._id, event)) {
@@ -246,13 +261,20 @@ export class AutomergeObject implements TypedObjectProperties {
 
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
-      ownKeys: () => {
-        return [];
-        // return Object.keys(this._get(path));
+      ownKeys: (target) => {
+        // TODO(mykola): Add support for expando objects.
+        return this.__schema?.props.map((field) => field.id!) ?? [];
       },
 
       has: (_, key) => {
-        return key in this._get(path);
+        if (!isValidKey(key)) {
+          return Reflect.has(this, key);
+        } else if (typeof key === 'symbol') {
+          // TODO(mykola): Copied from TypedObject, do we need this?
+          return false;
+        } else {
+          return key in this._get(path);
+        }
       },
 
       getOwnPropertyDescriptor: (_, key) => {
