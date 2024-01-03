@@ -144,15 +144,14 @@ export type CommentsOptions = {
  * Comment threads.
  * 1). Updates the EditorModel to store relative selections for a set of comments threads.
  *     Since the selections are relative, they do not need to be updated when the document is edited.
- *     TODO(burdon): Currently doesn't update or read from the model.
+ *     TODO(burdon): Currently doesn't update or read from the model. Needs hook? Compute state field?
  * 2). Implements a StateField to track absolute selections corresponding to the comments (i.e., when the document is edited).
- *     TODO(burdon): Doesn't correctly update the statefield when the document is edited.
  * 3). Creates decoration marks to apply classes to each selection.
  * 4). Tracks the current cursor position to:
  *     a). Update the decoration to show if the cursor is within a current selection.
  *     b). Calls a handler to indicate which is the closest selection (e.g., to update the thread sidebar).
  * 5). Optionally, inserts a markdown footnote when creating a comment thread.
- * 6). Optionally, implements a hovertooltip to show hints when creating a selection range.
+ * 6). Optionally, implements a hoverTooltip to show hints when creating a selection range.
  */
 export const comments = (options: CommentsOptions = {}): Extension => {
   const handleSelect = debounce((state: CommentsState) => options.onSelect?.(state), 200);
