@@ -22,7 +22,8 @@
       "outputs": [
         "packages/ui/react-ui-editor/src/testing/proto/gen"
       ]
-    }
+    },
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

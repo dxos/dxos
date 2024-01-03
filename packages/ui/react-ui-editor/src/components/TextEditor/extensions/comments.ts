@@ -290,6 +290,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             const newRange = model?.getEditorRange?.(range.range);
             // TODO(burdon): The range doesn't change relative to the document.
             //  E.g., if characters are being inserted before (or inside of the range), then the new range should be updated.
+            //  Create unit test.
             console.log('update', range.range, newRange);
             mod = true;
           }

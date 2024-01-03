@@ -108,7 +108,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     text: () => text.content!.toString(),
     comments: [],
     getModelPosition: (value: Range) => {
-      // https://www.npmjs.com/package/yjs#relative-positions
+      // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
       return arrayToString(
         Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.from, value.to)),
       );
