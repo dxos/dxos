@@ -246,13 +246,20 @@ export class AutomergeObject implements TypedObjectProperties {
 
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
-      ownKeys: () => {
-        return [];
-        // return Object.keys(this._get(path));
+      ownKeys: (target) => {
+        // TODO(mykola): Add support for expando objects.
+        return this.__schema?.props.map((field) => field.id!) ?? [];
       },
 
       has: (_, key) => {
-        return key in this._get(path);
+        if (!isValidKey(key)) {
+          return Reflect.has(this, key);
+        } else if (typeof key === 'symbol') {
+          // TODO(mykola): Copied from TypedObject, do we need this?
+          return false;
+        } else {
+          return key in this._get(path);
+        }
       },
 
       getOwnPropertyDescriptor: (_, key) => {
