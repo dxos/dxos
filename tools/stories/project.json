@@ -4,6 +4,7 @@
   "targets": {
     "chromatic": {
       "dependsOn": [
+        "chromatic-examples",
         "chromatic-shell",
         "chromatic-ui"
       ],
