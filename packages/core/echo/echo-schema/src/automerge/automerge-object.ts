@@ -34,7 +34,7 @@ import {
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
-import { InspectOptionsStylized, inspect } from 'util';
+import { InspectOptionsStylized, inspect } from 'node:util';
 
 export type BindOptions = {
   db: AutomergeDb;

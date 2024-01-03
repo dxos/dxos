@@ -94,16 +94,21 @@ export class TextObject extends AbstractEchoObject<TextModel> {
       kind: this.kind,
       field: this.model?.field,
     };
-    if (this.model?.field) {
-      jsonRepresentation[this.model.field] = this.text;
-    }
 
     for(const [key, value] of this.model?.doc.share ?? []) {
-      if(!(key in jsonRepresentation) && value._map.size > 0) {
-        const map = this.model!.doc.getMap(key);
-        jsonRepresentation[key] = map.toJSON();
+      if(!jsonRepresentation[key] && value._map.size > 0) {
+        try {
+          const map = this.model!.doc.getMap(key);
+          jsonRepresentation[key] = map.toJSON();
+        } catch {}
       }
     }
+
+    try {
+      if (this.model?.field) {
+        jsonRepresentation[this.model.field] = this.text;
+      }
+    } catch {}
 
     return jsonRepresentation;
   }
