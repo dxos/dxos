@@ -45,7 +45,7 @@ export type Range = {
 
 export type CommentRange = {
   id: string;
-  range: string;
+  relPos: string;
   location?: Rect;
 } & Range;
 
@@ -56,8 +56,8 @@ export type EditorModel = {
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
   comments: CommentRange[];
-  getModelPosition?: (value: Range) => string;
-  getEditorRange?: (value: string) => Range | undefined;
+  getRelPos?: (value: Range) => string;
+  getRange?: (value: string) => Range | undefined;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -107,15 +107,23 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     content: text.content,
     text: () => text.content!.toString(),
     comments: [],
-    getModelPosition: (value: Range) => {
+    getRelPos: (value: Range) => {
       // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
-      return arrayToString(
-        Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.from, value.to)),
-      );
+      const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.from));
+      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.to));
+      return [arrayToString(from), arrayToString(to)].join(':');
     },
-    getEditorRange: (value: string) => {
-      const x = Y.createAbsolutePositionFromRelativePosition(Y.decodeRelativePosition(stringToArray(value)), text.doc!);
-      return x ? { from: x.index!, to: x.assoc ?? x.index } : undefined;
+    getRange: (value: string) => {
+      const parts = value.split(':');
+      const from = Y.createAbsolutePositionFromRelativePosition(
+        Y.decodeRelativePosition(stringToArray(parts[0])),
+        text.doc!,
+      );
+      const to = Y.createAbsolutePositionFromRelativePosition(
+        Y.decodeRelativePosition(stringToArray(parts[1])),
+        text.doc!,
+      );
+      return { from: from!.index, to: to!.index };
     },
     extension: [yCollab(text.content as YText, provider?.awareness), modelState.init(() => model)],
     awareness: provider?.awareness,

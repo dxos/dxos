@@ -35,18 +35,17 @@ const styles = EditorView.baseTheme({
   '& .cm-bookmark-selected': {
     backgroundColor: 'orange',
   },
-  // TODO(burdon): Rename comment?
-  '& .cm-highlight': {
+  '& .cm-comment': {
     backgroundColor: 'yellow',
   },
-  '& .cm-highlight-active': {
+  '& .cm-comment-active': {
     backgroundColor: 'lime',
   },
 });
 
 const marks = {
-  highlight: Decoration.mark({ class: 'cm-highlight' }),
-  highlightActive: Decoration.mark({ class: 'cm-highlight-active' }),
+  highlight: Decoration.mark({ class: 'cm-comment' }),
+  highlightActive: Decoration.mark({ class: 'cm-comment-active' }),
 };
 
 export type CommentsState = {
@@ -64,7 +63,7 @@ const setCommentsEffect = StateEffect.define<CommentsState>();
  *
  * Call dispatch to update:
  * ```ts
- * dispatch({ effects: setHighlights.of([selection]) })
+ * dispatch({ effects: setHighlights.of({ ... }) })
  * ```
  */
 // TODO(burdon): Use facet? Or computed from model?
@@ -164,17 +163,16 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   const createCommentThread: Command = (view) => {
     const { head, from, to } = view.state.selection.main;
     const model = view.state.field(modelState);
-    const range = model?.getModelPosition?.({ from, to });
-    console.log('create', range, { from, to });
-    if (range) {
+    const relPos = model?.getRelPos?.({ from, to: to - 1 });
+    if (relPos) {
       // Create thread via callback.
-      const id = options.onCreate?.(range);
+      const id = options.onCreate?.(relPos);
       if (id) {
         // Update range.
         // TODO(burdon): Update model (not state field directly) and read from computed property.
         const { ranges } = view.state.field(commentsStateField);
         view.dispatch({
-          effects: setCommentsEffect.of({ active: id, ranges: [...ranges, { id, from, to, range }] }),
+          effects: setCommentsEffect.of({ active: id, ranges: [...ranges, { id, from, to: to - 1, relPos }] }),
           selection: { anchor: from },
         });
 
@@ -283,17 +281,18 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         const model = state.field(modelState);
         const { active, ranges } = state.field(commentsStateField);
         changes.iterChanges((from, to, from2, to2) => {
-          const idx = ranges.findIndex((comment) => from > comment.from && to < comment.to);
-          if (idx !== -1) {
-            // TODO(burdon): If deleting from the end of the selection then actually update the model range.
-            const range = ranges[idx];
-            const newRange = model?.getEditorRange?.(range.range);
-            // TODO(burdon): The range doesn't change relative to the document.
-            //  E.g., if characters are being inserted before (or inside of the range), then the new range should be updated.
-            //  Create unit test.
-            console.log('update', range.range, newRange);
-            mod = true;
-          }
+          ranges.forEach((range) => {
+            // TODO(burdon): If editing inside the range then update model (change relPos of end).
+            if (from > range.from && from <= range.to) {
+              console.log('inside', range.id);
+            }
+
+            if (from <= range.to) {
+              const newRange = model?.getRange?.(range.relPos);
+              Object.assign(range, newRange);
+              mod = true;
+            }
+          });
         });
 
         if (mod) {
