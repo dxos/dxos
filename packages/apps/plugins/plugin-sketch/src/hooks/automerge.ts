@@ -232,31 +232,30 @@ const rebasePath = (path: A.Prop[], base: string[]): A.Prop[] | undefined => {
 
 // TLDraw -> Automerge
 const encode = (value: any): any => {
-  if(Array.isArray(value)) {
+  if (Array.isArray(value)) {
     return value.map(encode);
   }
-  if(value instanceof A.RawString) {
+  if (value instanceof A.RawString) {
     throw new Error('encode called on automerge data');
   }
-  if(typeof value === 'object' && value !== null) {
+  if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, encode(value)]));
   }
-  if(typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
+  if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
     return new A.RawString(value);
   }
   return value;
 };
 
-
 // Automerge -> TLDraw
 const decode = (value: any): any => {
-  if(Array.isArray(value)) {
+  if (Array.isArray(value)) {
     return value.map(decode);
   }
-  if(value instanceof A.RawString) {
+  if (value instanceof A.RawString) {
     return value.toString();
   }
-  if(typeof value === 'object' && value !== null) {
+  if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, decode(value)]));
   }
   return value;
