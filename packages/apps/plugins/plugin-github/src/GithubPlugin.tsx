@@ -43,7 +43,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       settings.close();
     },
     provides: {
-      settings: { meta, values: settings.values },
+      settings: settings.values,
       translations,
       graph: {
         builder: ({ parent }) => {

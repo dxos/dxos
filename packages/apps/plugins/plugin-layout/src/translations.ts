@@ -11,7 +11,6 @@ export default [
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open navigation sidebar.',
         'open complementary sidebar label': 'Open complementary sidebar.',
-        'open commands label': 'Search commands',
         'open settings label': 'Show settings',
         'plugin error message': 'Content failed to render.',
         'first run message': 'Nothing selected.',
@@ -19,6 +18,7 @@ export default [
         'content fallback description':
           'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
         'enable complementary sidebar label': 'Complementary sidebar.',
+        'toggle fullscreen label': 'Toggle fullscreen',
       },
     },
   },
