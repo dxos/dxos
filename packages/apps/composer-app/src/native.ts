@@ -85,7 +85,11 @@ export const initializeNativeApp = async () => {
     const slug = event.url.host;
 
     if (slug.match(/^[a-z0-9]{64}$/)) {
-      window.location.pathname = `/${event.url.host}`;
+      history.pushState({}, '', `/${event.url.host}`);
+
+      // Send a fake popstate event to trigger app navigation.
+      const urlEvent = new Event('popstate');
+      window.dispatchEvent(urlEvent);
     } else {
       alert('URL is not supported\nPlease check that it was copied or entered correctly.');
     }
