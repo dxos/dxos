@@ -11,6 +11,7 @@ export default [
         'plugin name': 'Help',
         'open help tour': 'Show welcome tour',
         'open shortcuts label': 'Show shortcuts',
+        'shortcuts dialog title': 'Shortcuts',
       },
     },
   },

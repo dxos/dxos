@@ -47,7 +47,6 @@ export const isSpace = (data: unknown): data is Space =>
     : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
-  console.log('::::', space.state.get());
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : space.state.get() === SpaceState.CLOSED
