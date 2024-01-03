@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type InspectOptionsStylized, inspect } from 'node:util';
+
 import { Event, Trigger } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -41,6 +43,9 @@ export type BindOptions = {
   path: string[];
   ignoreCache?: boolean;
 };
+
+// Strings longer than this will have collaborative editing disabled for performance reasons.
+const STRING_CRDT_LIMIT = 300_000;
 
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb = undefined;
@@ -168,6 +173,19 @@ export class AutomergeObject implements TypedObjectProperties {
     };
   }
 
+  get [Symbol.toStringTag]() {
+    return this.__schema?.typename ?? 'Expando';
+  }
+
+  // TODO(dmaretskyi): Always prints root even for nested proxies.
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
+  }
+
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
     const listener = (event: DocHandleChangePayload<DocStructure>) => {
       if (objectIsUpdated(this._id, event)) {
@@ -246,13 +264,20 @@ export class AutomergeObject implements TypedObjectProperties {
 
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
-      ownKeys: () => {
-        return [];
-        // return Object.keys(this._get(path));
+      ownKeys: (target) => {
+        // TODO(mykola): Add support for expando objects.
+        return this.__schema?.props.map((field) => field.id!) ?? [];
       },
 
       has: (_, key) => {
-        return key in this._get(path);
+        if (!isValidKey(key)) {
+          return Reflect.has(this, key);
+        } else if (typeof key === 'symbol') {
+          // TODO(mykola): Copied from TypedObject, do we need this?
+          return false;
+        } else {
+          return key in this._get(path);
+        }
       },
 
       getOwnPropertyDescriptor: (_, key) => {
@@ -361,6 +386,9 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _encode(value: any) {
+    if (value instanceof automerge.RawString) {
+      return value;
+    }
     if (value === undefined) {
       return null;
     }
@@ -387,6 +415,10 @@ export class AutomergeObject implements TypedObjectProperties {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
 
+    if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
+      return new automerge.RawString(value);
+    }
+
     return value;
   }
 
@@ -399,6 +431,9 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     if (Array.isArray(value)) {
       return value.map((val) => this._decode(val));
+    }
+    if (value instanceof automerge.RawString) {
+      return value.toString();
     }
     if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
       if (value.protocol === 'protobuf') {

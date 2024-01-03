@@ -67,10 +67,9 @@ jobs:
           SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
 
       - name: Publish to NPM
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
-          pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=latest
+        run: ./.github/workflows/scripts/publish.sh
         env:
+          DX_ENVIRONMENT: production
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bundle

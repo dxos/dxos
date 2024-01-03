@@ -230,7 +230,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
     },
     provides: {
-      settings: { meta, values: settings.values },
+      settings: settings.values,
       metadata: {
         records: {
           [DocumentType.schema.typename]: {

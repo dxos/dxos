@@ -1,0 +1,19 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-settings/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-settings/src/index.ts",
+          "packages/apps/plugins/plugin-settings/src/meta.ts"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

@@ -26,7 +26,7 @@ export const RegistryPlugin = (): PluginDefinition<RegistryPluginProvides> => {
       settings.prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool);
     },
     provides: {
-      settings: { meta, values: settings.values },
+      settings: settings.values,
       translations,
       surface: {
         component: ({ data, role }) => {
