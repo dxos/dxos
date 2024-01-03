@@ -54,7 +54,7 @@ describe('AutomergeObject', () => {
     expect(task2.previous).to.eq(task1);
   });
 
-  test('destructuring', () => {
+  test('destructuring', async () => {
     setGlobalAutomergePreference(true);
     afterTest(() => setGlobalAutomergePreference(false));
 
@@ -64,5 +64,14 @@ describe('AutomergeObject', () => {
 
     const { ...copy } = { ...obj };
     expect(copy.title).to.eq('Task');
+  });
+
+  test('`in` operator', async () => {
+    setGlobalAutomergePreference(true);
+    afterTest(() => setGlobalAutomergePreference(false));
+
+    const obj = new Task({ title: 'Task' });
+    expect('title' in obj).to.eq(true);
+    expect('id' in obj).to.eq(true);
   });
 });
