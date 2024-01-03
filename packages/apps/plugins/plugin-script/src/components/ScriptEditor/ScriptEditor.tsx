@@ -37,6 +37,7 @@ export const ScriptEditor = ({ id, content, language, themeMode, className, onBe
     cursorStyle: 'line-thin',
     fontSize: 14,
     fontFamily: get(tailwindConfig({}).theme, 'fontFamily.mono', []).join(','),
+    fontLigatures: true,
     language,
     minimap: {
       enabled: false,
