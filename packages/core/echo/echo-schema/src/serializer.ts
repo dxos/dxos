@@ -10,7 +10,7 @@ import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject } from './object';
+import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject, getGlobalAutomergePreference } from './object';
 import { Filter } from './query';
 
 /**
@@ -120,7 +120,7 @@ export class Serializer {
     const { '@id': id, '@type': type, '@model': model, '@deleted': deleted, '@meta': meta, ...data } = object;
 
     let obj: EchoObject;
-    if (model === TextModel.meta.type || type === LEGACY_TEXT_TYPE) {
+    if ((model === TextModel.meta.type || type === LEGACY_TEXT_TYPE) && !getGlobalAutomergePreference()) {
       invariant(data.field);
       obj = new TextObject(data[data.field], data.kind, data.field);
     } else {

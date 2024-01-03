@@ -34,6 +34,7 @@ import {
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
+import { InspectOptionsStylized, inspect } from 'util';
 
 export type BindOptions = {
   db: AutomergeDb;
@@ -167,6 +168,20 @@ export class AutomergeObject implements TypedObjectProperties {
       ...value.data,
     };
   }
+
+  get [Symbol.toStringTag]() {
+    return this.__schema?.typename ?? 'Expando';
+  }
+
+  // TODO(dmaretskyi): Always prints root even for nested proxies.
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
+  }
+
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
     const listener = (event: DocHandleChangePayload<DocStructure>) => {

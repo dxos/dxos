@@ -85,7 +85,7 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   }
 
   toJSON() {
-    const jsonRepresentation = {
+    const jsonRepresentation: Record<string, any> = {
       // TODO(mykola): Delete backend (for debug).
       '@backend': 'hypercore',
       '@id': this.id,
@@ -95,7 +95,14 @@ export class TextObject extends AbstractEchoObject<TextModel> {
       field: this.model?.field,
     };
     if (this.model?.field) {
-      (jsonRepresentation as any)[this.model.field] = this.text;
+      jsonRepresentation[this.model.field] = this.text;
+    }
+
+    for(const [key, value] of this.model?.doc.share ?? []) {
+      if(!(key in jsonRepresentation) && value._map.size > 0) {
+        const map = this.model!.doc.getMap(key);
+        jsonRepresentation[key] = map.toJSON();
+      }
     }
 
     return jsonRepresentation;

@@ -8,6 +8,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { afterTest, describe, test } from '@dxos/test';
 
 import {
+  LEGACY_TEXT_TYPE,
   TextObject,
   TypedObject,
   isActualAutomergeObject,
@@ -17,6 +18,7 @@ import {
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase, testWithAutomerge } from './testing';
 import { Contact } from './tests/proto';
+import { Filter } from './query';
 
 describe('Serializer', () => {
   testWithAutomerge(() => {
@@ -229,12 +231,20 @@ describe('Serializer from Hypergraph to Automerge', () => {
         // { useAutomergeBackend: false },
       );
       db.add(obj);
+
+      const yjs = new TextObject();
+      yjs.doc!.transact(() => {
+        const yMap = yjs.doc!.getMap('records');
+        yMap.set('one', { id: 'one', title: 'One' });
+        yMap.set('two', { id: 'two', title: 'Two' });
+      });
+      db.add(yjs);
+
       await db.flush();
-      expect(db.objects).to.have.length(4);
+      expect(db.objects).to.have.length(5);
       expect(db.objects.every((object) => !isActualAutomergeObject(object))).to.be.true;
-      expect(db.objects.every((object) => isActualTypedObject(object))).to.be.true;
       serialized = await serializer.export(db);
-      expect(serialized.objects).to.have.length(4);
+      expect(serialized.objects).to.have.length(5);
     }
 
     {
@@ -244,7 +254,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await serializer.import(db, serialized);
 
       const { objects } = db.query();
-      expect(objects).to.have.length(4);
+      expect(objects).to.have.length(5);
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;
       expect(main.subtasks).to.have.length(2);
@@ -257,6 +267,10 @@ describe('Serializer from Hypergraph to Automerge', () => {
       expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
       expect(main.subtasks[1].title).to.eq('Subtask 2');
       expect(main.assignee.name).to.eq('Dmytro Veremchuk');
+
+      const [yjs] = db.query(Filter.typename(LEGACY_TEXT_TYPE)).objects;
+      expect(yjs.records.one.title).to.eq('One')
+      expect(yjs.records.two.title).to.eq('Two')
     }
   });
 });
