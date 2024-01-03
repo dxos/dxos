@@ -3,12 +3,13 @@
 //
 
 import MonacoEditor, { type Monaco, useMonaco } from '@monaco-editor/react';
+import get from 'lodash.get';
 import { editor } from 'monaco-editor';
 import React, { useEffect } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
 import { type ThemeMode } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx, tailwindConfig } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
@@ -35,6 +36,7 @@ export const ScriptEditor = ({ id, content, language, themeMode, className, onBe
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
     fontSize: 14,
+    fontFamily: get(tailwindConfig({}).theme, 'fontFamily.mono', []).join(','),
     language,
     minimap: {
       enabled: false,
