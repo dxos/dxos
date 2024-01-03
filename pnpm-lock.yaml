@@ -557,6 +557,9 @@ importers:
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugins/plugin-search
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugins/plugin-settings
       '@braneframe/plugin-sketch':
         specifier: workspace:*
         version: link:../plugins/plugin-sketch
@@ -918,6 +921,9 @@ importers:
 
   packages/apps/plugins/plugin-client:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -970,6 +976,9 @@ importers:
 
   packages/apps/plugins/plugin-debug:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1289,6 +1298,9 @@ importers:
 
   packages/apps/plugins/plugin-github:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1743,6 +1755,9 @@ importers:
 
   packages/apps/plugins/plugin-layout:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
@@ -1862,6 +1877,9 @@ importers:
 
   packages/apps/plugins/plugin-markdown:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -2078,6 +2096,9 @@ importers:
       '@dxos/react-ui-navtree':
         specifier: workspace:*
         version: link:../../../ui/react-ui-navtree
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-searchlist
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2319,6 +2340,9 @@ importers:
 
   packages/apps/plugins/plugin-registry:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -2533,6 +2557,37 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-settings:
+    dependencies:
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-sketch:
     dependencies:
       '@dxos/async':
@@ -2620,6 +2675,9 @@ importers:
 
   packages/apps/plugins/plugin-space:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -7118,18 +7176,12 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui-searchlist':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7143,15 +7195,6 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../ui/storybook-utils
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
