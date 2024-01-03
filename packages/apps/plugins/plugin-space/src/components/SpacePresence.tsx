@@ -95,7 +95,7 @@ export const ObjectPresence = (props: ObjectPresenceProps) => {
           {viewers.length > 0 && (
             <AvatarGroup.Root size={size} classNames={size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2'}>
               {viewers.length > 3 && showCount && (
-                <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
+                <AvatarGroup.Label classNames='text-xs font-semibold'>{viewers.length}</AvatarGroup.Label>
               )}
               {viewers.slice(0, 3).map((viewer, i) => {
                 const viewerHex = viewer.identityKey.toHex();
