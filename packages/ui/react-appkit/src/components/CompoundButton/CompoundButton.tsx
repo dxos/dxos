@@ -36,7 +36,6 @@ export const CompoundButton = ({
   const descriptionId = useId('compoundButton-description');
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
-  const isOs = tx('themeName', 'default', {}) === 'dxos';
   const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
   const buttonClassName = tx(
     'button.root',
