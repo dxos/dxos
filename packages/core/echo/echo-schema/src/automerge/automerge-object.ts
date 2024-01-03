@@ -252,7 +252,11 @@ export class AutomergeObject implements TypedObjectProperties {
       },
 
       has: (_, key) => {
-        return key in this._get(path);
+        if (!isValidKey(key)) {
+          return Reflect.has(this, key);
+        } else {
+          return key in this._get(path);
+        }
       },
 
       getOwnPropertyDescriptor: (_, key) => {
