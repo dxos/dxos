@@ -73,8 +73,14 @@ message File {
 message Document {
   option (object) = true;
 
+  message Comment {
+    string range = 1;
+    Thread thread = 2;
+  }
+
   string title = 1;
   dxos.schema.Text content = 2;
+  repeated Comment comments = 3;
 }
 
 /**

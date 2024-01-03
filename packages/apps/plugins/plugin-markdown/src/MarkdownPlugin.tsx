@@ -118,10 +118,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     },
     // TODO(burdon): Update position in editor: EditorView.scrollIntoView
     comments: space && {
-      onCreate: (from: number, to: number) => {
-        if (space) {
-          // TODO(burdon): Set back ref from thread to this object.
+      onCreate: (range: string) => {
+        if (space && document) {
+          // Create comment thread.
           const thread = space.db.add(new ThreadType());
+          document.comments.push({ range, thread });
+
           void intentPlugin?.provides.intent.dispatch([
             {
               action: ThreadAction.SELECT,
@@ -132,11 +134,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               data: { state: true },
             },
           ]);
+
           return thread.id;
         }
       },
       onUpdate: (info) => {
-        console.log('::>', info);
         const { active, items } = info;
         void intentPlugin?.provides.intent.dispatch([
           {

@@ -4,17 +4,15 @@
 
 import '@dxosTheme';
 
-import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
-import { ArrowSquareOut, Plus } from '@phosphor-icons/react';
+import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { StrictMode, useMemo, useRef, useState } from 'react';
+import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { Button } from '@dxos/react-ui';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -34,15 +32,15 @@ import {
   blast,
   demo,
   defaultOptions,
-  highlight,
   code,
-  type HighlightOptions,
 } from './extensions';
-import { type EditorModel, useTextModel } from '../../hooks';
+import { useTextModel } from '../../hooks';
 
 // Extensions:
 // TODO(burdon): Table of contents.
 // TODO(burdon): Front-matter
+
+faker.seed(101);
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -187,37 +185,14 @@ const onLinkRender: LinkOptions['onRender'] = (el, url) => {
   );
 };
 
-// TODO(burdon): Show shortcut (see Superhuman).
-const onHighlightMenu: HighlightOptions['onMenu'] = (el) => {
-  createRoot(el).render(
-    <StrictMode>
-      <Button variant='ghost' classNames='p-0'>
-        <div role='none' className='flex px-2 items-center gap-2'>
-          <Plus className={mx(getSize(4))} />
-          <span>Create comment.</span>
-        </div>
-      </Button>
-    </StrictMode>,
-  );
-};
-
-// TODO(burdon): Pass in model?
 const Story = ({
   text,
   automerge,
-  extensions: _extensions = [],
   ...props
-}: { text?: string; extensions?: Extension[] | ((model: EditorModel) => Extension[]); automerge?: boolean } & Pick<
-  TextEditorProps,
-  'readonly' | 'slots'
->) => {
+}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>) => {
   const ref = useRef<TextEditorRef>(null);
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
-  const extensions = useMemo(
-    () => (typeof _extensions === 'function' ? _extensions(model!) : _extensions),
-    [model, _extensions],
-  );
   if (!model) {
     return null;
   }
@@ -326,33 +301,25 @@ export const Mention = {
   ),
 };
 
-const mark = () => `[^${PublicKey.random().toHex()}]`;
 export const Comments = {
   render: () => (
     <Story
-      text={str(text.paragraphs, mark(), '', mark(), text.footer)}
+      text={str(text.paragraphs, text.footer)}
       extensions={[
         comments({
           onCreate: () => PublicKey.random().toHex(),
-          onUpdate: (info) => {
-            // console.log('update', info);
-          },
-        }),
-      ]}
-    />
-  ),
-};
-
-export const Highlight = {
-  render: () => (
-    <Story
-      text={str(text.paragraphs, text.footer)}
-      extensions={(model) => [
-        highlight({
-          model,
-          onMenu: onHighlightMenu,
-          onChange: (id) => {
-            console.log(id);
+          onSelect: (state) => {
+            const debug = false;
+            if (debug) {
+              console.log(
+                'update',
+                JSON.stringify({
+                  active: state.active?.slice(0, 8),
+                  closest: state.closest?.slice(0, 8),
+                  ranges: state.ranges.length,
+                }),
+              );
+            }
           },
         }),
       ]}
