@@ -36,7 +36,6 @@ export const CompoundButton = ({
   const descriptionId = useId('compoundButton-description');
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
-  const isOs = tx('themeName', 'react-ui', {}) === 'dxos';
   const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
   const buttonClassName = tx(
     'button.root',
@@ -71,9 +70,8 @@ export const CompoundButton = ({
             id={descriptionId}
             {...slots.description}
             className={mx(
-              'text-xs mbe-1',
+              'text-xs mbe-1 font-normal',
               variant === 'primary' ? descriptionTextPrimary : descriptionText,
-              isOs ? 'font-system-normal' : 'font-normal',
               slots.description?.className,
             )}
           >
