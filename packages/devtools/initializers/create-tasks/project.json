@@ -2,6 +2,14 @@
   "sourceRoot": "packages/devtools/initializers/create-tasks/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/initializers/create-tasks/src/main.ts",
+        "outputPath": "packages/devtools/initializers/create-tasks/dist",
+        "tsConfig": "packages/devtools/initializers/create-tasks/tsconfig.json"
+      }
+    },
     "lint": {}
   }
 }
