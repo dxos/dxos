@@ -6,11 +6,14 @@ import { transact } from '@tldraw/state';
 import { createTLStore, defaultShapes, type TLRecord } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
-import * as A from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
 import { type Unsubscribe } from '../types';
+
+// Strings longer than this will have collaborative editing disabled for performance reasons.
+const STRING_CRDT_LIMIT = 300_000;
 
 // TODO(dmaretskyi): Take a look at https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
 export class AutomergeStoreAdapter {
@@ -46,7 +49,7 @@ export class AutomergeStoreAdapter {
           const allRecords = this._store.allRecords();
           log.info('seed initial records', { allRecords });
           for (const record of allRecords) {
-            content[record.id] = clone(record);
+            content[record.id] = encode(record);
           }
         });
       } else {
@@ -54,7 +57,7 @@ export class AutomergeStoreAdapter {
         transact(() => {
           log.info('load initial records', { contentRecords });
           this._store.clear();
-          this._store.put([...Object.values(contentRecords ?? {})].map((record) => clone(record)));
+          this._store.put([...Object.values(contentRecords ?? {})].map((record) => decode(record)));
         });
       }
     }
@@ -124,7 +127,7 @@ export class AutomergeStoreAdapter {
           this._store.remove(Array.from(removed));
         }
         if (updated.size) {
-          this._store.put(Array.from(updated).map((id) => clone(contentRecords[id])));
+          this._store.put(Array.from(updated).map((id) => decode(contentRecords[id])));
         }
       });
       this._lastHeads = currentHeads;
@@ -164,12 +167,12 @@ export class AutomergeStoreAdapter {
               mutations.forEach(({ type, record }) => {
                 switch (type) {
                   case 'added': {
-                    content[record.id] = clone(record);
+                    content[record.id] = encode(record);
                     break;
                   }
                   case 'updated': {
                     // TODO(dmaretskyi): Granular updates.
-                    content[record.id] = clone(record);
+                    content[record.id] = encode(record);
                     break;
                   }
                   case 'removed': {
@@ -227,6 +230,34 @@ const rebasePath = (path: A.Prop[], base: string[]): A.Prop[] | undefined => {
   return path.slice(base.length);
 };
 
-const clone = (obj: any) => {
-  return JSON.parse(JSON.stringify(obj));
+// TLDraw -> Automerge
+const encode = (value: any): any => {
+  if(Array.isArray(value)) {
+    return value.map(encode);
+  }
+  if(value instanceof A.RawString) {
+    throw new Error('encode called on automerge data');
+  }
+  if(typeof value === 'object' && value !== null) {
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, encode(value)]));
+  }
+  if(typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
+    return new A.RawString(value);
+  }
+  return value;
+};
+
+
+// Automerge -> TLDraw
+const decode = (value: any): any => {
+  if(Array.isArray(value)) {
+    return value.map(decode);
+  }
+  if(value instanceof A.RawString) {
+    return value.toString();
+  }
+  if(typeof value === 'object' && value !== null) {
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, decode(value)]));
+  }
+  return value;
 };

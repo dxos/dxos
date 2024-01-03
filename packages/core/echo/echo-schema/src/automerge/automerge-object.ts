@@ -44,6 +44,9 @@ export type BindOptions = {
   ignoreCache?: boolean;
 };
 
+// Strings longer than this will have collaborative editing disabled for performance reasons.
+const STRING_CRDT_LIMIT = 300_000;
+
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb = undefined;
   private _doc?: Doc<any> = undefined;
@@ -383,6 +386,9 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _encode(value: any) {
+    if(value instanceof automerge.RawString) {
+      return value;
+    }
     if (value === undefined) {
       return null;
     }
@@ -409,6 +415,10 @@ export class AutomergeObject implements TypedObjectProperties {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
 
+    if(typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
+      return new automerge.RawString(value);
+    }
+
     return value;
   }
 
@@ -421,6 +431,9 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     if (Array.isArray(value)) {
       return value.map((val) => this._decode(val));
+    }
+    if(value instanceof automerge.RawString) {
+      return value.toString()
     }
     if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
       if (value.protocol === 'protobuf') {
