@@ -81,6 +81,16 @@ export const initializeNativeApp = async () => {
     }
   });
 
+  window.addEventListener('applicationurl', (event: any) => {
+    const slug = event.url.host;
+
+    if (slug.match(/^[a-z0-9]{64}$/)) {
+      window.location.pathname = `/${event.url.host}`;
+    } else {
+      alert('URL is not supported\nPlease check that it was copied or entered correctly.');
+    }
+  });
+
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
   log.info('initialized');
 };
