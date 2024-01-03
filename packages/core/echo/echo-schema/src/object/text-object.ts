@@ -95,8 +95,8 @@ export class TextObject extends AbstractEchoObject<TextModel> {
       field: this.model?.field,
     };
 
-    for(const [key, value] of this.model?.doc.share ?? []) {
-      if(!jsonRepresentation[key] && value._map.size > 0) {
+    for (const [key, value] of this.model?.doc.share ?? []) {
+      if (!jsonRepresentation[key] && value._map.size > 0) {
         try {
           const map = this.model!.doc.getMap(key);
           jsonRepresentation[key] = map.toJSON();

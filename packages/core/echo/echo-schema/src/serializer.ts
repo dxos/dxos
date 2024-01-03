@@ -10,7 +10,14 @@ import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject, getGlobalAutomergePreference } from './object';
+import {
+  base,
+  type EchoObject,
+  LEGACY_TEXT_TYPE,
+  TextObject,
+  TypedObject,
+  getGlobalAutomergePreference,
+} from './object';
 import { Filter } from './query';
 
 /**

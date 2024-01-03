@@ -15,10 +15,10 @@ import {
   isActualTypedObject,
   setGlobalAutomergePreference,
 } from './object';
+import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase, testWithAutomerge } from './testing';
 import { Contact } from './tests/proto';
-import { Filter } from './query';
 
 describe('Serializer', () => {
   testWithAutomerge(() => {
@@ -269,8 +269,8 @@ describe('Serializer from Hypergraph to Automerge', () => {
       expect(main.assignee.name).to.eq('Dmytro Veremchuk');
 
       const [yjs] = db.query(Filter.typename(LEGACY_TEXT_TYPE)).objects;
-      expect(yjs.records.one.title).to.eq('One')
-      expect(yjs.records.two.title).to.eq('Two')
+      expect(yjs.records.one.title).to.eq('One');
+      expect(yjs.records.two.title).to.eq('Two');
     }
   });
 });

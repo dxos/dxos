@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type InspectOptionsStylized, inspect } from 'node:util';
+
 import { Event, Trigger } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
@@ -34,7 +36,6 @@ import {
 import { AbstractEchoObject } from '../object/object';
 import { type Schema } from '../proto';
 import { compositeRuntime } from '../util';
-import { InspectOptionsStylized, inspect } from 'node:util';
 
 export type BindOptions = {
   db: AutomergeDb;
@@ -181,7 +182,6 @@ export class AutomergeObject implements TypedObjectProperties {
   ) {
     return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
-
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
     const listener = (event: DocHandleChangePayload<DocStructure>) => {
