@@ -26,12 +26,19 @@ import { SpaceAwarenessProvider } from './yjs';
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
 
+export type DocumentRange = {
+  id: string;
+  from: number;
+  to: number;
+};
+
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type EditorModel = {
   id: string;
   // TODO(burdon): Remove.
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
+  ranges: DocumentRange[];
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -80,6 +87,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     id: text.doc.guid,
     content: text.content,
     text: () => text.content!.toString(),
+    ranges: [],
     extension: yCollab(text.content as YText, provider?.awareness),
     awareness: provider?.awareness,
     peer: identity
@@ -99,6 +107,7 @@ const createAutomergeModel = ({ identity, text }: UseTextModelOptions): EditorMo
     id: obj.id,
     content: doc,
     text: () => get(doc.handle.docSync(), doc.path),
+    ranges: [],
     extension: automergePlugin(doc.handle, doc.path),
     peer: identity
       ? {

@@ -13,6 +13,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Section, type SectionProps } from './Section';
 
 export default {
+  title: 'react-ui-stack/Section',
   component: Section as any,
   decorators: [withTheme],
   args: {

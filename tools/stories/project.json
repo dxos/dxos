@@ -4,6 +4,7 @@
   "targets": {
     "chromatic": {
       "dependsOn": [
+        "chromatic-examples",
         "chromatic-shell",
         "chromatic-ui"
       ],
@@ -102,7 +103,7 @@
         }
       },
       "dependsOn": [
-        "examples:compile"
+        "examples:prebuild"
       ],
       "executor": "@nx/storybook:build",
       "options": {

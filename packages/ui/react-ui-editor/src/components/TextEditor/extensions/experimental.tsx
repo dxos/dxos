@@ -13,28 +13,21 @@ import {
   type ViewUpdate,
 } from '@codemirror/view';
 
-// TODO(burdon): Modes: parallel parsing and decoration (e.g., associated with language).
-// TODO(burdon): Add-on: runmode: run lexer over content (with rendering codemirror).
-//  https://codemirror.net/5/doc/manual.html#addon_runmode
-// TODO(burdon): Add-on: dialog.
-// TODO(burdon): Comments: https://codemirror.net/5/doc/manual.html#setBookmark
-// TODO(burdon): Split view: https://codemirror.net/examples/split
-// TODO(burdon): https://codemirror.net/5/demo/simplemode.html
+// TODO(burdon): Reconcile with theme.
+export const styles = EditorView.baseTheme({
+  '.cm-hyperlink-label': {
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
+  '.cm-hyperlink-bracket': {
+    opacity: 0.2,
+  },
+  '.cm-hyperlink-url': {
+    opacity: 0.5,
+    fontFamily: 'monospace',
+  },
+});
 
-// https://codemirror.net/examples/autocompletion
-// https://codemirror.net/docs/ref/#autocomplete.autocompletion
-// https://codemirror.net/docs/ref/#autocomplete.Completion
-
-// TODO(burdon): Hint to customize?
-// https://codemirror.net/examples/autocompletion
-
-// Notes: Can't edit widget content (or cursor nav through them).
-// - https://discuss.codemirror.net/t/focusing-inputs-within-widgets/5178/7
-//   Widgets intentionally always get set to contenteditable=false,
-//   or they would become part of CodeMirror’s editable content element.
-//   You should be able to introduce new contenteditable=true child elements inside of them.
-
-// TODO(burdon): URL match?
 const markdownLinkRegexp = /\[([^\]]+)]\(([^)]+)\)(!?)/gi;
 
 /**
@@ -99,7 +92,7 @@ export function hyperLinkExtension() {
       }
     },
     {
-      decorations: (view) => view.decorations,
+      decorations: (value) => value.decorations,
       eventHandlers: {
         // TODO(burdon): CLick to expand link.
         // https://discuss.codemirror.net/t/decorator-iteration-on-click-event/4226/2
@@ -117,19 +110,5 @@ export function hyperLinkExtension() {
     },
   );
 }
-
-export const styles = EditorView.baseTheme({
-  '.cm-hyperlink-label': {
-    cursor: 'pointer',
-    textDecoration: 'underline',
-  },
-  '.cm-hyperlink-bracket': {
-    opacity: 0.2,
-  },
-  '.cm-hyperlink-url': {
-    opacity: 0.5,
-    fontFamily: 'monospace',
-  },
-});
 
 export const hyperlinkWidget: Extension = [hyperLinkExtension(), styles];

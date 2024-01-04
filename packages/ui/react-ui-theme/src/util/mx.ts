@@ -9,7 +9,7 @@ import { withLogical } from './withLogical';
 export const mx = extendTailwindMerge(
   {
     classGroups: {
-      fontFamily: ['font-body', 'font-display', 'font-mono'],
+      fontFamily: ['font-body', 'font-mono'],
       fontWeight: [
         // App weights
         'font-thin',
@@ -21,16 +21,6 @@ export const mx = extendTailwindMerge(
         'font-bold',
         'font-extrabold',
         'font-black',
-        // OS weights
-        'font-system-thin',
-        'font-system-extralight',
-        'font-system-light',
-        'font-system-normal',
-        'font-system-medium',
-        'font-system-semibold',
-        'font-system-bold',
-        'font-system-extrabold',
-        'font-system-black',
         // Arbitrary numbers
         validators.isArbitraryNumber,
       ],

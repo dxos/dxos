@@ -17,6 +17,7 @@ import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
 import GridMeta from '@braneframe/plugin-grid/meta';
+import HelpMeta from '@braneframe/plugin-help/meta';
 import InboxMeta from '@braneframe/plugin-inbox/meta';
 import IpfsMeta from '@braneframe/plugin-ipfs/meta';
 import KanbanMeta from '@braneframe/plugin-kanban/meta';
@@ -32,6 +33,7 @@ import PwaMeta from '@braneframe/plugin-pwa/meta';
 import RegistryMeta from '@braneframe/plugin-registry/meta';
 import ScriptMeta from '@braneframe/plugin-script/meta';
 import SearchMeta from '@braneframe/plugin-search/meta';
+import SettingsMeta from '@braneframe/plugin-settings/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
@@ -48,7 +50,9 @@ import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { appKey } from './globals';
+import { steps } from './help';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
+import { initializeNativeApp } from './native';
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -56,6 +60,11 @@ const main = async () => {
   const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
   const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
+
+  // Test if socket supply native app.
+  if ((globalThis as any).__args) {
+    void initializeNativeApp();
+  }
 
   const App = createApp({
     fallback: (
@@ -78,6 +87,8 @@ const main = async () => {
       // UX
       LayoutMeta,
       NavTreeMeta,
+      SettingsMeta,
+      HelpMeta,
 
       // Data integrations
       ClientMeta,
@@ -121,9 +132,9 @@ const main = async () => {
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
         appKey,
         config,
+        debugIdentity,
         services,
         types,
-        debugIdentity,
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
@@ -132,6 +143,9 @@ const main = async () => {
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
+      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {
+        steps,
+      }),
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
@@ -149,6 +163,7 @@ const main = async () => {
         containerUrl: '/script-frame/index.html',
       }),
       [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
+      [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         version: '1',
@@ -177,11 +192,13 @@ const main = async () => {
       ClientMeta.id,
       ErrorMeta.id,
       GraphMeta.id,
+      HelpMeta.id,
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
       PwaMeta.id,
       RegistryMeta.id,
+      SettingsMeta.id,
       SpaceMeta.id,
       ThemeMeta.id,
       TelemetryMeta.id,

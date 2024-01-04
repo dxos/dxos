@@ -92,7 +92,7 @@ export default {
   ],
 };
 
-export const Graph = {
+export const Default = {
   render: ({ debug }: { debug?: boolean }) => (
     <Mosaic.Root debug={debug}>
       <StorybookNavTree />

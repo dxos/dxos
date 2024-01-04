@@ -41,7 +41,7 @@ export const Stack = ({
                 item={item}
                 path={id}
                 position={index}
-                className='m-1'
+                classNames='m-1'
                 // debug={debug}
               />
             ))}
