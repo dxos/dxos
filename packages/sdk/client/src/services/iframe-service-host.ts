@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, Event, asyncTimeout } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
   DEFAULT_VAULT_URL,
   DEFAULT_INTERNAL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
-  DEFAULT_SHELL_CHANNEL,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
@@ -33,6 +32,7 @@ export type IFrameClientServicesHostOptions = {
  * @deprecated
  */
 export class IFrameClientServicesHost implements ClientServicesProvider {
+  readonly closed = new Event<Error | undefined>();
   /**
    * @internal
    */
@@ -102,7 +102,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
       },
     });
 
-    this._shellManager = new ShellManager(this._iframeManager, DEFAULT_SHELL_CHANNEL, 'deprecated-dxos-shell');
+    this._shellManager = new ShellManager(this._iframeManager);
   }
 
   get descriptors(): ServiceBundle<ClientServices> {

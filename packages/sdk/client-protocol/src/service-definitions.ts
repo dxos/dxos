@@ -49,11 +49,14 @@ export type ClientServices = {
  * Provide access to client services definitions and service handler.
  */
 export interface ClientServicesProvider {
+  /**
+   * The connection to the services provider was termintaed.
+   *
+   * This should fire if the services disconnect unexpectedly or during a client reset.
+   */
+  closed: Event<Error | undefined>;
   descriptors: ServiceBundle<ClientServices>;
   services: Partial<ClientServices>;
-  // TODO(wittjosiah): Should this be required?
-  //  If reset happens in the shell this is required to communicate the reset client that the reset happen and restart.
-  terminated?: Event<void>;
 
   open(ctx: Context): Promise<void>;
   close(ctx: Context): Promise<void>;

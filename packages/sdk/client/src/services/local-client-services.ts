@@ -64,7 +64,7 @@ const setupNetworking = async (config: Config, options: Partial<NetworkManagerOp
  * Starts a local instance of the service host.
  */
 export class LocalClientServices implements ClientServicesProvider {
-  readonly terminated = new Event<void>();
+  readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
   private readonly _params: ClientServicesHostParams;
   private _host?: ClientServicesHost;
@@ -98,7 +98,7 @@ export class LocalClientServices implements ClientServicesProvider {
       callbacks: {
         ...this._params.callbacks,
         onReset: async () => {
-          this.terminated.emit();
+          this.closed.emit(undefined);
           await this._params.callbacks?.onReset?.();
         },
       },

@@ -4,7 +4,7 @@
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { WorkerProxyRuntime } from '@dxos/client-services';
+import type { SharedWorkerConnection } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
@@ -44,7 +44,7 @@ export type WorkerClientServicesParams = {
  * Proxy to host client service in worker.
  */
 export class WorkerClientServices implements ClientServicesProvider {
-  readonly terminated = new Event<void>();
+  readonly closed = new Event<Error | undefined>();
   readonly joinedSpace = new Event<PublicKey>();
 
   private _isOpen = false;
@@ -52,7 +52,7 @@ export class WorkerClientServices implements ClientServicesProvider {
   private readonly _createWorker: () => SharedWorker;
   private readonly _logFilter: LogFilter[];
 
-  private _runtime!: WorkerProxyRuntime;
+  private _runtime!: SharedWorkerConnection;
   private _services!: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
 
@@ -70,7 +70,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     return this._services.services;
   }
 
-  get runtime(): WorkerProxyRuntime {
+  get runtime(): SharedWorkerConnection {
     return this._runtime;
   }
 
@@ -81,7 +81,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     }
 
     log('opening...');
-    const { WorkerProxyRuntime } = await import('@dxos/client-services');
+    const { SharedWorkerConnection } = await import('@dxos/client-services');
 
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
     const worker = this._createWorker();
@@ -93,7 +93,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     };
     const { systemPort, appPort } = await ports.wait();
 
-    this._runtime = new WorkerProxyRuntime({
+    this._runtime = new SharedWorkerConnection({
       config: this._config,
       systemPort: createWorkerPort({ port: systemPort }),
     });
@@ -103,7 +103,9 @@ export class WorkerClientServices implements ClientServicesProvider {
     await this._services.open();
     void navigator.locks.request(LOCK_KEY, () => {
       log('terminated');
-      this.terminated.emit();
+      if (this._isOpen) {
+        this.closed.emit(new Error('Shared worker terminated.'));
+      }
     });
 
     this._loggingStream = this._services.services.LoggingService.queryLogs({

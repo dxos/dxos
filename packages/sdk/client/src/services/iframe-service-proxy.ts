@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
@@ -39,6 +39,7 @@ export type IFrameClientServicesProxyOptions = {
  * @deprecated
  */
 export class IFrameClientServicesProxy implements ClientServicesProvider {
+  readonly closed = new Event<Error | undefined>();
   /**
    * @internal
    */
@@ -114,7 +115,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     });
 
     if (typeof this._shell === 'string') {
-      this._shellManager = new ShellManager(this._iframeManager, DEFAULT_SHELL_CHANNEL, 'deprecated-dxos-shell');
+      this._shellManager = new ShellManager(this._iframeManager);
     }
   }
 

@@ -40,8 +40,6 @@ export class ShellManager {
   constructor(
     private readonly _iframeManager: IFrameManager,
     private readonly _channel = DEFAULT_SHELL_CHANNEL,
-    // TODO(wittjosiah): Remove. Required to disambiguate deprecated iframe service proxy from standalone shell.
-    private readonly _testid = 'dxos-shell',
   ) {}
 
   get display() {
@@ -64,7 +62,7 @@ export class ShellManager {
 
     const iframe = this._iframeManager.iframe;
     iframe!.setAttribute('style', shellStyles);
-    iframe!.setAttribute('data-testid', this._testid);
+    iframe!.setAttribute('data-testid', 'dxos-shell');
     this.contextUpdate.on(({ display, spaceKey }) => {
       iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
       if (display === ShellDisplay.NONE) {

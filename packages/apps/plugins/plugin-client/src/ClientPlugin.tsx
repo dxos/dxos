@@ -20,7 +20,14 @@ import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { Client, ClientContext, PublicKey, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import {
+  Client,
+  ClientContext,
+  PublicKey,
+  type ClientOptions,
+  type SystemStatus,
+  fromIFrame,
+} from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 
@@ -83,18 +90,20 @@ export const ClientPlugin = ({
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
 
-      const oldClient = new Client({
-        config: new Config(
-          {
-            runtime: {
-              client: {
-                remoteSource: 'https://halo.dxos.org/vault.html',
-              },
+      const oldConfig = new Config(
+        {
+          runtime: {
+            client: {
+              remoteSource: 'https://halo.dxos.org/vault.html',
             },
           },
-          await Envs(),
-          Defaults(),
-        ),
+        },
+        await Envs(),
+        Defaults(),
+      );
+      const oldClient = new Client({
+        config: oldConfig,
+        services: fromIFrame(oldConfig, { shell: false }),
       });
 
       try {

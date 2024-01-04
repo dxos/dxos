@@ -31,12 +31,18 @@ void navigator.locks.request('dxos-client-worker', (lock) => {
 });
 
 const workerRuntime = new WorkerRuntime(
-  () => lockAcquired.wait(),
-  () => releaseLock(),
   async () => {
     const config = new Config(await Dynamics(), await Envs(), Local(), Defaults());
     log.config({ filter: LOG_FILTER, prefix: config.get('runtime.client.log.prefix') });
     return config;
+  },
+  {
+    acquireLock: () => lockAcquired.wait(),
+    releaseLock: () => releaseLock(),
+    onReset: async () => {
+      // Close the shared worker, lock will be released automatically.
+      self.close();
+    },
   },
 );
 

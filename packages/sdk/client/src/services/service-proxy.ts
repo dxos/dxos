@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import { clientServiceBundle, type ClientServices, type ClientServicesProvider } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
@@ -13,6 +13,7 @@ import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
  * For example, the services can be located in Wallet Extension.
  */
 export class ClientServicesProxy implements ClientServicesProvider {
+  readonly closed = new Event<Error | undefined>();
   private _proxy?: ProtoRpcPeer<ClientServices>;
 
   constructor(

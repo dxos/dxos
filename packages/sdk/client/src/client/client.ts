@@ -280,7 +280,7 @@ export class Client {
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
     await this._services.open(this._ctx);
-    this._services.terminated?.on(async () => {
+    this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
       if (!this._resetting) {
         await this._close();
