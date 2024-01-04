@@ -2,7 +2,11 @@
   "sourceRoot": "packages/devtools/initializers/create-bare/src",
   "projectType": "library",
   "targets": {
-    "build": {},
+    "build": {
+      "options": {
+        "outputPath": "packages/devtools/initializers/create-bare/dist"
+      }
+    },
     "lint": {}
   }
 }
