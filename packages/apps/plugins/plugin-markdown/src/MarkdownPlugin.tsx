@@ -164,9 +164,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const space = getSpaceForObject(document);
     const [comments, setComments] = useState<CommentRange[]>([]);
     // TODO(burdon): How to update without triggering creating a new model?
-    useEffect(() => {
-      setComments(document.comments?.map((comment) => ({ id: comment.thread!.id, range: comment.range! })));
-    }, [document.comments]);
+    // useEffect(() => {
+    //   setComments(document.comments?.map((comment) => ({ id: comment.thread!.id, range: comment.range! })));
+    // }, [document.comments]);
     const model = useTextModel({ identity, space, text: document?.content, comments });
     useEffect(() => {
       void intentPlugin?.provides.intent.dispatch({

@@ -77,20 +77,21 @@ export type UseTextModelProps = {
 export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
   const { identity, space, text, comments } = props;
   const [model, setModel] = useState<EditorModel | undefined>(() => createModel(props));
-  useEffect(() => setModel(createModel(props)), [identity, space, text, comments]);
+  useEffect(() => setModel(createModel(props)), [identity, space, text]);
   return model;
 };
 
-const createModel = (options: UseTextModelProps) => {
-  const { text } = options;
+const createModel = (props: UseTextModelProps) => {
+  console.log(':::', props);
+  const { text } = props;
   if (isActualAutomergeObject(text)) {
-    return createAutomergeModel(options);
+    return createAutomergeModel(props);
   } else {
     if (!text?.doc) {
       return undefined;
     }
 
-    return createYjsModel(options);
+    return createYjsModel(props);
   }
 };
 
