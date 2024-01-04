@@ -62,7 +62,7 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
 };
 
 export default {
-  title: 'DXOS UI/Avatar',
+  title: 'react-ui/Avatar',
   component: StorybookAvatar,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

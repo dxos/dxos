@@ -8,7 +8,7 @@ import { Tag } from './Tag';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'DXOS UI/Tag',
+  title: 'react-ui/Tag',
   component: Tag,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

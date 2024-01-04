@@ -46,7 +46,7 @@ const StoryMain = (_args: StoryMainArgs) => {
 };
 
 export default {
-  title: 'DXOS UI/Main',
+  title: 'react-ui/Main',
   component: StoryMain,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
