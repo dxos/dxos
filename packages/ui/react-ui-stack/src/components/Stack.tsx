@@ -25,6 +25,7 @@ export type Direction = 'horizontal' | 'vertical';
 
 export const DEFAULT_TYPE = 'stack-section';
 
+<<<<<<< Updated upstream
 type StackItem = MosaicDataItem & {
   items: StackSectionItem[];
 };
@@ -45,6 +46,15 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
   onRemoveSection?: (path: string) => void;
   onNavigateToSection?: (id: string) => void;
 };
+=======
+export type StackProps<TData extends StackSectionContent = StackSectionContent> = Omit<
+  MosaicContainerProps<TData, number>,
+  'debug' | 'Component'
+> &
+  StackContextValue<TData> & {
+    items?: StackSectionItem[];
+  };
+>>>>>>> Stashed changes
 
 export const Stack = ({
   id,
@@ -108,6 +118,10 @@ export const Stack = ({
           type={type}
           className={className}
           item={{ id, items: itemsWithPreview }}
+<<<<<<< Updated upstream
+=======
+          itemContext={{ count: items?.length, transform, onRemoveSection, onNavigateToSection, SectionContent }}
+>>>>>>> Stashed changes
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />
