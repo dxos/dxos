@@ -56,14 +56,14 @@ type CommentSelected = {
 };
 
 // TODO(burdon): Rename.
-type InternalCommentRange = Range &
+type ExtendedCommentRange = Range &
   CommentRange & {
     // TODO(burdon): Not part of state; just required for callback.
     location?: Rect | null;
   };
 
 export type CommentsState = CommentSelected & {
-  ranges: InternalCommentRange[];
+  ranges: ExtendedCommentRange[];
 };
 
 export const setCommentRange = StateEffect.define<{ model: EditorModel; comments: CommentRange[] }>();
@@ -89,7 +89,7 @@ const commentsStateField = StateField.define<CommentsState>({
       // Update range from store.
       if (effect.is(setCommentRange)) {
         const { model, comments } = effect.value;
-        const ranges: InternalCommentRange[] = comments.map((comment) => {
+        const ranges: ExtendedCommentRange[] = comments.map((comment) => {
           const range = model.getRange!(comment.relPos)!;
           return { ...comment, ...range };
         });
