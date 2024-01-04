@@ -19,22 +19,22 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
 import {
   autocomplete,
+  blast,
+  code,
+  comments,
+  defaultOptions,
+  hr,
+  image,
   listener,
   link,
+  mention,
+  table,
   tasklist,
   tooltip,
+  typewriter,
+  type CommentsOptions,
   type TooltipOptions,
   type LinkOptions,
-  table,
-  image,
-  mention,
-  blast,
-  demo,
-  defaultOptions,
-  code,
-  type CommentsOptions,
-  hr,
-  comments,
 } from './extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
@@ -179,7 +179,9 @@ const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
 };
 
 const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded bg-neutral-500 text-xs'>{char}</span>
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+    {char}
+  </span>
 );
 
 const onCommentsHover: CommentsOptions['onHover'] = (el) => {
@@ -386,7 +388,7 @@ export const Diagnostics = {
 };
 
 export const Demo = {
-  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[demo()]} />,
+  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[typewriter()]} />,
 };
 
 export const Blast = {
@@ -394,7 +396,7 @@ export const Blast = {
     <Story
       text={str(text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        demo({
+        typewriter({
           items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
         }),
         blast(
