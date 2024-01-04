@@ -8,6 +8,7 @@ export * from './blast';
 export * from './code';
 export * from './demo';
 export * from './comments';
+export * from './hr';
 export * from './image';
 export * from './link';
 export * from './listener';

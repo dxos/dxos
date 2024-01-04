@@ -14,8 +14,6 @@ import {
   MatchDecorator,
   ViewPlugin,
   WidgetType,
-  hasHoverTooltips,
-  closeHoverTooltips,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 
@@ -39,7 +37,7 @@ const styles = EditorView.baseTheme({
     backgroundColor: 'yellow',
   },
   '& .cm-comment-active': {
-    backgroundColor: 'lime',
+    backgroundColor: 'orange',
   },
 });
 
@@ -138,6 +136,10 @@ export type CommentsOptions = {
    * Called to notify which thread is currently closest to the cursor.
    */
   onSelect?: (state: CommentsState) => void;
+  /**
+   * Called to render tooltip.
+   */
+  onHover?: (el: Element) => void;
 };
 
 /**
@@ -248,27 +250,29 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     //
     // Hover tooltip (for key shortcut hints, etc.)
     //
-    hoverTooltip(
-      (view, pos) => {
-        const selection = view.state.selection.main;
-        if (selection && pos >= selection.from && pos <= selection.to) {
-          return {
-            pos: selection.from,
-            end: selection.to,
-            above: true,
-            create: () => {
-              // TODO(burdon): Dispatch to react callback to render (or use SSR)?
-              const el = document.createElement('div');
-              el.innerText = 'Press shift-meta-c to create a comment.';
-              return { dom: el, offset: { x: 0, y: 0 } };
-            },
-          };
-        }
+    options.onHover
+      ? hoverTooltip(
+          (view, pos) => {
+            const selection = view.state.selection.main;
+            if (selection && pos >= selection.from && pos <= selection.to) {
+              return {
+                pos: selection.from,
+                end: selection.to,
+                above: true,
+                create: () => {
+                  // TODO(burdon): Dispatch to react callback to render (or use SSR)?
+                  const el = document.createElement('div');
+                  options.onHover?.(el);
+                  return { dom: el, offset: { x: 0, y: 8 } };
+                },
+              };
+            }
 
-        return null;
-      },
-      { hoverTime: 1000 },
-    ),
+            return null;
+          },
+          { hideOnChange: true, hoverTime: 1000 },
+        )
+      : [],
 
     //
     // Monitor cursor movement and text updates.
@@ -329,13 +333,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             ...next,
             ranges: next.ranges.map((range) => ({ ...range, location: view.coordsAtPos(range.from) })),
           });
-        }
-      }
-
-      // Reset hover if moved.
-      if (hasHoverTooltips(state)) {
-        if (state.selection.main.head !== startState.selection.main.head) {
-          view.dispatch({ effects: closeHoverTooltips });
         }
       }
     }),

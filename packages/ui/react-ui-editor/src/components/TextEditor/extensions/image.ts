@@ -55,8 +55,9 @@ class ImageWidget extends WidgetType {
     super();
   }
 
+  // TODO(burdon): Does this need to be unique for each position?
   override eq(other: WidgetType) {
-    return this._url === (other as any as ImageWidget)?._url;
+    return this._url === (other as any as ImageWidget)._url;
   }
 
   toDOM(view: EditorView) {

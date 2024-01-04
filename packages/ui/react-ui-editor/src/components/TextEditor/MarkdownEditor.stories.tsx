@@ -8,7 +8,7 @@ import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { StrictMode, useRef, useState } from 'react';
+import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -33,6 +33,8 @@ import {
   demo,
   defaultOptions,
   code,
+  type CommentsOptions,
+  hr,
 } from './extensions';
 import { useTextModel } from '../../hooks';
 
@@ -56,6 +58,7 @@ const text = {
     '  - [ ] state',
     '  - [ ] indent',
     '  - [x] style',
+    '',
   ),
 
   list: str(
@@ -64,6 +67,7 @@ const text = {
     '- new york',
     '- london',
     '- tokyo',
+    '',
   ),
 
   numbered: str(
@@ -88,8 +92,8 @@ const text = {
     '',
     '  return () => <div>Test</div>;',
     '};',
+    '```',
     '',
-    '```'
   ),
 
   links: str(
@@ -148,7 +152,6 @@ const document = str(
   text.table,
   '---',
   text.image,
-  '',
   text.footer,
 );
 
@@ -171,6 +174,25 @@ const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
         {web.origin}
         <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
       </a>
+    </StrictMode>,
+  );
+};
+
+const Key: FC<{ char: string }> = ({ char }) => (
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded bg-neutral-500 text-xs'>{char}</span>
+);
+
+const onCommentsHover: CommentsOptions['onHover'] = (el) => {
+  createRoot(el).render(
+    <StrictMode>
+      <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+        <div>Create comment</div>
+        <div className='flex gap-1'>
+          <Key char='⌘' />
+          <Key char='⇧' />
+          <Key char='C' />
+        </div>
+      </div>
     </StrictMode>,
   );
 };
@@ -201,7 +223,7 @@ const Story = ({
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor ref={ref} model={model} extensions={extensions} {...props} />
+          <MarkdownEditor ref={ref} model={model} {...props} />
           <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
@@ -221,6 +243,7 @@ const extensions = [
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   code(),
+  hr(),
   image(),
   link({ onRender: onLinkRender }),
   table(),
@@ -234,6 +257,16 @@ export const Default = {
 
 export const Readonly = {
   render: () => <Story text={document} extensions={extensions} readonly />,
+};
+
+export const NoExtensions = {
+  render: () => <Story text={document} />,
+};
+
+export const HorizontalRule = {
+  render: () => (
+    <Story text={str(text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)} extensions={[hr()]} />
+  ),
 };
 
 export const Tooltips = {
@@ -307,6 +340,7 @@ export const Comments = {
       text={str(text.paragraphs, text.footer)}
       extensions={[
         comments({
+          onHover: onCommentsHover,
           onCreate: () => PublicKey.random().toHex(),
           onSelect: (state) => {
             const debug = false;
@@ -368,8 +402,4 @@ export const Blast = {
       ]}
     />
   ),
-};
-
-export const NoExtensions = {
-  render: () => <Story text={document} />,
 };
