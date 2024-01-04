@@ -58,6 +58,7 @@
   "devDependencies": {
     "@automerge/automerge-repo-network-broadcastchannel": "^1.0.19",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

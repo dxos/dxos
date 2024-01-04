@@ -44,7 +44,8 @@ export type Range = {
 
 export type CommentRange = {
   id: string;
-  range: string;
+  // TODO(burdon): Split into begin/end?
+  cursor: string;
 };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
@@ -53,9 +54,8 @@ export type EditorModel = {
   // TODO(burdon): Remove.
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
-  comments: CommentRange[];
-  getRelRange?: (value: Range) => string;
-  getAbsRange?: (relRange: string) => Range | undefined;
+  getCursorFromRange?: (value: Range) => string;
+  getRangeFromCursor?: (cursor: string) => Range | undefined;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -69,20 +69,18 @@ export type UseTextModelProps = {
   identity?: Identity | null;
   space?: Space;
   text?: TextObject;
-  comments?: CommentRange[];
 };
 
 // TODO(burdon): Remove YJS/Automerge deps (from UI component -- create abstraction; incl. all ECHO/Space deps).
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
-  const { identity, space, text, comments } = props;
+  const { identity, space, text } = props;
   const [model, setModel] = useState<EditorModel | undefined>(() => createModel(props));
   useEffect(() => setModel(createModel(props)), [identity, space, text]);
   return model;
 };
 
 const createModel = (props: UseTextModelProps) => {
-  console.log(':::', props);
   const { text } = props;
   if (isActualAutomergeObject(text)) {
     return createAutomergeModel(props);
@@ -95,7 +93,7 @@ const createModel = (props: UseTextModelProps) => {
   }
 };
 
-const createYjsModel = ({ identity, space, text, comments = [] }: UseTextModelProps): EditorModel => {
+const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorModel => {
   invariant(text?.doc && text?.content);
   const provider = space
     ? new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
@@ -105,15 +103,14 @@ const createYjsModel = ({ identity, space, text, comments = [] }: UseTextModelPr
     id: text.doc.guid,
     content: text.content,
     text: () => text.content!.toString(),
-    comments,
     // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
-    getRelRange: (value: Range) => {
-      const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.from));
-      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.to));
+    getCursorFromRange: (range: Range) => {
+      const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.from));
+      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.to));
       return [arrayToString(from), arrayToString(to)].join(':');
     },
-    getAbsRange: (value: string) => {
-      const parts = value.split(':');
+    getRangeFromCursor: (cursor: string) => {
+      const parts = cursor.split(':');
       const from = Y.createAbsolutePositionFromRelativePosition(
         Y.decodeRelativePosition(stringToArray(parts[0])),
         text.doc!,
@@ -145,7 +142,6 @@ const createAutomergeModel = ({ identity, text }: UseTextModelProps): EditorMode
     id: obj.id,
     content: doc,
     text: () => get(doc.handle.docSync(), doc.path),
-    comments: [],
     // TODO(burdon): https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
     extension: [automergePlugin(doc.handle, doc.path), modelState.init(() => model)],
     peer: identity

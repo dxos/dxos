@@ -5,7 +5,7 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, type Ref, useEffect, useState } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, type Ref, useEffect } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
@@ -23,13 +23,7 @@ import {
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, getSpaceForObject, isTypedObject, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import {
-  type AutocompleteResult,
-  type CommentRange,
-  type EditorModel,
-  type TextEditorRef,
-  useTextModel,
-} from '@dxos/react-ui-editor';
+import { type AutocompleteResult, type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 import { nonNullable } from '@dxos/util';
 
@@ -162,12 +156,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const MarkdownMain: FC<{ document: DocumentType; readonly: boolean }> = ({ document, readonly }) => {
     const identity = useIdentity();
     const space = getSpaceForObject(document);
-    const [comments, setComments] = useState<CommentRange[]>([]);
-    // TODO(burdon): How to update without triggering creating a new model?
-    // useEffect(() => {
-    //   setComments(document.comments?.map((comment) => ({ id: comment.thread!.id, range: comment.range! })));
-    // }, [document.comments]);
-    const model = useTextModel({ identity, space, text: document?.content, comments });
+    const model = useTextModel({ identity, space, text: document?.content });
     useEffect(() => {
       void intentPlugin?.provides.intent.dispatch({
         action: ThreadAction.SELECT,

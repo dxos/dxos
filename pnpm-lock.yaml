@@ -8513,6 +8513,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen

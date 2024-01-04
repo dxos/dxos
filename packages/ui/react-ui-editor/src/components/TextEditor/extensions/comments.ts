@@ -49,6 +49,7 @@ const marks = {
   highlightActive: Decoration.mark({ class: 'cm-comment-active' }),
 };
 
+// TODO(burdon): Should this be part of state?
 type CommentSelected = {
   active?: string;
   closest?: string;
@@ -89,7 +90,7 @@ const commentsStateField = StateField.define<CommentsState>({
       if (effect.is(setCommentRange)) {
         const { model, comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments.map((comment) => {
-          const range = model.getAbsRange!(comment.range)!;
+          const range = model.getRangeFromCursor!(comment.cursor)!;
           return { ...comment, ...range };
         });
 
@@ -191,7 +192,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   const createCommentThread: Command = (view) => {
     const { head, from, to } = view.state.selection.main;
     const model = view.state.field(modelState);
-    const relPos = model?.getRelRange?.({ from, to: to - 1 });
+    const relPos = model?.getCursorFromRange?.({ from, to: to - 1 });
     if (relPos) {
       // Create thread via callback.
       const id = options.onCreate?.(relPos);
@@ -320,7 +321,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             }
 
             if (from <= range.to) {
-              const newRange = model?.getAbsRange?.(range.range);
+              const newRange = model?.getRangeFromCursor?.(range.cursor);
               Object.assign(range, newRange);
               mod = true;
             }

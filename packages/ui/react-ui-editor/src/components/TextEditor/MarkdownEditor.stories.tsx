@@ -348,7 +348,7 @@ export const Comments = {
             onHover: onCommentsHover,
             onCreate: (relPos) => {
               const id = PublicKey.random().toHex();
-              setCommentStates((comments) => [...comments, { id, range: relPos }]);
+              setCommentStates((comments) => [...comments, { id, cursor: relPos }]);
               return id;
             },
             onSelect: (state) => {
