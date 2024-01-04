@@ -10,8 +10,8 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { ObjectMeta } from '@dxos/react-client/echo';
-import type { EditorMode } from '@dxos/react-ui-editor';
+import { type ObjectMeta } from '@dxos/react-client/echo';
+import { type EditorMode, type Extension } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
 
@@ -32,6 +32,7 @@ export type MarkdownProperties = {
 
 export type MarkdownProvides = {
   markdown: {
+    extension?: Extension;
     onChange?: (text: string) => void;
   };
 };

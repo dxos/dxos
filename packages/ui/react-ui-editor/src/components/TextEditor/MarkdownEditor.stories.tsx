@@ -25,7 +25,6 @@ import {
   tooltip,
   type TooltipOptions,
   type LinkOptions,
-  comments,
   table,
   image,
   mention,
@@ -35,8 +34,9 @@ import {
   code,
   type CommentsOptions,
   hr,
+  comments,
 } from './extensions';
-import { useTextModel } from '../../hooks';
+import { type CommentRange, useTextModel } from '../../hooks';
 
 // Extensions:
 // TODO(burdon): Table of contents.
@@ -207,11 +207,12 @@ const onLinkRender: LinkOptions['onRender'] = (el, url) => {
   );
 };
 
-const Story = ({
-  text,
-  automerge,
-  ...props
-}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>) => {
+type StoryProps = {
+  text?: string;
+  automerge?: boolean;
+} & Pick<TextEditorProps, 'comments' | 'readonly' | 'extensions' | 'slots'>;
+
+const Story = ({ text, automerge, ...props }: StoryProps) => {
   const ref = useRef<TextEditorRef>(null);
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
@@ -335,30 +336,39 @@ export const Mention = {
 };
 
 export const Comments = {
-  render: () => (
-    <Story
-      text={str(text.paragraphs, text.footer)}
-      extensions={[
-        comments({
-          onHover: onCommentsHover,
-          onCreate: () => PublicKey.random().toHex(),
-          onSelect: (state) => {
-            const debug = false;
-            if (debug) {
-              console.log(
-                'update',
-                JSON.stringify({
-                  active: state.active?.slice(0, 8),
-                  closest: state.closest?.slice(0, 8),
-                  ranges: state.ranges.length,
-                }),
-              );
-            }
-          },
-        }),
-      ]}
-    />
-  ),
+  render: () => {
+    const [commentsStates, setCommentStates] = useState<CommentRange[]>([]);
+
+    return (
+      <Story
+        text={str(text.paragraphs, text.footer)}
+        comments={commentsStates}
+        extensions={[
+          comments({
+            onHover: onCommentsHover,
+            onCreate: (relPos) => {
+              const id = PublicKey.random().toHex();
+              setCommentStates((comments) => [...comments, { id, relPos }]);
+              return id;
+            },
+            onSelect: (state) => {
+              const debug = false;
+              if (debug) {
+                console.log(
+                  'update',
+                  JSON.stringify({
+                    active: state.active?.slice(0, 8),
+                    closest: state.closest?.slice(0, 8),
+                    ranges: state.ranges.length,
+                  }),
+                );
+              }
+            },
+          }),
+        ]}
+      />
+    );
+  },
 };
 
 export const Diagnostics = {

@@ -3,7 +3,6 @@
 //
 
 import { type Extension, StateField } from '@codemirror/state';
-import { type Rect } from '@codemirror/view';
 import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
@@ -45,9 +44,8 @@ export type Range = {
 
 export type CommentRange = {
   id: string;
-  relPos: string;
-  location?: Rect | null;
-} & Range;
+  relPos: string; // TODO(burdon): Rename?
+};
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type EditorModel = {
@@ -107,8 +105,8 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     content: text.content,
     text: () => text.content!.toString(),
     comments: [],
+    // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
     getRelPos: (value: Range) => {
-      // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
       const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.from));
       const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.to));
       return [arrayToString(from), arrayToString(to)].join(':');
@@ -147,6 +145,7 @@ const createAutomergeModel = ({ identity, text }: UseTextModelOptions): EditorMo
     content: doc,
     text: () => get(doc.handle.docSync(), doc.path),
     comments: [],
+    // TODO(burdon): https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
     extension: [automergePlugin(doc.handle, doc.path), modelState.init(() => model)],
     peer: identity
       ? {

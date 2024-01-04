@@ -14,13 +14,16 @@ import {
   MatchDecorator,
   ViewPlugin,
   WidgetType,
+  type Rect,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-import { type CommentRange, modelState } from '../../../hooks';
+import { type CommentRange, type EditorModel, modelState, type Range } from '../../../hooks';
+
+// TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
@@ -46,30 +49,56 @@ const marks = {
   highlightActive: Decoration.mark({ class: 'cm-comment-active' }),
 };
 
-export type CommentsState = {
+// TODO(burdon): Rename.
+type CommentSelected = {
   active?: string;
   closest?: string;
-  ranges: CommentRange[];
 };
 
-const setCommentsEffect = StateEffect.define<CommentsState>();
+// TODO(burdon): Rename.
+type InternalCommentRange = Range &
+  CommentRange & {
+    // TODO(burdon): Not part of state; just required for callback.
+    location?: Rect | null;
+  };
+
+export type CommentsState = CommentSelected & {
+  ranges: InternalCommentRange[];
+};
+
+export const setCommentRange = StateEffect.define<{ model: EditorModel; comments: CommentRange[] }>();
+
+const setSelection = StateEffect.define<CommentSelected>();
+
+const setCommentState = StateEffect.define<CommentsState>();
 
 /**
- * State field that tracks highlight ranges.
+ * State field that tracks comment ranges.
  * The ranges are tracked as codemirror ranges (i.e., not relative YJS/Automerge positions), and
  * therefore must be updated when the document changes.
- *
- * Call dispatch to update:
- * ```ts
- * dispatch({ effects: setHighlights.of({ ... }) })
- * ```
  */
-// TODO(burdon): Use facet? Or computed from model?
 const commentsStateField = StateField.define<CommentsState>({
   create: () => ({ ranges: [] }),
   update: (value, tr) => {
     for (const effect of tr.effects) {
-      if (effect.is(setCommentsEffect)) {
+      // Update selection.
+      if (effect.is(setSelection)) {
+        return { ...value, ...effect.value };
+      }
+
+      // Update range from store.
+      if (effect.is(setCommentRange)) {
+        const { model, comments } = effect.value;
+        const ranges: InternalCommentRange[] = comments.map((comment) => {
+          const range = model.getRange!(comment.relPos)!;
+          return { ...comment, ...range };
+        });
+
+        return { ...value, ranges };
+      }
+
+      // Update entire state.
+      if (effect.is(setCommentState)) {
         return effect.value;
       }
     }
@@ -131,7 +160,7 @@ export type CommentsOptions = {
   /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (range: string) => string | undefined;
+  onCreate?: (relPos: string) => string | undefined;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -146,7 +175,6 @@ export type CommentsOptions = {
  * Comment threads.
  * 1). Updates the EditorModel to store relative selections for a set of comments threads.
  *     Since the selections are relative, they do not need to be updated when the document is edited.
- *     TODO(burdon): Currently doesn't update or read from the model. Needs hook? Compute state field?
  * 2). Implements a StateField to track absolute selections corresponding to the comments (i.e., when the document is edited).
  * 3). Creates decoration marks to apply classes to each selection.
  * 4). Tracks the current cursor position to:
@@ -171,9 +199,13 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       if (id) {
         // Update range.
         // TODO(burdon): Update model (not state field directly) and read from computed property.
-        const { ranges } = view.state.field(commentsStateField);
+        // const { ranges } = view.state.field(commentsStateField);
+        // view.dispatch({
+        //   effects: setCommentsEffect.of({ active: id, ranges: [...ranges, { id, from, to: to - 1, relPos }] }),
+        //   selection: { anchor: from },
+        // });
         view.dispatch({
-          effects: setCommentsEffect.of({ active: id, ranges: [...ranges, { id, from, to: to - 1, relPos }] }),
+          effects: setSelection.of({ active: id }),
           selection: { anchor: from },
         });
 
@@ -303,7 +335,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         });
 
         if (mod) {
-          view.dispatch({ effects: setCommentsEffect.of({ active, ranges }) });
+          view.dispatch({ effects: setCommentState.of({ active, ranges }) });
         }
       }
 
@@ -315,24 +347,25 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
         let min = Infinity;
         const { active, closest, ranges } = state.field(commentsStateField);
-        const next: CommentsState = { active: undefined, closest: undefined, ranges };
+        const selected: CommentSelected = { active: undefined, closest: undefined };
         ranges.forEach((comment) => {
           const d = Math.min(Math.abs(head - comment.from), Math.abs(head - comment.to));
           if (head >= comment.from && head <= comment.to) {
-            next.active = comment.id;
+            selected.active = comment.id;
           }
           if (d < min) {
-            next.closest = comment.id;
+            selected.closest = comment.id;
             min = d;
           }
         });
 
-        if (next.active !== active || next.closest !== closest) {
-          view.dispatch({ effects: setCommentsEffect.of(next) });
+        if (selected.active !== active || selected.closest !== closest) {
+          view.dispatch({ effects: setSelection.of(selected) });
 
+          // Update callback.
           handleSelect({
-            ...next,
-            ranges: next.ranges.map((range) => ({ ...range, location: view.coordsAtPos(range.from) })),
+            ...selected,
+            ranges: ranges.map((range) => ({ ...range, location: view.coordsAtPos(range.from) })),
           });
         }
       }

@@ -96,7 +96,7 @@ message Script {
 /**
  *
  */
-// TODO(burdon): Generalize to script?
+// TODO(burdon): Remove (change plugin to provide Markdown extension).
 message Mermaid {
   option (object) = true;
 

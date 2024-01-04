@@ -10,14 +10,10 @@ export type ProgressBarProps = {
   className?: string;
 };
 
-<<<<<<< HEAD
 /**
  * @deprecated
  */
 // TODO(burdon): Replace with react-ui/Status
-=======
-// TODO(burdon): Move to react-ui?
->>>>>>> origin/main
 export const ProgressBar = (props: ProgressBarProps) => {
   const { className, indeterminate = false, progress = 0 } = props;
   return (

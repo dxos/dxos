@@ -3,9 +3,8 @@
 //
 
 import get from 'lodash.get';
-import { type StyleSpec } from 'style-mod';
 
-import { tokens } from '../../../styles';
+import { type ThemeStyles, tokens } from '../../../styles';
 
 // TODO(burdon): Can we erase All of the default CM styles?
 // TODO(burdon): Theme styles seem to be added multiple times?
@@ -21,7 +20,7 @@ import { tokens } from '../../../styles';
  * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  */
-export const defaultTheme: StyleSpec = {
+export const defaultTheme: ThemeStyles = {
   //
   // Main layout:
   // https://codemirror.net/examples/styling
@@ -277,7 +276,7 @@ export const defaultTheme: StyleSpec = {
   },
 };
 
-export const textTheme: StyleSpec = {
+export const textTheme: ThemeStyles = {
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
@@ -286,14 +285,14 @@ export const textTheme: StyleSpec = {
   },
 };
 
-export const markdownTheme: StyleSpec = {
+export const markdownTheme: ThemeStyles = {
   // NOTE: Must leave base font family as is (i.e., monospace) due to fenced code blocks.
   '& .cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
 };
 
-export const codeTheme: StyleSpec = {
+export const codeTheme: ThemeStyles = {
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
