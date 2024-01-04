@@ -10,7 +10,8 @@ import { next as automerge } from '@dxos/automerge/automerge';
 
 import { type IDocHandle } from './handle';
 import { type Field, isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads } from './plugin';
-import { automergeToCodemirror, codemirrorToAutomerge } from './translation';
+import { updateAutomerge } from './update-automerge';
+import { updateCodeMirror } from './update-codemirror';
 
 type Doc<T> = automerge.Doc<T>;
 type Heads = automerge.Heads;
@@ -55,7 +56,7 @@ export class PatchSemaphore {
     }
 
     // Apply the unreconciled transactions to the document.
-    let newHeads = codemirrorToAutomerge(this._field, handle, transactions, view.state);
+    let newHeads = updateAutomerge(this._field, handle, transactions, view.state);
 
     // NOTE: null and undefined each come from automerge and repo respectively.
     if (newHeads === null || newHeads === undefined) {
@@ -65,7 +66,7 @@ export class PatchSemaphore {
 
     // Now get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
     const diff = automerge.equals(oldHeads, newHeads) ? [] : automerge.diff(handle.docSync()!, oldHeads, newHeads);
-    automergeToCodemirror(view, selection, path, diff);
+    updateCodeMirror(view, selection, path, diff);
 
     view.dispatch({
       effects: updateHeads(newHeads),

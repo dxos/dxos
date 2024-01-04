@@ -9,5 +9,4 @@ export * from './EditorSection';
 export * from './MarkdownMainEmpty';
 export * from './MarkdownSettings';
 export * from './StandaloneLayout';
-export * from './SpaceMarkdownChooser';
 export * from './StandaloneMenu';

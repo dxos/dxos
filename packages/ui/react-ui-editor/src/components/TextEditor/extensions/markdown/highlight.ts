@@ -8,15 +8,12 @@ import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 import get from 'lodash.get';
 
-import { mx } from '@dxos/react-ui-theme';
-
 import {
   blockquote,
   bold,
   code,
   codeMark,
   heading,
-  horizontalRule,
   inlineUrl,
   italic,
   mark,
@@ -35,7 +32,7 @@ export const markdownTags = {
   CodeText: Tag.define(),
   EmphasisMark: Tag.define(),
   HeaderMark: Tag.define(),
-  HorizontalRule: Tag.define(),
+  // HorizontalRule: Tag.define(),
   InlineCode: Tag.define(),
   LinkLabel: Tag.define(),
   LinkReference: Tag.define(),
@@ -182,10 +179,10 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       },
 
       // TODO(burdon): Replace with extension.
-      {
-        tag: [markdownTags.HorizontalRule],
-        class: mx(horizontalRule, readonly && '-indent-[100rem]'),
-      },
+      // {
+      //   tag: [markdownTags.HorizontalRule],
+      //   class: mx(horizontalRule, readonly && '-indent-[100rem]'),
+      // },
 
       // TODO(burdon): Only if being edited.
       {
