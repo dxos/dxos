@@ -38,6 +38,17 @@ export type SerializedSpace = {
   version: number;
 
   /**
+   * Human-readable date of creation.
+   */
+  date?: string;
+
+  /**
+   * Space key.
+   */
+  // TODO(mykola): Maybe remove this?
+  spaceKey?: string;
+
+  /**
    * List of objects included in the archive.
    */
   objects: SerializedObject[];
@@ -90,6 +101,8 @@ export class Serializer {
       }),
 
       version: Serializer.version,
+      date: new Date().toUTCString(),
+      spaceKey: database.spaceKey.toHex(),
     };
 
     return data;
