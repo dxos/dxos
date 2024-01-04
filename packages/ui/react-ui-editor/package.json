@@ -39,7 +39,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.12.0",
+    "@fluentui/react-tabster": "^9.16.1",
     "@lezer/common": "^1.1.1",
     "@lezer/highlight": "^1.2.0",
     "@lezer/markdown": "^1.1.1",

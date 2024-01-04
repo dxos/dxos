@@ -11,8 +11,11 @@ import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
+import { NAVTREE_PLUGIN } from '../meta';
+
+// TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(NAVTREE_PLUGIN);
 
   // TODO(burdon): Factor out.
   // TODO(burdon): How to access all translations across plugins?
@@ -51,7 +54,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
 
   return (
     <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden']}>
-      <Dialog.Title>{t('commands dialog title', { ns: 'os' })}</Dialog.Title>
+      <Dialog.Title>{t('commands dialog title', { ns: NAVTREE_PLUGIN })}</Dialog.Title>
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
       <SearchList.Root label={t('commandlist input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>

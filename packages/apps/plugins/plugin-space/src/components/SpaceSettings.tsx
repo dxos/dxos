@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { SettingsValue, parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { SettingsValue } from '@braneframe/plugin-settings';
+import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';

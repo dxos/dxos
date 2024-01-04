@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import React, { forwardRef, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -103,10 +104,15 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
   ({ classNames, path, isOver, item: { items }, itemContext }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
+    const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List ref={forwardedRef} classNames={mx(textBlockWidth, 'm-2 p-2 rounded-lg', isOver && dropRing, classNames)}>
+      <List
+        ref={forwardedRef}
+        classNames={mx(textBlockWidth, 'm-2 p-2 rounded-lg', isOver && dropRing, classNames)}
+        {...domAttributes}
+      >
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (

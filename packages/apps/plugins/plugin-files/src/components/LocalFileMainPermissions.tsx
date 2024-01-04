@@ -22,7 +22,7 @@ export const LocalFileMainPermissions = ({ entity }: { entity: LocalEntity }) =>
         role='alert'
         className={mx(
           descriptionText,
-          'border border-dashed border-neutral-400/50 rounded-lg flex flex-col space-items-evenly justify-center p-8 font-system-normal text-lg',
+          'border border-dashed border-neutral-400/50 rounded-lg flex flex-col space-items-evenly justify-center p-8 font-normal text-lg',
         )}
       >
         {t('missing file permissions')}

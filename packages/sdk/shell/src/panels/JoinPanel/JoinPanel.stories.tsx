@@ -28,6 +28,7 @@ const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
 );
 
 export default {
+  title: 'react-shell/JoinPanel',
   component: JoinDialog,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

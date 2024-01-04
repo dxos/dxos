@@ -65,6 +65,7 @@ export default [
         'confirm import title': 'Overwrite this document’s content?',
         'confirm import body':
           'Importing will overwrite this document’s content. If you’d rather import into a new document, first create a new document and then import into it.',
+        'target blank description': 'Link opens in a new tab.',
       },
     },
   },
