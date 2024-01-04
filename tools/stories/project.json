@@ -103,7 +103,7 @@
         }
       },
       "dependsOn": [
-        "examples:compile"
+        "examples:prebuild"
       ],
       "executor": "@nx/storybook:build",
       "options": {
