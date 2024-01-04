@@ -32,6 +32,7 @@ const testLayout = testItems.reduce<GridLayout>((map, item) => {
 }, {});
 
 export default {
+  title: 'react-ui-mosaic/Grid',
   component: Grid,
   render: () => {
     return (
