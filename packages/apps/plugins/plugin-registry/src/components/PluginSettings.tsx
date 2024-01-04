@@ -4,7 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type Plugin, SettingsValue, usePlugins } from '@dxos/app-framework';
+import { SettingsValue } from '@braneframe/plugin-settings';
+import { type Plugin, usePlugins } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { isNotNullOrUndefined } from '@dxos/util';
 
