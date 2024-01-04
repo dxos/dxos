@@ -154,6 +154,9 @@
       "path": "../plugins/plugin-search"
     },
     {
+      "path": "../plugins/plugin-settings"
+    },
+    {
       "path": "../plugins/plugin-sketch"
     },
     {

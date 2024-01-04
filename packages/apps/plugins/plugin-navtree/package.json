@@ -33,6 +33,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-navtree": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-react": "^1.3.6",
     "date-fns": "^2.29.3",

@@ -185,7 +185,7 @@ export const ClientPlugin = ({
       await client.destroy();
     },
     provides: {
-      settings: { meta, values: settings.values },
+      settings: settings.values,
       translations,
       surface: {
         component: ({ data, role }) => {

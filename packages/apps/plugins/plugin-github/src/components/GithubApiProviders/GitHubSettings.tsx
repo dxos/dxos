@@ -5,7 +5,7 @@
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { SettingsValue } from '@dxos/app-framework';
+import { SettingsValue } from '@braneframe/plugin-settings';
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -23,7 +23,7 @@ const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
         <ArrowSquareOut weight='bold' className={mx(getSize(3), 'inline-block leading-none -mbs-0.5 mli-px')} />
       </Link>
       <span className='sr-only' id={descriptionId}>
-        {t('target blank description', { ns: 'os' })}
+        {t('target blank description', { ns: GITHUB_PLUGIN })}
       </span>
     </>
   );

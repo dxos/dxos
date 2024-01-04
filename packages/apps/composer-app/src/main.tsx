@@ -33,6 +33,7 @@ import PwaMeta from '@braneframe/plugin-pwa/meta';
 import RegistryMeta from '@braneframe/plugin-registry/meta';
 import ScriptMeta from '@braneframe/plugin-script/meta';
 import SearchMeta from '@braneframe/plugin-search/meta';
+import SettingsMeta from '@braneframe/plugin-settings/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
@@ -84,6 +85,7 @@ const main = async () => {
       // UX
       LayoutMeta,
       NavTreeMeta,
+      SettingsMeta,
       HelpMeta,
 
       // Data integrations
@@ -158,6 +160,7 @@ const main = async () => {
         containerUrl: '/script-frame/index.html',
       }),
       [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
+      [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         version: '1',
@@ -192,6 +195,7 @@ const main = async () => {
       NavTreeMeta.id,
       PwaMeta.id,
       RegistryMeta.id,
+      SettingsMeta.id,
       SpaceMeta.id,
       ThemeMeta.id,
       TelemetryMeta.id,

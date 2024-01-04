@@ -1,6 +1,5 @@
 FROM cimg/base:2022.04
 
-# TODO(nf): ensure KUBE publish works on 18.19.0
 ENV NODE_VERSION 18.19.0
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#global-npm-dependencies
 ENV NPM_CONFIG_PREFIX=/home/circleci/.npm-global
@@ -18,5 +17,3 @@ RUN sudo apt-get update \
   && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 lsof \
   && npx playwright@1.27.1 install-deps \ 
   && npm install -g pnpm@8.9.2
-
-# TODO(wittjosiah): Add CI job to publish this automatically.
