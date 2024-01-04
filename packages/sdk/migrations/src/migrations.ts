@@ -7,11 +7,10 @@ import { invariant } from '@dxos/invariant';
 import type { MaybePromise } from '@dxos/util';
 
 export type MigrationContext = {
-  version: string | number;
   space: Space;
 };
 
-type Migration = {
+export type Migration = {
   version: string | number;
   up: (context: MigrationContext) => MaybePromise<void>;
   down: (context: MigrationContext) => MaybePromise<void>;
@@ -45,14 +44,14 @@ export class Migrations {
     if (targetIndex > currentIndex) {
       const migrations = this.migrations.slice(currentIndex, targetIndex);
       for (const migration of migrations) {
-        await migration.up({ version: migration.version, space });
+        await migration.up({ space });
         space.properties[this.versionProperty] = migration.version;
       }
     } else {
       const migrations = this.migrations.slice(targetIndex, currentIndex);
       migrations.reverse();
       for (const migration of migrations) {
-        await migration.down({ version: migration.version, space });
+        await migration.down({ space });
         const index = this.migrations.indexOf(migration);
         space.properties[this.versionProperty] = this.migrations[index - 1]?.version;
       }
