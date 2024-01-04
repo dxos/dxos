@@ -73,7 +73,7 @@ const setSelection = StateEffect.define<CommentSelected>();
 const setCommentState = StateEffect.define<CommentsState>();
 
 /**
- * State field that tracks comment ranges.
+ * State field (reducer) that tracks comment ranges.
  * The ranges are tracked as codemirror ranges (i.e., not relative YJS/Automerge positions), and
  * therefore must be updated when the document changes.
  */
