@@ -509,6 +509,9 @@ importers:
       '@braneframe/plugin-grid':
         specifier: workspace:*
         version: link:../plugins/plugin-grid
+      '@braneframe/plugin-help':
+        specifier: workspace:*
+        version: link:../plugins/plugin-help
       '@braneframe/plugin-inbox':
         specifier: workspace:*
         version: link:../plugins/plugin-inbox
@@ -554,6 +557,9 @@ importers:
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugins/plugin-search
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugins/plugin-settings
       '@braneframe/plugin-sketch':
         specifier: workspace:*
         version: link:../plugins/plugin-sketch
@@ -620,6 +626,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      react-joyride:
+        specifier: ^2.7.2
+        version: 2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-graph':
         specifier: workspace:*
@@ -678,42 +687,6 @@ importers:
       workbox-window:
         specifier: ^6.5.4
         version: 6.5.4
-
-  packages/apps/composer-app/build/mac/Composer-dev.app/Contents/Resources/socket:
-    optionalDependencies:
-      '@socketsupply/socket-darwin-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-darwin-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-win32-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-
-  packages/apps/composer-app/tmp/build/mac/tmp-dev.app/Contents/Resources/socket:
-    optionalDependencies:
-      '@socketsupply/socket-darwin-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-darwin-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-arm64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-linux-x64':
-        specifier: 0.5.3
-        version: 0.5.3
-      '@socketsupply/socket-win32-x64':
-        specifier: 0.5.3
-        version: 0.5.3
 
   packages/apps/composer-extension:
     devDependencies:
@@ -948,6 +921,9 @@ importers:
 
   packages/apps/plugins/plugin-client:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -972,6 +948,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -997,6 +976,9 @@ importers:
 
   packages/apps/plugins/plugin-debug:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1316,6 +1298,9 @@ importers:
 
   packages/apps/plugins/plugin-github:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1493,6 +1478,73 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-help:
+    dependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      react-joyride:
+        specifier: ^2.7.2
+        version: 2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.3.1
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -1703,12 +1755,18 @@ importers:
 
   packages/apps/plugins/plugin-layout:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -1819,6 +1877,9 @@ importers:
 
   packages/apps/plugins/plugin-markdown:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1831,6 +1892,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2005,6 +2069,9 @@ importers:
 
   packages/apps/plugins/plugin-navtree:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -2017,6 +2084,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -2029,6 +2099,9 @@ importers:
       '@dxos/react-ui-navtree':
         specifier: workspace:*
         version: link:../../../ui/react-ui-navtree
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-searchlist
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2269,6 +2342,16 @@ importers:
         version: 4.3.9(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
+    dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -2403,6 +2486,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2470,6 +2556,37 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-settings:
+    dependencies:
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
@@ -2561,6 +2678,9 @@ importers:
 
   packages/apps/plugins/plugin-space:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -3619,6 +3739,31 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
+
+  packages/common/keyboard:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/common/keys:
     dependencies:
@@ -7071,6 +7216,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7086,9 +7234,6 @@ importers:
       lodash.set:
         specifier: ^4.3.2
         version: 4.3.2
-      mousetrap:
-        specifier: ^1.6.5
-        version: 1.6.5
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*
@@ -7114,9 +7259,6 @@ importers:
       '@types/lodash.set':
         specifier: ^4.3.7
         version: 4.3.7
-      '@types/mousetrap':
-        specifier: ^1.6.11
-        version: 1.6.12
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -7640,8 +7782,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.12.0
-        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-accordion':
         specifier: ^1.1.1
         version: 1.1.1(react-dom@18.2.0)(react@18.2.0)
@@ -8323,8 +8465,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.12.0
-        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@lezer/common':
         specifier: ^1.1.1
         version: 1.1.1
@@ -8349,6 +8491,12 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      lodash.pick:
+        specifier: ^4.4.0
+        version: 4.4.0
+      lodash.sortby:
+        specifier: ^4.7.0
+        version: 4.7.0
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
@@ -8368,6 +8516,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
@@ -8392,12 +8543,21 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
+      '@types/lodash.pick':
+        specifier: ^4.4.7
+        version: 4.4.9
+      '@types/lodash.sortby':
+        specifier: ^4.7.7
+        version: 4.7.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8519,6 +8679,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -8626,6 +8789,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@fluentui/react-tabster':
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
@@ -8691,8 +8857,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.12.0
-        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -8748,15 +8914,12 @@ importers:
       '@fluent-blocks/colors':
         specifier: ^9.2.0
         version: 9.2.0
-      '@fontsource/fira-code':
-        specifier: ^4.5.12
-        version: 4.5.12
-      '@fontsource/roboto-flex':
-        specifier: ^4.5.2
-        version: 4.5.2
-      '@fontsource/space-grotesk':
-        specifier: ^4.5.10
-        version: 4.5.10
+      '@fontsource-variable/inter':
+        specifier: ^5.0.16
+        version: 5.0.16
+      '@fontsource-variable/jetbrains-mono':
+        specifier: ^5.0.16
+        version: 5.0.19
       '@tailwindcss/forms':
         specifier: ^0.5.3
         version: 0.5.3(tailwindcss@3.3.2)
@@ -13705,104 +13868,129 @@ packages:
     engines: {node: '>=14.0.0', npm: '>=7.0.0'}
     dev: true
 
-  /@fluentui/keyboard-keys@9.0.3:
-    resolution: {integrity: sha512-40KBVJ9HzsvmPL3rwYaAvxCacNS0xnTmOt6TLxxrAVgVrZ1X7DLgd8OGFZcWROs0dhHdCk2D51bl4nK8Q1r3mQ==}
+  /@fluentui/keyboard-keys@9.0.7:
+    resolution: {integrity: sha512-vaQ+lOveQTdoXJYqDQXWb30udSfTVcIuKk1rV0X0eGAgcHeSDeP1HxMy+OgHOQZH3OiBH4ZYeWxb+tmfiDiygQ==}
     dependencies:
-      '@swc/helpers': 0.4.14
+      '@swc/helpers': 0.5.1
     dev: false
 
-  /@fluentui/react-shared-contexts@9.7.1(@types/react@18.0.21)(react@18.2.0):
-    resolution: {integrity: sha512-9WuIKRYM2sM6Qb/xq4fxorWWLdypjZQoeFPfaiCnVUHh+RA/cRxeDGeGTcDzjxXLlJZHgK8ARym+KN2ASrQkJw==}
+  /@fluentui/react-shared-contexts@9.13.2(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-78aEZdff7vaUOmeRyMDPc/Ml+kbwn02BiRLPQhqgYtCyjy0V3YBpmYfqxO8N5hUIZcFTedyOaHWpzVeEYxpNmA==}
     peerDependencies:
-      '@types/react': '>=16.8.0 <19.0.0'
-      react: '>=16.8.0 <19.0.0'
+      '@types/react': '>=16.14.0 <19.0.0'
+      react: '>=16.14.0 <19.0.0'
     dependencies:
-      '@fluentui/react-theme': 9.1.10
-      '@swc/helpers': 0.4.14
+      '@fluentui/react-theme': 9.1.16
+      '@swc/helpers': 0.5.1
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
 
-  /@fluentui/react-tabster@9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-dKIJh9+nFCRt0+gSimCVwxHkdBxid2MKQ6DPtyLvVJRYiBxSNG9EJYuNCHtE9873HO06zS4GrD4KmKEQPfwP5A==}
+  /@fluentui/react-tabster@9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-j5yxvt5HglW48Q/0rktGHSAb9q4FQsn6y9pwdAKpo8b0HcUsaNMCtV4d5afyGbDy4S0cAfb3Kmab3o0MOnrNiw==}
     peerDependencies:
-      '@types/react': '>=16.8.0 <19.0.0'
-      '@types/react-dom': '>=16.8.0 <19.0.0'
-      react: '>=16.8.0 <19.0.0'
-      react-dom: '>=16.8.0 <19.0.0'
+      '@types/react': '>=16.14.0 <19.0.0'
+      '@types/react-dom': '>=16.14.0 <19.0.0'
+      react: '>=16.14.0 <19.0.0'
+      react-dom: '>=16.14.0 <19.0.0'
     dependencies:
-      '@fluentui/react-shared-contexts': 9.7.1(@types/react@18.0.21)(react@18.2.0)
-      '@fluentui/react-theme': 9.1.10
-      '@fluentui/react-utilities': 9.11.0(@types/react@18.0.21)(react@18.2.0)
-      '@griffel/react': 1.5.8(react@18.2.0)
-      '@swc/helpers': 0.4.14
+      '@fluentui/react-shared-contexts': 9.13.2(@types/react@18.0.21)(react@18.2.0)
+      '@fluentui/react-theme': 9.1.16
+      '@fluentui/react-utilities': 9.15.5(@types/react@18.0.21)(react@18.2.0)
+      '@griffel/react': 1.5.19(react@18.2.0)
+      '@swc/helpers': 0.5.1
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      keyborg: 2.0.0
+      keyborg: 2.4.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      tabster: 4.7.2
+      tabster: 5.2.0
     dev: false
 
-  /@fluentui/react-theme@9.1.10:
-    resolution: {integrity: sha512-E6W5LB9wg7aJSzDM87FyYBOOADCSh554W81msLRTXwLzuKHPtLannyyYXKO0tP2ZJfiySQ2LWNzHnIqV8fUuxQ==}
+  /@fluentui/react-theme@9.1.16:
+    resolution: {integrity: sha512-QK2dGE5aQXN1UGdiEmGKpYGP3tHXIchLvFf8DEEOWnF4XBc9SiEPNFYkvLMJjHxZmDz4D670rsOPe0r5jFDEKQ==}
     dependencies:
-      '@fluentui/tokens': 1.0.0-alpha.7
-      '@swc/helpers': 0.4.14
+      '@fluentui/tokens': 1.0.0-alpha.13
+      '@swc/helpers': 0.5.1
     dev: false
 
-  /@fluentui/react-utilities@9.11.0(@types/react@18.0.21)(react@18.2.0):
-    resolution: {integrity: sha512-+lK8OU7jX5QFNfvMPwekQk9NPStETi3rHknb7S9oSEhXAnKFvH7L8Jp9LD+/CCeKrbkoGUX4t8AyDgBhtgx40g==}
+  /@fluentui/react-utilities@9.15.5(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-5kNL5SgsrT4680OkfH50vOGQv7m3tZBEFDeWItPsrIIrfbcycAlApYdhDSzMT+VMKLxd4JU2uGCd1a5cn0IqKw==}
     peerDependencies:
-      '@types/react': '>=16.8.0 <19.0.0'
-      react: '>=16.8.0 <19.0.0'
+      '@types/react': '>=16.14.0 <19.0.0'
+      react: '>=16.14.0 <19.0.0'
     dependencies:
-      '@fluentui/keyboard-keys': 9.0.3
-      '@swc/helpers': 0.4.14
+      '@fluentui/keyboard-keys': 9.0.7
+      '@fluentui/react-shared-contexts': 9.13.2(@types/react@18.0.21)(react@18.2.0)
+      '@swc/helpers': 0.5.1
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
 
-  /@fluentui/tokens@1.0.0-alpha.7:
-    resolution: {integrity: sha512-djgLw4HVx0Jx0GYKQEu65aQ5nY59CkcV850LrLPHOERV+KhuWqoI4CdrvL2fFqrAvqLlfK940MP1mPrvy8NAow==}
+  /@fluentui/tokens@1.0.0-alpha.13:
+    resolution: {integrity: sha512-IzYysTTBkAH7tQZxYKpzhxYnTJkvwXhjhTOpmERgnqTFifHTP8/vaQjJAAm7dI/9zlDx1oN+y/I+KzL9bDLHZQ==}
     dependencies:
-      '@swc/helpers': 0.4.14
+      '@swc/helpers': 0.5.1
     dev: false
 
-  /@fontsource/fira-code@4.5.12:
-    resolution: {integrity: sha512-dAVGsgiVR6jslpuXosHH4/Jf8bsAIKL1RWqjVq4WpmxL7CFHfg9hT5bAv/Y3xsEj8kDTibEgpuC3eMfr9kb02g==}
+  /@fontsource-variable/inter@5.0.16:
+    resolution: {integrity: sha512-k+BUNqksTL+AN+o+OV7ILeiE9B5M5X+/jA7LWvCwjbV9ovXTqZyKRhA/x7uYv/ml8WQ0XNLBM7cRFIx4jW0/hg==}
     dev: false
 
-  /@fontsource/roboto-flex@4.5.2:
-    resolution: {integrity: sha512-GYG8WbC9K8HdIYwIzgPb7dc4CrMMb0QUOP6IYPeuVvd33PyZRvVvu1CvRzXhqbI+trV37Ti3WBCfJJl9RvsVTQ==}
-    dev: false
-
-  /@fontsource/space-grotesk@4.5.10:
-    resolution: {integrity: sha512-Ua+3NeVpUbVrF4F0I5posgZ0/SvpX0ijmwU4MI43cormzOP6r6Z09+BWwhS85+wMJsM+ravc+65fa/rqAZQ3wg==}
+  /@fontsource-variable/jetbrains-mono@5.0.19:
+    resolution: {integrity: sha512-7PTG1Kp3B/FgoNVPT8da4humj5JxQYxTtO08ZPS2IfanS37Yb/WShbgScnG/iupuFwiRnHVkIuC/2czxItxmyg==}
     dev: false
 
   /@gar/promisify@1.1.3:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: true
 
-  /@griffel/core@1.12.0:
-    resolution: {integrity: sha512-QGmAv0vU0LpTgxqO5yZP/MDcqgvDUDvD3Y3d5GZ3OHuEQrFdyS0dOH2PD/scynuxAfE/wf0whsrvIO7WPFrwnQ==}
+  /@gilbarbara/deep-equal@0.1.2:
+    resolution: {integrity: sha512-jk+qzItoEb0D0xSSmrKDDzf9sheQj/BAPxlgNxgmOaA3mxpUa6ndJLYGZKsJnIVEQSD8zcTbyILz7I0HcnBCRA==}
+    dev: false
+
+  /@gilbarbara/deep-equal@0.3.1:
+    resolution: {integrity: sha512-I7xWjLs2YSVMc5gGx1Z3ZG1lgFpITPndpi8Ku55GeEIKpACCPQNS/OTqQbxgTCfq0Ncvcc+CrFov96itVh6Qvw==}
+    dev: false
+
+  /@gilbarbara/helpers@0.9.1:
+    resolution: {integrity: sha512-B6q4qruzaurfbpmdGK85SSgnI36pFuJlewTul9hWHUv7u8VGxDwjj8anxSfuPyDZ3ovXF1H6ifCVFHQqRV2+Gg==}
+    dependencies:
+      '@gilbarbara/types': 0.2.2
+      is-lite: 1.2.0
+    dev: false
+
+  /@gilbarbara/types@0.2.2:
+    resolution: {integrity: sha512-QuQDBRRcm1Q8AbSac2W1YElurOhprj3Iko/o+P1fJxUWS4rOGKMVli98OXS7uo4z+cKAif6a+L9bcZFSyauQpQ==}
+    dependencies:
+      type-fest: 4.9.0
+    dev: false
+
+  /@griffel/core@1.15.1:
+    resolution: {integrity: sha512-09w5axbOJuBzjTVFN5EycbAOIpCoxZeoJMZgT2fTrIl2GIxnTWpK3F2d63UzGBmQf1O+EgR6nK4FgMXFt1UFig==}
     dependencies:
       '@emotion/hash': 0.9.0
-      csstype: 3.1.2
+      '@griffel/style-types': 1.0.2
+      csstype: 3.1.3
       rtl-css-js: 1.16.1
       stylis: 4.3.0
       tslib: 2.6.0
     dev: false
 
-  /@griffel/react@1.5.8(react@18.2.0):
-    resolution: {integrity: sha512-stQ/KwV7HguYRTZeJa3mY1F2Fpkx9qTz+mkuHWvtSqcB+KhbnqlP1iTngVFbc5AvB9mp6s7xDCPXcM8c+V7d/g==}
+  /@griffel/react@1.5.19(react@18.2.0):
+    resolution: {integrity: sha512-qefnZseAwcwCpFVzN33mG20t/hofpWci7VNtOwzSco/IxFLuJaB2ffki+uAdUgWCpV2A67bWQjXNlymBoMUysg==}
     peerDependencies:
       react: '>=16.8.0 <19.0.0'
     dependencies:
-      '@griffel/core': 1.12.0
+      '@griffel/core': 1.15.1
       react: 18.2.0
       tslib: 2.6.0
+    dev: false
+
+  /@griffel/style-types@1.0.2:
+    resolution: {integrity: sha512-ka/Tpl1WU8js88LObwB/4EvpgXzx/EEJfbHhAr4ZNt29hrQKgL93X1zSY6M/FRhMhWrGIawauWkZP6/y6w/WiQ==}
+    dependencies:
+      csstype: 3.1.3
     dev: false
 
   /@humanwhocodes/config-array@0.11.11:
@@ -18952,28 +19140,12 @@ packages:
       '@sinonjs/commons': 1.8.3
     dev: true
 
-  /@socketsupply/socket-darwin-arm64@0.5.3:
-    resolution: {integrity: sha512-+nXFcRjEgDjietEjUYwCTjiuf5MFCUA4EpvI/8XeebhUq6OAoJNUNJZwcrxFShmvsi1EfQmJpCahweULPl93FQ==}
-    cpu: [arm64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-darwin-arm64@0.5.4:
     resolution: {integrity: sha512-YAR9PPU1pb2R9QMLzh0LSQzDg2oFJoykOgXxew9zmdZ8NbVZPSrPgiMzV8EXbNhd8wPjtcbUuZWeQD76w3S7wA==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: true
-    optional: true
-
-  /@socketsupply/socket-darwin-x64@0.5.3:
-    resolution: {integrity: sha512-Icp26lIjB/zpJZEdR9aDnnFf2T/URTKCG0p5cQusxtcR04YZ4Z+8diZSA7QBZU48qR5YnhWs/b1MjXJEY1gl+g==}
-    cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
     optional: true
 
   /@socketsupply/socket-darwin-x64@0.5.4:
@@ -18984,14 +19156,6 @@ packages:
     dev: true
     optional: true
 
-  /@socketsupply/socket-linux-arm64@0.5.3:
-    resolution: {integrity: sha512-BSxQqAZLt0CS9G4RekdjpQCkRDCblkOZLKP2HiUX7f4ojSGjj38xVY0Yak1ahtFfgnTuOh7tQwzcfHeBZldt+Q==}
-    cpu: [arm64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-linux-arm64@0.5.4:
     resolution: {integrity: sha512-9Ql9NBXwVaJZTbrsKKoiwAe26PNZKAPivaVL2O2cpWfg3OsWC1wFcwyuImIgOotN4BM10LcwTaTi3Q5cG2corw==}
     cpu: [arm64]
@@ -19000,28 +19164,12 @@ packages:
     dev: true
     optional: true
 
-  /@socketsupply/socket-linux-x64@0.5.3:
-    resolution: {integrity: sha512-qB/LGXP+LN5W6pPTAO+wI/xaKBmiLCeL1N5gEqyYx5ENDkiFBzRZ+SfEm9rgmOMXlXWCMRKPYTFUHNrXMYUeug==}
-    cpu: [x64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@socketsupply/socket-linux-x64@0.5.4:
     resolution: {integrity: sha512-AfVfYZ2QUdMOkLLjjsPCJXb2Kk/lxr3gOGFtHVTM41q7VzeieqiKQx07PCseA4D8IOu6qvJuKgPc0dVAlx95Rw==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: true
-    optional: true
-
-  /@socketsupply/socket-win32-x64@0.5.3:
-    resolution: {integrity: sha512-qGDaJImhmNjVSqC2h1s9qd/HWPBCo0Gni8y0GjYwCaetz7tqmrKwPluaAPZeyLuPJb+SLRw8otTWyqN6um311g==}
-    cpu: [x64]
-    os: [win32]
-    requiresBuild: true
-    dev: false
     optional: true
 
   /@socketsupply/socket-win32-x64@0.5.4:
@@ -20249,12 +20397,12 @@ packages:
     resolution: {integrity: sha512-4C7nX/dvpzB7za4Ql9K81xK3HPxCpHMgwTZVyf+9JQ6VUbn9jjZVN7/Nkdz/Ugzs2CSjqnL/UPXroiVBVHUWUw==}
     dependencies:
       tslib: 2.6.0
+    dev: true
 
   /@swc/helpers@0.5.1:
     resolution: {integrity: sha512-sJ902EfIzn1Fa+qYmjdQqh8tPsoxyBz+8yBKC2HKUxyezKJFwPGOn7pv4WY6QuQW//ySQi5lJjA/ZT9sNWWNTg==}
     dependencies:
       tslib: 2.6.0
-    dev: true
 
   /@swc/types@0.1.5:
     resolution: {integrity: sha512-myfUej5naTBWnqOCc/MdVOLVjXUXtIA+NpDrDBKJtLLg2shUjBu3cZmB/85RyitKc55+lUUyl7oRfLOvkr2hsw==}
@@ -21446,6 +21594,12 @@ packages:
       '@types/lodash': 4.14.191
     dev: true
 
+  /@types/lodash.pick@4.4.9:
+    resolution: {integrity: sha512-hDpr96x9xHClwy1KX4/RXRejqjDFTEGbEMT3t6wYSYeFDzxmMnSKB/xHIbktRlPj8Nii2g8L5dtFDRaNFBEzUQ==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
   /@types/lodash.pickby@4.6.7:
     resolution: {integrity: sha512-4ebXRusuLflfscbD0PUX4eVknDHD9Yf+uMtBIvA/hrnTqeAzbuHuDjvnYriLjUrI9YrhCPVKUf4wkRSXJQ6gig==}
     dependencies:
@@ -21582,10 +21736,6 @@ packages:
 
   /@types/mocha@8.2.3:
     resolution: {integrity: sha512-ekGvFhFgrc2zYQoX4JeZPmVzZxw6Dtllga7iGHzfbYIYkAMUx/sAFP2GdFpLff+vdHXu5fl7WX9AT+TtqYcsyw==}
-    dev: true
-
-  /@types/mousetrap@1.6.12:
-    resolution: {integrity: sha512-tzXGzMbvXt815z0Z7FE45wmRVRitMTaPgfVcdGhOS6LtEOWBZBokFJxEdatVA8cj+cQxvdFLmlMC4c12TNqv9A==}
     dev: true
 
   /@types/ms@0.7.31:
@@ -26245,7 +26395,6 @@ packages:
 
   /csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
-    dev: true
 
   /csv-parse@5.5.2:
     resolution: {integrity: sha512-YRVtvdtUNXZCMyK5zd5Wty1W6dNTpGKdqQd4EQ8tl/c6KW1aMBB1Kg1ppky5FONKmEqGJ/8WjLlTNLPne4ioVA==}
@@ -26837,6 +26986,10 @@ packages:
   /dedent@0.7.0:
     resolution: {integrity: sha512-Q6fKUPqnAHAyhiUgFU7BUzLiv0kd8saH9al7tnu5Q/okj6dnupxyTgFIBjVzJATdfIAm9NAsvXNzjaKa+bxVyA==}
     dev: true
+
+  /deep-diff@1.0.2:
+    resolution: {integrity: sha512-aWS3UIVH+NPGCD1kki+DCU9Dua032iSsO43LqQpcs4R3+dVv7tX0qBGjiVHJHjplsoUM2XRO/KB92glqc68awg==}
+    dev: false
 
   /deep-eql@4.1.3:
     resolution: {integrity: sha512-WaEtAOpRA1MQ0eohqZjpGD8zdI0Ovsm8mmFhaDN8dvDZzyoUMcYDnf5Y6iu7HTXxf8JDS23qWa4a+hKCDyOPzw==}
@@ -31954,6 +32107,14 @@ packages:
     resolution: {integrity: sha512-z7CMFGNrENq5iFB9Bqo64Xk6Y9sg+epq1myIcdHaGnbMTYOxvzsEtdYqQUylB7LxfkvgrrjP32T6Ywciio9UIQ==}
     dev: true
 
+  /is-lite@0.8.2:
+    resolution: {integrity: sha512-JZfH47qTsslwaAsqbMI3Q6HNNjUuq6Cmzzww50TdP5Esb6e1y2sK2UAaZZuzfAzpoI2AkxoPQapZdlDuP6Vlsw==}
+    dev: false
+
+  /is-lite@1.2.0:
+    resolution: {integrity: sha512-Q9EaBEC0QV44D9iyoLMJQPEF2qMOG3TgfPCm1/lnorU5Y0PJbEqlaqX0vSBxVnxqL/m2rE4ZqRhe2OEAgVdJHA==}
+    dev: false
+
   /is-map@2.0.2:
     resolution: {integrity: sha512-cOZFQQozTha1f4MxLFzlgKYPTyj26picdZTx82hbc/Xf4K/tZOOXSCkMvU4pKioRXGDLJRn0GM7Upe7kR721yg==}
     dev: false
@@ -33837,6 +33998,10 @@ packages:
 
   /keyborg@2.0.0:
     resolution: {integrity: sha512-RWY8nWrzRkwTQLaKyDtbTu5SOb5L4B20UzAsBHlQDFZqVY/+Mid0bQ7MVTC8vbOTrWY2xkkzj8gZF9Ua7re4xA==}
+    dev: false
+
+  /keyborg@2.4.0:
+    resolution: {integrity: sha512-EixFnyCc6m27NkFwyT5GNNQl+9wiTMePtAvVuKXZpc0CZLLJfJFB3zXGFBGnwtvEXymbJoPWoErzwTpiEQ+Msg==}
     dev: false
 
   /keyv@4.5.2:
@@ -36258,10 +36423,6 @@ packages:
       monaco-editor: 0.44.0
     dev: false
 
-  /mousetrap@1.6.5:
-    resolution: {integrity: sha512-QNo4kEepaIBwiT8CDhP98umTetp+JNfQYBWvC1pc6/OAibuXtRcxZ58Qz8skvEHYvURne/7R8T5VoOI7rDsEUA==}
-    dev: false
-
   /mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
@@ -38125,6 +38286,11 @@ packages:
       '@babel/runtime': 7.22.15
     dev: true
 
+  /popper.js@1.16.1:
+    resolution: {integrity: sha512-Wb4p1J4zyFTbM+u6WuO4XstYx4Ky9Cewe4DWrel7B0w6VVICvPwdOpotjzcf6eD8TsckVnIMNONQyPIUFOUbCQ==}
+    deprecated: You can find the new Popper v2 at @popperjs/core, this package is dedicated to the legacy v1
+    dev: false
+
   /portfinder@1.0.32:
     resolution: {integrity: sha512-on2ZJVVDXRADWE6jnQaX0ioEylzgBpQk8r55NE4wjXW1ZxO+BgDlY6DXwj20i0V8eB4SenDQ00WEaxfiIQPcxg==}
     engines: {node: '>= 0.12.0'}
@@ -39134,6 +39300,21 @@ packages:
       react-is: 18.1.0
     dev: true
 
+  /react-floater@0.7.9(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-NXqyp9o8FAXOATOEo0ZpyaQ2KPb4cmPMXGWkx377QtJkIXHlHRAGer7ai0r0C1kG5gf+KJ6Gy+gdNIiosvSicg==}
+    peerDependencies:
+      react: 15 - 18
+      react-dom: 15 - 18
+    dependencies:
+      deepmerge: 4.3.1
+      is-lite: 0.8.2
+      popper.js: 1.16.1
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      tree-changes: 0.9.3
+    dev: false
+
   /react-i18next@11.18.6(i18next@21.10.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
     peerDependencies:
@@ -39154,6 +39335,16 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /react-innertext@1.1.5(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-PWAqdqhxhHIv80dT9znP2KvS+hfkbRovFp4zFYHFFlOoQLRiawIic81gKb3U1wEyJZgMwgs3JoLtwryASRWP3Q==}
+    peerDependencies:
+      '@types/react': '>=0.0.0 <=99'
+      react: '>=0.0.0 <=99'
+    dependencies:
+      '@types/react': 18.0.21
+      react: 18.2.0
+    dev: false
+
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -39167,6 +39358,30 @@ packages:
 
   /react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
+
+  /react-joyride@2.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-AVzEweJxjQMc6hXUbJlH6St987GCmw0pkCSoz+X3XBMQmrk57FCMOrh1LvyMvW5GaT95C4D5oZpoaVjaOsgptg==}
+    peerDependencies:
+      react: 15 - 18
+      react-dom: 15 - 18
+    dependencies:
+      '@gilbarbara/deep-equal': 0.3.1
+      '@gilbarbara/helpers': 0.9.1
+      deep-diff: 1.0.2
+      deepmerge: 4.3.1
+      is-lite: 1.2.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      react-floater: 0.7.9(react-dom@18.2.0)(react@18.2.0)
+      react-innertext: 1.1.5(@types/react@18.0.21)(react@18.2.0)
+      react-is: 16.13.1
+      scroll: 3.0.1
+      scrollparent: 2.1.0
+      tree-changes: 0.11.2
+      type-fest: 4.9.0
+    transitivePeerDependencies:
+      - '@types/react'
+    dev: false
 
   /react-json-tree@0.18.0(@types/react@18.0.21)(react@18.2.0):
     resolution: {integrity: sha512-Qe6HKSXrr++n9Y31nkRJ3XvQMATISpqigH1vEKhLwB56+nk5thTP0ITThpjxY6ZG/ubpVq/aEHIcyLP/OPHxeA==}
@@ -40507,6 +40722,14 @@ packages:
     resolution: {integrity: sha512-g3WxHrqSWCZHGHlSrF51VXFdjImhwvH8ZO/pryFH56Qi0cDsZfylQa/t0jCzVQFNbNvM00HfHjkDPEuarKDSWQ==}
     engines: {node: '>=8'}
     dev: true
+
+  /scroll@3.0.1:
+    resolution: {integrity: sha512-pz7y517OVls1maEzlirKO5nPYle9AXsFzTMNJrRGmT951mzpIBy7sNHOg5o/0MQd/NqliCiWnAi0kZneMPFLcg==}
+    dev: false
+
+  /scrollparent@2.1.0:
+    resolution: {integrity: sha512-bnnvJL28/Rtz/kz2+4wpBjHzWoEzXhVg/TE8BeVGJHUqE8THNIRnDxDWMktwM+qahvlRdvlLdsQfYe+cuqfZeA==}
+    dev: false
 
   /section-matter@1.0.0:
     resolution: {integrity: sha512-vfD3pmTzGpufjScBh50YHKzEu2lxBWhVEHsNGoEXmCmn2hKGfeNLYMzCJpe8cD7gqX7TJluOVpBkAequ6dgMmA==}
@@ -41933,10 +42156,10 @@ packages:
       strip-ansi: 6.0.1
     dev: false
 
-  /tabster@4.7.2:
-    resolution: {integrity: sha512-wRFOnje3CxqUVgdDiY7spipDWXee4PatHE5e3XoVXN51fOxu0/QlI/7EVURIyg2jGDFPL4ZffLMpX3pvTVbVVQ==}
+  /tabster@5.2.0:
+    resolution: {integrity: sha512-cSi3a0gGeM9Co/gTKHlhTFfiitwVjcA+kP9lJux0U7QaRrZox1yYrfbwZhJXM7N0fux7BgvCYaOxME5k0EQ0tA==}
     dependencies:
-      keyborg: 2.0.0
+      keyborg: 2.4.0
       tslib: 2.6.0
     dev: false
 
@@ -42492,6 +42715,20 @@ packages:
     resolution: {integrity: sha512-iawgk0hLP3SxGKDfnDJf8wTz4p2qImnyihM5Hh/sGvQ3K37dPi/w8sRhdNIxYA1TwFwc5mDhIJq+O0RsvXBKdQ==}
     dev: false
 
+  /tree-changes@0.11.2:
+    resolution: {integrity: sha512-4gXlUthrl+RabZw6lLvcCDl6KfJOCmrC16BC5CRdut1EAH509Omgg0BfKLY+ViRlzrvYOTWR0FMS2SQTwzumrw==}
+    dependencies:
+      '@gilbarbara/deep-equal': 0.3.1
+      is-lite: 1.2.0
+    dev: false
+
+  /tree-changes@0.9.3:
+    resolution: {integrity: sha512-vvvS+O6kEeGRzMglTKbc19ltLWNtmNt1cpBoSYLj/iEcPVvpJasemKOlxBrmZaCtDJoF+4bwv3m01UKYi8mukQ==}
+    dependencies:
+      '@gilbarbara/deep-equal': 0.1.2
+      is-lite: 0.8.2
+    dev: false
+
   /tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
@@ -42736,6 +42973,11 @@ packages:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
     dev: true
+
+  /type-fest@4.9.0:
+    resolution: {integrity: sha512-KS/6lh/ynPGiHD/LnAobrEFq3Ad4pBzOlJ1wAnJx9N4EYoqFhMfLIBjUT2UEx4wg5ZE+cC1ob6DCSpppVo+rtg==}
+    engines: {node: '>=16'}
+    dev: false
 
   /type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}

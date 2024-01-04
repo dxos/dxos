@@ -8,17 +8,20 @@ import { createRoot } from 'react-dom/client';
 
 import { useIntent, type DispatchIntent, LayoutAction } from '@dxos/app-framework';
 import {
-  link,
-  tasklist,
-  tooltip,
+  type AutocompleteOptions,
+  type CommentsOptions,
   type Extension,
-  listener,
+  type ListenerOptions,
   type TooltipOptions,
   autocomplete,
-  type AutocompleteOptions,
   comments,
-  type CommentsOptions,
-  type ListenerOptions,
+  demo,
+  image,
+  link,
+  listener,
+  table,
+  tasklist,
+  tooltip,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -66,6 +69,7 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
 
 // TODO(burdon): Make markdown plugins separately configurable.
 export type UseExtensionsOptions = {
+  debug?: boolean;
   experimental?: boolean;
   listener?: ListenerOptions;
   autocomplete?: AutocompleteOptions;
@@ -73,24 +77,31 @@ export type UseExtensionsOptions = {
 };
 
 export const useExtensions = ({
+  debug,
   experimental,
-  listener: _listener,
-  autocomplete: _autocomplete,
-  comments: _comments,
+  listener: listenerOption,
+  autocomplete: autocompleteOption,
+  comments: commentsOptions,
 }: UseExtensionsOptions = {}): Extension[] => {
   const { dispatch } = useIntent();
-  const extensions: Extension[] = [];
+  const extensions: Extension[] = [
+    image(),
+    link({ onRender: onRender(dispatch) }),
+    table(),
+    tasklist(),
+    tooltip({ onHover }),
+    autocompleteOption && autocomplete(autocompleteOption),
+    commentsOptions && comments(commentsOptions),
+    listenerOption && listener(listenerOption),
+  ].filter(nonNullable);
+
+  if (debug) {
+    const items = localStorage.getItem('dxos.composer.extension.demo');
+    extensions.push(...[items ? demo({ items: items!.split(',') }) : undefined].filter(nonNullable));
+  }
+
   if (experimental) {
-    extensions.push(
-      ...[
-        link({ onRender: onRender(dispatch) }),
-        tooltip({ onHover }),
-        tasklist(),
-        _listener && listener(_listener),
-        _autocomplete && autocomplete(_autocomplete),
-        _comments && comments(_comments),
-      ].filter(nonNullable),
-    );
+    extensions.push(...[].filter(nonNullable));
   }
 
   return extensions;

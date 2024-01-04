@@ -91,7 +91,7 @@ export const Grid = ({
   debug,
   selected: controlledSelected,
   Component = Mosaic.DefaultComponent,
-  className,
+  classNames,
   onDrop,
   onOver,
   onSelect,
@@ -162,7 +162,7 @@ export const Grid = ({
         onOver,
       }}
     >
-      <div className={mx('flex grow overflow-auto', className)}>
+      <div className={mx('flex grow overflow-auto', classNames)}>
         {/* TODO(burdon): Tailwind classes aren't currently processed by labs. */}
         <div ref={containerRef} className={mx('grow overflow-auto snap-x md:snap-none snap-mandatory')}>
           <div className='group block relative' style={{ ...bounds, margin: marginSize }}>

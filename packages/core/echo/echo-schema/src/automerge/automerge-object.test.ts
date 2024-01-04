@@ -39,10 +39,10 @@ describe('AutomergeObject', () => {
     const testBuilder = new TestBuilder();
     const { db } = await testBuilder.createPeer();
 
-    const contact = new Contact({ name: 'Contact' }, { useAutomergeBackend: false });
+    const contact = new Contact({ name: 'Contact' }, { automerge: false });
     db.add(contact);
-    const task1 = new Task({ title: 'Task1' }, { useAutomergeBackend: true });
-    const task2 = new Task({ title: 'Task2' }, { useAutomergeBackend: false });
+    const task1 = new Task({ title: 'Task1' }, { automerge: true });
+    const task2 = new Task({ title: 'Task2' }, { automerge: false });
 
     contact.tasks.push(task1);
     contact.tasks.push(task2);
@@ -52,5 +52,26 @@ describe('AutomergeObject', () => {
     expect(contact.tasks[0]).to.eq(task1);
     expect(contact.tasks[1]).to.eq(task2);
     expect(task2.previous).to.eq(task1);
+  });
+
+  test('destructuring', async () => {
+    setGlobalAutomergePreference(true);
+    afterTest(() => setGlobalAutomergePreference(false));
+
+    const obj = new Task({ title: 'Task' });
+    const { title } = obj;
+    expect(title).to.eq('Task');
+
+    const { ...copy } = { ...obj };
+    expect(copy.title).to.eq('Task');
+  });
+
+  test('`in` operator', async () => {
+    setGlobalAutomergePreference(true);
+    afterTest(() => setGlobalAutomergePreference(false));
+
+    const obj = new Task({ title: 'Task' });
+    expect('title' in obj).to.eq(true);
+    expect('id' in obj).to.eq(true);
   });
 });

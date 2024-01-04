@@ -12,6 +12,7 @@ import { ColumnPanel } from './ColumnMenu';
 import { type ColumnProps } from '../schema';
 
 export default {
+  title: 'react-ui-table/ColumnPanel',
   component: ColumnPanel,
   decorators: [withTheme],
 };

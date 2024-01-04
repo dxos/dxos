@@ -124,7 +124,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
                     path={path}
                     position={index}
                     Component={Component!}
-                    className='m-1'
+                    classNames='m-1'
                     // debug={debug}
                   />
                 ))}

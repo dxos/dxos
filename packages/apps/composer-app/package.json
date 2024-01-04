@@ -23,6 +23,7 @@
     "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-grid": "workspace:*",
+    "@braneframe/plugin-help": "workspace:*",
     "@braneframe/plugin-inbox": "workspace:*",
     "@braneframe/plugin-ipfs": "workspace:*",
     "@braneframe/plugin-kanban": "workspace:*",
@@ -38,6 +39,7 @@
     "@braneframe/plugin-registry": "workspace:*",
     "@braneframe/plugin-script": "workspace:*",
     "@braneframe/plugin-search": "workspace:*",
+    "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/plugin-sketch": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
@@ -59,7 +61,8 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "isomorphic-fetch": "^3.0.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-joyride": "^2.7.2"
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",

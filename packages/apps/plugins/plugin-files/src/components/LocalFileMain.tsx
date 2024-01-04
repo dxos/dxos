@@ -14,12 +14,12 @@ export const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
     () =>
       file.permission !== 'granted'
         ? {
-            composer: { id: file.id, content: () => <LocalFileMainPermissions entity={file} /> },
+            model: { id: file.id, content: () => <LocalFileMainPermissions entity={file} /> },
             properties: { title: file.title, readOnly: true },
           }
         : file.text
         ? {
-            composer: { id: file.id, content: file.text },
+            model: { id: file.id, content: file.text },
             properties: { title: file.title, readOnly: true },
           }
         : { file },

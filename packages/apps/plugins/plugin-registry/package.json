@@ -22,7 +22,11 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@braneframe/plugin-settings": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",

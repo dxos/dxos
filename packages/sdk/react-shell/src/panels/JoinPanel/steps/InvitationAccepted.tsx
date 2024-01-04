@@ -35,7 +35,7 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
-        <p className='text-center text-sm font-system-normal'>{t('welcome message')}</p>
+        <p className='text-center text-sm font-normal'>{t('welcome message')}</p>
       </div>
       <Actions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</Actions>
     </>

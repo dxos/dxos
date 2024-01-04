@@ -49,6 +49,8 @@ export const isSpace = (data: unknown): data is Space =>
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
+    : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
+    ? ['closed space label', { ns: SPACE_PLUGIN }]
     : space.state.get() !== SpaceState.READY
     ? ['loading space label', { ns: SPACE_PLUGIN }]
     : ['unnamed space label', { ns: SPACE_PLUGIN }];
@@ -69,8 +71,7 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
-        // TODO(burdon): Need to bind based on context.
-        keyBinding: 'meta+k',
+        keyBinding: 'ctrl+n', // TODO(burdon): Not working since invoke is no-op.
         invoke: () => {
           // No-op.
         },
@@ -178,7 +179,7 @@ export const spaceToGraphNode = ({
       properties: {
         ...partials.properties,
         disabled: space.state.get() === SpaceState.INACTIVE,
-        // TODO(burdon): Factor out palette constants.
+        // TODO(burdon): Change to semantic classes that are customizable.
         palette: isPersonalSpace ? 'teal' : undefined,
         testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       },
@@ -203,13 +204,14 @@ export const spaceToGraphNode = ({
           id: 'rename-space',
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
+          keyBinding: 'shift+F6',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space } }),
         },
         {
           id: 'share-space',
           label: ['share space', { ns: SPACE_PLUGIN }],
           icon: (props) => <Users {...props} />,
-          keyBinding: 'shift+meta+.',
+          keyBinding: 'meta+.',
           invoke: () =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
         },
@@ -308,6 +310,7 @@ export const objectToGraphNode = ({
         id: 'rename',
         label: ['rename object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
+        keyBinding: 'shift+F6',
         invoke: () =>
           dispatch({
             action: SpaceAction.RENAME_OBJECT,
@@ -318,6 +321,7 @@ export const objectToGraphNode = ({
         id: 'delete',
         label: ['delete object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Trash {...props} />,
+        keyBinding: 'meta+Backspace',
         invoke: () =>
           dispatch([
             {

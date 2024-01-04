@@ -33,8 +33,8 @@ import { DebugPanel } from './DebugPanel';
 import { SchemaList } from './SchemaList';
 import { Json } from './Tree';
 import { useFileDownload } from './util';
-import { DebugContext } from '../props';
 import { Generator } from '../testing';
+import { DebugContext } from '../types';
 
 const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;

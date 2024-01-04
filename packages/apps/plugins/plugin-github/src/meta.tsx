@@ -13,6 +13,7 @@ export const GITHUB_PLUGIN_SHORT_ID = 'github';
 export default pluginMeta({
   id: GITHUB_PLUGIN,
   shortId: GITHUB_PLUGIN_SHORT_ID,
-  name: 'Github',
+  name: 'GitHub',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <GithubLogo {...props} />,
 });

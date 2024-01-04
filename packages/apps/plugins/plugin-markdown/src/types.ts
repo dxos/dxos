@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Document } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { ObjectMeta } from '@dxos/react-client/echo';
-import type { EditorMode } from '@dxos/react-ui-editor';
+import { type ObjectMeta } from '@dxos/react-client/echo';
+import { type EditorMode, type Extension } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
 
@@ -19,6 +19,7 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
 export enum MarkdownAction {
   CREATE = `${MARKDOWN_ACTION}/create`,
+  TOGGLE_VIEW = `${MARKDOWN_ACTION}/toggle-view`,
 }
 
 export type MarkdownProperties = {
@@ -26,12 +27,12 @@ export type MarkdownProperties = {
 
   // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
   __meta: ObjectMeta;
-  readOnly?: boolean;
+  readonly?: boolean;
 };
 
 export type MarkdownProvides = {
   markdown: {
-    filter?: (document: Document) => boolean;
+    extension?: Extension;
     onChange?: (text: string) => void;
   };
 };
@@ -48,15 +49,16 @@ type StackProvides = {
 };
 
 export type MarkdownSettingsProps = {
+  viewMode: { [key: string]: boolean };
   editorMode?: EditorMode;
-  experimental?: boolean; // TODO(burdon): Flip.
+  experimental?: boolean;
+  debug?: boolean;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
-  StackProvides & {
-    settings: MarkdownSettingsProps;
-  };
+  StackProvides;
