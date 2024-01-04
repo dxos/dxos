@@ -65,23 +65,23 @@ export type EditorModel = {
 };
 
 // TODO(burdon): Remove space/identity dependency. Define interface for the framework re content and presence.
-export type UseTextModelOptions = {
+export type UseTextModelProps = {
   identity?: Identity | null;
   space?: Space;
   text?: TextObject;
+  comments?: CommentRange[];
 };
 
 // TODO(burdon): Remove YJS/Automerge deps (from UI component -- create abstraction; incl. all ECHO/Space deps).
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
-export const useTextModel = ({ identity, space, text }: UseTextModelOptions): EditorModel | undefined => {
-  const [model, setModel] = useState<EditorModel | undefined>(() => createModel({ identity, space, text }));
-  useEffect(() => {
-    setModel(createModel({ identity, space, text }));
-  }, [identity, space, text]);
+export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
+  const { identity, space, text, comments } = props;
+  const [model, setModel] = useState<EditorModel | undefined>(() => createModel(props));
+  useEffect(() => setModel(createModel(props)), [identity, space, text, comments]);
   return model;
 };
 
-const createModel = (options: UseTextModelOptions) => {
+const createModel = (options: UseTextModelProps) => {
   const { text } = options;
   if (isActualAutomergeObject(text)) {
     return createAutomergeModel(options);
@@ -94,7 +94,7 @@ const createModel = (options: UseTextModelOptions) => {
   }
 };
 
-const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorModel => {
+const createYjsModel = ({ identity, space, text, comments = [] }: UseTextModelProps): EditorModel => {
   invariant(text?.doc && text?.content);
   const provider = space
     ? new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
@@ -104,7 +104,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     id: text.doc.guid,
     content: text.content,
     text: () => text.content!.toString(),
-    comments: [],
+    comments,
     // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
     getRelRange: (value: Range) => {
       const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.from));
@@ -136,7 +136,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
   return model;
 };
 
-const createAutomergeModel = ({ identity, text }: UseTextModelOptions): EditorModel => {
+const createAutomergeModel = ({ identity, text }: UseTextModelProps): EditorModel => {
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
 
