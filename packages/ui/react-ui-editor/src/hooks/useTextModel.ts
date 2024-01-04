@@ -44,7 +44,7 @@ export type Range = {
 
 export type CommentRange = {
   id: string;
-  relPos: string; // TODO(burdon): Rename?
+  range: string;
 };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
@@ -54,8 +54,8 @@ export type EditorModel = {
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
   comments: CommentRange[];
-  getRelPos?: (value: Range) => string;
-  getRange?: (value: string) => Range | undefined;
+  getRelRange?: (value: Range) => string;
+  getAbsRange?: (relRange: string) => Range | undefined;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -106,12 +106,12 @@ const createYjsModel = ({ identity, space, text }: UseTextModelOptions): EditorM
     text: () => text.content!.toString(),
     comments: [],
     // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
-    getRelPos: (value: Range) => {
+    getRelRange: (value: Range) => {
       const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.from));
       const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, value.to));
       return [arrayToString(from), arrayToString(to)].join(':');
     },
-    getRange: (value: string) => {
+    getAbsRange: (value: string) => {
       const parts = value.split(':');
       const from = Y.createAbsolutePositionFromRelativePosition(
         Y.decodeRelativePosition(stringToArray(parts[0])),

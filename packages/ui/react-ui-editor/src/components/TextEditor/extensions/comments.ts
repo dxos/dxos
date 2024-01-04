@@ -49,7 +49,6 @@ const marks = {
   highlightActive: Decoration.mark({ class: 'cm-comment-active' }),
 };
 
-// TODO(burdon): Rename.
 type CommentSelected = {
   active?: string;
   closest?: string;
@@ -90,7 +89,7 @@ const commentsStateField = StateField.define<CommentsState>({
       if (effect.is(setCommentRange)) {
         const { model, comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments.map((comment) => {
-          const range = model.getRange!(comment.relPos)!;
+          const range = model.getAbsRange!(comment.range)!;
           return { ...comment, ...range };
         });
 
@@ -160,7 +159,7 @@ export type CommentsOptions = {
   /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (relPos: string) => string | undefined;
+  onCreate?: (range: string) => string | undefined;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -192,18 +191,12 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   const createCommentThread: Command = (view) => {
     const { head, from, to } = view.state.selection.main;
     const model = view.state.field(modelState);
-    const relPos = model?.getRelPos?.({ from, to: to - 1 });
+    const relPos = model?.getRelRange?.({ from, to: to - 1 });
     if (relPos) {
       // Create thread via callback.
       const id = options.onCreate?.(relPos);
       if (id) {
         // Update range.
-        // TODO(burdon): Update model (not state field directly) and read from computed property.
-        // const { ranges } = view.state.field(commentsStateField);
-        // view.dispatch({
-        //   effects: setCommentsEffect.of({ active: id, ranges: [...ranges, { id, from, to: to - 1, relPos }] }),
-        //   selection: { anchor: from },
-        // });
         view.dispatch({
           effects: setSelection.of({ active: id }),
           selection: { anchor: from },
@@ -327,7 +320,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             }
 
             if (from <= range.to) {
-              const newRange = model?.getRange?.(range.relPos);
+              const newRange = model?.getAbsRange?.(range.range);
               Object.assign(range, newRange);
               mod = true;
             }
