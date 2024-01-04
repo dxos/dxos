@@ -54,7 +54,7 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 // Intents
 //
 
-const LAYOUT_ACTION = 'dxos.org/plugin/intent';
+const LAYOUT_ACTION = 'dxos.org/plugin/layout';
 // TODO(wittjosiah): Consider consolidating some action types (e.g. toggle).
 export enum LayoutAction {
   TOGGLE_FULLSCREEN = `${LAYOUT_ACTION}/toggle-fullscreen`,
@@ -65,11 +65,6 @@ export enum LayoutAction {
   OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
   CLOSE_POPOVER = `${LAYOUT_ACTION}/close-popover`,
   ACTIVATE = `${LAYOUT_ACTION}/activate`,
-
-  // TODO(burdon): Move to new plugin.
-  OPEN_COMMANDS = `${LAYOUT_ACTION}/open-commands`,
-  OPEN_SETTINGS = `${LAYOUT_ACTION}/open-settings`,
-  OPEN_SHORTCUTS = `${LAYOUT_ACTION}/open-shortcuts`,
 }
 
 /**

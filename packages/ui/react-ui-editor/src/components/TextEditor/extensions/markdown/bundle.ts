@@ -10,7 +10,15 @@ import { languages } from '@codemirror/language-data';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import { crosshairCursor, drawSelection, dropCursor, EditorView, keymap, placeholder } from '@codemirror/view';
+import {
+  crosshairCursor,
+  drawSelection,
+  dropCursor,
+  EditorView,
+  highlightActiveLine,
+  keymap,
+  placeholder,
+} from '@codemirror/view';
 
 import type { ThemeMode } from '@dxos/react-ui';
 
@@ -48,6 +56,7 @@ export const markdownBundle = ({
     crosshairCursor(),
     dropCursor(),
     drawSelection(),
+    highlightActiveLine(),
     history(),
     indentOnInput(),
     _placeholder && placeholder(_placeholder),
