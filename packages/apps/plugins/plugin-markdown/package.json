@@ -28,6 +28,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

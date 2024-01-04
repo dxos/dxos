@@ -75,7 +75,7 @@ export type TypedObjectOptions = {
 } & AutomergeOptions;
 
 export type AutomergeOptions = {
-  useAutomergeBackend?: boolean;
+  automerge?: boolean;
 };
 
 /**
@@ -101,7 +101,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    if (opts?.automerge ?? getGlobalAutomergePreference()) {
       return new AutomergeObject(initialProps, opts) as any;
     }
 
@@ -132,7 +132,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     if (this._schema) {
       for (const field of this._schema.props) {
         if (field.repeated) {
-          this._set(field.id!, new EchoArray([], { useAutomergeBackend: false }));
+          this._set(field.id!, new EchoArray([], { automerge: false }));
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { TextObject } = require('./text-object');
@@ -363,7 +363,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray([], { useAutomergeBackend: false })._attach(this[base], key, meta);
+        return new EchoArray([], { automerge: false })._attach(this[base], key, meta);
       default:
         return value;
     }

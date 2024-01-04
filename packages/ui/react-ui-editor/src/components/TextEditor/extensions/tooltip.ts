@@ -55,7 +55,7 @@ export const tooltip = ({ onHover, regexp = markdownLinkRegexp }: TooltipOptions
         const el = document.createElement('div');
         el.className = tooltipContent({}, 'pli-2 plb-1');
         onHover(el, url);
-        return { dom: el, offset: { x: 0, y: 12 } };
+        return { dom: el, offset: { x: 0, y: 4 } };
       },
     };
   });
