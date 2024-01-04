@@ -7779,8 +7779,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.12.0
-        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-accordion':
         specifier: ^1.1.1
         version: 1.1.1(react-dom@18.2.0)(react@18.2.0)
@@ -8462,8 +8462,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.12.0
-        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@lezer/common':
         specifier: ^1.1.1
         version: 1.1.1
@@ -8780,6 +8780,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@fluentui/react-tabster':
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
@@ -8845,8 +8848,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.12.0
-        version: 9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^9.16.1
+        version: 9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -13856,68 +13859,69 @@ packages:
     engines: {node: '>=14.0.0', npm: '>=7.0.0'}
     dev: true
 
-  /@fluentui/keyboard-keys@9.0.3:
-    resolution: {integrity: sha512-40KBVJ9HzsvmPL3rwYaAvxCacNS0xnTmOt6TLxxrAVgVrZ1X7DLgd8OGFZcWROs0dhHdCk2D51bl4nK8Q1r3mQ==}
+  /@fluentui/keyboard-keys@9.0.7:
+    resolution: {integrity: sha512-vaQ+lOveQTdoXJYqDQXWb30udSfTVcIuKk1rV0X0eGAgcHeSDeP1HxMy+OgHOQZH3OiBH4ZYeWxb+tmfiDiygQ==}
     dependencies:
-      '@swc/helpers': 0.4.14
+      '@swc/helpers': 0.5.1
     dev: false
 
-  /@fluentui/react-shared-contexts@9.7.1(@types/react@18.0.21)(react@18.2.0):
-    resolution: {integrity: sha512-9WuIKRYM2sM6Qb/xq4fxorWWLdypjZQoeFPfaiCnVUHh+RA/cRxeDGeGTcDzjxXLlJZHgK8ARym+KN2ASrQkJw==}
+  /@fluentui/react-shared-contexts@9.13.2(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-78aEZdff7vaUOmeRyMDPc/Ml+kbwn02BiRLPQhqgYtCyjy0V3YBpmYfqxO8N5hUIZcFTedyOaHWpzVeEYxpNmA==}
     peerDependencies:
-      '@types/react': '>=16.8.0 <19.0.0'
-      react: '>=16.8.0 <19.0.0'
+      '@types/react': '>=16.14.0 <19.0.0'
+      react: '>=16.14.0 <19.0.0'
     dependencies:
-      '@fluentui/react-theme': 9.1.10
-      '@swc/helpers': 0.4.14
+      '@fluentui/react-theme': 9.1.16
+      '@swc/helpers': 0.5.1
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
 
-  /@fluentui/react-tabster@9.12.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-dKIJh9+nFCRt0+gSimCVwxHkdBxid2MKQ6DPtyLvVJRYiBxSNG9EJYuNCHtE9873HO06zS4GrD4KmKEQPfwP5A==}
+  /@fluentui/react-tabster@9.16.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-j5yxvt5HglW48Q/0rktGHSAb9q4FQsn6y9pwdAKpo8b0HcUsaNMCtV4d5afyGbDy4S0cAfb3Kmab3o0MOnrNiw==}
     peerDependencies:
-      '@types/react': '>=16.8.0 <19.0.0'
-      '@types/react-dom': '>=16.8.0 <19.0.0'
-      react: '>=16.8.0 <19.0.0'
-      react-dom: '>=16.8.0 <19.0.0'
+      '@types/react': '>=16.14.0 <19.0.0'
+      '@types/react-dom': '>=16.14.0 <19.0.0'
+      react: '>=16.14.0 <19.0.0'
+      react-dom: '>=16.14.0 <19.0.0'
     dependencies:
-      '@fluentui/react-shared-contexts': 9.7.1(@types/react@18.0.21)(react@18.2.0)
-      '@fluentui/react-theme': 9.1.10
-      '@fluentui/react-utilities': 9.11.0(@types/react@18.0.21)(react@18.2.0)
-      '@griffel/react': 1.5.8(react@18.2.0)
-      '@swc/helpers': 0.4.14
+      '@fluentui/react-shared-contexts': 9.13.2(@types/react@18.0.21)(react@18.2.0)
+      '@fluentui/react-theme': 9.1.16
+      '@fluentui/react-utilities': 9.15.5(@types/react@18.0.21)(react@18.2.0)
+      '@griffel/react': 1.5.19(react@18.2.0)
+      '@swc/helpers': 0.5.1
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      keyborg: 2.0.0
+      keyborg: 2.4.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      tabster: 4.7.2
+      tabster: 5.2.0
     dev: false
 
-  /@fluentui/react-theme@9.1.10:
-    resolution: {integrity: sha512-E6W5LB9wg7aJSzDM87FyYBOOADCSh554W81msLRTXwLzuKHPtLannyyYXKO0tP2ZJfiySQ2LWNzHnIqV8fUuxQ==}
+  /@fluentui/react-theme@9.1.16:
+    resolution: {integrity: sha512-QK2dGE5aQXN1UGdiEmGKpYGP3tHXIchLvFf8DEEOWnF4XBc9SiEPNFYkvLMJjHxZmDz4D670rsOPe0r5jFDEKQ==}
     dependencies:
-      '@fluentui/tokens': 1.0.0-alpha.7
-      '@swc/helpers': 0.4.14
+      '@fluentui/tokens': 1.0.0-alpha.13
+      '@swc/helpers': 0.5.1
     dev: false
 
-  /@fluentui/react-utilities@9.11.0(@types/react@18.0.21)(react@18.2.0):
-    resolution: {integrity: sha512-+lK8OU7jX5QFNfvMPwekQk9NPStETi3rHknb7S9oSEhXAnKFvH7L8Jp9LD+/CCeKrbkoGUX4t8AyDgBhtgx40g==}
+  /@fluentui/react-utilities@9.15.5(@types/react@18.0.21)(react@18.2.0):
+    resolution: {integrity: sha512-5kNL5SgsrT4680OkfH50vOGQv7m3tZBEFDeWItPsrIIrfbcycAlApYdhDSzMT+VMKLxd4JU2uGCd1a5cn0IqKw==}
     peerDependencies:
-      '@types/react': '>=16.8.0 <19.0.0'
-      react: '>=16.8.0 <19.0.0'
+      '@types/react': '>=16.14.0 <19.0.0'
+      react: '>=16.14.0 <19.0.0'
     dependencies:
-      '@fluentui/keyboard-keys': 9.0.3
-      '@swc/helpers': 0.4.14
+      '@fluentui/keyboard-keys': 9.0.7
+      '@fluentui/react-shared-contexts': 9.13.2(@types/react@18.0.21)(react@18.2.0)
+      '@swc/helpers': 0.5.1
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
 
-  /@fluentui/tokens@1.0.0-alpha.7:
-    resolution: {integrity: sha512-djgLw4HVx0Jx0GYKQEu65aQ5nY59CkcV850LrLPHOERV+KhuWqoI4CdrvL2fFqrAvqLlfK940MP1mPrvy8NAow==}
+  /@fluentui/tokens@1.0.0-alpha.13:
+    resolution: {integrity: sha512-IzYysTTBkAH7tQZxYKpzhxYnTJkvwXhjhTOpmERgnqTFifHTP8/vaQjJAAm7dI/9zlDx1oN+y/I+KzL9bDLHZQ==}
     dependencies:
-      '@swc/helpers': 0.4.14
+      '@swc/helpers': 0.5.1
     dev: false
 
   /@fontsource-variable/inter@5.0.16:
@@ -13953,24 +13957,31 @@ packages:
       type-fest: 4.9.0
     dev: false
 
-  /@griffel/core@1.12.0:
-    resolution: {integrity: sha512-QGmAv0vU0LpTgxqO5yZP/MDcqgvDUDvD3Y3d5GZ3OHuEQrFdyS0dOH2PD/scynuxAfE/wf0whsrvIO7WPFrwnQ==}
+  /@griffel/core@1.15.1:
+    resolution: {integrity: sha512-09w5axbOJuBzjTVFN5EycbAOIpCoxZeoJMZgT2fTrIl2GIxnTWpK3F2d63UzGBmQf1O+EgR6nK4FgMXFt1UFig==}
     dependencies:
       '@emotion/hash': 0.9.0
-      csstype: 3.1.2
+      '@griffel/style-types': 1.0.2
+      csstype: 3.1.3
       rtl-css-js: 1.16.1
       stylis: 4.3.0
       tslib: 2.6.0
     dev: false
 
-  /@griffel/react@1.5.8(react@18.2.0):
-    resolution: {integrity: sha512-stQ/KwV7HguYRTZeJa3mY1F2Fpkx9qTz+mkuHWvtSqcB+KhbnqlP1iTngVFbc5AvB9mp6s7xDCPXcM8c+V7d/g==}
+  /@griffel/react@1.5.19(react@18.2.0):
+    resolution: {integrity: sha512-qefnZseAwcwCpFVzN33mG20t/hofpWci7VNtOwzSco/IxFLuJaB2ffki+uAdUgWCpV2A67bWQjXNlymBoMUysg==}
     peerDependencies:
       react: '>=16.8.0 <19.0.0'
     dependencies:
-      '@griffel/core': 1.12.0
+      '@griffel/core': 1.15.1
       react: 18.2.0
       tslib: 2.6.0
+    dev: false
+
+  /@griffel/style-types@1.0.2:
+    resolution: {integrity: sha512-ka/Tpl1WU8js88LObwB/4EvpgXzx/EEJfbHhAr4ZNt29hrQKgL93X1zSY6M/FRhMhWrGIawauWkZP6/y6w/WiQ==}
+    dependencies:
+      csstype: 3.1.3
     dev: false
 
   /@humanwhocodes/config-array@0.11.11:
@@ -20377,12 +20388,12 @@ packages:
     resolution: {integrity: sha512-4C7nX/dvpzB7za4Ql9K81xK3HPxCpHMgwTZVyf+9JQ6VUbn9jjZVN7/Nkdz/Ugzs2CSjqnL/UPXroiVBVHUWUw==}
     dependencies:
       tslib: 2.6.0
+    dev: true
 
   /@swc/helpers@0.5.1:
     resolution: {integrity: sha512-sJ902EfIzn1Fa+qYmjdQqh8tPsoxyBz+8yBKC2HKUxyezKJFwPGOn7pv4WY6QuQW//ySQi5lJjA/ZT9sNWWNTg==}
     dependencies:
       tslib: 2.6.0
-    dev: true
 
   /@swc/types@0.1.5:
     resolution: {integrity: sha512-myfUej5naTBWnqOCc/MdVOLVjXUXtIA+NpDrDBKJtLLg2shUjBu3cZmB/85RyitKc55+lUUyl7oRfLOvkr2hsw==}
@@ -26375,7 +26386,6 @@ packages:
 
   /csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
-    dev: true
 
   /csv-parse@5.5.2:
     resolution: {integrity: sha512-YRVtvdtUNXZCMyK5zd5Wty1W6dNTpGKdqQd4EQ8tl/c6KW1aMBB1Kg1ppky5FONKmEqGJ/8WjLlTNLPne4ioVA==}
@@ -33979,6 +33989,10 @@ packages:
 
   /keyborg@2.0.0:
     resolution: {integrity: sha512-RWY8nWrzRkwTQLaKyDtbTu5SOb5L4B20UzAsBHlQDFZqVY/+Mid0bQ7MVTC8vbOTrWY2xkkzj8gZF9Ua7re4xA==}
+    dev: false
+
+  /keyborg@2.4.0:
+    resolution: {integrity: sha512-EixFnyCc6m27NkFwyT5GNNQl+9wiTMePtAvVuKXZpc0CZLLJfJFB3zXGFBGnwtvEXymbJoPWoErzwTpiEQ+Msg==}
     dev: false
 
   /keyv@4.5.2:
@@ -42133,10 +42147,10 @@ packages:
       strip-ansi: 6.0.1
     dev: false
 
-  /tabster@4.7.2:
-    resolution: {integrity: sha512-wRFOnje3CxqUVgdDiY7spipDWXee4PatHE5e3XoVXN51fOxu0/QlI/7EVURIyg2jGDFPL4ZffLMpX3pvTVbVVQ==}
+  /tabster@5.2.0:
+    resolution: {integrity: sha512-cSi3a0gGeM9Co/gTKHlhTFfiitwVjcA+kP9lJux0U7QaRrZox1yYrfbwZhJXM7N0fux7BgvCYaOxME5k0EQ0tA==}
     dependencies:
-      keyborg: 2.0.0
+      keyborg: 2.4.0
       tslib: 2.6.0
     dev: false
 

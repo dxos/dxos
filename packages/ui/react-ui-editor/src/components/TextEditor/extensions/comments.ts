@@ -249,6 +249,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
     //
     // Hover tooltip (for key shortcut hints, etc.)
+    // TODO(burdon): Factor out to generic hints extension for current selection/line.
     //
     options.onHover
       ? hoverTooltip(
