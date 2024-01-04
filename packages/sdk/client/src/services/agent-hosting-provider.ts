@@ -6,25 +6,27 @@ import { log } from '@dxos/log';
 
 export type AgentHostingProvider = {
   name: string;
-  BaseURL: string;
+  baseURL: string;
 };
 
+/**
+ * Cannot communicate with, or decode response from hosting provider.
+ */
+export class ProviderApiError extends Error {}
+
 // TODO: Load from config or dynamically discover
-const DEFAULT_AGENT_HOSTING_PROVIDER: AgentHostingProvider = {
+const defaultConfig: AgentHostingProvider = {
   name: 'default',
-  BaseURL: 'http://localhost:8082/v1alpha1/',
+  baseURL: 'http://localhost:8082/v1alpha1/',
 };
 
 // Interface to REST API to manage agent deployments
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
 export class AgentHostingProviderClient {
-  private agentHostingProvider: AgentHostingProvider;
-  constructor() {
-    this.agentHostingProvider = DEFAULT_AGENT_HOSTING_PROVIDER;
-  }
+  constructor(private readonly _config = defaultConfig) {}
 
   public async createAgent(invitationCode: string, identityKey: string) {
-    const res = await fetch(new URL('agent', this.agentHostingProvider.BaseURL), {
+    const res = await fetch(new URL('agent', this._config.baseURL), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,20 +40,21 @@ export class AgentHostingProviderClient {
     try {
       const agent = await res.json();
       return agent.metadata.uid;
-    } catch (e) {
-      if (e instanceof TypeError) {
+    } catch (err) {
+      if (err instanceof TypeError) {
         log.warn('failed to parse response from agent create', { res });
-        return null;
+        throw new ProviderApiError('failed to parse response from hosting provider');
       }
       log.warn('bad response from agent create', { res });
+      throw new ProviderApiError('bad response from hosting provider');
     }
   }
 
   public async getAgent(agentID: string) {
-    const res = await fetch(new URL('agent/' + agentID, this.agentHostingProvider.BaseURL));
+    const res = await fetch(new URL('agent/' + agentID, this._config.baseURL));
     if (res.status !== 200) {
       log.warn('request to agent get failed', { res });
-      return null;
+      throw new ProviderApiError('bad response from hosting provider');
     }
 
     log.info('getAgent', { res });
@@ -59,17 +62,18 @@ export class AgentHostingProviderClient {
     try {
       const agent = await res.json();
       return agent.metadata.uid;
-    } catch (e) {
-      if (e instanceof TypeError) {
+    } catch (err) {
+      if (err instanceof TypeError) {
         log.warn('failed to parse response from agent create', { res });
-        return null;
+        throw new ProviderApiError('failed to parse response from hosting provider');
       }
       log.warn('bad response from agent create', { res });
+      throw new ProviderApiError('bad response from hosting provider');
     }
   }
 
   public async destroyAgent(agentID: string) {
-    const res = await fetch(new URL('agent/' + agentID, this.agentHostingProvider.BaseURL), {
+    const res = await fetch(new URL('agent/' + agentID, this._config.baseURL), {
       method: 'DELETE',
     });
 
@@ -78,7 +82,6 @@ export class AgentHostingProviderClient {
     }
 
     log.warn('failed to send destroy request', { status: res.status, statusText: res.statusText });
-
-    return false;
+    throw new ProviderApiError('bad response from hosting provider');
   }
 }

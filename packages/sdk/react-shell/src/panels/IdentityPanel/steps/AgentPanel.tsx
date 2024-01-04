@@ -5,6 +5,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { useClient, useAgentHostingProviderClient } from '@dxos/react-client';
 import { type Identity, useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -56,28 +58,16 @@ export const AgentForm = (props: AgentFormProps) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
       console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
-      if (!identity) {
-        setValidationMessage('Identity not found?');
-        console.error('Identity not found');
-        return;
+      invariant(identity, 'Identity not found');
+      try {
+        const res = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
+        // TODO(nf): human-consumable response from API
+        setAgentStatus(res);
+        setAgentActive(true);
+        setValidationMessage('');
+      } catch (err: any) {
+        setValidationMessage(`error creating agent: ${err.message}`);
       }
-      agentHostingProviderClient
-        ?.createAgent(invitationCode, identity.identityKey.truncate())
-        .then((res) => {
-          console.log(res);
-          if (res) {
-            setAgentStatus(res);
-            setAgentActive(true);
-            setValidationMessage('');
-          } else {
-            setValidationMessage('error creating agent');
-          }
-        })
-        .catch((error) => {
-          // TODO(nf): feedback on error
-          setValidationMessage('error creating agent');
-        });
-      // TODO(nf): feedback on response
     }
   }, []);
 
@@ -92,25 +82,15 @@ export const AgentForm = (props: AgentFormProps) => {
 
   const handleAgentDestroy = async () => {
     const identity = client.halo.identity.get();
-    if (!identity) {
-      console.error('Identity not found');
-      return;
+    invariant(identity, 'Identity not found');
+    try {
+      await agentHostingProviderClient?.destroyAgent(identity.identityKey.truncate());
+      setValidationMessage('No agent deployed via provider.');
+      setAgentStatus('');
+      setAgentActive(false);
+    } catch (err: any) {
+      setValidationMessage(`error destroying agent: ${err.message}`);
     }
-    agentHostingProviderClient
-      ?.destroyAgent(identity.identityKey.truncate())
-      .then((res) => {
-        if (res) {
-          setValidationMessage('No agent deployed via provider.');
-          setAgentStatus('');
-          setAgentActive(false);
-        } else {
-          // TODO(nf): feedback on error
-          setValidationMessage('error destroying agent.');
-        }
-      })
-      .catch((error) => {
-        setValidationMessage('error destroying agent.');
-      });
   };
 
   return (
