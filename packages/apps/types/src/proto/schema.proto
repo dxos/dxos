@@ -74,8 +74,11 @@ message Document {
   option (object) = true;
 
   message Comment {
+    // TODO(burdon): Should not be object, but arrays of plain objects are broken.
+    // option (object) = true;
+
     Thread thread = 1;
-    string range = 2; // TODO(burdon): Rename cursor (start/end).
+    string cursor = 2; // TODO(burdon): Rename cursor (start/end).
   }
 
   string title = 1;

@@ -89,7 +89,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       }
     }, [awareness, peer, themeMode]);
 
-    // TODO(burdon): How to make this pluggable?
+    // TODO(burdon): Factor out as extension.
     useEffect(() => {
       if (view && comments?.length) {
         view.dispatch({

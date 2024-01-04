@@ -187,10 +187,10 @@ const onCommentsHover: CommentsOptions['onHover'] = (el) => {
     <StrictMode>
       <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
         <div>Create comment</div>
+        {/* TODO(burdon): Unify shortcuts. */}
         <div className='flex gap-1'>
           <Key char='⌘' />
-          <Key char='⇧' />
-          <Key char='C' />
+          <Key char="'" />
         </div>
       </div>
     </StrictMode>,

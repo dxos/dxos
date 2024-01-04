@@ -21,9 +21,12 @@ import sortBy from 'lodash.sortby';
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
+import { callbackWrapper } from './util';
 import { type CommentRange, type EditorModel, modelState, type Range } from '../../../hooks';
 
 // TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
+
+// TODO(burdon): Handle copy and paste (separately) text that includes comment range.
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
@@ -190,12 +193,17 @@ export const comments = (options: CommentsOptions = {}): Extension => {
    * Create comment thread action.
    */
   const createCommentThread: Command = (view) => {
+    invariant(options.onCreate);
     const { head, from, to } = view.state.selection.main;
+    if (from === to) {
+      return false;
+    }
+
     const model = view.state.field(modelState);
     const relPos = model?.getCursorFromRange?.({ from, to: to - 1 });
     if (relPos) {
       // Create thread via callback.
-      const id = options.onCreate?.(relPos);
+      const id = callbackWrapper(options.onCreate)(relPos);
       if (id) {
         // Update range.
         view.dispatch({
@@ -267,7 +275,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     options.onCreate
       ? keymap.of([
           {
-            key: options?.key ?? 'shift-meta-c',
+            key: options?.key ?? "meta-'",
             run: createCommentThread,
           },
         ])
