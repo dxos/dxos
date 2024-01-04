@@ -57,7 +57,6 @@ export const SpaceListPanel: FC = () => {
     const space = await client.spaces.create();
     await space.waitUntilReady();
     await importData(space, backup);
-    space.properties[Folder.schema.typename].name = space.key.toHex();
     space.properties.name = space.properties.name + ' - IMPORTED';
   };
 
