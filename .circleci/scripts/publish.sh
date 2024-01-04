@@ -40,7 +40,7 @@ function notifyStart() {
 }
 
 if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
-  notifyStart
+  DX_ENVIRONMENT=$BRANCH notifyStart
 fi
 
 failed=""
