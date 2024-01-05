@@ -5,8 +5,8 @@
 import type { Browser, Page } from '@playwright/test';
 
 import { StackManager } from '@dxos/react-ui-stack/testing';
+import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
-import { ShellManager } from '@dxos/vault/testing';
 
 export class AppManager {
   page!: Page;

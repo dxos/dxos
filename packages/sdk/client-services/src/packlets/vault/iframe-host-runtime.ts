@@ -30,6 +30,8 @@ export type IFrameHostRuntimeParams = {
  *
  * Holds a lock over the client services such that only one instance can run at a time.
  * This should only be used when SharedWorker is not available.
+ *
+ * @deprecated
  */
 export class IFrameHostRuntime {
   private readonly _configProvider: IFrameHostRuntimeParams['config'];

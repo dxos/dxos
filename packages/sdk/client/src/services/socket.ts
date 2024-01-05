@@ -30,6 +30,7 @@ export const fromSocket = async (url: string): Promise<ClientServicesProvider> =
       });
       await dxRpcClient.open();
     },
+
     close: () => dxRpcClient.close(),
   };
 };

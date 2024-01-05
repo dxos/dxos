@@ -128,6 +128,7 @@ export class TestBuilder {
    */
   createLocal() {
     const services = new LocalClientServices({
+      shell: null,
       config: this.config,
       modelFactory: this._modelFactory,
       storage: this.storage,

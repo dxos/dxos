@@ -9,7 +9,7 @@ export default template.define
   .script({
     content: ({ input, slots, imports }) => {
       const { react, pwa, dxosUi, name, proto } = input;
-      const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.use(
+      const { ClientProvider, Config, Defaults, Local } = imports.use(
         ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
         '@dxos/react-client',
       );
@@ -59,8 +59,7 @@ export default template.define
         
         ${slots.extraImports}
         
-        // Dynamics allows configuration to be supplied by the hosting KUBE.
-        const config = async () => new ${Config}(await ${Dynamics}(), ${Local}(), ${Defaults}());
+        const config = () => new ${Config}(${Local}(), ${Defaults}());
 
         export const App = () => {
           ${pwa && plate`const serviceWorker = ${useRegisterSW}();`}
