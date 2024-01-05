@@ -3,6 +3,7 @@
 //
 
 import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
+import { Trigger } from '@dxos/async';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
@@ -21,11 +22,29 @@ void initializeAppTelemetry({
   telemetryOptions: { enable: false },
 });
 
-const workerRuntime = new WorkerRuntime(async () => {
-  const config = new Config(await Dynamics(), await Envs(), Local(), Defaults());
-  log.config({ filter: LOG_FILTER, prefix: config.get('runtime.client.log.prefix') });
-  return config;
+let releaseLock: () => void;
+const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
+const lockAcquired = new Trigger();
+void navigator.locks.request('dxos-client-worker', (lock) => {
+  lockAcquired.wake();
+  return lockPromise;
 });
+
+const workerRuntime = new WorkerRuntime(
+  async () => {
+    const config = new Config(await Dynamics(), await Envs(), Local(), Defaults());
+    log.config({ filter: LOG_FILTER, prefix: config.get('runtime.client.log.prefix') });
+    return config;
+  },
+  {
+    acquireLock: () => lockAcquired.wait(),
+    releaseLock: () => releaseLock(),
+    onReset: async () => {
+      // Close the shared worker, lock will be released automatically.
+      self.close();
+    },
+  },
+);
 
 // Allow to access host from console.
 mountDevtoolsHooks({

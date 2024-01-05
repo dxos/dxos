@@ -21,12 +21,20 @@ export type CreateSessionParams = {
   shellPort?: RpcPort;
 };
 
+export type WorkerRuntimeCallbacks = {
+  acquireLock: () => Promise<void>;
+  releaseLock: () => void;
+  onReset: () => Promise<void>;
+};
+
 /**
  * Runtime for the shared worker.
  * Manages connections from proxies (in tabs).
  * Tabs make requests to the `ClientServicesHost`, and provide a WebRTC gateway.
  */
 export class WorkerRuntime {
+  private readonly _acquireLock: () => Promise<void>;
+  private readonly _releaseLock: () => void;
   private readonly _transportFactory = new SimplePeerTransportProxyFactory();
   private readonly _ready = new Trigger<Error | undefined>();
   private readonly _sessions = new Set<WorkerSession>();
@@ -34,12 +42,15 @@ export class WorkerRuntime {
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
 
-  constructor(private readonly _configProvider: () => MaybePromise<Config>) {
+  constructor(
+    private readonly _configProvider: () => MaybePromise<Config>,
+    { acquireLock, releaseLock, onReset }: WorkerRuntimeCallbacks,
+  ) {
+    this._acquireLock = acquireLock;
+    this._releaseLock = releaseLock;
     this._clientServices = new ClientServicesHost({
       callbacks: {
-        onReset: async () => {
-          self.close();
-        },
+        onReset: async () => onReset(),
       },
     });
   }
@@ -51,6 +62,7 @@ export class WorkerRuntime {
   async start() {
     log('starting...');
     try {
+      await this._acquireLock();
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
@@ -71,7 +83,8 @@ export class WorkerRuntime {
   }
 
   async stop() {
-    // TODO(dmaretskyi): Terminate active sessions.
+    // Release the lock to notify remote clients that the worker is terminating.
+    this._releaseLock();
     await this._clientServices.close();
   }
 
