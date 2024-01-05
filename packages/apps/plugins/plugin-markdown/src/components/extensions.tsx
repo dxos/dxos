@@ -15,13 +15,13 @@ import {
   type TooltipOptions,
   autocomplete,
   comments,
-  demo,
   image,
   link,
   listener,
   table,
   tasklist,
   tooltip,
+  typewriter,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -97,7 +97,7 @@ export const useExtensions = ({
 
   if (debug) {
     const items = localStorage.getItem('dxos.composer.extension.demo');
-    extensions.push(...[items ? demo({ items: items!.split(',') }) : undefined].filter(nonNullable));
+    extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
   }
 
   if (experimental) {

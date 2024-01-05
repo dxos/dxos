@@ -24,7 +24,7 @@ export type EditorMainProps = {
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
   extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'readonly' | 'model' | 'editorMode'>;
+} & Pick<TextEditorProps, 'readonly' | 'model' | 'comments' | 'editorMode'>;
 
 export const EditorMain = ({
   editorRefCb,
@@ -33,6 +33,7 @@ export const EditorMain = ({
   extensions: _extensions,
   readonly,
   model,
+  comments,
   editorMode,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
@@ -44,6 +45,7 @@ export const EditorMain = ({
       <MarkdownEditor
         ref={editorRefCb}
         model={model}
+        comments={comments}
         readonly={readonly}
         editorMode={editorMode}
         extensions={extensions}

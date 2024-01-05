@@ -31,7 +31,7 @@ const Story = ({
   ...props
 }: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'extensions' | 'slots'>) => {
   const ref = useRef<TextEditorRef>(null);
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
     return null;
