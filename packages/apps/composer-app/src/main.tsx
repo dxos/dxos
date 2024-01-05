@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { StrictMode } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import ChainMeta from '@braneframe/plugin-chain/meta';
@@ -132,6 +132,7 @@ const main = async () => {
         config,
         services,
         types,
+        shell: './shell.html',
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
@@ -205,9 +206,9 @@ const main = async () => {
   });
 
   createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
+    // <StrictMode>
+    <App />,
+    // </StrictMode>,
   );
 };
 

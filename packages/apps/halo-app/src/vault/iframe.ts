@@ -150,7 +150,14 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
     await iframeRuntime.start();
     if (iframeRuntime.shell) {
-      await startShell(config, iframeRuntime.shell, iframeRuntime.services, iframeRuntime.origin);
+      await startShell(
+        config,
+        iframeRuntime.shell,
+        // There's a TODO inside iframe runtime to address this but it's now deprecated.
+        // This fixes the build so that we can move forward.
+        iframeRuntime.services as unknown as ClientServicesProvider,
+        iframeRuntime.origin,
+      );
     }
 
     window.addEventListener('beforeunload', () => {
@@ -191,8 +198,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       void shellClientProxy.open(new Context());
     }
 
-    const { WorkerProxyRuntime } = await import('@dxos/client-services');
-    const iframeRuntime = new WorkerProxyRuntime({
+    const { SharedWorkerConnection } = await import('@dxos/client-services');
+    const iframeRuntime = new SharedWorkerConnection({
       config,
       systemPort: createWorkerPort({ port: systemPort }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: DEFAULT_SHELL_CHANNEL }),

@@ -19,7 +19,15 @@ import {
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Client, ClientContext, PublicKey, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { log } from '@dxos/log';
+import {
+  Client,
+  ClientContext,
+  PublicKey,
+  type ClientOptions,
+  type SystemStatus,
+  fromIFrame,
+} from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 
@@ -27,7 +35,7 @@ import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 
-const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
+const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
 
 const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export enum ClientAction {
@@ -82,23 +90,34 @@ export const ClientPlugin = ({
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
 
-      const oldClient = new Client({
-        config: new Config(
-          {
-            runtime: {
-              client: {
-                remoteSource: 'https://halo.dxos.org/vault.html',
-              },
+      const oldConfig = new Config(
+        {
+          runtime: {
+            client: {
+              remoteSource: 'https://halo.dxos.org/vault.html',
             },
           },
-          await Envs(),
-          Defaults(),
-        ),
+        },
+        await Envs(),
+        Defaults(),
+      );
+      const oldClient = new Client({
+        config: oldConfig,
+        services: fromIFrame(oldConfig, { shell: false }),
       });
 
       try {
         await oldClient.initialize();
         await client.initialize();
+
+        // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
+        client.reloaded.on(() => {
+          client.halo.identity.subscribe(async (identity) => {
+            if (identity) {
+              window.location.href = window.location.origin;
+            }
+          });
+        });
 
         if (types) {
           client.addTypes(types);
@@ -142,6 +161,7 @@ export const ClientPlugin = ({
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
       } catch (err) {
+        log.catch(err);
         error = err;
       }
 

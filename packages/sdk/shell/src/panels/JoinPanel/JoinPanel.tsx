@@ -19,6 +19,7 @@ import {
   InvitationRescuer,
   InvitationInput,
   InvitationAccepted,
+  ResetIdentity,
 } from './steps';
 import { Viewport } from '../../components';
 import { stepStyles } from '../../styles';
@@ -44,6 +45,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     onHaloInvitationAuthenticate,
     onSpaceInvitationAuthenticate,
     IdentityInput: IdentityInputComponent = IdentityInput,
+    ResetIdentity: ResetIdentityComponent = ResetIdentity,
   } = props;
   return (
     <DensityProvider density='fine'>
@@ -52,6 +54,13 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
         <Viewport.Views>
           <Viewport.View classNames={stepStyles} id='addition method chooser'>
             <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
+          </Viewport.View>
+          <Viewport.View classNames={stepStyles} id='reset identity confirmation'>
+            <ResetIdentityComponent
+              send={send}
+              method='reset identity'
+              active={activeView === 'reset identity confirmation'}
+            />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='create identity input'>
             <IdentityInputComponent
@@ -184,6 +193,8 @@ export const JoinPanel = ({
     },
   });
 
+  console.log('[joinState]', joinState);
+
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
       log('[state]', state);
@@ -206,6 +217,8 @@ export const JoinPanel = ({
     switch (true) {
       case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
         return 'addition method chooser';
+      case joinState.matches('resettingIdentity'):
+        return 'reset identity confirmation';
       case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
         return 'create identity input';
       case joinState.matches({ choosingIdentity: 'recoveringIdentity' }):
