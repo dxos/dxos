@@ -62,10 +62,10 @@ for APP in "${APPS[@]}"; do
     DX_CONFIG="$ROOT/.circleci/publish-config/config-production.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
+    set +e
     eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
     eval "export DX_TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
-    set +e
     $ROOT/packages/devtools/cli/bin/run app publish \
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
