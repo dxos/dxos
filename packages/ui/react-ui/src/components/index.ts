@@ -7,7 +7,7 @@ export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Buttons';
 export * from './Dialogs';
-export * from './DropdownMenu';
+export * from './Menus';
 export * from './Input';
 export * from './Link';
 export * from './Lists';
