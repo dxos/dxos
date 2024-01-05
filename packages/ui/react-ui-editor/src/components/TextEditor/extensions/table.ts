@@ -9,6 +9,9 @@ import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 // TODO(burdon): Snippet to create basic table.
 //  https://codemirror.net/docs/ref/#autocomplete.snippet
 
+// TODO(burdon): Advanced formatting (left/right/center).
+// TODO(burdon): Editor to auto balance columns.
+
 export type TableOptions = {};
 
 /**

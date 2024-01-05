@@ -19,22 +19,23 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
 import {
   autocomplete,
+  blast,
+  code,
+  comments,
+  defaultOptions,
+  hr,
+  image,
   listener,
   link,
+  mention,
+  table,
   tasklist,
   tooltip,
+  typewriter,
+  type CommentsOptions,
   type TooltipOptions,
   type LinkOptions,
-  table,
-  image,
-  mention,
-  blast,
-  demo,
-  defaultOptions,
-  code,
-  type CommentsOptions,
-  hr,
-  comments,
+  mermaid,
 } from './extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
@@ -108,11 +109,11 @@ const text = {
   table: str(
     '# Table',
     '',
-    `| ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} |`,
-    '|----------|----------|----------|',
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
+    `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     '', // TODO(burdon): Possible GFM parsing bug if no newline?
   ),
 
@@ -123,6 +124,8 @@ const text = {
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+
+  mermaid: str('```mermaid', 'graph TD;', 'A-->B;', 'A-->C;', 'B-->D;', 'C-->D;', '```'),
 
   footer: str('', '', '', '', '')
 };
@@ -179,7 +182,9 @@ const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
 };
 
 const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded bg-neutral-500 text-xs'>{char}</span>
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+    {char}
+  </span>
 );
 
 const onCommentsHover: CommentsOptions['onHover'] = (el) => {
@@ -264,9 +269,13 @@ export const NoExtensions = {
   render: () => <Story text={document} />,
 };
 
+// TODO(burdon): Cursor bug if no newline after BR (cursor down just loops back to start of each paragraph).
 export const HorizontalRule = {
   render: () => (
-    <Story text={str(text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)} extensions={[hr()]} />
+    <Story
+      text={str('# Horizontal Rule', '', text.paragraphs, '---', '', text.paragraphs, '---', '', text.paragraphs)}
+      extensions={[hr()]}
+    />
   ),
 };
 
@@ -290,7 +299,7 @@ export const Image = {
   render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
 
-export const TaskList = {
+export const Tasklist = {
   render: () => (
     <Story
       text={str(text.tasks, '', text.list, text.footer)}
@@ -335,13 +344,17 @@ export const Mention = {
   ),
 };
 
+export const Mermaid = {
+  render: () => <Story text={str('# Mermaid', '', text.mermaid, text.footer)} extensions={[code(), mermaid()]} />,
+};
+
 export const Comments = {
   render: () => {
     const [commentsStates, setCommentStates] = useState<CommentRange[]>([]);
 
     return (
       <Story
-        text={str(text.paragraphs, text.footer)}
+        text={str('# Comments', '', text.paragraphs, text.footer)}
         comments={commentsStates}
         extensions={[
           comments({
@@ -371,30 +384,16 @@ export const Comments = {
   },
 };
 
-export const Diagnostics = {
-  render: () => (
-    <Story
-      text={document}
-      extensions={[
-        // Cursor moved.
-        EditorView.updateListener.of((update) => {
-          console.log('update', update.view.state.selection.main.head);
-        }),
-      ]}
-    />
-  ),
-};
-
-export const Demo = {
-  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[demo()]} />,
+export const Typewriter = {
+  render: () => <Story text={str('# Typewriter', '', text.paragraphs, text.footer)} extensions={[typewriter()]} />,
 };
 
 export const Blast = {
   render: () => (
     <Story
-      text={str(text.paragraphs, text.code, text.paragraphs)}
+      text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        demo({
+        typewriter({
           items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
         }),
         blast(
@@ -409,6 +408,20 @@ export const Blast = {
             defaultOptions,
           ),
         ),
+      ]}
+    />
+  ),
+};
+
+export const Diagnostics = {
+  render: () => (
+    <Story
+      text={document}
+      extensions={[
+        // Cursor moved.
+        EditorView.updateListener.of((update) => {
+          console.log('update', update.view.state.selection.main.head);
+        }),
       ]}
     />
   ),

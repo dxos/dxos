@@ -55,7 +55,7 @@ export type EditorModel = {
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
   getCursorFromRange?: (value: Range) => string;
-  getRangeFromCursor?: (cursor: string) => Range | undefined;
+  getRangeFromCursor?: (cursor: string) => Range;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -106,7 +106,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorMod
     // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
     getCursorFromRange: (range: Range) => {
       const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.from));
-      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.to));
+      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.to, -1));
       return [arrayToString(from), arrayToString(to)].join(':');
     },
     getRangeFromCursor: (cursor: string) => {
