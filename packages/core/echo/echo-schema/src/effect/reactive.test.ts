@@ -39,21 +39,28 @@ export type ReactiveFn = {
   // typed: <T> (schema: S.Schema<T>) => (obj: T) => T & Reactive;
 };
 
-const proxies = new WeakMap<object, any>();
+const proxyToObject = new WeakMap<object, any>();
+
+const isSuitableProxyTarget = (value: any) => typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 
 const reactive: ReactiveFn = <T>(target: any): Re<T> => {
+  if(!isSuitableProxyTarget(target)) {
+    throw new Error('Value cannot be made into a reactive object.');
+  }
+
+  const existingProxy = proxyToObject.get(target);
+  if (existingProxy) {
+    return existingProxy;
+  }
+
   const signal = compositeRuntime.createSignal();
 
   const proxy = new Proxy(target, {
     get(target, prop, receiver) {
       signal.notifyRead();
       const value = Reflect.get(target, prop, receiver);
-      const existingProxy = proxies.get(value);
-      if (existingProxy) {
-        return existingProxy;
-      }
 
-      if (typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype) {
+      if (isSuitableProxyTarget(value)) {
         return reactive(value);
       }
 
@@ -65,7 +72,8 @@ const reactive: ReactiveFn = <T>(target: any): Re<T> => {
       return result;
     },
   });
-  proxies.set(target, proxy);
+
+  proxyToObject.set(target, proxy);
   return proxy;
 };
 
@@ -119,6 +127,8 @@ describe.only('Reactive', () => {
     // Non-plains objects are not reactive.
     person.phone.value = '123';
     expect(timesRun).to.equal(2);
+
+    expect(person.address === person.address).to.be.true;
   });
 
   // test.skip('typed', () => {
