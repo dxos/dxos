@@ -7,6 +7,7 @@ import { effect } from '@preact/signals-core';
 import { signal, batch } from '@preact/signals-core';
 
 import { registerSignalRuntime as registerRuntimeForEcho } from '../util/signal';
+import { reactive } from './reactive';
 
 { // TODO(dmaretskyi): Resolve circular dependency on @dxos/echo-signals.
   registerRuntimeForEcho({
@@ -25,57 +26,6 @@ import { registerSignalRuntime as registerRuntimeForEcho } from '../util/signal'
     batch,
   });
 }
-
-/**
- * Reactive object.
- * Accessing properties triggers signal semantics.
- */
-export type Re<T> = { [K in keyof T]: T[K] }; //
-
-export type ReactiveFn = {
-  <T extends {}>(obj: T): Re<T>;
-  // <T> (schema: S.Schema<T>): (obj: T) => T & Reactive;
-
-  // typed: <T> (schema: S.Schema<T>) => (obj: T) => T & Reactive;
-};
-
-const proxyToObject = new WeakMap<object, any>();
-
-const isSuitableProxyTarget = (value: any) => typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
-
-const reactive: ReactiveFn = <T>(target: any): Re<T> => {
-  if(!isSuitableProxyTarget(target)) {
-    throw new Error('Value cannot be made into a reactive object.');
-  }
-
-  const existingProxy = proxyToObject.get(target);
-  if (existingProxy) {
-    return existingProxy;
-  }
-
-  const signal = compositeRuntime.createSignal();
-
-  const proxy = new Proxy(target, {
-    get(target, prop, receiver) {
-      signal.notifyRead();
-      const value = Reflect.get(target, prop, receiver);
-
-      if (isSuitableProxyTarget(value)) {
-        return reactive(value);
-      }
-
-      return value;
-    },
-    set(target, prop, value, receiver): boolean {
-      const result = Reflect.set(target, prop, value, receiver);
-      signal.notifyWrite();
-      return result;
-    },
-  });
-
-  proxyToObject.set(target, proxy);
-  return proxy;
-};
 
 describe.only('Reactive', () => {
   test('untyped', () => {
@@ -128,7 +78,7 @@ describe.only('Reactive', () => {
     person.phone.value = '123';
     expect(timesRun).to.equal(2);
 
-    expect(person.address === person.address).to.be.true;
+    expect(person.address === person.address, 'Proxies have stable references').to.be.true;
   });
 
   // test.skip('typed', () => {
