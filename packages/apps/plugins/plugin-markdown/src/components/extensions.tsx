@@ -6,7 +6,10 @@ import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { ThreadAction } from '@braneframe/plugin-thread';
+import { Document as DocumentType, Thread as ThreadType } from '@braneframe/types';
 import { useIntent, type DispatchIntent, LayoutAction } from '@dxos/app-framework';
+import { type Space } from '@dxos/react-client/echo';
 import {
   type AutocompleteOptions,
   type CommentsOptions,
@@ -22,6 +25,7 @@ import {
   tasklist,
   tooltip,
   typewriter,
+  type AutocompleteResult,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -106,3 +110,79 @@ export const useExtensions = ({
 
   return extensions;
 };
+
+export type GetExtensionConfigOptions = {
+  space?: Space;
+  document?: DocumentType;
+  debug?: boolean;
+  experimental?: boolean;
+  dispatch?: DispatchIntent;
+  onChange?: (text: string) => void;
+};
+
+// TODO(burdon): Factor out space dependency.
+export const getExtensionsConfig = ({
+  space,
+  document,
+  debug,
+  experimental,
+  dispatch,
+  onChange,
+}: GetExtensionConfigOptions): UseExtensionsOptions => ({
+  debug,
+  experimental,
+  listener: onChange ? { onChange } : undefined,
+  autocomplete: space && {
+    onSearch: (text: string) => {
+      // TODO(burdon): Specify filter (e.g., stack).
+      const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
+      return objects
+        .map<AutocompleteResult | undefined>((object) =>
+          object.title?.length && object.id !== document?.id
+            ? {
+                label: object.title,
+                // TODO(burdon): Factor out URL builder.
+                apply: `[${object.title}](/${object.id})`,
+              }
+            : undefined,
+        )
+        .filter(nonNullable);
+    },
+  },
+  // TODO(burdon): Update position in editor: EditorView.scrollIntoView
+  comments: space &&
+    document &&
+    dispatch && {
+      onCreate: (cursor: string) => {
+        // Create comment thread.
+        const thread = space.db.add(new ThreadType());
+        // const comment = space.db.add(new DocumentType.Comment({ thread, cursor }));
+        document.comments.push({ thread, cursor });
+
+        void dispatch?.([
+          {
+            action: ThreadAction.SELECT,
+            data: { active: thread.id, threads: [{ id: thread.id }] },
+          },
+          {
+            action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
+            data: { state: true },
+          },
+        ]);
+
+        return thread.id;
+      },
+      onSelect: (state) => {
+        const { active, ranges } = state;
+        void dispatch?.([
+          {
+            action: ThreadAction.SELECT,
+            data: {
+              active,
+              threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
+            },
+          },
+        ]);
+      },
+    },
+});

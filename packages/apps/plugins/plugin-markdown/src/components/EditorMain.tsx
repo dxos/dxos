@@ -2,14 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback } from 'react';
+import React, { type HTMLAttributes, type RefCallback, type MutableRefObject, type PropsWithChildren } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
-import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { useTranslation, Main } from '@dxos/react-ui';
+import { type TextEditorProps, type TextEditorRef, MarkdownEditor, type EditorModel } from '@dxos/react-ui-editor';
+import {
+  focusRing,
+  inputSurface,
+  mx,
+  surfaceElevation,
+  baseSurface,
+  topbarBlockPaddingStart,
+  textBlockWidth,
+} from '@dxos/react-ui-theme';
 
-import { EmbeddedLayout } from './EmbeddedLayout';
-import { StandaloneLayout } from './StandaloneLayout';
 import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
@@ -22,14 +28,14 @@ export type SearchResult = {
 export type EditorMainProps = {
   editorRefCb?: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
+  layout?: 'main' | 'embedded';
   extensions?: UseExtensionsOptions;
 } & Pick<TextEditorProps, 'readonly' | 'model' | 'comments' | 'editorMode'>;
 
 export const EditorMain = ({
   editorRefCb,
   properties,
-  layout,
+  layout = 'main',
   extensions: _extensions,
   readonly,
   model,
@@ -37,7 +43,7 @@ export const EditorMain = ({
   editorMode,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
-  const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
+  const Root = layout === 'embedded' ? EmbeddedLayout : MainLayout;
   const extensions = useExtensions(_extensions);
 
   return (
@@ -81,4 +87,32 @@ export const EditorMain = ({
       />
     </Root>
   );
+};
+
+const MainLayout = ({
+  children,
+}: PropsWithChildren<{
+  model: EditorModel;
+  properties: MarkdownProperties;
+  // TODO(wittjosiah): ForwardRef.
+  editorRef?: MutableRefObject<TextEditorRef>;
+}>) => {
+  return (
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+      <div role='none' className={mx(textBlockWidth, 'pli-2')}>
+        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
+          {children}
+        </div>
+
+        {/* Overscroll area. */}
+        <div role='none' className='bs-[50dvh]' />
+      </div>
+    </Main.Content>
+  );
+};
+
+// Used when the editor is embedded in another context (e.g., iframe) and has no topbar/sidebar/etc.
+// TODO(wittjosiah): What's the difference between this and Section/Card?
+const EmbeddedLayout = ({ children }: PropsWithChildren<{}>) => {
+  return <Main.Content classNames='min-bs-[100dvh] flex flex-col p-0.5'>{children}</Main.Content>;
 };

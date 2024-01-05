@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './DocumentMain';
+export * from './DocumentSection';
 export * from './EditorCard';
 export * from './EditorMain';
-export * from './EditorMainEmbedded';
 export * from './EditorSection';
-export * from './MarkdownMainEmpty';
 export * from './MarkdownSettings';
-export * from './StandaloneLayout';
-export * from './StandaloneMenu';
+export * from './HeadingMenu';

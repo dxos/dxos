@@ -3,4 +3,3 @@
 //
 
 export * from './LocalFileMain';
-export * from './LocalFileMainPermissions';
