@@ -56,9 +56,10 @@ export type ThreadContainerProps = {
   thread: ThreadType;
   activeObjectId?: string;
   fullWidth?: boolean;
+  onFocus?: () => void;
 };
 
-export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: ThreadContainerProps) => {
+export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
 
@@ -109,6 +110,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth }: Th
       propertiesProvider={messagePropertiesProvider(identity, members)}
       thread={thread}
       fullWidth={fullWidth}
+      onFocus={onFocus}
       onCreate={handleCreate}
       onDelete={handleDelete}
     />

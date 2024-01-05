@@ -61,6 +61,7 @@ export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
+  activeComment?: string;
   onChange: NonNullable<(text: string) => void>[];
 };
 
@@ -124,11 +125,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       document && {
         onCreate: (cursor: string) => {
           // Create comment thread.
-          const thread = space.db.add(new ThreadType());
-          // const comment = space.db.add(new DocumentType.Comment({ thread, cursor }));
+          const thread = space.db.add(new ThreadType({ context: { object: document.id } }));
           document.comments.push({ thread, cursor });
-          console.log(document.comments.length);
-
           void intentPlugin?.provides.intent.dispatch([
             {
               action: ThreadAction.SELECT,
@@ -397,6 +395,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       intent: {
         resolver: ({ action, data }) => {
           switch (action) {
+            case LayoutAction.FOCUS: {
+              state.activeComment = data.object;
+              break;
+            }
+
             case MarkdownAction.CREATE: {
               return { object: new DocumentType() };
             }
