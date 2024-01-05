@@ -8,6 +8,7 @@ import { signal, batch } from '@preact/signals-core';
 
 import { registerSignalRuntime as registerRuntimeForEcho } from '../util/signal';
 import { reactive } from './reactive';
+import { type } from 'os';
 
 { // TODO(dmaretskyi): Resolve circular dependency on @dxos/echo-signals.
   registerRuntimeForEcho({
@@ -81,19 +82,32 @@ describe.only('Reactive', () => {
     expect(person.address === person.address, 'Proxies have stable references').to.be.true;
   });
 
-  // test.skip('typed', () => {
-  //   const Person = S.struct({
-  //     name: S.string,
-  //     age: S.optional(S.number),
-  //   });
+  test.only('typed', () => {
+    const Person = S.struct({
+      name: S.string,
+      age: S.optional(S.number),
+      address: S.struct({
+        street: S.string,
+        city: S.string,
+      }).pipe(S.optional),
+    });
+    type Person = S.Schema.To<typeof Person>;
 
-  //   const person = reactive(Person)({
-  //     name: 'John',
-  //     age: 42,
-  //   });
+    const person = reactive(Person, {
+      name: 'John',
+      age: 42,
+      address: {
+        street: 'Main Street',
+        city: 'London',
+      }
+    });
 
-  //   person.age = 'unknown'; // Runtime error.
-  // });
+    person.name = 'John Doe';
+
+    expect(() =>  {
+      (person as any).address.city = 42; // Runtime error.
+    }).to.throw();
+  });
 
   // test.skip('storing to echo', () => {
   //   declare const db: any;
@@ -103,7 +117,7 @@ describe.only('Reactive', () => {
   //     age: S.optional(S.number),
   //   });
 
-  //   const person = reactive(Person)({
+  //   const person = reactive(Person, {
   //     name: 'John',
   //     age: 42,
   //   });

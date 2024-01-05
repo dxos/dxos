@@ -62,7 +62,7 @@ class MockEchoObject {
   }
 }
 
-describe.only('@effect/schema #1', () => {
+describe('@effect/schema #1', () => {
   test('create schema', () => {
     const contact = objectSchema(
       {
