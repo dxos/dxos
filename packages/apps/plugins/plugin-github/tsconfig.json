@@ -42,6 +42,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../../types"
     },
     {
@@ -49,6 +52,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

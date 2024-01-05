@@ -103,7 +103,6 @@ export const NetworkPanel = () => {
   useEffect(() => {
     if (members) {
       model.setFromMemberList(members);
-      console.log(model.graph);
     }
   }, [members]);
 

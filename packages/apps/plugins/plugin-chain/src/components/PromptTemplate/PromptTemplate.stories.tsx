@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
 import { TextObject } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { PromptTemplate } from './PromptTemplate';
 
@@ -39,6 +40,7 @@ const Story = () => {
 export default {
   component: PromptTemplate,
   render: Story,
+  decorators: [withTheme],
 };
 
 export const Default = {};

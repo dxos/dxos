@@ -7,25 +7,36 @@ import React, { forwardRef } from 'react';
 import type { Document as DocumentType } from '@braneframe/types';
 import { DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
-import { createHyperlinkTooltip, MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { onTooltip } from './extensions';
+import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 export type EditorCardProps = {
   id: string;
   object: DocumentType;
   color?: string;
+  extensions?: UseExtensionsOptions;
 };
 
 export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, object, color }, grow, onSelect, onAction },
+    {
+      classNames,
+      isDragging,
+      draggableStyle,
+      draggableProps,
+      item: { id, object, color, extensions: _extensions },
+      grow,
+      onSelect,
+      onAction,
+    },
     forwardRef,
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
+    const extensions = useExtensions(_extensions);
     const model = useTextModel({ text: object.content });
     if (!model) {
       return null;
@@ -33,7 +44,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
-        <Card.Root classNames={mx(className, 'w-full snap-center', color, isDragging && 'opacity-20')} grow={grow}>
+        <Card.Root classNames={mx('w-full snap-center', color, isDragging && 'opacity-20', classNames)} grow={grow}>
           <Card.Header onDoubleClick={() => onSelect?.()}>
             <Card.DragHandle {...draggableProps} />
             <Input.Root>
@@ -58,7 +69,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
           <Card.Body>
             <MarkdownEditor
               model={model}
-              extensions={[createHyperlinkTooltip(onTooltip)]}
+              extensions={extensions}
               slots={{
                 root: {
                   className: mx(

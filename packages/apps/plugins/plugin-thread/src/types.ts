@@ -17,6 +17,7 @@ import { THREAD_PLUGIN } from './meta';
 const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 export enum ThreadAction {
   CREATE = `${THREAD_ACTION}/create`,
+  SELECT = `${THREAD_ACTION}/select`,
 }
 
 export type ThreadPluginProvides = SurfaceProvides &

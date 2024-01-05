@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { Component, type PropsWithChildren } from 'react';
 
 import { fromHost } from '@dxos/client/services';
@@ -11,6 +13,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { ClientProvider, useClient } from './ClientContext';
 
 export default {
+  title: 'react-client/ClientContext',
   component: ClientProvider,
   decorators: [withTheme],
 };
@@ -49,7 +52,7 @@ const TestApp = () => {
 
 const servicesProvider = (config?: Config) => fromHost(config);
 
-export const Primary = {
+export const Default = {
   render: () => (
     <ClientProvider services={servicesProvider}>
       <TestApp />
@@ -79,7 +82,8 @@ class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean
 }
 
 const config = new Config({ runtime: { client: { remoteSource: 'bad-value' } } });
-export const Failure = {
+
+export const Error = {
   render: () => (
     <ErrorBoundary>
       <ClientProvider config={config}>

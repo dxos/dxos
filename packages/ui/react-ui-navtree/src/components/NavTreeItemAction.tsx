@@ -5,6 +5,8 @@
 import { type IconProps } from '@phosphor-icons/react';
 import React, { type FC, Fragment, type MutableRefObject, useRef, useState } from 'react';
 
+import { type Label } from '@dxos/app-graph';
+import { keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, DropdownMenu, Popover, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -12,7 +14,6 @@ import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlIte
 
 import { translationKey } from '../translations';
 import type { TreeNodeAction } from '../types';
-import { keyString } from '../util';
 
 type NavTreeItemActionProps = {
   id: string;
@@ -25,18 +26,21 @@ type NavTreeItemActionProps = {
   popoverAnchorId?: string;
   testId?: string;
   menuType?: 'searchList' | 'dropdown';
+  onAction?: (action: TreeNodeAction) => void;
 };
 
-const NavTreeItemActionDropdownMenu = ({
+export const NavTreeItemActionDropdownMenu = ({
   icon: Icon,
   active,
   testId,
   actions,
   suppressNextTooltip,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active'> & {
+  onAction,
+}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
+  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
@@ -82,16 +86,16 @@ const NavTreeItemActionDropdownMenu = ({
                   // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                   suppressNextTooltip.current = true;
                   setOptionsMenuOpen(false);
-                  void action.invoke();
+                  onAction?.(action);
                 }}
                 classNames='gap-2'
                 disabled={action.properties.disabled}
                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
               >
                 {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                <span className='grow truncate'>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                <span className='grow truncate'>{getLabel(action.label)}</span>
                 {action.keyBinding && (
-                  <span className={mx('shrink-0', descriptionText)}>{keyString(action.keyBinding)}</span>
+                  <span className={mx('shrink-0', descriptionText)}>{keySymbols(action.keyBinding).join('')}</span>
                 )}
               </DropdownMenu.Item>
             ))}
@@ -103,20 +107,29 @@ const NavTreeItemActionDropdownMenu = ({
   );
 };
 
-const NavTreeItemActionSearchList = ({
+export const NavTreeItemActionSearchList = ({
   icon: Icon,
   active,
   label,
   testId,
   actions,
   suppressNextTooltip,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'label'> & {
+  onAction,
+}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'label' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
+  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const button = useRef<HTMLButtonElement | null>(null);
+
+  // TODO(burdon): Optionally sort.
+  const sortedActions = actions?.sort(({ label: l1 }, { label: l2 }) => {
+    const t1 = getLabel(l1).toLowerCase();
+    const t2 = getLabel(l2).toLowerCase();
+    return t1.localeCompare(t2);
+  });
 
   // TODO(thure): Use LayoutPlugin’s global Dialog.
   return (
@@ -164,32 +177,35 @@ const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] p-0'>
+          <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] px-2 py-1']}>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='p-4' />
-              <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto border border-is-0 border-ie-0 border-neutral-200 dark:border-neutral-800 p-2'>
-                {actions?.map((action) => {
-                  const value = Array.isArray(action.label) ? t(...action.label) : action.label;
+              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
+              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
+                {sortedActions?.map((action) => {
+                  const label = getLabel(action.label);
                   return (
                     <SearchList.Item
-                      value={value}
+                      value={label}
                       key={action.id}
                       onSelect={() => {
                         if (action.properties.disabled) {
                           return;
                         }
+
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
-                        void action.invoke();
+                        onAction?.(action);
                       }}
                       classNames='flex items-center gap-2 pli-2'
                       disabled={action.properties.disabled}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
                       {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                      <span className='grow truncate'>{value}</span>
+                      <span className='grow truncate'>{label}</span>
                       {action.keyBinding && (
-                        <span className={mx('shrink-0', descriptionText)}>{keyString(action.keyBinding)}</span>
+                        <span className={mx('shrink-0', descriptionText)}>
+                          {keySymbols(action.keyBinding).join('')}
+                        </span>
                       )}
                     </SearchList.Item>
                   );
@@ -274,6 +290,7 @@ export const NavTreeItemAction = ({
             suppressNextTooltip={suppressNextTooltip}
             icon={Icon}
             label={label}
+            onAction={(action) => action.invoke()}
           />
         ) : (
           <NavTreeItemActionDropdownMenu
@@ -282,6 +299,7 @@ export const NavTreeItemAction = ({
             active={active}
             suppressNextTooltip={suppressNextTooltip}
             icon={Icon}
+            onAction={(action) => action.invoke()}
           />
         )}
       </Tooltip.Root>

@@ -36,6 +36,11 @@ const config: UserConfig = defineUserConfig({
     md.use(MarkdownIt.apiDocRenderDirective);
     md.use(MarkdownIt.showcaseRenderDirective);
   },
+  markdown: {
+    toc: {
+      level: [1, 2, 3, 4],
+    },
+  },
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
     // Header logotype.
@@ -54,6 +59,7 @@ const config: UserConfig = defineUserConfig({
       center: [],
       end: ['Search', 'Outlook', 'Repo'],
     },
+    navTitle: false,
     navbar: [
       {
         text: 'Guide',

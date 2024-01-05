@@ -3,16 +3,15 @@
 //
 
 import '@dxosTheme';
-
 import React from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SettingsDialog } from './SettingsDialog';
 
 export default {
   component: SettingsDialog,
-  parameters: {
-    layout: 'fullscreen',
-  },
+  decorators: [withTheme],
 };
 
 export const Default = {

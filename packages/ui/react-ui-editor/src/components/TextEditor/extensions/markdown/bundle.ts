@@ -3,18 +3,11 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
-import {
-  bracketMatching,
-  defaultHighlightStyle,
-  foldKeymap,
-  indentOnInput,
-  syntaxHighlighting,
-} from '@codemirror/language';
+import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { lintKeymap } from '@codemirror/lint';
-import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
+import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
@@ -23,77 +16,91 @@ import {
   dropCursor,
   EditorView,
   highlightActiveLine,
-  highlightActiveLineGutter,
-  highlightSpecialChars,
   keymap,
   placeholder,
-  rectangularSelection,
 } from '@codemirror/view';
-// import { GFM } from '@lezer/markdown';
 
 import type { ThemeMode } from '@dxos/react-ui';
 
-import { markdownTagsExtension } from './tags';
-import { markdownHighlightStyle } from './theme';
+import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
 export type MarkdownBundleOptions = {
+  readonly?: boolean;
   themeMode?: ThemeMode;
   placeholder?: string;
 };
 
-export const markdownBundle = ({ themeMode, placeholder: _placeholder }: MarkdownBundleOptions): Extension[] => {
-  // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
-  // https://codemirror.net/docs/ref/#codemirror.basicSetup
+/**
+ * Markdown bundle.
+ * Refs:
+ * https://github.com/codemirror/basic-setup
+ * https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts#L50
+ * https://codemirror.net/docs/community
+ * https://codemirror.net/docs/ref/#codemirror.basicSetup
+ */
+// TODO(burdon): Add Composer here: https://codemirror.net/docs/community
+export const markdownBundle = ({
+  readonly,
+  themeMode,
+  placeholder: _placeholder,
+}: MarkdownBundleOptions): Extension[] => {
   return [
-    bracketMatching(),
-    closeBrackets(),
-    _placeholder && placeholder(_placeholder),
-
     EditorState.allowMultipleSelections.of(true),
+    EditorState.tabSize.of(2),
     EditorView.lineWrapping,
 
-    // autocompletion(),
+    customKeymap(),
+
+    bracketMatching(),
+    closeBrackets(),
     crosshairCursor(),
     dropCursor(),
     drawSelection(),
     highlightActiveLine(),
-    highlightActiveLineGutter(),
-    highlightSelectionMatches(),
-    highlightSpecialChars(),
     history(),
     indentOnInput(),
-    rectangularSelection(),
-
-    keymap.of([
-      ...closeBracketsKeymap,
-      // ...completionKeymap,
-      ...defaultKeymap,
-      ...foldKeymap,
-      ...historyKeymap,
-      ...lintKeymap,
-      ...searchKeymap,
-      indentWithTab,
-    ]),
+    _placeholder && placeholder(_placeholder),
 
     // Main extension.
     // https://github.com/codemirror/lang-markdown
+    // https://codemirror.net/5/mode/markdown/index.html (demo).
     markdown({
+      // GRM by default (vs strict CommonMark):
+      // Table, TaskList, Strikethrough, and Autolink.
+      // NOTE: This extends the parser; it doesn't affect rendering.
+      // https://github.github.com/gfm
+      // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
       base: markdownLanguage,
-      codeLanguages: languages,
-      extensions: [
-        // TODO(burdon): This seems to upgrade the parser.
-        // GitHub flavored markdown bundle: Table, TaskList, Strikethrough, and Autolink.
-        // https://github.com/lezer-parser/markdown?tab=readme-ov-file#github-flavored-markdown
-        // https://github.github.com/gfm
-        // GFM,
 
-        // Custom styling.
-        markdownTagsExtension,
+      // Languages for syntax highlighting fenced code blocks.
+      codeLanguages: languages,
+
+      // Parser extensions.
+      extensions: [
+        // GFM provided by default.
+        markdownTagsExtensions,
       ],
     }),
 
-    // TODO(thure): All but one rule here apply to both themes; rename or refactor.
-    syntaxHighlighting(markdownHighlightStyle),
+    // https://github.com/codemirror/theme-one-dark
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
+
+    // Custom styles.
+    syntaxHighlighting(markdownHighlightStyle(readonly)),
   ].filter(Boolean) as Extension[];
 };
+
+// https://codemirror.net/docs/ref/#view.keymap
+const customKeymap = () =>
+  keymap.of([
+    // https://codemirror.net/docs/ref/#commands.indentWithTab
+    indentWithTab,
+    // https://codemirror.net/docs/ref/#commands.standardKeymap
+    ...standardKeymap,
+    // https://codemirror.net/docs/ref/#commands.historyKeymap
+    ...historyKeymap,
+    // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
+    ...closeBracketsKeymap,
+    // https://codemirror.net/docs/ref/#search.searchKeymap
+    ...searchKeymap,
+  ]);

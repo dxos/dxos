@@ -18,7 +18,7 @@ export const DialogRestoreSpace = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const { dispatch } = useIntent();
   return (
-    <>
+    <Dialog.Content>
       <Dialog.Title>{t('confirm restore title')}</Dialog.Title>
       <p className='mlb-4'>{t('confirm restore body')}</p>
       <FileUploader
@@ -35,6 +35,6 @@ export const DialogRestoreSpace = ({ space }: { space: Space }) => {
       <Button classNames='block is-full' onClick={() => dispatch({ action: LayoutAction.CLOSE_DIALOG })}>
         {t('cancel label', { ns: 'appkit' })}
       </Button>
-    </>
+    </Dialog.Content>
   );
 };

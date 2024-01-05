@@ -85,11 +85,32 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   }
 
   toJSON() {
-    return {
+    const jsonRepresentation: Record<string, any> = {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'hypercore',
       '@id': this.id,
       '@model': TextModel.meta.type,
-      text: this.text,
+      '@type': LEGACY_TEXT_TYPE,
+      kind: this.kind,
+      field: this.model?.field,
     };
+
+    for (const [key, value] of this.model?.doc.share ?? []) {
+      if (!jsonRepresentation[key] && value._map.size > 0) {
+        try {
+          const map = this.model!.doc.getMap(key);
+          jsonRepresentation[key] = map.toJSON();
+        } catch {}
+      }
+    }
+
+    try {
+      if (this.model?.field) {
+        jsonRepresentation[this.model.field] = this.text;
+      }
+    } catch {}
+
+    return jsonRepresentation;
   }
 
   protected override _afterBind() {

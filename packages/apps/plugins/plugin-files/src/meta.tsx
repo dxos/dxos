@@ -15,5 +15,6 @@ export default pluginMeta({
   shortId: FILES_PLUGIN_SHORT_ID,
   name: 'Files',
   description: 'Open files from the local file system.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <File {...props} />,
 });

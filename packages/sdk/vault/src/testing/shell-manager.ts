@@ -47,12 +47,13 @@ export class ShellManager extends NaturalShellManager {
     await this.page.keyboard.press('Escape');
   }
 
+  // TODO(wittjosiah): These shortcuts are no longer within the SDK so these commands should live elsewhere.
   async openCurrentSpace() {
-    await this.page.keyboard.press('Control+.');
+    await this.page.keyboard.press('Meta+.');
   }
 
   async openSpaceList() {
-    await this.page.keyboard.press('Control+Shift+>');
+    await this.page.keyboard.press('Meta+Shift+>');
   }
 
   async showAllSpaces() {

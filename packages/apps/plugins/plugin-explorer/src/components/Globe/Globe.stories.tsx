@@ -11,7 +11,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
 import { types } from '@braneframe/types';
-import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Globe } from './Globe';
 
@@ -20,15 +20,12 @@ import { Globe } from './Globe';
 
 export default {
   component: Plot,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
+  decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => {
+export const Default = () => <ClientRepeater Component={DefaultStory} types={types} createSpace />;
+
+const DefaultStory = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   useEffect(() => {
     setTimeout(async () => {
@@ -53,7 +50,8 @@ export const Default = () => {
   return <Globe items={cities} />;
 };
 
-export const Extended = () => {
+export const Extended = () => <ClientRepeater Component={ExtendedStory} types={types} createSpace />;
+const ExtendedStory = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   useEffect(() => {

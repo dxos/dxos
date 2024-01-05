@@ -199,10 +199,10 @@ export const tailwindConfig = ({
 }): TailwindConfig => ({
   darkMode: 'class',
   theme: {
+    // Configure fonts in theme.css and package.json.
     fontFamily: {
-      body: ['Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
-      display: ['Space GroteskVariable', 'Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
-      mono: ['Fira CodeVariable', ...defaultConfig.theme.fontFamily.mono],
+      body: ['Inter Variable', ...defaultConfig.theme.fontFamily.sans],
+      mono: ['JetBrains Mono Variable', ...defaultConfig.theme.fontFamily.mono],
     },
     extend: merge(
       {

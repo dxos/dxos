@@ -26,20 +26,23 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
       console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     }
   }, []);
-  const createInvitation = () => {
+  const createInvitation = (e: React.MouseEvent) => {
+    const testing = e.altKey && e.shiftKey;
     invitations.forEach((invitation) => invitation.cancel());
-    const invitation = client.halo.share();
+    const invitation = client.halo.share(
+      testing ? { type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE } : undefined,
+    );
     // TODO(wittjosiah): Don't depend on NODE_ENV.
     if (process.env.NODE_ENV !== 'production') {
       invitation.subscribe(onInvitationEvent);
     }
     send?.({ type: 'selectInvitation', invitation });
   };
-  return <IdentityActionChooserImpl {...props} onCreateInvitationClick={createInvitation} />;
+  return <IdentityActionChooserImpl {...props} onCreateInvitationClick={(e) => createInvitation(e)} />;
 };
 
 export type IdentityActionChooserImplProps = IdentityActionChooserProps & {
-  onCreateInvitationClick?: () => void;
+  onCreateInvitationClick?: (e: React.MouseEvent) => void;
 };
 
 export const IdentityActionChooserImpl = ({

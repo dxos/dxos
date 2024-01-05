@@ -56,6 +56,10 @@ export class AutomergeDb {
     this._echoDatabase = echoDatabase;
   }
 
+  get spaceKey() {
+    return this._echoDatabase._backend.spaceKey;
+  }
+
   @synchronized
   async open(spaceState: SpaceState) {
     if (this._ctx) {
@@ -67,7 +71,10 @@ export class AutomergeDb {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        const doc = await asyncTimeout(this._docHandle.doc(), 1_000);
+        // TODO(mykola): Remove check for global preference or timeout?
+        const doc = getGlobalAutomergePreference()
+          ? await this._docHandle.doc()
+          : await asyncTimeout(this._docHandle.doc(), 1_000);
         const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
@@ -150,7 +157,7 @@ export class AutomergeDb {
 
   private _emitUpdateEvent(itemsUpdated: string[]) {
     this._updateEvent.emit({
-      spaceKey: this._echoDatabase._backend.spaceKey,
+      spaceKey: this.spaceKey,
       itemsUpdated: itemsUpdated.map((id) => ({ id })),
     });
   }
