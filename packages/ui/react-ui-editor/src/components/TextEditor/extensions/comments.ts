@@ -20,6 +20,8 @@ import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
 import { callbackWrapper } from './util';
 import { type CommentRange, type EditorModel, modelState, type Range } from '../../../hooks';
@@ -115,14 +117,21 @@ const commentsStateField = StateField.define<CommentsState>({
 const highlightDecorations = EditorView.decorations.compute([commentsStateField], (state) => {
   const { active, ranges } = state.field(commentsStateField);
   const decorations =
-    sortBy(ranges ?? [], (range) => range.from)?.flatMap((selection) => {
-      const range = { from: selection.from, to: selection.to + 1 };
-      if (selection.id === active) {
-        return marks.highlightActive.range(range.from, range.to);
-      } else {
-        return marks.highlight.range(range.from, range.to);
-      }
-    }) ?? [];
+    sortBy(ranges ?? [], (range) => range.from)
+      ?.flatMap((selection) => {
+        // TODO(burdon): Invalid range (e.g., deleted).
+        if (selection.from === selection.to) {
+          return undefined;
+        }
+
+        const range = { from: selection.from, to: selection.to };
+        if (selection.id === active) {
+          return marks.highlightActive.range(range.from, range.to);
+        } else {
+          return marks.highlight.range(range.from, range.to);
+        }
+      })
+      .filter(nonNullable) ?? [];
 
   return Decoration.set(decorations);
 });
@@ -321,15 +330,18 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         const model = state.field(modelState);
         const { active, ranges } = state.field(commentsStateField);
         changes.iterChanges((from, to, from2, to2) => {
+          invariant(model);
           ranges.forEach((range) => {
-            // TODO(burdon): Delete range if empty.
             if (from2 === to2) {
-              const newRange = model?.getRangeFromCursor?.(range.cursor);
-              console.log('delete', from, to, from2, to2, range, newRange);
+              const newRange = model.getRangeFromCursor!(range.cursor);
+              if (newRange.to - newRange.from === 0) {
+                // TODO(burdon): Delete range if empty.
+                log.info('deleted comment', { thread: range.id });
+              }
             }
 
             if (from <= range.to) {
-              const newRange = model?.getRangeFromCursor?.(range.cursor);
+              const newRange = model.getRangeFromCursor!(range.cursor);
               Object.assign(range, newRange);
               mod = true;
             }

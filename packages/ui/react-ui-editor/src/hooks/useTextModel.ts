@@ -55,7 +55,7 @@ export type EditorModel = {
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
   getCursorFromRange?: (value: Range) => string;
-  getRangeFromCursor?: (cursor: string) => Range | undefined;
+  getRangeFromCursor?: (cursor: string) => Range;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {
@@ -119,7 +119,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorMod
         Y.decodeRelativePosition(stringToArray(parts[1])),
         text.doc!,
       );
-      return { from: from!.index, to: to!.index - 1 };
+      return { from: from!.index, to: to!.index };
     },
     extension: [yCollab(text.content as YText, provider?.awareness), modelState.init(() => model)],
     awareness: provider?.awareness,
