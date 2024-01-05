@@ -29,6 +29,8 @@ export type IFrameClientServicesHostOptions = {
 
 /**
  * Proxy to host client service via iframe.
+ *
+ * @deprecated
  */
 export class IFrameClientServicesHost implements ClientServicesProvider {
   readonly joinedSpace = new Event<PublicKey>();
