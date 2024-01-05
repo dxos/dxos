@@ -51,10 +51,10 @@
       "node": "./dist/lib/node/services/index.cjs"
     },
     "./shared-worker": {
-      "browser": "./dist/lib/browser/shared-worker.mjs",
-      "import": "./dist/lib/browser/shared-worker.mjs",
-      "require": "./dist/lib/node/shared-worker.cjs",
-      "node": "./dist/lib/node/shared-worker.cjs"
+      "browser": "./dist/lib/browser/worker/shared-worker.mjs",
+      "import": "./dist/lib/browser/worker/shared-worker.mjs",
+      "require": "./dist/lib/node/worker/shared-worker.cjs",
+      "node": "./dist/lib/node/worker/shared-worker.cjs"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",

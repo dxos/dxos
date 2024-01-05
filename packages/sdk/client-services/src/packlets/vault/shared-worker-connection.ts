@@ -20,7 +20,7 @@ import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
 import { ShellRuntimeImpl } from './shell-runtime';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
-export type WorkerProxyRuntimeParams = {
+export type SharedWorkerConnectionOptions = {
   config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
   /**
@@ -32,9 +32,9 @@ export type WorkerProxyRuntimeParams = {
 /**
  * Manages the client connection to the shared worker.
  */
-export class WorkerProxyRuntime {
+export class SharedWorkerConnection {
   private readonly _id = String(Math.floor(Math.random() * 1000000));
-  private readonly _configProvider: WorkerProxyRuntimeParams['config'];
+  private readonly _configProvider: SharedWorkerConnectionOptions['config'];
   private readonly _systemPort: RpcPort;
   private readonly _shellPort?: RpcPort;
   private _release = new Trigger();
@@ -43,7 +43,7 @@ export class WorkerProxyRuntime {
   private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
   private _shellRuntime?: ShellRuntimeImpl;
 
-  constructor({ config, systemPort, shellPort }: WorkerProxyRuntimeParams) {
+  constructor({ config, systemPort, shellPort }: SharedWorkerConnectionOptions) {
     this._configProvider = config;
     this._systemPort = systemPort;
     this._shellPort = shellPort;
@@ -104,7 +104,11 @@ export class WorkerProxyRuntime {
   async close() {
     this._release.wake();
     await this._shellRuntime?.close();
-    await this._systemRpc.rpc.WorkerService.stop();
+    try {
+      await this._systemRpc.rpc.WorkerService.stop();
+    } catch {
+      // If this fails, the worker is probably already gone.
+    }
     await this._systemRpc.close();
   }
 

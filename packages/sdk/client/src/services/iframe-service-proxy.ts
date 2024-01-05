@@ -39,15 +39,13 @@ export type IFrameClientServicesProxyOptions = {
  * @deprecated
  */
 export class IFrameClientServicesProxy implements ClientServicesProvider {
-  readonly joinedSpace = new Event<PublicKey>();
-
+  readonly closed = new Event<Error | undefined>();
   /**
    * @internal
    */
-  _shellManager?: ShellManager;
-  private _iframe?: HTMLIFrameElement;
+  readonly _shellManager?: ShellManager;
+  private readonly _iframeManager: IFrameManager;
   private _appPort!: RpcPort;
-  private _iframeManager: IFrameManager;
   private _clientServicesProxy?: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
   private readonly _source: string;
@@ -115,6 +113,10 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
         }
       },
     });
+
+    if (typeof this._shell === 'string') {
+      this._shellManager = new ShellManager(this._iframeManager);
+    }
   }
 
   get proxy() {
@@ -160,24 +162,15 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       }
     });
 
-    if (typeof this._shell !== 'string') {
-      return;
-    }
-
-    this._shellManager = new ShellManager(this._iframeManager, this.joinedSpace);
-    await this._shellManager.open();
+    await this._shellManager?.open();
   }
 
   async close() {
     await this._shellManager?.close();
+    await this._iframeManager.close();
     await this._loggingStream?.close();
     await this._clientServicesProxy?.close();
-    this._shellManager = undefined;
     this._clientServicesProxy = undefined;
-    if (this._iframe) {
-      this._iframe.remove();
-      this._iframe = undefined;
-    }
     log.trace('dxos.sdk.iframe-client-services-proxy', trace.end({ id: this._instanceId }));
   }
 }

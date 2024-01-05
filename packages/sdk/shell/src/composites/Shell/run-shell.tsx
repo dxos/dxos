@@ -17,9 +17,9 @@ import { ClipboardProvider } from '../../components';
 import { osTranslations } from '../../translations';
 
 export const runShell = async (config: Config = new Config()) => {
-  const runtime = new ShellRuntimeImpl(createIFramePort({ channel: DEFAULT_SHELL_CHANNEL }));
   const services = new ClientServicesProxy(createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL }));
   const client = new Client({ config, services });
+  const runtime = new ShellRuntimeImpl(createIFramePort({ channel: DEFAULT_SHELL_CHANNEL }));
   await Promise.all([runtime.open(), client.initialize()]);
 
   createRoot(document.getElementById('root')!).render(

@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { sleep } from '@dxos/async';
-import { WorkerProxyRuntime, WorkerRuntime } from '@dxos/client-services';
+import { SharedWorkerConnection, WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
@@ -20,7 +20,17 @@ chai.use(chaiAsPromised);
 
 // TODO(burdon): Flaky: https://cloud.nx.app/runs/7BZ7WKaZPA
 const setup = (getConfig: Provider<MaybePromise<Config>>) => {
-  const workerRuntime = new WorkerRuntime(getConfig);
+  const workerRuntime = new WorkerRuntime(getConfig, {
+    acquireLock: async () => {
+      // No-op.
+    },
+    releaseLock: () => {
+      // No-op.
+    },
+    onReset: async () => {
+      // No-op.
+    },
+  });
 
   const systemPorts = createLinkedPorts();
   const appPorts = createLinkedPorts();
@@ -30,7 +40,7 @@ const setup = (getConfig: Provider<MaybePromise<Config>>) => {
     appPort: appPorts[1],
     shellPort: shellPorts[1],
   });
-  const clientProxy = new WorkerProxyRuntime({
+  const clientProxy = new SharedWorkerConnection({
     config: getConfig,
     systemPort: systemPorts[0],
     shellPort: shellPorts[0],
