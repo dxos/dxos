@@ -44,22 +44,20 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
+import { createClientServices, Config, Defaults } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import { setupConfig } from './config';
 import { appKey } from './globals';
 import { steps } from './help';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import { initializeNativeApp } from './native';
 
 const main = async () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
-  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
+  const config = await setupConfig();
   const services = await createClientServices(config);
-  const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
 
   // Test if socket supply native app.
   if ((globalThis as any).__args) {
@@ -132,7 +130,6 @@ const main = async () => {
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
         appKey,
         config,
-        debugIdentity,
         services,
         types,
       }),
