@@ -15,10 +15,9 @@ export type DemoOptions = {
 const defaultItems = ['hello world!', 'this is a test.', 'this is [DXOS](https://dxos.org)'];
 
 /**
- * Demo script.
  * Configurable plugin that let's user cycle through pre-configured input script.
  */
-export const demo = ({ delay = 75, items = defaultItems }: DemoOptions = {}): Extension => {
+export const typewriter = ({ delay = 75, items = defaultItems }: DemoOptions = {}): Extension => {
   let t: any;
   let idx = 0;
 
