@@ -1,8 +1,12 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Facet } from '@codemirror/state';
 
 /**
  * Converts indexes into the text document into stable peer-independent cursors.
- * 
+ *
  * See:
  *  - https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
  *  - https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions

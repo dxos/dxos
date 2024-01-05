@@ -108,21 +108,21 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
       };
     },
   );
-  
+
   const cursorConverter: CursorConverter = {
     toCursor: (pos: number) => {
       const doc = handle.docSync();
       return doc ? automerge.getCursor(doc, path.slice(), pos) : '';
     },
     fromCursor: (cursor: string) => {
-      if(cursor === '') {
+      if (cursor === '') {
         return 0;
       }
 
       const doc = handle.docSync();
       return doc ? automerge.getCursorPosition(doc, path.slice(), cursor) : 0;
     },
-  }
+  };
 
   return {
     extension: [stateField, semaphoreFacet.of(semaphore), viewPlugin, CursorConverter.of(cursorConverter)],

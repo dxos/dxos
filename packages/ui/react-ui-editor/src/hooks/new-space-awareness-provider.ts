@@ -1,9 +1,18 @@
-import { Space } from "@dxos/react-client/echo";
-import { AwarenessPosition, AwarenessProvider, AwarenessState } from "../components/TextEditor/extensions/awareness";
-import { DeferredTask, Event, UnsubscribeCallback, sleep } from "@dxos/async";
-import { GossipMessage } from "@dxos/react-client/src/mesh";
-import { invariant } from "@dxos/invariant";
-import { Context } from "@dxos/context";
+//
+// Copyright 2024 DXOS.org
+//
+
+import { DeferredTask, Event, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
+import { type Space } from '@dxos/react-client/echo';
+import { type GossipMessage } from '@dxos/react-client/src/mesh';
+
+import {
+  type AwarenessPosition,
+  type AwarenessProvider,
+  type AwarenessState,
+} from '../components/TextEditor/extensions/awareness';
 
 export type NewSpaceAwarenessProviderParams = {
   space: Space;
@@ -11,14 +20,16 @@ export type NewSpaceAwarenessProviderParams = {
   peerId: string;
   displayName: string;
   color: string;
-}
+};
 
-type ProtocolMessage = {
-  kind: 'query',
-} | {
-  kind: 'post',
-  state: AwarenessState
-}
+type ProtocolMessage =
+  | {
+      kind: 'query';
+    }
+  | {
+      kind: 'post';
+      state: AwarenessState;
+    };
 
 export class NewSpaceAwarenessProvider implements AwarenessProvider {
   private readonly _space: Space;
@@ -31,21 +42,19 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
   private _remoteStates = new Map<string, AwarenessState>();
   private _localState?: AwarenessState = undefined;
 
-  private readonly _ctx = new Context()
+  private readonly _ctx = new Context();
   private readonly _postTask = new DeferredTask(this._ctx, async () => {
-    if(this._localState) {
+    if (this._localState) {
       this._space.postMessage(this._channel, {
         kind: 'post',
-        state: this._localState
+        state: this._localState,
       } satisfies ProtocolMessage);
 
       await sleep(100); // TODO(dmaretskyi): config.
     }
-  })
+  });
 
-  constructor(
-    params: NewSpaceAwarenessProviderParams
-  ) {
+  constructor(params: NewSpaceAwarenessProviderParams) {
     this._space = params.space;
     this._channel = params.channel;
     this._peerId = params.peerId;
@@ -55,8 +64,8 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
 
   open() {
     const unsubscribe = this._space.listen(this._channel, (message: GossipMessage) => {
-      console.log(message)
-      switch(message.payload.kind) {
+      console.log(message);
+      switch (message.payload.kind) {
         case 'query': {
           this._handleQueryMessage();
           break;
@@ -70,7 +79,7 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
     this._ctx.onDispose(unsubscribe);
 
     this._space.postMessage(this._channel, {
-      kind: 'query'
+      kind: 'query',
     } satisfies ProtocolMessage);
   }
 

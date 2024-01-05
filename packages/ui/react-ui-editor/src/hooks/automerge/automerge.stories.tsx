@@ -13,18 +13,17 @@ import React, { useEffect, useRef, useState } from 'react';
 // TODO(burdon): Why separate imports?
 import { type Prop } from '@dxos/automerge/automerge';
 import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
-import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
+import { Filter, setGlobalAutomergePreference } from '@dxos/echo-schema';
+import { type PublicKey } from '@dxos/keys';
+import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { ClientRepeater } from '@dxos/react-client/testing';
 
 import { type IDocHandle } from './handle';
 import { automergePlugin } from './plugin';
+import { MarkdownEditor } from '../../components';
 import { awareness } from '../../components/TextEditor/extensions/awareness';
-import { ClientRepeater } from '@dxos/react-client/testing';
-import { PublicKey } from '@dxos/keys';
-import { Expando, TextObject, useQuery, useSpace } from '@dxos/react-client/echo';
-import { Filter, setGlobalAutomergePreference } from '@dxos/echo-schema';
-import { BaseTextEditor, MarkdownEditor } from '../../components';
 import { useTextModel } from '../useTextModel';
-import { useIdentity } from '@dxos/react-client/halo';
 
 type EditorProps = {
   handle: IDocHandle;
@@ -137,12 +136,10 @@ export const WithEcho = {
         createSpace
         onCreateSpace={async (space) => {
           space.db.add(
-            new Expando(
-              {
-                type: 'test',
-                content: new TextObject('Hello world!'),
-              },
-            ),
+            new Expando({
+              type: 'test',
+              content: new TextObject('Hello world!'),
+            }),
           );
         }}
         Component={EchoStory}
