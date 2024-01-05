@@ -1,30 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import {
-  Root as DropdownMenuRootPrimitive,
-  type DropdownMenuProps as DropdownMenuRootPrimitiveProps,
-  DropdownMenuTrigger as DropdownMenuTriggerPrimitive,
-  type DropdownMenuTriggerProps as DropdownMenuTriggerPrimitiveProps,
-  DropdownMenuPortal as DropdownMenuPortalPrimitive,
-  type DropdownMenuPortalProps as DropdownMenuPortalPrimitiveProps,
-  DropdownMenuContent as DropdownMenuContentPrimitive,
-  type DropdownMenuContentProps as DropdownMenuContentPrimitiveProps,
-  DropdownMenuArrow as DropdownMenuArrowPrimitive,
-  type DropdownMenuArrowProps as DropdownMenuArrowPrimitiveProps,
-  DropdownMenuGroup as DropdownMenuGroupPrimitive,
-  type DropdownMenuGroupProps as DropdownMenuGroupPrimitiveProps,
-  DropdownMenuItem as DropdownMenuItemPrimitive,
-  type DropdownMenuItemProps as DropdownMenuItemPrimitiveProps,
-  DropdownMenuCheckboxItem as DropdownMenuCheckboxItemPrimitive,
-  type DropdownMenuCheckboxItemProps as DropdownMenuCheckboxItemPrimitiveProps,
-  DropdownMenuItemIndicator as DropdownMenuItemIndicatorPrimitive,
-  type DropdownMenuItemIndicatorProps as DropdownMenuItemIndicatorPrimitiveProps,
-  DropdownMenuSeparator as DropdownMenuSeparatorPrimitive,
-  type DropdownMenuSeparatorProps as DropdownMenuSeparatorPrimitiveProps,
-  DropdownMenuLabel as DropdownMenuLabelPrimitive,
-  type DropdownMenuLabelProps as DropdownMenuLabelPrimitiveProps,
-} from '@radix-ui/react-dropdown-menu';
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
@@ -33,33 +10,35 @@ import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
-type DropdownMenuRootProps = DropdownMenuRootPrimitiveProps;
+type DropdownMenuRootProps = DropdownMenuPrimitive.DropdownMenuProps;
 
-const DropdownMenuRoot = DropdownMenuRootPrimitive;
+const DropdownMenuRoot = DropdownMenuPrimitive.DropdownMenu;
 
-type DropdownMenuTriggerProps = DropdownMenuTriggerPrimitiveProps;
+type DropdownMenuTriggerProps = DropdownMenuPrimitive.DropdownMenuTriggerProps;
 
-const DropdownMenuTrigger = DropdownMenuTriggerPrimitive;
+const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
-type DropdownMenuPortalProps = DropdownMenuPortalPrimitiveProps;
+type DropdownMenuPortalProps = DropdownMenuPrimitive.DropdownMenuPortalProps;
 
-const DropdownMenuPortal = DropdownMenuPortalPrimitive;
+const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
 
-type DropdownMenuContentProps = ThemedClassName<DropdownMenuContentPrimitiveProps> & { constrainBlockSize?: boolean };
+type DropdownMenuContentProps = ThemedClassName<DropdownMenuPrimitive.DropdownMenuContentProps> & {
+  constrainBlockSize?: boolean;
+};
 
 const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DropdownMenuContentPrimitive
+      <DropdownMenuPrimitive.Content
         sideOffset={4}
         collisionPadding={8}
         {...props}
-        className={tx('dropdownMenu.content', 'dropdown-menu', {}, classNames)}
+        className={tx('menu.content', 'menu', {}, classNames)}
         ref={forwardedRef}
       >
         <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
-      </DropdownMenuContentPrimitive>
+      </DropdownMenuPrimitive.Content>
     );
   },
 );
@@ -73,94 +52,90 @@ const DropdownMenuViewport = forwardRef<HTMLDivElement, DropdownMenuViewportProp
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root
-        {...props}
-        className={tx('dropdownMenu.viewport', 'dropdown-menu__viewport', {}, classNames)}
-        ref={forwardedRef}
-      >
+      <Root {...props} className={tx('menu.viewport', 'menu__viewport', {}, classNames)} ref={forwardedRef}>
         {children}
       </Root>
     );
   },
 );
 
-type DropdownMenuArrowProps = ThemedClassName<DropdownMenuArrowPrimitiveProps>;
+type DropdownMenuArrowProps = ThemedClassName<DropdownMenuPrimitive.DropdownMenuArrowProps>;
 
 const DropdownMenuArrow = forwardRef<SVGSVGElement, DropdownMenuArrowProps>(
   ({ classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DropdownMenuArrowPrimitive
+      <DropdownMenuPrimitive.Arrow
         {...props}
-        className={tx('dropdownMenu.arrow', 'dropdown-menu__arrow', {}, classNames)}
+        className={tx('menu.arrow', 'menu__arrow', {}, classNames)}
         ref={forwardedRef}
       />
     );
   },
 );
 
-type DropdownMenuGroupProps = DropdownMenuGroupPrimitiveProps;
+type DropdownMenuGroupProps = DropdownMenuPrimitive.DropdownMenuGroupProps;
 
-const DropdownMenuGroup = DropdownMenuGroupPrimitive;
+const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 
-type DropdownMenuItemIndicatorProps = DropdownMenuItemIndicatorPrimitiveProps;
+type DropdownMenuItemIndicatorProps = DropdownMenuPrimitive.DropdownMenuItemIndicatorProps;
 
-const DropdownMenuItemIndicator = DropdownMenuItemIndicatorPrimitive;
+const DropdownMenuItemIndicator = DropdownMenuPrimitive.ItemIndicator;
 
-type DropdownMenuItemProps = ThemedClassName<DropdownMenuItemPrimitiveProps>;
+type DropdownMenuItemProps = ThemedClassName<DropdownMenuPrimitive.DropdownMenuItemProps>;
 
 const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
   ({ classNames, ...props }: DropdownMenuItemProps, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DropdownMenuItemPrimitive
+      <DropdownMenuPrimitive.Item
         {...props}
-        className={tx('dropdownMenu.item', 'dropdown-menu__item', {}, classNames)}
+        className={tx('menu.item', 'menu__item', {}, classNames)}
         ref={forwardedRef}
       />
     );
   },
 );
 
-type DropdownMenuCheckboxItemProps = ThemedClassName<DropdownMenuCheckboxItemPrimitiveProps>;
+type DropdownMenuCheckboxItemProps = ThemedClassName<DropdownMenuPrimitive.DropdownMenuCheckboxItemProps>;
 
 const DropdownMenuCheckboxItem = forwardRef<HTMLDivElement, DropdownMenuCheckboxItemProps>(
   ({ classNames, ...props }: DropdownMenuItemProps, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DropdownMenuCheckboxItemPrimitive
+      <DropdownMenuPrimitive.CheckboxItem
         {...props}
-        className={tx('dropdownMenu.item', 'dropdown-menu__item--checkbox', {}, classNames)}
+        className={tx('menu.item', 'menu__item--checkbox', {}, classNames)}
         ref={forwardedRef}
       />
     );
   },
 );
 
-type DropdownMenuSeparatorProps = ThemedClassName<DropdownMenuSeparatorPrimitiveProps>;
+type DropdownMenuSeparatorProps = ThemedClassName<DropdownMenuPrimitive.DropdownMenuSeparatorProps>;
 
 const DropdownMenuSeparator = forwardRef<HTMLDivElement, DropdownMenuSeparatorProps>(
   ({ classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DropdownMenuSeparatorPrimitive
+      <DropdownMenuPrimitive.Separator
         {...props}
-        className={tx('dropdownMenu.separator', 'dropdown-menu__item', {}, classNames)}
+        className={tx('menu.separator', 'menu__item', {}, classNames)}
         ref={forwardedRef}
       />
     );
   },
 );
 
-type DropdownMenuGroupLabelProps = ThemedClassName<DropdownMenuLabelPrimitiveProps>;
+type DropdownMenuGroupLabelProps = ThemedClassName<DropdownMenuPrimitive.DropdownMenuLabelProps>;
 
 const DropdownMenuGroupLabel = forwardRef<HTMLDivElement, DropdownMenuGroupLabelProps>(
   ({ classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DropdownMenuLabelPrimitive
+      <DropdownMenuPrimitive.Label
         {...props}
-        className={tx('dropdownMenu.groupLabel', 'dropdown-menu__group__label', {}, classNames)}
+        className={tx('menu.groupLabel', 'menu__group__label', {}, classNames)}
         ref={forwardedRef}
       />
     );
