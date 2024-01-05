@@ -24,9 +24,8 @@ import { invariant } from '@dxos/invariant';
 import { callbackWrapper } from './util';
 import { type CommentRange, type EditorModel, modelState, type Range } from '../../../hooks';
 
+// TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
 // TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
-
-// TODO(burdon): Handle copy and paste (separately) text that includes comment range.
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
@@ -200,7 +199,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     }
 
     const model = view.state.field(modelState);
-    const relPos = model?.getCursorFromRange?.({ from, to: to - 1 });
+    const relPos = model?.getCursorFromRange?.({ from, to });
     if (relPos) {
       // Create thread via callback.
       const id = callbackWrapper(options.onCreate)(relPos);
@@ -315,7 +314,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     //
     EditorView.updateListener.of(({ view, state, startState, changes }) => {
       //
-      // Test if need to recompute ranges to update the state field.
+      // Test if need to recompute indexed range if document changes before the end of the range.
       //
       {
         let mod = false;
@@ -323,9 +322,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         const { active, ranges } = state.field(commentsStateField);
         changes.iterChanges((from, to, from2, to2) => {
           ranges.forEach((range) => {
-            // TODO(burdon): If editing inside the range then update model (change relPos of end).
-            if (from > range.from && from <= range.to) {
-              console.log('inside', range.id);
+            // TODO(burdon): Delete range if empty.
+            if (from2 === to2) {
+              const newRange = model?.getRangeFromCursor?.(range.cursor);
+              console.log('delete', from, to, from2, to2, range, newRange);
             }
 
             if (from <= range.to) {

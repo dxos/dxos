@@ -106,7 +106,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorMod
     // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
     getCursorFromRange: (range: Range) => {
       const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.from));
-      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.to));
+      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.to, -1));
       return [arrayToString(from), arrayToString(to)].join(':');
     },
     getRangeFromCursor: (cursor: string) => {
@@ -119,7 +119,7 @@ const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorMod
         Y.decodeRelativePosition(stringToArray(parts[1])),
         text.doc!,
       );
-      return { from: from!.index, to: to!.index };
+      return { from: from!.index, to: to!.index - 1 };
     },
     extension: [yCollab(text.content as YText, provider?.awareness), modelState.init(() => model)],
     awareness: provider?.awareness,
