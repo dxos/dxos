@@ -14,11 +14,12 @@ import {
 } from '@codemirror/state';
 import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
 
-import * as automerge from '@dxos/automerge/automerge';
+import { next as automerge } from '@dxos/automerge/automerge';
 import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
 import { type IDocHandle } from './handle';
 import { PatchSemaphore } from './semaphore';
+import { CursorConverter } from '../../components/TextEditor/extensions/cursor-converter';
 
 export type Value = {
   lastHeads: Heads;
@@ -107,9 +108,24 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
       };
     },
   );
+  
+  const cursorConverter: CursorConverter = {
+    toCursor: (pos: number) => {
+      const doc = handle.docSync();
+      return doc ? automerge.getCursor(doc, path.slice(), pos) : '';
+    },
+    fromCursor: (cursor: string) => {
+      if(cursor === '') {
+        return 0;
+      }
+
+      const doc = handle.docSync();
+      return doc ? automerge.getCursorPosition(doc, path.slice(), cursor) : 0;
+    },
+  }
 
   return {
-    extension: [stateField, semaphoreFacet.of(semaphore), viewPlugin],
+    extension: [stateField, semaphoreFacet.of(semaphore), viewPlugin, CursorConverter.of(cursorConverter)],
   };
 };
 
