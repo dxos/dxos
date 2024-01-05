@@ -8,7 +8,7 @@ import { Link } from './Link';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'DXOS UI/Link',
+  title: 'react-ui/Link',
   component: Link,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

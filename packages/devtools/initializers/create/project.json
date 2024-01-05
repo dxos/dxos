@@ -2,6 +2,11 @@
   "sourceRoot": "packages/devtools/initializers/create/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "options": {
+        "outputPath": "packages/devtools/initializers/create/dist"
+      }
+    },
     "lint": {}
   }
 }

@@ -16,19 +16,26 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { Client, ClientContext, type ClientOptions, PublicKey, type SystemStatus } from '@dxos/react-client';
+import {
+  Client,
+  ClientContext,
+  PublicKey,
+  type ClientOptions,
+  type SystemStatus,
+  fromIFrame,
+} from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
+import { Invitation } from '@dxos/react-client/invitations';
 
 import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 
-const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
+const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
 
 const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export enum ClientAction {
@@ -62,7 +69,6 @@ export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
 export const ClientPlugin = ({
-  debugIdentity,
   types,
   appKey,
   ...options
@@ -74,8 +80,7 @@ export const ClientPlugin = ({
   registerSignalFactory();
 
   const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings');
-
-  const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
+  let client: Client;
 
   return {
     meta,
@@ -83,8 +88,36 @@ export const ClientPlugin = ({
       let error: unknown = null;
       let firstRun = false;
 
+      client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
+
+      const oldConfig = new Config(
+        {
+          runtime: {
+            client: {
+              remoteSource: 'https://halo.dxos.org/vault.html',
+            },
+          },
+        },
+        await Envs(),
+        Defaults(),
+      );
+      const oldClient = new Client({
+        config: oldConfig,
+        services: fromIFrame(oldConfig, { shell: false }),
+      });
+
       try {
+        await oldClient.initialize();
         await client.initialize();
+
+        // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
+        client.reloaded.on(() => {
+          client.halo.identity.subscribe(async (identity) => {
+            if (identity) {
+              window.location.href = window.location.origin;
+            }
+          });
+        });
 
         if (types) {
           client.addTypes(types);
@@ -93,10 +126,32 @@ export const ClientPlugin = ({
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
-        if (!client.halo.identity.get() && !deviceInvitationCode) {
-          await client.halo.createIdentity();
-          // TODO(wittjosiah): Ideally this would be per app rather than per identity.
-          firstRun = true;
+        const identity = client.halo.identity.get();
+        if (!identity && !deviceInvitationCode) {
+          // TODO(wittjosiah): Remove.
+          const oldIdentity = oldClient.halo.identity.get();
+          if (oldIdentity) {
+            alert(
+              'Composer must perform some database maintenance to upgrade your identity to the latest version. After continuing, please keep this window open until the app loads.',
+            );
+            const oldObs = oldClient.halo.share();
+            const newObs = client.halo.join(oldObs.get());
+
+            oldObs.subscribe(async (invitation) => {
+              switch (invitation.state) {
+                case Invitation.State.READY_FOR_AUTHENTICATION: {
+                  await newObs.authenticate(invitation.authCode!);
+                }
+              }
+            });
+
+            await newObs.wait();
+            void oldClient.destroy();
+          } else {
+            await client.halo.createIdentity();
+            // TODO(wittjosiah): Ideally this would be per app rather than per identity.
+            firstRun = true;
+          }
         } else if (client.halo.identity.get() && deviceInvitationCode) {
           // Ignore device invitation if identity already exists.
           // TODO(wittjosiah): Identity merging.
@@ -106,27 +161,8 @@ export const ClientPlugin = ({
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
       } catch (err) {
+        log.catch(err);
         error = err;
-      }
-
-      // Debugging (e.g., for monolithic mode).
-      if (debugIdentity) {
-        if (!client.halo.identity.get()) {
-          await client.halo.createIdentity();
-        }
-
-        // Handle initial connection (assumes no PIN).
-        const searchParams = new URLSearchParams(window.location.search);
-        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-        if (spaceInvitationCode) {
-          setTimeout(() => {
-            // TODO(burdon): Unsubscribe.
-            const observer = client.spaces.join(InvitationEncoder.decode(spaceInvitationCode));
-            observer.subscribe(({ state }) => {
-              log.info('invitation', { state });
-            });
-          }, 2000);
-        }
       }
 
       if (client.halo.identity.get()) {
@@ -169,7 +205,7 @@ export const ClientPlugin = ({
       await client.destroy();
     },
     provides: {
-      settings: { meta, values: settings.values },
+      settings: settings.values,
       translations,
       surface: {
         component: ({ data, role }) => {

@@ -40,6 +40,9 @@
     },
     {
       "path": "../../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugin-settings"
     }
   ]
 }

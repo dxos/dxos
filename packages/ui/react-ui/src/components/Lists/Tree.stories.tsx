@@ -56,7 +56,7 @@ const StorybookTree = ({ data }: StorybookTreeProps) => {
 };
 
 export default {
-  title: 'DXOS UI/Tree',
+  title: 'react-ui/Tree',
   component: StorybookTree,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

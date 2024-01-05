@@ -72,7 +72,7 @@ const StoryInput = (props: StoryInputProps) => {
 };
 
 export default {
-  title: 'DXOS UI/Input',
+  title: 'react-ui/Input',
   component: StoryInput,
   // TODO(thure): Refactor
   argTypes: {

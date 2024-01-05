@@ -164,6 +164,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-settings/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },
@@ -664,12 +669,7 @@
         },
         {
           "type": "json",
-          "path": "packages/sdk/react-shell/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/sdk/vault/package.json",
+          "path": "packages/sdk/shell/package.json",
           "jsonpath": "$.version"
         },
         {

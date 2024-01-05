@@ -77,13 +77,19 @@ jobs:
   # NOTE: This job is required to complete before ALL PRs can be merged to main.
   #
   check:
+    parameters:
+      node-version:
+        type: string
     docker:
-      - *docker_image_default
+      - image: ghcr.io/dxos/circleci-node:<< parameters.node-version >>
+        auth:
+          username: dxos-bot
+          password: $GH_TOKEN
     # https://circleci.com/docs/configuration-reference/#docker-execution-environment
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
-    
+
     # Run the job on ramdisk for optimal performance.
     # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
     working_directory: /mnt/ramdisk/work
@@ -116,14 +122,8 @@ jobs:
   # End-to-end playwright UI testing.
   #
   e2e:
-    parameters:
-      node-version:
-        type: string
     docker:
-      - image: ghcr.io/dxos/circleci-node:<< parameters.node-version >>
-        auth:
-          username: dxos-bot
-          password: $GH_TOKEN
+      - *docker_image_default
     # TODO(wittjosiah): Using because of kai bundling memory usage.
     resource_class: xlarge
     steps:
@@ -137,13 +137,11 @@ jobs:
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
-            REMOTE_SOURCE: http://localhost:3967/vault.html
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
             NODE_OPTIONS: --max_old_space_size=10240
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
           environment:
-            REMOTE_SOURCE: http://localhost:3967/vault.html
             # TODO(wittjosiah): Remove. Currently need because e2e seems to be re-running bundling.
             NODE_OPTIONS: --max_old_space_size=10240
       - run:
@@ -206,6 +204,9 @@ workflows:
       - check:
           context:
             - Github
+          matrix:
+            parameters:
+              node-version: *node-version
       - e2e:
           # Only run e2e tests on pushes to main & release branches.
           filters:
@@ -218,9 +219,6 @@ workflows:
                 - nf/circleci-docker
           context:
             - Github
-          matrix:
-            parameters:
-              node-version: *node-version
 
   e2e:
     when: << pipeline.parameters.e2e >>
@@ -228,9 +226,6 @@ workflows:
       - e2e:
           context:
             - Github
-          matrix:
-            parameters:
-              node-version: *node-version
 
   deploy:
     jobs:

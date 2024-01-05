@@ -3,9 +3,11 @@
 //
 
 import get from 'lodash.get';
-import { type StyleSpec } from 'style-mod';
 
-import { tokens } from '../../../styles';
+import { type ThemeStyles, tokens } from '../../../styles';
+
+// TODO(burdon): Can we erase All of the default CM styles?
+// TODO(burdon): Theme styles seem to be added multiple times?
 
 /**
  * Minimal styles.
@@ -18,29 +20,43 @@ import { tokens } from '../../../styles';
  * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  */
-export const defaultTheme: {
-  [selector: string]: StyleSpec;
-} = {
+export const defaultTheme: ThemeStyles = {
   //
   // Main layout:
-  // <div class=".cm-editor .cm-focused">
-  //   <div class=".cm-scroller">
-  //     <div class=".cm-content" role="textbox" contenteditable="true">
-  //       <div class=".cm-line" />
+  // https://codemirror.net/examples/styling
+  //
+  // <div class="cm-editor [cm-focused] [generated classes]">
+  //   <div class="cm-scroller">
+  //     <div class="cm-gutters">
+  //       <div class="cm-gutter [...]">
+  //         <div class="cm-gutterElement">...</div>
+  //       </div>
+  //     </div>
+  //     <div class="cm-content" role="textbox" contenteditable="true">
+  //       <div class="cm-line"></div>
+  //     </div>
+  //     <div class="cm-selectionLayer">
+  //       <div class="cm-selectionBackground"></div>
+  //     </div>
+  //     <div class="cm-cursorLayer">
+  //       <div class="cm-cursor"></div>
   //     </div>
   //   </div>
   // </div>
   //
+
   '&': {},
   '&.cm-focused': {
     outline: 'none',
   },
   '& .cm-scroller': {
     overflow: 'visible',
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
+
   '& .cm-content': {
     padding: 0,
-    // Base font size (otherwise defined by HTML tag, which might be different for storybook).
+    // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
   },
   '&light .cm-content': {
@@ -71,31 +87,41 @@ export const defaultTheme: {
   '& .cm-line': {
     paddingInline: 0,
   },
-  '& .cm-line *': {},
   '& .cm-activeLine': {
-    backgroundColor: 'transparent',
+    background: 'inherit',
   },
 
   //
-  // selection
+  // Selection
   //
 
-  '&light .cm-selectionBackground, &light.cm-focused .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.150', '#00ffff'),
+  '&light .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.100'),
   },
-  '&dark .cm-selectionBackground, &dark.cm-focused .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.850', '#00ffff'),
+  '&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.200'),
   },
-  '&light .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.250', '#00ffff') + '44',
+  '&dark .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.700'),
   },
-  '&dark .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.600', '#00ffff') + '44',
+  '&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
+    background: get(tokens, 'extend.colors.primary.600'),
+  },
+
+  //
+  // Search
+  //
+
+  '&light .cm-searchMatch': {
+    backgroundColor: get(tokens, 'extend.colors.yellow.100'),
+  },
+  '&dark .cm-searchMatch': {
+    backgroundColor: get(tokens, 'extend.colors.yellow.700'),
   },
 
   //
   // collaboration
-  // TODO(burdon): Review classnames (YJS dependent?)
+  // TODO(burdon): Review classnames (YJS dependent?) Note: e2e tests depend on this class.
   //
 
   '&light .cm-ySelection, &light .cm-yLineSelection': {
@@ -210,6 +236,7 @@ export const defaultTheme: {
 
   /**
    * Panels
+   * TODO(burdon): Needs styling attention (esp. dark mode).
    * https://github.com/codemirror/search/blob/main/src/search.ts#L745
    *
    * Find/replace panel.
@@ -225,7 +252,6 @@ export const defaultTheme: {
    */
   '& .cm-panels': {
     border: `1px solid ${get(tokens, 'extend.colors.neutral.200')}`,
-    borderBottom: 'none',
   },
   '& .cm-panel': {
     background: get(tokens, 'extend.colors.neutral.50'),
@@ -235,20 +261,22 @@ export const defaultTheme: {
     margin: '4px',
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     background: get(tokens, 'extend.colors.neutral.100'),
+    backgroundImage: 'none',
     border: 'none',
+    '&:hover': {
+      background: get(tokens, 'extend.colors.neutral.200'),
+    },
+    '&:active': {
+      background: get(tokens, 'extend.colors.neutral.300'),
+      backgroundImage: 'none',
+    },
   },
-
-  '& .cm-searchMatch': {
-    backgroundColor: get(tokens, 'extend.colors.yellow.100'),
-  },
-  '& .cm-searchMatch.cm-searchMatch-selected': {
-    backgroundColor: get(tokens, 'extend.colors.primary.100'),
+  '& .cm-panel input[type=checkbox]': {
+    marginRight: '0.4rem !important',
   },
 };
 
-export const textTheme: {
-  [selector: string]: StyleSpec;
-} = {
+export const textTheme: ThemeStyles = {
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
@@ -257,18 +285,14 @@ export const textTheme: {
   },
 };
 
-export const markdownTheme: {
-  [selector: string]: StyleSpec;
-} = {
+export const markdownTheme: ThemeStyles = {
   // NOTE: Must leave base font family as is (i.e., monospace) due to fenced code blocks.
   '& .cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
 };
 
-export const codeTheme: {
-  [selector: string]: StyleSpec;
-} = {
+export const codeTheme: ThemeStyles = {
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },

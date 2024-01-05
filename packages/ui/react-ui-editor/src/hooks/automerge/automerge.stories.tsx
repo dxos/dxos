@@ -85,8 +85,7 @@ const Story = () => {
 export default {
   title: 'react-ui-editor/Automerge',
   component: Editor,
-};
-
-export const Default = {
   render: () => <Story />,
 };
+
+export const Default = {};

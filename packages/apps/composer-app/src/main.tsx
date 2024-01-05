@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { StrictMode } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import ChainMeta from '@braneframe/plugin-chain/meta';
@@ -33,6 +33,7 @@ import PwaMeta from '@braneframe/plugin-pwa/meta';
 import RegistryMeta from '@braneframe/plugin-registry/meta';
 import ScriptMeta from '@braneframe/plugin-script/meta';
 import SearchMeta from '@braneframe/plugin-search/meta';
+import SettingsMeta from '@braneframe/plugin-settings/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
@@ -43,22 +44,20 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
-import { createClientServices, Config, Defaults, Envs, Local, Remote } from '@dxos/react-client';
+import { createClientServices, Config, Defaults } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import { setupConfig } from './config';
 import { appKey } from './globals';
 import { steps } from './help';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import { initializeNativeApp } from './native';
 
 const main = async () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
-  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
+  const config = await setupConfig();
   const services = await createClientServices(config);
-  const debugIdentity = config?.values.runtime?.app?.env?.DX_DEBUG;
 
   // Test if socket supply native app.
   if ((globalThis as any).__args) {
@@ -86,6 +85,7 @@ const main = async () => {
       // UX
       LayoutMeta,
       NavTreeMeta,
+      SettingsMeta,
       HelpMeta,
 
       // Data integrations
@@ -130,9 +130,9 @@ const main = async () => {
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
         appKey,
         config,
-        debugIdentity,
         services,
         types,
+        shell: './shell.html',
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
@@ -161,6 +161,7 @@ const main = async () => {
         containerUrl: '/script-frame/index.html',
       }),
       [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
+      [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         version: '1',
@@ -195,6 +196,7 @@ const main = async () => {
       NavTreeMeta.id,
       PwaMeta.id,
       RegistryMeta.id,
+      SettingsMeta.id,
       SpaceMeta.id,
       ThemeMeta.id,
       TelemetryMeta.id,
@@ -204,9 +206,9 @@ const main = async () => {
   });
 
   createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
+    // <StrictMode>
+    <App />,
+    // </StrictMode>,
   );
 };
 
