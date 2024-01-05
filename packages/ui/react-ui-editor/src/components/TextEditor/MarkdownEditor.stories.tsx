@@ -38,6 +38,7 @@ import {
   mermaid,
 } from './extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
+import { awareness } from './extensions/awareness';
 
 // Extensions:
 // TODO(burdon): Table of contents.

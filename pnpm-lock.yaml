@@ -8328,6 +8328,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../core/echo/automerge
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
