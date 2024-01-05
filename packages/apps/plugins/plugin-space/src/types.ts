@@ -6,6 +6,7 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -57,7 +58,7 @@ export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides<SpaceSettingsProps> &
   TranslationsProvides & {
-    settings: Readonly<SpaceSettingsProps>;
     space: Readonly<PluginState>;
   };

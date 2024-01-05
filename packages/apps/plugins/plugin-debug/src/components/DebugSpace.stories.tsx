@@ -8,7 +8,7 @@ import React, { type FC, useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { useSpaces } from '@dxos/react-client/echo';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
 
 import { DebugSpace } from './DebugSpace';
 
@@ -24,8 +24,7 @@ const Story: FC = () => {
 
 export default {
   component: DebugSpace,
-  render: Story,
-  decorators: [ClientSpaceDecorator()],
+  render: () => <ClientRepeater Component={Story} createSpace />,
   parameters: {
     layout: 'fullscreen',
   },

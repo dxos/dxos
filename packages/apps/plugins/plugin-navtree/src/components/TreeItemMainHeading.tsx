@@ -4,8 +4,10 @@
 
 import React from 'react';
 
+import { useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
+import { Keyboard } from '@dxos/keyboard';
 import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -14,6 +16,10 @@ import { getTreeItemLabel } from '../util';
 export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
+
+  const { graph } = useGraph();
+  const context = graph.getPath(activeNode.id)?.join('/');
+  Keyboard.singleton.setCurrentContext(context);
 
   const handleActivate = (node: Node) => {
     void dispatch({

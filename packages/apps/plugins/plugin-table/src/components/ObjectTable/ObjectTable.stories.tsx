@@ -10,7 +10,8 @@ import React, { useEffect, useState } from 'react';
 import { Table as TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
-import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
 
@@ -40,8 +41,8 @@ const Story = () => {
 
 export default {
   component: ObjectTable,
-  render: Story,
-  decorators: [FullscreenDecorator(), ClientSpaceDecorator()],
+  render: () => <ClientRepeater Component={Story} createSpace />,
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-navtree",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "A navigation tree component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,7 @@
   ],
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",

@@ -70,6 +70,7 @@ const StorybookToolbar = (props: StorybookToolbarProps) => {
 };
 
 export default {
+  title: 'react-ui/Toolbar',
   component: StorybookToolbar,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

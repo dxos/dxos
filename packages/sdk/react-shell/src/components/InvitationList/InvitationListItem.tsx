@@ -144,7 +144,7 @@ export const InvitationListItemImpl = ({
         <>
           <Button
             variant='ghost'
-            classNames='grow justify-start font-system-medium'
+            classNames='grow justify-start font-medium'
             onClick={() => send({ type: 'selectInvitation', invitation })}
             data-testid='show-qrcode'
           >

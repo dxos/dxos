@@ -6,4 +6,5 @@ import { ThreadPlugin } from './ThreadPlugin';
 
 export default ThreadPlugin;
 
+export * from './types';
 export * from './ThreadPlugin';

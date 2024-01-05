@@ -9,26 +9,23 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
-  Surface,
   findPlugin,
-  resolvePlugin,
-  useIntent,
-  usePlugins,
   parseGraphPlugin,
   parseIntentPlugin,
   parseSurfacePlugin,
+  resolvePlugin,
+  useIntent,
+  usePlugins,
   LayoutAction,
+  Surface,
+  type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
-  type LayoutProvides,
-  type IntentResolverProvides,
   type GraphProvides,
-  type GraphBuilderProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
   type SurfaceProps,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -37,20 +34,18 @@ import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './compon
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
-
-export type LayoutPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  LayoutProvides;
+import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
 export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
+  // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+
+  const state = new LocalStorageStore<LayoutState & LayoutSettingsProps>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
-    enableComplementarySidebar: false,
+    enableComplementarySidebar: true,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -61,6 +56,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
     active: undefined,
     previous: undefined,
+
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
       return this.active && graphPlugin.provides.graph.findNode(this.active);
@@ -74,23 +70,27 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
+
+      // TODO(burdon): Create context and plugin.
+      Keyboard.singleton.initialize();
     },
     unload: async () => {
+      Keyboard.singleton.destroy();
       state.close();
     },
     provides: {
+      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
       layout: state.values as RevertDeepSignal<LayoutState>,
+      settings: state.values,
       translations,
-      // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
-        builder: ({ parent, plugins }) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+        builder: ({ parent }) => {
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
@@ -101,7 +101,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
-                  action: 'toggle-fullscreen',
+                  action: LayoutAction.TOGGLE_FULLSCREEN,
                 }),
             });
           }
@@ -202,10 +202,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          if (role === 'settings') {
-            return <LayoutSettings />;
-          }
-
           switch (data.component) {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
@@ -220,10 +216,14 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextPanel />;
-
-            default:
-              return null;
           }
+
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
+          }
+
+          return null;
         },
       },
       intent: {
@@ -283,9 +283,15 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             }
 
             case LayoutAction.ACTIVATE: {
+              const id = (intent.data as LayoutAction.Activate).id;
+              const path = graphPlugin?.provides.graph.getPath(id);
+              if (path) {
+                Keyboard.singleton.setCurrentContext(path.join('/'));
+              }
+
               batch(() => {
                 state.values.previous = state.values.active;
-                state.values.active = (intent.data as LayoutAction.Activate).id;
+                state.values.active = id;
               });
               return true;
             }

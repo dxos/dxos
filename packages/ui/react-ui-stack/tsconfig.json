@@ -20,6 +20,9 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../react-ui"
     },
     {

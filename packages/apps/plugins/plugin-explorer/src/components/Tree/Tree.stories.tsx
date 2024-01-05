@@ -9,7 +9,7 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { types, Tree as TreeType } from '@braneframe/types';
 import { useClient } from '@dxos/react-client';
-import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Tree, type TreeComponentProps } from './Tree';
 
@@ -95,13 +95,8 @@ const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {})
 
 export default {
   component: Tree,
-  render: Story,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
+  render: () => <ClientRepeater Component={Story} types={types} createSpace />,
+  decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
