@@ -12,6 +12,14 @@ import {
   type ViewUpdate,
 } from '@codemirror/view';
 
+// TODO(burdon): Reconcile with theme.
+const styles = EditorView.baseTheme({
+  '& .cm-task-item': {
+    paddingLeft: '4px',
+    paddingRight: '8px',
+  },
+});
+
 class CheckboxWidget extends WidgetType {
   constructor(
     private readonly _pos: number,
@@ -52,14 +60,6 @@ class CheckboxWidget extends WidgetType {
     return false;
   }
 }
-
-// TODO(burdon): Reconcile with theme.
-const styles = EditorView.baseTheme({
-  '& .cm-task-item': {
-    paddingLeft: '4px',
-    paddingRight: '8px',
-  },
-});
 
 export type TasklistOptions = {};
 
@@ -109,7 +109,7 @@ export const tasklist = (options: TasklistOptions = {}) => {
       }
     },
     {
-      decorations: (instance) => instance.tasks,
+      decorations: (value) => value.tasks,
       provide: (plugin) =>
         EditorView.atomicRanges.of((view) => {
           return view.plugin(plugin)?.tasks || Decoration.none;

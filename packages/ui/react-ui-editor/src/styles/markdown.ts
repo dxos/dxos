@@ -6,12 +6,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
+// TODO(burdon): Better way to align vertically than negative margin? Font-specific?
 // https://tailwindcss.com/docs/font-weight
 export const headings: Record<HeadingLevel, string[]> = {
-  1: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-4xl', '-ml-1.5'],
-  2: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-3xl', '-ml-1.5'],
-  3: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-2xl', '-ml-1.5'],
-  4: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-xl', '-ml-[5px]'],
+  1: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-4xl', '-ml-[10px]'],
+  2: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-3xl', '-ml-[8px]'],
+  3: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-2xl', '-ml-[7px]'],
+  4: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-xl', '-ml-[6px]'],
   5: ['mbs-4 mbe-2 font-medium text-inherit no-underline text-lg', '-ml-[5px]'],
   6: ['mbs-4 mbe-2 font-medium text-inherit no-underline', '-ml-[4px]'],
 };

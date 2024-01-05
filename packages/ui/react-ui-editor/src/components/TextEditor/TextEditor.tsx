@@ -21,9 +21,9 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle } from './extensions';
+import { basicBundle, markdownBundle, setCommentRange } from './extensions';
 import { defaultTheme, markdownTheme, textTheme } from './themes';
-import { type EditorModel } from '../../hooks';
+import { type CommentRange, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 
 export const EditorModes = ['default', 'vim'] as const;
@@ -56,6 +56,7 @@ export type TextEditorSlots = {
 
 export type TextEditorProps = {
   model: EditorModel;
+  comments?: CommentRange[];
   readonly?: boolean;
   editorMode?: EditorMode;
   extensions?: Extension[];
@@ -67,13 +68,13 @@ export type TextEditorProps = {
  * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
 export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, readonly, editorMode, extensions = [], slots = defaultSlots }, forwardedRef) => {
+  ({ model, comments, readonly, editorMode, extensions = [], slots = defaultSlots }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
-
     const [root, setRoot] = useState<HTMLDivElement | null>(null);
-    const [state, setState] = useState<EditorState>();
-    const [view, setView] = useState<EditorView>();
+    const [{ state = undefined, view = undefined } = {}, setEditor] = useState<
+      { state?: EditorState; view?: EditorView } | undefined
+    >();
     useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
     // TODO(burdon): Factor out?
@@ -88,23 +89,34 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       }
     }, [awareness, peer, themeMode]);
 
+    // TODO(burdon): Factor out as extension.
+    useEffect(() => {
+      if (view && comments?.length) {
+        view.dispatch({
+          effects: setCommentRange.of({ model, comments }),
+        });
+      }
+    }, [view, comments]);
+
     useEffect(() => {
       if (!root) {
         return;
       }
 
+      // TODO(burdon): Remember cursor position.
+      // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: model.text(),
         extensions: [
           readonly && EditorState.readOnly.of(readonly),
 
-          // TODO(burdon): Factor out VIM mode?
+          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
           editorMode === 'vim' && vim(),
 
           // Theme.
+          // TODO(burdon): Make theme configurable.
           EditorView.baseTheme(defaultTheme),
           EditorView.theme(slots?.editor?.theme ?? {}),
-          // TODO(burdon): themeMode doesn't change in storybooks.
           EditorView.darkTheme.of(themeMode === 'dark'),
 
           // Storage and replication.
@@ -117,17 +129,26 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 
       // NOTE: This repaints the editor.
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
-      // Ideally this should not be hit except when changing between text objects.
+      // Ideally this should not happen except when changing between text objects.
       view?.destroy();
-      setView(new EditorView({ state, parent: root }));
-      setState(state);
+      setEditor({
+        state,
+        view: new EditorView({
+          state,
+          parent: root,
+          // NOTE: Uncomment to spy on all transactions.
+          // https://codemirror.net/docs/ref/#view.EditorView.dispatch
+          // dispatch: (transaction, view) => {
+          //   view.update([transaction]);
+          // },
+        }),
+      });
 
       return () => {
         view?.destroy();
-        setView(undefined);
-        setState(undefined);
+        setEditor(undefined);
       };
-    }, [root, model, themeMode, readonly, editorMode]);
+    }, [root, model, readonly, editorMode, themeMode]);
 
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {

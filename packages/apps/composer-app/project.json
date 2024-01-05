@@ -52,9 +52,11 @@
     },
     "serve-with-vault": {
       "executor": "@dxos/serve-with-vault:run"
-    }
+    },
+    "test": {}
   },
   "implicitDependencies": [
-    "serve-with-vault"
+    "serve-with-vault",
+    "test"
   ]
 }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut, Gear, Keyboard as KeyboardIcon, MagnifyingGlass } from '@phosphor-icons/react';
+import { ArrowsOut } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
 import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
@@ -17,9 +17,6 @@ import {
   useIntent,
   usePlugins,
   LayoutAction,
-  CommandsDialogContent,
-  SettingsDialogContent,
-  ShortcutsDialogContent,
   Surface,
   type IntentPluginProvides,
   type Plugin,
@@ -88,12 +85,12 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       state.close();
     },
     provides: {
+      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
       layout: state.values as RevertDeepSignal<LayoutState>,
-      settings: { meta, values: state.values },
+      settings: state.values,
       translations,
-      // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: ({ parent }) => {
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
@@ -104,45 +101,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
-                  action: 'toggle-fullscreen',
-                }),
-            });
-
-            // TODO(burdon): Move special handlers to separate plugin (LayoutPlugin is optional).
-
-            parent.addAction({
-              id: LayoutAction.OPEN_SETTINGS,
-              label: ['open settings label', { ns: LAYOUT_PLUGIN }],
-              icon: (props) => <Gear {...props} />,
-              keyBinding: 'meta+,',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.OPEN_SETTINGS,
-                }),
-            });
-
-            parent.addAction({
-              id: LayoutAction.OPEN_COMMANDS,
-              label: ['open commands label', { ns: LAYOUT_PLUGIN }],
-              icon: (props) => <MagnifyingGlass {...props} />,
-              keyBinding: 'meta+k',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.OPEN_COMMANDS,
-                }),
-            });
-
-            parent.addAction({
-              id: LayoutAction.OPEN_SHORTCUTS,
-              label: ['open shortcuts label', { ns: LAYOUT_PLUGIN }],
-              icon: (props) => <KeyboardIcon {...props} />,
-              keyBinding: 'meta+/',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.OPEN_SHORTCUTS,
+                  action: LayoutAction.TOGGLE_FULLSCREEN,
                 }),
             });
           }
@@ -257,15 +216,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextPanel />;
-
-            case `${LAYOUT_PLUGIN}/Settings`:
-              return <SettingsDialogContent />;
-
-            case `${LAYOUT_PLUGIN}/Commands`:
-              return <CommandsDialogContent graph={graphPlugin?.provides.graph} />;
-
-            case `${LAYOUT_PLUGIN}/Shortcuts`:
-              return <ShortcutsDialogContent />;
           }
 
           switch (role) {
@@ -329,26 +279,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = false;
               state.values.popoverContent = null;
               state.values.popoverAnchorId = undefined;
-              return true;
-            }
-
-            // TODO(burdon): Move system commands to app framework plugin?
-
-            case LayoutAction.OPEN_SETTINGS: {
-              state.values.dialogOpen = true;
-              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Settings' };
-              return true;
-            }
-
-            case LayoutAction.OPEN_COMMANDS: {
-              state.values.dialogOpen = true;
-              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Commands' };
-              return true;
-            }
-
-            case LayoutAction.OPEN_SHORTCUTS: {
-              state.values.dialogOpen = true;
-              state.values.dialogContent = { component: 'dxos.org/plugin/layout/Shortcuts' };
               return true;
             }
 

@@ -13,6 +13,7 @@ export default [
         'empty space message': 'No documents',
         'empty tree message': 'No spaces',
         'unnamed space label': 'New space',
+        'closed space label': 'Closed',
         'loading space label': 'Loading space…',
         'rename space label': 'Rename space',
         'active space label': 'Active space:',

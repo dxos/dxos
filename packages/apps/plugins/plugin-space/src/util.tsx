@@ -49,6 +49,8 @@ export const isSpace = (data: unknown): data is Space =>
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
+    : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
+    ? ['closed space label', { ns: SPACE_PLUGIN }]
     : space.state.get() !== SpaceState.READY
     ? ['loading space label', { ns: SPACE_PLUGIN }]
     : ['unnamed space label', { ns: SPACE_PLUGIN }];
@@ -177,7 +179,7 @@ export const spaceToGraphNode = ({
       properties: {
         ...partials.properties,
         disabled: space.state.get() === SpaceState.INACTIVE,
-        // TODO(burdon): Factor out palette constants.
+        // TODO(burdon): Change to semantic classes that are customizable.
         palette: isPersonalSpace ? 'teal' : undefined,
         testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       },

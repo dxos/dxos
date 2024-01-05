@@ -95,7 +95,7 @@ export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLI
 
 export type NavTreeItemData = TreeNode & { level: number };
 
-// TODO(burdon): Disabled until working.
+// TODO(burdon): Disabled until working and UX review.
 const presence = false;
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(

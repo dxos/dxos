@@ -100,8 +100,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SketchAction.CREATE: {
-              // TODO(dmaretskyi): Text compat.
-              console.log(':::', getGlobalAutomergePreference());
               return {
                 object: new SketchType({
                   data: getGlobalAutomergePreference() ? (new Expando() as any) : undefined,

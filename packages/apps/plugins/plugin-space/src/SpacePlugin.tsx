@@ -207,8 +207,9 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
+      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
       space: state as RevertDeepSignal<PluginState>,
-      settings: { meta, values: settings.values },
+      settings: settings.values,
       translations,
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
@@ -335,7 +336,6 @@ export const SpacePlugin = ({
             properties: {
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
-              // TODO(burdon): Factor out palette constants.
               palette: 'pink',
               childrenPersistenceClass: 'folder',
               onRearrangeChildren: (nextOrder: Space[]) => {

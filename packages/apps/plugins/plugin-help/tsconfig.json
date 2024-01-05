@@ -24,7 +24,16 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/keyboard"
+    },
+    {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/app-graph"
     },
     {
       "path": "../../../sdk/react-client"

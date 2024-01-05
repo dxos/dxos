@@ -17,7 +17,7 @@ import { FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'Views/Stack/Columns',
+  title: 'react-ui-mosaic/Stack',
   component: Stack,
   render: (args: DemoStackProps) => {
     return (

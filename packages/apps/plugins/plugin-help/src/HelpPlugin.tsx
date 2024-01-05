@@ -2,51 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Info } from '@phosphor-icons/react';
+import { Info, Keyboard as KeyboardIcon } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 import { type Step } from 'react-joyride';
 
-import { type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { LayoutAction, type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { LocalStorageStore } from '@dxos/local-storage';
 
-import { HelpContextProvider } from './components';
+import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints } from './components';
 import meta, { HELP_PLUGIN } from './meta';
+import translations from './translations';
 import { HelpAction, type HelpPluginProvides } from './types';
 
-export const HelpPlugin = (): PluginDefinition<HelpPluginProvides> => {
-  const state = deepSignal<{ running: boolean }>({ running: false });
+export type HelpSettingsProps = { showHints?: boolean; showWelcome?: boolean };
 
-  // TODO(burdon): Move text to translation object.
-  const steps: Step[] = [
-    {
-      target: '[data-joyride="welcome/1"]',
-      title: 'HALO',
-      content: 'Click here to access your profile and manage devices.',
-      placement: 'right',
-      disableBeacon: true,
-      floaterProps: {
-        style: {
-          margin: 16,
-        },
-      },
-    },
-    {
-      // TODO(burdon): HACK: Extend Graph Node type to support joyride targets (similar to test ids).
-      target: '[data-testid="navtree.treeItem.heading"]',
-      title: 'Personal space',
-      content: 'Your personal space contains data that will be synchronized across your devices.',
-      placement: 'right',
-    },
-    {
-      target: '[data-itemid="shared-spaces"]',
-      title: 'Shared spaces',
-      content: 'You can create multiple shared spaces to collaborate with your team.',
-      placement: 'right',
-    },
-  ];
+export type HelpPluginOptions = { steps?: Step[] };
+
+export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<HelpPluginProvides> => {
+  const settings = new LocalStorageStore<HelpSettingsProps>(HELP_PLUGIN, { showHints: true, showWelcome: true });
+  const state = deepSignal<{ running: boolean }>({ running: false });
 
   return {
     meta,
+    ready: async () => {
+      settings
+        .prop(settings.values.$showHints!, 'showHints', LocalStorageStore.bool)
+        .prop(settings.values.$showWelcome!, 'showWelcome', LocalStorageStore.bool);
+    },
     provides: {
       context: ({ children }) => {
         return (
@@ -55,25 +38,61 @@ export const HelpPlugin = (): PluginDefinition<HelpPluginProvides> => {
           </HelpContextProvider>
         );
       },
+      translations,
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
           if (parent.id === 'root') {
             parent.addAction({
               id: 'start-help', // TODO(burdon): Standarize.
-              label: ['open devtools label', { ns: HELP_PLUGIN }],
+              label: ['open help tour', { ns: HELP_PLUGIN }],
               icon: (props) => <Info {...props} />,
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
+              invoke: () => {
+                settings.values.showHints = true;
+                return intentPlugin?.provides.intent.dispatch({
                   plugin: HELP_PLUGIN,
                   action: HelpAction.START,
-                }),
+                });
+              },
               keyBinding: 'shift+meta+/',
               properties: {
                 testId: 'helpPlugin.openHelp',
               },
             });
+
+            parent.addAction({
+              id: 'show-shortcuts',
+              label: ['open shortcuts label', { ns: HELP_PLUGIN }],
+              icon: (props) => <KeyboardIcon {...props} />,
+              keyBinding: 'meta+/',
+              invoke: () => {
+                settings.values.showHints = true;
+                return intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.OPEN_DIALOG,
+                  data: {
+                    component: `${HELP_PLUGIN}/Shortcuts`,
+                  },
+                });
+              },
+            });
           }
+        },
+      },
+      surface: {
+        component: ({ data, role }) => {
+          switch (role) {
+            case 'hints':
+              return settings.values.showHints ? (
+                <ShortcutsHints onClose={() => (settings.values.showHints = false)} />
+              ) : null;
+          }
+
+          switch (data.component) {
+            case `${HELP_PLUGIN}/Shortcuts`:
+              return <ShortcutsDialogContent />;
+          }
+
+          return null;
         },
       },
       intent: {

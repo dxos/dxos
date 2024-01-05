@@ -9,7 +9,7 @@ import { type TooltipRenderProps, type Props } from 'react-joyride';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { useHelp } from '../hooks';
+import { useHelp } from '../../hooks';
 
 // https://docs.react-joyride.com/styling
 // https://github.com/gilbarbara/react-floater
@@ -68,7 +68,7 @@ export const Tooltip = ({
   return (
     <DensityProvider density='fine'>
       <div
-        className={mx('flex flex-col min-w-[10rem] max-w-[20rem] min-h-[10rem] overflow-hidden rounded', inputSurface)}
+        className={mx('flex flex-col min-w-[12rem] max-w-[30rem] min-h-[10rem] overflow-hidden rounded', inputSurface)}
       >
         <div className='flex p-2 items-center'>
           <div className='grow px-2 text-lg text-primary-500'>{title}</div>
