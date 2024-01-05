@@ -16,14 +16,9 @@ import {
   type SpliceTextPatch,
 } from '@dxos/automerge/automerge';
 
-import { reconcileAnnotationType } from '../plugin';
+import { reconcileAnnotationType } from './plugin';
 
-export const automergeToCodemirror = (
-  view: EditorView,
-  selection: EditorSelection,
-  target: Prop[],
-  patches: Patch[],
-) => {
+export const updateCodeMirror = (view: EditorView, selection: EditorSelection, target: Prop[], patches: Patch[]) => {
   for (const patch of patches) {
     const changeSpec = handlePatch(patch, target, view.state);
     if (changeSpec != null) {

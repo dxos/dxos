@@ -8,7 +8,7 @@ import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { StrictMode, useRef, useState } from 'react';
+import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -19,27 +19,31 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
 import {
   autocomplete,
+  blast,
+  code,
+  comments,
+  defaultOptions,
+  hr,
+  image,
   listener,
   link,
+  mention,
+  table,
   tasklist,
   tooltip,
+  typewriter,
+  type CommentsOptions,
   type TooltipOptions,
   type LinkOptions,
-  comments,
-  table,
-  image,
-  mention,
-  blast,
-  demo,
-  defaultOptions,
-  highlight,
-  code,
+  mermaid,
 } from './extensions';
-import { useTextModel } from '../../hooks';
+import { type CommentRange, useTextModel } from '../../hooks';
 
 // Extensions:
 // TODO(burdon): Table of contents.
 // TODO(burdon): Front-matter
+
+faker.seed(101);
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -55,6 +59,7 @@ const text = {
     '  - [ ] state',
     '  - [ ] indent',
     '  - [x] style',
+    '',
   ),
 
   list: str(
@@ -63,6 +68,7 @@ const text = {
     '- new york',
     '- london',
     '- tokyo',
+    '',
   ),
 
   numbered: str(
@@ -87,8 +93,8 @@ const text = {
     '',
     '  return () => <div>Test</div>;',
     '};',
+    '```',
     '',
-    '```'
   ),
 
   links: str(
@@ -103,11 +109,11 @@ const text = {
   table: str(
     '# Table',
     '',
-    `| ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} |`,
-    '|----------|----------|----------|',
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
+    `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     '', // TODO(burdon): Possible GFM parsing bug if no newline?
   ),
 
@@ -118,6 +124,8 @@ const text = {
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+
+  mermaid: str('```mermaid', 'graph TD;', 'A-->B;', 'A-->C;', 'B-->D;', 'C-->D;', '```'),
 
   footer: str('', '', '', '', '')
 };
@@ -147,7 +155,6 @@ const document = str(
   text.table,
   '---',
   text.image,
-  '',
   text.footer,
 );
 
@@ -162,7 +169,7 @@ const links = [
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onHover: TooltipOptions['onHover'] = (el, url) => {
+const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -174,7 +181,28 @@ const onHover: TooltipOptions['onHover'] = (el, url) => {
   );
 };
 
-const onRender: LinkOptions['onRender'] = (el, url) => {
+const Key: FC<{ char: string }> = ({ char }) => (
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+    {char}
+  </span>
+);
+
+const onCommentsHover: CommentsOptions['onHover'] = (el) => {
+  createRoot(el).render(
+    <StrictMode>
+      <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+        <div>Create comment</div>
+        {/* TODO(burdon): Unify shortcuts. */}
+        <div className='flex gap-1'>
+          <Key char='⌘' />
+          <Key char="'" />
+        </div>
+      </div>
+    </StrictMode>,
+  );
+};
+
+const onLinkRender: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
@@ -184,14 +212,14 @@ const onRender: LinkOptions['onRender'] = (el, url) => {
   );
 };
 
-// TODO(burdon): Pass in model.
-const Story = ({
-  text,
-  automerge,
-  ...props
-}: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>) => {
+type StoryProps = {
+  text?: string;
+  automerge?: boolean;
+} & Pick<TextEditorProps, 'comments' | 'readonly' | 'extensions' | 'slots'>;
+
+const Story = ({ text, automerge, ...props }: StoryProps) => {
   const ref = useRef<TextEditorRef>(null);
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
     return null;
@@ -221,11 +249,12 @@ const extensions = [
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   code(),
+  hr(),
   image(),
-  link({ onRender }),
+  link({ onRender: onLinkRender }),
   table(),
   tasklist(),
-  tooltip({ onHover }),
+  tooltip({ onHover: onTooltipHover }),
 ];
 
 export const Default = {
@@ -236,12 +265,26 @@ export const Readonly = {
   render: () => <Story text={document} extensions={extensions} readonly />,
 };
 
+export const NoExtensions = {
+  render: () => <Story text={document} />,
+};
+
+// TODO(burdon): Cursor bug if no newline after BR (cursor down just loops back to start of each paragraph).
+export const HorizontalRule = {
+  render: () => (
+    <Story
+      text={str('# Horizontal Rule', '', text.paragraphs, '---', '', text.paragraphs, '---', '', text.paragraphs)}
+      extensions={[hr()]}
+    />
+  ),
+};
+
 export const Tooltips = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover: onTooltipHover })]} />,
 };
 
 export const Links = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender })]} />,
+  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender: onLinkRender })]} />,
 };
 
 export const Code = {
@@ -256,7 +299,7 @@ export const Image = {
   render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
 
-export const TaskList = {
+export const Tasklist = {
   render: () => (
     <Story
       text={str(text.tasks, '', text.list, text.footer)}
@@ -277,7 +320,7 @@ export const Autocomplete = {
     <Story
       text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
       extensions={[
-        link({ onRender }),
+        link({ onRender: onLinkRender }),
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
@@ -301,48 +344,56 @@ export const Mention = {
   ),
 };
 
-const mark = () => `[^${PublicKey.random().toHex()}]`;
+export const Mermaid = {
+  render: () => <Story text={str('# Mermaid', '', text.mermaid, text.footer)} extensions={[code(), mermaid()]} />,
+};
+
 export const Comments = {
-  render: () => (
-    <Story
-      text={str(text.paragraphs, mark(), '', mark(), text.footer)}
-      extensions={[
-        comments({
-          onCreate: () => PublicKey.random().toHex(),
-          onUpdate: (info) => {
-            // console.log('update', info);
-          },
-        }),
-        highlight(),
-      ]}
-    />
-  ),
+  render: () => {
+    const [commentsStates, setCommentStates] = useState<CommentRange[]>([]);
+
+    return (
+      <Story
+        text={str('# Comments', '', text.paragraphs, text.footer)}
+        comments={commentsStates}
+        extensions={[
+          comments({
+            onHover: onCommentsHover,
+            onCreate: (relPos) => {
+              const id = PublicKey.random().toHex();
+              setCommentStates((comments) => [...comments, { id, cursor: relPos }]);
+              return id;
+            },
+            onSelect: (state) => {
+              const debug = false;
+              if (debug) {
+                console.log(
+                  'update',
+                  JSON.stringify({
+                    active: state.active?.slice(0, 8),
+                    closest: state.closest?.slice(0, 8),
+                    ranges: state.ranges.length,
+                  }),
+                );
+              }
+            },
+          }),
+        ]}
+      />
+    );
+  },
 };
 
-export const Diagnostics = {
-  render: () => (
-    <Story
-      text={document}
-      extensions={[
-        // Cursor moved.
-        EditorView.updateListener.of((update) => {
-          console.log('update', update.view.state.selection.main.head);
-        }),
-      ]}
-    />
-  ),
-};
-
-export const Demo = {
-  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[demo()]} />,
+export const Typewriter = {
+  render: () => <Story text={str('# Typewriter', '', text.paragraphs, text.footer)} extensions={[typewriter()]} />,
 };
 
 export const Blast = {
   render: () => (
     <Story
-      text={str(text.paragraphs, text.code, text.paragraphs)}
+      text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        demo({
+        typewriter({
           items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
         }),
         blast(
@@ -362,6 +413,16 @@ export const Blast = {
   ),
 };
 
-export const NoExtensions = {
-  render: () => <Story text={document} />,
+export const Diagnostics = {
+  render: () => (
+    <Story
+      text={document}
+      extensions={[
+        // Cursor moved.
+        EditorView.updateListener.of((update) => {
+          console.log('update', update.view.state.selection.main.head);
+        }),
+      ]}
+    />
+  ),
 };
