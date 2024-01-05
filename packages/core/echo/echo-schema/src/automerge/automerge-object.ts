@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { type InspectOptionsStylized, inspect } from 'node:util';
+
+import { Event, Trigger } from '@dxos/async';
 import { next as automerge, type ChangeOptions, type ChangeFn, type Doc, type Heads } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Reference } from '@dxos/document-model';
@@ -37,10 +39,13 @@ import { compositeRuntime } from '../util';
 
 export type BindOptions = {
   db: AutomergeDb;
-  docHandle: DocHandle<any>;
+  docHandle: DocHandle<DocStructure>;
   path: string[];
   ignoreCache?: boolean;
 };
+
+// Strings longer than this will have collaborative editing disabled for performance reasons.
+const STRING_CRDT_LIMIT = 300_000;
 
 export class AutomergeObject implements TypedObjectProperties {
   private _database?: AutomergeDb = undefined;
@@ -148,7 +153,37 @@ export class AutomergeObject implements TypedObjectProperties {
     for (const key of this[base]._path) {
       value = value?.[key];
     }
-    return value;
+    const typeRef = this.__system.type;
+
+    return {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'automerge',
+      '@id': this._id,
+      '@type': typeRef
+        ? {
+            '@type': REFERENCE_TYPE_TAG,
+            itemId: typeRef.itemId,
+            protocol: typeRef.protocol,
+            host: typeRef.host,
+          }
+        : undefined,
+      ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
+      '@meta': value.meta,
+      ...value.data,
+    };
+  }
+
+  get [Symbol.toStringTag]() {
+    return this.__schema?.typename ?? 'Expando';
+  }
+
+  // TODO(dmaretskyi): Always prints root even for nested proxies.
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
@@ -193,10 +228,15 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _bind(options: BindOptions) {
+    const binded = new Trigger();
     this._database = options.db;
     this._docHandle = options.docHandle;
-    this._docHandle.on('change', (event) => {
+    this._docHandle.on('change', async (event) => {
       if (objectIsUpdated(this._id, event)) {
+        // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
+        //       Without it there was race condition in SpacePlugin on Folder creation.
+        //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
+        await binded.wait();
         this._notifyUpdate();
       }
     });
@@ -219,17 +259,25 @@ export class AutomergeObject implements TypedObjectProperties {
       this._doc = undefined;
       this._set([], doc);
     }
+    binded.wake();
   }
 
   private _createProxy(path: string[]): any {
     return new Proxy(this, {
-      ownKeys: () => {
-        return [];
-        // return Object.keys(this._get(path));
+      ownKeys: (target) => {
+        // TODO(mykola): Add support for expando objects.
+        return this.__schema?.props.map((field) => field.id!) ?? [];
       },
 
       has: (_, key) => {
-        return key in this._get(path);
+        if (!isValidKey(key)) {
+          return Reflect.has(this, key);
+        } else if (typeof key === 'symbol') {
+          // TODO(mykola): Copied from TypedObject, do we need this?
+          return false;
+        } else {
+          return key in this._get(path);
+        }
       },
 
       getOwnPropertyDescriptor: (_, key) => {
@@ -249,7 +297,9 @@ export class AutomergeObject implements TypedObjectProperties {
           return Reflect.get(this, key);
         }
 
-        const value = this._get([...path, key as string]);
+        const relativePath = [...path, ...(key as string).split('.')];
+
+        const value = this._get(relativePath);
 
         if (value instanceof AbstractEchoObject || value instanceof AutomergeObject || value instanceof TextObject) {
           return value;
@@ -259,21 +309,22 @@ export class AutomergeObject implements TypedObjectProperties {
           return value;
         }
         if (Array.isArray(value)) {
-          return new AutomergeArray()._attach(this[base], [...path, key as string]);
+          return new AutomergeArray()._attach(this[base], relativePath);
         }
         if (typeof value === 'object' && value !== null) {
-          return this._createProxy([...path, key as string]);
+          return this._createProxy(relativePath);
         }
 
         return value;
       },
 
       set: (_, key, value) => {
+        const relativePath = [...path, ...(key as string).split('.')];
         if (this[base]._immutable && !mutationOverride) {
           log.warn('Read only access');
           return false;
         }
-        this._set([...path, key as string], value);
+        this._set(relativePath, value);
         return true;
       },
     });
@@ -335,6 +386,9 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _encode(value: any) {
+    if (value instanceof automerge.RawString) {
+      return value;
+    }
     if (value === undefined) {
       return null;
     }
@@ -361,6 +415,10 @@ export class AutomergeObject implements TypedObjectProperties {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this._encode(value)]));
     }
 
+    if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
+      return new automerge.RawString(value);
+    }
+
     return value;
   }
 
@@ -373,6 +431,9 @@ export class AutomergeObject implements TypedObjectProperties {
     }
     if (Array.isArray(value)) {
       return value.map((val) => this._decode(val));
+    }
+    if (value instanceof automerge.RawString) {
+      return value.toString();
     }
     if (typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG) {
       if (value.protocol === 'protobuf') {
@@ -405,7 +466,7 @@ export class AutomergeObject implements TypedObjectProperties {
         return new Reference(obj.id);
       } else {
         if ((obj[base]._database as any) !== this._database) {
-          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+          return new Reference(obj.id, undefined, obj[base]._database.spaceKey.toHex());
         } else {
           return new Reference(obj.id);
         }
@@ -442,8 +503,12 @@ export class AutomergeObject implements TypedObjectProperties {
    */
   // TODO(mykola): Unify usage of `_notifyUpdate`.
   private _notifyUpdate = () => {
-    this._signal.notifyWrite();
-    this._updates.emit();
+    try {
+      this._signal.notifyWrite();
+      this._updates.emit();
+    } catch (err) {
+      log.catch(err);
+    }
   };
 
   /**
@@ -556,7 +621,7 @@ const encodeReference = (reference: Reference) => ({
 const decodeReference = (value: any) =>
   new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
 
-const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 
 export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DocStructure>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {

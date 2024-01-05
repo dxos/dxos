@@ -10,7 +10,7 @@ import { TextObject } from '@dxos/client/echo';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useClient } from '@dxos/react-client';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
 
 // @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
@@ -56,8 +56,8 @@ const Story = () => {
 
 export default {
   component: ScriptBlock,
-  render: Story,
-  decorators: [ClientSpaceDecorator()],
+  render: () => <ClientRepeater Component={Story} createSpace />,
+  decorators: [],
   parameters: {
     layout: 'fullscreen',
   },

@@ -10,7 +10,7 @@ import { type EditorModel } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
-import type { ExportViewState, GhFileIdentifier, GhIdentifier } from '../props';
+import type { ExportViewState, GhFileIdentifier, GhIdentifier } from '../types';
 
 export const ExportDialog = ({
   type,
@@ -88,7 +88,7 @@ export const ExportDialog = ({
   }, [octokit, docGhId, content, ghBranchValue, ghMessageValue, t]);
 
   return (
-    <>
+    <Dialog.Content>
       <Dialog.Title>{t('confirm export title')}</Dialog.Title>
       {exportViewState === 'response' ? (
         <>
@@ -154,6 +154,6 @@ export const ExportDialog = ({
           </div>
         </div>
       )}
-    </>
+    </Dialog.Content>
   );
 };

@@ -27,6 +27,9 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../common/keyboard"
+    },
+    {
       "path": "../../../common/local-storage"
     },
     {
@@ -42,7 +45,13 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-theme"

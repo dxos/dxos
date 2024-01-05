@@ -30,7 +30,7 @@ export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
   const db = getDatabaseFromObject(obj);
-  return db && new Reference(obj.id, undefined, db._backend.spaceKey.toHex());
+  return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
 };
 
 export const matchKeys = (a: ForeignKey[], b: ForeignKey[]): boolean =>

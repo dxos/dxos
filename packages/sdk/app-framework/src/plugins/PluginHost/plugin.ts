@@ -55,6 +55,11 @@ export type Plugin<TProvides = {}> = {
     description?: string;
 
     /**
+     * URL of home page.
+     */
+    homePage?: string;
+
+    /**
      * Tags to help categorize the plugin.
      */
     tags?: string[];

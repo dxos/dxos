@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type GhIdentifier } from '../props';
+import { type GhIdentifier } from '../types';
 
 export const useDocGhId = (keys: { source?: string; id?: string }[]) => {
   return useMemo<GhIdentifier | null>(() => {

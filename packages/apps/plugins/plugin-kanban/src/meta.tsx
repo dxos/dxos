@@ -13,4 +13,5 @@ export default pluginMeta({
   id: KANBAN_PLUGIN,
   name: 'Kanban',
   iconComponent: (props: IconProps) => <Kanban {...props} />,
+  tags: ['experimental'],
 });

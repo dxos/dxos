@@ -212,7 +212,7 @@ class SpaceQuerySource implements QuerySource {
   constructor(private readonly _database: EchoDatabase) {}
 
   get spaceKey() {
-    return this._database._backend.spaceKey;
+    return this._database.spaceKey;
   }
 
   private _onUpdate = (updateEvent: { spaceKey: PublicKey; itemsUpdated: { id: string }[] }) => {

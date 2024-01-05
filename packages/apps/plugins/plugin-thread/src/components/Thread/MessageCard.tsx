@@ -15,58 +15,57 @@ import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM } from '../../meta';
-import { useSubscription } from '../util';
 
 export type BlockProperties = {
   displayName?: string;
   classes?: string;
 };
 
-export type ThreadMessageProps = {
+export type MessageCardProps = {
+  className?: string;
   message: MessageType;
-  identityKey: PublicKey;
-  propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
-  onDelete?: (blockId: string, idx: number) => void;
+  propertiesProvider?: (identityKey: PublicKey | undefined) => BlockProperties;
+  onDelete?: (messageId: string, idx: number) => void;
 };
 
-export const MessageCard = ({ message, propertiesProvider, onDelete }: ThreadMessageProps) => {
-  useSubscription(message.blocks); // TODO(burdon): Not updated.
-  if (!message.blocks.length || !message.from?.identityKey) {
+export const MessageCard = ({
+  className = mx(inputSurface, 'rounded shadow'),
+  message,
+  propertiesProvider,
+  onDelete,
+}: MessageCardProps) => {
+  if (!message.blocks.length) {
     return null;
   }
 
   const message2 = message.blocks[0]!;
-  const { classes, displayName } = propertiesProvider(
-    message.from?.identityKey ? PublicKey.from(message.from?.identityKey) : undefined,
-  );
+  const { classes, displayName = 'anonymous' } =
+    propertiesProvider?.(message.from?.identityKey ? PublicKey.from(message.from?.identityKey) : undefined) ?? {};
   const date = message2.timestamp ? new Date(message2.timestamp) : undefined;
 
   // TODO(burdon): Use aurora cards.
   // TODO(burdon): Reply button.
   return (
     <DensityProvider density='fine'>
-      <div
-        key={message.id}
-        className={mx(
-          'flex flex-col overflow-hidden rounded shadow',
-          inputSurface,
-          // !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
-        )}
-      >
+      <div key={message.id} className={mx('flex flex-col overflow-hidden', className)}>
         <div className='flex'>
           <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
             <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
           </div>
           <div className='flex flex-col w-full overflow-hidden'>
-            <div className='flex text-sm px-2 py-1 space-x-1 truncate'>
-              <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>{displayName}</span>
-              {date && (
-                <>
-                  <span className='font-mono text-xs'>{format(date, 'HH:mm')}</span>
-                  <span className='font-mono text-xs'>{format(date, 'aaa')}</span>
-                </>
-              )}
-            </div>
+            {displayName && (
+              <div className='flex text-sm px-2 py-1 space-x-1 truncate'>
+                <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>
+                  {displayName}
+                </span>
+                {date && (
+                  <>
+                    <span className='font-mono text-xs'>{format(date, 'HH:mm')}</span>
+                    <span className='font-mono text-xs'>{format(date, 'aaa')}</span>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className='overflow-hidden pb-1'>
               {message.blocks.map((block, i) => (

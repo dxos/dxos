@@ -46,8 +46,10 @@ const StoryMain = (_args: StoryMainArgs) => {
 };
 
 export default {
+  title: 'react-ui/Main',
   component: StoryMain,
   decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

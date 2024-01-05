@@ -12,6 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
 
 export default {
+  title: 'react-shell/CompoundButton',
   component: CompoundButton,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -74,7 +74,7 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
 };
 
 export default {
-  title: 'Components/NavTree/Graph',
+  title: 'react-ui-navtree/Graph',
   component: NavTree,
   parameters: {
     layout: 'fullscreen',
@@ -92,7 +92,7 @@ export default {
   ],
 };
 
-export const Graph = {
+export const Default = {
   render: ({ debug }: { debug?: boolean }) => (
     <Mosaic.Root debug={debug}>
       <StorybookNavTree />

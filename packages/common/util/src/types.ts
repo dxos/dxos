@@ -14,6 +14,8 @@ export const isNotNullOrUndefined = <T>(x: T): x is Exclude<T, null | undefined>
 
 /**
  * Use with filter chaining instead of filter(Boolean) to preserve type.
+ * NOTE: To filter by type:
+ * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
  */
 export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
 
