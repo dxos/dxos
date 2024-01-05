@@ -86,7 +86,7 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
-        <AlertDialog.Content>
+        <AlertDialog.Content classNames='w-[20rem]'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (

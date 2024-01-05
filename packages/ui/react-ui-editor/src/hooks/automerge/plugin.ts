@@ -17,8 +17,8 @@ import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '
 import * as automerge from '@dxos/automerge/automerge';
 import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
-import { PatchSemaphore } from './PatchSemaphore';
 import { type IDocHandle } from './handle';
+import { PatchSemaphore } from './semaphore';
 
 export type Value = {
   lastHeads: Heads;
@@ -78,6 +78,7 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
       return result;
     },
   });
+
   const semaphore = new PatchSemaphore(stateField);
 
   const viewPlugin = ViewPlugin.fromClass(

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-debug",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-settings": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/devtools": "workspace:*",

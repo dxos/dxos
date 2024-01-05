@@ -21,7 +21,7 @@ export const StandaloneLayout = ({
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] plb-4'>
+        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
           {children}
         </div>
 

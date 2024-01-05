@@ -7,6 +7,8 @@ import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
 import React from 'react';
 import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
+
 import { DEFAULT_TYPE, type MosaicOperation, type MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useContainer, useMosaic } from './hooks';
@@ -21,10 +23,7 @@ export type MosaicTileAction = { id: string; action: string; data?: any };
 /**
  * Props passed to mosaic tile.
  */
-export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
-  HTMLAttributes<HTMLDivElement>,
-  'className'
-> &
+export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = ThemedClassName<{}> &
   MosaicTileOverlayProps & {
     path: string;
     item: TData;

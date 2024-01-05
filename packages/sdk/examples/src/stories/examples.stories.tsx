@@ -12,7 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { TaskListExample } from '../examples';
 
 export default {
-  title: 'DXOS Examples',
+  title: 'examples/DXOS',
   decorators: [withTheme],
 };
 

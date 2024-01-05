@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-telemetry",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "DXOS Surface plugin for hooking up app telemetry",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

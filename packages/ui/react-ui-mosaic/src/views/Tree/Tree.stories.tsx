@@ -70,6 +70,7 @@ const testItems2 = [
 ];
 
 export default {
+  title: 'react-ui-mosaic/Tree',
   component: Tree,
   render: (args: DemoTreeProps) => {
     return (

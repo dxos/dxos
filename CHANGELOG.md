@@ -1,5 +1,57 @@
 # Changelog
 
+## [0.3.10](https://github.com/dxos/dxos/compare/v0.3.9...v0.3.10) (2024-01-04)
+
+
+### Features
+
+* Add automerge switch to settings ([#4958](https://github.com/dxos/dxos/issues/4958)) ([3cfd481](https://github.com/dxos/dxos/commit/3cfd48171fbfadf6538fab181897da75bd2195b4))
+* add hidden option for pin-less device invite ([#4934](https://github.com/dxos/dxos/issues/4934)) ([678d1a6](https://github.com/dxos/dxos/commit/678d1a65ba51f0a336bfa87e3b79e1ca8bf8154a))
+* Codemirror extensions ([#5011](https://github.com/dxos/dxos/issues/5011)) ([fe592a2](https://github.com/dxos/dxos/commit/fe592a2ca2b8e81890d9f6661c0b3a5d0b0ad417))
+* command-k dialog ([#4996](https://github.com/dxos/dxos/issues/4996)) ([74608f1](https://github.com/dxos/dxos/commit/74608f1569a28c78d75c708cb4326ce3a1a80feb))
+* Comment threads ([#4971](https://github.com/dxos/dxos/issues/4971)) ([806e683](https://github.com/dxos/dxos/commit/806e683242d68e52beedc69c7d0eb8fa85e590e6))
+* Comments ([#4963](https://github.com/dxos/dxos/issues/4963)) ([28981f2](https://github.com/dxos/dxos/commit/28981f2ab4586f28e9eac5145b2476b21a5efb72))
+* **composer-app:** add migration to consolidate space folders ([#4983](https://github.com/dxos/dxos/issues/4983)) ([1302620](https://github.com/dxos/dxos/commit/1302620e0d9807fe4342d77cb97a04b862a9fb5c))
+* contextual key bindings ([#4995](https://github.com/dxos/dxos/issues/4995)) ([dcfebef](https://github.com/dxos/dxos/commit/dcfebef9e588f4898f975b6485b2115f8df47e70))
+* **devtools:** Add backup feature ([#4973](https://github.com/dxos/dxos/issues/4973)) ([279fbbe](https://github.com/dxos/dxos/commit/279fbbe1ba3b4e5637cf9fc6d6f247981219fe2c))
+* Getting started tour (using react-joyride) ([#4998](https://github.com/dxos/dxos/issues/4998)) ([cbe7692](https://github.com/dxos/dxos/commit/cbe7692d3b93824acac4b2c2cfd533a35e843be0))
+* markdown editor read-only (view) mode ([#4997](https://github.com/dxos/dxos/issues/4997)) ([560f82b](https://github.com/dxos/dxos/commit/560f82b5d98f8f09e1d95b5816f5fb4d7fd515b5))
+* Markdown setting enables/disables all codemirror extensions ([#4976](https://github.com/dxos/dxos/issues/4976)) ([54483f4](https://github.com/dxos/dxos/commit/54483f43bb9f74a4a3c06c45027dcffd82209e23))
+* Markdown table ([#5010](https://github.com/dxos/dxos/issues/5010)) ([92d1f2c](https://github.com/dxos/dxos/commit/92d1f2cf810b2b9177597034e76a72ba93c79178))
+* **react-ui-stack:** Add arrow key access to Stack ([#5027](https://github.com/dxos/dxos/issues/5027)) ([a0865c9](https://github.com/dxos/dxos/commit/a0865c9b4de130ae8712dc147441256d301afb67))
+* Serializing automerge objects ([#4940](https://github.com/dxos/dxos/issues/4940)) ([88763c4](https://github.com/dxos/dxos/commit/88763c4dc110781b96a40515e6effa3b18ae06ed))
+* settings framework ([#4986](https://github.com/dxos/dxos/issues/4986)) ([ec4f2f4](https://github.com/dxos/dxos/commit/ec4f2f4f567db779c2efb38197c205f26a52733b))
+* Show shortcut hints ([#5008](https://github.com/dxos/dxos/issues/5008)) ([5e11230](https://github.com/dxos/dxos/commit/5e1123031b21a7421607921ef8541b3d6c659e30))
+* Storybook for navtree. ([#4949](https://github.com/dxos/dxos/issues/4949)) ([6ba804d](https://github.com/dxos/dxos/commit/6ba804d22cc9bcffa69e69abb4f95cdfd5d6af01))
+* System menu and resize ([#4981](https://github.com/dxos/dxos/issues/4981)) ([cb1d9e2](https://github.com/dxos/dxos/commit/cb1d9e2f637ecaa1b5609a68b7aea378633705e7))
+
+
+### Bug Fixes
+
+* Asset handling issues with AM and TLDraw ([#5023](https://github.com/dxos/dxos/issues/5023)) ([cc91b2d](https://github.com/dxos/dxos/commit/cc91b2db8fa74948d1def81419cb097c320fa9a4))
+* Automerge build ([3c0616c](https://github.com/dxos/dxos/commit/3c0616c354fa3f50aad7a158c2aee76174487d73))
+* Automerge/YJS text model. ([#4954](https://github.com/dxos/dxos/issues/4954)) ([a21ec31](https://github.com/dxos/dxos/commit/a21ec319e9789b9b080a02ffc695b795a248517c))
+* **automerge:** Fix automerge textModel and dedup network streams ([#4955](https://github.com/dxos/dxos/issues/4955)) ([ee543cf](https://github.com/dxos/dxos/commit/ee543cf573dc79567a270597b40d2f896b3f28ac))
+* **automerge:** Fix object creation in Composer and cross-references ([#4942](https://github.com/dxos/dxos/issues/4942)) ([43b334a](https://github.com/dxos/dxos/commit/43b334a903bf712dd852cc42809431326bc2c776))
+* **automerge:** Fix stacks ([#5020](https://github.com/dxos/dxos/issues/5020)) ([d280bad](https://github.com/dxos/dxos/commit/d280badf0322d2ddf48b7ce048375320e943fd88))
+* circleci config ([#4947](https://github.com/dxos/dxos/issues/4947)) ([504bdbf](https://github.com/dxos/dxos/commit/504bdbf06943847e1b2a96e1c7be0857c9970cb0))
+* Clean-up plugin ([#4964](https://github.com/dxos/dxos/issues/4964)) ([90b298e](https://github.com/dxos/dxos/commit/90b298e00c11d90d177f7d4e8bdad582c2c9a916))
+* clean-up stories ([#5013](https://github.com/dxos/dxos/issues/5013)) ([aebf1c0](https://github.com/dxos/dxos/commit/aebf1c05d9c7cdf47d1f7ab244d841d27e4c9c03))
+* cli KUBE publishing ([#4959](https://github.com/dxos/dxos/issues/4959)) ([8aaa303](https://github.com/dxos/dxos/commit/8aaa303554cb520019cac393920d3d2c24775e1e))
+* Codemirror extensions fixes ([#5012](https://github.com/dxos/dxos/issues/5012)) ([e948ee0](https://github.com/dxos/dxos/commit/e948ee066644506bf07bd61918b74b219e024e2e))
+* Disable broken presence navtree indicators ([#5003](https://github.com/dxos/dxos/issues/5003)) ([3edbcce](https://github.com/dxos/dxos/commit/3edbccef188b4530210ff26a2b5a3fb7649c63cb))
+* do matrix ci on check instead of e2e ([#5025](https://github.com/dxos/dxos/issues/5025)) ([4f6becb](https://github.com/dxos/dxos/commit/4f6becbc7a76d5facf032f6d8382954168e1f04c))
+* e2e test active line classname bug ([#5016](https://github.com/dxos/dxos/issues/5016)) ([396fa89](https://github.com/dxos/dxos/commit/396fa89a521e3582153269cac3f49b28cb5d16e5))
+* Editor styles ([#4945](https://github.com/dxos/dxos/issues/4945)) ([5515dfe](https://github.com/dxos/dxos/commit/5515dfeea67173e0bcee01af19e7e556bd497a84))
+* **examples:** storybook publishes ([#4966](https://github.com/dxos/dxos/issues/4966)) ([04816d3](https://github.com/dxos/dxos/commit/04816d392377de99e651a3a4e6bc0e5380bcfc0c))
+* Fix backup import failing ([#5030](https://github.com/dxos/dxos/issues/5030)) ([e38869c](https://github.com/dxos/dxos/commit/e38869ca03a3aa703dcb6e1ff09d6d01394ecb59))
+* hook up shell shortcuts ([#4980](https://github.com/dxos/dxos/issues/4980)) ([33e06eb](https://github.com/dxos/dxos/commit/33e06eb6d5fb45ee4cc3f800161905d4798bf13f))
+* Import/export of TLDraw documents to JSON ([#5021](https://github.com/dxos/dxos/issues/5021)) ([f460bb8](https://github.com/dxos/dxos/commit/f460bb870c130a5415d7e89cb333d0aec9e226c2))
+* **plugin-stack,react-ui-stack:** Stack DnD & overreactivity ([#4975](https://github.com/dxos/dxos/issues/4975)) ([31aac81](https://github.com/dxos/dxos/commit/31aac813619bc6b022634c6f3a2ef9f164588485))
+* Storybook automerge issue ([#5019](https://github.com/dxos/dxos/issues/5019)) ([4cae50a](https://github.com/dxos/dxos/commit/4cae50a8f4dcc78884313f0b703402d08c490feb))
+* trigger CI ([#4953](https://github.com/dxos/dxos/issues/4953)) ([11cdcf4](https://github.com/dxos/dxos/commit/11cdcf48317a017b8f4b69f2f126327afc09d207))
+* ux tweaks ([#5007](https://github.com/dxos/dxos/issues/5007)) ([c5193cc](https://github.com/dxos/dxos/commit/c5193cc97447adf5f100d6c99a3788916c9f67f0))
+
 ## [0.3.9](https://github.com/dxos/dxos/compare/v0.3.8...v0.3.9) (2023-12-14)
 
 

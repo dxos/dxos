@@ -14,13 +14,14 @@ import { InvitationList } from './InvitationList';
 import { inviteWithState } from '../../testing';
 
 export default {
+  title: 'react-shell/InvitationList',
   component: InvitationList,
   decorators: [withTheme],
   actions: { argTypesRegex: '^on.*' },
   parameters: { chromatic: { disableSnapshot: false } },
 };
 
-export const Normal = () => {
+export const Default = () => {
   return (
     <Tooltip.Provider>
       <InvitationList

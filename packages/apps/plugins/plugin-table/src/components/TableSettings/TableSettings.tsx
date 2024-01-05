@@ -36,7 +36,7 @@ export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSetti
       </Input.Root>
       <Input.Root>
         <Input.Label classNames='mbe-1 mbs-3'>{t('table schema label')}</Input.Label>
-        <Select.Root onValueChange={handleValueChange} value={table.schema?.id ?? NEW_ID}>
+        <Select.Root value={table.schema?.id ?? NEW_ID} onValueChange={handleValueChange}>
           <Select.TriggerButton placeholder={t('table schema label')} classNames='is-full' />
           <Select.Portal>
             <Select.Content>

@@ -58,7 +58,7 @@ const SurfacesStory = () => {
 };
 
 export default {
-  title: 'DXOS UI/Scenarios/Surfaces',
+  title: 'react-ui/Scenarios/Surfaces',
   component: SurfacesStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
