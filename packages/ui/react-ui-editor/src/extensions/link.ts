@@ -92,16 +92,12 @@ export const link = (options: LinkOptions = {}): Extension => {
 };
 
 class LinkButton extends WidgetType {
-  constructor(
-    private readonly _pos: number,
-    private readonly _url: string,
-    private readonly _onAttach: LinkOptions['onRender'],
-  ) {
+  constructor(private readonly _url: string, private readonly _onAttach: LinkOptions['onRender']) {
     super();
   }
 
   override eq(other: LinkButton) {
-    return this._pos === other._pos && this._url === other._url;
+    return this._url === other._url;
   }
 
   toDOM(view: EditorView) {
@@ -178,7 +174,7 @@ const update = (state: EditorState, options: LinkOptions) => {
             node.to,
             node.to,
             Decoration.replace({
-              widget: new LinkButton(node.from, url, options.onRender),
+              widget: new LinkButton(url, options.onRender),
             }),
           );
         }
