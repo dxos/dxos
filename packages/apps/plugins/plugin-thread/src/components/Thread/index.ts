@@ -3,6 +3,6 @@
 //
 
 export * from './ChatInput';
-export * from './Comments';
+export * from './CommentThread';
 export * from './MessageCard';
 export * from './ThreadChannel';
