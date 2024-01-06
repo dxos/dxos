@@ -218,6 +218,9 @@ export class RemoteSelectionsPluginValue {
     if(this._lastHead === sel?.head && this._lastAnchor === sel?.anchor) {
       return;
     }
+    
+    this._lastHead = sel?.head;
+    this._lastAnchor = sel?.anchor;
 
     const selCursor = sel
       ? {
@@ -230,83 +233,78 @@ export class RemoteSelectionsPluginValue {
   }
 
   private _updateRemoteSelections(update: cmView.ViewUpdate) {
-    if (true ||
-      !this._hasLoadedAwarenessState ||
-      update.transactions.some((tr) => tr.annotation(RemoteSelectionChangedAnnotation))
-    ) {
-      this._hasLoadedAwarenessState = true;
+    this._hasLoadedAwarenessState = true;
 
-      const decorations: Array<cmState.Range<cmView.Decoration>> = [];
-      const awarenessStates = this._provider.getRemoteStates();
+    const decorations: Array<cmState.Range<cmView.Decoration>> = [];
+    const awarenessStates = this._provider.getRemoteStates();
 
-      for (const state of awarenessStates) {
-        const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
-        const head = state.position?.head ? this._cursorConverter.fromCursor(state.position.head) : null;
+    for (const state of awarenessStates) {
+      const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
+      const head = state.position?.head ? this._cursorConverter.fromCursor(state.position.head) : null;
 
-        if (anchor == null || head == null) {
-          continue;
-        }
-
-        const start = Math.min(Math.min(anchor, head), update.view.state.doc.length);
-        const end = Math.min(Math.max(anchor, head), update.view.state.doc.length);
-
-        const startLine = update.view.state.doc.lineAt(start);
-        const endLine = update.view.state.doc.lineAt(end);
-
-        if (startLine.number === endLine.number) {
-          // selected content in a single line.
-          decorations.push({
-            from: start,
-            to: end,
-            value: cmView.Decoration.mark({
-              attributes: { style: `background-color: ${state.color}` },
-              class: 'cm-ySelection',
-            }),
-          });
-        } else {
-          // selected content in multiple lines
-          // first, render text-selection in the first line
-          decorations.push({
-            from: start,
-            to: startLine.from + startLine.length,
-            value: cmView.Decoration.mark({
-              attributes: { style: `background-color: ${state.color}` },
-              class: 'cm-ySelection',
-            }),
-          });
-          // render text-selection in the last line
-          decorations.push({
-            from: endLine.from,
-            to: end,
-            value: cmView.Decoration.mark({
-              attributes: { style: `background-color: ${state.color}` },
-              class: 'cm-ySelection',
-            }),
-          });
-          for (let i = startLine.number + 1; i < endLine.number; i++) {
-            const linePos = update.view.state.doc.line(i).from;
-            decorations.push({
-              from: linePos,
-              to: linePos,
-              value: cmView.Decoration.line({
-                attributes: { style: `background-color: ${state.color}`, class: 'cm-yLineSelection' },
-              }),
-            });
-          }
-        }
-        decorations.push({
-          from: head,
-          to: head,
-          value: cmView.Decoration.widget({
-            side: head - anchor > 0 ? -1 : 1, // the local cursor should be rendered outside the remote selection
-            block: false,
-            widget: new RemoteCaretWidget(state.color ?? '#30bced', state.displayName ?? 'Anonymous'),
-          }),
-        });
+      if (anchor == null || head == null) {
+        continue;
       }
 
-      this.decorations = cmView.Decoration.set(decorations, true);
+      const start = Math.min(Math.min(anchor, head), update.view.state.doc.length);
+      const end = Math.min(Math.max(anchor, head), update.view.state.doc.length);
+
+      const startLine = update.view.state.doc.lineAt(start);
+      const endLine = update.view.state.doc.lineAt(end);
+
+      if (startLine.number === endLine.number) {
+        // selected content in a single line.
+        decorations.push({
+          from: start,
+          to: end,
+          value: cmView.Decoration.mark({
+            attributes: { style: `background-color: ${state.color}` },
+            class: 'cm-ySelection',
+          }),
+        });
+      } else {
+        // selected content in multiple lines
+        // first, render text-selection in the first line
+        decorations.push({
+          from: start,
+          to: startLine.from + startLine.length,
+          value: cmView.Decoration.mark({
+            attributes: { style: `background-color: ${state.color}` },
+            class: 'cm-ySelection',
+          }),
+        });
+        // render text-selection in the last line
+        decorations.push({
+          from: endLine.from,
+          to: end,
+          value: cmView.Decoration.mark({
+            attributes: { style: `background-color: ${state.color}` },
+            class: 'cm-ySelection',
+          }),
+        });
+        for (let i = startLine.number + 1; i < endLine.number; i++) {
+          const linePos = update.view.state.doc.line(i).from;
+          decorations.push({
+            from: linePos,
+            to: linePos,
+            value: cmView.Decoration.line({
+              attributes: { style: `background-color: ${state.color}`, class: 'cm-yLineSelection' },
+            }),
+          });
+        }
+      }
+      decorations.push({
+        from: head,
+        to: head,
+        value: cmView.Decoration.widget({
+          side: head - anchor > 0 ? -1 : 1, // the local cursor should be rendered outside the remote selection
+          block: false,
+          widget: new RemoteCaretWidget(state.color ?? '#30bced', state.displayName ?? 'Anonymous'),
+        }),
+      });
     }
+
+    this.decorations = cmView.Decoration.set(decorations, true);
   }
 
   update(update: cmView.ViewUpdate) {
