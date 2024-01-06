@@ -56,10 +56,10 @@ export type TextEditorSlots = {
 
 export type TextEditorProps = {
   model: EditorModel;
-  comments?: CommentRange[];
-  readonly?: boolean;
-  editorMode?: EditorMode;
+  readonly?: boolean; // TODO(burdon): Move into model.
+  comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
+  editorMode?: EditorMode;
   slots?: TextEditorSlots;
 };
 
@@ -68,7 +68,7 @@ export type TextEditorProps = {
  * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
 export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, comments, readonly, editorMode, extensions = [], slots = defaultSlots }, forwardedRef) => {
+  ({ model, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const [root, setRoot] = useState<HTMLDivElement | null>(null);

@@ -35,6 +35,7 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 
 import { InvitationsProxy } from '../invitations';
 
+// TODO(burdon): This should not be used as part of the API (don't export).
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
 

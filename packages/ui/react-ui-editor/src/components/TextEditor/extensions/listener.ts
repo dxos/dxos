@@ -2,22 +2,38 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StateField } from '@codemirror/state';
+import { type Extension, StateField } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
-export type ListenerOptions = { onChange: (text: string) => void };
+import { nonNullable } from '@dxos/util';
+
+export type ListenerOptions = {
+  onFocus?: (focused: boolean) => void;
+  onChange?: (text: string) => void;
+};
 
 /**
- * Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
+ * Event listener.
  */
-export const listener = ({ onChange }: ListenerOptions) => {
-  return StateField.define({
-    create: () => null,
-    update: (_value, transaction) => {
-      if (transaction.docChanged && onChange) {
-        onChange(transaction.newDoc.toString());
-      }
+export const listener = ({ onFocus, onChange }: ListenerOptions): Extension =>
+  [
+    onFocus
+      ? EditorView.focusChangeEffect.of((view, focused) => {
+          onFocus(focused);
+          return null;
+        })
+      : undefined,
 
-      return null;
-    },
-  });
-};
+    onChange
+      ? StateField.define({
+          create: () => null,
+          update: (_value, transaction) => {
+            if (transaction.docChanged) {
+              onChange(transaction.newDoc.toString());
+            }
+
+            return null;
+          },
+        })
+      : undefined,
+  ].filter(nonNullable);
