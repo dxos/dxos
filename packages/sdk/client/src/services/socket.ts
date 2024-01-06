@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -9,9 +10,15 @@ import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
  * Access to remote client via a socket.
  */
 export const fromSocket = async (url: string): Promise<ClientServicesProvider> => {
+  // TODO(wittjosiah): Fire an event if the socket disconnects.
+  const closed = new Event<Error | undefined>();
   let dxRpcClient!: WebsocketRpcClient<ClientServices, {}>;
 
   return {
+    get closed() {
+      return closed;
+    },
+
     get descriptors() {
       return clientServiceBundle;
     },
@@ -30,6 +37,7 @@ export const fromSocket = async (url: string): Promise<ClientServicesProvider> =
       });
       await dxRpcClient.open();
     },
+
     close: () => dxRpcClient.close(),
   };
 };

@@ -5,7 +5,14 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { types as clientSchema, type ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import {
+  types as clientSchema,
+  type ClientServicesProvider,
+  STATUS_TIMEOUT,
+  type ClientServices,
+  clientServiceBundle,
+  DEFAULT_CLIENT_CHANNEL,
+} from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -21,13 +28,15 @@ import {
   type QueryStatusResponse,
   SystemStatus,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { createIFramePort } from '@dxos/rpc-tunnel';
+import { type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
-import type { Shell } from '../services';
+import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
 /**
@@ -43,6 +52,8 @@ export type ClientOptions = {
   modelFactory?: ModelFactory;
   /** Types. */
   types?: TypeCollection;
+  /** Shell path. */
+  shell?: string;
 };
 
 /**
@@ -52,21 +63,29 @@ export class Client {
   /**
    * The version of this client API.
    */
-  public readonly version = DXOS_VERSION;
+  readonly version = DXOS_VERSION;
+
+  /**
+   * Emitted after the client is reset and the services have finished restarting.
+   */
+  readonly reloaded = new Event<void>();
 
   private readonly _options: ClientOptions;
+  private _ctx = new Context();
   private _config?: Config;
   private _services?: ClientServicesProvider;
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
-  // TODO(wittjosiah): Remove.
-  private _defaultKey!: string;
 
   private _initialized = false;
+  private _resetting = false;
   private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
+  private _iframeManager?: IFrameManager;
+  private _shellManager?: ShellManager;
+  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
   private readonly _graph = new Hypergraph();
 
@@ -74,6 +93,7 @@ export class Client {
    * Unique id of the Client, local to the current peer.
    */
   private readonly _instanceId = PublicKey.random().toHex();
+
   constructor(options: ClientOptions = {}) {
     if (
       typeof window !== 'undefined' &&
@@ -229,20 +249,46 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame, IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import(
-      '../services'
-    );
+    const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
+    this._ctx = new Context();
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    await this._services!.open(new Context());
+    this._services = await (this._options.services ?? createClientServices(this._config));
+    this._iframeManager = this._options.shell
+      ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
+      : undefined;
+    this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
+    await this._open();
 
-    const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
+    // TODO(dmaretskyi): Refactor devtools init.
+    if (typeof window !== 'undefined') {
+      const { mountDevtoolsHooks } = await import('../devtools');
+      mountDevtoolsHooks({ client: this });
+    }
+
+    this._initialized = true;
+    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
+  }
+
+  private async _open() {
+    log('opening...');
+    invariant(this._services);
+    const { SpaceList, createDefaultModelFactory } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
+    const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
-    this._defaultKey = defaultKey;
+    await this._services.open(this._ctx);
+    this._services.closed?.on(async (error) => {
+      log('terminated', { resetting: this._resetting });
+      if (!this._resetting) {
+        await this._close();
+        await this._open();
+        this.reloaded.emit();
+      }
+    });
+
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
@@ -253,28 +299,22 @@ export class Client {
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
-
-    let shell: Shell | undefined;
-    if (this._services instanceof IFrameClientServicesHost || this._services instanceof IFrameClientServicesProxy) {
-      invariant(this._services._shellManager, 'ShellManager is not available.');
-      shell = new Shell({
-        shellManager: this._services._shellManager,
-        identity: halo.identity,
-        devices: halo.devices,
-        spaces,
-      });
-    }
-
+    const shellManager =
+      this._services instanceof IFrameClientServicesProxy || this._services instanceof IFrameClientServicesHost
+        ? this._services._shellManager
+        : this._shellManager;
+    const shell = shellManager
+      ? new Shell({
+          shellManager,
+          identity: halo.identity,
+          devices: halo.devices,
+          spaces,
+        })
+      : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
-    // TODO(dmaretskyi): Refactor devtools init.
-    if (typeof window !== 'undefined') {
-      const { mountDevtoolsHooks } = await import('../devtools');
-      mountDevtoolsHooks({ client: this });
-    }
-
     const trigger = new Trigger<Error | undefined>();
-    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {
@@ -288,7 +328,9 @@ export class Client {
       },
       (err) => {
         trigger.wake(err);
-        this._statusUpdate.emit(null);
+        if (err) {
+          this._statusUpdate.emit(null);
+        }
       },
     );
 
@@ -299,8 +341,23 @@ export class Client {
 
     await this._runtime.open();
 
-    this._initialized = true;
-    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
+    // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
+    await this._iframeManager?.open();
+    await this._shellManager?.open();
+    if (this._iframeManager?.iframe) {
+      this._shellClientProxy = createProtoRpcPeer({
+        exposed: clientServiceBundle,
+        handlers: this._services.services as ClientServices,
+        port: createIFramePort({
+          channel: DEFAULT_CLIENT_CHANNEL,
+          iframe: this._iframeManager.iframe,
+          origin: this._iframeManager.source.origin,
+        }),
+      });
+
+      await this._shellClientProxy.open();
+    }
+    log('opened');
   }
 
   /**
@@ -313,12 +370,20 @@ export class Client {
       return;
     }
 
-    await this._runtime!.close();
-    this._statusTimeout && clearTimeout(this._statusTimeout);
-    await this._statusStream!.close();
-    await this.services.close(new Context());
+    await this._close();
+    this._statusUpdate.emit(null);
+    await this._ctx.dispose();
 
     this._initialized = false;
+  }
+
+  private async _close() {
+    log('closing...');
+    this._statusTimeout && clearTimeout(this._statusTimeout);
+    await this._statusStream?.close();
+    await this._runtime?.close();
+    await this._services?.close(this._ctx);
+    log('closed');
   }
 
   /**
@@ -333,17 +398,21 @@ export class Client {
 
   /**
    * Resets and destroys client storage.
-   * Warning: Inconsistent state after reset, do not continue to use this client instance.
    */
+  @synchronized
   async reset() {
     if (!this._initialized) {
       throw new ApiError('Client not open.');
     }
 
-    invariant(this.services.services.SystemService, 'SystemService is not available.');
-    await this.services.services?.SystemService.reset();
-    await this.destroy();
-    // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
-    this._initialized = false;
+    log('resetting...');
+    this._resetting = true;
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    await this._services?.services.SystemService.reset();
+    await this._close();
+    await this._open();
+    this._resetting = false;
+    this.reloaded.emit();
+    log('reset complete');
   }
 }
