@@ -20,11 +20,11 @@ import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
-import { type IDocHandle } from './handle';
-import { automergePlugin } from './plugin';
-import { MarkdownEditor } from '../../components';
-import { awareness } from '../../components/TextEditor/extensions/awareness';
-import { useTextModel } from '../useTextModel';
+import { type IDocHandle } from '../components/TextEditor/extensions/automerge/handle';
+import { automergePlugin } from '../components/TextEditor/extensions/automerge/plugin';
+import { MarkdownEditor } from '../components';
+import { awareness } from '../components/TextEditor/extensions/awareness'; 
+import { useTextModel } from './useTextModel';
 
 type EditorProps = {
   handle: IDocHandle;

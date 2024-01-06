@@ -22,10 +22,10 @@ import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 
-import { automergePlugin } from './automerge';
 import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
 import { SpaceAwarenessProvider } from './yjs';
 import { AwarenessProvider } from '../components/TextEditor/extensions/awareness';
+import { automergePlugin } from '../components';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;

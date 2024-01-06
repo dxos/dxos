@@ -1,0 +1,42 @@
+import type { Prop } from "@dxos/automerge/automerge";
+import { IDocHandle } from "./handle";
+import { CursorConverter } from "../cursor-converter";
+import { next as automerge } from '@dxos/automerge/automerge'
+import get from "lodash.get";
+
+export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConverter => ({
+  toCursor: (pos: number) => {
+    const doc = handle.docSync();
+    if(!doc) return ''
+
+    const value = get(doc, path);
+    if(typeof value === 'string' && value.length <= pos) {
+      return 'end';
+    }
+
+    // NOTE: Slice is needed because getCursor mutates the array.
+    return automerge.getCursor(doc, path.slice(), pos);
+  },
+  fromCursor: (cursor: string) => {
+    if (cursor === '') {
+      return 0;
+    }
+
+    const doc = handle.docSync();
+    if(!doc) {
+      return 0;
+    }
+
+    if(cursor === 'end') {
+      const value = get(doc, path);
+      if(typeof value === 'string') {
+        return value.length;
+      } else {
+        return 0
+      }
+    }
+
+    // NOTE: Slice is needed because getCursor mutates the array.
+    return automerge.getCursorPosition(doc, path.slice(), cursor);
+  },
+});
