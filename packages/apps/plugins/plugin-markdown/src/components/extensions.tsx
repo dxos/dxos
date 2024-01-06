@@ -14,7 +14,6 @@ import {
   type AutocompleteResult,
   type Extension,
   type ListenerOptions,
-  type TooltipOptions,
   autocomplete,
   comments,
   image,
@@ -23,6 +22,7 @@ import {
   table,
   tasklist,
   typewriter,
+  type LinkOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -185,7 +185,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   );
 };
 
-export const onHoverLinkTooltip: TooltipOptions['onHover'] = (el, url) => {
+export const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
