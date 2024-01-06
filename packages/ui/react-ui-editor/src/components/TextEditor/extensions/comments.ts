@@ -26,6 +26,7 @@ import { nonNullable } from '@dxos/util';
 import { callbackWrapper } from './util';
 import { type CommentRange, type EditorModel, modelState, type Range } from '../../../hooks';
 
+// TODO(burdon): Handle scroll to.
 // TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
 // TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
 
@@ -284,7 +285,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       ? keymap.of([
           {
             key: options?.key ?? "meta-'",
-            run: createCommentThread,
+            run: callbackWrapper(createCommentThread),
           },
         ])
       : [],

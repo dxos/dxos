@@ -7,7 +7,7 @@ import React, { forwardRef, type KeyboardEventHandler, useState } from 'react';
 
 import { TextObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
-import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
+import { listener, TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { tagExtension } from './extension';
@@ -15,11 +15,12 @@ import { tagExtension } from './extension';
 export type ChatInputProps = {
   className?: string;
   placeholder?: string;
+  onFocus?: () => void;
   onMessage: (text: string) => boolean | void;
 };
 
 export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
-  ({ className = 'rounded shadow p-2', placeholder, onMessage }, ref) => {
+  ({ className = 'rounded shadow p-2', placeholder, onFocus, onMessage }, ref) => {
     const [text] = useState(new TextObject());
     const model = useTextModel({ text });
 
@@ -52,7 +53,16 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
       <div ref={ref} className={mx('flex w-full', inputSurface, className)} onKeyDownCapture={handleKeyDown}>
         <TextEditor
           model={model}
-          extensions={[tagExtension]}
+          extensions={[
+            tagExtension,
+            listener({
+              onFocus: (focused) => {
+                if (focused) {
+                  onFocus?.();
+                }
+              },
+            }),
+          ]}
           slots={{
             root: {
               className: 'flex w-full items-center pl-2 overflow-x-hidden',
