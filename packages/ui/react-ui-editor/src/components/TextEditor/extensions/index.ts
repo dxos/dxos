@@ -19,3 +19,4 @@ export * from './tasklist';
 export * from './tooltip';
 export * from './typewriter';
 export * from './automerge';
+export * from './cursor-converter';

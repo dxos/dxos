@@ -25,7 +25,8 @@ import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
 import { SpaceAwarenessProvider } from './yjs';
 import { AwarenessProvider } from '../components/TextEditor/extensions/awareness';
-import { automergePlugin } from '../components';
+import { CursorConverter, automergePlugin } from '../components';
+import { yjsCursorConverter } from './yjs/yjs-cursor-converter';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
@@ -137,7 +138,11 @@ const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorMod
       );
       return { from: from!.index, to: to!.index };
     },
-    extension: [yCollab(text.content as YText, provider?.awareness), modelState.init(() => model)],
+    extension: [
+      yCollab(text.content as YText, provider?.awareness),
+      CursorConverter.of(yjsCursorConverter(text.content as YText)),
+      modelState.init(() => model),
+    ],
     awareness: provider?.awareness,
     peer: identity
       ? {
