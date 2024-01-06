@@ -6,7 +6,6 @@ import { type Extension } from '@codemirror/state';
 import * as cmState from '@codemirror/state';
 import * as cmView from '@codemirror/view';
 import * as dom from 'lib0/dom';
-import * as math from 'lib0/math';
 import * as pair from 'lib0/pair';
 
 import { Event } from '@dxos/async';
@@ -107,7 +106,7 @@ export type AwarenessState = {
 };
 
 export interface AwarenessProvider {
-  localPositionChanged(position: AwarenessPosition | null): void;
+  localPositionChanged(position: AwarenessPosition | undefined): void;
   remoteStateChange: Event<void>;
   getRemoteStates(): AwarenessState[];
 }
@@ -197,6 +196,9 @@ export class RemoteSelectionsPluginValue {
   public decorations: cmView.DecorationSet = cmState.RangeSet.of([]);
   private _hasLoadedAwarenessState = false;
 
+  private _lastAnchor?: number = undefined;
+  private _lastHead?: number = undefined;
+
   constructor(view: cmView.EditorView) {
     this._provider = view.state.facet(AwarenessProvider);
     this._provider.remoteStateChange.on(this._ctx, () => {
@@ -211,19 +213,24 @@ export class RemoteSelectionsPluginValue {
 
   private _updateLocalSelection(update: cmView.ViewUpdate) {
     const hasFocus = update.view.hasFocus && update.view.dom.ownerDocument.hasFocus();
-    const sel = hasFocus ? update.state.selection.main : null;
+    const sel = hasFocus ? update.state.selection.main : undefined;
+
+    if(this._lastHead === sel?.head && this._lastAnchor === sel?.anchor) {
+      return;
+    }
+
     const selCursor = sel
       ? {
           anchor: this._cursorConverter.toCursor(sel.anchor),
           head: this._cursorConverter.toCursor(sel.head),
         }
-      : null;
+      : undefined;
 
     this._provider.localPositionChanged(selCursor);
   }
 
   private _updateRemoteSelections(update: cmView.ViewUpdate) {
-    if (
+    if (true ||
       !this._hasLoadedAwarenessState ||
       update.transactions.some((tr) => tr.annotation(RemoteSelectionChangedAnnotation))
     ) {
@@ -231,7 +238,7 @@ export class RemoteSelectionsPluginValue {
 
       const decorations: Array<cmState.Range<cmView.Decoration>> = [];
       const awarenessStates = this._provider.getRemoteStates();
-      console.log({ awarenessStates });
+
       for (const state of awarenessStates) {
         const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
         const head = state.position?.head ? this._cursorConverter.fromCursor(state.position.head) : null;
@@ -240,8 +247,8 @@ export class RemoteSelectionsPluginValue {
           continue;
         }
 
-        const start = math.min(anchor, head);
-        const end = math.max(anchor, head);
+        const start = Math.min(Math.min(anchor, head), update.view.state.doc.length);
+        const end = Math.min(Math.max(anchor, head), update.view.state.doc.length);
 
         const startLine = update.view.state.doc.lineAt(start);
         const endLine = update.view.state.doc.lineAt(end);

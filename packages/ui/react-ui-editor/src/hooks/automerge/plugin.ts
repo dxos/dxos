@@ -20,6 +20,7 @@ import { type Heads, type Prop } from '@dxos/automerge/automerge';
 import { type IDocHandle } from './handle';
 import { PatchSemaphore } from './semaphore';
 import { CursorConverter } from '../../components/TextEditor/extensions/cursor-converter';
+import get from 'lodash.get';
 
 export type Value = {
   lastHeads: Heads;
@@ -112,7 +113,15 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
   const cursorConverter: CursorConverter = {
     toCursor: (pos: number) => {
       const doc = handle.docSync();
-      return doc ? automerge.getCursor(doc, path.slice(), pos) : '';
+      if(!doc) return ''
+
+      const value = get(doc, path);
+      if(typeof value === 'string' && value.length <= pos) {
+        return 'end';
+      }
+
+      // NOTE: Slice is needed because getCursor mutates the array.
+      return automerge.getCursor(doc, path.slice(), pos);
     },
     fromCursor: (cursor: string) => {
       if (cursor === '') {
@@ -120,7 +129,21 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
       }
 
       const doc = handle.docSync();
-      return doc ? automerge.getCursorPosition(doc, path.slice(), cursor) : 0;
+      if(!doc) {
+        return 0;
+      }
+
+      if(cursor === 'end') {
+        const value = get(doc, path);
+        if(typeof value === 'string') {
+          return value.length;
+        } else {
+          return 0
+        }
+      }
+
+      // NOTE: Slice is needed because getCursor mutates the array.
+      return automerge.getCursorPosition(doc, path.slice(), cursor);
     },
   };
 

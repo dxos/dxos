@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { withTheme } from '@dxos/storybook-utils';
 import '@preact/signals-react'; // Register react integration
 import '@dxosTheme';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
@@ -146,4 +147,5 @@ export const WithEcho = {
       />
     )
   ),
+  decorators: [withTheme]
 };

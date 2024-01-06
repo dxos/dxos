@@ -64,7 +64,6 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
 
   open() {
     const unsubscribe = this._space.listen(this._channel, (message: GossipMessage) => {
-      console.log(message);
       switch (message.payload.kind) {
         case 'query': {
           this._handleQueryMessage();
@@ -87,12 +86,12 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
     this._ctx.dispose();
   }
 
-  localPositionChanged(position: AwarenessPosition | null): void {
+  localPositionChanged(position: AwarenessPosition | undefined): void {
     this._localState = {
       peerId: this._peerId,
       displayName: this._displayName,
       color: this._color,
-      position: position ?? undefined,
+      position: position,
     };
 
     this._postTask.schedule();
