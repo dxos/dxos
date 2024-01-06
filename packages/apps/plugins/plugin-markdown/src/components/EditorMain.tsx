@@ -10,45 +10,23 @@ import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-th
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
-
-export type SearchResult = {
-  text: string;
-  url: string;
-};
 
 export type EditorMainProps = {
   editorRefCb?: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'readonly' | 'model' | 'comments' | 'editorMode'>;
+  layout: 'standalone' | 'embedded'; // TODO(burdon): Separate components.
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
 
-export const EditorMain = ({
-  editorRefCb,
-  properties,
-  layout,
-  extensions: _extensions,
-  readonly,
-  model,
-  comments,
-  editorMode,
-}: EditorMainProps) => {
+export const EditorMain = ({ editorRefCb, properties, layout, extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = useExtensions(_extensions);
 
   return (
-    <Root properties={properties} model={model}>
+    <Root properties={properties}>
       <MarkdownEditor
-        ref={editorRefCb}
-        model={model}
-        comments={comments}
-        readonly={readonly}
-        editorMode={editorMode}
-        extensions={extensions}
+        {...props}
         slots={{
           root: {
             role: 'none',
@@ -78,6 +56,7 @@ export const EditorMain = ({
             },
           },
         }}
+        ref={editorRefCb}
       />
     </Root>
   );

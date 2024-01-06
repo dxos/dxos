@@ -7,18 +7,17 @@ import React, { forwardRef } from 'react';
 import type { Document as DocumentType } from '@braneframe/types';
 import { DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
-import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import { type Extension, MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 export type EditorCardProps = {
   id: string;
   object: DocumentType;
   color?: string;
-  extensions?: UseExtensionsOptions;
+  extensions?: Extension[];
 };
 
 export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
@@ -28,7 +27,7 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
       isDragging,
       draggableStyle,
       draggableProps,
-      item: { id, object, color, extensions: _extensions },
+      item: { id, object, color, extensions },
       grow,
       onSelect,
       onAction,
@@ -36,7 +35,6 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
     forwardRef,
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
-    const extensions = useExtensions(_extensions);
     const model = useTextModel({ text: object.content });
     if (!model) {
       return null;

@@ -31,4 +31,5 @@ export type Intent = {
  *
  * @returns The result of the last intent.
  */
+// TODO(burdon): Rename IntentDispatcher.
 export type DispatchIntent = (intent: Intent | Intent[]) => Promise<any>;
