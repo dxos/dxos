@@ -46,7 +46,7 @@ export class AppManager {
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click({ button: 'right' });
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
