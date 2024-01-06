@@ -14,7 +14,6 @@ import {
   type AutocompleteResult,
   type Extension,
   type ListenerOptions,
-  type TooltipOptions,
   autocomplete,
   comments,
   image,
@@ -22,8 +21,8 @@ import {
   listener,
   table,
   tasklist,
-  tooltip,
   typewriter,
+  type LinkOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -54,7 +53,6 @@ export const getExtensions = ({
     image(),
     table(),
     tasklist(),
-    tooltip({ onHover: onHoverTooltip }),
   ];
 
   //
@@ -74,6 +72,7 @@ export const getExtensions = ({
   if (dispatch) {
     extensions.push(
       link({
+        onHover: onHoverLinkTooltip,
         onRender: onRenderLink((id: string) => {
           void dispatch({
             action: LayoutAction.ACTIVATE,
@@ -186,7 +185,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   );
 };
 
-export const onHoverTooltip: TooltipOptions['onHover'] = (el, url) => {
+export const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>

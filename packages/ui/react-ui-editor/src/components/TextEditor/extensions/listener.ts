@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension, StateField } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-
-import { nonNullable } from '@dxos/util';
 
 export type ListenerOptions = {
   onFocus?: (focused: boolean) => void;
@@ -15,25 +13,23 @@ export type ListenerOptions = {
 /**
  * Event listener.
  */
-export const listener = ({ onFocus, onChange }: ListenerOptions): Extension =>
-  [
-    onFocus
-      ? EditorView.focusChangeEffect.of((view, focused) => {
-          onFocus(focused);
-          return null;
-        })
-      : undefined,
+export const listener = ({ onFocus, onChange }: ListenerOptions): Extension => {
+  const extensions: Extension[] = [];
 
-    onChange
-      ? StateField.define({
-          create: () => null,
-          update: (_value, transaction) => {
-            if (transaction.docChanged) {
-              onChange(transaction.newDoc.toString());
-            }
+  onFocus &&
+    extensions.push(
+      EditorView.focusChangeEffect.of((_, focused) => {
+        onFocus(focused);
+        return null;
+      }),
+    );
 
-            return null;
-          },
-        })
-      : undefined,
-  ].filter(nonNullable);
+  onChange &&
+    extensions.push(
+      EditorView.updateListener.of((update) => {
+        onChange(update.state.doc.toString());
+      }),
+    );
+
+  return extensions;
+};
