@@ -17,10 +17,9 @@ import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '
 import { next as automerge } from '@dxos/automerge/automerge';
 import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
+import { cursorConverter } from './cursor-converter';
 import { type IDocHandle } from './handle';
 import { PatchSemaphore } from './semaphore';
-import get from 'lodash.get';
-import { cursorConverter } from './cursor-converter';
 import { CursorConverter } from '../cursor-converter';
 
 export type Value = {
@@ -111,14 +110,12 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
     },
   );
 
-  
-
   return {
     extension: [
       stateField,
       semaphoreFacet.of(semaphore),
       viewPlugin,
-      CursorConverter.of(cursorConverter(handle, path))
+      CursorConverter.of(cursorConverter(handle, path)),
     ],
   };
 };

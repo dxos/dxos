@@ -1,16 +1,24 @@
-import type { Prop } from "@dxos/automerge/automerge";
-import { IDocHandle } from "./handle";
-import { CursorConverter } from "../cursor-converter";
-import { next as automerge } from '@dxos/automerge/automerge'
-import get from "lodash.get";
+//
+// Copyright 2024 DXOS.org
+//
+
+import get from 'lodash.get';
+
+import type { Prop } from '@dxos/automerge/automerge';
+import { next as automerge } from '@dxos/automerge/automerge';
+
+import { type IDocHandle } from './handle';
+import { type CursorConverter } from '../cursor-converter';
 
 export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConverter => ({
   toCursor: (pos: number) => {
     const doc = handle.docSync();
-    if(!doc) return ''
+    if (!doc) {
+      return '';
+    }
 
     const value = get(doc, path);
-    if(typeof value === 'string' && value.length <= pos) {
+    if (typeof value === 'string' && value.length <= pos) {
       return 'end';
     }
 
@@ -23,16 +31,16 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
     }
 
     const doc = handle.docSync();
-    if(!doc) {
+    if (!doc) {
       return 0;
     }
 
-    if(cursor === 'end') {
+    if (cursor === 'end') {
       const value = get(doc, path);
-      if(typeof value === 'string') {
+      if (typeof value === 'string') {
         return value.length;
       } else {
-        return 0
+        return 0;
       }
     }
 

@@ -102,12 +102,12 @@ export type AwarenessInfo = {
   displayName?: string;
   color?: string;
   lightColor?: string;
-}
+};
 
 export type AwarenessState = {
   position?: AwarenessPosition;
   peerId: string;
-  info: AwarenessInfo
+  info: AwarenessInfo;
 };
 
 export interface AwarenessProvider {
@@ -119,9 +119,9 @@ export interface AwarenessProvider {
 }
 
 const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
-  open() { },
-  close() { },
-  localPositionChanged (state) {},
+  open: () => {},
+  close: () => {},
+  localPositionChanged: (state) => {},
   remoteStateChange: new Event(),
   getRemoteStates: () => [],
 };
@@ -196,7 +196,7 @@ export class RemoteSelectionsPluginValue {
   }
 
   destroy() {
-    this._ctx.dispose();
+    void this._ctx.dispose();
     this._provider.close();
   }
 
@@ -204,7 +204,7 @@ export class RemoteSelectionsPluginValue {
     const hasFocus = update.view.hasFocus && update.view.dom.ownerDocument.hasFocus();
     const sel = hasFocus ? update.state.selection.main : undefined;
 
-    if(this._lastHead === sel?.head && this._lastAnchor === sel?.anchor) {
+    if (this._lastHead === sel?.head && this._lastAnchor === sel?.anchor) {
       return;
     }
 
@@ -242,7 +242,7 @@ export class RemoteSelectionsPluginValue {
       const endLine = update.view.state.doc.lineAt(end);
 
       const color = state.info.color ?? '#30bced';
-      const lightColor = state.info.lightColor ?? (color + '33');
+      const lightColor = state.info.lightColor ?? color + '33';
 
       if (startLine.number === endLine.number) {
         // selected content in a single line.

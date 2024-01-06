@@ -5,11 +5,12 @@
 import { DeferredTask, Event, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
-import { type GossipMessage } from '@dxos/react-client/src/mesh';
+import { type GossipMessage } from '@dxos/react-client/mesh';
 
 import {
-  AwarenessInfo,
+  type AwarenessInfo,
   type AwarenessPosition,
   type AwarenessProvider,
   type AwarenessState,
@@ -19,7 +20,7 @@ export type NewSpaceAwarenessProviderParams = {
   space: Space;
   channel: string;
   peerId: string;
-  info: AwarenessInfo,
+  info: AwarenessInfo;
 };
 
 type ProtocolMessage =
@@ -46,7 +47,7 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
   private _ctx = new Context();
   private readonly _postTask = new DeferredTask(this._ctx, async () => {
     if (this._localState) {
-      this._space.postMessage(this._channel, {
+      await this._space.postMessage(this._channel, {
         kind: 'post',
         state: this._localState,
       } satisfies ProtocolMessage);
@@ -77,20 +78,24 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
     });
     this._ctx.onDispose(unsubscribe);
 
-    this._space.postMessage(this._channel, {
-      kind: 'query',
-    } satisfies ProtocolMessage);
+    void this._space
+      .postMessage(this._channel, {
+        kind: 'query',
+      } satisfies ProtocolMessage)
+      .catch((err) => {
+        log.debug('failed to query awareness', { err });
+      });
   }
 
   close() {
-    this._ctx.dispose();
+    void this._ctx.dispose();
     this._ctx = new Context();
   }
 
   localPositionChanged(position: AwarenessPosition | undefined): void {
     this._localState = {
       peerId: this._peerId,
-      position: position,
+      position,
       info: this._info,
     };
 

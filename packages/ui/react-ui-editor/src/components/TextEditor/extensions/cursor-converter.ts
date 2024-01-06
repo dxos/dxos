@@ -10,7 +10,7 @@ import { Facet } from '@codemirror/state';
  * See:
  *  - https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
  *  - https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
- * 
+ *
  * @param {assoc} number Negative values will associate the cursor with the previous character
  *                       while positive - with the next one.
  */

@@ -2,29 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import { withTheme } from '@dxos/storybook-utils';
-import '@preact/signals-react'; // Register react integration
-import '@dxosTheme';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { EditorView } from '@codemirror/view';
+import '@dxosTheme';
+import '@preact/signals-react'; // Register react integration
 import { basicSetup } from 'codemirror';
 import get from 'lodash.get';
 import React, { useEffect, useRef, useState } from 'react';
 
 // TODO(burdon): Why separate imports?
 import { type Prop } from '@dxos/automerge/automerge';
-import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
+import { Repo, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Filter, setGlobalAutomergePreference } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
+import { useTextModel } from './useTextModel';
+import { MarkdownEditor } from '../components';
 import { type IDocHandle } from '../components/TextEditor/extensions/automerge/handle';
 import { automergePlugin } from '../components/TextEditor/extensions/automerge/plugin';
-import { MarkdownEditor } from '../components';
-import { awareness } from '../components/TextEditor/extensions/awareness'; 
-import { useTextModel } from './useTextModel';
+import { awareness } from '../components/TextEditor/extensions/awareness';
 
 type EditorProps = {
   handle: IDocHandle;
@@ -117,7 +117,7 @@ const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
       // <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor model={model} extensions={[awareness()]} />
+          <MarkdownEditor model={model} />
           <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
@@ -129,9 +129,9 @@ const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
 };
 
 export const WithEcho = {
-  render: () => (
-    setGlobalAutomergePreference(true),
-    (
+  render: () => {
+    setGlobalAutomergePreference(true);
+    return (
       <ClientRepeater
         count={2}
         createSpace
@@ -145,7 +145,7 @@ export const WithEcho = {
         }}
         Component={EchoStory}
       />
-    )
-  ),
-  decorators: [withTheme]
+    );
+  },
+  decorators: [withTheme],
 };

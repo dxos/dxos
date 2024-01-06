@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension, StateField } from '@codemirror/state';
+import { StateField, type Extension } from '@codemirror/state';
 import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
@@ -11,12 +11,12 @@ import * as Y from 'yjs';
 
 import { invariant } from '@dxos/invariant';
 import {
+  getRawDoc,
+  isActualAutomergeObject,
+  type AutomergeTextCompat,
   type DocAccessor,
   type Space,
   type TextObject,
-  type AutomergeTextCompat,
-  getRawDoc,
-  isActualAutomergeObject,
 } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
@@ -24,9 +24,9 @@ import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 
 import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
 import { SpaceAwarenessProvider, cursorColor } from './yjs';
-import { AwarenessProvider } from '../components/TextEditor/extensions/awareness';
-import { CursorConverter, automergePlugin } from '../components';
 import { yjsCursorConverter } from './yjs/yjs-cursor-converter';
+import { CursorConverter, automergePlugin } from '../components';
+import { AwarenessProvider, awareness } from '../components/TextEditor/extensions/awareness';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
@@ -153,7 +153,7 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
   const obj = text as any as AutomergeTextCompat;
   const doc = getRawDoc(obj, [obj.field]);
 
-  const awareness =
+  const awarenessProvider =
     space &&
     new NewSpaceAwarenessProvider({
       space,
@@ -165,7 +165,7 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
       },
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
     });
-    
+
   const model: EditorModel = {
     id: obj.id,
     content: doc,
@@ -174,7 +174,8 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
     extension: [
       automergePlugin(doc.handle, doc.path),
       modelState.init(() => model),
-      awareness && AwarenessProvider.of(awareness),
+      awarenessProvider && AwarenessProvider.of(awarenessProvider),
+      awareness(),
     ].filter(isNotNullOrUndefined),
     peer: identity
       ? {
