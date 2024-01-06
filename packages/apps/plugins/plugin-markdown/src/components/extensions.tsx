@@ -22,7 +22,6 @@ import {
   listener,
   table,
   tasklist,
-  tooltip,
   typewriter,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -54,7 +53,6 @@ export const getExtensions = ({
     image(),
     table(),
     tasklist(),
-    tooltip({ onHover: onHoverTooltip }),
   ];
 
   //
@@ -74,6 +72,7 @@ export const getExtensions = ({
   if (dispatch) {
     extensions.push(
       link({
+        onHover: onHoverLinkTooltip,
         onRender: onRenderLink((id: string) => {
           void dispatch({
             action: LayoutAction.ACTIVATE,
@@ -186,7 +185,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   );
 };
 
-export const onHoverTooltip: TooltipOptions['onHover'] = (el, url) => {
+export const onHoverLinkTooltip: TooltipOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
