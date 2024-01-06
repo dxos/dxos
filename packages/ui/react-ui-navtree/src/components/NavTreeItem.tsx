@@ -168,6 +168,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     level < 1 && topLevelCollapsibleSpacing,
                     staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
                   )}
+                  data-testId={`navtree.treeItem.actionsLevel${level}`}
                 >
                   <NavTreeItemHeading
                     {...{
