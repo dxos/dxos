@@ -69,9 +69,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
-  // Update external plugins.
-  const handleChange = (text: string) => {
-    state.onChange.forEach((onChange) => onChange(text));
+  const _getExtensions = (space?: Space, document?: DocumentType) => {
+    // Update external plugins.
+    const handleChange = (text: string) => {
+      state.onChange.forEach((onChange) => onChange(text));
+    };
+
+    return getExtensions({
+      debug: settings.values.debug,
+      experimental: settings.values.experimental,
+      space,
+      document,
+      dispatch: intentPlugin?.provides.intent.dispatch,
+      onChange: handleChange,
+    });
   };
 
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc.
@@ -117,14 +128,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         readonly={readonly}
         comments={comments}
         editorMode={settings.values.editorMode}
-        extensions={getExtensions({
-          debug: settings.values.debug,
-          experimental: settings.values.experimental,
-          space,
-          document,
-          dispatch: intentPlugin?.provides.intent.dispatch,
-          onChange: handleChange,
-        })}
+        extensions={_getExtensions(space, document)}
       />
     );
   };
@@ -160,14 +164,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       <EditorSection
         editorMode={settings.values.editorMode}
         model={model}
-        extensions={getExtensions({
-          debug: settings.values.debug,
-          experimental: settings.values.experimental,
-          space,
-          document,
-          dispatch: intentPlugin?.provides.intent.dispatch,
-          onChange: handleChange,
-        })}
+        extensions={_getExtensions(space, document)}
       />
     );
   };
@@ -325,14 +322,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                    extensions: getExtensions({
-                      debug: settings.values.debug,
-                      experimental: settings.values.experimental,
-                      space: data.space as Space,
-                      document: data.content.object,
-                      dispatch: intentPlugin?.provides.intent.dispatch,
-                      onChange: handleChange,
-                    }),
+                    extensions: _getExtensions(data.space as Space, data.content.object),
                   },
                 };
 
