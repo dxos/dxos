@@ -23,7 +23,7 @@ import type { YText, YXmlFragment } from '@dxos/text-model';
 import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 
 import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
-import { SpaceAwarenessProvider } from './yjs';
+import { SpaceAwarenessProvider, cursorColor } from './yjs';
 import { AwarenessProvider } from '../components/TextEditor/extensions/awareness';
 import { CursorConverter, automergePlugin } from '../components';
 import { yjsCursorConverter } from './yjs/yjs-cursor-converter';
@@ -57,11 +57,16 @@ export type EditorModel = {
   // TODO(burdon): Remove.
   content: string | YText | YXmlFragment | DocAccessor;
   text: () => string;
+  /**
+   * @deprecated Use CursorConverter.
+   */
   getCursorFromRange?: (value: Range) => string;
+  /**
+   * @deprecated Use CursorConverter.
+   */
   getRangeFromCursor?: (cursor: string) => Range;
   extension?: Extension;
   awareness?: Awareness;
-  newAwareness?: NewSpaceAwarenessProvider;
   peer?: {
     id: string;
     name?: string;
@@ -81,17 +86,6 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
   const { identity, space, text } = props;
   const [model, setModel] = useState<EditorModel | undefined>(() => createModel(props));
   useEffect(() => setModel(createModel(props)), [identity, space, text]);
-
-  // TODO(dmaretskyi): Find a better way to handle this lifecycle.
-  useEffect(() => {
-    if (model?.newAwareness instanceof NewSpaceAwarenessProvider) {
-      model.newAwareness.open();
-
-      return () => {
-        model.newAwareness!.close();
-      };
-    }
-  }, [model?.newAwareness]);
 
   return model;
 };
@@ -164,11 +158,14 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
     new NewSpaceAwarenessProvider({
       space,
       channel: `automerge.awareness.${obj.id}`,
+      info: {
+        displayName: identity?.profile?.displayName ?? '',
+        color: cursorColor.color,
+        lightColor: cursorColor.light,
+      },
       peerId: identity?.identityKey.toHex() ?? 'Anonymous',
-      displayName: identity?.profile?.displayName ?? '',
-      color: 'red',
     });
-  console.log({ awareness });
+    
   const model: EditorModel = {
     id: obj.id,
     content: doc,
@@ -179,7 +176,6 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
       modelState.init(() => model),
       awareness && AwarenessProvider.of(awareness),
     ].filter(isNotNullOrUndefined),
-    newAwareness: awareness,
     peer: identity
       ? {
           id: identity.identityKey.toHex(),

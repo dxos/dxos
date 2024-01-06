@@ -9,6 +9,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { type GossipMessage } from '@dxos/react-client/src/mesh';
 
 import {
+  AwarenessInfo,
   type AwarenessPosition,
   type AwarenessProvider,
   type AwarenessState,
@@ -18,8 +19,7 @@ export type NewSpaceAwarenessProviderParams = {
   space: Space;
   channel: string;
   peerId: string;
-  displayName: string;
-  color: string;
+  info: AwarenessInfo,
 };
 
 type ProtocolMessage =
@@ -31,18 +31,19 @@ type ProtocolMessage =
       state: AwarenessState;
     };
 
+const DEBOUNCE_INTERVAL = 100; // ms
+
 export class NewSpaceAwarenessProvider implements AwarenessProvider {
   private readonly _space: Space;
   private readonly _channel: string;
   private readonly _peerId: string;
-  private readonly _displayName: string;
-  private readonly _color: string;
+  private readonly _info: AwarenessInfo;
   public readonly remoteStateChange = new Event<void>();
 
   private _remoteStates = new Map<string, AwarenessState>();
   private _localState?: AwarenessState = undefined;
 
-  private readonly _ctx = new Context();
+  private _ctx = new Context();
   private readonly _postTask = new DeferredTask(this._ctx, async () => {
     if (this._localState) {
       this._space.postMessage(this._channel, {
@@ -50,7 +51,7 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
         state: this._localState,
       } satisfies ProtocolMessage);
 
-      await sleep(100); // TODO(dmaretskyi): config.
+      await sleep(DEBOUNCE_INTERVAL);
     }
   });
 
@@ -58,8 +59,7 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
     this._space = params.space;
     this._channel = params.channel;
     this._peerId = params.peerId;
-    this._displayName = params.displayName;
-    this._color = params.color;
+    this._info = params.info;
   }
 
   open() {
@@ -84,14 +84,14 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
 
   close() {
     this._ctx.dispose();
+    this._ctx = new Context();
   }
 
   localPositionChanged(position: AwarenessPosition | undefined): void {
     this._localState = {
       peerId: this._peerId,
-      displayName: this._displayName,
-      color: this._color,
       position: position,
+      info: this._info,
     };
 
     this._postTask.schedule();

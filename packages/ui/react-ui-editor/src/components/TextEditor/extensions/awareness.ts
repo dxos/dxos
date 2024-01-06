@@ -98,45 +98,32 @@ export type AwarenessPosition = {
   head?: string;
 };
 
+export type AwarenessInfo = {
+  displayName?: string;
+  color?: string;
+  lightColor?: string;
+}
+
 export type AwarenessState = {
   position?: AwarenessPosition;
   peerId: string;
-  color?: string;
-  displayName?: string;
+  info: AwarenessInfo
 };
 
 export interface AwarenessProvider {
+  open(): void;
+  close(): void;
   localPositionChanged(position: AwarenessPosition | undefined): void;
   remoteStateChange: Event<void>;
   getRemoteStates(): AwarenessState[];
 }
 
 const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
-  localPositionChanged: (state) => {
-    console.log('localStateChanged', state);
-  },
+  open() { },
+  close() { },
+  localPositionChanged (state) {},
   remoteStateChange: new Event(),
-  getRemoteStates: () =>
-    [
-      {
-        peerId: '1',
-        color: 'blue',
-        displayName: 'Anonymous',
-        position: {
-          anchor: '0',
-          head: '0',
-        },
-      },
-      {
-        peerId: '2',
-        color: 'red',
-        displayName: 'Anonymous',
-        position: {
-          anchor: '2',
-          head: '6',
-        },
-      },
-    ] satisfies AwarenessState[],
+  getRemoteStates: () => [],
 };
 
 export const AwarenessProvider = cmState.Facet.define<AwarenessProvider, AwarenessProvider>({
@@ -201,6 +188,7 @@ export class RemoteSelectionsPluginValue {
 
   constructor(view: cmView.EditorView) {
     this._provider = view.state.facet(AwarenessProvider);
+    this._provider.open();
     this._provider.remoteStateChange.on(this._ctx, () => {
       view.dispatch({ annotations: [RemoteSelectionChangedAnnotation.of([])] });
     });
@@ -209,6 +197,7 @@ export class RemoteSelectionsPluginValue {
 
   destroy() {
     this._ctx.dispose();
+    this._provider.close();
   }
 
   private _updateLocalSelection(update: cmView.ViewUpdate) {
@@ -218,7 +207,7 @@ export class RemoteSelectionsPluginValue {
     if(this._lastHead === sel?.head && this._lastAnchor === sel?.anchor) {
       return;
     }
-    
+
     this._lastHead = sel?.head;
     this._lastAnchor = sel?.anchor;
 
@@ -252,13 +241,16 @@ export class RemoteSelectionsPluginValue {
       const startLine = update.view.state.doc.lineAt(start);
       const endLine = update.view.state.doc.lineAt(end);
 
+      const color = state.info.color ?? '#30bced';
+      const lightColor = state.info.lightColor ?? (color + '33');
+
       if (startLine.number === endLine.number) {
         // selected content in a single line.
         decorations.push({
           from: start,
           to: end,
           value: cmView.Decoration.mark({
-            attributes: { style: `background-color: ${state.color}` },
+            attributes: { style: `background-color: ${lightColor}` },
             class: 'cm-ySelection',
           }),
         });
@@ -269,7 +261,7 @@ export class RemoteSelectionsPluginValue {
           from: start,
           to: startLine.from + startLine.length,
           value: cmView.Decoration.mark({
-            attributes: { style: `background-color: ${state.color}` },
+            attributes: { style: `background-color: ${color}` },
             class: 'cm-ySelection',
           }),
         });
@@ -278,7 +270,7 @@ export class RemoteSelectionsPluginValue {
           from: endLine.from,
           to: end,
           value: cmView.Decoration.mark({
-            attributes: { style: `background-color: ${state.color}` },
+            attributes: { style: `background-color: ${color}` },
             class: 'cm-ySelection',
           }),
         });
@@ -288,7 +280,7 @@ export class RemoteSelectionsPluginValue {
             from: linePos,
             to: linePos,
             value: cmView.Decoration.line({
-              attributes: { style: `background-color: ${state.color}`, class: 'cm-yLineSelection' },
+              attributes: { style: `background-color: ${color}`, class: 'cm-yLineSelection' },
             }),
           });
         }
@@ -299,7 +291,7 @@ export class RemoteSelectionsPluginValue {
         value: cmView.Decoration.widget({
           side: head - anchor > 0 ? -1 : 1, // the local cursor should be rendered outside the remote selection
           block: false,
-          widget: new RemoteCaretWidget(state.color ?? '#30bced', state.displayName ?? 'Anonymous'),
+          widget: new RemoteCaretWidget(color, state.info.displayName ?? 'Anonymous'),
         }),
       });
     }
