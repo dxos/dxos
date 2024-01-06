@@ -285,7 +285,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       ? keymap.of([
           {
             key: options?.key ?? "meta-'",
-            run: createCommentThread,
+            run: callbackWrapper(createCommentThread),
           },
         ])
       : [],

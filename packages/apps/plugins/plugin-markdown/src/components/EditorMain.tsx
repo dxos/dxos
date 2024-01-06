@@ -19,7 +19,7 @@ export type EditorMainProps = {
   layout: 'standalone' | 'embedded'; // TODO(burdon): Separate components.
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
 
-export const EditorMain = ({ editorRefCb, properties, layout, extensions, ...props }: EditorMainProps) => {
+export const EditorMain = ({ editorRefCb, properties, layout, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
 
