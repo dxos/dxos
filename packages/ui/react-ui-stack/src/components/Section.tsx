@@ -62,6 +62,7 @@ export type SectionProps = PropsWithChildren<{
   // Data props.
   id: string;
   title: string;
+  separation: boolean;
 
   // Tile props.
   active?: MosaicActiveType;
@@ -71,19 +72,21 @@ export type SectionProps = PropsWithChildren<{
   onNavigate?: MosaicTileProps['onNavigate'];
 }>;
 
-// TODO(burdon): Provide runtime option (different use cases).
-const separation = false;
-
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
   SectionProps
->(({ id, title, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
+>(({ id, title, separation, active, draggableProps, draggableStyle, onRemove, onNavigate, children }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
   return (
     <DensityProvider density='fine'>
-      <ListItem.Root ref={forwardedRef} id={id} classNames={['block', separation && 'pbe-2']} style={draggableStyle}>
+      <ListItem.Root
+        ref={forwardedRef}
+        id={id}
+        classNames={['block group', separation && 'pbe-2']}
+        style={draggableStyle}
+      >
         <div
           role='none'
           className={mx(
@@ -91,7 +94,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             inputSurface,
             hoverableControls,
             'flex',
-            separation ? 'rounded min-bs-[4rem]' : 'first:rounded-bs last:rounded-be',
+            separation ? 'rounded min-bs-[4rem]' : 'group-first:rounded-bs group-last:rounded-be',
             active && staticHoverableControls,
             (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
           )}
@@ -171,6 +174,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const { t } = useTranslation(translationKey);
     const { activeItem } = useMosaic();
 
+    const separation = !!itemContext?.separation;
     const { transform, onRemoveSection, onNavigateToSection, SectionContent, ...contentItem } = {
       ...itemContext,
       ...item,
@@ -192,6 +196,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         ref={forwardedRef}
         id={transformedItem.id}
         title={itemObject?.title ?? t('untitled section title')}
+        separation={separation}
         active={active}
         draggableProps={draggableProps}
         draggableStyle={draggableStyle}

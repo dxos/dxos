@@ -121,6 +121,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
         SectionContent={SectionContent}
         type={StackType.Section.schema.typename}
         items={items}
+        separation={false}
         transform={handleTransform}
         onOver={handleOver}
         onDrop={handleDrop}
