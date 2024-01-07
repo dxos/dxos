@@ -13,6 +13,8 @@ import type { YText, YXmlFragment } from '@dxos/text-model';
 import { createAutomergeModel } from './automerge';
 import { createYjsModel } from './yjs';
 
+// TODO(burdon): Factor out defs.
+
 /**
  * State field makes the model available to other extensions.
  */
@@ -28,7 +30,6 @@ export type Range = {
 
 export type CommentRange = {
   id: string;
-  // TODO(burdon): Split into begin/end?
   cursor: string;
 };
 
@@ -72,11 +73,9 @@ const createModel = (props: UseTextModelProps) => {
   const { text } = props;
   if (isAutomergeObject(text)) {
     return createAutomergeModel(props);
-  } else {
-    if (!text?.doc) {
-      return undefined;
-    }
-
+  } else if (text?.doc) {
     return createYjsModel(props);
+  } else {
+    return undefined;
   }
 };

@@ -84,10 +84,10 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
 
   return {
     extension: [
-      stateField,
-      semaphoreFacet.of(semaphore),
-      viewPlugin,
       CursorConverter.of(cursorConverter(handle, path)),
+      semaphoreFacet.of(semaphore),
+      stateField,
+      viewPlugin,
     ],
   };
 };

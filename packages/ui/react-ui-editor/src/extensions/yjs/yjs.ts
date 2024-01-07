@@ -11,6 +11,6 @@ import { cursorConverter } from './cursor';
 import { CursorConverter } from '../../util';
 
 export const yjs = (content: YText, awareness?: YP.Awareness) => [
-  yCollab(content, awareness),
   CursorConverter.of(cursorConverter(content)),
+  yCollab(content, awareness),
 ];
