@@ -13,7 +13,7 @@ import {
 } from '@codemirror/view';
 import get from 'lodash.get';
 
-import { tokens } from '../../../styles';
+import { tokens } from '../styles';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
