@@ -8,11 +8,14 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { CursorConverter } from './cursor-converter';
+import { CursorConverter } from './util';
 
+/**
+ * Extension provides presence information about other peers.
+ */
 export const awareness = (provider = EMPTY_AWARENESS_PROVIDER): Extension => {
   return [
-    remoteSelectionsTheme,
+    styles,
     AwarenessProvider.of(provider),
     ViewPlugin.fromClass(RemoteSelectionsPluginValue, {
       decorations: (v) => v.decorations,
@@ -20,7 +23,8 @@ export const awareness = (provider = EMPTY_AWARENESS_PROVIDER): Extension => {
   ];
 };
 
-const remoteSelectionsTheme = EditorView.baseTheme({
+// TODO(burdon): Rename prefix (y for yjs?)
+const styles = EditorView.baseTheme({
   '.cm-ySelection': {},
   '.cm-yLineSelection': {
     padding: 0,
@@ -120,8 +124,8 @@ const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
   open: () => {},
   close: () => {},
 
+  // TODO(burdon): Rename update.
   updateLocalPosition: (state) => {},
-
   remoteStateChange: new Event(),
   getRemoteStates: () => [],
 };

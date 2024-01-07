@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './cursors';
+export * from './cursor';
 export * from './space-provider';

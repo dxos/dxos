@@ -10,7 +10,6 @@ import { basicSetup } from 'codemirror';
 import get from 'lodash.get';
 import React, { useEffect, useRef, useState } from 'react';
 
-// TODO(burdon): Why separate imports?
 import { type Prop } from '@dxos/automerge/automerge';
 import { Repo, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { Filter, setGlobalAutomergePreference } from '@dxos/echo-schema';

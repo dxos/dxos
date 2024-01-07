@@ -8,10 +8,17 @@ import { type EditorView } from '@codemirror/view';
 
 import { next as automerge } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from './handle';
+import {
+  getLastHeads,
+  getPath,
+  isReconcileTx,
+  reconcileAnnotationType,
+  updateHeads,
+  type IDocHandle,
+  type Value,
+} from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
-import { isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads, type Value } from './util';
 
 type Doc<T> = automerge.Doc<T>;
 type Heads = automerge.Heads;

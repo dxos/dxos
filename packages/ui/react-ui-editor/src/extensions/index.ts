@@ -18,5 +18,4 @@ export * from './table';
 export * from './tasklist';
 export * from './typewriter';
 export * from './automerge';
-export * from './cursor-converter';
 export * from './awareness';

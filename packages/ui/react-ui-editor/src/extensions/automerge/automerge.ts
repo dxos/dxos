@@ -9,11 +9,10 @@ import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '
 import { next as A } from '@dxos/automerge/automerge';
 import { type Prop } from '@dxos/automerge/automerge';
 
-import { cursorConverter } from './cursor-converter';
-import { type IDocHandle } from './handle';
+import { cursorConverter } from './cursor';
+import { effectType, type IDocHandle, isReconcileTx, type Value } from './defs';
 import { PatchSemaphore } from './semaphore';
-import { effectType, isReconcileTx, type Value } from './util';
-import { CursorConverter } from '../cursor-converter';
+import { CursorConverter } from '../util';
 
 const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.

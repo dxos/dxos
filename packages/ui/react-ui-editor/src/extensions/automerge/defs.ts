@@ -12,7 +12,7 @@ import {
   type TransactionSpec,
 } from '@codemirror/state';
 
-import { type Heads, type Prop } from '@dxos/automerge/automerge';
+import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 
 export type Value = {
   lastHeads: Heads;
@@ -50,4 +50,13 @@ export const makeReconcile = (tr: TransactionSpec) => {
   //   ...tr,
   //   annotations: reconcileAnnotationType.of({})
   // }
+};
+
+export type IDocHandle<T = any> = {
+  docSync(): Doc<T> | undefined;
+  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
+  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): string[] | undefined;
+
+  addListener(event: 'change', listener: () => void): void;
+  removeListener(event: 'change', listener: () => void): void;
 };

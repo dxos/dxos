@@ -7,8 +7,8 @@ import get from 'lodash.get';
 import type { Prop } from '@dxos/automerge/automerge';
 import { next as automerge } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from './handle';
-import { type CursorConverter } from '../cursor-converter';
+import { type IDocHandle } from './defs';
+import { type CursorConverter } from '../util';
 
 export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConverter => ({
   toCursor: (pos: number) => {

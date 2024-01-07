@@ -29,7 +29,10 @@ type ProtocolMessage =
 
 const DEBOUNCE_INTERVAL = 100; // ms
 
+// TODO(burdon): Document.
 export class NewSpaceAwarenessProvider implements AwarenessProvider {
+  public readonly remoteStateChange = new Event<void>();
+
   private readonly _space: Space;
   private readonly _channel: string;
   private readonly _peerId: string;
@@ -37,10 +40,8 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
   private _remoteStates = new Map<string, AwarenessState>();
   private _localState?: AwarenessState = undefined;
 
-  private _ctx!: Context;
+  private _ctx?: Context;
   private _postTask!: DeferredTask;
-
-  public readonly remoteStateChange = new Event<void>();
 
   constructor(params: NewSpaceAwarenessProviderParams) {
     this._space = params.space;
@@ -86,7 +87,8 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
   }
 
   close() {
-    void this._ctx.dispose();
+    void this._ctx?.dispose();
+    this._ctx = undefined;
   }
 
   updateLocalPosition(position: AwarenessPosition | undefined): void {

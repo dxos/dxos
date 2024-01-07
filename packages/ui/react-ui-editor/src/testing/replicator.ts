@@ -15,7 +15,8 @@ import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
-import { cursorColor, type EditorModel } from '../hooks';
+import { type EditorModel } from '../hooks';
+import { cursorColor } from '../styles';
 
 type Awareness = awarenessProtocol.Awareness;
 

@@ -7,8 +7,7 @@ import { type EditorState, type StateField, type Text, type Transaction } from '
 
 import { next as am, type Heads } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from './handle';
-import { type Value } from './util';
+import { type IDocHandle, type Value } from './defs';
 
 export const updateAutomerge = (
   field: StateField<Value>,

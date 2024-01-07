@@ -23,9 +23,10 @@ import type { YText, YXmlFragment } from '@dxos/text-model';
 import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 
 import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
-import { SpaceAwarenessProvider, cursorColor } from './yjs';
-import { yjsCursorConverter } from './yjs/yjs-cursor-converter';
-import { AwarenessProvider, CursorConverter, automerge, awareness } from '../extensions';
+import { SpaceAwarenessProvider, yjsCursorConverter } from './yjs';
+import { AwarenessProvider, automerge, awareness } from '../extensions';
+import { CursorConverter } from '../extensions/util';
+import { cursorColor } from '../styles';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
