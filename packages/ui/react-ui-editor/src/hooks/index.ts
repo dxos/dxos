@@ -3,4 +3,3 @@
 //
 
 export * from './useTextModel';
-export * from './yjs';

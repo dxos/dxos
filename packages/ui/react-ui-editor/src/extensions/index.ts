@@ -3,6 +3,8 @@
 //
 
 export * from './autocomplete';
+export * from './automerge';
+export * from './awareness';
 export * from './basic';
 export * from './blast';
 export * from './code';
@@ -17,5 +19,4 @@ export * from './mermaid';
 export * from './table';
 export * from './tasklist';
 export * from './typewriter';
-export * from './automerge';
-export * from './awareness';
+export * from './yjs';

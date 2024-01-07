@@ -23,18 +23,16 @@ import type { YText, YXmlFragment } from '@dxos/text-model';
 import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
-import { YJSAwarenessProvider, yjsCursorConverter } from './yjs';
-import { AwarenessProvider, automerge, awareness } from '../extensions';
+import { YJSAwarenessProvider, yjsCursorConverter, AwarenessProvider, automerge, awareness } from '../extensions';
 import { cursorColor } from '../styles';
 import { CursorConverter } from '../util';
 
-// TODO(burdon): Move.
+// TODO(burdon): Generalize.
 type Awareness = awarenessProtocol.Awareness;
 
 /**
  * State field makes the model available to other extensions.
  */
-// TODO(burdon): Use facet?
 export const modelState = StateField.define<EditorModel | undefined>({
   create: () => undefined,
   update: (model) => model,

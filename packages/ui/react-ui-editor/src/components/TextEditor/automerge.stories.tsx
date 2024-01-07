@@ -20,10 +20,9 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useTextModel } from './useTextModel';
-import { MarkdownEditor } from '../components';
-import { type IDocHandle } from '../extensions';
-import { automerge, awareness } from '../extensions';
+import { MarkdownEditor } from './TextEditor';
+import { type IDocHandle, automerge, awareness } from '../../extensions';
+import { useTextModel } from '../../hooks';
 
 // TODO(burdon): Move to components.
 
