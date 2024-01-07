@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback } from 'react';
+import React, { type HTMLAttributes, type RefCallback, useRef } from 'react';
 
+import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
+import { type TextEditorProps, type TextEditorRef, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
@@ -19,9 +20,26 @@ export type EditorMainProps = {
   layout: 'standalone' | 'embedded'; // TODO(burdon): Separate components.
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
 
+// TODO(burdon): Don't export ref.
 export const EditorMain = ({ editorRefCb, properties, layout, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
+
+  // TODO(burdon): Reconcile refs.
+  const editorRef = useRef<TextEditorRef>();
+  const setEditorRef: RefCallback<TextEditorRef> = (ref) => {
+    editorRef.current = ref as any;
+    editorRefCb?.(ref);
+  };
+
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.FOCUS: {
+        const { object } = data;
+        setFocus(editorRef.current!.view!, object);
+      }
+    }
+  });
 
   return (
     <Root properties={properties}>
@@ -56,7 +74,7 @@ export const EditorMain = ({ editorRefCb, properties, layout, ...props }: Editor
             },
           },
         }}
-        ref={editorRefCb}
+        ref={setEditorRef}
       />
     </Root>
   );

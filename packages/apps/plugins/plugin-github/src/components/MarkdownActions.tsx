@@ -89,6 +89,7 @@ export const MarkdownActions = ({
             classNames='gap-2'
             disabled={!docGhId}
             onClick={() =>
+              // TODO(burdon): Intent should return content value from dialog.
               dispatch({
                 action: LayoutAction.OPEN_DIALOG,
                 data: { component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId, editorRef } },

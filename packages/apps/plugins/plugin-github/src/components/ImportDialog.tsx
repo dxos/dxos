@@ -27,6 +27,7 @@ export const ImportDialog = ({
       try {
         const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
         const { data } = await octokit.rest.issues.get({ owner, repo, issue_number: issueNumber });
+        // TODO(burdon): Invert dependency so that the editor is not required here.
         editorRef.current.view.dispatch({
           changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: data.body ?? '' },
         });

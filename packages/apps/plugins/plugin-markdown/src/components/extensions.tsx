@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client';
 
 import { ThreadAction } from '@braneframe/plugin-thread';
 import { Document as DocumentType, Thread as ThreadType } from '@braneframe/types';
-import { type DispatchIntent, LayoutAction } from '@dxos/app-framework';
+import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import {
   type AutocompleteResult,
@@ -32,7 +32,7 @@ export type ExtensionsOptions = {
   experimental?: boolean;
   space?: Space;
   document?: DocumentType;
-  dispatch?: DispatchIntent;
+  dispatch?: IntentDispatcher;
 } & Pick<ListenerOptions, 'onChange'>;
 
 /**
