@@ -62,8 +62,6 @@ export const createYjsModel = ({ identity, space, text }: UseTextModelProps): Ed
   return model;
 };
 
-type Awareness = YP.Awareness;
-
 // Based on https://github.com/yjs/y-webrtc/blob/88baab2/src/y-webrtc.js.
 
 const messageAwareness = 1;
@@ -74,11 +72,21 @@ const messageQueryAwareness = 3;
  */
 export class YJSAwarenessProvider extends Observable<any> {
   private readonly _space: Space;
-  private readonly _awareness: Awareness;
+  private readonly _awareness: YP.Awareness;
   private readonly _clientId: number;
   private readonly _channel: string;
 
-  constructor({ space, doc, channel, awareness }: { space: Space; doc: Doc; channel: string; awareness?: Awareness }) {
+  constructor({
+    space,
+    doc,
+    channel,
+    awareness,
+  }: {
+    space: Space;
+    doc: Doc;
+    channel: string;
+    awareness?: YP.Awareness;
+  }) {
     super();
     this._space = space;
     this._awareness = awareness ?? new YP.Awareness(doc);
@@ -106,7 +114,7 @@ export class YJSAwarenessProvider extends Observable<any> {
     void this._space.postMessage(this._channel, encoding.toUint8Array(encoderAwarenessState));
   }
 
-  get awareness(): Awareness {
+  get awareness(): YP.Awareness {
     return this._awareness;
   }
 
