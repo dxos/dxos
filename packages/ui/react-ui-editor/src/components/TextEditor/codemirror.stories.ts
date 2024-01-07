@@ -7,7 +7,6 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type StoryObj } from '@storybook/html';
 import { basicSetup } from 'codemirror';
-import { cursorColor } from 'packages/ui/react-ui-editor/src/styles';
 import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
@@ -19,6 +18,7 @@ import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/
 import { YText } from '@dxos/text-model';
 
 import { YAwarenessProvider } from '../../hooks';
+import { cursorColor } from '../../styles';
 import { EditorDocument, types as schema } from '../../testing';
 
 export default {
