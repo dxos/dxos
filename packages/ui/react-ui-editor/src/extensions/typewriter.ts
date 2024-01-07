@@ -19,7 +19,7 @@ const defaultItems = ['hello world!', 'this is a test.', 'this is [DXOS](https:/
  */
 export const typewriter = ({ delay = 75, items = defaultItems }: DemoOptions = {}): Extension => {
   let t: any;
-  let idx = 0;
+  let idx = 0; // TODO(burdon): Make global.
 
   return [
     keymap.of([
