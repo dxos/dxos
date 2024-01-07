@@ -111,22 +111,23 @@ export type AwarenessState = {
 };
 
 export interface AwarenessProvider {
+  remoteStateChange: Event<void>;
+
   open(): void;
   close(): void;
 
+  // TODO(burdon): Rename update.
   updateLocalPosition(position: AwarenessPosition | undefined): void;
-
-  remoteStateChange: Event<void>;
   getRemoteStates(): AwarenessState[];
 }
 
 const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
+  remoteStateChange: new Event(),
+
   open: () => {},
   close: () => {},
 
-  // TODO(burdon): Rename update.
-  updateLocalPosition: (state) => {},
-  remoteStateChange: new Event(),
+  updateLocalPosition: () => {},
   getRemoteStates: () => [],
 };
 

@@ -24,7 +24,7 @@ export {
   TypedObject,
   getGlobalAutomergePreference, // TODO(dmaretskyi): Remove.
   getRawDoc,
-  isActualAutomergeObject,
+  isAutomergeObject,
   isDocAccessor,
   type AutomergeTextCompat,
   type DocAccessor,

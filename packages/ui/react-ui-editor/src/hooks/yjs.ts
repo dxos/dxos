@@ -2,17 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { yCollab } from 'y-codemirror.next';
 import * as Y from 'yjs';
 
 import { invariant } from '@dxos/invariant';
 import type { YText } from '@dxos/text-model';
 import { arrayToString, stringToArray } from '@dxos/util';
 
-import { YJSAwarenessProvider } from './awareness-provider';
-import { cursorConverter } from './cursor';
-import { type EditorModel, modelState, type Range, type UseTextModelProps } from '../../hooks';
-import { CursorConverter } from '../../util';
+import { type EditorModel, modelState, type Range, type UseTextModelProps } from './useTextModel';
+import { yjs, YJSAwarenessProvider } from '../extensions';
 
 export const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorModel => {
   invariant(text?.doc && text?.content);
@@ -44,11 +41,7 @@ export const createYjsModel = ({ identity, space, text }: UseTextModelProps): Ed
       );
       return from && to ? { from: from.index, to: to.index } : undefined;
     },
-    extension: [
-      yCollab(text.content as YText, provider?.awareness),
-      CursorConverter.of(cursorConverter(text.content as YText)),
-      modelState.init(() => model),
-    ],
+    extension: [modelState.init(() => model), yjs(text.content as YText, provider?.awareness)],
     awareness: provider?.awareness,
     peer: identity
       ? {

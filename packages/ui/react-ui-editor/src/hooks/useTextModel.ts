@@ -6,11 +6,12 @@ import { StateField, type Extension } from '@codemirror/state';
 import { useEffect, useState } from 'react';
 import type * as Y from 'y-protocols/awareness';
 
-import { isActualAutomergeObject, type DocAccessor, type Space, type TextObject } from '@dxos/react-client/echo';
+import { isAutomergeObject, type DocAccessor, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 
-import { createAutomergeModel, createYjsModel } from '../extensions';
+import { createAutomergeModel } from './automerge';
+import { createYjsModel } from './yjs';
 
 /**
  * State field makes the model available to other extensions.
@@ -64,13 +65,12 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
   const { identity, space, text } = props;
   const [model, setModel] = useState<EditorModel | undefined>(() => createModel(props));
   useEffect(() => setModel(createModel(props)), [identity, space, text]);
-
   return model;
 };
 
 const createModel = (props: UseTextModelProps) => {
   const { text } = props;
-  if (isActualAutomergeObject(text)) {
+  if (isAutomergeObject(text)) {
     return createAutomergeModel(props);
   } else {
     if (!text?.doc) {

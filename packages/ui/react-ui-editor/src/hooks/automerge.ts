@@ -7,11 +7,10 @@ import get from 'lodash.get';
 import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { isNotNullOrUndefined } from '@dxos/util';
 
-import { automerge } from './automerge';
-import { type EditorModel, modelState, type UseTextModelProps } from '../../hooks';
-import { SpaceAwarenessProvider } from '../../hooks';
-import { cursorColor } from '../../styles';
-import { awareness, AwarenessProvider } from '../awareness';
+import { SpaceAwarenessProvider } from './awareness-provider';
+import { type EditorModel, modelState, type UseTextModelProps } from './useTextModel';
+import { automerge, awareness, AwarenessProvider } from '../extensions';
+import { cursorColor } from '../styles';
 
 export const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): EditorModel => {
   const obj = text as any as AutomergeTextCompat;
@@ -36,8 +35,8 @@ export const createAutomergeModel = ({ space, identity, text }: UseTextModelProp
     text: () => get(doc.handle.docSync(), doc.path),
     // TODO(burdon): https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
     extension: [
-      automerge({ handle: doc.handle, path: doc.path }),
       modelState.init(() => model),
+      automerge({ handle: doc.handle, path: doc.path }),
       awarenessProvider && AwarenessProvider.of(awarenessProvider),
       awareness(),
     ].filter(isNotNullOrUndefined),
