@@ -8,7 +8,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { CursorConverter } from './util';
+import { CursorConverter } from '../util';
 
 /**
  * Extension provides presence information about other peers.

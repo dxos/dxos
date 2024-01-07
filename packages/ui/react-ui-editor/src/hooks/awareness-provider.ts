@@ -11,13 +11,6 @@ import { type GossipMessage } from '@dxos/react-client/mesh';
 
 import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from '../extensions';
 
-export type NewSpaceAwarenessProviderParams = {
-  space: Space;
-  channel: string;
-  peerId: string;
-  info: AwarenessInfo;
-};
-
 type ProtocolMessage =
   | {
       kind: 'query';
@@ -29,21 +22,28 @@ type ProtocolMessage =
 
 const DEBOUNCE_INTERVAL = 100; // ms
 
-// TODO(burdon): Document.
-export class NewSpaceAwarenessProvider implements AwarenessProvider {
+export type AwarenessProviderParams = {
+  space: Space;
+  channel: string;
+  peerId: string;
+  info: AwarenessInfo;
+};
+
+// TODO(burdon): Repackage inside extensions.
+export class SpaceAwarenessProvider implements AwarenessProvider {
   public readonly remoteStateChange = new Event<void>();
 
   private readonly _space: Space;
   private readonly _channel: string;
   private readonly _peerId: string;
   private readonly _info: AwarenessInfo;
-  private _remoteStates = new Map<string, AwarenessState>();
+  private readonly _remoteStates = new Map<string, AwarenessState>();
+
   private _localState?: AwarenessState = undefined;
-
-  private _ctx?: Context;
   private _postTask!: DeferredTask;
+  private _ctx?: Context;
 
-  constructor(params: NewSpaceAwarenessProviderParams) {
+  constructor(params: AwarenessProviderParams) {
     this._space = params.space;
     this._channel = params.channel;
     this._peerId = params.peerId;

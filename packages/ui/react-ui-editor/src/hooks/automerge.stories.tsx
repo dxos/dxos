@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { EditorView } from '@codemirror/view';
-import '@dxosTheme';
 import '@preact/signals-react'; // Register react integration
 import { basicSetup } from 'codemirror';
 import get from 'lodash.get';
@@ -23,6 +24,8 @@ import { useTextModel } from './useTextModel';
 import { MarkdownEditor } from '../components';
 import { type IDocHandle } from '../extensions';
 import { automerge, awareness } from '../extensions';
+
+// TODO(burdon): Move to components.
 
 type EditorProps = {
   handle: IDocHandle;

@@ -22,7 +22,7 @@ const messageQueryAwareness = 3;
 /**
  * Yjs awareness provider on top of a DXOS space.
  */
-export class SpaceAwarenessProvider extends Observable<any> {
+export class YJSAwarenessProvider extends Observable<any> {
   private readonly _space: Space;
   private readonly _awareness: Awareness;
   private readonly _clientId: number;

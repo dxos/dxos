@@ -8,7 +8,7 @@ import type { Prop } from '@dxos/automerge/automerge';
 import { next as automerge } from '@dxos/automerge/automerge';
 
 import { type IDocHandle } from './defs';
-import { type CursorConverter } from '../util';
+import { type CursorConverter } from '../../util';
 
 export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConverter => ({
   toCursor: (pos: number) => {

@@ -22,11 +22,11 @@ import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 
-import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
-import { SpaceAwarenessProvider, yjsCursorConverter } from './yjs';
+import { SpaceAwarenessProvider } from './awareness-provider';
+import { YJSAwarenessProvider, yjsCursorConverter } from './yjs';
 import { AwarenessProvider, automerge, awareness } from '../extensions';
-import { CursorConverter } from '../extensions/util';
 import { cursorColor } from '../styles';
+import { CursorConverter } from '../util';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
@@ -103,7 +103,7 @@ const createModel = (props: UseTextModelProps) => {
 const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorModel => {
   invariant(text?.doc && text?.content);
   const provider = space
-    ? new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
+    ? new YJSAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
     : undefined;
 
   const model: EditorModel = {
@@ -153,7 +153,7 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
 
   const awarenessProvider =
     space &&
-    new NewSpaceAwarenessProvider({
+    new SpaceAwarenessProvider({
       space,
       channel: `automerge.awareness.${obj.id}`,
       info: {
