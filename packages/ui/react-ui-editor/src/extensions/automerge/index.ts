@@ -4,3 +4,4 @@
 
 export { automerge } from './automerge';
 export { type IDocHandle } from './defs';
+export * from './model';

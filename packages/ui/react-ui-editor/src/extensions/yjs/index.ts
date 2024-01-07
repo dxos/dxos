@@ -4,3 +4,4 @@
 
 export * from './awareness-provider';
 export * from './cursor';
+export * from './model';

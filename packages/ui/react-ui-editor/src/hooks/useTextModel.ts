@@ -3,32 +3,14 @@
 //
 
 import { StateField, type Extension } from '@codemirror/state';
-import get from 'lodash.get';
 import { useEffect, useState } from 'react';
-import { yCollab } from 'y-codemirror.next';
-import type * as awarenessProtocol from 'y-protocols/awareness';
-import * as Y from 'yjs';
+import type * as Y from 'y-protocols/awareness';
 
-import { invariant } from '@dxos/invariant';
-import {
-  getRawDoc,
-  isActualAutomergeObject,
-  type AutomergeTextCompat,
-  type DocAccessor,
-  type Space,
-  type TextObject,
-} from '@dxos/react-client/echo';
+import { isActualAutomergeObject, type DocAccessor, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
-import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 
-import { SpaceAwarenessProvider } from './awareness-provider';
-import { YJSAwarenessProvider, yjsCursorConverter, AwarenessProvider, automerge, awareness } from '../extensions';
-import { cursorColor } from '../styles';
-import { CursorConverter } from '../util';
-
-// TODO(burdon): Generalize.
-type Awareness = awarenessProtocol.Awareness;
+import { createAutomergeModel, createYjsModel } from '../extensions';
 
 /**
  * State field makes the model available to other extensions.
@@ -61,7 +43,8 @@ export type EditorModel = {
   getCursorFromRange?: (value: Range) => string;
   getRangeFromCursor?: (cursor: string) => Range | undefined;
   extension?: Extension;
-  awareness?: Awareness;
+  // TODO(burdon): Generalize.
+  awareness?: Y.Awareness;
   peer?: {
     id: string;
     name?: string;
@@ -96,90 +79,4 @@ const createModel = (props: UseTextModelProps) => {
 
     return createYjsModel(props);
   }
-};
-
-const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorModel => {
-  invariant(text?.doc && text?.content);
-  const provider = space
-    ? new YJSAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
-    : undefined;
-
-  const model: EditorModel = {
-    id: text.doc.guid,
-    content: text.content,
-    text: () => text.content!.toString(),
-    // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
-    // TODO(dmaretskyi): Refactor as cursor-converter.
-    getCursorFromRange: (range: Range) => {
-      const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.from));
-      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.to, -1));
-      return [arrayToString(from), arrayToString(to)].join(':');
-    },
-    getRangeFromCursor: (cursor: string) => {
-      invariant(text.doc);
-      const parts = cursor.split(':');
-      const from = Y.createAbsolutePositionFromRelativePosition(
-        Y.decodeRelativePosition(stringToArray(parts[0])),
-        text.doc,
-      );
-      const to = Y.createAbsolutePositionFromRelativePosition(
-        Y.decodeRelativePosition(stringToArray(parts[1])),
-        text.doc,
-      );
-      return from && to ? { from: from.index, to: to.index } : undefined;
-    },
-    extension: [
-      yCollab(text.content as YText, provider?.awareness),
-      CursorConverter.of(yjsCursorConverter(text.content as YText)),
-      modelState.init(() => model),
-    ],
-    awareness: provider?.awareness,
-    peer: identity
-      ? {
-          id: identity.identityKey.toHex(),
-          name: identity.profile?.displayName,
-        }
-      : undefined,
-  };
-
-  return model;
-};
-
-const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): EditorModel => {
-  const obj = text as any as AutomergeTextCompat;
-  const doc = getRawDoc(obj, [obj.field]);
-
-  const awarenessProvider =
-    space &&
-    new SpaceAwarenessProvider({
-      space,
-      channel: `automerge.awareness.${obj.id}`,
-      info: {
-        displayName: identity?.profile?.displayName ?? '',
-        color: cursorColor.color,
-        lightColor: cursorColor.light,
-      },
-      peerId: identity?.identityKey.toHex() ?? 'Anonymous',
-    });
-
-  const model: EditorModel = {
-    id: obj.id,
-    content: doc,
-    text: () => get(doc.handle.docSync(), doc.path),
-    // TODO(burdon): https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
-    extension: [
-      automerge({ handle: doc.handle, path: doc.path }),
-      modelState.init(() => model),
-      awarenessProvider && AwarenessProvider.of(awarenessProvider),
-      awareness(),
-    ].filter(isNotNullOrUndefined),
-    peer: identity
-      ? {
-          id: identity.identityKey.toHex(),
-          name: identity.profile?.displayName,
-        }
-      : undefined,
-  };
-
-  return model;
 };

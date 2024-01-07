@@ -8,7 +8,7 @@ import { arrayToString, stringToArray } from '@dxos/util';
 
 import { type CursorConverter } from '../../util';
 
-export const yjsCursorConverter = (text: Y.Text): CursorConverter => ({
+export const cursorConverter = (text: Y.Text): CursorConverter => ({
   toCursor: (index, assoc) => {
     return arrayToString(Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text, index, assoc)));
   },
