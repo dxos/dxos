@@ -94,10 +94,12 @@ const commentsStateField = StateField.define<CommentsState>({
       // Update range from store.
       if (effect.is(setCommentRange)) {
         const { model, comments } = effect.value;
-        const ranges: ExtendedCommentRange[] = comments.map((comment) => {
-          const range = model.getRangeFromCursor!(comment.cursor)!;
-          return { ...comment, ...range };
-        });
+        const ranges: ExtendedCommentRange[] = comments
+          .map((comment) => {
+            const range = model.getRangeFromCursor!(comment.cursor);
+            return range && { ...comment, ...range };
+          })
+          .filter(nonNullable);
 
         return { ...value, ranges };
       }
@@ -335,7 +337,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
           ranges.forEach((range) => {
             if (from2 === to2) {
               const newRange = model.getRangeFromCursor!(range.cursor);
-              if (newRange.to - newRange.from === 0) {
+              if (!newRange || newRange.to - newRange.from === 0) {
                 // TODO(burdon): Delete range if empty.
                 log.info('deleted comment', { thread: range.id });
               }

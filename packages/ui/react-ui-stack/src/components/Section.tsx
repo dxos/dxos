@@ -73,6 +73,9 @@ export type SectionProps = PropsWithChildren<{
   onNavigate?: MosaicTileProps['onNavigate'];
 }>;
 
+// TODO(burdon): Provide runtime option (different use cases).
+const separation = false;
+
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
   SectionProps
@@ -86,16 +89,15 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
 
     return (
       <DensityProvider density='fine'>
-        <ListItem.Root ref={forwardedRef} id={id} classNames='block __pbe-2' style={draggableStyle}>
+        <ListItem.Root ref={forwardedRef} id={id} classNames={['block', separation && 'pbe-2']} style={draggableStyle}>
           <div
             role='none'
             className={mx(
               surfaceElevation({ elevation: 'group' }),
               inputSurface,
               hoverableControls,
-              'flex __rounded __min-bs-[4rem]',
-              index === 0 && 'rounded-t',
-              index === count - 1 && 'rounded-b',
+              'flex',
+              separation ? 'rounded min-bs-[4rem]' : [index === 0 && 'rounded-t', index === count - 1 && 'rounded-b'],
               active && staticHoverableControls,
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
@@ -107,7 +109,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               className={mx(
                 fineButtonDimensions,
                 hoverableFocusedKeyboardControls,
-                'self-stretch flex items-center __rounded-is justify-center bs-auto is-auto',
+                'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
                 active === 'overlay' && document.body.hasAttribute('data-is-keyboard') ? staticFocusRing : focusRing,
               )}
               data-testid='section.drag-handle'
