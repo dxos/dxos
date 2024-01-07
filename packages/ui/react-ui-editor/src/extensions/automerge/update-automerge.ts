@@ -6,15 +6,15 @@
 // Code taken from https://github.com/automerge/automerge-codemirror
 //
 
-import { type EditorState, type Text, type Transaction } from '@codemirror/state';
+import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
 import { next as am, type Heads } from '@dxos/automerge/automerge';
 
 import { type IDocHandle } from './handle';
-import { type Field } from './plugin';
+import type { Value } from './plugin';
 
 export const updateAutomerge = (
-  field: Field,
+  field: StateField<Value>,
   handle: IDocHandle,
   transactions: Transaction[],
   state: EditorState,

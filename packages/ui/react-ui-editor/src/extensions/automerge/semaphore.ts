@@ -1,17 +1,15 @@
 //
 // Copyright 2023 DXOS.org
+// Ref: https://github.com/automerge/automerge-codemirror
 //
 
-//
-// Code taken from https://github.com/automerge/automerge-codemirror
-//
-
+import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import { next as automerge } from '@dxos/automerge/automerge';
 
 import { type IDocHandle } from './handle';
-import { type Field, isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads } from './plugin';
+import { isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads, type Value } from './plugin';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
@@ -24,11 +22,11 @@ type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads |
  * TODO(burdon): Comment.
  */
 export class PatchSemaphore {
-  _field!: Field;
+  _field!: StateField<Value>;
   _inReconcile = false;
   _queue: Array<ChangeFn> = [];
 
-  constructor(field?: Field) {
+  constructor(field?: StateField<Value>) {
     if (field !== undefined) {
       this._field = field;
     }

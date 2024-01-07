@@ -3,4 +3,4 @@
 //
 
 export { type IDocHandle } from './handle';
-export { automerge, type AutomergePlugin } from './plugin';
+export { automerge } from './plugin';

@@ -1,9 +1,6 @@
 //
 // Copyright 2023 DXOS.org
-//
-
-//
-// Code taken from https://github.com/automerge/automerge-codemirror
+// Ref: https://github.com/automerge/automerge-codemirror
 //
 
 import {
@@ -40,21 +37,16 @@ export const effectType = StateEffect.define<UpdateHeads>({});
 
 export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
 
-export const getLastHeads = (state: EditorState, field: Field): Heads => state.field(field).lastHeads;
+export const getLastHeads = (state: EditorState, field: StateField<Value>): Heads => state.field(field).lastHeads;
 
-export const getPath = (state: EditorState, field: Field): Prop[] => state.field(field).path;
-
-export type Field = StateField<Value>;
+export const getPath = (state: EditorState, field: StateField<Value>): Prop[] => state.field(field).path;
 
 const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.
 });
 
-export type AutomergePlugin = {
-  extension: Extension;
-};
-
-export const automerge = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
+export const automerge = (handle: IDocHandle, path: Prop[]): Extension => {
+  // TODO(burdon): Rename.
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
       lastHeads: A.getHeads(handle.docSync()!),
