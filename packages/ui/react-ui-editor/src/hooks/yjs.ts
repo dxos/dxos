@@ -22,7 +22,7 @@ import { yjs } from '../extensions';
 export const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorModel => {
   invariant(text?.doc && text?.content);
   const provider = space
-    ? new YJSAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
+    ? new YAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
     : undefined;
 
   const model: EditorModel = {
@@ -70,7 +70,7 @@ const messageQueryAwareness = 3;
 /**
  * Yjs awareness provider on top of a DXOS space.
  */
-export class YJSAwarenessProvider extends Observable<any> {
+export class YAwarenessProvider extends Observable<any> {
   private readonly _space: Space;
   private readonly _awareness: YP.Awareness;
   private readonly _clientId: number;

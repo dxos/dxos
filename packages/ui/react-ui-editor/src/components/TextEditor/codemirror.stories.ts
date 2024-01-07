@@ -18,7 +18,7 @@ import { type Identity } from '@dxos/react-client/halo';
 import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 
-import { YJSAwarenessProvider } from '../../hooks';
+import { YAwarenessProvider } from '../../hooks';
 import { EditorDocument, types as schema } from '../../testing';
 
 export default {
@@ -36,7 +36,7 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
     return;
   }
 
-  const { awareness } = new YJSAwarenessProvider({ space, doc, channel: `yjs.awareness.${text.id}` });
+  const { awareness } = new YAwarenessProvider({ space, doc, channel: `yjs.awareness.${text.id}` });
   awareness.setLocalStateField('user', {
     name: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
     // TODO(wittjosiah): Pick colours from theme based on identity key.
