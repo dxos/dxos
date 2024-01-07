@@ -20,6 +20,12 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

@@ -6,7 +6,7 @@ import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { type IntentContext, IntentProvider } from './IntentContext';
-import type { Intent } from './intent';
+import type { Intent, IntentResolver } from './intent';
 import IntentMeta from './meta';
 import { type IntentPluginProvides, type IntentResolverProvides, parseIntentResolverPlugin } from './provides';
 import type { PluginDefinition } from '../PluginHost';
@@ -17,7 +17,9 @@ import { filterPlugins, findPlugin } from '../helpers';
  * Inspired by https://developer.android.com/reference/android/content/Intent.
  */
 const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
-  const state = deepSignal<IntentContext>({ dispatch: async () => {} });
+  const state = deepSignal<IntentContext>({ dispatch: async () => {}, registerResolver: () => () => {} });
+
+  const dynamicResolvers = new Set<{ plugin: string; resolver: IntentResolver }>();
 
   return {
     meta: IntentMeta,
@@ -25,8 +27,24 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       // Dispatch intent to associated plugin.
       const dispatch = async (intent: Intent) => {
         if (intent.plugin) {
+          for (const entry of dynamicResolvers) {
+            if (entry.plugin === intent.plugin) {
+              const result = entry.resolver(intent, plugins);
+              if (result) {
+                return result;
+              }
+            }
+          }
+
           const plugin = findPlugin<IntentResolverProvides>(plugins, intent.plugin);
           return plugin?.provides.intent.resolver(intent, plugins);
+        }
+
+        for (const entry of dynamicResolvers) {
+          const result = entry.resolver(intent, plugins);
+          if (result) {
+            return result;
+          }
         }
 
         // Return resolved value from first plugin that handles the intent.
@@ -46,6 +64,12 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           result = await dispatch({ ...intent, data });
         }
         return result;
+      };
+
+      state.registerResolver = (plugin, resolver) => {
+        const entry = { plugin, resolver };
+        dynamicResolvers.add(entry);
+        return () => dynamicResolvers.delete(entry);
       };
     },
     provides: {

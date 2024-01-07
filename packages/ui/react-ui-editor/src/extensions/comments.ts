@@ -16,6 +16,7 @@ import {
   WidgetType,
   type Rect,
 } from '@codemirror/view';
+import get from 'lodash.get';
 import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
@@ -25,8 +26,8 @@ import { nonNullable } from '@dxos/util';
 
 import { callbackWrapper } from './util';
 import { type CommentRange, type EditorModel, modelState, type Range } from '../hooks';
+import { tokens } from '../styles';
 
-// TODO(burdon): Handle scroll to.
 // TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
 // TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
 
@@ -42,10 +43,10 @@ const styles = EditorView.baseTheme({
     backgroundColor: 'orange',
   },
   '& .cm-comment': {
-    backgroundColor: 'yellow',
+    backgroundColor: get(tokens, 'extend.colors.yellow.50'),
   },
   '& .cm-comment-active': {
-    backgroundColor: 'orange',
+    backgroundColor: get(tokens, 'extend.colors.yellow.100'),
   },
 });
 
@@ -71,9 +72,22 @@ export type CommentsState = CommentSelected & {
   ranges: ExtendedCommentRange[];
 };
 
+export const setFocus = (view: EditorView, thread: string) => {
+  const range = view.state.field(commentsStateField).ranges.find((range) => range.id === thread);
+  if (!range) {
+    return;
+  }
+
+  view.dispatch({
+    effects: setSelection.of({ active: thread }),
+    selection: { anchor: range.from },
+    scrollIntoView: true,
+  });
+};
+
 export const setCommentRange = StateEffect.define<{ model: EditorModel; comments: CommentRange[] }>();
 
-const setSelection = StateEffect.define<CommentSelected>();
+export const setSelection = StateEffect.define<CommentSelected>();
 
 const setCommentState = StateEffect.define<CommentsState>();
 
