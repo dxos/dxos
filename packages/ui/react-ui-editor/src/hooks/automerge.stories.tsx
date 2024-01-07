@@ -22,9 +22,8 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { useTextModel } from './useTextModel';
 import { MarkdownEditor } from '../components';
-import { type IDocHandle } from '../extensions'; 
-import { automergePlugin } from '../extensions';
-import { awareness } from '../extensions'; 
+import { type IDocHandle } from '../extensions';
+import { automerge, awareness } from '../extensions';
 
 type EditorProps = {
   handle: IDocHandle;
@@ -38,7 +37,7 @@ const Editor = ({ handle, path }: EditorProps) => {
   useEffect(() => {
     const view = (editorRoot.current = new EditorView({
       doc: get(handle.docSync()!, path),
-      extensions: [basicSetup, automergePlugin(handle, path), awareness()],
+      extensions: [basicSetup, automerge(handle, path), awareness()],
       parent: containerRef.current as any,
     }));
 

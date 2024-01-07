@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Additional copyright?
+//
+// Code taken from https://github.com/automerge/automerge-codemirror
+//
 
 import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';

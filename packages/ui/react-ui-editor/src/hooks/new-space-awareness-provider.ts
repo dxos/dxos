@@ -9,12 +9,7 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type GossipMessage } from '@dxos/react-client/mesh';
 
-import {
-  type AwarenessInfo,
-  type AwarenessPosition,
-  type AwarenessProvider,
-  type AwarenessState,
-} from '../extensions';
+import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from '../extensions';
 
 export type NewSpaceAwarenessProviderParams = {
   space: Space;

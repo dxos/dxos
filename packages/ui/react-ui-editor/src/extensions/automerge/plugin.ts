@@ -2,6 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+//
+// Code taken from https://github.com/automerge/automerge-codemirror
+//
+
 import {
   Annotation,
   type EditorState,
@@ -14,7 +18,7 @@ import {
 } from '@codemirror/state';
 import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
 
-import { next as automerge } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
 import { cursorConverter } from './cursor-converter';
@@ -50,10 +54,10 @@ export type AutomergePlugin = {
   extension: Extension;
 };
 
-export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
+export const automerge = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
-      lastHeads: automerge.getHeads(handle.docSync()!),
+      lastHeads: A.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
       path: path.slice(),
     }),

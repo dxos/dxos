@@ -25,7 +25,7 @@ import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
 import { SpaceAwarenessProvider, cursorColor } from './yjs';
 import { yjsCursorConverter } from './yjs/yjs-cursor-converter';
-import { AwarenessProvider, CursorConverter, automergePlugin, awareness } from '../extensions';
+import { AwarenessProvider, CursorConverter, automerge, awareness } from '../extensions';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
@@ -169,7 +169,7 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
     text: () => get(doc.handle.docSync(), doc.path),
     // TODO(burdon): https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
     extension: [
-      automergePlugin(doc.handle, doc.path),
+      automerge(doc.handle, doc.path),
       modelState.init(() => model),
       awarenessProvider && AwarenessProvider.of(awarenessProvider),
       awareness(),

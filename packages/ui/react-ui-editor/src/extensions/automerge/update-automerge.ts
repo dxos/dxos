@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Additional copyright?
+//
+// Code taken from https://github.com/automerge/automerge-codemirror
+//
 
 import { type EditorState, type Text, type Transaction } from '@codemirror/state';
 
