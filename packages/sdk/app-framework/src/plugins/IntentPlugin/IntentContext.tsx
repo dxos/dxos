@@ -4,13 +4,19 @@
 
 import { type Context, createContext, useContext, type Provider } from 'react';
 
-import { type DispatchIntent } from './intent';
+import { type UnsubscribeCallback } from '@dxos/async';
+
+import { type IntentDispatcher, type IntentResolver } from './intent';
 
 export type IntentContext = {
-  dispatch: DispatchIntent;
+  dispatch: IntentDispatcher;
+  registerResolver: (pluginId: string, resolver: IntentResolver) => UnsubscribeCallback;
 };
 
-const IntentContext: Context<IntentContext> = createContext<IntentContext>({ dispatch: async () => {} });
+const IntentContext: Context<IntentContext> = createContext<IntentContext>({
+  dispatch: async () => {},
+  registerResolver: () => () => {},
+});
 
 export const useIntent = () => useContext(IntentContext);
 

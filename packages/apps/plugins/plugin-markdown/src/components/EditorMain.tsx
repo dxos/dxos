@@ -4,6 +4,7 @@
 
 import React, { type HTMLAttributes, type RefCallback } from 'react';
 
+import { useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
 import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
@@ -22,6 +23,10 @@ export type EditorMainProps = {
 export const EditorMain = ({ editorRefCb, properties, layout, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
+
+  useIntentResolver(MARKDOWN_PLUGIN, (intent) => {
+    console.log(intent);
+  });
 
   return (
     <Root properties={properties}>

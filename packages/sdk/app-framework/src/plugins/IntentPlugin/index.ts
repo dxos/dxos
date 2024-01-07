@@ -4,5 +4,6 @@
 
 export * from './intent';
 export * from './provides';
+export * from './useIntentResolver';
 
 export * from './IntentContext';
