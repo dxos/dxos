@@ -21,8 +21,8 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle, setCommentRange } from './extensions';
 import { defaultTheme, markdownTheme, textTheme } from './themes';
+import { basicBundle, markdownBundle, setCommentRange } from '../../extensions';
 import { type CommentRange, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 

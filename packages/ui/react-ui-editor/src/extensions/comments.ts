@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { callbackWrapper } from './util';
-import { type CommentRange, type EditorModel, modelState, type Range } from '../../../hooks';
+import { type CommentRange, type EditorModel, modelState, type Range } from '../hooks';
 
 // TODO(burdon): Handle scroll to.
 // TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.

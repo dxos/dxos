@@ -7,4 +7,5 @@ export { Doc, YText, YXmlFragment } from '@dxos/text-model';
 export { type Extension } from '@codemirror/state';
 
 export * from './components';
+export * from './extensions';
 export * from './hooks';
