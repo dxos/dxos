@@ -39,22 +39,15 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
   private readonly _channel: string;
   private readonly _peerId: string;
   private readonly _info: AwarenessInfo;
-  public readonly remoteStateChange = new Event<void>();
 
+  
   private _remoteStates = new Map<string, AwarenessState>();
   private _localState?: AwarenessState = undefined;
+  
+  private _ctx!: Context;
+  private _postTask!: DeferredTask;
 
-  private _ctx = new Context();
-  private readonly _postTask = new DeferredTask(this._ctx, async () => {
-    if (this._localState) {
-      await this._space.postMessage(this._channel, {
-        kind: 'post',
-        state: this._localState,
-      } satisfies ProtocolMessage);
-
-      await sleep(DEBOUNCE_INTERVAL);
-    }
-  });
+  public readonly remoteStateChange = new Event<void>();
 
   constructor(params: NewSpaceAwarenessProviderParams) {
     this._space = params.space;
@@ -64,6 +57,18 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
   }
 
   open() {
+    this._ctx = new Context();
+    this._postTask = new DeferredTask(this._ctx, async () => {
+      if (this._localState) {
+        await this._space.postMessage(this._channel, {
+          kind: 'post',
+          state: this._localState,
+        } satisfies ProtocolMessage);
+        
+        await sleep(DEBOUNCE_INTERVAL);
+      }
+    });
+
     const unsubscribe = this._space.listen(this._channel, (message: GossipMessage) => {
       switch (message.payload.kind) {
         case 'query': {
@@ -89,10 +94,9 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
 
   close() {
     void this._ctx.dispose();
-    this._ctx = new Context();
   }
 
-  localPositionChanged(position: AwarenessPosition | undefined): void {
+  updateLocalPosition(position: AwarenessPosition | undefined): void {
     this._localState = {
       peerId: this._peerId,
       position,

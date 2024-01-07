@@ -112,20 +112,20 @@ const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
     space,
   });
 
-  if (model) {
-    return (
-      // <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center overflow-y-scroll'>
-        <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor model={model} />
-          <div className='flex shrink-0 h-[300px]'></div>
-        </div>
-      </div>
-      // </div>
-    );
-  } else {
+  if (!model) {
     return null;
   }
+  
+  return (
+    // <div className={mx(fixedInsetFlexLayout, groupSurface)}>
+    <div className='flex justify-center overflow-y-scroll'>
+      <div className='flex flex-col w-[800px] py-16'>
+        <MarkdownEditor model={model} />
+        <div className='flex shrink-0 h-[300px]'></div>
+      </div>
+    </div>
+    // </div>
+  );
 };
 
 export const WithEcho = {
