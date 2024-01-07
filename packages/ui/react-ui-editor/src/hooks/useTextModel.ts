@@ -36,17 +36,19 @@ export type CommentRange = {
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type EditorModel = {
   id: string;
+  text: () => string;
+  extension?: Extension;
+
   // TODO(burdon): Remove.
   content: string | YText | YXmlFragment | DocAccessor;
-  text: () => string;
   /**
    * @deprecated Use CursorConverter.
    */
   getCursorFromRange?: (value: Range) => string;
   getRangeFromCursor?: (cursor: string) => Range | undefined;
-  extension?: Extension;
-  // TODO(burdon): Generalize.
+  // TODO(burdon): Move into extension.
   awareness?: YP.Awareness;
+  // TODO(burdon): Remove.
   peer?: {
     id: string;
     name?: string;
