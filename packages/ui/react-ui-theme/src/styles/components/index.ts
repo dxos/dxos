@@ -7,7 +7,7 @@ export * from './avatar';
 export * from './breadcrumb';
 export * from './button';
 export * from './dialog';
-export * from './dropdown-menu';
+export * from './menu';
 export * from './input';
 export * from './link';
 export * from './list';

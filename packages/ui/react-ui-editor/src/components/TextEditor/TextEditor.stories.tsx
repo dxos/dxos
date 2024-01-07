@@ -12,8 +12,8 @@ import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { defaultSlots, TextEditor, type TextEditorProps, type TextEditorRef, type TextEditorSlots } from './TextEditor';
-import { textTheme } from './themes';
 import { useTextModel } from '../../hooks';
+import { textTheme } from '../../themes';
 
 const initialText = [
   '# TextEditor',

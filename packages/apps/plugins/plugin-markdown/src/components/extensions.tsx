@@ -6,13 +6,14 @@ import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { useIntent, type DispatchIntent, LayoutAction } from '@dxos/app-framework';
+import { ThreadAction } from '@braneframe/plugin-thread';
+import { Document as DocumentType, Thread as ThreadType } from '@braneframe/types';
+import { type DispatchIntent, LayoutAction } from '@dxos/app-framework';
+import { type Space } from '@dxos/client/echo';
 import {
-  type AutocompleteOptions,
-  type CommentsOptions,
+  type AutocompleteResult,
   type Extension,
   type ListenerOptions,
-  type TooltipOptions,
   autocomplete,
   comments,
   image,
@@ -20,24 +21,153 @@ import {
   listener,
   table,
   tasklist,
-  tooltip,
   typewriter,
+  type LinkOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
+export type ExtensionsOptions = {
+  debug?: boolean;
+  experimental?: boolean;
+  space?: Space;
+  document?: DocumentType;
+  dispatch?: DispatchIntent;
+} & Pick<ListenerOptions, 'onChange'>;
+
+/**
+ * Create extension instances for editor.
+ */
+export const getExtensions = ({
+  debug,
+  experimental,
+  space, // TODO(burdon): Reconcile Space/non-space deps.
+  document,
+  dispatch,
+  onChange,
+}: ExtensionsOptions): Extension[] => {
+  const extensions: Extension[] = [
+    //
+    // Common.
+    //
+    image(),
+    table(),
+    tasklist(),
+  ];
+
+  //
+  // Document change listener.
+  //
+  if (onChange) {
+    extensions.push(
+      listener({
+        onChange,
+      }),
+    );
+  }
+
+  //
+  // Hyperlinks (external and internal object links).
+  //
+  if (dispatch) {
+    extensions.push(
+      link({
+        onHover: onHoverLinkTooltip,
+        onRender: onRenderLink((id: string) => {
+          void dispatch({
+            action: LayoutAction.ACTIVATE,
+            data: { id },
+          });
+        }),
+      }),
+    );
+  }
+
+  //
+  // Autocomplete object links.
+  //
+  if (space) {
+    extensions.push(
+      autocomplete({
+        onSearch: (text: string) => {
+          // TODO(burdon): Specify filter (e.g., stack).
+          const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
+          return objects
+            .map<AutocompleteResult | undefined>((object) =>
+              object.title?.length && object.id !== document?.id
+                ? {
+                    label: object.title,
+                    // TODO(burdon): Factor out URL builder.
+                    apply: `[${object.title}](/${object.id})`,
+                  }
+                : undefined,
+            )
+            .filter(nonNullable);
+        },
+      }),
+    );
+
+    //
+    // Comment threads.
+    //
+    if (dispatch && document) {
+      extensions.push(
+        comments({
+          onCreate: (cursor: string) => {
+            // Create comment thread.
+            const thread = space.db.add(new ThreadType({ context: { object: document.id } }));
+            document.comments.push({ thread, cursor });
+            void dispatch([
+              {
+                action: ThreadAction.SELECT,
+                data: { active: thread.id, threads: [{ id: thread.id }] },
+              },
+              {
+                action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
+                data: { state: true },
+              },
+            ]);
+
+            return thread.id;
+          },
+          onSelect: (state) => {
+            const { active, ranges } = state;
+            void dispatch([
+              {
+                action: ThreadAction.SELECT,
+                data: {
+                  active,
+                  threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
+                },
+              },
+            ]);
+          },
+        }),
+      );
+    }
+  }
+
+  if (debug) {
+    const items = localStorage.getItem('dxos.composer.extension.demo');
+    extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
+  }
+
+  if (experimental) {
+    extensions.push(...[].filter(nonNullable));
+  }
+
+  return extensions;
+};
+
 // TODO(burdon): Factor out style.
 const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onRender = (dispatch: DispatchIntent) => (el: Element, url: string) => {
-  // TODO(burdon): Dispatch if local link.
+const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url: string) => {
+  // TODO(burdon): Formalize/document internal link format.
   const options: AnchorHTMLAttributes<any> = url.startsWith('/')
     ? {
         onClick: () => {
-          void dispatch({
-            action: LayoutAction.ACTIVATE,
-            data: { id: url.slice(1) },
-          });
+          onSelectObject(url.slice(1));
         },
       }
     : {
@@ -55,7 +185,7 @@ const onRender = (dispatch: DispatchIntent) => (el: Element, url: string) => {
   );
 };
 
-export const onHover: TooltipOptions['onHover'] = (el, url) => {
+export const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -65,44 +195,4 @@ export const onHover: TooltipOptions['onHover'] = (el, url) => {
       </a>
     </StrictMode>,
   );
-};
-
-// TODO(burdon): Make markdown plugins separately configurable.
-export type UseExtensionsOptions = {
-  debug?: boolean;
-  experimental?: boolean;
-  listener?: ListenerOptions;
-  autocomplete?: AutocompleteOptions;
-  comments?: CommentsOptions;
-};
-
-export const useExtensions = ({
-  debug,
-  experimental,
-  listener: listenerOption,
-  autocomplete: autocompleteOption,
-  comments: commentsOptions,
-}: UseExtensionsOptions = {}): Extension[] => {
-  const { dispatch } = useIntent();
-  const extensions: Extension[] = [
-    image(),
-    link({ onRender: onRender(dispatch) }),
-    table(),
-    tasklist(),
-    tooltip({ onHover }),
-    autocompleteOption && autocomplete(autocompleteOption),
-    commentsOptions && comments(commentsOptions),
-    listenerOption && listener(listenerOption),
-  ].filter(nonNullable);
-
-  if (debug) {
-    const items = localStorage.getItem('dxos.composer.extension.demo');
-    extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
-  }
-
-  if (experimental) {
-    extensions.push(...[].filter(nonNullable));
-  }
-
-  return extensions;
 };

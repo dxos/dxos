@@ -61,9 +61,6 @@ export type EditorModel = {
    * @deprecated Use CursorConverter.
    */
   getCursorFromRange?: (value: Range) => string;
-  /**
-   * @deprecated Use CursorConverter.
-   */
   getRangeFromCursor?: (cursor: string) => Range;
   extension?: Extension;
   awareness?: Awareness;
@@ -121,16 +118,17 @@ const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorMod
       return [arrayToString(from), arrayToString(to)].join(':');
     },
     getRangeFromCursor: (cursor: string) => {
+      invariant(text.doc);
       const parts = cursor.split(':');
       const from = Y.createAbsolutePositionFromRelativePosition(
         Y.decodeRelativePosition(stringToArray(parts[0])),
-        text.doc!,
+        text.doc,
       );
       const to = Y.createAbsolutePositionFromRelativePosition(
         Y.decodeRelativePosition(stringToArray(parts[1])),
-        text.doc!,
+        text.doc,
       );
-      return { from: from!.index, to: to!.index };
+      return from && to ? { from: from.index, to: to.index } : undefined;
     },
     extension: [
       yCollab(text.content as YText, provider?.awareness),

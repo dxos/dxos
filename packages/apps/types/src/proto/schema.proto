@@ -217,8 +217,16 @@ message Sketch {
 message Thread {
   option (object) = true;
 
+  // TODO(burdon): Reconcile with Message.Context.
+  message Context {
+    string space = 1;
+    string schema = 2;
+    string object = 3;
+  }
+
   string title = 1;
   repeated Message messages = 2;
+  Context context = 3;
 }
 
 /**
