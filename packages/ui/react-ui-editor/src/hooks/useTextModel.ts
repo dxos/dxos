@@ -4,7 +4,7 @@
 
 import { StateField, type Extension } from '@codemirror/state';
 import { useEffect, useState } from 'react';
-import type * as Y from 'y-protocols/awareness';
+import type * as YP from 'y-protocols/awareness';
 
 import { isAutomergeObject, type DocAccessor, type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
@@ -45,7 +45,7 @@ export type EditorModel = {
   getRangeFromCursor?: (cursor: string) => Range | undefined;
   extension?: Extension;
   // TODO(burdon): Generalize.
-  awareness?: Y.Awareness;
+  awareness?: YP.Awareness;
   peer?: {
     id: string;
     name?: string;

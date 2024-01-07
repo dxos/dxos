@@ -18,7 +18,7 @@ import { type Identity } from '@dxos/react-client/halo';
 import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 
-import { YJSAwarenessProvider } from '../../extensions';
+import { YJSAwarenessProvider } from '../../hooks';
 import { EditorDocument, types as schema } from '../../testing';
 
 export default {

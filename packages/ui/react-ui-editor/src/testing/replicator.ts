@@ -7,7 +7,7 @@ import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import { Observable } from 'lib0/observable';
 import { useMemo } from 'react';
-import * as awarenessProtocol from 'y-protocols/awareness';
+import * as YP from 'y-protocols/awareness';
 import * as syncProtocol from 'y-protocols/sync';
 import { Doc } from 'yjs';
 
@@ -18,7 +18,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { type EditorModel } from '../hooks';
 import { cursorColor } from '../styles';
 
-type Awareness = awarenessProtocol.Awareness;
+type Awareness = YP.Awareness;
 
 const messageSync = 0;
 const messageAwareness = 1;
@@ -36,7 +36,7 @@ export class AwarenessProvider extends Observable<any> {
     super();
     this._remoteUpdate = update;
     this._doc = doc;
-    this._awareness = awareness ?? new awarenessProtocol.Awareness(doc);
+    this._awareness = awareness ?? new YP.Awareness(doc);
 
     this._doc.on('update', this._handleDocUpdate.bind(this));
     this._awareness.on('update', this._handleAwarenessUpdate.bind(this));
@@ -56,10 +56,7 @@ export class AwarenessProvider extends Observable<any> {
     // Post local awareness state.
     const encoderAwarenessState = encoding.createEncoder();
     encoding.writeVarUint(encoderAwarenessState, messageAwareness);
-    encoding.writeVarUint8Array(
-      encoderAwarenessState,
-      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [this._doc.clientID]),
-    );
+    encoding.writeVarUint8Array(encoderAwarenessState, YP.encodeAwarenessUpdate(this.awareness, [this._doc.clientID]));
     void this._remoteUpdate.emit(encoding.toUint8Array(encoderAwarenessState));
   }
 
@@ -80,10 +77,7 @@ export class AwarenessProvider extends Observable<any> {
     const changedClients = added.concat(updated).concat(removed);
     const encoderAwareness = encoding.createEncoder();
     encoding.writeVarUint(encoderAwareness, messageAwareness);
-    encoding.writeVarUint8Array(
-      encoderAwareness,
-      awarenessProtocol.encodeAwarenessUpdate(this._awareness, changedClients),
-    );
+    encoding.writeVarUint8Array(encoderAwareness, YP.encodeAwarenessUpdate(this._awareness, changedClients));
     this._remoteUpdate.emit(encoding.toUint8Array(encoderAwareness));
   }
 
@@ -110,7 +104,7 @@ export class AwarenessProvider extends Observable<any> {
       }
 
       case messageAwareness: {
-        awarenessProtocol.applyAwarenessUpdate(this._awareness, decoding.readVarUint8Array(decoder), this);
+        YP.applyAwarenessUpdate(this._awareness, decoding.readVarUint8Array(decoder), this);
         break;
       }
 
@@ -118,7 +112,7 @@ export class AwarenessProvider extends Observable<any> {
         encoding.writeVarUint(encoder, messageAwareness);
         encoding.writeVarUint8Array(
           encoder,
-          awarenessProtocol.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys())),
+          YP.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys())),
         );
         sendReply = true;
         break;
@@ -139,7 +133,7 @@ export class AwarenessProvider extends Observable<any> {
   }
 
   private _handleBeforeUnload() {
-    awarenessProtocol.removeAwarenessStates(this._awareness, [this._doc.clientID], 'window unload');
+    YP.removeAwarenessStates(this._awareness, [this._doc.clientID], 'window unload');
   }
 }
 

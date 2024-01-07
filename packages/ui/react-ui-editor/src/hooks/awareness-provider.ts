@@ -29,7 +29,6 @@ export type AwarenessProviderParams = {
   info: AwarenessInfo;
 };
 
-// TODO(burdon): Repackage inside extensions.
 export class SpaceAwarenessProvider implements AwarenessProvider {
   public readonly remoteStateChange = new Event<void>();
 
