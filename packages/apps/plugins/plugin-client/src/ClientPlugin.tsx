@@ -68,6 +68,8 @@ export type ClientPluginProvides = SurfaceProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
+const ENABLE_VAULT_MIGRATION = false;
+
 export const ClientPlugin = ({
   types,
   appKey,
@@ -90,24 +92,30 @@ export const ClientPlugin = ({
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
 
-      const oldConfig = new Config(
-        {
-          runtime: {
-            client: {
-              remoteSource: 'https://halo.dxos.org/vault.html',
+      let oldClient: Client = null as any;
+
+      if (ENABLE_VAULT_MIGRATION) {
+        const oldConfig = new Config(
+          {
+            runtime: {
+              client: {
+                remoteSource: 'https://halo.dxos.org/vault.html',
+              },
             },
           },
-        },
-        await Envs(),
-        Defaults(),
-      );
-      const oldClient = new Client({
-        config: oldConfig,
-        services: fromIFrame(oldConfig, { shell: false }),
-      });
+          await Envs(),
+          Defaults(),
+        );
+        oldClient = new Client({
+          config: oldConfig,
+          services: fromIFrame(oldConfig, { shell: false }),
+        });
+      }
 
       try {
-        await oldClient.initialize();
+        if(ENABLE_VAULT_MIGRATION) {
+          await oldClient.initialize();
+        }
         await client.initialize();
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -127,7 +135,7 @@ export const ClientPlugin = ({
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         const identity = client.halo.identity.get();
-        if (!identity && !deviceInvitationCode) {
+        if (ENABLE_VAULT_MIGRATION && !identity && !deviceInvitationCode) {
           // TODO(wittjosiah): Remove.
           const oldIdentity = oldClient.halo.identity.get();
           if (oldIdentity) {
@@ -147,11 +155,11 @@ export const ClientPlugin = ({
 
             await newObs.wait();
             void oldClient.destroy();
-          } else {
-            await client.halo.createIdentity();
-            // TODO(wittjosiah): Ideally this would be per app rather than per identity.
-            firstRun = true;
-          }
+          } 
+        } else if(!client.halo.identity.get()) {
+          await client.halo.createIdentity();
+          // TODO(wittjosiah): Ideally this would be per app rather than per identity.
+          firstRun = true;
         } else if (client.halo.identity.get() && deviceInvitationCode) {
           // Ignore device invitation if identity already exists.
           // TODO(wittjosiah): Identity merging.
