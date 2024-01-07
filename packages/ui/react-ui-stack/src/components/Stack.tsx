@@ -91,7 +91,7 @@ export const Stack = ({
           type={type}
           classNames={classNames}
           item={{ id, items: itemsWithPreview }}
-          itemContext={{ count: items?.length, transform, onRemoveSection, onNavigateToSection, SectionContent }}
+          itemContext={{ transform, onRemoveSection, onNavigateToSection, SectionContent }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />
