@@ -6,7 +6,7 @@ import { File as FileIcon, FloppyDisk, Folder, Plugs, X } from '@phosphor-icons/
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type DispatchIntent } from '@dxos/app-framework';
+import { type IntentDispatcher } from '@dxos/app-framework';
 
 import { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID } from './meta';
 import { type LocalDirectory, type LocalEntity, type LocalFile, LocalFilesAction } from './types';
@@ -113,7 +113,7 @@ const handleLegacySave = (file: LocalFile) => {
   document.body.removeChild(a);
 };
 
-export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispatch: DispatchIntent) => {
+export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispatch: IntentDispatcher) => {
   if ('children' in entity) {
     return localDirectoryToGraphNode(entity, parent, dispatch);
   } else {
@@ -124,7 +124,7 @@ export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispat
 const localDirectoryToGraphNode = (
   directory: LocalDirectory,
   parent: Node<LocalDirectory>,
-  dispatch: DispatchIntent,
+  dispatch: IntentDispatcher,
 ) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: directory.id,
@@ -168,7 +168,7 @@ const localDirectoryToGraphNode = (
   return node;
 };
 
-const localFileToGraphNode = (file: LocalFile, parent: Node<LocalDirectory>, dispatch: DispatchIntent) => {
+const localFileToGraphNode = (file: LocalFile, parent: Node<LocalDirectory>, dispatch: IntentDispatcher) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: file.id,
     label: file.title,

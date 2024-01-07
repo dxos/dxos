@@ -2790,6 +2790,12 @@ importers:
 
   packages/apps/plugins/plugin-stack:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

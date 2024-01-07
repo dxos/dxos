@@ -113,7 +113,7 @@ export const ClientPlugin = ({
       }
 
       try {
-        if(ENABLE_VAULT_MIGRATION) {
+        if (ENABLE_VAULT_MIGRATION) {
           await oldClient.initialize();
         }
         await client.initialize();
@@ -155,8 +155,8 @@ export const ClientPlugin = ({
 
             await newObs.wait();
             void oldClient.destroy();
-          } 
-        } else if(!client.halo.identity.get()) {
+          }
+        } else if (!client.halo.identity.get()) {
           await client.halo.createIdentity();
           // TODO(wittjosiah): Ideally this would be per app rather than per identity.
           firstRun = true;

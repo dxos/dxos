@@ -42,7 +42,13 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
     },
     {
       "path": "../../../ui/react-ui"
@@ -60,6 +66,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
       "path": "../../../ui/storybook-utils"
     },
     {
@@ -69,7 +78,16 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-layout"
@@ -81,7 +99,16 @@
       "path": "../plugin-space"
     },
     {
+      "path": "../plugin-space"
+    },
+    {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
     },
     {
       "path": "../plugin-thread"

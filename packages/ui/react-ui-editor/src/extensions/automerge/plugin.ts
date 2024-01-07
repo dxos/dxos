@@ -89,15 +89,13 @@ export const automerge = (handle: IDocHandle, path: Prop[]): AutomergePlugin => 
 
   const viewPlugin = ViewPlugin.fromClass(
     class AutomergeCodemirrorViewPlugin implements PluginValue {
-      private _view: EditorView;
-
-      constructor(view: EditorView) {
-        this._view = view;
+      constructor(private readonly _view: EditorView) {
         handle.addListener('change', this._handleChange);
       }
 
       update(update: ViewUpdate) {
-        if (update.transactions.length > 0 && update.transactions.some((t) => !isReconcileTx(t))) {
+        if (update.transactions.length > 0 && update.transactions.some((tr) => !isReconcileTx(tr))) {
+          // TODO(burdon): This is a hack to ensure that the view is updated after the transaction is applied.
           queueMicrotask(() => {
             this._view.state.facet(semaphoreFacet).reconcile(handle, this._view);
           });
