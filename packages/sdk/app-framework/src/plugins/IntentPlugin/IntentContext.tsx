@@ -3,6 +3,7 @@
 //
 
 import { type Context, createContext, useContext, type Provider } from 'react';
+import { useEffect } from 'react';
 
 import { type UnsubscribeCallback } from '@dxos/async';
 
@@ -18,6 +19,23 @@ const IntentContext: Context<IntentContext> = createContext<IntentContext>({
   registerResolver: () => () => {},
 });
 
+/**
+ * @deprecated
+ * TODO(burdon): Use useIntentDispatcher.
+ */
 export const useIntent = () => useContext(IntentContext);
+
+// TODO(burdon): Dispatch or Dispatcher?
+export const useIntentDispatcher = (): IntentDispatcher => {
+  const { dispatch } = useIntent();
+  return dispatch;
+};
+
+export const useIntentResolver = (plugin: string, resolver: IntentResolver) => {
+  const { registerResolver } = useIntent();
+  useEffect(() => {
+    return registerResolver(plugin, resolver);
+  }, [plugin, resolver]);
+};
 
 export const IntentProvider: Provider<IntentContext> = IntentContext.Provider;
