@@ -34,7 +34,7 @@ import {
   type CommentsOptions,
   type LinkOptions,
   mermaid,
-} from '../../extensions';
+} from './extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
 // Extensions:
