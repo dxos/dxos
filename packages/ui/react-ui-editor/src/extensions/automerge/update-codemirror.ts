@@ -1,9 +1,6 @@
 //
 // Copyright 2023 DXOS.org
-//
-
-//
-// Code taken from https://github.com/automerge/automerge-codemirror
+// Ref: https://github.com/automerge/automerge-codemirror
 //
 
 import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
@@ -18,7 +15,7 @@ import {
   type SpliceTextPatch,
 } from '@dxos/automerge/automerge';
 
-import { reconcileAnnotationType } from './plugin';
+import { reconcileAnnotationType } from './util';
 
 export const updateCodeMirror = (view: EditorView, selection: EditorSelection, target: Prop[], patches: Patch[]) => {
   for (const patch of patches) {
@@ -91,8 +88,8 @@ const handlePut = (target: Prop[], patch: PutPatch, state: EditorState): Array<C
   return [{ from: 0, to: length, insert: patch.value as any }];
 };
 
-// If the path of the patch is of the form [path, <index>] then we know this is
-// a path to a character within the sequence given by path
+// If the path of the patch is of the form [path, <index>] then we know this is a path to a character
+// within the sequence given by path.
 const charPath = (textPath: Prop[], candidatePath: Prop[]): number | null => {
   if (candidatePath.length !== textPath.length + 1) {
     return null;

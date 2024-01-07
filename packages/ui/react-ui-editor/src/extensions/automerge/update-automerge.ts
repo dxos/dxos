@@ -1,9 +1,6 @@
 //
 // Copyright 2023 DXOS.org
-//
-
-//
-// Code taken from https://github.com/automerge/automerge-codemirror
+// Ref: https://github.com/automerge/automerge-codemirror
 //
 
 import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
@@ -11,7 +8,7 @@ import { type EditorState, type StateField, type Text, type Transaction } from '
 import { next as am, type Heads } from '@dxos/automerge/automerge';
 
 import { type IDocHandle } from './handle';
-import type { Value } from './plugin';
+import { type Value } from './util';
 
 export const updateAutomerge = (
   field: StateField<Value>,

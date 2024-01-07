@@ -169,7 +169,7 @@ const createAutomergeModel = ({ space, identity, text }: UseTextModelProps): Edi
     text: () => get(doc.handle.docSync(), doc.path),
     // TODO(burdon): https://automerge.org/automerge/api-docs/js/functions/next.getCursor.html
     extension: [
-      automerge(doc.handle, doc.path),
+      automerge({ handle: doc.handle, path: doc.path }),
       modelState.init(() => model),
       awarenessProvider && AwarenessProvider.of(awarenessProvider),
       awareness(),

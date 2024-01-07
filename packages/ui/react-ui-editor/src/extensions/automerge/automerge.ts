@@ -3,49 +3,28 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import {
-  Annotation,
-  type EditorState,
-  type Extension,
-  Facet,
-  StateEffect,
-  StateField,
-  type Transaction,
-  type TransactionSpec,
-} from '@codemirror/state';
+import { Facet, StateField, type Extension, type Transaction } from '@codemirror/state';
 import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
 
 import { next as A } from '@dxos/automerge/automerge';
-import { type Heads, type Prop } from '@dxos/automerge/automerge';
+import { type Prop } from '@dxos/automerge/automerge';
 
 import { cursorConverter } from './cursor-converter';
 import { type IDocHandle } from './handle';
 import { PatchSemaphore } from './semaphore';
+import { effectType, isReconcileTx, type Value } from './util';
 import { CursorConverter } from '../cursor-converter';
-
-export type Value = {
-  lastHeads: Heads;
-  path: Prop[];
-  unreconciledTransactions: Transaction[];
-};
-
-type UpdateHeads = {
-  newHeads: Heads;
-};
-
-export const effectType = StateEffect.define<UpdateHeads>({});
-
-export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
-
-export const getLastHeads = (state: EditorState, field: StateField<Value>): Heads => state.field(field).lastHeads;
-
-export const getPath = (state: EditorState, field: StateField<Value>): Prop[] => state.field(field).path;
 
 const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.
 });
 
-export const automerge = (handle: IDocHandle, path: Prop[]): Extension => {
+export type AutomergeOptions = {
+  handle: IDocHandle;
+  path: Prop[];
+};
+
+export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
   // TODO(burdon): Rename.
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
@@ -112,24 +91,4 @@ export const automerge = (handle: IDocHandle, path: Prop[]): Extension => {
       CursorConverter.of(cursorConverter(handle, path)),
     ],
   };
-};
-
-export const reconcileAnnotationType = Annotation.define<unknown>();
-
-export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
-
-export const makeReconcile = (tr: TransactionSpec) => {
-  if (tr.annotations != null) {
-    if (tr.annotations instanceof Array) {
-      tr.annotations = [...tr.annotations, reconcileAnnotationType.of({})];
-    } else {
-      tr.annotations = [tr.annotations, reconcileAnnotationType.of({})];
-    }
-  } else {
-    tr.annotations = [reconcileAnnotationType.of({})];
-  }
-  // return {
-  // ...tr,
-  // annotations: reconcileAnnotationType.of({})
-  // }
 };

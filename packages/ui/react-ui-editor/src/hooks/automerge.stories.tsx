@@ -37,7 +37,7 @@ const Editor = ({ handle, path }: EditorProps) => {
   useEffect(() => {
     const view = (editorRoot.current = new EditorView({
       doc: get(handle.docSync()!, path),
-      extensions: [basicSetup, automerge(handle, path), awareness()],
+      extensions: [basicSetup, automerge({ handle, path }), awareness()],
       parent: containerRef.current as any,
     }));
 
