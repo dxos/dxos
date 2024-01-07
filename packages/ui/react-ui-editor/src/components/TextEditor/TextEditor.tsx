@@ -21,10 +21,10 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { defaultTheme, markdownTheme, textTheme } from './themes';
 import { basicBundle, markdownBundle, setCommentRange } from '../../extensions';
 import { type CommentRange, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
+import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
