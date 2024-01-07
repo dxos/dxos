@@ -23,6 +23,8 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-settings": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
