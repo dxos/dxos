@@ -22,9 +22,9 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { useTextModel } from './useTextModel';
 import { MarkdownEditor } from '../components';
-import { type IDocHandle } from '../components/TextEditor/extensions/automerge/handle';
-import { automergePlugin } from '../components/TextEditor/extensions/automerge/plugin';
-import { awareness } from '../components/TextEditor/extensions/awareness';
+import { type IDocHandle } from '../extensions'; 
+import { automergePlugin } from '../extensions';
+import { awareness } from '../extensions'; 
 
 type EditorProps = {
   handle: IDocHandle;

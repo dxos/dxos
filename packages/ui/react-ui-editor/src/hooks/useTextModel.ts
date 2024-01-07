@@ -25,8 +25,7 @@ import { arrayToString, isNotNullOrUndefined, stringToArray } from '@dxos/util';
 import { NewSpaceAwarenessProvider } from './new-space-awareness-provider';
 import { SpaceAwarenessProvider, cursorColor } from './yjs';
 import { yjsCursorConverter } from './yjs/yjs-cursor-converter';
-import { CursorConverter, automergePlugin } from '../components';
-import { AwarenessProvider, awareness } from '../components/TextEditor/extensions/awareness';
+import { AwarenessProvider, CursorConverter, automergePlugin, awareness } from '../extensions';
 
 // TODO(burdon): Move.
 type Awareness = awarenessProtocol.Awareness;
@@ -61,7 +60,7 @@ export type EditorModel = {
    * @deprecated Use CursorConverter.
    */
   getCursorFromRange?: (value: Range) => string;
-  getRangeFromCursor?: (cursor: string) => Range;
+  getRangeFromCursor?: (cursor: string) => Range | undefined;
   extension?: Extension;
   awareness?: Awareness;
   peer?: {

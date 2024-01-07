@@ -14,7 +14,7 @@ import {
   type AwarenessPosition,
   type AwarenessProvider,
   type AwarenessState,
-} from '../components/TextEditor/extensions/awareness';
+} from '../extensions';
 
 export type NewSpaceAwarenessProviderParams = {
   space: Space;
