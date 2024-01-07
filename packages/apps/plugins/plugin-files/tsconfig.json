@@ -27,7 +27,16 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../../ui/react-ui-theme"
@@ -39,10 +48,22 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-layout"
+    },
+    {
       "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-theme"
     },
     {
       "path": "../plugin-theme"
