@@ -115,7 +115,7 @@ const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
   if (!model) {
     return null;
   }
-  
+
   return (
     // <div className={mx(fixedInsetFlexLayout, groupSurface)}>
     <div className='flex justify-center overflow-y-scroll'>

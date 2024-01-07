@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Annotation, Facet, type Extension, RangeSet, Range } from '@codemirror/state';
+import { Annotation, Facet, type Extension, RangeSet, type Range } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
 import { CursorConverter } from './cursor-converter';
-import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType } from '@codemirror/view';
 
 export const awareness = (provider = EMPTY_AWARENESS_PROVIDER): Extension => {
   return [

@@ -39,11 +39,9 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
   private readonly _channel: string;
   private readonly _peerId: string;
   private readonly _info: AwarenessInfo;
-
-  
   private _remoteStates = new Map<string, AwarenessState>();
   private _localState?: AwarenessState = undefined;
-  
+
   private _ctx!: Context;
   private _postTask!: DeferredTask;
 
@@ -64,7 +62,7 @@ export class NewSpaceAwarenessProvider implements AwarenessProvider {
           kind: 'post',
           state: this._localState,
         } satisfies ProtocolMessage);
-        
+
         await sleep(DEBOUNCE_INTERVAL);
       }
     });
