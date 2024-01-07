@@ -18,6 +18,7 @@ export type ThreadChannelProps = {
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
   fullWidth?: boolean;
+  onFocus?: () => void;
   onCreate?: ChatInputProps['onMessage'];
   onDelete?: (blockId: string, idx: number) => void;
 };
@@ -27,6 +28,7 @@ export const ThreadChannel = ({
   identityKey,
   propertiesProvider,
   fullWidth = true, // TODO(burdon): Replace with className.
+  onFocus,
   onCreate,
   onDelete,
 }: ThreadChannelProps) => {
@@ -42,6 +44,8 @@ export const ThreadChannel = ({
       return true;
     }
   };
+
+  // TODO(burdon): Autofocus.
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
@@ -66,7 +70,7 @@ export const ThreadChannel = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <ChatInput placeholder={t('message placeholder')} onMessage={handleSubmit} />
+          <ChatInput placeholder={t('message placeholder')} onFocus={onFocus} onMessage={handleSubmit} />
         </div>
       )}
     </div>

@@ -71,10 +71,6 @@ export class Shell {
    * @returns Shell result with the new identity.
    */
   async initializeIdentity({ invitationCode }: { invitationCode?: string } = {}): Promise<InitializeIdentityResult> {
-    if (this._identity.get()) {
-      throw new Error('Identity already exists');
-    }
-
     await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY, invitationCode });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {

@@ -57,9 +57,7 @@ export const Default = {
     // TODO(burdon): Goal: Factor-out CMD-K like dialog.
     return (
       <NavTreeItemAction
-        id='test'
         icon={List}
-        level={0}
         actions={actions}
         menuType='searchList'
         label='Select action'

@@ -2,22 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StateField } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
-export type ListenerOptions = { onChange: (text: string) => void };
+export type ListenerOptions = {
+  onFocus?: (focused: boolean) => void;
+  onChange?: (text: string) => void;
+};
 
 /**
- * Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799
+ * Event listener.
  */
-export const listener = ({ onChange }: ListenerOptions) => {
-  return StateField.define({
-    create: () => null,
-    update: (_value, transaction) => {
-      if (transaction.docChanged && onChange) {
-        onChange(transaction.newDoc.toString());
-      }
+export const listener = ({ onFocus, onChange }: ListenerOptions): Extension => {
+  const extensions: Extension[] = [];
 
-      return null;
-    },
-  });
+  onFocus &&
+    extensions.push(
+      EditorView.focusChangeEffect.of((_, focused) => {
+        onFocus(focused);
+        return null;
+      }),
+    );
+
+  onChange &&
+    extensions.push(
+      EditorView.updateListener.of((update) => {
+        onChange(update.state.doc.toString());
+      }),
+    );
+
+  return extensions;
 };

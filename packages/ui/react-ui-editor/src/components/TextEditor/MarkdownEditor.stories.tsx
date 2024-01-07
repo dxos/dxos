@@ -19,22 +19,21 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
 import {
   autocomplete,
+  blast,
+  code,
+  comments,
+  defaultOptions,
+  hr,
+  image,
   listener,
   link,
-  tasklist,
-  tooltip,
-  type TooltipOptions,
-  type LinkOptions,
-  table,
-  image,
   mention,
-  blast,
-  demo,
-  defaultOptions,
-  code,
+  table,
+  tasklist,
+  typewriter,
   type CommentsOptions,
-  hr,
-  comments,
+  type LinkOptions,
+  mermaid,
 } from './extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
@@ -108,11 +107,11 @@ const text = {
   table: str(
     '# Table',
     '',
-    `| ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} | ${faker.lorem.word().padStart(8)} |`,
-    '|----------|----------|----------|',
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
-    `| ${num().padStart(8)} | ${num().padStart(8)} | ${num().padStart(8)} |`,
+    `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
+    `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
+    `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     '', // TODO(burdon): Possible GFM parsing bug if no newline?
   ),
 
@@ -123,6 +122,8 @@ const text = {
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+
+  mermaid: str('```mermaid', 'graph TD;', 'A-->B;', 'A-->C;', 'B-->D;', 'C-->D;', '```'),
 
   footer: str('', '', '', '', '')
 };
@@ -166,7 +167,7 @@ const links = [
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
+const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -179,7 +180,9 @@ const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
 };
 
 const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded bg-neutral-500 text-xs'>{char}</span>
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+    {char}
+  </span>
 );
 
 const onCommentsHover: CommentsOptions['onHover'] = (el) => {
@@ -197,7 +200,7 @@ const onCommentsHover: CommentsOptions['onHover'] = (el) => {
   );
 };
 
-const onLinkRender: LinkOptions['onRender'] = (el, url) => {
+const onRenderLink: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
@@ -246,10 +249,9 @@ const extensions = [
   code(),
   hr(),
   image(),
-  link({ onRender: onLinkRender }),
+  link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
   table(),
   tasklist(),
-  tooltip({ onHover: onTooltipHover }),
 ];
 
 export const Default = {
@@ -264,18 +266,23 @@ export const NoExtensions = {
   render: () => <Story text={document} />,
 };
 
+// TODO(burdon): Cursor bug if no newline after BR (cursor down just loops back to start of each paragraph).
 export const HorizontalRule = {
   render: () => (
-    <Story text={str(text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)} extensions={[hr()]} />
+    <Story
+      text={str('# Horizontal Rule', '', text.paragraphs, '---', '', text.paragraphs, '---', '', text.paragraphs)}
+      extensions={[hr()]}
+    />
   ),
 };
 
-export const Tooltips = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover: onTooltipHover })]} />,
-};
-
 export const Links = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender: onLinkRender })]} />,
+  render: () => (
+    <Story
+      text={str(text.links, text.footer)}
+      extensions={[link({ onHover: onHoverLinkTooltip, onRender: onRenderLink })]}
+    />
+  ),
 };
 
 export const Code = {
@@ -290,7 +297,7 @@ export const Image = {
   render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
 
-export const TaskList = {
+export const Tasklist = {
   render: () => (
     <Story
       text={str(text.tasks, '', text.list, text.footer)}
@@ -311,7 +318,7 @@ export const Autocomplete = {
     <Story
       text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
       extensions={[
-        link({ onRender: onLinkRender }),
+        link({ onRender: onRenderLink }),
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
@@ -335,13 +342,17 @@ export const Mention = {
   ),
 };
 
+export const Mermaid = {
+  render: () => <Story text={str('# Mermaid', '', text.mermaid, text.footer)} extensions={[code(), mermaid()]} />,
+};
+
 export const Comments = {
   render: () => {
     const [commentsStates, setCommentStates] = useState<CommentRange[]>([]);
 
     return (
       <Story
-        text={str(text.paragraphs, text.footer)}
+        text={str('# Comments', '', text.paragraphs, text.footer)}
         comments={commentsStates}
         extensions={[
           comments({
@@ -371,30 +382,16 @@ export const Comments = {
   },
 };
 
-export const Diagnostics = {
-  render: () => (
-    <Story
-      text={document}
-      extensions={[
-        // Cursor moved.
-        EditorView.updateListener.of((update) => {
-          console.log('update', update.view.state.selection.main.head);
-        }),
-      ]}
-    />
-  ),
-};
-
-export const Demo = {
-  render: () => <Story text={str(text.paragraphs, text.footer)} extensions={[demo()]} />,
+export const Typewriter = {
+  render: () => <Story text={str('# Typewriter', '', text.paragraphs, text.footer)} extensions={[typewriter()]} />,
 };
 
 export const Blast = {
   render: () => (
     <Story
-      text={str(text.paragraphs, text.code, text.paragraphs)}
+      text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        demo({
+        typewriter({
           items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
         }),
         blast(
@@ -409,6 +406,20 @@ export const Blast = {
             defaultOptions,
           ),
         ),
+      ]}
+    />
+  ),
+};
+
+export const Diagnostics = {
+  render: () => (
+    <Story
+      text={document}
+      extensions={[
+        // Cursor moved.
+        EditorView.updateListener.of((update) => {
+          console.log('update', update.view.state.selection.main.head);
+        }),
       ]}
     />
   ),
