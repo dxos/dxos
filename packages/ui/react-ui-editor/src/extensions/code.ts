@@ -15,7 +15,7 @@ import get from 'lodash.get';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { tokens } from '../../../styles';
+import { tokens } from '../styles';
 
 const CODE_REGEX = /```[\s\S]*?```/gs;
 
