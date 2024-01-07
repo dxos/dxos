@@ -35,7 +35,7 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   return <Surface role='section' data={{ object: data }} />;
 };
 
-export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
+export const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
@@ -121,6 +121,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
         SectionContent={SectionContent}
         type={StackType.Section.schema.typename}
         items={items}
+        separation={separation}
         transform={handleTransform}
         onOver={handleOver}
         onDrop={handleDrop}
