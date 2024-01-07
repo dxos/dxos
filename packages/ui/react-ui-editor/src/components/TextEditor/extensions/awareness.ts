@@ -3,8 +3,6 @@
 //
 
 import { Annotation, Facet, type Extension, RangeSet, Range } from '@codemirror/state';
-import * as dom from 'lib0/dom';
-import * as pair from 'lib0/pair';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -113,7 +111,7 @@ export interface AwarenessProvider {
   close(): void;
 
   updateLocalPosition(position: AwarenessPosition | undefined): void;
-  
+
   remoteStateChange: Event<void>;
   getRemoteStates(): AwarenessState[];
 }
@@ -123,7 +121,7 @@ const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
   close: () => {},
 
   updateLocalPosition: (state) => {},
-  
+
   remoteStateChange: new Event(),
   getRemoteStates: () => [],
 };
@@ -140,20 +138,25 @@ class RemoteCaretWidget extends WidgetType {
   }
 
   toDOM(): HTMLElement {
-    return dom.element(
-      'span',
-      [
-        pair.create('class', 'cm-ySelectionCaret'),
-        pair.create('style', `background-color: ${this.color}; border-color: ${this.color}`),
-      ],
-      [
-        dom.text('\u2060'),
-        dom.element('div', [pair.create('class', 'cm-ySelectionCaretDot')]),
-        dom.text('\u2060'),
-        dom.element('div', [pair.create('class', 'cm-ySelectionInfo')], [dom.text(this.name)]),
-        dom.text('\u2060'),
-      ],
-    ) as HTMLElement;
+    const span = document.createElement('span');
+    span.className = 'cm-ySelectionCaret';
+    span.style.backgroundColor = this.color;
+    span.style.borderColor = this.color;
+
+    const dot = document.createElement('div');
+    dot.className = 'cm-ySelectionCaretDot';
+
+    const info = document.createElement('div');
+    info.className = 'cm-ySelectionInfo';
+    info.innerText = this.name;
+
+    span.appendChild(document.createTextNode('\u2060'));
+    span.appendChild(dot);
+    span.appendChild(document.createTextNode('\u2060'));
+    span.appendChild(info);
+    span.appendChild(document.createTextNode('\u2060'));
+
+    return span;
   }
 
   override eq(widget: this) {
