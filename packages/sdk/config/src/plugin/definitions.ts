@@ -56,7 +56,9 @@ export const definitions = ({
           // Set build info automatically if available.
           try {
             const timestamp = new Date().toISOString();
-            const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).replace('\n', '');
+            const commitHash =
+              process.env.DX_COMMIT_HASH ??
+              execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).replace('\n', '');
             const packagePath = pkgUp.sync();
             const packageJson = packagePath && JSON.parse(readFileSync(packagePath, 'utf-8'));
             set(content, ['runtime', 'app', 'build', 'timestamp'], timestamp);

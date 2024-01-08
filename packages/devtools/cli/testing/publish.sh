@@ -3,13 +3,12 @@
 pushd ./testing/app > /dev/null
 
 export DX_CONFIG=../../config/config.yml
-
-dx=../../bin/run
+export PATH=$PATH:../../bin
 
 # Publish mock app.
-$dx app publish --verbose
+dx app publish --verbose
 
 # List published apps.
-$dx app list
+dx app list
 
 popd > /dev/null
