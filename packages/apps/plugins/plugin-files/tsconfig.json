@@ -36,6 +36,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-editor"
+    },
+    {
       "path": "../../../ui/react-ui-theme"
     },
     {
