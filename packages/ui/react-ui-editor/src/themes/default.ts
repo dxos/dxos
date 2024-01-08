@@ -218,7 +218,13 @@ export const defaultTheme: ThemeStyles = {
   // image
   //
   '.cm-image': {
-    padding: '0.5rem 0',
+    display: 'block',
+    height: '0',
+  },
+  '.cm-image.cm-loaded-image': {
+    height: 'auto',
+    borderTop: '0.5rem solid transparent',
+    borderBottom: '0.5rem solid transparent',
   },
 
   //
