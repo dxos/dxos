@@ -185,7 +185,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   );
 };
 
-export const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
+const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>

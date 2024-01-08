@@ -5,10 +5,15 @@
 import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
+import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
-import { type AutomergeOptions, type TypedObject, getGlobalAutomergePreference } from './typed-object';
+import {
+  getGlobalAutomergePreference,
+  isAutomergeObject,
+  type AutomergeOptions,
+  type TypedObject,
+} from './typed-object';
 import { AutomergeObject } from '../automerge';
 
 export type TextObjectOptions = AutomergeOptions;
@@ -131,3 +136,15 @@ export class TextObject extends AbstractEchoObject<TextModel> {
  */
 // TODO(burdon): Remove.
 export class Text extends TextObject {}
+
+/**
+ * @deprecated
+ */
+export const setTextContent = (object: TextObject, text: string) => {
+  if (isAutomergeObject(object)) {
+    (object as any).content = text;
+  } else {
+    object.content?.delete(0, object.text.length);
+    object.content?.insert(0, text as any);
+  }
+};
