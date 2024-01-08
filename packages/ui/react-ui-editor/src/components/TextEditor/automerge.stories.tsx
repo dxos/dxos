@@ -2,19 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@preact/signals-react'; // Register react integration
+import '@dxosTheme';
+
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { EditorView } from '@codemirror/view';
+import '@preact/signals-react'; // Register react integration
 import { basicSetup } from 'codemirror';
 import get from 'lodash.get';
 import React, { useEffect, useRef, useState } from 'react';
 
-// TODO(burdon): Why separate imports?
 import { type Prop } from '@dxos/automerge/automerge';
-import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
+import { Repo, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { Filter, setGlobalAutomergePreference } from '@dxos/echo-schema';
+import { type PublicKey } from '@dxos/keys';
+import { Expando, TextObject, useSpace } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { ClientRepeater } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { type IDocHandle } from './handle';
-import { automergePlugin } from './plugin';
+import { MarkdownEditor } from './TextEditor';
+import { type IDocHandle, automerge, awareness } from '../../extensions';
+import { useTextModel } from '../../hooks';
+
+// TODO(burdon): Move to components.
 
 type EditorProps = {
   handle: IDocHandle;
@@ -28,7 +38,7 @@ const Editor = ({ handle, path }: EditorProps) => {
   useEffect(() => {
     const view = (editorRoot.current = new EditorView({
       doc: get(handle.docSync()!, path),
-      extensions: [basicSetup, automergePlugin(handle, path)],
+      extensions: [basicSetup, automerge({ handle, path }), awareness()],
       parent: containerRef.current as any,
     }));
 
@@ -89,3 +99,53 @@ export default {
 };
 
 export const Default = {};
+
+const EchoStory = ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
+  const identity = useIdentity();
+  const space = useSpace(spaceKey);
+  // TODO(dmaretskyi): useQuery doesn't work.
+  const [obj] = space?.db.query(Filter.from({ type: 'test' })).objects ?? [];
+
+  const model = useTextModel({
+    text: obj?.content,
+    identity,
+    space,
+  });
+
+  if (!model) {
+    return null;
+  }
+
+  return (
+    // <div className={mx(fixedInsetFlexLayout, groupSurface)}>
+    <div className='flex justify-center overflow-y-scroll'>
+      <div className='flex flex-col w-[800px] py-16'>
+        <MarkdownEditor model={model} />
+        <div className='flex shrink-0 h-[300px]'></div>
+      </div>
+    </div>
+    // </div>
+  );
+};
+
+export const WithEcho = {
+  render: () => {
+    setGlobalAutomergePreference(true);
+    return (
+      <ClientRepeater
+        count={2}
+        createSpace
+        onCreateSpace={async (space) => {
+          space.db.add(
+            new Expando({
+              type: 'test',
+              content: new TextObject('Hello world!'),
+            }),
+          );
+        }}
+        Component={EchoStory}
+      />
+    );
+  },
+  decorators: [withTheme],
+};
