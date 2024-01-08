@@ -189,7 +189,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'section': {
-              if (isDocument(data.object) && isMarkdown(data.object.content)) {
+              if (isDocument(data.object)) {
                 return <DocumentSection content={data.object} />;
               }
               break;
