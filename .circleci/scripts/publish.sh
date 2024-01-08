@@ -66,7 +66,7 @@ for APP in "${APPS[@]}"; do
     eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
     eval "export DX_TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
-    $ROOT/packages/devtools/cli/bin/run app publish \
+    $ROOT/packages/devtools/cli/bin/dx app publish \
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
       --version=$VERSION \
@@ -86,7 +86,7 @@ for APP in "${APPS[@]}"; do
     VERSION=$(cat package.json | jq -r ".version")
 
     set +e
-    $ROOT/packages/devtools/cli/bin/run app publish \
+    $ROOT/packages/devtools/cli/bin/dx app publish \
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
       --version=$VERSION \
@@ -105,7 +105,7 @@ for APP in "${APPS[@]}"; do
     DX_CONFIG="$ROOT/.circleci/publish-config/config-development.yml"
 
     set +e
-    $ROOT/packages/devtools/cli/bin/run app publish \
+    $ROOT/packages/devtools/cli/bin/dx app publish \
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
       --verbose
