@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Plugin } from '../PluginHost';
+
 /**
  * An intent is an abstract description of an operation to be performed.
  * Intents allow actions to be performed across plugins.
@@ -31,4 +33,6 @@ export type Intent = {
  *
  * @returns The result of the last intent.
  */
-export type DispatchIntent = (intent: Intent | Intent[]) => Promise<any>;
+export type IntentDispatcher = (intent: Intent | Intent[]) => Promise<any>;
+
+export type IntentResolver = (intent: Intent, plugins: Plugin[]) => any;

@@ -5,7 +5,7 @@
 import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/react-ui';
-import { type EditorModel, type TextEditorRef } from '@dxos/react-ui-editor';
+import { type TextEditorRef } from '@dxos/react-ui-editor';
 import { baseSurface, topbarBlockPaddingStart, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
@@ -13,7 +13,6 @@ import { type MarkdownProperties } from '../types';
 export const StandaloneLayout = ({
   children,
 }: PropsWithChildren<{
-  model: EditorModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
   editorRef?: MutableRefObject<TextEditorRef>;

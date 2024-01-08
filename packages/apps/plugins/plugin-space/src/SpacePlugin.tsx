@@ -11,8 +11,8 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import {
+  type IntentDispatcher,
   type PluginDefinition,
-  type DispatchIntent,
   LayoutAction,
   resolvePlugin,
   parseIntentPlugin,
@@ -70,7 +70,7 @@ export type SpacePluginOptions = {
     client: Client;
     defaultSpace: Space;
     personalSpaceFolder: Folder;
-    dispatch: DispatchIntent;
+    dispatch: IntentDispatcher;
   }) => void;
 };
 

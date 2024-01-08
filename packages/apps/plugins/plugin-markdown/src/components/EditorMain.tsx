@@ -2,53 +2,49 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback } from 'react';
+import React, { type HTMLAttributes, type RefCallback, useRef } from 'react';
 
+import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor } from '@dxos/react-ui-editor';
+import { type TextEditorProps, type TextEditorRef, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
 import { focusRing, inputSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
-
-export type SearchResult = {
-  text: string;
-  url: string;
-};
 
 export type EditorMainProps = {
   editorRefCb?: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'readonly' | 'model' | 'comments' | 'editorMode'>;
+  layout: 'standalone' | 'embedded'; // TODO(burdon): Separate components.
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
 
-export const EditorMain = ({
-  editorRefCb,
-  properties,
-  layout,
-  extensions: _extensions,
-  readonly,
-  model,
-  comments,
-  editorMode,
-}: EditorMainProps) => {
+// TODO(burdon): Don't export ref.
+export const EditorMain = ({ editorRefCb, properties, layout, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
-  const extensions = useExtensions(_extensions);
+
+  // TODO(burdon): Reconcile refs.
+  const editorRef = useRef<TextEditorRef>();
+  const setEditorRef: RefCallback<TextEditorRef> = (ref) => {
+    editorRef.current = ref as any;
+    editorRefCb?.(ref);
+  };
+
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.FOCUS: {
+        const { object } = data;
+        setFocus(editorRef.current!.view!, object);
+      }
+    }
+  });
 
   return (
-    <Root properties={properties} model={model}>
+    <Root properties={properties}>
       <MarkdownEditor
-        ref={editorRefCb}
-        model={model}
-        comments={comments}
-        readonly={readonly}
-        editorMode={editorMode}
-        extensions={extensions}
+        {...props}
         slots={{
           root: {
             role: 'none',
@@ -78,6 +74,7 @@ export const EditorMain = ({
             },
           },
         }}
+        ref={setEditorRef}
       />
     </Root>
   );

@@ -10,7 +10,7 @@ import React, { type FC, type MutableRefObject, type RefCallback, type Ref, useE
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { ThreadAction } from '@braneframe/plugin-thread';
-import { Document as DocumentType, Thread as ThreadType, Folder } from '@braneframe/types';
+import { Document as DocumentType, Folder } from '@braneframe/types';
 import {
   type Plugin,
   type PluginDefinition,
@@ -21,17 +21,10 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, getSpaceForObject, isTypedObject, type Space } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import {
-  type AutocompleteResult,
-  type CommentRange,
-  type EditorModel,
-  type TextEditorRef,
-  useTextModel,
-} from '@dxos/react-ui-editor';
+import { type CommentRange, type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
-import { nonNullable } from '@dxos/util';
 
 import {
   EditorCard,
@@ -42,7 +35,7 @@ import {
   MarkdownSettings,
   StandaloneMenu,
 } from './components';
-import type { UseExtensionsOptions } from './components/extensions';
+import { getExtensions } from './components/extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -61,6 +54,7 @@ export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
+  activeComment?: string;
   onChange: NonNullable<(text: string) => void>[];
 };
 
@@ -75,6 +69,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
+  const _getExtensions = (space?: Space, document?: DocumentType) => {
+    // Update external plugins.
+    const handleChange = (text: string) => {
+      state.onChange.forEach((onChange) => onChange(text));
+    };
+
+    return getExtensions({
+      debug: settings.values.debug,
+      experimental: settings.values.experimental,
+      space,
+      document,
+      dispatch: intentPlugin?.provides.intent.dispatch,
+      onChange: handleChange,
+    });
+  };
+
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc.
   //  Should these components be inline or external?
   const EditorMainStandalone: FC<{
@@ -85,82 +95,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       <EditorMain
         editorMode={settings.values.editorMode}
         model={model}
-        extensions={{
-          listener: {
-            onChange: (text: string) => {
-              state.onChange.forEach((onChange) => onChange(text));
-            },
+        extensions={getExtensions({
+          onChange: (text: string) => {
+            state.onChange.forEach((onChange) => onChange(text));
           },
-        }}
+        })}
         properties={properties}
         layout='standalone'
         editorRefCb={pluginRefCallback}
       />
     );
   };
-
-  // TODO(burdon): Factor out space dependency.
-  const getExtensionsConfig = (space?: Space, document?: DocumentType): UseExtensionsOptions => ({
-    debug: settings.values.debug,
-    experimental: settings.values.experimental,
-    listener: {
-      onChange: (text: string) => {
-        state.onChange.forEach((onChange) => onChange(text));
-      },
-    },
-    autocomplete: space && {
-      onSearch: (text: string) => {
-        // TODO(burdon): Specify filter (e.g., stack).
-        const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
-        return objects
-          .map<AutocompleteResult | undefined>((object) =>
-            object.title?.length && object.id !== document?.id
-              ? {
-                  label: object.title,
-                  // TODO(burdon): Factor out URL builder.
-                  apply: `[${object.title}](/${object.id})`,
-                }
-              : undefined,
-          )
-          .filter(nonNullable);
-      },
-    },
-    // TODO(burdon): Update position in editor: EditorView.scrollIntoView
-    comments: space &&
-      document && {
-        onCreate: (cursor: string) => {
-          // Create comment thread.
-          const thread = space.db.add(new ThreadType());
-          // const comment = space.db.add(new DocumentType.Comment({ thread, cursor }));
-          document.comments.push({ thread, cursor });
-
-          void intentPlugin?.provides.intent.dispatch([
-            {
-              action: ThreadAction.SELECT,
-              data: { active: thread.id, threads: [{ id: thread.id }] },
-            },
-            {
-              action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
-              data: { state: true },
-            },
-          ]);
-
-          return thread.id;
-        },
-        onSelect: (state) => {
-          const { active, ranges } = state;
-          void intentPlugin?.provides.intent.dispatch([
-            {
-              action: ThreadAction.SELECT,
-              data: {
-                active,
-                threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
-              },
-            },
-          ]);
-        },
-      },
-  });
 
   const MarkdownMain: FC<{ document: DocumentType; readonly: boolean }> = ({ document, readonly }) => {
     const identity = useIdentity();
@@ -181,14 +126,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
     return (
       <EditorMain
-        readonly={readonly}
-        editorMode={settings.values.editorMode}
-        model={model}
-        comments={comments}
-        extensions={getExtensionsConfig(space!, document)}
+        editorRefCb={pluginRefCallback}
         properties={document}
         layout='standalone'
-        editorRefCb={pluginRefCallback}
+        model={model}
+        readonly={readonly}
+        comments={comments}
+        editorMode={settings.values.editorMode}
+        extensions={_getExtensions(space, document)}
       />
     );
   };
@@ -224,7 +169,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       <EditorSection
         editorMode={settings.values.editorMode}
         model={model}
-        extensions={getExtensionsConfig(space!, document)}
+        extensions={_getExtensions(space, document)}
       />
     );
   };
@@ -372,13 +317,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'card': {
               if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+                // TODO(burdon): Type.
                 const cardProps = {
                   ...props,
                   item: {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                    extensions: getExtensionsConfig(),
+                    extensions: _getExtensions(data.space as Space, data.content.object),
                   },
                 };
 
@@ -400,6 +346,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       intent: {
         resolver: ({ action, data }) => {
           switch (action) {
+            case LayoutAction.FOCUS: {
+              state.activeComment = data.object;
+              break;
+            }
+
             case MarkdownAction.CREATE: {
               return { object: new DocumentType() };
             }

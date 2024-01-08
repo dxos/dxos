@@ -9,7 +9,7 @@ import { type MarkdownProperties } from '../types';
 
 export const MarkdownMainEmpty = ({ model, properties }: { model: any; properties: MarkdownProperties }) => {
   return (
-    <StandaloneLayout model={model} properties={properties}>
+    <StandaloneLayout properties={properties}>
       <model.content />
     </StandaloneLayout>
   );
