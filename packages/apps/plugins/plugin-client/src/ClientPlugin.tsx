@@ -68,7 +68,7 @@ export type ClientPluginProvides = SurfaceProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
-const ENABLE_VAULT_MIGRATION = false;
+const ENABLE_VAULT_MIGRATION = true;
 
 export const ClientPlugin = ({
   types,
