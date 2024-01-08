@@ -93,10 +93,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   }> = ({ model, properties }) => {
     return (
       <EditorMain
+        editorMode={settings.values.editorMode}
         model={model}
+        extensions={getExtensions({
+          onChange: (text: string) => {
+            state.onChange.forEach((onChange) => onChange(text));
+          },
+        })}
         properties={properties}
         layout='standalone'
-        editorMode={settings.values.editorMode}
         editorRefCb={pluginRefCallback}
       />
     );
@@ -274,27 +279,24 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 const readonly = settings.values.viewMode[data.active.id];
                 return <MarkdownMain document={data.active} readonly={readonly} />;
               } else if (
-                // TODO(burdon): Why 'composer' property?
-                'composer' in data &&
-                isMarkdown(data.composer) &&
+                'model' in data &&
+                isMarkdown(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
                 if ('view' in data && data.view === 'embedded') {
-                  return <EditorMainEmbedded model={data.composer} properties={data.properties} />;
+                  return <EditorMainEmbedded model={data.model} properties={data.properties} />;
                 } else {
-                  return <EditorMainStandalone model={data.composer} properties={data.properties} />;
+                  return <EditorMainStandalone model={data.model} properties={data.properties} />;
                 }
               } else if (
-                // TODO(burdon): Why 'composer' property?
-                'composer' in data &&
-                isMarkdownPlaceholder(data.composer) &&
+                'model' in data &&
+                isMarkdownPlaceholder(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                // TODO(burdon): Remove?
-                const content = data.composer.content?.toString();
-                return <MarkdownMainEmpty content={content} properties={data.properties} />;
+                // TODO(wittjosiah): Used for when files are missing permissions. Factor out to local file plugin.
+                return <MarkdownMainEmpty model={data.model} properties={data.properties} />;
               }
               break;
             }

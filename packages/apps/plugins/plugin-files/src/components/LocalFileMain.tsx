@@ -5,6 +5,7 @@
 import React, { type FC, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
+import { type EditorModel } from '@dxos/react-ui-editor';
 
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
 import { type LocalFile } from '../types';
@@ -19,7 +20,7 @@ export const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
           }
         : file.text
         ? {
-            model: { id: file.id, content: file.text },
+            model: { id: file.id, text: () => file.text } as EditorModel,
             properties: { title: file.title, readOnly: true },
           }
         : { file },
