@@ -7,7 +7,6 @@ import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
-import { AutomergeObject } from '../automerge';
 import { AbstractEchoObject } from './object';
 import {
   getGlobalAutomergePreference,
@@ -15,6 +14,7 @@ import {
   type AutomergeOptions,
   type TypedObject,
 } from './typed-object';
+import { AutomergeObject } from '../automerge';
 
 export type TextObjectOptions = AutomergeOptions;
 
