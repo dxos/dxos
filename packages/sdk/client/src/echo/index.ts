@@ -26,6 +26,7 @@ export {
   getRawDoc,
   isAutomergeObject,
   isDocAccessor,
+  setTextContent,
   type AutomergeTextCompat,
   type DocAccessor,
   type EchoObject, // TODO(burdon): Remove from API?

@@ -28,7 +28,7 @@ export interface AwarenessProvider {
   getRemoteStates(): AwarenessState[];
 }
 
-const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
+const dummyProvider: AwarenessProvider = {
   remoteStateChange: new Event(),
 
   open: () => {},
@@ -39,7 +39,7 @@ const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
 };
 
 export const AwarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
-  combine: (providers) => providers[0] ?? EMPTY_AWARENESS_PROVIDER,
+  combine: (providers) => providers[0] ?? dummyProvider,
 });
 
 // TODO(dmaretskyi): Specify the users that actually changed. Currently, we recalculate positions for every user.
@@ -67,7 +67,7 @@ export type AwarenessState = {
  * Extension provides presence information about other peers.
  */
 // TODO(burdon): Why provide default?
-export const awareness = (provider = EMPTY_AWARENESS_PROVIDER): Extension => {
+export const awareness = (provider = dummyProvider): Extension => {
   return [
     AwarenessProvider.of(provider),
     ViewPlugin.fromClass(RemoteSelectionsDecorator, {
@@ -87,7 +87,6 @@ export class RemoteSelectionsDecorator implements PluginValue {
 
   private _cursorConverter: CursorConverter;
   private _provider: AwarenessProvider;
-  private _hasLoadedAwarenessState = false; // TODO(burdon): Not referenced.
   private _lastAnchor?: number = undefined;
   private _lastHead?: number = undefined;
 
@@ -121,7 +120,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
     this._lastHead = head;
 
     this._provider.update(
-      anchor && head
+      anchor !== undefined && head !== undefined
         ? {
             anchor: this._cursorConverter.toCursor(anchor),
             head: this._cursorConverter.toCursor(head),
@@ -131,8 +130,6 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 
   private _updateRemoteSelections(update: ViewUpdate) {
-    this._hasLoadedAwarenessState = true;
-
     const decorations: Range<Decoration>[] = [];
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {

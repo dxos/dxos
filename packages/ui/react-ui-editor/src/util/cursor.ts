@@ -15,7 +15,7 @@ import { Facet } from '@codemirror/state';
  *                       while positive - with the next one.
  */
 export interface CursorConverter {
-  toCursor(position: number, assoc?: number): string;
+  toCursor(position: number, assoc?: -1 | 1 | undefined): string;
   fromCursor(cursor: string): number;
 }
 
