@@ -4,15 +4,16 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
+import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import {
-  type EditorState,
-  type Extension,
-  type RangeSet,
-  RangeSetBuilder,
-  StateField,
-  type Transaction,
-} from '@codemirror/state';
-import { Decoration, EditorView, WidgetType, hoverTooltip } from '@codemirror/view';
+  Decoration,
+  type EditorView,
+  WidgetType,
+  hoverTooltip,
+  ViewPlugin,
+  type ViewUpdate,
+  type DecorationSet,
+} from '@codemirror/view';
 
 import { tooltipContent } from '@dxos/react-ui-theme';
 
@@ -34,11 +35,24 @@ export type LinkOptions = {
  */
 export const link = (options: LinkOptions = {}): Extension => {
   const extensions: Extension[] = [
-    StateField.define<RangeSet<any>>({
-      create: (state) => update(state, options),
-      update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
-      provide: (field) => EditorView.decorations.from(field),
-    }),
+    ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet;
+
+        constructor(view: EditorView) {
+          this.decorations = buildDecorations(view, options);
+        }
+
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.viewportChanged || update.selectionSet) {
+            this.decorations = buildDecorations(update.view, options);
+          }
+        }
+      },
+      {
+        decorations: (v) => v.decorations,
+      },
+    ),
   ];
 
   if (options.onHover) {
@@ -143,46 +157,51 @@ class LinkText extends WidgetType {
  * possibly overlapping ranges in such a way that they can efficiently be mapped though document changes.
  * https://codemirror.net/docs/ref/#state
  */
-const update = (state: EditorState, options: LinkOptions) => {
-  const builder = new RangeSetBuilder();
+const buildDecorations = (view: EditorView, options: LinkOptions): DecorationSet => {
+  const builder = new RangeSetBuilder<Decoration>();
+  const { state } = view;
   const cursor = state.selection.main.head;
 
-  syntaxTree(state).iterate({
-    enter: (node) => {
-      // Check if cursor is inside text.
-      if (node.name === 'Link') {
-        const marks = node.node.getChildren('LinkMark');
-        const text = marks.length >= 2 ? state.sliceDoc(marks[0].to, marks[1].from) : '';
-        const urlNode = node.node.getChild('URL');
-        const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
-        if (!url) {
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(state).iterate({
+      enter: (node) => {
+        // Check if cursor is inside text.
+        if (node.name === 'Link') {
+          const marks = node.node.getChildren('LinkMark');
+          const text = marks.length >= 2 ? state.sliceDoc(marks[0].to, marks[1].from) : '';
+          const urlNode = node.node.getChild('URL');
+          const url = urlNode ? state.sliceDoc(urlNode.from, urlNode.to) : '';
+          if (!url) {
+            return false;
+          }
+
+          if (state.readOnly || cursor < node.from || cursor > node.to) {
+            builder.add(
+              node.from,
+              node.to,
+              Decoration.replace({
+                widget: new LinkText(text, options.link ? url : undefined),
+              }),
+            );
+          }
+
+          if (options.onRender) {
+            builder.add(
+              node.to,
+              node.to,
+              Decoration.replace({
+                widget: new LinkButton(url, options.onRender),
+              }),
+            );
+          }
+
           return false;
         }
-
-        if (state.readOnly || cursor < node.from || cursor > node.to) {
-          builder.add(
-            node.from,
-            node.to,
-            Decoration.replace({
-              widget: new LinkText(text, options.link ? url : undefined),
-            }),
-          );
-        }
-
-        if (options.onRender) {
-          builder.add(
-            node.to,
-            node.to,
-            Decoration.replace({
-              widget: new LinkButton(url, options.onRender),
-            }),
-          );
-        }
-
-        return false;
-      }
-    },
-  });
+      },
+      from,
+      to,
+    });
+  }
 
   return builder.finish();
 };
