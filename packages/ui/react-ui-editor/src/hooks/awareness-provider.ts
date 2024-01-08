@@ -32,14 +32,15 @@ export type AwarenessProviderParams = {
 export class SpaceAwarenessProvider implements AwarenessProvider {
   public readonly remoteStateChange = new Event<void>();
 
+  private readonly _remoteStates = new Map<string, AwarenessState>();
+
   private readonly _space: Space;
   private readonly _channel: string;
   private readonly _peerId: string;
   private readonly _info: AwarenessInfo;
-  private readonly _remoteStates = new Map<string, AwarenessState>();
 
-  private _localState?: AwarenessState = undefined;
-  private _postTask!: DeferredTask;
+  private _localState?: AwarenessState;
+  private _postTask?: DeferredTask;
   private _ctx?: Context;
 
   constructor(params: AwarenessProviderParams) {
@@ -88,9 +89,11 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   close() {
     void this._ctx?.dispose();
     this._ctx = undefined;
+    this._postTask = undefined;
   }
 
-  updateLocalPosition(position: AwarenessPosition | undefined): void {
+  update(position: AwarenessPosition | undefined): void {
+    invariant(this._postTask);
     this._localState = {
       peerId: this._peerId,
       position,
@@ -105,6 +108,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   }
 
   private _handleQueryMessage() {
+    invariant(this._postTask);
     this._postTask.schedule();
   }
 

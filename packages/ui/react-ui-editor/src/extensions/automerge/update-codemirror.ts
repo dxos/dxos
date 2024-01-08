@@ -1,5 +1,6 @@
 //
 // Copyright 2023 DXOS.org
+// Copyright 2024 Automerge
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
@@ -55,6 +56,7 @@ const handleInsert = (target: Prop[], patch: InsertPatch): Array<ChangeSpec> => 
   if (index == null) {
     return [];
   }
+
   const text = patch.values.map((v) => (v ? v.toString() : '')).join('');
   return [{ from: index, to: index, insert: text }];
 };
@@ -64,6 +66,7 @@ const handleSplice = (target: Prop[], patch: SpliceTextPatch): Array<ChangeSpec>
   if (index == null) {
     return [];
   }
+
   return [{ from: index, insert: patch.value }];
 };
 
@@ -72,6 +75,7 @@ const handleDel = (target: Prop[], patch: DelPatch): Array<ChangeSpec> => {
   if (index == null) {
     return [];
   }
+
   const length = patch.length || 1;
   return [{ from: index, to: index + length }];
 };
@@ -81,10 +85,12 @@ const handlePut = (target: Prop[], patch: PutPatch, state: EditorState): Array<C
   if (index == null) {
     return [];
   }
+
   const length = state.doc.length;
   if (typeof patch.value !== 'string') {
     return []; // TODO(dmaretskyi): How to handle non string values?
   }
+
   return [{ from: 0, to: length, insert: patch.value as any }];
 };
 
@@ -94,14 +100,17 @@ const charPath = (textPath: Prop[], candidatePath: Prop[]): number | null => {
   if (candidatePath.length !== textPath.length + 1) {
     return null;
   }
+
   for (let i = 0; i < textPath.length; i++) {
     if (textPath[i] !== candidatePath[i]) {
       return null;
     }
   }
+
   const index = candidatePath[candidatePath.length - 1];
   if (typeof index === 'number') {
     return index;
   }
+
   return null;
 };

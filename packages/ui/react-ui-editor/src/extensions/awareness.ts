@@ -3,25 +3,262 @@
 //
 
 import { Annotation, Facet, type Extension, RangeSet, type Range } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  type PluginValue,
+  ViewPlugin,
+  type ViewUpdate,
+  WidgetType,
+} from '@codemirror/view';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
 import { CursorConverter } from '../util';
 
+export interface AwarenessProvider {
+  remoteStateChange: Event<void>;
+
+  open(): void;
+  close(): void;
+
+  update(position: AwarenessPosition | undefined): void;
+  getRemoteStates(): AwarenessState[];
+}
+
+const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
+  remoteStateChange: new Event(),
+
+  open: () => {},
+  close: () => {},
+
+  update: () => {},
+  getRemoteStates: () => [],
+};
+
+export const AwarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
+  combine: (providers) => providers[0] ?? EMPTY_AWARENESS_PROVIDER,
+});
+
+// TODO(dmaretskyi): Specify the users that actually changed. Currently, we recalculate positions for every user.
+const RemoteSelectionChangedAnnotation = Annotation.define();
+
+export type AwarenessPosition = {
+  anchor?: string;
+  head?: string;
+};
+
+export type AwarenessInfo = {
+  displayName?: string;
+  // TODO(burdon): Rename light/dark.
+  color?: string;
+  lightColor?: string;
+};
+
+export type AwarenessState = {
+  position?: AwarenessPosition;
+  peerId: string;
+  info: AwarenessInfo;
+};
+
 /**
  * Extension provides presence information about other peers.
  */
+// TODO(burdon): Why provide default?
 export const awareness = (provider = EMPTY_AWARENESS_PROVIDER): Extension => {
   return [
-    styles,
     AwarenessProvider.of(provider),
-    ViewPlugin.fromClass(RemoteSelectionsPluginValue, {
-      decorations: (v) => v.decorations,
+    ViewPlugin.fromClass(RemoteSelectionsDecorator, {
+      decorations: (value) => value.decorations,
     }),
+    styles,
   ];
 };
+
+/**
+ * Generates selection decorations from remote peers.
+ */
+export class RemoteSelectionsDecorator implements PluginValue {
+  public decorations: DecorationSet = RangeSet.of([]);
+
+  private readonly _ctx = new Context();
+
+  private _cursorConverter: CursorConverter;
+  private _provider: AwarenessProvider;
+  private _hasLoadedAwarenessState = false; // TODO(burdon): Not referenced.
+  private _lastAnchor?: number = undefined;
+  private _lastHead?: number = undefined;
+
+  constructor(view: EditorView) {
+    this._cursorConverter = view.state.facet(CursorConverter);
+    this._provider = view.state.facet(AwarenessProvider);
+    this._provider.open();
+    this._provider.remoteStateChange.on(this._ctx, () => {
+      view.dispatch({ annotations: [RemoteSelectionChangedAnnotation.of([])] });
+    });
+  }
+
+  destroy() {
+    void this._ctx.dispose();
+    this._provider.close();
+  }
+
+  update(update: ViewUpdate) {
+    this._updateLocalSelection(update);
+    this._updateRemoteSelections(update);
+  }
+
+  private _updateLocalSelection(update: ViewUpdate) {
+    const hasFocus = update.view.hasFocus && update.view.dom.ownerDocument.hasFocus();
+    const { anchor = undefined, head = undefined } = hasFocus ? update.state.selection.main : {};
+    if (this._lastAnchor === anchor && this._lastHead === head) {
+      return;
+    }
+
+    this._lastAnchor = anchor;
+    this._lastHead = head;
+
+    this._provider.update(
+      anchor && head
+        ? {
+            anchor: this._cursorConverter.toCursor(anchor),
+            head: this._cursorConverter.toCursor(head),
+          }
+        : undefined,
+    );
+  }
+
+  private _updateRemoteSelections(update: ViewUpdate) {
+    this._hasLoadedAwarenessState = true;
+
+    const decorations: Range<Decoration>[] = [];
+    const awarenessStates = this._provider.getRemoteStates();
+    for (const state of awarenessStates) {
+      const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
+      const head = state.position?.head ? this._cursorConverter.fromCursor(state.position.head) : null;
+      if (anchor == null || head == null) {
+        continue;
+      }
+
+      const start = Math.min(Math.min(anchor, head), update.view.state.doc.length);
+      const end = Math.min(Math.max(anchor, head), update.view.state.doc.length);
+
+      const startLine = update.view.state.doc.lineAt(start);
+      const endLine = update.view.state.doc.lineAt(end);
+
+      // TODO(burdon): Factor out styles.
+      const color = state.info.color ?? '#30bced';
+      const lightColor = state.info.lightColor ?? color + '33';
+
+      if (startLine.number === endLine.number) {
+        // Selected content in a single line.
+        decorations.push({
+          from: start,
+          to: end,
+          value: Decoration.mark({
+            attributes: { style: `background-color: ${lightColor}` },
+            class: 'cm-ySelection',
+          }),
+        });
+      } else {
+        // Selected content in multiple lines; first, render text-selection in the first line.
+        decorations.push({
+          from: start,
+          to: startLine.from + startLine.length,
+          value: Decoration.mark({
+            attributes: { style: `background-color: ${color}` },
+            class: 'cm-ySelection',
+          }),
+        });
+
+        // Render text-selection in the last line.
+        decorations.push({
+          from: endLine.from,
+          to: end,
+          value: Decoration.mark({
+            attributes: { style: `background-color: ${color}` },
+            class: 'cm-ySelection',
+          }),
+        });
+
+        for (let i = startLine.number + 1; i < endLine.number; i++) {
+          const linePos = update.view.state.doc.line(i).from;
+          decorations.push({
+            from: linePos,
+            to: linePos,
+            value: Decoration.line({
+              attributes: { style: `background-color: ${color}`, class: 'cm-yLineSelection' },
+            }),
+          });
+        }
+      }
+
+      decorations.push({
+        from: head,
+        to: head,
+        value: Decoration.widget({
+          side: head - anchor > 0 ? -1 : 1, // The local cursor should be rendered outside the remote selection.
+          block: false,
+          widget: new RemoteCaretWidget(state.info.displayName ?? 'Anonymous', color),
+        }),
+      });
+    }
+
+    this.decorations = Decoration.set(decorations, true);
+  }
+}
+
+class RemoteCaretWidget extends WidgetType {
+  constructor(public name: string, public color: string) {
+    super();
+    this.name = name;
+    this.color = color;
+  }
+
+  toDOM(): HTMLElement {
+    const span = document.createElement('span');
+    span.className = 'cm-ySelectionCaret';
+    span.style.backgroundColor = this.color;
+    span.style.borderColor = this.color;
+
+    const dot = document.createElement('div');
+    dot.className = 'cm-ySelectionCaretDot';
+
+    const info = document.createElement('div');
+    info.className = 'cm-ySelectionInfo';
+    info.innerText = this.name;
+
+    span.appendChild(document.createTextNode('\u2060'));
+    span.appendChild(dot);
+    span.appendChild(document.createTextNode('\u2060'));
+    span.appendChild(info);
+    span.appendChild(document.createTextNode('\u2060'));
+
+    return span;
+  }
+
+  override eq(widget: this) {
+    return widget.color === this.color;
+  }
+
+  compare(widget: this) {
+    return widget.color === this.color;
+  }
+
+  override updateDOM() {
+    return false;
+  }
+
+  override get estimatedHeight() {
+    return -1;
+  }
+
+  override ignoreEvent() {
+    return true;
+  }
+}
 
 // TODO(burdon): Rename prefix (y for yjs?)
 const styles = EditorView.baseTheme({
@@ -80,236 +317,3 @@ const styles = EditorView.baseTheme({
     transitionDelay: '0s',
   },
 });
-
-/**
- * @todo specify the users that actually changed. Currently, we recalculate positions for every user.
- */
-const RemoteSelectionChangedAnnotation = Annotation.define();
-
-export type AwarenessPosition = {
-  /**
-   * Cursor.
-   */
-  anchor?: string;
-
-  /**
-   * Cursor.
-   */
-  head?: string;
-};
-
-export type AwarenessInfo = {
-  displayName?: string;
-  color?: string;
-  lightColor?: string;
-};
-
-export type AwarenessState = {
-  position?: AwarenessPosition;
-  peerId: string;
-  info: AwarenessInfo;
-};
-
-export interface AwarenessProvider {
-  remoteStateChange: Event<void>;
-
-  open(): void;
-  close(): void;
-
-  // TODO(burdon): Rename update.
-  updateLocalPosition(position: AwarenessPosition | undefined): void;
-  getRemoteStates(): AwarenessState[];
-}
-
-const EMPTY_AWARENESS_PROVIDER: AwarenessProvider = {
-  remoteStateChange: new Event(),
-
-  open: () => {},
-  close: () => {},
-
-  updateLocalPosition: () => {},
-  getRemoteStates: () => [],
-};
-
-export const AwarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
-  combine: (providers) => providers[0] ?? EMPTY_AWARENESS_PROVIDER,
-});
-
-class RemoteCaretWidget extends WidgetType {
-  constructor(public color: string, public name: string) {
-    super();
-    this.color = color;
-    this.name = name;
-  }
-
-  toDOM(): HTMLElement {
-    const span = document.createElement('span');
-    span.className = 'cm-ySelectionCaret';
-    span.style.backgroundColor = this.color;
-    span.style.borderColor = this.color;
-
-    const dot = document.createElement('div');
-    dot.className = 'cm-ySelectionCaretDot';
-
-    const info = document.createElement('div');
-    info.className = 'cm-ySelectionInfo';
-    info.innerText = this.name;
-
-    span.appendChild(document.createTextNode('\u2060'));
-    span.appendChild(dot);
-    span.appendChild(document.createTextNode('\u2060'));
-    span.appendChild(info);
-    span.appendChild(document.createTextNode('\u2060'));
-
-    return span;
-  }
-
-  override eq(widget: this) {
-    return widget.color === this.color;
-  }
-
-  compare(widget: this) {
-    return widget.color === this.color;
-  }
-
-  override updateDOM() {
-    return false;
-  }
-
-  override get estimatedHeight() {
-    return -1;
-  }
-
-  override ignoreEvent() {
-    return true;
-  }
-}
-
-export class RemoteSelectionsPluginValue {
-  private readonly _ctx = new Context();
-  private _provider: AwarenessProvider;
-  private _cursorConverter: CursorConverter;
-
-  public decorations: DecorationSet = RangeSet.of([]);
-  private _hasLoadedAwarenessState = false;
-
-  private _lastAnchor?: number = undefined;
-  private _lastHead?: number = undefined;
-
-  constructor(view: EditorView) {
-    this._provider = view.state.facet(AwarenessProvider);
-    this._provider.open();
-    this._provider.remoteStateChange.on(this._ctx, () => {
-      view.dispatch({ annotations: [RemoteSelectionChangedAnnotation.of([])] });
-    });
-    this._cursorConverter = view.state.facet(CursorConverter);
-  }
-
-  destroy() {
-    void this._ctx.dispose();
-    this._provider.close();
-  }
-
-  private _updateLocalSelection(update: ViewUpdate) {
-    const hasFocus = update.view.hasFocus && update.view.dom.ownerDocument.hasFocus();
-    const sel = hasFocus ? update.state.selection.main : undefined;
-
-    if (this._lastHead === sel?.head && this._lastAnchor === sel?.anchor) {
-      return;
-    }
-
-    this._lastHead = sel?.head;
-    this._lastAnchor = sel?.anchor;
-
-    const selCursor = sel
-      ? {
-          anchor: this._cursorConverter.toCursor(sel.anchor),
-          head: this._cursorConverter.toCursor(sel.head),
-        }
-      : undefined;
-
-    this._provider.updateLocalPosition(selCursor);
-  }
-
-  private _updateRemoteSelections(update: ViewUpdate) {
-    this._hasLoadedAwarenessState = true;
-
-    const decorations: Range<Decoration>[] = [];
-    const awarenessStates = this._provider.getRemoteStates();
-
-    for (const state of awarenessStates) {
-      const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
-      const head = state.position?.head ? this._cursorConverter.fromCursor(state.position.head) : null;
-      if (anchor == null || head == null) {
-        continue;
-      }
-
-      const start = Math.min(Math.min(anchor, head), update.view.state.doc.length);
-      const end = Math.min(Math.max(anchor, head), update.view.state.doc.length);
-
-      const startLine = update.view.state.doc.lineAt(start);
-      const endLine = update.view.state.doc.lineAt(end);
-
-      const color = state.info.color ?? '#30bced';
-      const lightColor = state.info.lightColor ?? color + '33';
-
-      if (startLine.number === endLine.number) {
-        // selected content in a single line.
-        decorations.push({
-          from: start,
-          to: end,
-          value: Decoration.mark({
-            attributes: { style: `background-color: ${lightColor}` },
-            class: 'cm-ySelection',
-          }),
-        });
-      } else {
-        // selected content in multiple lines
-        // first, render text-selection in the first line
-        decorations.push({
-          from: start,
-          to: startLine.from + startLine.length,
-          value: Decoration.mark({
-            attributes: { style: `background-color: ${color}` },
-            class: 'cm-ySelection',
-          }),
-        });
-        // render text-selection in the last line
-        decorations.push({
-          from: endLine.from,
-          to: end,
-          value: Decoration.mark({
-            attributes: { style: `background-color: ${color}` },
-            class: 'cm-ySelection',
-          }),
-        });
-        for (let i = startLine.number + 1; i < endLine.number; i++) {
-          const linePos = update.view.state.doc.line(i).from;
-          decorations.push({
-            from: linePos,
-            to: linePos,
-            value: Decoration.line({
-              attributes: { style: `background-color: ${color}`, class: 'cm-yLineSelection' },
-            }),
-          });
-        }
-      }
-      decorations.push({
-        from: head,
-        to: head,
-        value: Decoration.widget({
-          side: head - anchor > 0 ? -1 : 1, // the local cursor should be rendered outside the remote selection
-          block: false,
-          widget: new RemoteCaretWidget(color, state.info.displayName ?? 'Anonymous'),
-        }),
-      });
-    }
-
-    this.decorations = Decoration.set(decorations, true);
-  }
-
-  update(update: ViewUpdate) {
-    this._updateLocalSelection(update);
-    this._updateRemoteSelections(update);
-  }
-}
