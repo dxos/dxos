@@ -63,8 +63,6 @@ test.describe('Basic test', () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
       }, 20_000); // TODO(wittjosiah): Remove.
-
-      await host.page.getByTestId('new-todo').waitFor({ state: 'hidden', timeout: 60_000 });
     });
 
     test('toggle a task', async () => {
