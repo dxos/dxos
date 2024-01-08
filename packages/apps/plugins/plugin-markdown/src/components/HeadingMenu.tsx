@@ -15,6 +15,7 @@ import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 
+// TODO(thure): this needs to be refactored into a graph node action.
 export const createDocumentHeadingMenu =
   (pluginMutableRef: MutableRefObject<TextEditorRef>): FC<{ content: DocumentType }> =>
   ({ content: document }) => {

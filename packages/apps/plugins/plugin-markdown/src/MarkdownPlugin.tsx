@@ -7,7 +7,6 @@ import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
 import React, { type MutableRefObject, type RefCallback, type Ref } from 'react';
 
-import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document as DocumentType, Folder } from '@braneframe/types';
 import { type PluginDefinition, isObject, parseIntentPlugin, resolvePlugin, LayoutAction } from '@dxos/app-framework';
@@ -53,8 +52,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const DocumentCard = createDocumentCard(settings.values);
   const DocumentMain = createDocumentMain(settings.values, state, pluginRefCallback);
-  const DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
   const DocumentSection = createDocumentSection(settings.values, state);
+
+  // TODO(thure): this needs to be refactored into a graph node action.
+  const _DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
 
   return {
     meta,
@@ -177,13 +178,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     layout={'view' in data && data.view === 'embedded' ? 'embedded' : 'main'}
                   />
                 );
-              }
-              break;
-            }
-
-            case 'heading': {
-              if (isGraphNode(data.activeNode) && isDocument(data.activeNode.data)) {
-                return <DocumentHeadingMenu content={data.activeNode.data} />;
               }
               break;
             }
