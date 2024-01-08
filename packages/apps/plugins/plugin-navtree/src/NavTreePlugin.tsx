@@ -108,7 +108,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 'label' in data.activeNode &&
                 'parent' in data.activeNode
               ) {
-                return <TreeItemMainHeading activeNode={data.activeNode as Node} />;
+                return (
+                  <TreeItemMainHeading
+                    activeNode={data.activeNode as Node}
+                    popoverAnchorId={data.popoverAnchorId as string | undefined}
+                  />
+                );
               }
               break;
           }

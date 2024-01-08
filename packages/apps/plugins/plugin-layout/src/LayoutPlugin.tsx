@@ -272,7 +272,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = true;
               state.values.popoverContent = { component, subject };
               state.values.popoverAnchorId = anchorId;
-              console.log('[open popover]', anchorId);
               return true;
             }
 
@@ -280,7 +279,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = false;
               state.values.popoverContent = null;
               state.values.popoverAnchorId = undefined;
-              console.log('[close popover]');
               return true;
             }
 
