@@ -45,6 +45,9 @@ export default template.define.script({
         ]
       }
     },
+    worker: {
+      format: 'es',
+    },
     `;
     // TODO(wittjosiah): Why is target esnext needed here but not composer?
     //  Why does dev server target need to be set to the default?
@@ -58,6 +61,9 @@ export default template.define.script({
     build: {
       target: 'esnext',
       outDir: 'out/${name}'
+    },
+    worker: {
+      format: 'es',
     },
     `;
     return /* javascript */ plate`

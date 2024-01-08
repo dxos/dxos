@@ -74,6 +74,9 @@ export interface ClientProviderProps {
 
   types?: TypeCollection;
 
+  /** Shell path. */
+  shell?: string;
+
   /**
    * ReactNode to display until the client is available.
    */
@@ -102,6 +105,7 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   types,
+  shell,
   fallback: Fallback = () => null,
   registerSignalFactory: register = true,
   onInitialized,
@@ -154,7 +158,7 @@ export const ClientProvider = ({
         log('resolved config', { config });
         const services = await createServices?.(config);
         log('created services', { services });
-        const client = new Client({ config, services, types });
+        const client = new Client({ config, services, types, shell });
         log('created client');
         await done(client);
       }
