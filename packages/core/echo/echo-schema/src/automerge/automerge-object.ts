@@ -18,7 +18,7 @@ import { type AutomergeDb } from './automerge-db';
 import { type DocStructure, type ObjectSystem } from './types';
 import { type EchoDatabase } from '../database';
 import {
-  isActualAutomergeObject,
+  isAutomergeObject,
   TextObject,
   type TypedObjectOptions,
   type EchoObject,
@@ -664,6 +664,6 @@ export const isDocAccessor = (obj: any): obj is DocAccessor => {
 };
 
 export const getRawDoc = (obj: EchoObject, path?: string[]): DocAccessor => {
-  invariant(isActualAutomergeObject(obj));
+  invariant(isAutomergeObject(obj));
   return obj[base]._getRawDoc(path);
 };

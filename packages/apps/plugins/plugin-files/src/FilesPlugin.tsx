@@ -21,10 +21,11 @@ import {
 import { EventSubscriptions, Trigger } from '@dxos/async';
 
 import { LocalFileMain } from './components';
-import meta, { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID } from './meta';
+import meta, { FILES_PLUGIN } from './meta';
 import translations from './translations';
 import { type LocalEntity, type LocalFile, LocalFilesAction, type LocalFilesPluginProvides } from './types';
 import {
+  PREFIX,
   findFile,
   getDirectoryChildren,
   handleSave,
@@ -57,21 +58,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
   return {
     meta,
     initialize: async () => {
-      return {
-        markdown: {
-          onChange: (text) => {
-            if (state.current) {
-              state.current.text = text.toString();
-              state.current.modified = true;
-              onFilesUpdate?.();
-            }
-          },
-        },
-      };
-    },
-    ready: async (plugins) => {
-      window.addEventListener('keydown', handleKeyDown);
-
       const value = await localforage.getItem<FileSystemHandle[]>(FILES_PLUGIN);
       if (Array.isArray(value)) {
         await Promise.all(
@@ -87,17 +73,30 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         );
       }
 
+      return {
+        markdown: {
+          onChange: (text) => {
+            if (state.current) {
+              state.current.text = text.toString();
+              state.current.modified = true;
+              onFilesUpdate?.();
+            }
+          },
+        },
+      };
+    },
+    ready: async (plugins) => {
+      window.addEventListener('keydown', handleKeyDown);
+
+      // Subscribe to graph to track the currently active file.
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       if (layoutPlugin && graphPlugin) {
         subscriptions.add(
           effect(() => {
             const active = layoutPlugin.provides.layout.active;
-            const path =
-              active &&
-              graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
-            const current =
-              (active?.startsWith(FILES_PLUGIN_SHORT_ID) && path && findFile(state.files, path)) || undefined;
+            const path = active && graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(PREFIX));
+            const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
             if (state.current !== current) {
               state.current = current;
             }
@@ -146,13 +145,14 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             id: 'open-file-handle',
             label: ['open file label', { ns: FILES_PLUGIN }],
             icon: (props) => <FilePlus {...props} />,
-            invoke: () => [
-              {
-                plugin: FILES_PLUGIN,
-                action: LocalFilesAction.OPEN_FILE,
-              },
-              { action: LayoutAction.ACTIVATE },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: FILES_PLUGIN,
+                  action: LocalFilesAction.OPEN_FILE,
+                },
+                { action: LayoutAction.ACTIVATE },
+              ]),
           });
 
           if ('showDirectoryPicker' in window) {
