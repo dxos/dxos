@@ -12,7 +12,7 @@ import { type CursorConverter } from '../../util';
 
 export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConverter => ({
   // TODO(burdon): Handle assoc to associate with a previous character.
-  toCursor: (pos, assoc) => {
+  toCursor: (pos) => {
     const doc = handle.docSync();
     if (!doc) {
       return '';
@@ -24,8 +24,7 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
     }
 
     // NOTE: Slice is needed because getCursor mutates the array.
-    const cursor = automerge.getCursor(doc, path.slice(), assoc === -1 ? Math.max(0, pos - 1) : pos);
-    return cursor;
+    return automerge.getCursor(doc, path.slice(), pos);
   },
   fromCursor: (cursor) => {
     if (cursor === '') {
