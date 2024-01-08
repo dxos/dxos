@@ -9,7 +9,6 @@ import React from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
-import * as JoinPanels from './JoinPanel/JoinPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
 
 const getComponentNames = (module: any): string[] =>
@@ -45,7 +44,8 @@ export const Default = (props: any) => {
       <tbody>
         <StoryRow components={getComponents(IdentityPanels)} />
         <StoryRow components={getComponents(SpacePanels)} />
-        <StoryRow components={getComponents(JoinPanels)} />
+        {/* TODO(wittjosiah): The JoinPanel stories changed and don't support this currently. */}
+        {/* <StoryRow components={getComponents(JoinPanels)} /> */}
       </tbody>
     </table>
   );

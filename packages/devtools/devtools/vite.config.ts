@@ -37,6 +37,9 @@ export default defineConfig({
       },
     },
   },
+  worker: {
+    format: 'es',
+  },
   plugins: [
     {
       name: 'package-version',
