@@ -32,7 +32,7 @@ export type MarkdownProperties = {
 
 export type MarkdownProvides = {
   markdown: {
-    extension?: Extension;
+    extensions?: Extension[];
     onChange?: (text: string) => void;
   };
 };

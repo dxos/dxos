@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type MarkdownProvides } from '@braneframe/plugin-markdown';
 import type { StackProvides } from '@braneframe/plugin-stack';
 import { Mermaid as MermaidType } from '@braneframe/types';
 import type {
@@ -26,7 +27,8 @@ export type MermaidPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
-  StackProvides;
+  StackProvides &
+  MarkdownProvides;
 
 export const isObject = (object: unknown): object is MermaidType => {
   return isTypedObject(object) && object.__typename === MermaidType.schema.typename;

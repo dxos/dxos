@@ -32,6 +32,10 @@ export const MermaidPlugin = (): PluginDefinition<MermaidPluginProvides> => {
         },
       },
       translations,
+      markdown: {
+        extensions: [],
+      },
+      // TODO(burdon): Remove.
       graph: {
         builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {

@@ -1980,6 +1980,9 @@ importers:
 
   packages/apps/plugins/plugin-mermaid:
     dependencies:
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@braneframe/plugin-script':
         specifier: workspace:*
         version: link:../plugin-script

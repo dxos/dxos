@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-script": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
