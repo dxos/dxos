@@ -175,7 +175,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   main: { data: { active: layout.activeNode.data } },
                   presence: { data: { object: layout.activeNode.data } },
                   status: { data: { active: layout.activeNode.data } },
-                  heading: { data: { activeNode: layout.activeNode } },
+                  'navbar-start': { data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId } },
                   documentTitle: { data: { activeNode: layout.activeNode } },
                 },
               }
@@ -272,6 +272,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = true;
               state.values.popoverContent = { component, subject };
               state.values.popoverAnchorId = anchorId;
+              console.log('[open popover]', anchorId);
               return true;
             }
 
@@ -279,6 +280,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = false;
               state.values.popoverContent = null;
               state.values.popoverAnchorId = undefined;
+              console.log('[close popover]');
               return true;
             }
 

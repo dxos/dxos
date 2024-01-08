@@ -3,19 +3,27 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
-import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
+import { Breadcrumb, Button, Popover, useTranslation } from '@dxos/react-ui';
 import { NavTreeItemAction } from '@dxos/react-ui-navtree';
 
 import { NAVTREE_PLUGIN } from '../meta';
 import { getTreeItemLabel } from '../util';
 
-export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
+const TREE_ITEM_MAIN_HEADING = 'TreeItemMainHeading';
+
+export const TreeItemMainHeading = ({
+  activeNode,
+  popoverAnchorId,
+}: {
+  activeNode: Node;
+  popoverAnchorId?: string;
+}) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
 
@@ -30,6 +38,9 @@ export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
       data: { id: node.id },
     });
   };
+
+  const ActionRoot =
+    popoverAnchorId === `dxos.org/ui/${TREE_ITEM_MAIN_HEADING}/${activeNode.id}` ? Popover.Anchor : Fragment;
 
   return (
     <>
@@ -56,12 +67,15 @@ export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
           </Breadcrumb.ListItem>
         </Breadcrumb.List>
       </Breadcrumb.Root>
-      <NavTreeItemAction
-        label={t('node actions menu invoker label')}
-        actions={activeNode.actions}
-        onAction={(action) => action.invoke?.()}
-        icon={DotsThreeVertical}
-      />
+      <ActionRoot>
+        <NavTreeItemAction
+          label={t('node actions menu invoker label')}
+          actions={activeNode.actions}
+          onAction={(action) => action.invoke?.({ caller: TREE_ITEM_MAIN_HEADING })}
+          icon={DotsThreeVertical}
+          caller={TREE_ITEM_MAIN_HEADING}
+        />
+      </ActionRoot>
     </>
   );
 };
