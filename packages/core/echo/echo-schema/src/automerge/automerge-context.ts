@@ -107,7 +107,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       .sendSyncMessage({
         id: this.peerId,
         syncMessage: cbor.encode(message),
-      })
+      }, { timeout: 5_000 })
       .catch((err) => {
         log.catch(err);
       });
