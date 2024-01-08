@@ -27,6 +27,9 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/app-graph"
     },
     {

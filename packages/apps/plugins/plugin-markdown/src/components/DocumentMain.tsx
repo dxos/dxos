@@ -12,8 +12,8 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { type CommentRange, useTextModel, type TextEditorRef } from '@dxos/react-ui-editor';
 
 import { EditorMain } from './EditorMain';
-import { getExtensionsConfig } from './extensions';
 import type { MarkdownPluginState } from '../MarkdownPlugin';
+import { getExtensions } from '../extensions';
 import type { MarkdownSettingsProps } from '../types';
 
 export const createDocumentMain =
@@ -47,7 +47,7 @@ export const createDocumentMain =
         editorMode={settings.editorMode}
         model={model}
         comments={comments}
-        extensions={getExtensionsConfig({
+        extensions={getExtensions({
           space,
           document,
           debug: settings.debug,

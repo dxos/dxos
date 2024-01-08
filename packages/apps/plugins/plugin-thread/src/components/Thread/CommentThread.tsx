@@ -14,14 +14,14 @@ import { type BlockProperties, MessageCard } from './MessageCard';
 import { THREAD_PLUGIN } from '../../meta';
 
 // TODO(burdon): Replace with ThreadChannel.
-export const Comments: FC<{
+export const CommentThread: FC<{
   thread: ThreadType;
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
-  onSelect?: () => void;
+  onFocus?: () => void;
   onCreate?: ChatInputProps['onMessage'];
   onDelete?: (messageId: string, idx: number) => void;
-}> = ({ thread, identityKey, propertiesProvider, onSelect, onCreate, onDelete }) => {
+}> = ({ thread, identityKey, propertiesProvider, onFocus, onCreate, onDelete }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -33,7 +33,7 @@ export const Comments: FC<{
     <div
       // TODO(burdon): Use border rather than opacity.
       className={mx('flex flex-col rounded shadow divide-y', inputSurface, fixedBorder, onCreate ? '' : 'opacity-60')}
-      onClick={() => onSelect?.()}
+      onClick={() => onFocus?.()}
     >
       {/* TODO(burdon): Don't show avatar/display name if same as previous. */}
       {thread.messages.map((message) => (
@@ -47,7 +47,13 @@ export const Comments: FC<{
       ))}
 
       {onCreate && (
-        <ChatInput ref={ref} className='pl-1 py-2' placeholder={t('comment placeholder')} onMessage={onCreate} />
+        <ChatInput
+          ref={ref}
+          className='pl-1 py-2'
+          placeholder={t('comment placeholder')}
+          onFocus={onFocus}
+          onMessage={onCreate}
+        />
       )}
     </div>
   );

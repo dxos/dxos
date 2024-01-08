@@ -29,15 +29,16 @@ import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
 
+export const DEFAULT_TYPE = 'stack-section';
+
 export type StackProps<TData extends StackSectionContent = StackSectionContent> = Omit<
   MosaicContainerProps<TData, number>,
   'debug' | 'Component'
 > &
   StackContextValue<TData> & {
     items?: StackSectionItem[];
+    separation?: boolean; // TODO(burdon): Style.
   };
-
-export const DEFAULT_TYPE = 'stack-section';
 
 export const Stack = ({
   id,
@@ -45,6 +46,7 @@ export const Stack = ({
   classNames,
   SectionContent,
   items = [],
+  separation = true,
   transform,
   onOver,
   onDrop,
@@ -56,6 +58,7 @@ export const Stack = ({
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
+  // TODO(burdon): Why callback not useMemo?
   const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
 
   const getOverlayProps = useCallback(() => ({ itemContext: { SectionContent } }), [SectionContent]);
@@ -91,7 +94,7 @@ export const Stack = ({
           type={type}
           classNames={classNames}
           item={{ id, items: itemsWithPreview }}
-          itemContext={{ transform, onRemoveSection, onNavigateToSection, SectionContent }}
+          itemContext={{ separation, transform, onRemoveSection, onNavigateToSection, SectionContent }}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
           Component={StackTile}
         />

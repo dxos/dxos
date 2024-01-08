@@ -12,8 +12,8 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { useTextModel } from '@dxos/react-ui-editor';
 
 import { EditorSection } from './EditorSection';
-import { getExtensionsConfig } from './extensions';
 import { type MarkdownPluginState } from '../MarkdownPlugin';
+import { getExtensions } from '../extensions';
 import { type MarkdownSettingsProps } from '../types';
 
 export const createDocumentSection =
@@ -37,7 +37,7 @@ export const createDocumentSection =
       <EditorSection
         editorMode={settings.editorMode}
         model={model}
-        extensions={getExtensionsConfig({
+        extensions={getExtensions({
           space,
           document,
           debug: settings.debug,

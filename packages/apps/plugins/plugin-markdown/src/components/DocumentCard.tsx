@@ -11,7 +11,7 @@ import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { getExtensionsConfig, useExtensions, type UseExtensionsOptions } from './extensions';
+import { getExtensions } from '../extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps } from '../types';
 
@@ -19,7 +19,6 @@ export type EditorCardProps = {
   id: string;
   object: DocumentType;
   color?: string;
-  extensions?: UseExtensionsOptions;
 };
 
 export const createDocumentCard = (settings: MarkdownSettingsProps): MosaicTileComponent<EditorCardProps> =>
@@ -29,9 +28,6 @@ export const createDocumentCard = (settings: MarkdownSettingsProps): MosaicTileC
       forwardRef,
     ) => {
       const { t } = useTranslation(MARKDOWN_PLUGIN);
-      const extensions = useExtensions(
-        getExtensionsConfig({ document: object, debug: settings.debug, experimental: settings.experimental }),
-      );
       const model = useTextModel({ text: object.content });
       if (!model) {
         return null;
@@ -64,7 +60,11 @@ export const createDocumentCard = (settings: MarkdownSettingsProps): MosaicTileC
             <Card.Body>
               <MarkdownEditor
                 model={model}
-                extensions={extensions}
+                extensions={getExtensions({
+                  document: object,
+                  debug: settings.debug,
+                  experimental: settings.experimental,
+                })}
                 slots={{
                   root: {
                     className: mx(

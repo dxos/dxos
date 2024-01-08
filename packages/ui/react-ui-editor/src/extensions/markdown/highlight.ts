@@ -19,7 +19,7 @@ import {
   mark,
   strikethrough,
   tokens,
-} from '../../../../styles';
+} from '../../styles';
 
 /**
  * Custom tags defined and processed by the GFM lezer extension.

@@ -2,59 +2,61 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback, type MutableRefObject, type PropsWithChildren } from 'react';
+import React, {
+  type HTMLAttributes,
+  type RefCallback,
+  useRef,
+  type PropsWithChildren,
+  type MutableRefObject,
+} from 'react';
 
-import { useTranslation, Main } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor, type EditorModel } from '@dxos/react-ui-editor';
+import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { Main, useTranslation } from '@dxos/react-ui';
+import { type TextEditorProps, type TextEditorRef, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
 import {
+  baseSurface,
   focusRing,
   inputSurface,
   mx,
   surfaceElevation,
-  baseSurface,
-  topbarBlockPaddingStart,
   textBlockWidth,
+  topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { useExtensions, type UseExtensionsOptions } from './extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownProperties } from '../types';
-
-export type SearchResult = {
-  text: string;
-  url: string;
-};
 
 export type EditorMainProps = {
   editorRefCb?: RefCallback<TextEditorRef>;
   properties: MarkdownProperties;
-  layout?: 'main' | 'embedded';
-  extensions?: UseExtensionsOptions;
-} & Pick<TextEditorProps, 'readonly' | 'model' | 'comments' | 'editorMode'>;
+  layout?: 'main' | 'embedded'; // TODO(burdon): Separate components.
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
 
-export const EditorMain = ({
-  editorRefCb,
-  properties,
-  layout = 'main',
-  extensions: _extensions,
-  readonly,
-  model,
-  comments,
-  editorMode,
-}: EditorMainProps) => {
+// TODO(burdon): Don't export ref.
+export const EditorMain = ({ editorRefCb, properties, layout, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : MainLayout;
-  const extensions = useExtensions(_extensions);
+
+  // TODO(burdon): Reconcile refs.
+  const editorRef = useRef<TextEditorRef>();
+  const setEditorRef: RefCallback<TextEditorRef> = (ref) => {
+    editorRef.current = ref as any;
+    editorRefCb?.(ref);
+  };
+
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.FOCUS: {
+        const { object } = data;
+        setFocus(editorRef.current!.view!, object);
+      }
+    }
+  });
 
   return (
-    <Root properties={properties} model={model}>
+    <Root properties={properties}>
       <MarkdownEditor
-        ref={editorRefCb}
-        model={model}
-        comments={comments}
-        readonly={readonly}
-        editorMode={editorMode}
-        extensions={extensions}
+        {...props}
         slots={{
           root: {
             role: 'none',
@@ -84,6 +86,7 @@ export const EditorMain = ({
             },
           },
         }}
+        ref={setEditorRef}
       />
     </Root>
   );
@@ -92,7 +95,6 @@ export const EditorMain = ({
 const MainLayout = ({
   children,
 }: PropsWithChildren<{
-  model: EditorModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
   editorRef?: MutableRefObject<TextEditorRef>;

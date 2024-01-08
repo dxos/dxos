@@ -24,6 +24,7 @@ import {
   createDocumentMain,
   createDocumentSection,
 } from './components';
+import { getExtensions } from './extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import { MarkdownAction, type MarkdownPluginProvides, type MarkdownSettingsProps } from './types';
@@ -37,6 +38,7 @@ export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
+  activeComment?: string;
   onChange: NonNullable<(text: string) => void>[];
 };
 
@@ -165,13 +167,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   <EditorMain
                     editorMode={settings.values.editorMode}
                     model={data.model}
-                    extensions={{
-                      listener: {
-                        onChange: (text: string) => {
-                          state.onChange.forEach((onChange) => onChange(text));
-                        },
+                    extensions={getExtensions({
+                      onChange: (text: string) => {
+                        state.onChange.forEach((onChange) => onChange(text));
                       },
-                    }}
+                    })}
                     properties={data.properties}
                     editorRefCb={pluginRefCallback}
                     layout={'view' in data && data.view === 'embedded' ? 'embedded' : 'main'}
@@ -197,6 +197,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'card': {
               if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+                // TODO(burdon): Type.
                 const cardProps = {
                   ...props,
                   item: {
@@ -224,6 +225,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       intent: {
         resolver: ({ action, data }) => {
           switch (action) {
+            case LayoutAction.FOCUS: {
+              state.activeComment = data.object;
+              break;
+            }
+
             case MarkdownAction.CREATE: {
               return { object: new DocumentType() };
             }
