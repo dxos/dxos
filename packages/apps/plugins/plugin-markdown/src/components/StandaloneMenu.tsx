@@ -19,7 +19,7 @@ export const StandaloneMenu = ({
 }: PropsWithChildren<{
   model: EditorModel;
   properties: MarkdownProperties;
-  // TODO(wittjosiah): ForwardRef.
+  // TODO(wittjosiah): ForwardRef. Remove?
   editorRef?: RefObject<TextEditorRef>;
 }>) => {
   return (

@@ -33,16 +33,18 @@ import {
   EditorSection,
   MarkdownMainEmpty,
   MarkdownSettings,
+  StandaloneLayout,
   StandaloneMenu,
 } from './components';
 import { getExtensions } from './components/extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
+  type ExtensionsProvider,
   MarkdownAction,
   type MarkdownPluginProvides,
-  type MarkdownProperties,
   type MarkdownSettingsProps,
+  type OnChange,
 } from './types';
 import { getFallbackTitle, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
@@ -55,12 +57,13 @@ export const isDocument = (data: unknown): data is DocumentType =>
 
 export type MarkdownPluginState = {
   activeComment?: string;
-  onChange: NonNullable<(text: string) => void>[];
+  extensions: NonNullable<ExtensionsProvider>[];
+  onChange: NonNullable<OnChange>[];
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
-  const state = deepSignal<MarkdownPluginState>({ onChange: [] });
+  const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
   const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
@@ -70,35 +73,34 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   const _getExtensions = (space?: Space, document?: DocumentType) => {
-    // Update external plugins.
-    const handleChange = (text: string) => {
-      state.onChange.forEach((onChange) => onChange(text));
-    };
-
-    return getExtensions({
+    // Configure extensions.
+    const extensions = getExtensions({
       debug: settings.values.debug,
       experimental: settings.values.experimental,
       space,
       document,
       dispatch: intentPlugin?.provides.intent.dispatch,
-      onChange: handleChange,
+      onChange: (text: string) => {
+        state.onChange.forEach((onChange) => onChange(text));
+      },
     });
+
+    // Add extensions from other plugins.
+    for (const provider of state.extensions) {
+      const provided = typeof provider === 'function' ? provider() : provider;
+      extensions.push(...provided);
+    }
+
+    return extensions;
   };
 
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc.
   //  Should these components be inline or external?
-  const EditorMainStandalone: FC<{
-    model: EditorModel;
-    properties: MarkdownProperties;
-  }> = ({ model, properties }) => {
+  const EditorMainStandalone: FC<{ model: EditorModel }> = ({ model }) => {
     return (
-      <EditorMain
-        model={model}
-        properties={properties}
-        layout='standalone'
-        editorMode={settings.values.editorMode}
-        editorRefCb={pluginRefCallback}
-      />
+      <StandaloneLayout>
+        <EditorMain model={model} editorMode={settings.values.editorMode} editorRefCb={pluginRefCallback} />
+      </StandaloneLayout>
     );
   };
 
@@ -120,16 +122,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     }
 
     return (
-      <EditorMain
-        editorRefCb={pluginRefCallback}
-        properties={document}
-        layout='standalone'
-        model={model}
-        readonly={readonly}
-        comments={comments}
-        editorMode={settings.values.editorMode}
-        extensions={_getExtensions(space, document)}
-      />
+      <StandaloneLayout>
+        <EditorMain
+          editorRefCb={pluginRefCallback}
+          model={model}
+          readonly={readonly}
+          comments={comments}
+          editorMode={settings.values.editorMode}
+          extensions={_getExtensions(space, document)}
+        />
+      </StandaloneLayout>
     );
   };
 
@@ -180,8 +182,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
       markdownPlugins(plugins).forEach((plugin) => {
-        if (plugin.provides.markdown.onChange) {
-          state.onChange.push(plugin.provides.markdown.onChange);
+        const { extensions, onChange } = plugin.provides.markdown;
+        if (extensions) {
+          state.extensions.push(extensions);
+        }
+        if (onChange) {
+          state.onChange.push(onChange);
         }
       });
     },
@@ -281,9 +287,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 isMarkdownProperties(data.properties)
               ) {
                 if ('view' in data && data.view === 'embedded') {
-                  return <EditorMainEmbedded model={data.composer} properties={data.properties} />;
+                  return <EditorMainEmbedded model={data.composer} />;
                 } else {
-                  return <EditorMainStandalone model={data.composer} properties={data.properties} />;
+                  return <EditorMainStandalone model={data.composer} />;
                 }
               } else if (
                 // TODO(burdon): Why 'composer' property?
@@ -294,7 +300,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               ) {
                 // TODO(burdon): Remove?
                 const content = data.composer.content?.toString();
-                return <MarkdownMainEmpty content={content} properties={data.properties} />;
+                return <MarkdownMainEmpty content={content} />;
               }
               break;
             }

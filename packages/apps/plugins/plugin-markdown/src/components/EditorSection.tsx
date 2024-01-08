@@ -12,16 +12,14 @@ import { MARKDOWN_PLUGIN } from '../meta';
 
 type EditorSectionProps = Pick<TextEditorProps, 'model' | 'extensions' | 'editorMode'>;
 
-export const EditorSection = ({ model, editorMode, extensions }: EditorSectionProps) => {
+export const EditorSection = (props: EditorSectionProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const editorRef = useRef<TextEditorRef>(null);
 
   return (
     <MarkdownEditor
       ref={editorRef}
-      model={model}
-      editorMode={editorMode}
-      extensions={extensions}
+      {...props}
       slots={{
         root: {
           role: 'none',

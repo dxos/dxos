@@ -8,13 +8,11 @@ import { Main } from '@dxos/react-ui';
 import { type TextEditorRef } from '@dxos/react-ui-editor';
 import { baseSurface, topbarBlockPaddingStart, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
-import { type MarkdownProperties } from '../types';
-
+// TODO(burdon): Factor out MainLayout for plugins?
+// TODO(wittjosiah): ForwardRef. Remove?
 export const StandaloneLayout = ({
   children,
 }: PropsWithChildren<{
-  properties: MarkdownProperties;
-  // TODO(wittjosiah): ForwardRef.
   editorRef?: MutableRefObject<TextEditorRef>;
 }>) => {
   return (
