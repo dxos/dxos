@@ -13,6 +13,9 @@
       }
     },
     "bundle": {
+      "dependsOn": [
+        "^bundle"
+      ],
       "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/todomvc/out/todomvc"

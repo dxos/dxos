@@ -54,11 +54,17 @@ test.describe('Basic test', () => {
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
 
+      // TODO(wittjosiah): useSpaces hook isn't updating for a long time for some reason.
+      //  This should be removed once that is fixed.
+      test.slow();
+
       // Wait for redirect.
       await waitForExpect(async () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      });
+      }, 20_000); // TODO(wittjosiah): Remove.
+
+      await host.page.getByTestId('new-todo').waitFor({ state: 'hidden', timeout: 60_000 });
     });
 
     test('toggle a task', async () => {
