@@ -3,7 +3,6 @@
 //
 
 import { Trigger, sleep } from '@dxos/async';
-import { cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, schema } from '@dxos/protocols';
@@ -110,20 +109,24 @@ export class AutomergeReplicator implements TeleportExtension {
     invariant(this._rpc, 'RPC not initialized');
 
     let retries = 0;
-    while(true) {
+    while (true) {
       try {
         await this._rpc.rpc.AutomergeReplicatorService.sendSyncMessage(message);
         break;
-      } catch(err) {
-        if(err instanceof RpcClosedError) return;
+      } catch (err) {
+        if (err instanceof RpcClosedError) {
+          return;
+        }
 
         log('sendSyncMessage error', { err });
 
         retries++;
         if (retries >= MAX_RETRIES) {
-          throw new Error(`Failed to send sync message after ${MAX_RETRIES} retries. Last attempt failed with error: ${err}`);
+          throw new Error(
+            `Failed to send sync message after ${MAX_RETRIES} retries. Last attempt failed with error: ${err}`,
+          );
         }
-        if(retries % NUM_RETRIES_BEFORE_BACKOFF === 0) {
+        if (retries % NUM_RETRIES_BEFORE_BACKOFF === 0) {
           await sleep(RETRY_BACKOFF);
         }
       }
