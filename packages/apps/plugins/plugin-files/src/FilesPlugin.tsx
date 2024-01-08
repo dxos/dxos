@@ -58,21 +58,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
   return {
     meta,
     initialize: async () => {
-      return {
-        markdown: {
-          onChange: (text) => {
-            if (state.current) {
-              state.current.text = text.toString();
-              state.current.modified = true;
-              onFilesUpdate?.();
-            }
-          },
-        },
-      };
-    },
-    ready: async (plugins) => {
-      window.addEventListener('keydown', handleKeyDown);
-
       const value = await localforage.getItem<FileSystemHandle[]>(FILES_PLUGIN);
       if (Array.isArray(value)) {
         await Promise.all(
@@ -87,6 +72,21 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           }),
         );
       }
+
+      return {
+        markdown: {
+          onChange: (text) => {
+            if (state.current) {
+              state.current.text = text.toString();
+              state.current.modified = true;
+              onFilesUpdate?.();
+            }
+          },
+        },
+      };
+    },
+    ready: async (plugins) => {
+      window.addEventListener('keydown', handleKeyDown);
 
       // Subscribe to graph to track the currently active file.
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
