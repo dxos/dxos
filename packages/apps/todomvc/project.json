@@ -14,7 +14,9 @@
     },
     "bundle": {
       "dependsOn": [
-        "^bundle"
+        "^build",
+        "^bundle",
+        "prebuild"
       ],
       "executor": "@nx/vite:build",
       "options": {
