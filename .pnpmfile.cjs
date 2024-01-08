@@ -5,7 +5,7 @@ function lockfileWarning() {
   const cp = require('child_process')
   
   // get repo root
-  const repoRoot = cp.execSync('git rev-parse --show-toplevel').toString().trim()
+  const repoRoot = process.env.DX_BUILD_ROOT_DIR ?? cp.execSync('git rev-parse --show-toplevel').toString().trim()
 
   if(!fs.existsSync(`${repoRoot}/pnpm-lock.yaml`)) {
     if(!process.env.REGENERATE_LOCKFILE) {

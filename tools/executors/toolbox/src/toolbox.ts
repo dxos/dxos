@@ -101,7 +101,7 @@ class Toolbox {
   // TODO(burdon): Merge options.
   constructor(options: ToolboxOptions = {}) {
     this.options = defaultsDeep({}, options, defaultOptions);
-    this.rootDir = execSync('git rev-parse --show-toplevel').toString().trim();
+    this.rootDir = process.env.DX_BUILD_ROOT_DIR ?? execSync('git rev-parse --show-toplevel').toString().trim();
   }
 
   /**

@@ -8,3 +8,4 @@ packages/experimental/kai-functions/**
 packages/experimental/kai-bots/**
 packages/experimental/kai-framework/**
 packages/experimental/kube-console/**
+packages/sdk/examples/src/template/**
