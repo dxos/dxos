@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { StandaloneLayout } from './StandaloneLayout';
-import { type MarkdownProperties } from '../types';
 
-export const MarkdownMainEmpty = ({ content, properties }: { content?: string; properties: MarkdownProperties }) => {
-  return <StandaloneLayout properties={properties}>{content}</StandaloneLayout>;
+export const MarkdownMainEmpty = ({ content }: { content?: string }) => {
+  return <StandaloneLayout>{content}</StandaloneLayout>;
 };
