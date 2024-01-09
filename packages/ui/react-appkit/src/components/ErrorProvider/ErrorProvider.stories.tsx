@@ -12,6 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { ErrorProvider } from './ErrorProvider';
 
 export default {
+  title: 'react-appkit/ErrorProvider',
   component: ErrorProvider,
   decorators: [withTheme],
 };

@@ -14,6 +14,7 @@ import { ObjectPresence, type ObjectPresenceProps } from './SpacePresence';
 import { type ObjectViewer } from '../types';
 
 export default {
+  title: 'plugin-space/ObjectPresence',
   component: ObjectPresence,
   actions: { argTypesRegex: '^on.*' },
 };
