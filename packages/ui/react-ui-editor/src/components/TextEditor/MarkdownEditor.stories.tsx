@@ -259,6 +259,12 @@ export const Readonly = {
   render: () => <Story text={document} extensions={extensions} readonly />,
 };
 
+const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
+
+export const Large = {
+  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
+};
+
 export const NoExtensions = {
   render: () => <Story text={document} />,
 };
