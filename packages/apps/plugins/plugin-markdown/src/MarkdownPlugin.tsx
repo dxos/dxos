@@ -23,12 +23,20 @@ import {
   DocumentMain,
   DocumentSection,
   EditorMain,
+  EmbeddedLayout,
+  MainLayout,
   MarkdownSettings,
 } from './components';
 import { getExtensions } from './extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
-import { MarkdownAction, type MarkdownPluginProvides, type MarkdownSettingsProps } from './types';
+import {
+  type ExtensionsProvider,
+  type MarkdownPluginProvides,
+  type MarkdownSettingsProps,
+  type OnChange,
+  MarkdownAction,
+} from './types';
 import { getFallbackTitle, isMarkdown, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -40,17 +48,40 @@ export const isDocument = (data: unknown): data is DocumentType =>
 
 export type MarkdownPluginState = {
   activeComment?: string;
-  onChange: NonNullable<(text: string) => void>[];
+  extensions: NonNullable<ExtensionsProvider>[];
+  onChange: NonNullable<OnChange>[];
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
-  const state = deepSignal<MarkdownPluginState>({ onChange: [] });
+  const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
   const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
+
+  // const _getExtensions = (space?: Space, document?: DocumentType) => {
+  //   // Configure extensions.
+  //   const extensions = getExtensions({
+  //     debug: settings.values.debug,
+  //     experimental: settings.values.experimental,
+  //     space,
+  //     document,
+  //     dispatch: intentPlugin?.provides.intent.dispatch,
+  //     onChange: (text: string) => {
+  //       state.onChange.forEach((onChange) => onChange(text));
+  //     },
+  //   });
+  //
+  //   // Add extensions from other plugins.
+  //   for (const provider of state.extensions) {
+  //     const provided = typeof provider === 'function' ? provider() : provider;
+  //     extensions.push(...provided);
+  //   }
+  //
+  //   return extensions;
+  // };
 
   return {
     meta,
@@ -61,8 +92,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool);
 
       markdownPlugins(plugins).forEach((plugin) => {
-        if (plugin.provides.markdown.onChange) {
-          state.onChange.push(plugin.provides.markdown.onChange);
+        const { extensions, onChange } = plugin.provides.markdown;
+        if (extensions) {
+          state.extensions.push(extensions);
+        }
+        if (onChange) {
+          state.onChange.push(onChange);
         }
       });
     },
@@ -167,7 +202,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                return (
+                const main = (
                   <EditorMain
                     editorMode={settings.values.editorMode}
                     model={data.model}
@@ -176,11 +211,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                         state.onChange.forEach((onChange) => onChange(text));
                       },
                     })}
-                    properties={data.properties}
                     editorRefCb={pluginRefCallback}
-                    layout={'view' in data && data.view === 'embedded' ? 'embedded' : 'main'}
                   />
                 );
+
+                if ('view' in data && data.view === 'embedded') {
+                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                } else {
+                  return <MainLayout>{main}</MainLayout>;
+                }
               }
               break;
             }
