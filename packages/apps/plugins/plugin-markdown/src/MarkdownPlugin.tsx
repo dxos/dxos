@@ -25,7 +25,6 @@ import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
   DocumentCard,
-  DocumentHeadingMenu,
   type DocumentItemProps,
   DocumentMain,
   DocumentSection,
@@ -91,7 +90,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   };
 
   // TODO(thure): this needs to be refactored into a graph node action.
-  const _DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
+  // const _DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
 
   return {
     meta,
