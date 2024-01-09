@@ -14,6 +14,7 @@ APPS=(
   ./packages/apps/todomvc
 )
 
+unset NX_CLOUD_ACCESS_TOKEN
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 ROOT=$(git rev-parse --show-toplevel)
 
