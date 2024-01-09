@@ -9,18 +9,16 @@ import { type Document as DocumentType } from '@braneframe/types';
 import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { type Extension, useTextModel } from '@dxos/react-ui-editor';
 
 import { EditorSection } from './EditorSection';
-import { type MarkdownPluginState } from '../MarkdownPlugin';
-import { getExtensions } from '../extensions';
 import { type MarkdownSettingsProps } from '../types';
 
 export const DocumentSection: FC<{
   document: DocumentType;
-  settings: MarkdownSettingsProps;
-  state: MarkdownPluginState;
-}> = ({ document, settings, state }) => {
+  editorMode: MarkdownSettingsProps['editorMode'];
+  extensions: Extension[];
+}> = ({ document, editorMode, extensions }) => {
   const { dispatch } = useIntent();
   const identity = useIdentity();
   const space = getSpaceForObject(document);
@@ -35,20 +33,5 @@ export const DocumentSection: FC<{
     return null;
   }
 
-  return (
-    <EditorSection
-      editorMode={settings.editorMode}
-      model={model}
-      extensions={getExtensions({
-        space,
-        document,
-        debug: settings.debug,
-        experimental: settings.experimental,
-        dispatch,
-        onChange: (text: string) => {
-          state.onChange.forEach((onChange) => onChange(text));
-        },
-      })}
-    />
-  );
+  return <EditorSection editorMode={editorMode} model={model} extensions={extensions} />;
 };

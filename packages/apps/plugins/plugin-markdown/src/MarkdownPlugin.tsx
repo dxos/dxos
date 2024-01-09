@@ -10,7 +10,15 @@ import React, { type MutableRefObject, type RefCallback, type Ref } from 'react'
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document as DocumentType, Folder } from '@braneframe/types';
-import { type PluginDefinition, isObject, parseIntentPlugin, resolvePlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  isObject,
+  parseIntentPlugin,
+  resolvePlugin,
+  LayoutAction,
+  type IntentPluginProvides,
+  type Plugin,
+  type PluginDefinition,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { type TextEditorRef } from '@dxos/react-ui-editor';
@@ -56,32 +64,32 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
   const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 
-  // const _getExtensions = (space?: Space, document?: DocumentType) => {
-  //   // Configure extensions.
-  //   const extensions = getExtensions({
-  //     debug: settings.values.debug,
-  //     experimental: settings.values.experimental,
-  //     space,
-  //     document,
-  //     dispatch: intentPlugin?.provides.intent.dispatch,
-  //     onChange: (text: string) => {
-  //       state.onChange.forEach((onChange) => onChange(text));
-  //     },
-  //   });
-  //
-  //   // Add extensions from other plugins.
-  //   for (const provider of state.extensions) {
-  //     const provided = typeof provider === 'function' ? provider() : provider;
-  //     extensions.push(...provided);
-  //   }
-  //
-  //   return extensions;
-  // };
+  const getCustomExtensions = (document?: DocumentType) => {
+    // Configure extensions.
+    const extensions = getExtensions({
+      document,
+      debug: settings.values.debug,
+      experimental: settings.values.experimental,
+      dispatch: intentPlugin?.provides.intent.dispatch,
+      onChange: (text: string) => {
+        state.onChange.forEach((onChange) => onChange(text));
+      },
+    });
+
+    // Add extensions from other plugins.
+    for (const provider of state.extensions) {
+      const provided = typeof provider === 'function' ? provider() : provider;
+      extensions.push(...provided);
+    }
+
+    return extensions;
+  };
 
   return {
     meta,
@@ -90,6 +98,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
         .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool);
+
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
       markdownPlugins(plugins).forEach((plugin) => {
         const { extensions, onChange } = plugin.provides.markdown;
@@ -114,8 +124,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
               id: `${MARKDOWN_PLUGIN}/create`,
@@ -191,9 +199,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   <DocumentMain
                     document={data.active}
                     readonly={readonly}
-                    settings={settings.values}
-                    state={state}
-                    pluginRefCallback={pluginRefCallback}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.active)}
+                    editorRefCb={pluginRefCallback}
                   />
                 );
               } else if (
@@ -202,10 +210,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
+                // TODO(burdon): Normalize with ECHO path above?
                 const main = (
                   <EditorMain
-                    editorMode={settings.values.editorMode}
                     model={data.model}
+                    editorMode={settings.values.editorMode}
                     extensions={getExtensions({
                       onChange: (text: string) => {
                         state.onChange.forEach((onChange) => onChange(text));
@@ -233,7 +242,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (isDocument(data.object)) {
-                return <DocumentSection document={data.object} settings={settings.values} state={state} />;
+                return (
+                  <DocumentSection
+                    document={data.object}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.object)}
+                  />
+                );
               }
               break;
             }

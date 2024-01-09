@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { ThreadAction } from '@braneframe/plugin-thread';
 import { Document as DocumentType, Thread as ThreadType } from '@braneframe/types';
 import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
-import { type Space } from '@dxos/client/echo';
+import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
@@ -28,10 +28,9 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 export type ExtensionsOptions = {
+  document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
-  space?: Space;
-  document?: DocumentType;
   dispatch?: IntentDispatcher;
 } & Pick<ListenerOptions, 'onChange'>;
 
@@ -39,13 +38,14 @@ export type ExtensionsOptions = {
  * Create extension instances for editor.
  */
 export const getExtensions = ({
+  document,
   debug,
   experimental,
-  space, // TODO(burdon): Reconcile Space/non-space deps.
-  document,
   dispatch,
   onChange,
 }: ExtensionsOptions): Extension[] => {
+  const space = document ? getSpaceForObject(document) : undefined;
+
   const extensions: Extension[] = [
     //
     // Common.

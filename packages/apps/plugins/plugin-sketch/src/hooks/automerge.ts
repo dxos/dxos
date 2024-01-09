@@ -47,7 +47,7 @@ export class AutomergeStoreAdapter {
         accessor.handle.change((doc) => {
           const content: Record<string, TLRecord> = getAndInit(doc, path, {});
           const allRecords = this._store.allRecords();
-          log.info('seed initial records', { allRecords });
+          log('seed initial records', { allRecords });
           for (const record of allRecords) {
             content[record.id] = encode(record);
           }
@@ -55,7 +55,7 @@ export class AutomergeStoreAdapter {
       } else {
         // Replace the store records with the automerge doc records.
         transact(() => {
-          log.info('load initial records', { contentRecords });
+          log('load initial records', { contentRecords });
           this._store.clear();
           this._store.put([...Object.values(contentRecords ?? {})].map((record) => decode(record)));
         });
@@ -110,7 +110,7 @@ export class AutomergeStoreAdapter {
         }
       });
 
-      log.info('remote change', {
+      log('remote change', {
         currentHeads,
         lastHeads: this._lastHeads,
         path,
@@ -163,7 +163,7 @@ export class AutomergeStoreAdapter {
           timeout = setTimeout(() => {
             accessor.handle.change((doc) => {
               const content: Record<string, TLRecord> = getAndInit(doc, path, {});
-              log.info('submitting mutations', { mutations });
+              log('submitting mutations', { mutations });
               mutations.forEach(({ type, record }) => {
                 switch (type) {
                   case 'added': {
