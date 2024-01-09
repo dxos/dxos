@@ -7,6 +7,7 @@ permissions:
 on:
   push:
     branches:
+      # TODO: enable for all branches
       - main
       - test-github/docker
       - nf/agent-docker
@@ -113,3 +114,22 @@ jobs:
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
+  docker_hub_description_update:
+    if: github.ref_name == 'main' || github.ref_name == 'nf/agent-docker'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update composer Docker Hub repo description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: dxos/composer-app
+          short-description: Composer is a tool for collaboration powered by the DXOS developer platform.
+          readme-filepath: packages/apps/composer-app/README.md
+      - name: Update agent Docker Hub repo description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: dxos/agent
+          short-description: DXOS Agent provides offline backup and synchronization capabilities for DXOS applications.
