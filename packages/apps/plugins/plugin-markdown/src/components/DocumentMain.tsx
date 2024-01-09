@@ -11,7 +11,7 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type CommentRange, useTextModel, type TextEditorRef } from '@dxos/react-ui-editor';
 
-import { EditorMain } from './EditorMain';
+import { EditorMain, MainLayout } from './EditorMain';
 import type { MarkdownPluginState } from '../MarkdownPlugin';
 import { getExtensions } from '../extensions';
 import type { MarkdownSettingsProps } from '../types';
@@ -42,23 +42,24 @@ export const DocumentMain: FC<{
   }
 
   return (
-    <EditorMain
-      readonly={readonly}
-      editorMode={settings.editorMode}
-      model={model}
-      comments={comments}
-      extensions={getExtensions({
-        space,
-        document,
-        debug: settings.debug,
-        experimental: settings.experimental,
-        dispatch,
-        onChange: (text: string) => {
-          state.onChange.forEach((onChange) => onChange(text));
-        },
-      })}
-      properties={document}
-      editorRefCb={pluginRefCallback}
-    />
+    <MainLayout>
+      <EditorMain
+        readonly={readonly}
+        editorMode={settings.editorMode}
+        model={model}
+        comments={comments}
+        extensions={getExtensions({
+          space,
+          document,
+          debug: settings.debug,
+          experimental: settings.experimental,
+          dispatch,
+          onChange: (text: string) => {
+            state.onChange.forEach((onChange) => onChange(text));
+          },
+        })}
+        editorRefCb={pluginRefCallback}
+      />
+    </MainLayout>
   );
 };
