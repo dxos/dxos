@@ -68,7 +68,7 @@ export type ClientPluginProvides = SurfaceProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
-const ENABLE_VAULT_MIGRATION = false;
+const ENABLE_VAULT_MIGRATION = !location.host.startsWith('localhost');
 
 export const ClientPlugin = ({
   types,
@@ -99,7 +99,12 @@ export const ClientPlugin = ({
           {
             runtime: {
               client: {
-                remoteSource: 'https://halo.dxos.org/vault.html',
+                remoteSource:
+                  location.host === 'composer.dev.dxos.org'
+                    ? 'https://halo.staging.dxos.org/vault.html'
+                    : location.host === 'composer.dev.dxos.org'
+                    ? 'https://halo.dev.dxos.org/vault.html'
+                    : 'https://halo.dxos.org/vault.html',
               },
             },
           },
@@ -135,9 +140,9 @@ export const ClientPlugin = ({
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         const identity = client.halo.identity.get();
-        if (ENABLE_VAULT_MIGRATION && !identity && !deviceInvitationCode) {
+        if (!identity && !deviceInvitationCode) {
           // TODO(wittjosiah): Remove.
-          const oldIdentity = oldClient.halo.identity.get();
+          const oldIdentity = ENABLE_VAULT_MIGRATION && oldClient.halo.identity.get();
           if (oldIdentity) {
             alert(
               'Composer must perform some database maintenance to upgrade your identity to the latest version. After continuing, please keep this window open until the app loads.',
@@ -155,11 +160,11 @@ export const ClientPlugin = ({
 
             await newObs.wait();
             void oldClient.destroy();
+          } else if (!client.halo.identity.get()) {
+            await client.halo.createIdentity();
+            // TODO(wittjosiah): Ideally this would be per app rather than per identity.
+            firstRun = true;
           }
-        } else if (!client.halo.identity.get()) {
-          await client.halo.createIdentity();
-          // TODO(wittjosiah): Ideally this would be per app rather than per identity.
-          firstRun = true;
         } else if (client.halo.identity.get() && deviceInvitationCode) {
           // Ignore device invitation if identity already exists.
           // TODO(wittjosiah): Identity merging.

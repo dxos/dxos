@@ -5,14 +5,62 @@
 import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import { Observable } from 'lib0/observable';
-import * as awarenessProtocol from 'y-protocols/awareness';
+import * as YP from 'y-protocols/awareness';
+import * as Y from 'yjs';
 import { type Doc } from 'yjs';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type GossipMessage } from '@dxos/react-client/mesh';
+import type { YText } from '@dxos/text-model';
+import { arrayToString, stringToArray } from '@dxos/util';
 
-type Awareness = awarenessProtocol.Awareness;
+import { type EditorModel, modelState, type Range, type UseTextModelProps } from './useTextModel';
+import { yjs } from '../extensions';
+
+export const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorModel => {
+  invariant(text?.doc && text?.content);
+  const provider = space
+    ? new YAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` })
+    : undefined;
+
+  const model: EditorModel = {
+    id: text.doc.guid,
+    content: text.content,
+    text: () => text.content!.toString(),
+    // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
+    // TODO(dmaretskyi): Refactor as cursor-converter.
+    getCursorFromRange: (range: Range) => {
+      const from = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.from));
+      const to = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text.content as YText, range.to, -1));
+      return [arrayToString(from), arrayToString(to)].join(':');
+    },
+    getRangeFromCursor: (cursor: string) => {
+      invariant(text.doc);
+      const parts = cursor.split(':');
+      const from = Y.createAbsolutePositionFromRelativePosition(
+        Y.decodeRelativePosition(stringToArray(parts[0])),
+        text.doc,
+      );
+      const to = Y.createAbsolutePositionFromRelativePosition(
+        Y.decodeRelativePosition(stringToArray(parts[1])),
+        text.doc,
+      );
+      return from && to ? { from: from.index, to: to.index } : undefined;
+    },
+    extension: [modelState.init(() => model), yjs(text.content as YText, provider?.awareness)],
+    awareness: provider?.awareness,
+    peer: identity
+      ? {
+          id: identity.identityKey.toHex(),
+          name: identity.profile?.displayName,
+        }
+      : undefined,
+  };
+
+  return model;
+};
 
 // Based on https://github.com/yjs/y-webrtc/blob/88baab2/src/y-webrtc.js.
 
@@ -22,16 +70,26 @@ const messageQueryAwareness = 3;
 /**
  * Yjs awareness provider on top of a DXOS space.
  */
-export class SpaceAwarenessProvider extends Observable<any> {
+export class YAwarenessProvider extends Observable<any> {
   private readonly _space: Space;
-  private readonly _awareness: Awareness;
+  private readonly _awareness: YP.Awareness;
   private readonly _clientId: number;
   private readonly _channel: string;
 
-  constructor({ space, doc, channel, awareness }: { space: Space; doc: Doc; channel: string; awareness?: Awareness }) {
+  constructor({
+    space,
+    doc,
+    channel,
+    awareness,
+  }: {
+    space: Space;
+    doc: Doc;
+    channel: string;
+    awareness?: YP.Awareness;
+  }) {
     super();
     this._space = space;
-    this._awareness = awareness ?? new awarenessProtocol.Awareness(doc);
+    this._awareness = awareness ?? new YP.Awareness(doc);
     this._channel = channel;
     this._clientId = doc.clientID;
 
@@ -52,14 +110,11 @@ export class SpaceAwarenessProvider extends Observable<any> {
     // Post local awareness state.
     const encoderAwarenessState = encoding.createEncoder();
     encoding.writeVarUint(encoderAwarenessState, messageAwareness);
-    encoding.writeVarUint8Array(
-      encoderAwarenessState,
-      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [this._clientId]),
-    );
+    encoding.writeVarUint8Array(encoderAwarenessState, YP.encodeAwarenessUpdate(this.awareness, [this._clientId]));
     void this._space.postMessage(this._channel, encoding.toUint8Array(encoderAwarenessState));
   }
 
-  get awareness(): Awareness {
+  get awareness(): YP.Awareness {
     return this._awareness;
   }
 
@@ -68,10 +123,7 @@ export class SpaceAwarenessProvider extends Observable<any> {
     const changedClients = added.concat(updated).concat(removed);
     const encoderAwareness = encoding.createEncoder();
     encoding.writeVarUint(encoderAwareness, messageAwareness);
-    encoding.writeVarUint8Array(
-      encoderAwareness,
-      awarenessProtocol.encodeAwarenessUpdate(this._awareness, changedClients),
-    );
+    encoding.writeVarUint8Array(encoderAwareness, YP.encodeAwarenessUpdate(this._awareness, changedClients));
     void this._space.postMessage(this._channel, encoding.toUint8Array(encoderAwareness));
   }
 
@@ -92,7 +144,7 @@ export class SpaceAwarenessProvider extends Observable<any> {
     let sendReply = false;
     switch (messageType) {
       case messageAwareness: {
-        awarenessProtocol.applyAwarenessUpdate(this._awareness, decoding.readVarUint8Array(decoder), this);
+        YP.applyAwarenessUpdate(this._awareness, decoding.readVarUint8Array(decoder), this);
         break;
       }
 
@@ -100,7 +152,7 @@ export class SpaceAwarenessProvider extends Observable<any> {
         encoding.writeVarUint(encoder, messageAwareness);
         encoding.writeVarUint8Array(
           encoder,
-          awarenessProtocol.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys())),
+          YP.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys())),
         );
         sendReply = true;
         break;
@@ -121,6 +173,6 @@ export class SpaceAwarenessProvider extends Observable<any> {
   }
 
   private _handleBeforeUnload() {
-    awarenessProtocol.removeAwarenessStates(this._awareness, [this._clientId], 'window unload');
+    YP.removeAwarenessStates(this._awareness, [this._clientId], 'window unload');
   }
 }
