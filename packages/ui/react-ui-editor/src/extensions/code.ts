@@ -11,24 +11,23 @@ import {
   Decoration,
   type BlockInfo,
 } from '@codemirror/view';
-import get from 'lodash.get';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { tokens } from '../styles';
+import { getToken } from '../styles';
 
 const CODE_REGEX = /```[\s\S]*?```/gs;
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
   '& .cm-codeblock': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    fontFamily: getToken('fontFamily.mono', []).join(','),
   },
   '&light [aria-readonly="true"] .cm-codeblock': {
-    background: get(tokens, 'extend.colors.neutral.50'),
+    background: getToken('extend.colors.neutral.50'),
   },
   '&dark [aria-readonly="true"] .cm-codeblock': {
-    background: get(tokens, 'extend.colors.neutral.850'),
+    background: getToken('extend.colors.neutral.850'),
   },
   '& [aria-readonly="true"] .cm-codeblock': {
     display: 'block',

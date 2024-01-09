@@ -2,11 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, type KeyboardEventHandler, useEffect, useRef, useState } from 'react';
+import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
+import React, { type HTMLAttributes, type KeyboardEventHandler, StrictMode, useEffect, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { TextEditor, useTextModel, type CursorInfo, type TextEditorRef, type YText } from '@dxos/react-ui-editor';
+import {
+  useTextModel,
+  type CursorInfo,
+  type TextEditorRef,
+  type YText,
+  link,
+  MarkdownEditor,
+} from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
@@ -170,9 +178,10 @@ const OutlinerItem = ({
       )}
 
       {model && (
-        <TextEditor
+        <MarkdownEditor
           ref={editorRef}
           model={model}
+          extensions={[link({ onRender: onRenderLink })]}
           slots={{
             root: {
               className: 'w-full',
@@ -482,3 +491,16 @@ export const Outliner = {
 };
 
 export type { OutlinerRootProps };
+
+// TODO(burdon): Factor out style.
+const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+
+const onRenderLink = (el: Element, url: string) => {
+  createRoot(el).render(
+    <StrictMode>
+      <a href={url} rel='noreferrer' target='_blank' className={hover}>
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
+      </a>
+    </StrictMode>,
+  );
+};
