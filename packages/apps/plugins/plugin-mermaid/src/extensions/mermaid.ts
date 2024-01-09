@@ -82,6 +82,23 @@ class MermaidWidget extends WidgetType {
       wrapper.innerHTML = this._svg;
     } else {
       setTimeout(async () => {
+        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
+        _mermaid.initialize({
+          darkMode: view.state.facet(EditorView.darkTheme),
+          theme: 'neutral',
+          // TODO(burdon): Styles.
+          // NOTE: Must specify 'base' in order to override.
+          // theme: 'base',
+          // themeVariables: {
+          //   primaryColor: getToken('extend.colors.red.100'),
+          //   primaryBorderColor: getToken('extend.colors.neutral.200'),
+          // },
+          // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/flowchart/styles.ts
+          // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/sequence/styles.js
+          // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/state/styles.js
+          // themeCSS: '.node rect { fill: red; }',
+        });
+
         this._svg = await this.render();
         if (this._error) {
           wrapper.innerText = this._error;
