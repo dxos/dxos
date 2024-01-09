@@ -158,7 +158,7 @@ const buildDecorations = (view: EditorView, options: LinkOptions): DecorationSet
             return false;
           }
 
-          if (state.readOnly || cursor < node.from || cursor > node.to) {
+          if (!view.hasFocus || state.readOnly || cursor < node.from || cursor > node.to) {
             builder.add(
               node.from,
               node.to,
