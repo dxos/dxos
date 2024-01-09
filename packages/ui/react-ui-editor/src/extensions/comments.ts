@@ -16,7 +16,6 @@ import {
   WidgetType,
   type Rect,
 } from '@codemirror/view';
-import get from 'lodash.get';
 import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
@@ -25,7 +24,7 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { type CommentRange, type EditorModel, type Range } from '../hooks';
-import { tokens } from '../styles';
+import { getToken } from '../styles';
 import { callbackWrapper, CursorConverter } from '../util';
 
 // TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
@@ -43,10 +42,10 @@ const styles = EditorView.baseTheme({
     backgroundColor: 'orange',
   },
   '& .cm-comment': {
-    backgroundColor: get(tokens, 'extend.colors.yellow.50'),
+    backgroundColor: getToken('extend.colors.yellow.50'),
   },
   '& .cm-comment-active': {
-    backgroundColor: get(tokens, 'extend.colors.yellow.100'),
+    backgroundColor: getToken('extend.colors.yellow.100'),
   },
 });
 

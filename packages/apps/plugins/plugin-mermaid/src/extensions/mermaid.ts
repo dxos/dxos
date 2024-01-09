@@ -12,6 +12,9 @@ import {
   StateField,
 } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
+import _mermaid from 'mermaid';
+
+import { getToken } from '@dxos/react-ui-editor';
 
 export type MermaidOptions = {};
 
@@ -23,6 +26,7 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
       update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
       provide: (field) => EditorView.decorations.from(field),
     }),
+    styles,
   ];
 };
 
@@ -59,18 +63,62 @@ const update = (state: EditorState, options: MermaidOptions) => {
 };
 
 class MermaidWidget extends WidgetType {
-  constructor(private readonly _text: string) {
+  _svg: string | undefined;
+  _error: string | undefined;
+
+  constructor(private readonly _source: string) {
     super();
   }
 
   override eq(other: MermaidWidget) {
-    return this._text === other._text;
+    return this._source === other._source;
   }
 
-  // TODO(burdon): Render.
   toDOM(view: EditorView) {
-    const el = document.createElement('pre');
-    el.innerText = this._text;
-    return el;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cm-mermaid';
+
+    if (this._svg) {
+      wrapper.innerHTML = this._svg;
+    } else {
+      setTimeout(async () => {
+        this._svg = await this.render();
+        if (this._error) {
+          wrapper.innerText = this._error;
+          wrapper.className = 'cm-mermaid-error';
+        } else {
+          wrapper.innerHTML = this._svg ?? '';
+        }
+      });
+    }
+
+    return wrapper;
+  }
+
+  async render(): Promise<string | undefined> {
+    try {
+      // https://github.com/mermaid-js/mermaid
+      const valid = await _mermaid.parse(this._source);
+      if (valid) {
+        const result = await _mermaid.render('test', this._source);
+        this._error = undefined;
+        this._svg = result.svg;
+        return result.svg;
+      }
+    } catch (err: any) {
+      this._error = String(err);
+      this._svg = undefined;
+    }
   }
 }
+
+const styles = EditorView.baseTheme({
+  '& .cm-mermaid': {
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  '& .cm-mermaid-error': {
+    display: 'block',
+    color: getToken('extend.colors.red.500'),
+  },
+});

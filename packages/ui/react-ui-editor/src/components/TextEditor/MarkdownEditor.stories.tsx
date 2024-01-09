@@ -33,7 +33,6 @@ import {
   typewriter,
   type CommentsOptions,
   type LinkOptions,
-  mermaid,
 } from '../../extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
@@ -122,8 +121,6 @@ const text = {
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
-
-  mermaid: str('```mermaid', 'graph TD;', 'A-->B;', 'A-->C;', 'B-->D;', 'C-->D;', '```'),
 
   footer: str('', '', '', '', '')
 };
@@ -340,10 +337,6 @@ export const Mention = {
       ]}
     />
   ),
-};
-
-export const Mermaid = {
-  render: () => <Story text={str('# Mermaid', '', text.mermaid, text.footer)} extensions={[code(), mermaid()]} />,
 };
 
 export const Comments = {

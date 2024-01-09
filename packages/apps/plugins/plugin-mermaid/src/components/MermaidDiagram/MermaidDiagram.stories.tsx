@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { MermaidDiagram } from './MermaidDiagram';
 
 export default {
+  title: 'plugin-mermaid/MermaidDiagram',
   component: MermaidDiagram,
 };
 
