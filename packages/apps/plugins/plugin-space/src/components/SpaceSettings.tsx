@@ -3,13 +3,13 @@
 //
 
 import { get } from 'idb-keyval';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 
-import { useAsyncEffect } from '../../../../../common/react-async/src';
 import { SPACE_PLUGIN } from '../meta';
 import { SPACE_DIRECTORY_HANDLE, SpaceAction, type SpaceSettingsProps } from '../types';
 
@@ -19,9 +19,10 @@ export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) =>
 
   const [dirName, setDirName] = useState<string | null>(null);
 
-  useAsyncEffect(async () => {
-    const handle = await get(SPACE_DIRECTORY_HANDLE);
-    setDirName(handle.name);
+  useEffect(() => {
+    get(SPACE_DIRECTORY_HANDLE)
+      .then((handle) => handle && setDirName(handle.name))
+      .catch((err) => log.catch(err));
   }, []);
 
   return (
