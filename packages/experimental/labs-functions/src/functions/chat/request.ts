@@ -10,7 +10,7 @@ import { formatDocumentsAsString } from 'langchain/util/document';
 import { Chain as ChainType } from '@braneframe/types';
 import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { Schema, type TypedObject } from '@dxos/echo-schema';
+import { getTextContent, Schema, type TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { sequences } from './chains';
@@ -93,7 +93,7 @@ const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.P
   const inputs = prompt.inputs.reduce<{ [name: string]: any }>((inputs, { type, name, value }) => {
     switch (type) {
       case ChainType.Input.Type.VALUE: {
-        inputs[name] = () => value.text;
+        inputs[name] = () => getTextContent(value);
         break;
       }
       case ChainType.Input.Type.PASS_THROUGH: {

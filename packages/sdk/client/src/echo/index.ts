@@ -24,8 +24,10 @@ export {
   TypedObject,
   getGlobalAutomergePreference, // TODO(dmaretskyi): Remove.
   getRawDoc,
-  isActualAutomergeObject,
+  isAutomergeObject,
   isDocAccessor,
+  getTextContent,
+  setTextContent,
   type AutomergeTextCompat,
   type DocAccessor,
   type EchoObject, // TODO(burdon): Remove from API?

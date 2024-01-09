@@ -21,10 +21,10 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle, setCommentRange } from './extensions';
-import { defaultTheme, markdownTheme, textTheme } from './themes';
+import { basicBundle, markdownBundle, setCommentRange } from '../../extensions';
 import { type CommentRange, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
+import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
@@ -56,10 +56,10 @@ export type TextEditorSlots = {
 
 export type TextEditorProps = {
   model: EditorModel;
-  comments?: CommentRange[];
-  readonly?: boolean;
-  editorMode?: EditorMode;
+  readonly?: boolean; // TODO(burdon): Move into model.
+  comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
+  editorMode?: EditorMode;
   slots?: TextEditorSlots;
 };
 
@@ -68,7 +68,7 @@ export type TextEditorProps = {
  * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
 export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, comments, readonly, editorMode, extensions = [], slots = defaultSlots }, forwardedRef) => {
+  ({ model, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const [root, setRoot] = useState<HTMLDivElement | null>(null);
@@ -77,7 +77,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     >();
     useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
-    // TODO(burdon): Factor out?
+    // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
     useEffect(() => {
       if (awareness && peer) {

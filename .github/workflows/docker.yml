@@ -1,0 +1,104 @@
+name: Build and publish Docker containers
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  push:
+    branches:
+      - main
+      - test-github/docker
+      - nf/agent-docker
+
+jobs:
+  docker_publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      # TODO(nf): share pnpm cache with main.yml?
+      - name: Set variables
+        shell: bash
+        run: |
+          BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "DXOS_BRANCH=${BRANCH//\//-}" >> $GITHUB_ENV
+          case $BRANCH in
+            production|staging)
+              echo "DX_ENVIRONMENT=$BRANCH" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "DX_ENVIRONMENT=development" >> $GITHUB_ENV
+          esac
+      - name: Bump version
+        run: npm install -g semver && NODE_PATH=$(npm root --quiet -g) node .github/workflows/scripts/bump-version.js ${{ env.DXOS_BRANCH }}
+      - name: Get version
+        shell: bash
+        run: echo "DX_VERSION=$(cat package.json | jq -r .version)" >> $GITHUB_ENV
+      # TODO(nf): build for arm64 as well, build currently hangs after install
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Install doctl 
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Log in to DigitalOcean container registry
+        run: doctl registry login --expiry-seconds 3600
+      - name: Login to Github container registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+      - name: Docker meta for agent
+        id: agent-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/agent
+            registry.digitalocean.com/eldon-experimental/agent
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+      - name: Docker meta for composer
+        id: composer-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/composer-app
+            registry.digitalocean.com/eldon-experimental/composer-app
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+      - name: Build and push agent
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          target: agent
+          tags: ${{ steps.agent-meta.outputs.tags }}
+          build-args: |
+            DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
+            DX_VERSION=${{ env.DX_VERSION }}
+            DX_COMMIT_HASH=${{ env.SHORT_SHA }}
+            DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
+            DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
+            DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
+            COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
+            COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
+      - name: Build and push composer
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          target: composer-app
+          tags: ${{ steps.composer-meta.outputs.tags }}
+          build-args: |
+            DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
+            DX_VERSION=${{ env.DX_VERSION }}
+            DX_COMMIT_HASH=${{ env.SHORT_SHA }}
+            DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
+            DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
+            DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
+            COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
+            COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}

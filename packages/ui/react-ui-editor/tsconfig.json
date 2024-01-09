@@ -24,6 +24,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -64,9 +67,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../react-ui"
     },
     {
       "path": "../react-ui"

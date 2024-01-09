@@ -20,7 +20,7 @@ import {
   base,
   getGlobalAutomergePreference,
   isActualTypedObject,
-  isActualAutomergeObject,
+  isAutomergeObject,
   TextObject,
 } from '../object';
 import { type Schema } from '../proto';
@@ -138,7 +138,7 @@ export class AutomergeDb {
       return obj;
     }
 
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
@@ -150,7 +150,7 @@ export class AutomergeDb {
   }
 
   remove<T extends EchoObject>(obj: T) {
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }

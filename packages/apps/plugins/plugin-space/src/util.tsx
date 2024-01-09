@@ -21,7 +21,7 @@ import React from 'react';
 
 import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
-import { type DispatchIntent, type MetadataResolver } from '@dxos/app-framework';
+import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -63,7 +63,7 @@ const getFolderGraphNodePartials = ({
 }: {
   folder: Folder;
   space: Space;
-  dispatch: DispatchIntent;
+  dispatch: IntentDispatcher;
 }): Partial<NodeArg> => {
   return {
     actions: [
@@ -152,7 +152,7 @@ export const spaceToGraphNode = ({
   parent: Node;
   hidden?: boolean;
   version?: string;
-  dispatch: DispatchIntent;
+  dispatch: IntentDispatcher;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   let previousObjects: TypedObject[] = [];
@@ -281,7 +281,7 @@ export const objectToGraphNode = ({
 }: {
   object: TypedObject;
   parent: Node;
-  dispatch: DispatchIntent;
+  dispatch: IntentDispatcher;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   const space = getSpaceForObject(object);

@@ -10,7 +10,11 @@ import { type Space, isTypedObject } from '@dxos/react-client/echo';
 
 import { ThreadContainer } from './ThreadContainer';
 
-export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType }> = ({ space, thread: controlledThread }) => {
+export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType; onFocus?: (thread: ThreadType) => void }> = ({
+  space,
+  thread: controlledThread,
+  onFocus,
+}) => {
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const [thread, setThread] = useState<ThreadType | undefined>(controlledThread);
   useEffect(() => setThread(controlledThread), [controlledThread]);
@@ -45,6 +49,9 @@ export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType }> = ({ space
       thread={thread}
       activeObjectId={layoutPlugin?.provides.layout.active}
       fullWidth={true}
+      onFocus={() => {
+        onFocus?.(thread);
+      }}
     />
   );
 };

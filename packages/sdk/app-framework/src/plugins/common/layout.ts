@@ -65,6 +65,7 @@ export enum LayoutAction {
   OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
   CLOSE_POPOVER = `${LAYOUT_ACTION}/close-popover`,
   ACTIVATE = `${LAYOUT_ACTION}/activate`,
+  FOCUS = `${LAYOUT_ACTION}/focus`,
 }
 
 /**

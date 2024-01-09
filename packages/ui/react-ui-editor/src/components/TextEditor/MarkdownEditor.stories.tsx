@@ -30,13 +30,10 @@ import {
   mention,
   table,
   tasklist,
-  tooltip,
   typewriter,
   type CommentsOptions,
-  type TooltipOptions,
   type LinkOptions,
-  mermaid,
-} from './extensions';
+} from '../../extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
 // Extensions:
@@ -125,8 +122,6 @@ const text = {
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
 
-  mermaid: str('```mermaid', 'graph TD;', 'A-->B;', 'A-->C;', 'B-->D;', 'C-->D;', '```'),
-
   footer: str('', '', '', '', '')
 };
 
@@ -169,7 +164,7 @@ const links = [
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onTooltipHover: TooltipOptions['onHover'] = (el, url) => {
+const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>
@@ -202,7 +197,7 @@ const onCommentsHover: CommentsOptions['onHover'] = (el) => {
   );
 };
 
-const onLinkRender: LinkOptions['onRender'] = (el, url) => {
+const onRenderLink: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
@@ -251,10 +246,9 @@ const extensions = [
   code(),
   hr(),
   image(),
-  link({ onRender: onLinkRender }),
+  link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
   table(),
   tasklist(),
-  tooltip({ onHover: onTooltipHover }),
 ];
 
 export const Default = {
@@ -263,6 +257,12 @@ export const Default = {
 
 export const Readonly = {
   render: () => <Story text={document} extensions={extensions} readonly />,
+};
+
+const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
+
+export const Large = {
+  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
 };
 
 export const NoExtensions = {
@@ -279,12 +279,13 @@ export const HorizontalRule = {
   ),
 };
 
-export const Tooltips = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[tooltip({ onHover: onTooltipHover })]} />,
-};
-
 export const Links = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[link({ onRender: onLinkRender })]} />,
+  render: () => (
+    <Story
+      text={str(text.links, text.footer)}
+      extensions={[link({ onHover: onHoverLinkTooltip, onRender: onRenderLink })]}
+    />
+  ),
 };
 
 export const Code = {
@@ -320,7 +321,7 @@ export const Autocomplete = {
     <Story
       text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
       extensions={[
-        link({ onRender: onLinkRender }),
+        link({ onRender: onRenderLink }),
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
@@ -342,10 +343,6 @@ export const Mention = {
       ]}
     />
   ),
-};
-
-export const Mermaid = {
-  render: () => <Story text={str('# Mermaid', '', text.mermaid, text.footer)} extensions={[code(), mermaid()]} />,
 };
 
 export const Comments = {

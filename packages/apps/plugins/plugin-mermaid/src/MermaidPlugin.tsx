@@ -13,6 +13,7 @@ import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { MermaidEditor } from './components';
+import { mermaid } from './extensions';
 import meta, { MERMAID_PLUGIN } from './meta';
 import translations from './translations';
 import { MermaidAction, type MermaidPluginProvides, isObject } from './types';
@@ -32,6 +33,10 @@ export const MermaidPlugin = (): PluginDefinition<MermaidPluginProvides> => {
         },
       },
       translations,
+      markdown: {
+        extensions: () => [mermaid()],
+      },
+      // TODO(burdon): Remove (since now handled by CM extension rather than custom type).
       graph: {
         builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
