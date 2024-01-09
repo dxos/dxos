@@ -23,9 +23,11 @@ import {
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { Expando, TypedObject, isTypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
+import { useFileDownload } from '@dxos/react-ui';
 import { inferRecordOrder } from '@dxos/util';
 
 import { exportData } from './backup';
@@ -43,6 +45,7 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
+import { saveSpaceToDisk } from './save-to-disk';
 import translations from './translations';
 import { SpaceAction, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
 import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
@@ -479,13 +482,9 @@ export const SpacePlugin = ({
                 // TODO(wittjosiah): Expose translations helper from theme plugin provides.
                 const backupBlob = await exportData(space, space.key.toHex());
                 const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-                const url = URL.createObjectURL(backupBlob);
-                // TODO(burdon): See DebugMain useFileDownload
-                const element = document.createElement('a');
-                element.setAttribute('href', url);
-                element.setAttribute('download', `${filename}.zip`);
-                element.setAttribute('target', 'download');
-                element.click();
+
+                const download = useFileDownload();
+                download(backupBlob, `${filename}.json`);
                 return true;
               }
               break;
@@ -500,6 +499,26 @@ export const SpacePlugin = ({
                   subject: intent.data.space,
                 },
               });
+            }
+
+            case SpaceAction.SAVE_TO_DISK: {
+              const space = intent.data.space;
+              if (space instanceof SpaceProxy) {
+                // NOTE: Browsers do not support saving files to disk without user interaction.
+                //       @see https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker
+                //       We once per app launch ask the user to select a directory to save to.
+                //       We are preserving its handle in a global variable to avoid showing the dialog each time user hit save.
+                if (!(window as any).__DXOS_DIR_HANDLE__) {
+                  (window as any).__DXOS_DIR_HANDLE__ = (window as any).showDirectoryPicker();
+                }
+
+                (window as any).__DXOS_DIR_HANDLE__
+                  .then((directory: FileSystemDirectoryHandle) => saveSpaceToDisk({ space, directory }))
+                  .catch((error: Error) => {
+                    log.catch(error);
+                  });
+              }
+              break;
             }
 
             case SpaceAction.ADD_OBJECT: {
