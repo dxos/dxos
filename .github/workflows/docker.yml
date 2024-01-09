@@ -131,3 +131,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: dxos/agent
           short-description: DXOS Agent provides offline backup and synchronization capabilities for DXOS applications.
+          readme-filepath: packages/devtools/cli/README-docker.md
