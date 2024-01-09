@@ -5,6 +5,7 @@
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { set, get } from 'idb-keyval';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -22,6 +23,7 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { Expando, TypedObject, isTypedObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -47,7 +49,13 @@ import {
 import meta, { SPACE_PLUGIN } from './meta';
 import { saveSpaceToDisk } from './save-to-disk';
 import translations from './translations';
-import { SpaceAction, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
+import {
+  SpaceAction,
+  type SpacePluginProvides,
+  type SpaceSettingsProps,
+  type PluginState,
+  SPACE_DIRECTORY_HANDLE,
+} from './types';
 import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
@@ -501,22 +509,29 @@ export const SpacePlugin = ({
               });
             }
 
+            case SpaceAction.SELECT_DIRECTORY: {
+              const handle = await (window as any).showDirectoryPicker();
+              await set(SPACE_DIRECTORY_HANDLE, handle);
+              return handle;
+            }
+
             case SpaceAction.SAVE_TO_DISK: {
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
-                // NOTE: Browsers do not support saving files to disk without user interaction.
-                //       @see https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker
-                //       We once per app launch ask the user to select a directory to save to.
-                //       We are preserving its handle in a global variable to avoid showing the dialog each time user hit save.
-                if (!(window as any).__DXOS_DIR_HANDLE__) {
-                  (window as any).__DXOS_DIR_HANDLE__ = (window as any).showDirectoryPicker();
-                }
-
-                (window as any).__DXOS_DIR_HANDLE__
-                  .then((directory: FileSystemDirectoryHandle) => saveSpaceToDisk({ space, directory }))
-                  .catch((error: Error) => {
-                    log.catch(error);
+                let directory: FileSystemDirectoryHandle | undefined = await get(SPACE_DIRECTORY_HANDLE);
+                if (!directory) {
+                  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+                  directory = await intentPlugin?.provides.intent.dispatch({
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.SELECT_DIRECTORY,
                   });
+                }
+                invariant(directory, 'No directory selected.');
+                // TODO(mykola): Is it Chrome-specific?
+                await (directory as any).requestPermission?.();
+                return saveSpaceToDisk({ space, directory }).catch((error) => {
+                  log.catch(error);
+                });
               }
               break;
             }
