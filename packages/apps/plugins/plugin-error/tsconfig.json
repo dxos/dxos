@@ -27,9 +27,6 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/app-framework"
-    },
-    {
       "path": "../../../sdk/client-services"
     },
     {
@@ -39,19 +36,10 @@
       "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/react-ui"
-    },
-    {
-      "path": "../../../ui/react-ui-theme"
-    },
-    {
       "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../../ui/storybook-utils"
-    },
-    {
-      "path": "../plugin-theme"
     },
     {
       "path": "../plugin-theme"
