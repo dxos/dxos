@@ -46,7 +46,8 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: prompt.source });
 
-  const text = prompt.source?.text ?? '';
+  // TODO(burdon): Remove check once automerge lands.
+  const text = prompt.source?.text ?? prompt.source?.content ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
