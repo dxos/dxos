@@ -3,28 +3,45 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import {
-  type EditorState,
-  type Extension,
-  type RangeSet,
-  RangeSetBuilder,
-  StateField,
-  type Transaction,
-} from '@codemirror/state';
-import { Decoration, EditorView, WidgetType } from '@codemirror/view';
+import { type EditorState, type Extension, StateField, type Transaction, type Range } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
 export type ImageOptions = {};
 
 export const image = (options: ImageOptions = {}): Extension => {
-  return StateField.define<RangeSet<any>>({
-    create: (state) => update(state, options),
-    update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
+  return StateField.define<DecorationSet>({
+    create: (state) => {
+      return Decoration.set(buildDecorations(0, state.doc.length, state));
+    },
+    update: (value: DecorationSet, tr: Transaction) => {
+      if (!tr.docChanged && !tr.selection) {
+        return value;
+      }
+      // Find range of changes and cursor changes.
+      const cursor = tr.state.selection.main.head;
+      const oldCursor = tr.changes.mapPos(tr.startState.selection.main.head);
+      let from = Math.min(cursor, oldCursor);
+      let to = Math.max(cursor, oldCursor);
+      tr.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
+        from = Math.min(from, fromB);
+        to = Math.max(to, toB);
+      });
+      // Expand to cover lines
+      from = tr.state.doc.lineAt(from).from;
+      to = tr.state.doc.lineAt(to).to;
+      return value.map(tr.changes).update({
+        filterFrom: from,
+        filterTo: to,
+        filter: () => false,
+        add: buildDecorations(from, to, tr.state),
+      });
+    },
     provide: (field) => EditorView.decorations.from(field),
   });
 };
 
-const update = (state: EditorState, options: ImageOptions) => {
-  const builder = new RangeSetBuilder();
+const buildDecorations = (from: number, to: number, state: EditorState) => {
+  const decorations: Range<Decoration>[] = [];
   const cursor = state.selection.main.head;
 
   syntaxTree(state).iterate({
@@ -34,20 +51,20 @@ const update = (state: EditorState, options: ImageOptions) => {
         if (urlNode) {
           const hide = state.readOnly || cursor < node.from || cursor > node.to;
           const url = state.sliceDoc(urlNode.from, urlNode.to);
-          builder.add(
-            hide ? node.from : node.to,
-            node.to,
+          decorations.push(
             Decoration.replace({
               block: true, // Prevent cursor from entering.
               widget: new ImageWidget(url),
-            }),
+            }).range(hide ? node.from : node.to, node.to),
           );
         }
       }
     },
+    from,
+    to,
   });
 
-  return builder.finish();
+  return decorations;
 };
 
 class ImageWidget extends WidgetType {
@@ -55,7 +72,6 @@ class ImageWidget extends WidgetType {
     super();
   }
 
-  // TODO(burdon): Does this need to be unique for each position?
   override eq(other: WidgetType) {
     return this._url === (other as any as ImageWidget)._url;
   }
@@ -64,6 +80,8 @@ class ImageWidget extends WidgetType {
     const img = document.createElement('img');
     img.setAttribute('src', this._url);
     img.setAttribute('class', 'cm-image');
+    // Images are hidden until successfully loaded to avoid flickering effects.
+    img.onload = () => img.classList.add('cm-loaded-image');
     return img;
   }
 }

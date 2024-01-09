@@ -16,7 +16,7 @@ import {
   useItemsWithPreview,
   useMosaic,
 } from '@dxos/react-ui-mosaic';
-import { dropRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { dropRing, groupBorder, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import {
   SectionTile,
@@ -108,12 +108,19 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
+    const separation = !!itemContext?.separation;
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
       <List
         ref={forwardedRef}
-        classNames={mx(textBlockWidth, 'm-2 p-2 rounded-lg', isOver && dropRing, classNames)}
+        classNames={mx(
+          textBlockWidth,
+          'm-2 p-2 rounded-lg',
+          !separation && ['divide-y', groupBorder],
+          isOver && dropRing,
+          classNames,
+        )}
         {...domAttributes}
       >
         {items.length > 0 ? (

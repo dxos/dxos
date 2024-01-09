@@ -22,6 +22,7 @@ export enum MarkdownAction {
   TOGGLE_VIEW = `${MARKDOWN_ACTION}/toggle-view`,
 }
 
+// TODO(burdon): Remove?
 export type MarkdownProperties = {
   title: string;
 
@@ -30,10 +31,15 @@ export type MarkdownProperties = {
   readonly?: boolean;
 };
 
+export type ExtensionsProvider = () => Extension[];
+export type OnChange = (text: string) => void;
+
 export type MarkdownProvides = {
   markdown: {
-    extension?: Extension;
-    onChange?: (text: string) => void;
+    extensions?: ExtensionsProvider;
+
+    // TODO(burdon): Replace with `listener` extension?
+    onChange?: OnChange;
   };
 };
 

@@ -9,24 +9,41 @@ import React, { type MutableRefObject, type RefCallback, type Ref } from 'react'
 
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document as DocumentType, Folder } from '@braneframe/types';
-import { type PluginDefinition, isObject, parseIntentPlugin, resolvePlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  isObject,
+  parseIntentPlugin,
+  resolvePlugin,
+  LayoutAction,
+  type IntentPluginProvides,
+  type Plugin,
+  type PluginDefinition,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { type TextEditorRef } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
+  DocumentCard,
+  DocumentHeadingMenu,
+  type DocumentItemProps,
+  DocumentMain,
+  DocumentSection,
   EditorMain,
+  EmbeddedLayout,
+  MainLayout,
   MarkdownSettings,
-  createDocumentCard,
-  createDocumentHeadingMenu,
-  createDocumentMain,
-  createDocumentSection,
 } from './components';
 import { getExtensions } from './extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
-import { MarkdownAction, type MarkdownPluginProvides, type MarkdownSettingsProps } from './types';
+import {
+  type ExtensionsProvider,
+  type MarkdownPluginProvides,
+  type MarkdownSettingsProps,
+  type OnChange,
+  MarkdownAction,
+} from './types';
 import { getFallbackTitle, isMarkdown, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -38,21 +55,40 @@ export const isDocument = (data: unknown): data is DocumentType =>
 
 export type MarkdownPluginState = {
   activeComment?: string;
-  onChange: NonNullable<(text: string) => void>[];
+  extensions: NonNullable<ExtensionsProvider>[];
+  onChange: NonNullable<OnChange>[];
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
-  const state = deepSignal<MarkdownPluginState>({ onChange: [] });
+  const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 
-  const DocumentCard = createDocumentCard(settings.values);
-  const DocumentMain = createDocumentMain(settings.values, state, pluginRefCallback);
-  const DocumentSection = createDocumentSection(settings.values, state);
+  const getCustomExtensions = (document?: DocumentType) => {
+    // Configure extensions.
+    const extensions = getExtensions({
+      document,
+      debug: settings.values.debug,
+      experimental: settings.values.experimental,
+      dispatch: intentPlugin?.provides.intent.dispatch,
+      onChange: (text: string) => {
+        state.onChange.forEach((onChange) => onChange(text));
+      },
+    });
+
+    // Add extensions from other plugins.
+    for (const provider of state.extensions) {
+      const provided = typeof provider === 'function' ? provider() : provider;
+      extensions.push(...provided);
+    }
+
+    return extensions;
+  };
 
   // TODO(thure): this needs to be refactored into a graph node action.
   const _DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
@@ -65,9 +101,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool);
 
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
       markdownPlugins(plugins).forEach((plugin) => {
-        if (plugin.provides.markdown.onChange) {
-          state.onChange.push(plugin.provides.markdown.onChange);
+        const { extensions, onChange } = plugin.provides.markdown;
+        if (extensions) {
+          state.extensions.push(extensions);
+        }
+        if (onChange) {
+          state.onChange.push(onChange);
         }
       });
     },
@@ -84,8 +126,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
               id: `${MARKDOWN_PLUGIN}/create`,
@@ -157,52 +197,72 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'main': {
               if (isDocument(data.active)) {
                 const readonly = settings.values.viewMode[data.active.id];
-                return <DocumentMain document={data.active} readonly={readonly} />;
+                return (
+                  <DocumentMain
+                    document={data.active}
+                    readonly={readonly}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.active)}
+                    editorRefCb={pluginRefCallback}
+                  />
+                );
               } else if (
                 'model' in data &&
                 isMarkdown(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                return (
+                // TODO(burdon): Normalize with ECHO path above?
+                const main = (
                   <EditorMain
-                    editorMode={settings.values.editorMode}
                     model={data.model}
+                    editorMode={settings.values.editorMode}
                     extensions={getExtensions({
                       onChange: (text: string) => {
                         state.onChange.forEach((onChange) => onChange(text));
                       },
                     })}
-                    properties={data.properties}
                     editorRefCb={pluginRefCallback}
-                    layout={'view' in data && data.view === 'embedded' ? 'embedded' : 'main'}
                   />
                 );
+
+                if ('view' in data && data.view === 'embedded') {
+                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                } else {
+                  return <MainLayout>{main}</MainLayout>;
+                }
               }
               break;
             }
 
             case 'section': {
               if (isDocument(data.object)) {
-                return <DocumentSection content={data.object} />;
+                return (
+                  <DocumentSection
+                    document={data.object}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.object)}
+                  />
+                );
               }
               break;
             }
 
             case 'card': {
               if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
-                // TODO(burdon): Type.
+                // isTileComponentProps is a type guard for these props.
+                // `props` will not pass this guard without transforming `data` into `item`.
                 const cardProps = {
                   ...props,
                   item: {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                  },
+                  } as DocumentItemProps,
                 };
 
                 return isTileComponentProps(cardProps) ? (
-                  <DocumentCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
+                  <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
                 ) : null;
               }
               break;

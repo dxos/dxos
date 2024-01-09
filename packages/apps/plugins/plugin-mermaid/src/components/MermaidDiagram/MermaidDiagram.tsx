@@ -10,6 +10,7 @@ export type MermaidDiagramProps = {
 };
 
 /**
+ * @deprecated
  * https://github.com/mermaid-js/mermaid
  */
 export const MermaidDiagram = ({ source }: MermaidDiagramProps) => {

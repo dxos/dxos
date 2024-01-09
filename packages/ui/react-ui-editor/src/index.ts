@@ -9,4 +9,5 @@ export { type Extension } from '@codemirror/state';
 export * from './components';
 export * from './extensions';
 export * from './hooks';
+export { getToken } from './styles';
 export * from './themes';
