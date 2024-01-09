@@ -14,6 +14,7 @@ import { Popover } from './Popover';
 import { Avatar } from '../Avatar';
 
 export default {
+  title: 'react-appkit/Popover',
   component: Popover,
   decorators: [withTheme],
 };

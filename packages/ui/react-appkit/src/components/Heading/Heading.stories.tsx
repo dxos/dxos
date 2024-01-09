@@ -9,6 +9,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Heading } from './Heading';
 
 export default {
+  title: 'react-appkit/Heading',
   component: Heading,
   decorators: [withTheme],
 };
