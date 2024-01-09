@@ -122,7 +122,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
           />
         </Section>
 
-        {prompt.inputs?.length && (
+        {prompt.inputs?.length > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>

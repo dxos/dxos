@@ -417,5 +417,5 @@ const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) =>
   const parts = cursor.split(':');
   const from = cursorConverter.fromCursor(parts[0]);
   const to = cursorConverter.fromCursor(parts[1]);
-  return from && to ? { from, to } : undefined;
+  return from !== undefined && to !== undefined ? { from, to } : undefined;
 };
