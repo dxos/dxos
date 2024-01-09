@@ -22,7 +22,6 @@ const styles = EditorView.baseTheme({
 
 class CheckboxWidget extends WidgetType {
   constructor(
-    private readonly _pos: number,
     private _checked: boolean,
     private readonly _indent: number,
     private readonly _onCheck?: (check: boolean) => void,
@@ -31,7 +30,7 @@ class CheckboxWidget extends WidgetType {
   }
 
   override eq(other: CheckboxWidget) {
-    return this._pos === other._pos && this._checked === other._checked && this._indent === other._indent;
+    return this._checked === other._checked && this._indent === other._indent;
   }
 
   toDOM(view: EditorView) {
@@ -73,7 +72,6 @@ export const tasklist = (options: TasklistOptions = {}) => {
       const checked = match[2] === 'x' || match[2] === 'X';
       return Decoration.replace({
         widget: new CheckboxWidget(
-          pos,
           checked,
           indent,
           view.state.readOnly

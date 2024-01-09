@@ -97,8 +97,11 @@ class TableWidget extends WidgetType {
     super();
   }
 
-  override eq(other: WidgetType) {
-    return this._table.from === (other as any as TableWidget)?._table?.from;
+  override eq(other: TableWidget) {
+    return (
+      this._table.header?.join() === other._table.header?.join() &&
+      this._table.rows?.join() === other._table.rows?.join()
+    );
   }
 
   toDOM(view: EditorView) {

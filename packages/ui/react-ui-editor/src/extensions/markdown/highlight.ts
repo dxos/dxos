@@ -6,19 +6,18 @@ import { markdownLanguage } from '@codemirror/lang-markdown';
 import { HighlightStyle } from '@codemirror/language';
 import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
-import get from 'lodash.get';
 
 import {
   blockquote,
   bold,
   code,
   codeMark,
+  getToken,
   heading,
   inlineUrl,
   italic,
   mark,
   strikethrough,
-  tokens,
 } from '../../styles';
 
 /**
@@ -193,12 +192,12 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       // Main content, paragraphs, etc.
       // {
       //   tag: [tags.content],
-      //   fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+      //   fontFamily: getToken('fontFamily.body', []).join(','),
       // },
     ],
     {
       scope: markdownLanguage,
-      all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') },
+      all: { fontFamily: getToken('fontFamily.body', []).join(',') },
     },
   );
 };
