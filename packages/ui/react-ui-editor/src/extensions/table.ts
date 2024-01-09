@@ -81,7 +81,6 @@ const update = (state: EditorState, options: TableOptions) => {
         table.from,
         table.to,
         Decoration.replace({
-          block: true,
           widget: new TableWidget(table),
         }),
       );
@@ -128,5 +127,9 @@ class TableWidget extends WidgetType {
     }
 
     return table;
+  }
+
+  override ignoreEvent(e: Event) {
+    return !/^mouse/.test(e.type);
   }
 }
