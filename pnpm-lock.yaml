@@ -1992,15 +1992,6 @@ importers:
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-script':
-        specifier: workspace:*
-        version: link:../plugin-script
-      '@braneframe/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@codemirror/language':
         specifier: ^6.9.3
         version: 6.9.3
@@ -2010,33 +2001,12 @@ importers:
       '@codemirror/view':
         specifier: ^6.22.2
         version: 6.22.2
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
-      '@dxos/text-model':
-        specifier: workspace:*
-        version: link:../../../core/echo/text-model
-      '@monaco-editor/react':
-        specifier: ^4.4.6
-        version: 4.4.6(monaco-editor@0.44.0)(react-dom@18.2.0)(react@18.2.0)
-      deepsignal:
-        specifier: 1.4.0-shallow.0
-        version: 1.4.0-shallow.0(react@18.2.0)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       mermaid:
         specifier: ^10.6.1
         version: 10.6.1
-      monaco-editor:
-        specifier: ^0.44.0
-        version: 0.44.0
-      monaco-mermaid:
-        specifier: ^1.1.0
-        version: 1.1.0(monaco-editor@0.44.0)
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -2056,6 +2026,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@dxos/text-model':
+        specifier: workspace:*
+        version: link:../../../core/echo/text-model
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -37226,14 +37199,6 @@ packages:
 
   /monaco-editor@0.44.0:
     resolution: {integrity: sha512-5SmjNStN6bSuSE5WPT2ZV+iYn1/yI9sd4Igtk23ChvqB7kDk9lZbB9F5frsuvpB+2njdIeGGFf2G4gbE6rCC9Q==}
-    dev: false
-
-  /monaco-mermaid@1.1.0(monaco-editor@0.44.0):
-    resolution: {integrity: sha512-myvqkgZlzvZvVATdyIRqf/BWqyFGVJpi9lq42DqT1QC3GdViCuxMLZRBEvg2FbVRptD3+a32CR/LaLey6XYftQ==}
-    peerDependencies:
-      monaco-editor: '*'
-    dependencies:
-      monaco-editor: 0.44.0
     dev: false
 
   /mri@1.2.0:

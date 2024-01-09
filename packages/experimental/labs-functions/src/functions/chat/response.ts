@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Message as MessageType, Mermaid as MermaidType, Stack as StackType } from '@braneframe/types';
+import { type Message as MessageType, Document as DocumentType, Stack as StackType } from '@braneframe/types';
 import { Expando, type Space } from '@dxos/client/echo';
 import { Schema, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -63,7 +63,7 @@ export const createResponse = (space: Space, context: PromptContext, content: st
           log.info('adding mermaid diagram to stack', { stack: context.object.id });
           context.object.sections.push(
             new StackType.Section({
-              object: new MermaidType({ source: new TextObject(content.trim()) }),
+              object: new DocumentType({ content: new TextObject(content.trim()) }),
             }),
           );
         }
