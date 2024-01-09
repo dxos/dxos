@@ -15,20 +15,21 @@ import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 
-export const createDocumentHeadingMenu =
-  (pluginMutableRef: MutableRefObject<TextEditorRef>): FC<{ content: DocumentType }> =>
-  ({ content: document }) => {
-    const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
+export const DocumentHeadingMenu: FC<{ document: DocumentType; pluginMutableRef: MutableRefObject<TextEditorRef> }> = ({
+  document,
+  pluginMutableRef,
+}) => {
+  const identity = useIdentity();
+  // TODO(wittjosiah): Should this be a hook?
+  const space = getSpaceForObject(document);
+  const model = useTextModel({ identity, space, text: document?.content });
 
-    if (!model) {
-      return null;
-    }
+  if (!model) {
+    return null;
+  }
 
-    return <HeadingMenu properties={document} model={model} editorRef={pluginMutableRef} />;
-  };
+  return <HeadingMenu properties={document} model={model} editorRef={pluginMutableRef} />;
+};
 
 /**
  * Menu for the layout heading.

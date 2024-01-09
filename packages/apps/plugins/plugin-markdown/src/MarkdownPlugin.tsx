@@ -17,12 +17,13 @@ import { type TextEditorRef } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
+  DocumentCard,
+  DocumentHeadingMenu,
+  type DocumentItemProps,
+  DocumentMain,
+  DocumentSection,
   EditorMain,
   MarkdownSettings,
-  createDocumentCard,
-  createDocumentHeadingMenu,
-  createDocumentMain,
-  createDocumentSection,
 } from './components';
 import { getExtensions } from './extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
@@ -50,11 +51,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
-
-  const DocumentCard = createDocumentCard(settings.values);
-  const DocumentMain = createDocumentMain(settings.values, state, pluginRefCallback);
-  const DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
-  const DocumentSection = createDocumentSection(settings.values, state);
 
   return {
     meta,
@@ -156,7 +152,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'main': {
               if (isDocument(data.active)) {
                 const readonly = settings.values.viewMode[data.active.id];
-                return <DocumentMain document={data.active} readonly={readonly} />;
+                return (
+                  <DocumentMain
+                    document={data.active}
+                    readonly={readonly}
+                    settings={settings.values}
+                    state={state}
+                    pluginRefCallback={pluginRefCallback}
+                  />
+                );
               } else if (
                 'model' in data &&
                 isMarkdown(data.model) &&
@@ -183,32 +187,33 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'heading': {
               if (isGraphNode(data.activeNode) && isDocument(data.activeNode.data)) {
-                return <DocumentHeadingMenu content={data.activeNode.data} />;
+                return <DocumentHeadingMenu document={data.activeNode.data} pluginMutableRef={pluginMutableRef} />;
               }
               break;
             }
 
             case 'section': {
               if (isDocument(data.object)) {
-                return <DocumentSection content={data.object} />;
+                return <DocumentSection document={data.object} settings={settings.values} state={state} />;
               }
               break;
             }
 
             case 'card': {
               if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
-                // TODO(burdon): Type.
+                // isTileComponentProps is a type guard for these props.
+                // `props` will not pass this guard without transforming `data` into `item`.
                 const cardProps = {
                   ...props,
                   item: {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                  },
+                  } as DocumentItemProps,
                 };
 
                 return isTileComponentProps(cardProps) ? (
-                  <DocumentCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
+                  <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
                 ) : null;
               }
               break;
