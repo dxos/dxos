@@ -61,34 +61,36 @@ export class DiscordBot {
 
     await client.login(token);
 
-    const LAST_WEEK_SNOWFLAKE = SnowflakeUtil.generate({
-      timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3 /* days */,
-    }).toString();
+    {
+      const LAST_WEEK_SNOWFLAKE = SnowflakeUtil.generate({
+        timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3 /* days */,
+      }).toString();
 
-    const channel = (await client.channels.fetch(channelId)) as TextChannel;
-    const allChannels = await channel.guild.channels.fetch();
-    const messages = (
-      await Promise.all(
-        allChannels.map(async (channel) => {
-          try {
-            if (!channel?.isTextBased()) return '';
-            const res = await channel.messages.fetch({ after: LAST_WEEK_SNOWFLAKE, limit: 100 });
-            const messagesConcatenated = res
-              .filter((msg) => msg.content.trim().length > 0)
-              .map((msg) => `${new Date(msg.createdTimestamp).toISOString()} ${msg.author.username}: ${msg.content}`)
-              .join('\n');
-            if(messagesConcatenated.length === 0) return '';
+      const channel = (await client.channels.fetch(channelId)) as TextChannel;
+      const allChannels = await channel.guild.channels.fetch();
+      const messages = (
+        await Promise.all(
+          allChannels.map(async (channel) => {
+            try {
+              if (!channel?.isTextBased()) return '';
+              const res = await channel.messages.fetch({ after: LAST_WEEK_SNOWFLAKE, limit: 100 });
+              const messagesConcatenated = res
+                .filter((msg) => msg.content.trim().length > 0)
+                .map((msg) => `${new Date(msg.createdTimestamp).toISOString()} ${msg.author.username}: ${msg.content}`)
+                .join('\n');
+              if(messagesConcatenated.length === 0) return '';
 
-            return `CONVERSATION:\n${messagesConcatenated}\n`;
-          } catch (err: any) {
-            console.log(`${channel?.name} ${err.message}`);
-            return '';
-          }
-        }),
-      )
-    ).flat();
+              return `CONVERSATION:\n${messagesConcatenated}\n`;
+            } catch (err: any) {
+              console.log(`${channel?.name} ${err.message}`);
+              return '';
+            }
+          }),
+        )
+      ).flat();
 
-    console.log(messages.join(''));
+      console.log(messages.join(''));
+    }
   }
 
   async stop() {}
