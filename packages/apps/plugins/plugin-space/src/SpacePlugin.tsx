@@ -527,8 +527,10 @@ export const SpacePlugin = ({
                   });
                 }
                 invariant(directory, 'No directory selected.');
-                // TODO(mykola): Is it Chrome-specific?
-                await (directory as any).requestPermission?.();
+                if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
+                  // TODO(mykola): Is it Chrome-specific?
+                  await (directory as any).requestPermission?.();
+                }
                 return saveSpaceToDisk({ space, directory }).catch((error) => {
                   log.catch(error);
                 });
