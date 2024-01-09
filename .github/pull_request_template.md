@@ -1,3 +1,5 @@
+<!-- For shorter PRs, feel free to delete the majority of this description and just use a sentence or two -->
+
 ### Motivation / Background
 
 <!--
