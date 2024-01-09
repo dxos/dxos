@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client, IntentsBitField, SnowflakeUtil, TextChannel } from 'discord.js';
+import { Client, IntentsBitField, SnowflakeUtil, type TextChannel } from 'discord.js';
 
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -72,13 +72,17 @@ export class DiscordBot {
         await Promise.all(
           allChannels.map(async (channel) => {
             try {
-              if (!channel?.isTextBased()) return '';
+              if (!channel?.isTextBased()) {
+                return '';
+              }
               const res = await channel.messages.fetch({ after: LAST_WEEK_SNOWFLAKE, limit: 100 });
               const messagesConcatenated = res
                 .filter((msg) => msg.content.trim().length > 0)
                 .map((msg) => `${new Date(msg.createdTimestamp).toISOString()} ${msg.author.username}: ${msg.content}`)
                 .join('\n');
-              if(messagesConcatenated.length === 0) return '';
+              if (messagesConcatenated.length === 0) {
+                return '';
+              }
 
               return `CONVERSATION:\n${messagesConcatenated}\n`;
             } catch (err: any) {
