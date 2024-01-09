@@ -23,6 +23,8 @@ import {
   DocumentMain,
   DocumentSection,
   EditorMain,
+  EmbeddedLayout,
+  MainLayout,
   MarkdownSettings,
 } from './components';
 import { getExtensions } from './extensions';
@@ -200,7 +202,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                return (
+                const main = (
                   <EditorMain
                     editorMode={settings.values.editorMode}
                     model={data.model}
@@ -209,10 +211,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                         state.onChange.forEach((onChange) => onChange(text));
                       },
                     })}
-                    layout={'view' in data && data.view === 'embedded' ? 'embedded' : 'main'}
                     editorRefCb={pluginRefCallback}
                   />
                 );
+
+                if ('view' in data && data.view === 'embedded') {
+                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                } else {
+                  return <MainLayout>{main}</MainLayout>;
+                }
               }
               break;
             }
