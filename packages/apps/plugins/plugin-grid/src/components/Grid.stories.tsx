@@ -159,6 +159,7 @@ const SurfaceCard: MosaicTileComponent<DemoCardProps> = forwardRef(({ item, ...p
 });
 
 export default {
+  title: 'plugin-grid/Grid',
   component: Grid,
   render: (args: DemoGridProps) => {
     return (

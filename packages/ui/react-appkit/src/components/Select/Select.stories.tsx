@@ -11,6 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Select } from './Select';
 
 export default {
+  title: 'react-appkit/Select',
   component: Select,
   decorators: [withTheme],
   actions: { argTypesRegex: '^on.*' },

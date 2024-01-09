@@ -9,6 +9,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Loading } from './Loading';
 
 export default {
+  title: 'react-appkit/Loading',
   component: Loading,
   decorators: [withTheme],
   argTypes: {

@@ -17,6 +17,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { SpaceList } from './SpaceList';
 
 export default {
+  title: 'react-appkit/SpaceList',
   component: SpaceList,
   decorators: [withTheme],
 };
