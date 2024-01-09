@@ -13,6 +13,7 @@ import { AuthChoices, type AuthChoicesProps } from './AuthChoices';
 import { Group } from '../Group';
 
 export default {
+  title: 'react-appkit/AuthChoices',
   component: AuthChoices,
   decorators: [withTheme],
   argTypes: {

@@ -44,6 +44,7 @@ const SearchContextDecorator = (): DecoratorFunction<ReactRenderer> => {
 };
 
 export default {
+  title: 'plugin-search/Search',
   component: Searchbar,
   render: Story,
   decorators: [FullscreenDecorator(), SearchContextDecorator()],

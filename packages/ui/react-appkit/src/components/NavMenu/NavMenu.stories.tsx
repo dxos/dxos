@@ -11,6 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { NavMenu } from './NavMenu';
 
 export default {
+  title: 'react-appkit/NavMenu',
   component: NavMenu,
   decorators: [withTheme],
 };

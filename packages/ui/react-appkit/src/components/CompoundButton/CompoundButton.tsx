@@ -27,9 +27,10 @@ export const CompoundButton = ({
   description,
   before,
   after,
+  slots = {},
   variant = 'default',
   elevation: propsElevation,
-  slots = {},
+  classNames,
   ...buttonProps
 }: Omit<CompoundButtonProps, 'density'>) => {
   const labelId = useId('compoundButton-label');
@@ -43,6 +44,7 @@ export const CompoundButton = ({
     styleProps,
     'flex items-center gap-4 plb-2.5',
     slots.root?.className,
+    classNames,
   );
   return (
     <button
