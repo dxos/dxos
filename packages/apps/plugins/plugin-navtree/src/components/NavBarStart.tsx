@@ -5,7 +5,7 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { KEY_BINDING, useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
@@ -17,13 +17,7 @@ import { getTreeItemLabel } from '../util';
 
 const TREE_ITEM_MAIN_HEADING = 'TreeItemMainHeading';
 
-export const TreeItemMainHeading = ({
-  activeNode,
-  popoverAnchorId,
-}: {
-  activeNode: Node;
-  popoverAnchorId?: string;
-}) => {
+export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node; popoverAnchorId?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
 
@@ -40,7 +34,10 @@ export const TreeItemMainHeading = ({
   };
 
   const ActionRoot =
-    popoverAnchorId === `dxos.org/ui/${TREE_ITEM_MAIN_HEADING}/${activeNode.id}` ? Popover.Anchor : Fragment;
+    popoverAnchorId === `dxos.org/ui/${TREE_ITEM_MAIN_HEADING}/${activeNode.id}` ||
+    popoverAnchorId === `dxos.org/ui/${KEY_BINDING}/${activeNode.id}`
+      ? Popover.Anchor
+      : Fragment;
 
   return (
     <>

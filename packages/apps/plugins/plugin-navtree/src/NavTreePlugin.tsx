@@ -21,13 +21,7 @@ import {
 import { Graph, type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 
-import {
-  CommandsDialogContent,
-  NODE_TYPE,
-  TreeItemMainHeading,
-  TreeViewContainer,
-  TreeViewDocumentTitle,
-} from './components';
+import { CommandsDialogContent, NODE_TYPE, NavBarStart, TreeViewContainer, TreeViewDocumentTitle } from './components';
 import meta, { NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -109,7 +103,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 'parent' in data.activeNode
               ) {
                 return (
-                  <TreeItemMainHeading
+                  <NavBarStart
                     activeNode={data.activeNode as Node}
                     popoverAnchorId={data.popoverAnchorId as string | undefined}
                   />
