@@ -1,57 +1,34 @@
 //
 // Copyright 2023 DXOS.org
+// Copyright 2024 Automerge
+// Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import {
-  Annotation,
-  type EditorState,
-  type Extension,
-  Facet,
-  StateEffect,
-  StateField,
-  type Transaction,
-  type TransactionSpec,
-} from '@codemirror/state';
+import { Facet, StateField, type Extension, type Transaction } from '@codemirror/state';
 import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
 
-import * as automerge from '@dxos/automerge/automerge';
-import { type Heads, type Prop } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
+import { type Prop } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from './handle';
+import { cursorConverter } from './cursor';
+import { effectType, type IDocHandle, isReconcileTx, type Value } from './defs';
 import { PatchSemaphore } from './semaphore';
-
-export type Value = {
-  lastHeads: Heads;
-  path: Prop[];
-  unreconciledTransactions: Transaction[];
-};
-
-type UpdateHeads = {
-  newHeads: Heads;
-};
-
-export const effectType = StateEffect.define<UpdateHeads>({});
-
-export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
-
-export const getLastHeads = (state: EditorState, field: Field): Heads => state.field(field).lastHeads;
-
-export const getPath = (state: EditorState, field: Field): Prop[] => state.field(field).path;
-
-export type Field = StateField<Value>;
+import { CursorConverter } from '../../util';
 
 const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.
 });
 
-export type AutomergePlugin = {
-  extension: Extension;
+export type AutomergeOptions = {
+  handle: IDocHandle;
+  path: Prop[];
 };
 
-export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
+export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
+  // TODO(burdon): Rename.
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
-      lastHeads: automerge.getHeads(handle.docSync()!),
+      lastHeads: A.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
       path: path.slice(),
     }),
@@ -107,26 +84,11 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
   );
 
   return {
-    extension: [stateField, semaphoreFacet.of(semaphore), viewPlugin],
+    extension: [
+      CursorConverter.of(cursorConverter(handle, path)),
+      semaphoreFacet.of(semaphore),
+      stateField,
+      viewPlugin,
+    ],
   };
-};
-
-export const reconcileAnnotationType = Annotation.define<unknown>();
-
-export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
-
-export const makeReconcile = (tr: TransactionSpec) => {
-  if (tr.annotations != null) {
-    if (tr.annotations instanceof Array) {
-      tr.annotations = [...tr.annotations, reconcileAnnotationType.of({})];
-    } else {
-      tr.annotations = [tr.annotations, reconcileAnnotationType.of({})];
-    }
-  } else {
-    tr.annotations = [reconcileAnnotationType.of({})];
-  }
-  // return {
-  // ...tr,
-  // annotations: reconcileAnnotationType.of({})
-  // }
 };

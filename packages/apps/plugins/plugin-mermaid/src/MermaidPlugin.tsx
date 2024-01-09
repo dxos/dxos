@@ -33,7 +33,7 @@ export const MermaidPlugin = (): PluginDefinition<MermaidPluginProvides> => {
       },
       translations,
       markdown: {
-        extensions: [],
+        extensions: () => [],
       },
       // TODO(burdon): Remove.
       graph: {

@@ -31,7 +31,7 @@ export type MarkdownProperties = {
   readonly?: boolean;
 };
 
-export type ExtensionsProvider = Extension[] | (() => Extension[]);
+export type ExtensionsProvider = () => Extension[];
 export type OnChange = (text: string) => void;
 
 export type MarkdownProvides = {

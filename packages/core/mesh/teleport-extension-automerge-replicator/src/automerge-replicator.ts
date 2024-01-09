@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { RpcClosedError, schema } from '@dxos/protocols';
 import {
   type PeerInfo,
   type AutomergeReplicatorService,
@@ -38,6 +38,11 @@ export type AutomergeReplicatorCallbacks = {
   onClose?: (err?: Error) => Promise<void>;
 };
 
+const RPC_TIMEOUT = 10_000;
+const NUM_RETRIES_BEFORE_BACKOFF = 3;
+const RETRY_BACKOFF = 1_000;
+const MAX_RETRIES = 10;
+
 /**
  * Sends automerge messages between two peers for a single teleport session.
  */
@@ -54,6 +59,7 @@ export class AutomergeReplicator implements TeleportExtension {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
+      timeout: RPC_TIMEOUT,
       requested: {
         AutomergeReplicatorService: schema.getService('dxos.mesh.teleport.automerge.AutomergeReplicatorService'),
       },
@@ -101,7 +107,30 @@ export class AutomergeReplicator implements TeleportExtension {
   async sendSyncMessage(message: SyncMessage) {
     await this._opened.wait();
     invariant(this._rpc, 'RPC not initialized');
-    await this._rpc.rpc.AutomergeReplicatorService.sendSyncMessage(message);
+
+    let retries = 0;
+    while (true) {
+      try {
+        await this._rpc.rpc.AutomergeReplicatorService.sendSyncMessage(message);
+        break;
+      } catch (err) {
+        if (err instanceof RpcClosedError) {
+          return;
+        }
+
+        log('sendSyncMessage error', { err });
+
+        retries++;
+        if (retries >= MAX_RETRIES) {
+          throw new Error(
+            `Failed to send sync message after ${MAX_RETRIES} retries. Last attempt failed with error: ${err}`,
+          );
+        }
+        if (retries % NUM_RETRIES_BEFORE_BACKOFF === 0) {
+          await sleep(RETRY_BACKOFF);
+        }
+      }
+    }
   }
 }
 

@@ -1,18 +1,17 @@
 //
 // Copyright 2023 DXOS.org
+// Copyright 2024 Automerge
+// Ref: https://github.com/automerge/automerge-codemirror
 //
 
-// TODO(burdon): Additional copyright?
-
-import { type EditorState, type Text, type Transaction } from '@codemirror/state';
+import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
 import { next as am, type Heads } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from './handle';
-import { type Field } from './plugin';
+import { type IDocHandle, type Value } from './defs';
 
 export const updateAutomerge = (
-  field: Field,
+  field: StateField<Value>,
   handle: IDocHandle,
   transactions: Transaction[],
   state: EditorState,

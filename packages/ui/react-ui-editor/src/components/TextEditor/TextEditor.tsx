@@ -77,7 +77,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     >();
     useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
-    // TODO(burdon): Factor out?
+    // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
     useEffect(() => {
       if (awareness && peer) {

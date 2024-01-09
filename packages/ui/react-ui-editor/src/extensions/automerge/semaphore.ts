@@ -1,15 +1,23 @@
 //
 // Copyright 2023 DXOS.org
+// Copyright 2024 Automerge
+// Ref: https://github.com/automerge/automerge-codemirror
 //
 
-// TODO(burdon): Additional copyright?
-
+import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import { next as automerge } from '@dxos/automerge/automerge';
 
-import { type IDocHandle } from './handle';
-import { type Field, isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads } from './plugin';
+import {
+  getLastHeads,
+  getPath,
+  isReconcileTx,
+  reconcileAnnotationType,
+  updateHeads,
+  type IDocHandle,
+  type Value,
+} from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
@@ -22,15 +30,10 @@ type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads |
  * TODO(burdon): Comment.
  */
 export class PatchSemaphore {
-  _field!: Field;
   _inReconcile = false;
   _queue: Array<ChangeFn> = [];
 
-  constructor(field?: Field) {
-    if (field !== undefined) {
-      this._field = field;
-    }
-  }
+  constructor(private readonly _field: StateField<Value>) {}
 
   reconcile = (handle: IDocHandle, view: EditorView) => {
     if (this._inReconcile) {
@@ -42,9 +45,8 @@ export class PatchSemaphore {
     const oldHeads = getLastHeads(view.state, this._field);
     let selection = view.state.selection;
 
-    const transactions = view.state.field(this._field).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
-
     // First undo all the unreconciled transactions.
+    const transactions = view.state.field(this._field).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
     const toInvert = transactions.slice().reverse();
     for (const tx of toInvert) {
       const inverted = tx.changes.invert(tx.startState.doc);

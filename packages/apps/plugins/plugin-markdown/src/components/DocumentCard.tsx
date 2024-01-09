@@ -7,28 +7,34 @@ import React, { forwardRef } from 'react';
 import type { Document as DocumentType } from '@braneframe/types';
 import { DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
-import { type Extension, MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
+import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
+import { getExtensions } from '../extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
+import { type MarkdownSettingsProps } from '../types';
 
-export type EditorCardProps = {
+export type DocumentItemProps = {
   id: string;
   object: DocumentType;
   color?: string;
-  extensions?: Extension[];
 };
 
-export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
+export type DocumentCardProps = {
+  settings: MarkdownSettingsProps;
+};
+
+export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement, DocumentCardProps> = forwardRef(
   (
     {
       classNames,
       isDragging,
       draggableStyle,
       draggableProps,
-      item: { id, object, color, extensions },
+      item: { id, object, color },
       grow,
+      settings,
       onSelect,
       onAction,
     },
@@ -67,7 +73,11 @@ export const EditorCard: MosaicTileComponent<EditorCardProps> = forwardRef(
           <Card.Body>
             <MarkdownEditor
               model={model}
-              extensions={extensions}
+              extensions={getExtensions({
+                document: object,
+                debug: settings.debug,
+                experimental: settings.experimental,
+              })}
               slots={{
                 root: {
                   className: mx(
