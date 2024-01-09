@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client, IntentsBitField } from 'discord.js';
+import { Client, IntentsBitField, SnowflakeUtil, TextChannel } from 'discord.js';
 
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -12,6 +12,7 @@ export class DiscordBot {
 
   async start() {
     const { value: token } = this._config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
+    const { value: channelId } = this._config.find('runtime.keys', { name: 'discord.com/channel' }) ?? {};
     if (!token) {
       throw new Error('Missing token.');
     }
@@ -32,7 +33,6 @@ export class DiscordBot {
 
     // Ensure bot has permission to channel.
     client.on('messageCreate', async (message) => {
-      const { value: channelId } = this._config.find('runtime.keys', { name: 'discord.com/channel' }) ?? {};
       if (channelId && message.channel.id !== channelId) {
         return;
       }
@@ -60,6 +60,35 @@ export class DiscordBot {
     });
 
     await client.login(token);
+
+    const LAST_WEEK_SNOWFLAKE = SnowflakeUtil.generate({
+      timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3 /* days */,
+    }).toString();
+
+    const channel = (await client.channels.fetch(channelId)) as TextChannel;
+    const allChannels = await channel.guild.channels.fetch();
+    const messages = (
+      await Promise.all(
+        allChannels.map(async (channel) => {
+          try {
+            if (!channel?.isTextBased()) return '';
+            const res = await channel.messages.fetch({ after: LAST_WEEK_SNOWFLAKE, limit: 100 });
+            const messagesConcatenated = res
+              .filter((msg) => msg.content.trim().length > 0)
+              .map((msg) => `${new Date(msg.createdTimestamp).toISOString()} ${msg.author.username}: ${msg.content}`)
+              .join('\n');
+            if(messagesConcatenated.length === 0) return '';
+
+            return `CONVERSATION:\n${messagesConcatenated}\n`;
+          } catch (err: any) {
+            console.log(`${channel?.name} ${err.message}`);
+            return '';
+          }
+        }),
+      )
+    ).flat();
+
+    console.log(messages.join(''));
   }
 
   async stop() {}
