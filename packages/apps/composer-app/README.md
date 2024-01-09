@@ -47,4 +47,4 @@ The app can be run using Docker.
 `docker run -it -p 80:80 dxos/composer-app:latest`
 
 # License
-[MIT](./LICENSE) Copyright 2022 © DXOS
+[MIT](https://github.com/dxos/dxos/blob/main/LICENSE) Copyright 2023 © DXOS

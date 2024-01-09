@@ -7,4 +7,4 @@ TODO
 https://github.com/dxos/dxos
 
 # License
-[MIT](./LICENSE) Copyright 2022 © DXOS
+[MIT](https://github.com/dxos/dxos/blob/main/LICENSE) Copyright 2023 © DXOS
