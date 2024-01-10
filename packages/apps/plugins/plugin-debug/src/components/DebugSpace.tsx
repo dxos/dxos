@@ -25,14 +25,13 @@ import { type Schema, type TypedObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Input, useThemeContext } from '@dxos/react-ui';
+import { Button, DropdownMenu, Input, useFileDownload, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { DebugPanel } from './DebugPanel';
 import { SchemaList } from './SchemaList';
 import { Json } from './Tree';
-import { useFileDownload } from './util';
 import { Generator } from '../testing';
 import { DebugContext } from '../types';
 

@@ -7,12 +7,13 @@ import { useMemo } from 'react';
 /**
  * File download anchor.
  *
+ * ```
  * const download = useDownload();
  * const handleDownload = (data: string) => {
  *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
  * };
+ * ```
  */
-// TODO(burdon): Factor out.
 export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
   return useMemo(
     () => (data: Blob | string, filename: string) => {
