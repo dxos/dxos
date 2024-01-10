@@ -205,7 +205,8 @@ export const spaceToGraphNode = ({
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
           keyBinding: 'shift+F6',
-          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space } }),
+          invoke: (params) =>
+            dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } }),
         },
         {
           id: 'share-space',
@@ -311,10 +312,10 @@ export const objectToGraphNode = ({
         label: ['rename object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
         keyBinding: 'shift+F6',
-        invoke: () =>
+        invoke: (params) =>
           dispatch({
             action: SpaceAction.RENAME_OBJECT,
-            data: { object },
+            data: { object, ...params },
           }),
       },
       {

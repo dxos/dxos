@@ -3,6 +3,6 @@
 //
 
 export * from './CommandsDialog';
-export * from './TreeItemMainHeading';
+export * from './NavBarStart';
 export * from './TreeViewContainer';
 export * from './TreeViewDocumentTitle';
