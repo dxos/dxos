@@ -7,6 +7,7 @@ permissions:
 on:
   push:
     branches:
+      # TODO: enable for all branches
       - main
       - test-github/docker
       - nf/agent-docker
@@ -44,10 +45,19 @@ jobs:
         uses: digitalocean/action-doctl@v2
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-      - name: Log in to DigitalOcean container registry
+      - name: Login to DigitalOcean container registry
         run: doctl registry login --expiry-seconds 3600
       - name: Login to Github container registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker meta for agent
         id: agent-meta
         uses: docker/metadata-action@v5
@@ -55,6 +65,7 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/agent
             registry.digitalocean.com/eldon-experimental/agent
+            dxos/agent
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -67,6 +78,7 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/composer-app
             registry.digitalocean.com/eldon-experimental/composer-app
+            dxos/composer-app
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -102,3 +114,21 @@ jobs:
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
+      - name: Update composer Docker Hub repo description
+        if: github.ref_name == 'main' || github.ref_name == 'nf/agent-docker'
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: dxos/composer-app
+          short-description: Composer is a tool for collaboration powered by the DXOS developer platform.
+          readme-filepath: packages/apps/composer-app/README.md
+      - name: Update agent Docker Hub repo description
+        if: github.ref_name == 'main'
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: dxos/agent
+          short-description: DXOS Agent provides offline backup and synchronization capabilities for DXOS applications.
+          readme-filepath: packages/devtools/cli/README-docker.md

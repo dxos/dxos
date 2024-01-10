@@ -44,7 +44,7 @@ const TypographyStory = () => {
 };
 
 export default {
-  title: 'DXOS UI/Scenarios/Typography',
+  title: 'react-ui/Scenarios/Typography',
   component: TypographyStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

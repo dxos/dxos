@@ -48,7 +48,6 @@ const update = (state: EditorState, options: MermaidOptions) => {
                 node.from,
                 node.to,
                 Decoration.replace({
-                  block: true,
                   widget: new MermaidWidget(`mermaid-${node.from}`, content),
                 }),
               );
@@ -109,6 +108,7 @@ class MermaidWidget extends WidgetType {
         // label.innerText = 'Mermaid';
         // label.className = 'cm-mermaid-label';
         // wrapper.appendChild(label);
+        view.requestMeasure();
       }
     });
 
@@ -130,12 +130,16 @@ class MermaidWidget extends WidgetType {
       this._svg = undefined;
     }
   }
+
+  override ignoreEvent(e: Event) {
+    return !/^mouse/.test(e.type);
+  }
 }
 
 const styles = EditorView.baseTheme({
   '& .cm-mermaid': {
     position: 'relative',
-    display: 'flex',
+    display: 'inline-flex',
     justifyContent: 'center',
     // backgroundColor: getToken('extend.colors.neutral.50'),
   },
@@ -145,7 +149,7 @@ const styles = EditorView.baseTheme({
   //   textSize: 10,
   // },
   '& .cm-mermaid-error': {
-    display: 'block',
+    display: 'inline-block',
     color: getToken('extend.colors.red.500'),
   },
 });

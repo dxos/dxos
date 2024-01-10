@@ -13,6 +13,7 @@ import { BaseTile, DefaultTile, GenericTile, TaskTile, TaskListTile } from './Ti
 import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
 
 export default {
+  title: 'react-appkit/Tile',
   component: BaseTile,
   decorators: [withTheme],
 } as any;
