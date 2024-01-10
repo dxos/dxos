@@ -331,11 +331,11 @@ export const objectToGraphNode = ({
         label: ['delete object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Trash {...props} />,
         keyBinding: 'shift+meta+Backspace',
-        invoke: () =>
+        invoke: (params) =>
           dispatch([
             {
               action: SpaceAction.REMOVE_OBJECT,
-              data: { object, folder: parent.data },
+              data: { object, folder: parent.data, ...params },
             },
           ]),
       },

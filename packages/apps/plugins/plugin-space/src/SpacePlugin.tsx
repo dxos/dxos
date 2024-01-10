@@ -28,7 +28,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { inferRecordOrder } from '@dxos/util';
 
@@ -270,9 +270,9 @@ export const SpacePlugin = ({
                 return <PopoverRenameObject object={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
-                isTypedObject(data.subject)
+                isTypedObject(data.subject.object)
               ) {
-                return <PopoverRemoveObject object={data.subject} />;
+                return <PopoverRemoveObject object={data.subject.object} folder={data.subject.folder} />;
               } else {
                 return null;
               }
@@ -574,40 +574,13 @@ export const SpacePlugin = ({
                 data: {
                   anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
                   component: 'dxos.org/plugin/space/RemoveObjectPopover',
-                  subject: intent.data.object,
+                  subject: {
+                    object: intent.data.object,
+                    folder: intent.data.folder,
+                  },
                   caller: intent.data.caller,
                 },
               });
-              // if (!(intent.data.object instanceof TypedObject)) {
-              //   return;
-              // }
-
-              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-              // const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              // if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
-              //   await intentPlugin?.provides.intent.dispatch({
-              //     action: LayoutAction.ACTIVATE,
-              //     data: { id: undefined },
-              //   });
-              // }
-
-              // if (intent.data.folder instanceof Folder) {
-              //   const index = intent.data.folder.objects.indexOf(intent.data.object);
-              //   index !== -1 && intent.data.folder.objects.splice(index, 1);
-              // }
-
-              // const space = getSpaceForObject(intent.data.object);
-
-              // const folder = space?.properties[Folder.schema.typename];
-              // if (folder instanceof Folder) {
-              //   const index = folder.objects.indexOf(intent.data.object);
-              //   index !== -1 && folder.objects.splice(index, 1);
-              // }
-
-              // if (space) {
-              //   space.db.remove(intent.data.object);
-              //   return true;
-              // }
               // break;
             }
 

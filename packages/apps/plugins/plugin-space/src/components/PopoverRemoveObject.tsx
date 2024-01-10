@@ -4,17 +4,53 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { type TypedObject } from '@dxos/react-client/echo';
+import { Folder } from '@braneframe/types';
+import { LayoutAction, parseIntentPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const PopoverRemoveObject = ({ object }: { object: TypedObject }) => {
+export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder: Folder }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 
-  const handleDelete = useCallback(() => {
-    console.log('delete');
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const intentPlugin = useResolvePlugin(parseIntentPlugin);
+
+  const handleDelete = useCallback(async () => {
+    if (!(object instanceof TypedObject)) {
+      return;
+    }
+
+    // If the item is active, navigate to "nowhere" to avoid navigating to a removed item
+    if (layoutPlugin?.provides.layout.active === object.id) {
+      await intentPlugin?.provides.intent.dispatch({
+        action: LayoutAction.ACTIVATE,
+        data: { id: undefined },
+      });
+    }
+
+    // remove a folder
+    if (propsFolder instanceof Folder) {
+      const index = propsFolder.objects.indexOf(object);
+      index !== -1 && propsFolder.objects.splice(index, 1);
+    }
+
+    const space = getSpaceForObject(object);
+
+    // remove the folder from the graph?
+    const folder = space?.properties[Folder.schema.typename];
+    if (folder instanceof Folder) {
+      const index = folder.objects.indexOf(object);
+      index !== -1 && folder.objects.splice(index, 1);
+    }
+
+    // remove the object
+    if (space) {
+      space.db.remove(object);
+      return true;
+    }
   }, [object]);
 
   return (
