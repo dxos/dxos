@@ -21,11 +21,10 @@ export const createResponse = (space: Space, context: PromptContext, content: st
   const result = parseMessage(content);
   log.info('parse', { result, content });
   if (result) {
-    const { pre, data, content, post, type } = result;
+    const { pre, data, content, post, type, kind } = result;
     pre && blocks.push({ timestamp, text: pre });
 
-    switch (result.type) {
-      case 'json': {
+    if (result.type === 'json') {
         const dataArray = Array.isArray(data) ? data : [data];
         blocks.push(
           ...dataArray.map((data): MessageType.Block => {
@@ -52,21 +51,16 @@ export const createResponse = (space: Space, context: PromptContext, content: st
             return { timestamp, data: JSON.stringify(data) };
           }),
         );
-        break;
-      }
-
-      case 'mermaid': {
+    } else if(context.object?.__typename === StackType.schema.typename) {
         // TODO(burdon): Insert based on prompt config.
-        if (context.object?.__typename === StackType.schema.typename) {
-          log.info('adding mermaid diagram to stack', { stack: context.object.id });
-          context.object.sections.push(
-            new StackType.Section({
-              object: new DocumentType({ content: new TextObject(`\`\`\`${type}\n${content.trim()}\n\`\`\`\n`) }),
-            }),
-          );
-        }
-        break;
-      }
+        log.info('adding section to stack', { stack: context.object.id });
+
+        const formattedContent = kind === 'code-block' && type !== 'markdown' ? `\`\`\`${type}\n${content.trim()}\n\`\`\`\n` : content;
+        context.object.sections.push(
+          new StackType.Section({
+            object: new DocumentType({ content: new TextObject(formattedContent) }),
+          }),
+        );
     }
 
     post && blocks.push({ timestamp, text: post });
