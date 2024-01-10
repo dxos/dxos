@@ -50,15 +50,21 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   if (activeThreads) {
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
-        space.postMessage(`${thread.id}/ephemeral_status`, {
-          event: 'AI_GENERATING',
-          ts: Date.now(),
-          messageCount: thread.messages.length,
-        }).catch(() => {})
+        let disPostStatus = false;
+        
 
 
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
+          if(!disPostStatus){
+            space.postMessage(`${thread.id}/ephemeral_status`, {
+              event: 'AI_GENERATING',
+              ts: Date.now(),
+              messageCount: thread.messages.length,
+            }).catch(() => {})
+            disPostStatus = true;
+          }
+          
           let blocks: MessageType.Block[];
           try {
             let text = message.blocks
