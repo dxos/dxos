@@ -9,6 +9,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Group } from './Group';
 
 export default {
+  title: 'react-appkit/Group',
   component: Group,
   decorators: [withTheme],
 };

@@ -48,8 +48,7 @@ const update = (state: EditorState, options: MermaidOptions) => {
                 node.from,
                 node.to,
                 Decoration.replace({
-                  block: true,
-                  widget: new MermaidWidget(cursor, content),
+                  widget: new MermaidWidget(`mermaid-${node.from}`, content),
                 }),
               );
             }
@@ -66,7 +65,8 @@ class MermaidWidget extends WidgetType {
   _svg: string | undefined;
   _error: string | undefined;
 
-  constructor(private readonly _pos: number, private readonly _source: string) {
+  // TODO(burdon): Mermaid API requires unique id.
+  constructor(private readonly _id: string, private readonly _source: string) {
     super();
   }
 
@@ -108,6 +108,7 @@ class MermaidWidget extends WidgetType {
         // label.innerText = 'Mermaid';
         // label.className = 'cm-mermaid-label';
         // wrapper.appendChild(label);
+        view.requestMeasure();
       }
     });
 
@@ -119,7 +120,7 @@ class MermaidWidget extends WidgetType {
       // https://github.com/mermaid-js/mermaid
       const valid = await _mermaid.parse(this._source);
       if (valid) {
-        const result = await _mermaid.render('mermaid-' + this._pos, this._source);
+        const result = await _mermaid.render(this._id, this._source);
         this._error = undefined;
         this._svg = result.svg;
         return result.svg;
@@ -129,12 +130,16 @@ class MermaidWidget extends WidgetType {
       this._svg = undefined;
     }
   }
+
+  override ignoreEvent(e: Event) {
+    return !/^mouse/.test(e.type);
+  }
 }
 
 const styles = EditorView.baseTheme({
   '& .cm-mermaid': {
     position: 'relative',
-    display: 'flex',
+    display: 'inline-flex',
     justifyContent: 'center',
     // backgroundColor: getToken('extend.colors.neutral.50'),
   },
@@ -144,7 +149,7 @@ const styles = EditorView.baseTheme({
   //   textSize: 10,
   // },
   '& .cm-mermaid-error': {
-    display: 'block',
+    display: 'inline-block',
     color: getToken('extend.colors.red.500'),
   },
 });

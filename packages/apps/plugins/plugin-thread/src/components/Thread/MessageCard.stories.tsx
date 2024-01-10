@@ -39,6 +39,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-thread/MessageCard',
   component: MessageCard,
   render: Story,
   decorators: [withTheme],

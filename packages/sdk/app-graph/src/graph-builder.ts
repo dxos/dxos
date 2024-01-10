@@ -12,6 +12,8 @@ import type { ActionArg, Action } from './action';
 import { Graph } from './graph';
 import type { NodeArg, Node, NodeBuilder } from './node';
 
+export const KEY_BINDING = 'KeyBinding';
+
 /**
  * The builder...
  */
@@ -144,7 +146,7 @@ export class GraphBuilder {
               Keyboard.singleton.getContext(path.join('/')).bind({
                 binding: action.keyBinding!,
                 handler: () => {
-                  action.invoke();
+                  action.invoke({ caller: KEY_BINDING });
                 },
                 data: action.label,
               });

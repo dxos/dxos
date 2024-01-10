@@ -40,6 +40,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-table/ObjectTable',
   component: ObjectTable,
   render: () => <ClientRepeater Component={Story} createSpace />,
   decorators: [withTheme, FullscreenDecorator()],
