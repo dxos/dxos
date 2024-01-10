@@ -81,7 +81,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
 
       const content = object.content;
       invariant(content instanceof AutomergeObject, 'Support only AutomergeObject.');
-      let text: string = content[(content as TypedObject).field];
+      let text: string = (content as any)[(content as any).field];
 
       // Create frontmatter.
       const metadata = {
@@ -98,7 +98,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
       if (!threadSerializer || !comments || comments.length === 0) {
         return `${frontmatter}\n${text}`;
       }
-      const doc = getRawDoc(content, [(content as TypedObject).field]);
+      const doc = getRawDoc(content, [(content as any).field]);
       const convertor = cursorConverter(doc.handle, doc.path);
 
       const insertions: Record<number, string> = {};
@@ -154,7 +154,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
     serialize: async (object: Sketch): Promise<string> => {
       invariant(object.data instanceof AutomergeObject, 'Support only AutomergeObject.');
       console.log('Sketch', object.data);
-      const text: string = object.data[(object.data as TypedObject).field];
+      const text: string = (object.data as any)[(object.data as any).field];
 
       return text ?? '';
     },
