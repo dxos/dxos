@@ -49,7 +49,7 @@ const update = (state: EditorState, options: MermaidOptions) => {
                 node.to,
                 Decoration.replace({
                   block: true,
-                  widget: new MermaidWidget(content),
+                  widget: new MermaidWidget(cursor, content),
                 }),
               );
             }
@@ -66,58 +66,60 @@ class MermaidWidget extends WidgetType {
   _svg: string | undefined;
   _error: string | undefined;
 
-  constructor(private readonly _source: string) {
+  constructor(private readonly _pos: number, private readonly _source: string) {
     super();
   }
 
-  override eq(other: MermaidWidget) {
+  override eq(other: this) {
     return this._source === other._source;
   }
 
-  toDOM(view: EditorView) {
+  override toDOM(view: EditorView) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'cm-mermaid';
 
-    if (this._svg) {
-      wrapper.innerHTML = this._svg;
-    } else {
-      setTimeout(async () => {
-        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
-        _mermaid.initialize({
-          darkMode: view.state.facet(EditorView.darkTheme),
-          theme: 'neutral',
-          // TODO(burdon): Styles.
-          // NOTE: Must specify 'base' in order to override.
-          // theme: 'base',
-          // themeVariables: {
-          //   primaryColor: getToken('extend.colors.red.100'),
-          //   primaryBorderColor: getToken('extend.colors.neutral.200'),
-          // },
-          // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/flowchart/styles.ts
-          // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/sequence/styles.js
-          // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/state/styles.js
-          // themeCSS: '.node rect { fill: red; }',
-        });
-
-        this._svg = await this.render();
-        if (this._error) {
-          wrapper.innerText = this._error;
-          wrapper.className = 'cm-mermaid-error';
-        } else {
-          wrapper.innerHTML = this._svg ?? '';
-        }
+    setTimeout(async () => {
+      // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
+      _mermaid.initialize({
+        darkMode: view.state.facet(EditorView.darkTheme),
+        theme: 'neutral',
+        // TODO(burdon): Styles.
+        // NOTE: Must specify 'base' in order to override.
+        // theme: 'base',
+        // themeVariables: {
+        //   primaryColor: getToken('extend.colors.red.100'),
+        //   primaryBorderColor: getToken('extend.colors.neutral.200'),
+        // },
+        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/flowchart/styles.ts
+        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/sequence/styles.js
+        // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/state/styles.js
+        // themeCSS: '.node rect { fill: red; }',
       });
-    }
+
+      // TODO(burdon): Cache?
+      const svg = await this.render(wrapper);
+      if (this._error) {
+        wrapper.className = 'cm-mermaid-error';
+        wrapper.innerText = this._error;
+      } else {
+        wrapper.className = 'cm-mermaid';
+        wrapper.innerHTML = svg!;
+
+        // const label = document.createElement('span');
+        // label.innerText = 'Mermaid';
+        // label.className = 'cm-mermaid-label';
+        // wrapper.appendChild(label);
+      }
+    });
 
     return wrapper;
   }
 
-  async render(): Promise<string | undefined> {
+  async render(container: Element): Promise<string | undefined> {
     try {
       // https://github.com/mermaid-js/mermaid
       const valid = await _mermaid.parse(this._source);
       if (valid) {
-        const result = await _mermaid.render('test', this._source);
+        const result = await _mermaid.render('mermaid-' + this._pos, this._source);
         this._error = undefined;
         this._svg = result.svg;
         return result.svg;
@@ -131,9 +133,16 @@ class MermaidWidget extends WidgetType {
 
 const styles = EditorView.baseTheme({
   '& .cm-mermaid': {
+    position: 'relative',
     display: 'flex',
     justifyContent: 'center',
+    // backgroundColor: getToken('extend.colors.neutral.50'),
   },
+  // '& .cm-mermaid-label': {
+  //   position: 'absolute',
+  //   right: 0,
+  //   textSize: 10,
+  // },
   '& .cm-mermaid-error': {
     display: 'block',
     color: getToken('extend.colors.red.500'),

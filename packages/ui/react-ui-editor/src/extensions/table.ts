@@ -98,14 +98,14 @@ class TableWidget extends WidgetType {
     super();
   }
 
-  override eq(other: TableWidget) {
+  override eq(other: this) {
     return (
       this._table.header?.join() === other._table.header?.join() &&
       this._table.rows?.join() === other._table.rows?.join()
     );
   }
 
-  toDOM(view: EditorView) {
+  override toDOM(view: EditorView) {
     const table = document.createElement('table');
 
     {

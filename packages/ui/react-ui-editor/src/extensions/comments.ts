@@ -159,17 +159,13 @@ const highlightDecorations = EditorView.decorations.compute([commentsStateField]
  * May correspond to a markdown bookmark.
  */
 class BookmarkWidget extends WidgetType {
-  constructor(
-    private readonly _anchor: number,
-    private readonly _id: string,
-    private readonly _handleClick?: () => void,
-  ) {
+  constructor(private readonly _pos: number, private readonly _id: string, private readonly _handleClick?: () => void) {
     super();
     invariant(this._id);
   }
 
-  override eq(other: BookmarkWidget) {
-    return this._anchor === other._anchor && this._id === other._id;
+  override eq(other: this) {
+    return this._pos === other._pos && this._id === other._id;
   }
 
   override toDOM() {
