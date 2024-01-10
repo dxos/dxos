@@ -11,3 +11,4 @@ export * from './extensions';
 export * from './hooks';
 export { getToken } from './styles';
 export * from './themes';
+export * from './util';
