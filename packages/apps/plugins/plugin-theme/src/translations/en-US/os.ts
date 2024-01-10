@@ -49,6 +49,8 @@ export const os = {
   'reconnect label': 'Reconnect',
   'cancel label': 'Cancel',
   'done label': 'Done',
+  'delete label': 'Delete',
+  'delete object description': 'Delete this item?',
   'reset label': 'Start over',
   'auth code input label': 'Enter the verification code',
   'invitation input label': 'Paste an invitation code or URL',
