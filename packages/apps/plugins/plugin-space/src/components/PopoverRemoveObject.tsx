@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 import { Folder } from '@braneframe/types';
 import { LayoutAction, parseIntentPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
-import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
@@ -55,13 +55,9 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
 
   return (
     <div role='none' className='p-1'>
-      <div role='none'>
-        <Input.Root>
-          <Input.DescriptionAndValidation>Delete this item?</Input.DescriptionAndValidation>
-        </Input.Root>
-      </div>
+      <p className='mlb-1 mli-2'>Delete this item?</p>
       <Popover.Close asChild>
-        <Button ref={deleteButton} classNames='self-stretch' onClick={handleDelete}>
+        <Button ref={deleteButton} classNames='is-full' onClick={handleDelete}>
           {t('delete label', { ns: 'os' })}
         </Button>
       </Popover.Close>
