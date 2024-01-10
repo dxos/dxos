@@ -7,33 +7,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
-import { Input, Toolbar } from '@dxos/react-ui';
+import { Input, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { JsonView, PanelContainer, Tree } from '../../../components';
-
-/**
- * File download anchor.
- *
- * const download = useDownload();
- * const handleDownload = (data: string) => {
- *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
- * };
- */
-// TODO(burdon): Factor out.
-export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
-  return useMemo(
-    () => (data: Blob | string, filename: string) => {
-      const url = typeof data === 'string' ? data : URL.createObjectURL(data);
-      const element = document.createElement('a');
-      element.setAttribute('href', url);
-      element.setAttribute('download', filename);
-      element.setAttribute('target', 'download');
-      element.click();
-    },
-    [],
-  );
-};
 
 export const DiagnosticsPanel = () => {
   const client = useClient();
