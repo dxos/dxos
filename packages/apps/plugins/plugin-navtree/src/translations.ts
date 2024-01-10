@@ -14,6 +14,7 @@ export default [
         'open commands label': 'Search commands',
         'commands dialog title': 'Commands',
         'commandlist input placeholder': 'Search for commands…',
+        'node actions menu invoker label': 'More options',
       },
     },
   },
