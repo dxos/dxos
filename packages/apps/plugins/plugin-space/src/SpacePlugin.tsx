@@ -270,9 +270,16 @@ export const SpacePlugin = ({
                 return <PopoverRenameObject object={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
-                isTypedObject(data.subject.object)
+                data.subject &&
+                typeof data.subject === 'object' &&
+                isTypedObject((data.subject as Record<string, any>)?.object)
               ) {
-                return <PopoverRemoveObject object={data.subject.object} folder={data.subject.folder} />;
+                return (
+                  <PopoverRemoveObject
+                    object={(data.subject as Record<string, any>)?.object}
+                    folder={(data.subject as Record<string, any>)?.folder}
+                  />
+                );
               } else {
                 return null;
               }
