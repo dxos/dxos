@@ -107,24 +107,25 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
   const [ephemeralStatus, setEphemeralStatus] = React.useState<any | undefined>(undefined);
   useEffect(() => {
     const unsubscribe = space.listen(`${thread.id}/ephemeral_status`, (status) => {
-      console.log('new status', status)
+      console.log('new status', status);
       setEphemeralStatus(status.payload);
     });
     const tid = setInterval(() => {
       setEphemeralStatus((prev: any) => {
-        if(typeof prev?.ts === 'number' && Date.now() - prev.ts > 20_000) { // Clear after 20s.
+        if (typeof prev?.ts === 'number' && Date.now() - prev.ts > 20_000) {
+          // Clear after 20s.
           return undefined;
         } else {
           return prev;
         }
       });
-    }, 1000)
+    }, 1000);
 
     return () => {
       unsubscribe();
       clearInterval(tid);
-    }
-  })
+    };
+  });
 
   return (
     <ThreadChannel
@@ -135,7 +136,11 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
       onFocus={onFocus}
       onCreate={handleCreate}
       onDelete={handleDelete}
-      ephemeralStatus={ephemeralStatus?.event === 'AI_GENERATING' && ephemeralStatus?.messageCount <= thread.messages.length ? 'AI thinking...' : undefined}
+      ephemeralStatus={
+        ephemeralStatus?.event === 'AI_GENERATING' && ephemeralStatus?.messageCount <= thread.messages.length
+          ? 'AI thinking...'
+          : undefined
+      }
     />
   );
 };

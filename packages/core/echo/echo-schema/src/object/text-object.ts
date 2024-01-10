@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import get from 'lodash.get';
+
+import { next as automerge } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
@@ -15,8 +18,6 @@ import {
   type TypedObject,
 } from './typed-object';
 import { AutomergeObject, getRawDoc } from '../automerge';
-import get from 'lodash.get';
-import { next as automerge } from '@dxos/automerge/automerge';
 
 export type TextObjectOptions = AutomergeOptions;
 
@@ -179,7 +180,7 @@ export const toCursor = (object: TextObject, pos: number) => {
 
   // NOTE: Slice is needed because getCursor mutates the array.
   return automerge.getCursor(doc, accessor.path.slice(), pos);
-}
+};
 
 /**
  * TODO: This API is gonna change.
@@ -206,7 +207,7 @@ export const fromCursor = (object: TextObject, cursor: string) => {
 
   // NOTE: Slice is needed because getCursor mutates the array.
   return automerge.getCursorPosition(doc, accessor.path.slice(), cursor);
-}
+};
 
 /**
  * TODO: This API is gonna change.
@@ -215,4 +216,4 @@ export const getTextInRange = (object: TextObject, begin: string, end: string) =
   const beginIdx = fromCursor(object, begin);
   const endIdx = fromCursor(object, end);
   return (object.content as any as string).slice(beginIdx, endIdx);
-}
+};

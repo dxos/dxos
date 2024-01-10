@@ -41,7 +41,11 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
 
   const handle = {
     update: (selection: Selection) => {
-      const newSelected = new Set(selection.filter((item): item is EchoObject => item instanceof AbstractEchoObject || item instanceof AutomergeObject));
+      const newSelected = new Set(
+        selection.filter(
+          (item): item is EchoObject => item instanceof AbstractEchoObject || item instanceof AutomergeObject,
+        ),
+      );
       const removed = [...handle.selected].filter((item) => !newSelected.has(item));
       const added = [...newSelected].filter((item) => !handle.selected.has(item));
       handle.selected = newSelected;

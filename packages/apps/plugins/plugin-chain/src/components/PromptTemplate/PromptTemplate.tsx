@@ -162,7 +162,9 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3 py-1.5'>
-                        {[ChainType.Input.Type.VALUE, ChainType.Input.Type.RESOLVER].includes(input.type) && <ValueEditor input={input} />}
+                        {[ChainType.Input.Type.VALUE, ChainType.Input.Type.RESOLVER].includes(input.type) && (
+                          <ValueEditor input={input} />
+                        )}
                       </td>
                     </tr>
                   ))}
