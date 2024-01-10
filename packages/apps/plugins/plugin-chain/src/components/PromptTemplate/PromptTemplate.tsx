@@ -34,6 +34,10 @@ const inputTypes = [
   //   value: ChainType.Input.Type.QUERY,
   //   label: 'Query',
   // },
+  {
+    value: ChainType.Input.Type.RESOLVER,
+    label: 'Resolver',
+  },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
@@ -154,7 +158,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3 py-1.5'>
-                        {input.type === ChainType.Input.Type.VALUE && <ValueEditor input={input} />}
+                        {[ChainType.Input.Type.VALUE, ChainType.Input.Type.RESOLVER].includes(input.type) && <ValueEditor input={input} />}
                       </td>
                     </tr>
                   ))}

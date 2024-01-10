@@ -13,6 +13,7 @@ import { createContext, createSequence } from './request';
 import { createResponse } from './response';
 import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
+import { createResolvers } from './resolvers';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
@@ -27,6 +28,8 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     apiKey: getKey(config, 'openai.com/api_key'),
   });
   await resources.store.initialize();
+
+  const resolvers = await createResolvers(client.config);
 
   // TODO(burdon): The handler is called before the mutation is processed!
   await sleep(500);
@@ -65,14 +68,14 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
             }
 
             const context = createContext(space, message.context);
-            const sequence = createSequence(space, resources, context, { command });
+            const sequence = await createSequence(space, resources, context, resolvers, { command });
             const response = await sequence.invoke(text);
             log.info('response', { response });
 
             blocks = createResponse(space, context, response);
             log.info('response', { blocks });
           } catch (error) {
-            log.error('processing message', error);
+            log.error('processing message', { error });
             blocks = [{ text: 'There was an error generating the response.' }];
           }
 

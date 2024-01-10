@@ -15,6 +15,8 @@ import { log } from '@dxos/log';
 
 import { sequences } from './chains';
 import type { ChainResources } from '../../chain';
+import { Resolvers } from './resolvers';
+import get from 'lodash.get';
 
 export type PromptContext = {
   object?: TypedObject;
@@ -56,12 +58,13 @@ export type SequenceGenerator = (
 ) => RunnableSequence;
 
 // TODO(burdon): Create registry class.
-export const createSequence = (
+export const createSequence = async (
   space: Space,
   resources: ChainResources,
   context: PromptContext,
+  resolvers: Resolvers,
   options: SequenceOptions = {},
-): RunnableSequence => {
+): Promise<RunnableSequence> => {
   log.info('create sequence', {
     context: {
       object: { id: context.object?.id, schema: context.object?.__typename },
@@ -76,7 +79,7 @@ export const createSequence = (
     for (const chain of chains) {
       for (const prompt of chain.prompts) {
         if (prompt.command === options.command) {
-          return createSequenceFromPrompt(resources, prompt);
+          return createSequenceFromPrompt(resources, prompt, resolvers);
         }
       }
     }
@@ -89,8 +92,9 @@ export const createSequence = (
   return generator(resources, () => context, options);
 };
 
-const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.Prompt) => {
-  const inputs = prompt.inputs.reduce<{ [name: string]: any }>((inputs, { type, name, value }) => {
+const createSequenceFromPrompt = async (resources: ChainResources, prompt: ChainType.Prompt, resolvers: Resolvers) => {
+  const inputs: Record<string, any> = {}
+  for(const { type, name, value } of prompt.inputs) {
     switch (type) {
       case ChainType.Input.Type.VALUE: {
         inputs[name] = () => getTextContent(value);
@@ -105,10 +109,13 @@ const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.P
         inputs[name] = retriever.pipe(formatDocumentsAsString);
         break;
       }
+      case ChainType.Input.Type.RESOLVER: {
+        const result = await runResolver(resolvers, getTextContent(value));
+        inputs[name] = () => result;
+        break;
+      }
     }
-
-    return inputs;
-  }, {});
+  }
 
   return RunnableSequence.from([
     inputs,
@@ -117,3 +124,17 @@ const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.P
     new StringOutputParser(),
   ]);
 };
+
+const runResolver = async (resolvers: Resolvers, name: string) => {
+  try {
+    const resolver = get(resolvers, name )
+    log.info('running resolver', { resolver: name  })
+    const start = performance.now();
+    const result =  typeof resolver === 'function' ? await resolver() : resolver;
+    log.info('resolver complete', { resolver: name , duration: performance.now() - start })
+    return result;
+  } catch (error) {
+    log.error('resolver error', { resolver: name, error })
+    return '';
+  }
+}

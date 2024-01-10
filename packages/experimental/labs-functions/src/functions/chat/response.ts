@@ -16,14 +16,12 @@ import { type PromptContext } from './request';
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
 export const createResponse = (space: Space, context: PromptContext, content: string): MessageType.Block[] => {
   const timestamp = new Date().toISOString();
-
-  const r = parseMessage(content);
-  log.info('parse', { r, content });
-
+  
   const blocks: MessageType.Block[] = [];
   const result = parseMessage(content);
+  log.info('parse', { result, content });
   if (result) {
-    const { pre, data, content, post } = result;
+    const { pre, data, content, post, type } = result;
     pre && blocks.push({ timestamp, text: pre });
 
     switch (result.type) {
@@ -63,7 +61,7 @@ export const createResponse = (space: Space, context: PromptContext, content: st
           log.info('adding mermaid diagram to stack', { stack: context.object.id });
           context.object.sections.push(
             new StackType.Section({
-              object: new DocumentType({ content: new TextObject(content.trim()) }),
+              object: new DocumentType({ content: new TextObject(`\`\`\`${type}\n${content.trim()}\n\`\`\`\n`) }),
             }),
           );
         }

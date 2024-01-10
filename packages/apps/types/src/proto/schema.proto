@@ -337,6 +337,7 @@ message Chain {
       RETRIEVER = 2;
       FUNCTION = 3;
       QUERY = 4;
+      RESOLVER = 5;
     }
 
     string name = 1;
