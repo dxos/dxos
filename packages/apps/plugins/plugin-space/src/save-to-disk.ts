@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Folder, Document } from '@braneframe/types';
+import { Folder, Document, Thread, Sketch } from '@braneframe/types';
 import { AutomergeObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { plate } from '@dxos/plate';
 import { type TypedObject, type Space, TextObject, getRawDoc } from '@dxos/react-client/echo';
 import { type CursorConverter, cursorConverter } from '@dxos/react-ui-editor';
 
@@ -22,6 +21,18 @@ export const saveSpaceToDisk = async ({ space, directory }: { space: Space; dire
 };
 
 const saveFolderToDisk = async (echoFolder: Folder, directory: FileSystemDirectoryHandle) => {
+  const namesCount = new Map<string, number>();
+  const fixNamesCollisions = ({ name = 'Untitled', fileExtension }: { name?: string; fileExtension: string }) => {
+    if (namesCount.has(name)) {
+      const count = namesCount.get(name)!;
+      namesCount.set(name, count + 1);
+      return `${name} (${count}).${fileExtension}`;
+    } else {
+      namesCount.set(name, 1);
+      return `${name}.${fileExtension}`;
+    }
+  };
+
   for (const child of echoFolder.objects) {
     if (child instanceof Folder) {
       const childDirectory = await directory.getDirectoryHandle(child.name, { create: true });
@@ -37,25 +48,29 @@ const saveFolderToDisk = async (echoFolder: Folder, directory: FileSystemDirecto
       continue;
     }
 
-    const fileHandle = await directory.getFileHandle(serializer.filename(child, 'Untitled'), { create: true });
+    const filename = fixNamesCollisions(serializer.filename(child));
+    const fileHandle = await directory.getFileHandle(filename, { create: true });
     const writable = await fileHandle.createWritable();
-    await writable.write(await serializer.serialize(child));
+    await writable.write((await serializer.serialize(child)) ?? '');
     await writable.close();
   }
 };
 interface TypedObjectSerializer {
-  filename(object: TypedObject, defaultFilename?: string): string;
+  filename(object: TypedObject): { name: string; fileExtension: string };
 
   serialize(object: TypedObject): Promise<string>;
   deserialize(text: string): Promise<TypedObject>;
 }
 
+// TODO(mykola): Factor out to respective plugins as providers.
 const serializers: Record<string, TypedObjectSerializer> = {
   [Document.schema.typename]: {
-    filename: (object: Document, defaultFilename: string) =>
-      `${object.title?.replace(/[/\\?%*:|"<>]/g, '-') ?? defaultFilename}.md`,
+    filename: (object: Document) => ({
+      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+      fileExtension: 'md',
+    }),
 
-    serialize: async (object: Document) => {
+    serialize: async (object: Document): Promise<string> => {
       // TODO(mykola): Factor out.
       const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
         const parts = cursor.split(':');
@@ -66,36 +81,86 @@ const serializers: Record<string, TypedObjectSerializer> = {
 
       const content = object.content;
       invariant(content instanceof AutomergeObject, 'Support only AutomergeObject.');
-
       let text: string = content[(content as TypedObject).field];
+
+      // Create frontmatter.
+      const metadata = {
+        title: object.title,
+        timestamp: new Date().toUTCString(),
+      };
+      const frontmatter = `---\n${Object.entries(metadata)
+        .map(([key, val]) => `${key}: ${val}`)
+        .join('\n')}\n---`;
+
+      // Insert comments.
       const comments = object.comments;
+      const threadSerializer = serializers[Thread.schema.typename];
+      if (!threadSerializer || !comments || comments.length === 0) {
+        return `${frontmatter}\n${text}`;
+      }
       const doc = getRawDoc(content, [(content as TypedObject).field]);
       const convertor = cursorConverter(doc.handle, doc.path);
 
       const insertions: Record<number, string> = {};
-      let footnote = '';
-      comments.forEach((comment, index) => {
-        if (!comment.cursor) {
-          return;
+      let footnote = '---\n';
+      {
+        for (const [index, comment] of comments.entries()) {
+          if (!comment.cursor || !comment.thread) {
+            continue;
+          }
+          const range = getRangeFromCursor(convertor, comment.cursor);
+          if (!range) {
+            continue;
+          }
+          const pointer = `[^dxos.org/comment/${index}]`;
+          insertions[range.to] = (insertions[range.to] || '') + pointer;
+          footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;
         }
-        const range = getRangeFromCursor(convertor, comment.cursor);
-        if (!range) {
-          return;
-        }
-        insertions[range.to] = (insertions[range.to] || '') + `[^${index}]`;
-        footnote += plate`[^${index}]: ${comment.thread?.messages
-          .map((message) => message.blocks.map((block) => `${block.text}`).join(' - '))
-          .join('\n')}\n\n`;
-      });
+      }
 
       text = text.replace(/(?:)/g, (_, index) => insertions[index] || '');
-      text += `\n\n${footnote}`;
 
-      return text;
+      return `${frontmatter}\n\n${text}\n\n${footnote}`;
     },
 
     deserialize: async (text: string) => {
       return new Document({ content: new TextObject(text) });
+    },
+  },
+
+  [Thread.schema.typename]: {
+    filename: (object: Thread) => ({
+      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+      fileExtension: 'md',
+    }),
+
+    serialize: async (object: Thread): Promise<string> => {
+      return (
+        object.messages.map((message) => message.blocks.map((block) => `${block.text}`).join(' - ')).join(' | ') ?? ''
+      );
+    },
+
+    deserialize: async (text: string) => {
+      throw new Error('Not implemented.');
+    },
+  },
+
+  [Sketch.schema.typename]: {
+    filename: (object: Sketch) => ({
+      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
+      fileExtension: 'svg',
+    }),
+
+    serialize: async (object: Sketch): Promise<string> => {
+      invariant(object.data instanceof AutomergeObject, 'Support only AutomergeObject.');
+      console.log('Sketch', object.data);
+      const text: string = object.data[(object.data as TypedObject).field];
+
+      return text ?? '';
+    },
+
+    deserialize: async (text: string) => {
+      throw new Error('Not implemented.');
     },
   },
 };
