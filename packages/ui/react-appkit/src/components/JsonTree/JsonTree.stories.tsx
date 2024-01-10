@@ -11,6 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { JsonTree } from './JsonTree';
 
 export default {
+  title: 'react-appkit/JsonTree',
   component: JsonTree,
   decorators: [withTheme],
 };

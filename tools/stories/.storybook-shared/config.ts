@@ -59,6 +59,9 @@ export const config = (
             overlay: false,
           },
         },
+        worker: {
+          format: 'es',
+        },
         plugins: [
           topLevelAwait(),
           ThemePlugin({

@@ -101,7 +101,7 @@ class Toolbox {
   // TODO(burdon): Merge options.
   constructor(options: ToolboxOptions = {}) {
     this.options = defaultsDeep({}, options, defaultOptions);
-    this.rootDir = execSync('git rev-parse --show-toplevel').toString().trim();
+    this.rootDir = process.env.DX_BUILD_ROOT_DIR ?? execSync('git rev-parse --show-toplevel').toString().trim();
   }
 
   /**
@@ -297,12 +297,15 @@ class Toolbox {
 
         // Get refs.
         const { dependencies = {}, devDependencies = {}, peerDependencies = {} } = projectPackage!;
-        const deps = [
-          ...Object.entries(dependencies),
-          ...Object.entries(devDependencies),
-          ...Object.entries(peerDependencies),
-        ].filter(([_, value]) => value === 'workspace:*');
+        const depsMap = new Map(
+          [
+            ...Object.entries(dependencies),
+            ...Object.entries(devDependencies),
+            ...Object.entries(peerDependencies),
+          ].filter(([_, value]) => value === 'workspace:*'),
+        );
 
+        const deps = Array.from(depsMap.entries());
         tsConfigJson.references = deps.map(([dependencyName]) => {
           const dependency = this._getProjectByPackageName(dependencyName)!;
           const path = relative(project.path, dependency.path);

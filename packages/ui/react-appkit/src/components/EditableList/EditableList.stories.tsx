@@ -19,6 +19,7 @@ import { arrayMove } from '../../util';
 import { ThemeProvider } from '../ThemeProvider';
 
 export default {
+  title: 'react-appkit/EditableList',
   component: EditableList,
   decorators: [withTheme],
 } as any;

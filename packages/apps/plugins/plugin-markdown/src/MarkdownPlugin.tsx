@@ -5,46 +5,45 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, type Ref, useEffect, useMemo } from 'react';
+import React, { type MutableRefObject, type RefCallback, type Ref } from 'react';
 
-import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { ThreadAction } from '@braneframe/plugin-thread';
 import { Document as DocumentType, Folder } from '@braneframe/types';
 import {
-  type Plugin,
-  type PluginDefinition,
-  type IntentPluginProvides,
   isObject,
   parseIntentPlugin,
   resolvePlugin,
   LayoutAction,
+  type IntentPluginProvides,
+  type Plugin,
+  type PluginDefinition,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type Space, SpaceProxy, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { type CommentRange, type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
+import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { type TextEditorRef } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
-  EditorCard,
+  DocumentCard,
+  type DocumentItemProps,
+  DocumentMain,
+  DocumentSection,
   EditorMain,
-  EditorMainEmbedded,
-  EditorSection,
-  MarkdownMainEmpty,
+  EmbeddedLayout,
+  MainLayout,
   MarkdownSettings,
-  StandaloneMenu,
 } from './components';
-import { getExtensions } from './components/extensions';
+import { getExtensions } from './extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  MarkdownAction,
+  type ExtensionsProvider,
   type MarkdownPluginProvides,
-  type MarkdownProperties,
   type MarkdownSettingsProps,
+  type OnChange,
+  MarkdownAction,
 } from './types';
-import { getFallbackTitle, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
+import { getFallbackTitle, isMarkdown, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -55,119 +54,43 @@ export const isDocument = (data: unknown): data is DocumentType =>
 
 export type MarkdownPluginState = {
   activeComment?: string;
-  onChange: NonNullable<(text: string) => void>[];
+  extensions: NonNullable<ExtensionsProvider>[];
+  onChange: NonNullable<OnChange>[];
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
-  const state = deepSignal<MarkdownPluginState>({ onChange: [] });
+  const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
 
-  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-
-  const _getExtensions = (space?: Space, document?: DocumentType) => {
-    // Update external plugins.
-    const handleChange = (text: string) => {
-      state.onChange.forEach((onChange) => onChange(text));
-    };
-
-    return getExtensions({
+  const getCustomExtensions = (document?: DocumentType) => {
+    // Configure extensions.
+    const extensions = getExtensions({
+      document,
       debug: settings.values.debug,
       experimental: settings.values.experimental,
-      space,
-      document,
       dispatch: intentPlugin?.provides.intent.dispatch,
-      onChange: handleChange,
+      onChange: (text: string) => {
+        state.onChange.forEach((onChange) => onChange(text));
+      },
     });
-  };
 
-  // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc.
-  //  Should these components be inline or external?
-  const EditorMainStandalone: FC<{
-    model: EditorModel;
-    properties: MarkdownProperties;
-  }> = ({ model, properties }) => {
-    return (
-      <EditorMain
-        model={model}
-        properties={properties}
-        layout='standalone'
-        editorMode={settings.values.editorMode}
-        editorRefCb={pluginRefCallback}
-      />
-    );
-  };
-
-  const MarkdownMain: FC<{ document: DocumentType; readonly: boolean }> = ({ document, readonly }) => {
-    const identity = useIdentity();
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document.content });
-    const comments = useMemo<CommentRange[]>(() => {
-      return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
-    }, [document.comments]);
-    useEffect(() => {
-      void intentPlugin?.provides.intent.dispatch({
-        action: ThreadAction.SELECT,
-      });
-    }, [document.id]);
-
-    if (!model) {
-      return null;
+    // Add extensions from other plugins.
+    for (const provider of state.extensions) {
+      const provided = typeof provider === 'function' ? provider() : provider;
+      extensions.push(...provided);
     }
 
-    return (
-      <EditorMain
-        editorRefCb={pluginRefCallback}
-        properties={document}
-        layout='standalone'
-        model={model}
-        readonly={readonly}
-        comments={comments}
-        editorMode={settings.values.editorMode}
-        extensions={_getExtensions(space, document)}
-      />
-    );
+    return extensions;
   };
 
-  const StandaloneMainMenu: FC<{ content: DocumentType }> = ({ content: document }) => {
-    const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
-
-    if (!model) {
-      return null;
-    }
-
-    return <StandaloneMenu properties={document} model={model} editorRef={pluginMutableRef} />;
-  };
-
-  const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
-    const identity = useIdentity();
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
-    useEffect(() => {
-      void intentPlugin?.provides.intent.dispatch({
-        action: ThreadAction.SELECT,
-      });
-    }, [document.id]);
-
-    if (!model) {
-      return null;
-    }
-
-    return (
-      <EditorSection
-        editorMode={settings.values.editorMode}
-        model={model}
-        extensions={_getExtensions(space, document)}
-      />
-    );
-  };
+  // TODO(thure): this needs to be refactored into a graph node action.
+  // const _DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
 
   return {
     meta,
@@ -180,8 +103,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
       markdownPlugins(plugins).forEach((plugin) => {
-        if (plugin.provides.markdown.onChange) {
-          state.onChange.push(plugin.provides.markdown.onChange);
+        const { extensions, onChange } = plugin.provides.markdown;
+        if (extensions) {
+          state.extensions.push(extensions);
+        }
+        if (onChange) {
+          state.onChange.push(onChange);
         }
       });
     },
@@ -199,8 +126,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       graph: {
         builder: ({ parent, plugins }) => {
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
-            const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
               id: `${MARKDOWN_PLUGIN}/create`,
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
@@ -267,67 +192,76 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
-          // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {
               if (isDocument(data.active)) {
                 const readonly = settings.values.viewMode[data.active.id];
-                return <MarkdownMain document={data.active} readonly={readonly} />;
+                return (
+                  <DocumentMain
+                    document={data.active}
+                    readonly={readonly}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.active)}
+                    editorRefCb={pluginRefCallback}
+                  />
+                );
               } else if (
-                // TODO(burdon): Why 'composer' property?
-                'composer' in data &&
-                isMarkdown(data.composer) &&
+                'model' in data &&
+                isMarkdown(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                if ('view' in data && data.view === 'embedded') {
-                  return <EditorMainEmbedded model={data.composer} properties={data.properties} />;
-                } else {
-                  return <EditorMainStandalone model={data.composer} properties={data.properties} />;
-                }
-              } else if (
-                // TODO(burdon): Why 'composer' property?
-                'composer' in data &&
-                isMarkdownPlaceholder(data.composer) &&
-                'properties' in data &&
-                isMarkdownProperties(data.properties)
-              ) {
-                // TODO(burdon): Remove?
-                const content = data.composer.content?.toString();
-                return <MarkdownMainEmpty content={content} properties={data.properties} />;
-              }
-              break;
-            }
+                // TODO(burdon): Normalize with ECHO path above?
+                const main = (
+                  <EditorMain
+                    model={data.model}
+                    editorMode={settings.values.editorMode}
+                    extensions={getExtensions({
+                      onChange: (text: string) => {
+                        state.onChange.forEach((onChange) => onChange(text));
+                      },
+                    })}
+                    editorRefCb={pluginRefCallback}
+                  />
+                );
 
-            case 'heading': {
-              if (isGraphNode(data.activeNode) && isDocument(data.activeNode.data)) {
-                return <StandaloneMainMenu content={data.activeNode.data} />;
+                if ('view' in data && data.view === 'embedded') {
+                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                } else {
+                  return <MainLayout>{main}</MainLayout>;
+                }
               }
               break;
             }
 
             case 'section': {
-              if (isDocument(data.object) && isMarkdown(data.object.content)) {
-                return <MarkdownSection content={data.object} />;
+              if (isDocument(data.object)) {
+                return (
+                  <DocumentSection
+                    document={data.object}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.object)}
+                  />
+                );
               }
               break;
             }
 
             case 'card': {
               if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
-                // TODO(burdon): Type.
+                // isTileComponentProps is a type guard for these props.
+                // `props` will not pass this guard without transforming `data` into `item`.
                 const cardProps = {
                   ...props,
                   item: {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                    extensions: _getExtensions(data.space as Space, data.content.object),
-                  },
+                  } as DocumentItemProps,
                 };
 
                 return isTileComponentProps(cardProps) ? (
-                  <EditorCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
+                  <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
                 ) : null;
               }
               break;

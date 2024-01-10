@@ -39,16 +39,10 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/app-framework"
-    },
-    {
       "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/storybook-utils"
-    },
-    {
-      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-layout"

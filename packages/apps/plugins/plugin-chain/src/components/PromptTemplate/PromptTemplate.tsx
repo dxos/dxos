@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
-import { TextObject } from '@dxos/react-client/echo';
+import { TextObject, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
@@ -46,7 +46,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: prompt.source });
 
-  const text = prompt.source?.text ?? '';
+  const text = getTextContent(prompt.source) ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -122,7 +122,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
           />
         </Section>
 
-        {prompt.inputs?.length && (
+        {prompt.inputs?.length > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>

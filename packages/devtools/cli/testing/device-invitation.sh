@@ -2,9 +2,9 @@
 
 export DX_CONFIG=./config/config-local.yml
 
-dx=./bin/run
+export PATH=$PATH:./bin
 
 pnpm -w nx build cli
 
 # Device join
-$dx halo join
+dx halo join

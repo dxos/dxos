@@ -5,7 +5,7 @@
 import { PaperPlaneRight } from '@phosphor-icons/react';
 import React, { forwardRef, type KeyboardEventHandler, useState } from 'react';
 
-import { TextObject } from '@dxos/react-client/echo';
+import { setTextContent, TextObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { listener, TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
@@ -27,7 +27,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
     const handleMessage = () => {
       const value = text.content!.toString();
       if (value.length && onMessage(value) !== false) {
-        text.content?.delete(0, text.content.length);
+        setTextContent(text, '');
       }
     };
 

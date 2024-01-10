@@ -175,7 +175,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   main: { data: { active: layout.activeNode.data } },
                   presence: { data: { object: layout.activeNode.data } },
                   status: { data: { active: layout.activeNode.data } },
-                  heading: { data: { activeNode: layout.activeNode } },
+                  'navbar-start': { data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId } },
                   documentTitle: { data: { activeNode: layout.activeNode } },
                 },
               }

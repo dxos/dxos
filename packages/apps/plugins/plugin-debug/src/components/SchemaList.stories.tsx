@@ -28,6 +28,7 @@ const Story: FC = () => {
 };
 
 export default {
+  title: 'plugin-debug/SchemaList',
   component: SchemaList,
   render: () => <ClientRepeater Component={Story} createSpace />,
   parameters: {

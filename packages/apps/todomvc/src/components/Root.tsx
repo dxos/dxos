@@ -16,6 +16,7 @@ export const Root = () => {
   return (
     <ClientProvider
       config={getConfig}
+      shell='./shell.html'
       onInitialized={async (client) => {
         client.addSchema(types);
 
