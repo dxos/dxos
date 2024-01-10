@@ -269,7 +269,7 @@ export const SpacePlugin = ({
               ) {
                 return <PopoverRenameObject object={data.subject} />;
               } else if (
-                data.component === 'dxos.org/plugin/sipace/RemoveObjectPopover' &&
+                data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
                 isTypedObject(data.subject)
               ) {
                 return <PopoverRemoveObject object={data.subject} />;

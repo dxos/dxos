@@ -18,10 +18,10 @@ export const PopoverRemoveObject = ({ object }: { object: TypedObject }) => {
   }, [object]);
 
   return (
-    <div role='none' className='p-1 flex'>
+    <div role='none' className='p-1'>
       <div role='none'>
         <Input.Root>
-          <Input.Description>Are you sure you want to delete this item?</Input.Description>
+          <Input.DescriptionAndValidation>Delete this item?</Input.DescriptionAndValidation>
         </Input.Root>
       </div>
       <Popover.Close asChild>
