@@ -12,7 +12,7 @@ import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
-import { keySymbols } from '@dxos/keyboard';
+import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -189,7 +189,7 @@ const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
       <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
         <div>Create comment</div>
         <div className='flex gap-1'>
-          {keySymbols(shortcut).map((char) => (
+          {keySymbols(parseShortcut(shortcut)).map((char) => (
             <Key key={char} char={char} />
           ))}
         </div>
