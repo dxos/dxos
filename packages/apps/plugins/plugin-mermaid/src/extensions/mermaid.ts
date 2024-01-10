@@ -48,7 +48,6 @@ const update = (state: EditorState, options: MermaidOptions) => {
                 node.from,
                 node.to,
                 Decoration.replace({
-                  block: true,
                   widget: new MermaidWidget(content),
                 }),
               );
@@ -106,6 +105,7 @@ class MermaidWidget extends WidgetType {
         } else {
           wrapper.innerHTML = this._svg ?? '';
         }
+        view.requestMeasure();
       });
     }
 
@@ -127,15 +127,19 @@ class MermaidWidget extends WidgetType {
       this._svg = undefined;
     }
   }
+
+  override ignoreEvent(e: Event) {
+    return !/^mouse/.test(e.type);
+  }
 }
 
 const styles = EditorView.baseTheme({
   '& .cm-mermaid': {
-    display: 'flex',
+    display: 'inline-flex',
     justifyContent: 'center',
   },
   '& .cm-mermaid-error': {
-    display: 'block',
+    display: 'inline-block',
     color: getToken('extend.colors.red.500'),
   },
 });
