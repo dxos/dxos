@@ -8,6 +8,7 @@ export * from './EmptySpace';
 export * from './EmptyTree';
 export * from './FolderMain';
 export * from './MissingObject';
+export * from './PopoverRemoveObject';
 export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
 export * from './SpaceMain';
