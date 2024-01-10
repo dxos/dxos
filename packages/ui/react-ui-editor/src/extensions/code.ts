@@ -55,7 +55,7 @@ const getLineRange = (lines: BlockInfo[], from: number, to: number) => {
 export const code = () => {
   const getDecorations = (view: EditorView) => {
     const decorations: Range<Decoration>[] = [];
-    if (view.state.readOnly) {
+    if (!view.hasFocus || view.state.readOnly) {
       const text = view.state.doc.sliceString(0);
       const matches = text.matchAll(CODE_REGEX);
       const blocks = view.viewportLineBlocks;
@@ -78,13 +78,21 @@ export const code = () => {
   return [
     ViewPlugin.fromClass(
       class {
+        hasFocus = false;
         decorations: DecorationSet;
         constructor(view: EditorView) {
           this.decorations = getDecorations(view);
         }
 
         update(update: ViewUpdate) {
-          if (update.docChanged || update.viewportChanged) {
+          if (
+            // TODO(burdon): Generalize for other extensions.
+            this.hasFocus !== update.view.hasFocus ||
+            update.startState.readOnly !== update.view.state.readOnly ||
+            update.docChanged ||
+            update.viewportChanged
+          ) {
+            this.hasFocus = update.view.hasFocus;
             this.decorations = getDecorations(update.view);
           }
         }
