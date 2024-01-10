@@ -62,7 +62,7 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
   );
 
 export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
-  mx('fill-neutral-50', ...etc);
+  mx('fill-neutral-600 dark:fill-neutral-300', ...etc);
 
 export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
   mx('inline-flex items-center', ...etc);

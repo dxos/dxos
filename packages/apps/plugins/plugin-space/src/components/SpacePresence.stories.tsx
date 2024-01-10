@@ -7,11 +7,11 @@ import React from 'react';
 import '@dxosTheme';
 
 import { PublicKey } from '@dxos/keys';
-import { type SpaceMember } from '@dxos/react-client/echo';
+import { SpaceMember } from '@dxos/react-client/echo';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { FullPresence, type MemberPresenceProps, SmallPresence } from './SpacePresence';
+import { FullPresence, type MemberPresenceProps, SmallPresence, type Member } from './SpacePresence';
 import translations from '../translations';
 
 export default {
@@ -21,12 +21,14 @@ export default {
   actions: { argTypesRegex: '^on.*' },
 };
 
-const nViewers = (n: number, presence: SpaceMember.PresenceState = 1): SpaceMember[] =>
+const nViewers = (n: number, match = true): Member[] =>
   Array.from({ length: n }, () => ({
     identity: {
       identityKey: PublicKey.random(),
     },
-    presence,
+    presence: SpaceMember.PresenceState.ONLINE,
+    match,
+    lastSeen: Date.now(),
   }));
 
 export const Full = (props: MemberPresenceProps) => {
@@ -47,10 +49,16 @@ export const Full = (props: MemberPresenceProps) => {
           <FullPresence members={nViewers(3)} {...p} />
         </div>
         <div className='p-3'>
+          <FullPresence members={nViewers(3, false)} {...p} />
+        </div>
+        <div className='p-3'>
           <FullPresence members={nViewers(4)} {...p} />
         </div>
         <div className='p-3'>
           <FullPresence members={nViewers(5)} {...p} />
+        </div>
+        <div className='p-3'>
+          <FullPresence members={nViewers(5, false)} {...p} />
         </div>
         <div className='p-3'>
           <FullPresence members={nViewers(10)} {...p} />
