@@ -13,6 +13,7 @@ import {
   type CompletionContext,
   type CompletionResult,
 } from '@codemirror/autocomplete';
+import { markdownLanguage } from '@codemirror/lang-markdown';
 import { keymap } from '@codemirror/view';
 
 export type AutocompleteResult = Completion;
@@ -28,32 +29,32 @@ export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
   return [
     // https://codemirror.net/docs/ref/#view.keymap
     // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
+    // TODO(burdon): Set custom keymap.
     keymap.of(completionKeymap),
 
     // https://codemirror.net/examples/autocompletion
     // https://codemirror.net/docs/ref/#autocomplete.autocompletion
     autocompletion({
-      // TODO(burdon): Set custom keymap.
-      // defaultKeymap: false,
+      defaultKeymap: false,
 
       // Don't start unless key press.
       activateOnTyping: false,
+    }),
 
-      // TODO(burdon): Option to create new page?
-      // TODO(burdon): Optional decoration via addToOptions
-      override: [
-        (context: CompletionContext): CompletionResult | null => {
-          const match = context.matchBefore(/\w*/);
-          if (!match || (match.from === match.to && !context.explicit)) {
-            return null;
-          }
+    // TODO(burdon): Option to create new page?
+    // TODO(burdon): Optional decoration via addToOptions
+    markdownLanguage.data.of({
+      autocomplete: (context: CompletionContext): CompletionResult | null => {
+        const match = context.matchBefore(/\w*/);
+        if (!match || (match.from === match.to && !context.explicit)) {
+          return null;
+        }
 
-          return {
-            from: match.from,
-            options: onSearch(match.text.toLowerCase()),
-          };
-        },
-      ],
+        return {
+          from: match.from,
+          options: onSearch(match.text.toLowerCase()),
+        };
+      },
     }),
   ];
 };
