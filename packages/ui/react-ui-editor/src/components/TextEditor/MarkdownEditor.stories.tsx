@@ -12,6 +12,7 @@ import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
+import { keySymbols } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -182,15 +183,15 @@ const Key: FC<{ char: string }> = ({ char }) => (
   </span>
 );
 
-const onCommentsHover: CommentsOptions['onHover'] = (el) => {
+const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   createRoot(el).render(
     <StrictMode>
       <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
         <div>Create comment</div>
-        {/* TODO(burdon): Unify shortcuts. */}
         <div className='flex gap-1'>
-          <Key char='⌘' />
-          <Key char="'" />
+          {keySymbols(shortcut).map((char) => (
+            <Key key={char} char={char} />
+          ))}
         </div>
       </div>
     </StrictMode>,
