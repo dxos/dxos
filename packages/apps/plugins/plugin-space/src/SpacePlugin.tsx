@@ -40,6 +40,7 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
+  PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
   SpaceMain,
@@ -267,6 +268,11 @@ export const SpacePlugin = ({
                 isTypedObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
+              } else if (
+                data.component === 'dxos.org/plugin/sipace/RemoveObjectPopover' &&
+                isTypedObject(data.subject)
+              ) {
+                return <PopoverRemoveObject object={data.subject} />;
               } else {
                 return null;
               }
@@ -562,37 +568,47 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.REMOVE_OBJECT: {
-              if (!(intent.data.object instanceof TypedObject)) {
-                return;
-              }
-
-              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
-                await intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.ACTIVATE,
-                  data: { id: undefined },
-                });
-              }
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_POPOVER,
+                data: {
+                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
+                  component: 'dxos.org/plugin/space/RemoveObjectPopover',
+                  subject: intent.data.object,
+                  caller: intent.data.caller,
+                },
+              });
+              // if (!(intent.data.object instanceof TypedObject)) {
+              //   return;
+              // }
 
-              if (intent.data.folder instanceof Folder) {
-                const index = intent.data.folder.objects.indexOf(intent.data.object);
-                index !== -1 && intent.data.folder.objects.splice(index, 1);
-              }
+              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+              // const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              // if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
+              //   await intentPlugin?.provides.intent.dispatch({
+              //     action: LayoutAction.ACTIVATE,
+              //     data: { id: undefined },
+              //   });
+              // }
 
-              const space = getSpaceForObject(intent.data.object);
+              // if (intent.data.folder instanceof Folder) {
+              //   const index = intent.data.folder.objects.indexOf(intent.data.object);
+              //   index !== -1 && intent.data.folder.objects.splice(index, 1);
+              // }
 
-              const folder = space?.properties[Folder.schema.typename];
-              if (folder instanceof Folder) {
-                const index = folder.objects.indexOf(intent.data.object);
-                index !== -1 && folder.objects.splice(index, 1);
-              }
+              // const space = getSpaceForObject(intent.data.object);
 
-              if (space) {
-                space.db.remove(intent.data.object);
-                return true;
-              }
-              break;
+              // const folder = space?.properties[Folder.schema.typename];
+              // if (folder instanceof Folder) {
+              //   const index = folder.objects.indexOf(intent.data.object);
+              //   index !== -1 && folder.objects.splice(index, 1);
+              // }
+
+              // if (space) {
+              //   space.db.remove(intent.data.object);
+              //   return true;
+              // }
+              // break;
             }
 
             case SpaceAction.RENAME_OBJECT: {
