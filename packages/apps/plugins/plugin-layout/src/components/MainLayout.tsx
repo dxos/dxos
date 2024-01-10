@@ -82,11 +82,9 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
                   <MenuIcon weight='light' className={getSize(4)} />
                 </Button>
 
-                <Surface role='heading' limit={2} />
+                <Surface role='navbar-start' />
                 <div role='none' className='grow' />
-
-                {/* TODO(burdon): Too specific? status? contentinfo? */}
-                <Surface role='presence' limit={1} />
+                <Surface role='navbar-end' direction='inline-reverse' />
 
                 {complementarySidebarOpen !== null && showComplementarySidebar && (
                   <Button

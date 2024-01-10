@@ -101,14 +101,17 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'document-title':
               return <TreeViewDocumentTitle activeNode={data.activeNode as Node | undefined} />;
 
-            case 'heading':
+            case 'navbar-start':
               if (
                 data.activeNode &&
                 typeof data.activeNode === 'object' &&
                 'label' in data.activeNode &&
                 'parent' in data.activeNode
               ) {
-                return <TreeItemMainHeading activeNode={data.activeNode as Node} />;
+                return {
+                  node: <TreeItemMainHeading activeNode={data.activeNode as Node} />,
+                  disposition: 'hoist',
+                };
               }
               break;
           }

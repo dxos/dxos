@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import { Minus, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { ObjectPresence } from '@braneframe/plugin-space';
+import { MemberPresence } from '@braneframe/plugin-space';
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { GraphBuilder, isGraphNode, type ActionArg } from '@dxos/app-graph';
 import { buildGraph } from '@dxos/app-graph/testing';
@@ -99,7 +99,7 @@ export const Demo = {
                 // @ts-ignore
                 presence: ({ data: { object } }: { data: { object: any } }) => {
                   return (
-                    <ObjectPresence size={2} viewers={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
+                    <MemberPresence size={2} viewers={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
                   );
                 },
               },

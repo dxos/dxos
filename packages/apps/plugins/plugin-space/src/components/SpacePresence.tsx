@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Users } from '@phosphor-icons/react';
+import { CaretDown } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type TypedObject, getSpaceForObject, useSpace } from '@dxos/react-client/echo';
+import { usePlugin } from '@dxos/app-framework';
+import { generateName } from '@dxos/display-name';
+import { type PublicKey, useClient } from '@dxos/react-client';
+import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -18,102 +20,171 @@ import {
   Tooltip,
   useDensityContext,
   useTranslation,
+  DropdownMenu,
 } from '@dxos/react-ui';
-import { getColorForValue, getSize, mx } from '@dxos/react-ui-theme';
+import { getColorForValue, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../meta';
-import { SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
+import type { SpacePluginProvides } from '../types';
 
-export const SpacePresence = ({ object }: { object: TypedObject }) => {
-  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
-  const intentPlugin = useResolvePlugin(parseIntentPlugin);
+export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; spaceKey?: PublicKey }) => {
   const density = useDensityContext();
-  const defaultSpace = useSpace();
+  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  const client = useClient();
   const identity = useIdentity();
+  const defaultSpace = useSpace();
+  const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
+  const spaceMembers = useMembers(space?.key);
 
-  if (!identity || !spacePlugin || !intentPlugin) {
+  if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
     return null;
   }
 
-  const space = getSpaceForObject(object);
+  // TODO(wittjosiah): This isn't working because of issue w/ deepsignal state.
+  //  Assigning plugin to deepsignal seems to create a new instance of objects in provides and breaks the reference.
+  const viewers = new Set(
+    spacePlugin.provides.space.viewers
+      .filter((viewer) => {
+        return (
+          space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000
+        );
+      })
+      .map((viewer) => viewer.identityKey),
+  );
 
-  const handleShare = () => {
-    void intentPlugin!.provides.intent.dispatch({
-      plugin: SPACE_PLUGIN,
-      action: SpaceAction.SHARE,
-      data: { spaceKey: space!.key.toHex() },
+  const members = spaceMembers
+    .map((member) => ({
+      ...member,
+      match: viewers.has(member.identity.identityKey),
+    }))
+    .toSorted((a, b) => {
+      if (a.presence && !b.presence) {
+        return -1;
+      }
+      if (!a.presence && b.presence) {
+        return 1;
+      }
+      if (a.match && !b.match) {
+        return -1;
+      }
+      if (!a.match && b.match) {
+        return 1;
+      }
+      return 0;
     });
-  };
 
-  if (!space || defaultSpace?.key.equals(space.key)) {
-    return null;
-  }
-
-  const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
-    return space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000;
-  });
-
-  return (
-    <ObjectPresence
-      size={density === 'fine' ? 2 : 4}
-      classNames={density === 'fine' ? 'is-6' : 'pli-2.5'}
-      onShareClick={handleShare}
-      viewers={viewers}
-    />
+  return density === 'fine' ? (
+    <SmallPresence members={members.filter((member) => member.match)} />
+  ) : (
+    <FullPresence members={members} />
   );
 };
 
-export type ObjectPresenceProps = ThemedClassName<{
+export type Member = SpaceMember & {
+  /**
+   * True if the member is currently viewing the specified object.
+   */
+  match?: boolean;
+};
+
+export type MemberPresenceProps = ThemedClassName<{
   size?: Size;
-  viewers?: ObjectViewer[];
+  members?: Member[];
   showCount?: boolean;
-  onShareClick?: () => void;
 }>;
 
-export const ObjectPresence = (props: ObjectPresenceProps) => {
-  const {
-    onShareClick,
-    viewers = [],
-    size = 4,
-    showCount = !props?.size || (props.size !== 'px' && props.size > 4),
-    classNames,
-  } = props;
+export const FullPresence = (props: MemberPresenceProps) => {
+  const { members = [], size = 8 } = props;
+  return (
+    <AvatarGroup.Root size={size}>
+      {members.slice(0, 3).map((member, i) => {
+        const memberHex = member.identity.identityKey.toHex();
+        const status = member.match ? 'warning' : member.presence === 1 ? 'active' : 'inactive';
+        const name = member.identity.profile?.displayName ?? generateName(member.identity.identityKey.toHex());
+        return (
+          <Tooltip.Root key={memberHex}>
+            <Tooltip.Trigger>
+              <AvatarGroupItem.Root color={getColorForValue({ value: memberHex, type: 'color' })} status={status}>
+                <Avatar.Frame style={{ zIndex: members.length - i }}>
+                  <Avatar.Fallback text={name[0]} />
+                </Avatar.Frame>
+              </AvatarGroupItem.Root>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side='bottom' classNames='z-[70]'>
+                <span>{name}</span>
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        );
+      })}
+
+      <AvatarGroup.Label classNames='text-xs font-semibold'>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <Button variant='ghost' classNames='pli-1'>
+              {members.length > 3 && <span className='me-1'>{members.length}</span>}
+              <CaretDown />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content classNames='z-[70]'>
+              <DropdownMenu.Arrow />
+              <DropdownMenu.Viewport>
+                {members.map((member) => {
+                  const viewerHex = member.identity.identityKey.toHex();
+                  const status = member.match ? 'warning' : member.presence === 1 ? 'active' : 'inactive';
+                  const name =
+                    member.identity.profile?.displayName ?? generateName(member.identity.identityKey.toHex());
+                  const description = member.presence === 1 ? 'Online' : 'Offline';
+                  return (
+                    <DropdownMenu.Item key={member.identity.identityKey.toHex()}>
+                      <div className='flex flex-row gap-3 align-middle items-center'>
+                        <Avatar.Root color={getColorForValue({ value: viewerHex, type: 'color' })} status={status}>
+                          <Avatar.Frame>
+                            <Avatar.Fallback text={name[0]} />
+                          </Avatar.Frame>
+                          <div>
+                            <Avatar.Label classNames='block'>{name}</Avatar.Label>
+                            <Avatar.Description classNames='block'>{description}</Avatar.Description>
+                          </div>
+                        </Avatar.Root>
+                      </div>
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </AvatarGroup.Label>
+    </AvatarGroup.Root>
+  );
+};
+
+export const SmallPresence = (props: MemberPresenceProps) => {
+  const { members = [], size = 2, classNames } = props;
   const { t } = useTranslation(SPACE_PLUGIN);
-  const density = useDensityContext();
-  return density === 'fine' && viewers.length === 0 ? (
+  return members.length === 0 ? (
     <div role='none' className={mx(classNames)} />
   ) : (
     <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <Button variant='ghost' classNames={['pli-0', classNames]} onClick={onShareClick}>
-          {onShareClick && viewers.length === 0 && (
-            <>
-              <Users className={getSize(4)} />
-              <span className='sr-only'>{t('share space')}</span>
-            </>
-          )}
-          {viewers.length > 0 && (
-            <AvatarGroup.Root size={size} classNames={size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2'}>
-              {viewers.length > 3 && showCount && (
-                <AvatarGroup.Label classNames='text-xs font-semibold'>{viewers.length}</AvatarGroup.Label>
-              )}
-              {viewers.slice(0, 3).map((viewer, i) => {
-                const viewerHex = viewer.identityKey.toHex();
-                return (
-                  <AvatarGroupItem.Root key={viewerHex} color={getColorForValue({ value: viewerHex, type: 'color' })}>
-                    <Avatar.Frame style={{ zIndex: viewers.length - i }}>
-                      <Avatar.Fallback href={viewerHex} />
-                    </Avatar.Frame>
-                  </AvatarGroupItem.Root>
-                );
-              })}
-            </AvatarGroup.Root>
-          )}
-        </Button>
+      <Tooltip.Trigger>
+        <AvatarGroup.Root size={size} classNames={size !== 'px' && size > 3 ? 'm-2 mie-4' : 'm-1 mie-2'}>
+          {members.slice(0, 3).map((viewer, i) => {
+            const viewerHex = viewer.identity.identityKey.toHex();
+            return (
+              <AvatarGroupItem.Root key={viewerHex} color={getColorForValue({ value: viewerHex, type: 'color' })}>
+                <Avatar.Frame style={{ zIndex: members.length - i }} />
+              </AvatarGroupItem.Root>
+            );
+          })}
+        </AvatarGroup.Root>
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>
-          <span>{viewers.length > 0 ? t('presence label', { count: viewers.length }) : t('share space')}</span>
+          <span>{t('presence label', { count: members.length })}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>

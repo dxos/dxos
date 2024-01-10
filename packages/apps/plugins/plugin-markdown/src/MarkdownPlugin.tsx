@@ -224,9 +224,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               break;
             }
 
-            case 'heading': {
+            case 'navbar-start': {
               if (isGraphNode(data.activeNode) && isDocument(data.activeNode.data)) {
-                return <DocumentHeadingMenu document={data.activeNode.data} pluginMutableRef={pluginMutableRef} />;
+                return {
+                  node: <DocumentHeadingMenu document={data.activeNode.data} pluginMutableRef={pluginMutableRef} />,
+                  disposition: 'hoist',
+                };
               }
               break;
             }
