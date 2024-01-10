@@ -5,6 +5,7 @@
 import {
   ClockCounterClockwise,
   Download,
+  FloppyDisk,
   FolderPlus,
   PencilSimpleLine,
   Planet,
@@ -221,6 +222,13 @@ export const spaceToGraphNode = ({
           label: ['close space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <X {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+        },
+        {
+          id: 'save-space-to-disk',
+          label: ['save space to disk label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <FloppyDisk {...props} />,
+          keyBinding: 'shift+meta+s',
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
