@@ -6,6 +6,7 @@ import { type UnsubscribeCallback } from '@dxos/async';
 
 import { AbstractEchoObject } from './object';
 import { type EchoObject, subscribe } from './types';
+import { AutomergeObject } from '../automerge';
 
 export type Selection = any[];
 
@@ -40,7 +41,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
 
   const handle = {
     update: (selection: Selection) => {
-      const newSelected = new Set(selection.filter((item): item is EchoObject => item instanceof AbstractEchoObject));
+      const newSelected = new Set(selection.filter((item): item is EchoObject => item instanceof AbstractEchoObject || item instanceof AutomergeObject));
       const removed = [...handle.selected].filter((item) => !newSelected.has(item));
       const added = [...newSelected].filter((item) => !handle.selected.has(item));
       handle.selected = newSelected;

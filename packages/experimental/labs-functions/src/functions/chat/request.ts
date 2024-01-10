@@ -112,7 +112,7 @@ const createSequenceFromPrompt = (resources: ChainResources, prompt: ChainType.P
 
   return RunnableSequence.from([
     inputs,
-    PromptTemplate.fromTemplate(prompt.source.text),
+    PromptTemplate.fromTemplate(getTextContent(prompt.source)),
     resources.chat,
     new StringOutputParser(),
   ]);
