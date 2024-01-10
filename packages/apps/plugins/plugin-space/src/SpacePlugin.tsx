@@ -588,7 +588,6 @@ export const SpacePlugin = ({
                   caller: intent.data.caller,
                 },
               });
-              // break;
             }
 
             case SpaceAction.RENAME_OBJECT: {

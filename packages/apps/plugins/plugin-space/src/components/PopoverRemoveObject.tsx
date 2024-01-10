@@ -31,7 +31,7 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
       });
     }
 
-    // remove a folder
+    // remove object from folder it's in
     if (propsFolder instanceof Folder) {
       const index = propsFolder.objects.indexOf(object);
       index !== -1 && propsFolder.objects.splice(index, 1);
@@ -39,14 +39,14 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
 
     const space = getSpaceForObject(object);
 
-    // remove the folder from the graph?
+    // remove the folder from the root folder - may be handled by previous condition
     const folder = space?.properties[Folder.schema.typename];
     if (folder instanceof Folder) {
       const index = folder.objects.indexOf(object);
       index !== -1 && folder.objects.splice(index, 1);
     }
 
-    // remove the object
+    // remove the object from the space
     if (space) {
       space.db.remove(object);
       return true;
@@ -55,7 +55,7 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
 
   return (
     <div role='none' className='p-1'>
-      <p className='mlb-1 mli-2'>Delete this item?</p>
+      <p className='mlb-1 mli-2'>{t('delete object description', { ns: 'os' })}</p>
       <Popover.Close asChild>
         <Button ref={deleteButton} classNames='is-full' onClick={handleDelete}>
           {t('delete label', { ns: 'os' })}
