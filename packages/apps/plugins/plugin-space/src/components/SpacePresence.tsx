@@ -102,14 +102,13 @@ export const FullPresence = (props: MemberPresenceProps) => {
     <AvatarGroup.Root size={size} classNames='mbs-2 mie-4'>
       {members.slice(0, 3).map((member, i) => {
         const memberHex = member.identity.identityKey.toHex();
-        const status = member.match ? 'active' : 'inactive';
+        const status = member.match ? 'current' : 'active';
         const name = member.identity.profile?.displayName ?? generateName(member.identity.identityKey.toHex());
         return (
           <Tooltip.Root key={memberHex}>
             <Tooltip.Trigger>
               <AvatarGroupItem.Root color={getColorForValue({ value: memberHex, type: 'color' })} status={status}>
                 <Avatar.Frame style={{ zIndex: members.length - i }} onClick={() => onMemberClick?.(member)}>
-                  {/* TODO(wittjosiah): Make text white. */}
                   <Avatar.Fallback text={name[0]} />
                 </Avatar.Frame>
               </AvatarGroupItem.Root>
@@ -127,7 +126,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
       {members.length > 3 && (
         <Tooltip.Root>
           <Tooltip.Trigger>
-            <AvatarGroupItem.Root color='#ddd' status='inactive'>
+            <AvatarGroupItem.Root color='#ccc' status='inactive'>
               <Avatar.Frame style={{ zIndex: members.length - 4 }} onClick={onMoreClick}>
                 {/* TODO(wittjosiah): Make text fit. */}
                 <Avatar.Fallback text={`+${members.length - 3}`} />
