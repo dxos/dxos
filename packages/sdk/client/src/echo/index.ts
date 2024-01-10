@@ -26,6 +26,7 @@ export {
   getRawDoc,
   isAutomergeObject,
   isDocAccessor,
+  getTextContent,
   setTextContent,
   type AutomergeTextCompat,
   type DocAccessor,

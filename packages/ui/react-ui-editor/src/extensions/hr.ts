@@ -11,16 +11,15 @@ import {
   type ViewUpdate,
   WidgetType,
 } from '@codemirror/view';
-import get from 'lodash.get';
 
-import { tokens } from '../styles';
+import { getToken } from '../styles';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
   '& .cm-hr': {
     // TODO(burdon): ???
     // Note that block-level decorations should not have vertical margins,
-    borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.200')}`,
+    borderBottom: `1px solid ${getToken('extend.colors.neutral.200')}`,
   },
 });
 

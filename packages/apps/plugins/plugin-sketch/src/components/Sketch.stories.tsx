@@ -30,6 +30,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-sketch/SketchComponent',
   component: SketchComponent,
   render: Story,
   decorators: [FullscreenDecorator()],

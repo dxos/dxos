@@ -38,6 +38,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-chain/PromptTemplate',
   component: PromptTemplate,
   render: Story,
   decorators: [withTheme],

@@ -10,6 +10,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { SettingsDialog } from './SettingsDialog';
 
 export default {
+  title: 'plugin-table/SettingsDialog',
   component: SettingsDialog,
   decorators: [withTheme],
 };

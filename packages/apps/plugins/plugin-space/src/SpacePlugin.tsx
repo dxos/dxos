@@ -473,9 +473,10 @@ export const SpacePlugin = ({
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${intent.data.space.key.toHex()}`,
+                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.space.key.toHex()}`,
                   component: 'dxos.org/plugin/space/RenameSpacePopover',
                   subject: intent.data.space,
+                  caller: intent.data.caller,
                 },
               });
             }
@@ -588,9 +589,10 @@ export const SpacePlugin = ({
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${intent.data.object.id}`,
+                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
                   component: 'dxos.org/plugin/space/RenameObjectPopover',
                   subject: intent.data.object,
+                  caller: intent.data.caller,
                 },
               });
             }

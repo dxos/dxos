@@ -32,7 +32,8 @@ const Story: FC<{ content: string }> = ({ content }) => {
 };
 
 export default {
-  component: Story,
+  title: 'plugin-presenter/Container',
+  render: Story,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

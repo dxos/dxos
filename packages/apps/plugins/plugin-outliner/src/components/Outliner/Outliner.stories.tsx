@@ -75,6 +75,7 @@ const Story = ({
 };
 
 export default {
+  title: 'plugin-outliner/Outliner',
   component: Outliner,
   render: Story,
   parameters: {

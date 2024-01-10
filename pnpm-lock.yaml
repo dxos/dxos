@@ -1989,6 +1989,9 @@ importers:
 
   packages/apps/plugins/plugin-mermaid:
     dependencies:
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@braneframe/plugin-script':
         specifier: workspace:*
         version: link:../plugin-script
@@ -1998,6 +2001,15 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@codemirror/language':
+        specifier: ^6.9.3
+        version: 6.9.3
+      '@codemirror/state':
+        specifier: ^6.3.3
+        version: 6.3.3
+      '@codemirror/view':
+        specifier: ^6.22.2
+        version: 6.22.3
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2032,6 +2044,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui

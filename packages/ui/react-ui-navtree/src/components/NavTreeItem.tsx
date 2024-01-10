@@ -105,6 +105,8 @@ export type NavTreeItemData = TreeNode & { level: number };
 // TODO(burdon): Disabled until working and UX review.
 const presence = false;
 
+export const NAV_TREE_ITEM = 'NavTreeItem';
+
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, active, path, position }, forwardedRef) => {
     const { level, ...node } = item;
@@ -128,7 +130,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
     const ContextMenuTriggerRoot = actions.length > 0 ? NavTreeItemActionContextMenu : Fragment;
-    const ActionRoot = popoverAnchorId === `dxos.org/ui/navtree/${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
     const isOverCurrent = isOver(path);
 
@@ -156,7 +158,10 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             role='treeitem'
           >
             <ActionRoot>
-              <ContextMenuTriggerRoot actions={actions} onAction={(action) => action.invoke?.()}>
+              <ContextMenuTriggerRoot
+                actions={actions}
+                onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
+              >
                 <div
                   role='none'
                   className={mx(
@@ -198,6 +203,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                       active={active}
                       testId={primaryAction.properties.testId}
                       menuType={primaryAction.properties.menuType}
+                      caller={NAV_TREE_ITEM}
                     />
                   )}
                   {presence && renderPresence?.(node)}

@@ -25,6 +25,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-thread/ChatInput',
   component: ChatInput,
   render: Story,
   decorators: [withTheme],

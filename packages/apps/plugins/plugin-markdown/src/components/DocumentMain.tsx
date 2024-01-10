@@ -9,20 +9,18 @@ import { type Document as DocumentType } from '@braneframe/types';
 import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type CommentRange, useTextModel, type TextEditorRef } from '@dxos/react-ui-editor';
+import { type CommentRange, useTextModel, type TextEditorRef, type Extension } from '@dxos/react-ui-editor';
 
 import { EditorMain, MainLayout } from './EditorMain';
-import type { MarkdownPluginState } from '../MarkdownPlugin';
-import { getExtensions } from '../extensions';
 import type { MarkdownSettingsProps } from '../types';
 
 export const DocumentMain: FC<{
   document: DocumentType;
   readonly: boolean;
-  settings: MarkdownSettingsProps;
-  state: MarkdownPluginState;
-  pluginRefCallback: RefCallback<TextEditorRef>;
-}> = ({ document, readonly, settings, state, pluginRefCallback }) => {
+  editorMode: MarkdownSettingsProps['editorMode'];
+  extensions: Extension[];
+  editorRefCb: RefCallback<TextEditorRef>;
+}> = ({ document, readonly, editorMode, extensions, editorRefCb }) => {
   const { dispatch } = useIntent();
   const identity = useIdentity();
   const space = getSpaceForObject(document);
@@ -45,20 +43,11 @@ export const DocumentMain: FC<{
     <MainLayout>
       <EditorMain
         readonly={readonly}
-        editorMode={settings.editorMode}
+        editorMode={editorMode}
         model={model}
         comments={comments}
-        extensions={getExtensions({
-          space,
-          document,
-          debug: settings.debug,
-          experimental: settings.experimental,
-          dispatch,
-          onChange: (text: string) => {
-            state.onChange.forEach((onChange) => onChange(text));
-          },
-        })}
-        editorRefCb={pluginRefCallback}
+        extensions={extensions}
+        editorRefCb={editorRefCb}
       />
     </MainLayout>
   );
