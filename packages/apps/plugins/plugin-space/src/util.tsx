@@ -330,7 +330,7 @@ export const objectToGraphNode = ({
         id: 'delete',
         label: ['delete object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Trash {...props} />,
-        keyBinding: 'meta+Backspace',
+        keyBinding: 'shift+meta+Backspace',
         invoke: () =>
           dispatch([
             {
