@@ -80,7 +80,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
               text = match[2];
             }
 
-            const context = createContext(space, message.context);
+            const context = createContext(space, message, thread);
             const sequence = await createSequence(space, resources, context, resolvers, { command });
             const response = await sequence.invoke(text);
             log.info('response', { response });

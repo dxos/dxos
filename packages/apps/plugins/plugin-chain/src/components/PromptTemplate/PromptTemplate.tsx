@@ -38,6 +38,10 @@ const inputTypes = [
     value: ChainType.Input.Type.RESOLVER,
     label: 'Resolver',
   },
+  {
+    value: ChainType.Input.Type.CONTEXT,
+    label: 'Context',
+  },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;

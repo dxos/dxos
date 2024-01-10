@@ -63,7 +63,8 @@ export const createResponse = (space: Space, context: PromptContext, content: st
         );
     }
 
-    post && blocks.push({ timestamp, text: post });
+    const reply = post ?? content;
+    reply && blocks.push({ timestamp, text: reply });
   } else {
     blocks.push({
       timestamp,

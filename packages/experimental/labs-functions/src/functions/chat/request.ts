@@ -7,10 +7,10 @@ import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
 import { formatDocumentsAsString } from 'langchain/util/document';
 
-import { Chain as ChainType } from '@braneframe/types';
+import { Chain as ChainType, Document, Thread } from '@braneframe/types';
 import { type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, Schema, type TypedObject } from '@dxos/echo-schema';
+import { fromCursor, getRawDoc, getTextContent, getTextInRange, IDocHandle, Schema, TextObject, type TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { sequences } from './chains';
@@ -21,25 +21,44 @@ import get from 'lodash.get';
 export type PromptContext = {
   object?: TypedObject;
   schema?: Schema;
+  contextText?: string;
 };
 
-export const createContext = (space: Space, messageContext: MessageType.Context | undefined): PromptContext => {
+export const createContext = (space: Space, message: MessageType, thread: Thread): PromptContext => {
   let object: TypedObject | undefined;
-  if (messageContext?.object) {
-    const { objects } = space.db.query({ id: messageContext?.object });
+  if (message.context?.object) {
+    const { objects } = space.db.query({ id: message.context?.object });
+    object = objects[0];
+  } else if(thread.context?.object) {
+    const { objects } = space.db.query({ id: thread.context?.object });
     object = objects[0];
   }
 
+  // log.info('context', { message: message.context, thread: thread.context })
+
   // TODO(burdon): How to infer schema from message/context/prompt.
   let schema: Schema | undefined;
+  let contextText: string | undefined;
+
   if (object?.__typename === 'braneframe.Grid') {
     const { objects: schemas } = space.db.query(Schema.filter());
     schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
   }
 
+  log.info('context object', { object })
+  if(object instanceof Document) {
+    const comment = object.comments?.find((comment) => comment.thread === thread);
+    log.info('context comment', { object })
+    if(comment) {
+      contextText = getReferencedText(object, comment);
+      log.info('context text', { contextText })
+    }
+  }
+
   return {
     object,
     schema,
+    contextText,
   };
 };
 
@@ -79,7 +98,7 @@ export const createSequence = async (
     for (const chain of chains) {
       for (const prompt of chain.prompts) {
         if (prompt.command === options.command) {
-          return createSequenceFromPrompt(resources, prompt, resolvers);
+          return createSequenceFromPrompt(resources, prompt, resolvers, context);
         }
       }
     }
@@ -92,7 +111,7 @@ export const createSequence = async (
   return generator(resources, () => context, options);
 };
 
-const createSequenceFromPrompt = async (resources: ChainResources, prompt: ChainType.Prompt, resolvers: Resolvers) => {
+const createSequenceFromPrompt = async (resources: ChainResources, prompt: ChainType.Prompt, resolvers: Resolvers, context: PromptContext) => {
   const inputs: Record<string, any> = {}
   for(const { type, name, value } of prompt.inputs) {
     switch (type) {
@@ -112,6 +131,10 @@ const createSequenceFromPrompt = async (resources: ChainResources, prompt: Chain
       case ChainType.Input.Type.RESOLVER: {
         const result = await runResolver(resolvers, getTextContent(value));
         inputs[name] = () => result;
+        break;
+      }
+      case ChainType.Input.Type.CONTEXT: {
+        inputs[name] = () => context.contextText;
         break;
       }
     }
@@ -137,4 +160,17 @@ const runResolver = async (resolvers: Resolvers, name: string) => {
     log.error('resolver error', { resolver: name, error })
     return '';
   }
+}
+
+/**
+ * @deprecated Clean this up. Only works for automerge.
+ * Text cursors should be a part of core ECHO API.
+ */
+const getReferencedText = (document: Document, comment: Document.Comment): string => {
+  if(!comment.cursor) {
+    return '';
+  }
+  const [begin, end] = comment.cursor.split(':');
+
+  return getTextInRange(document.content, begin, end);
 }
