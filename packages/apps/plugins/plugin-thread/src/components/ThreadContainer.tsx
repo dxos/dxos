@@ -3,7 +3,7 @@
 //
 
 import differenceInSeconds from 'date-fns/differenceInSeconds';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
@@ -104,6 +104,28 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
     }
   };
 
+  const [ephemeralStatus, setEphemeralStatus] = React.useState<any | undefined>(undefined);
+  useEffect(() => {
+    const unsubscribe = space.listen(`${thread.id}/ephemeral_status`, (status) => {
+      console.log('new status', status)
+      setEphemeralStatus(status.payload);
+    });
+    const tid = setInterval(() => {
+      setEphemeralStatus((prev: any) => {
+        if(typeof prev?.ts === 'number' && Date.now() - prev.ts > 20_000) { // Clear after 20s.
+          return undefined;
+        } else {
+          return prev;
+        }
+      });
+    }, 1000)
+
+    return () => {
+      unsubscribe();
+      clearInterval(tid);
+    }
+  })
+
   return (
     <ThreadChannel
       identityKey={identity.identityKey}
@@ -113,6 +135,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
       onFocus={onFocus}
       onCreate={handleCreate}
       onDelete={handleDelete}
+      ephemeralStatus={ephemeralStatus?.event === 'AI_GENERATING' && ephemeralStatus?.messageCount <= thread.messages.length ? 'AI thinking...' : undefined}
     />
   );
 };
