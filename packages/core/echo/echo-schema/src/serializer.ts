@@ -40,7 +40,7 @@ export type SerializedSpace = {
   /**
    * Human-readable date of creation.
    */
-  date?: string;
+  timestamp?: string;
 
   /**
    * Space key.
@@ -101,7 +101,7 @@ export class Serializer {
       }),
 
       version: Serializer.version,
-      date: new Date().toUTCString(),
+      timestamp: new Date().toUTCString(),
       spaceKey: database.spaceKey.toHex(),
     };
 
