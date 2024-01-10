@@ -13,6 +13,7 @@ import { SingleInputStep, type SingleInputStepProps } from './SingleInputStep';
 import { Group } from '../Group';
 
 export default {
+  title: 'react-appkit/SingleInputStep',
   component: SingleInputStep,
   decorators: [withTheme],
   argTypes: {

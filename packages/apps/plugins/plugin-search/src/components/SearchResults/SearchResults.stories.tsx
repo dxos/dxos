@@ -30,6 +30,7 @@ const Story: FC<SearchResultsProps> = (args) => {
 };
 
 export default {
+  title: 'plugin-search/SearchResults',
   component: SearchResults,
   render: Story,
   decorators: [FullscreenDecorator()],

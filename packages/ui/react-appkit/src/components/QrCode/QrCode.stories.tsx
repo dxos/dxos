@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { QrCode } from './QrCode';
 
 export default {
+  title: 'react-appkit/QrCode',
   component: QrCode,
 };
 
