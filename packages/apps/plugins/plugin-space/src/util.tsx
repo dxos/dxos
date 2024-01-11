@@ -5,6 +5,7 @@
 import {
   ClockCounterClockwise,
   Download,
+  FloppyDisk,
   FolderPlus,
   PencilSimpleLine,
   Planet,
@@ -205,7 +206,8 @@ export const spaceToGraphNode = ({
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
           keyBinding: 'shift+F6',
-          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space } }),
+          invoke: (params) =>
+            dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } }),
         },
         {
           id: 'share-space',
@@ -220,6 +222,13 @@ export const spaceToGraphNode = ({
           label: ['close space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <X {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+        },
+        {
+          id: 'save-space-to-disk',
+          label: ['save space to disk label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <FloppyDisk {...props} />,
+          keyBinding: 'shift+meta+s',
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
@@ -311,22 +320,22 @@ export const objectToGraphNode = ({
         label: ['rename object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
         keyBinding: 'shift+F6',
-        invoke: () =>
+        invoke: (params) =>
           dispatch({
             action: SpaceAction.RENAME_OBJECT,
-            data: { object },
+            data: { object, ...params },
           }),
       },
       {
         id: 'delete',
         label: ['delete object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Trash {...props} />,
-        keyBinding: 'meta+Backspace',
-        invoke: () =>
+        keyBinding: 'shift+meta+Backspace',
+        invoke: (params) =>
           dispatch([
             {
               action: SpaceAction.REMOVE_OBJECT,
-              data: { object, folder: parent.data },
+              data: { object, folder: parent.data, ...params },
             },
           ]),
       },

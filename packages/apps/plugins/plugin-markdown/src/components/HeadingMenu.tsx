@@ -15,20 +15,22 @@ import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 
-export const createDocumentHeadingMenu =
-  (pluginMutableRef: MutableRefObject<TextEditorRef>): FC<{ content: DocumentType }> =>
-  ({ content: document }) => {
-    const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
+// TODO(thure): this needs to be refactored into a graph node action.
+export const DocumentHeadingMenu: FC<{ document: DocumentType; pluginMutableRef: MutableRefObject<TextEditorRef> }> = ({
+  document,
+  pluginMutableRef,
+}) => {
+  const identity = useIdentity();
+  // TODO(wittjosiah): Should this be a hook?
+  const space = getSpaceForObject(document);
+  const model = useTextModel({ identity, space, text: document?.content });
 
-    if (!model) {
-      return null;
-    }
+  if (!model) {
+    return null;
+  }
 
-    return <HeadingMenu properties={document} model={model} editorRef={pluginMutableRef} />;
-  };
+  return <HeadingMenu properties={document} model={model} editorRef={pluginMutableRef} />;
+};
 
 /**
  * Menu for the layout heading.
@@ -40,7 +42,7 @@ export const HeadingMenu = ({
 }: PropsWithChildren<{
   model: EditorModel;
   properties: MarkdownProperties;
-  // TODO(wittjosiah): ForwardRef.
+  // TODO(wittjosiah): ForwardRef. Remove?
   editorRef?: RefObject<TextEditorRef>;
 }>) => {
   return (

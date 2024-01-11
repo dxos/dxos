@@ -15,6 +15,8 @@ const bump = async () => {
     }
   } = releasePleaseConfig;
 
+  extraFiles.push({ type: 'json', path: 'package.json', jsonpath: '$.version' })
+
   const { '.': currentVersion } = releasePleaseManifest;
 
   const prereleaseID = process.argv[2] || 'next';

@@ -5,7 +5,7 @@
 import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useRef, useState } from 'react';
 
-import { type Action, type Graph, type Label } from '@dxos/app-graph';
+import { KEY_BINDING, type Action, type Graph, type Label } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -83,7 +83,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
                   // TODO(burdon): Remove hack to close dialog (via hook?)
                   buttonRef.current?.click();
                   setTimeout(() => {
-                    void action.invoke();
+                    void action.invoke({ caller: KEY_BINDING });
                   });
                 }}
                 classNames='flex items-center gap-2'

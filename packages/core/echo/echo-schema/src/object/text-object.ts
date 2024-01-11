@@ -148,3 +148,14 @@ export const setTextContent = (object: TextObject, text: string) => {
     object.content?.insert(0, text as any);
   }
 };
+
+/**
+ * @deprecated
+ */
+export const getTextContent = (object: TextObject): string => {
+  if (isAutomergeObject(object)) {
+    return (object as any).content;
+  } else {
+    return object.text;
+  }
+};

@@ -23,9 +23,13 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-script": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
+    "@codemirror/language": "^6.9.3",
+    "@codemirror/state": "^6.3.3",
+    "@codemirror/view": "^6.22.2",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/text-model": "workspace:*",
@@ -39,6 +43,7 @@
   "devDependencies": {
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

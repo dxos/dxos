@@ -19,6 +19,7 @@ const Story: FC<SearchbarProps> = (args) => {
 };
 
 export default {
+  title: 'plugin-search/Searchbar',
   component: Searchbar,
   render: Story,
   parameters: {

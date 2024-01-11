@@ -10,6 +10,10 @@ import type { MaybePromise } from '@dxos/util';
 // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
 export type Label = string | [string, { ns: string; count?: number }];
 
+export type InvokeParams = Partial<{
+  caller: string;
+}>;
+
 /**
  * An action on a node in the graph which may be invoked by sending the associated intent.
  */
@@ -57,7 +61,7 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
   // TODO(burdon): Why get vs. prop?
   get actions(): Action[];
 
-  invoke: () => MaybePromise<any>;
+  invoke: (params?: InvokeParams) => MaybePromise<any>;
 
   addProperty(key: string, value: any): void;
   removeProperty(key: string): void;

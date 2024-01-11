@@ -21,10 +21,10 @@
   ],
   "references": [
     {
-      "path": "../../../core/echo/text-model"
+      "path": "../../../core/echo/echo-schema"
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../core/echo/text-model"
     },
     {
       "path": "../../../sdk/app-framework"
@@ -36,13 +36,7 @@
       "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/react-ui"
-    },
-    {
       "path": "../../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../../ui/react-ui-theme"
@@ -54,10 +48,10 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-script"
+      "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-space"
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-space"

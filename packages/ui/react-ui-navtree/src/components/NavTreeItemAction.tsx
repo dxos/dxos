@@ -22,6 +22,7 @@ type NavTreeItemActionProps = {
   actions?: TreeNodeAction[];
   active?: MosaicActiveType;
   testId?: string;
+  caller?: string;
   menuType?: 'searchList' | 'dropdown';
   onAction?: (action: TreeNodeAction) => void;
 };
@@ -104,7 +105,13 @@ export const NavTreeItemActionDropdownMenu = ({
   );
 };
 
-export const NavTreeItemActionContextMenu = ({
+export const NavTreeItemActionContextMenu = (
+  props: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>,
+) => {
+  return (props.actions?.length ?? 0) > 0 ? <>{props.children}</> : <NavTreeItemActionContextMenuImpl {...props} />;
+};
+
+const NavTreeItemActionContextMenuImpl = ({
   actions,
   onAction,
   children,
@@ -269,6 +276,7 @@ export const NavTreeItemAction = ({
   actions,
   active,
   testId,
+  caller,
   menuType,
 }: NavTreeItemActionProps) => {
   const suppressNextTooltip = useRef<boolean>(false);
@@ -309,7 +317,7 @@ export const NavTreeItemAction = ({
                 return;
               }
               event.stopPropagation();
-              void action.invoke();
+              void action.invoke(caller ? { caller } : undefined);
             }}
             data-testid={testId}
           >
@@ -324,7 +332,7 @@ export const NavTreeItemAction = ({
           suppressNextTooltip={suppressNextTooltip}
           icon={Icon}
           label={label}
-          onAction={(action) => action.invoke()}
+          onAction={(action) => action.invoke(caller ? { caller } : undefined)}
         />
       ) : (
         <NavTreeItemActionDropdownMenu
@@ -333,7 +341,7 @@ export const NavTreeItemAction = ({
           active={active}
           suppressNextTooltip={suppressNextTooltip}
           icon={Icon}
-          onAction={(action) => action.invoke()}
+          onAction={(action) => action.invoke(caller ? { caller } : undefined)}
         />
       )}
     </Tooltip.Root>

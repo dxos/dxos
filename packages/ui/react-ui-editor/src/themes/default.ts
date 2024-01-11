@@ -49,12 +49,12 @@ export const defaultTheme: ThemeStyles = {
   '&.cm-focused': {
     outline: 'none',
   },
-  '& .cm-scroller': {
+  '.cm-scroller': {
     overflow: 'visible',
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
 
-  '& .cm-content': {
+  '.cm-content': {
     padding: 0,
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
@@ -77,17 +77,17 @@ export const defaultTheme: ThemeStyles = {
   '&dark .cm-cursor, &dark .cm-dropCursor': {
     borderLeft: '2px solid white',
   },
-  '& .cm-placeholder': {
+  '.cm-placeholder': {
     fontWeight: 100,
   },
 
   //
   // line
   //
-  '& .cm-line': {
+  '.cm-line': {
     paddingInline: 0,
   },
-  '& .cm-activeLine': {
+  '.cm-activeLine': {
     background: 'inherit',
   },
 
@@ -131,28 +131,28 @@ export const defaultTheme: ThemeStyles = {
     mixBlendMode: 'screen',
   },
 
-  '& .cm-ySelectionInfo': {
+  '.cm-ySelectionInfo': {
     padding: '2px 4px',
     marginBlockStart: '-4px',
   },
-  '& .cm-ySelection, & .cm-selectionMatch': {
+  '.cm-ySelection, & .cm-selectionMatch': {
     paddingBlockStart: '.15em',
     paddingBlockEnd: '.15em',
   },
-  '& .cm-ySelectionCaret': {
+  '.cm-ySelectionCaret': {
     display: 'inline-block',
     insetBlockStart: '.1em',
     blockSize: '1.4em',
     verticalAlign: 'top',
   },
-  '& .cm-yLineSelection': {
+  '.cm-yLineSelection': {
     margin: 0,
   },
 
   //
   // link
   //
-  '& .cm-link': {
+  '.cm-link': {
     color: get(tokens, 'extend.colors.primary.500'),
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
@@ -164,34 +164,34 @@ export const defaultTheme: ThemeStyles = {
   //
   // tooltip
   //
-  '& .cm-tooltip': {
+  '.cm-tooltip': {
     border: 'none',
   },
-  '& .cm-tooltip-below': {},
+  '.cm-tooltip-below': {},
 
   //
   // autocomplete
   //
-  '& .cm-tooltip-autocomplete': {
+  '.cm-tooltip-autocomplete': {
     marginTop: '4px',
     marginLeft: '-3px',
   },
-  '& .cm-tooltip-autocomplete ul li': {},
-  '& .cm-tooltip-autocomplete ul li[aria-selected]': {},
-  '& .cm-completionIcon': {
+  '.cm-tooltip-autocomplete ul li': {},
+  '.cm-tooltip-autocomplete ul li[aria-selected]': {},
+  '.cm-completionIcon': {
     display: 'none',
   },
-  '& .cm-completionLabel': {
+  '.cm-completionLabel': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
-  '& .cm-completionMatchedText': {
+  '.cm-completionMatchedText': {
     textDecoration: 'none',
   },
 
   //
   // widgets
   //
-  '& .cm-widgetBuffer': {
+  '.cm-widgetBuffer': {
     display: 'none',
     height: 0,
   },
@@ -199,26 +199,32 @@ export const defaultTheme: ThemeStyles = {
   //
   // table
   //
-  '& .cm-table *': {
+  '.cm-table *': {
     fontFamily: `${get(tokens, 'fontFamily.mono', []).join(',')} !important`,
     textDecoration: 'none !important',
   },
-  '& .cm-table-head': {
+  '.cm-table-head': {
     padding: '2px 16px 2px 0px',
     borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.500')}`,
     fontWeight: 100,
     textAlign: 'left',
     color: get(tokens, 'extend.colors.neutral.500'),
   },
-  '& .cm-table-cell': {
+  '.cm-table-cell': {
     padding: '2px 16px 2px 0px',
   },
 
   //
   // image
   //
-  '& .cm-image': {
-    margin: '0.5rem 0',
+  '.cm-image': {
+    display: 'block',
+    height: '0',
+  },
+  '.cm-image.cm-loaded-image': {
+    height: 'auto',
+    borderTop: '0.5rem solid transparent',
+    borderBottom: '0.5rem solid transparent',
   },
 
   //
@@ -250,14 +256,14 @@ export const defaultTheme: ThemeStyles = {
    *   </div>
    * </div
    */
-  '& .cm-panels': {
+  '.cm-panels': {
     border: `1px solid ${get(tokens, 'extend.colors.neutral.200')}`,
   },
-  '& .cm-panel': {
+  '.cm-panel': {
     background: get(tokens, 'extend.colors.neutral.50'),
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
-  '& .cm-button': {
+  '.cm-button': {
     margin: '4px',
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     background: get(tokens, 'extend.colors.neutral.100'),
@@ -271,32 +277,32 @@ export const defaultTheme: ThemeStyles = {
       backgroundImage: 'none',
     },
   },
-  '& .cm-panel input[type=checkbox]': {
+  '.cm-panel input[type=checkbox]': {
     marginRight: '0.4rem !important',
   },
 };
 
 export const textTheme: ThemeStyles = {
-  '& .cm-scroller': {
+  '.cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
-  '& .cm-placeholder': {
+  '.cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
 };
 
 export const markdownTheme: ThemeStyles = {
   // NOTE: Must leave base font family as is (i.e., monospace) due to fenced code blocks.
-  '& .cm-placeholder': {
+  '.cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
 };
 
 export const codeTheme: ThemeStyles = {
-  '& .cm-scroller': {
+  '.cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
-  '& .cm-placeholder': {
+  '.cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
 };

@@ -5,6 +5,7 @@
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { set, get } from 'idb-keyval';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -22,10 +23,13 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { Expando, TypedObject, isTypedObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { useFileDownload } from '@dxos/react-ui';
 import { inferRecordOrder } from '@dxos/util';
 
 import { exportData } from './backup';
@@ -36,6 +40,7 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
+  PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
   SpaceMain,
@@ -43,8 +48,15 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
+import { saveSpaceToDisk } from './save-to-disk';
 import translations from './translations';
-import { SpaceAction, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
+import {
+  SpaceAction,
+  type SpacePluginProvides,
+  type SpaceSettingsProps,
+  type PluginState,
+  SPACE_DIRECTORY_HANDLE,
+} from './types';
 import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
@@ -256,6 +268,18 @@ export const SpacePlugin = ({
                 isTypedObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
+              } else if (
+                data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
+                data.subject &&
+                typeof data.subject === 'object' &&
+                isTypedObject((data.subject as Record<string, any>)?.object)
+              ) {
+                return (
+                  <PopoverRemoveObject
+                    object={(data.subject as Record<string, any>)?.object}
+                    folder={(data.subject as Record<string, any>)?.folder}
+                  />
+                );
               } else {
                 return null;
               }
@@ -448,9 +472,10 @@ export const SpacePlugin = ({
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${intent.data.space.key.toHex()}`,
+                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.space.key.toHex()}`,
                   component: 'dxos.org/plugin/space/RenameSpacePopover',
                   subject: intent.data.space,
+                  caller: intent.data.caller,
                 },
               });
             }
@@ -478,13 +503,9 @@ export const SpacePlugin = ({
                 // TODO(wittjosiah): Expose translations helper from theme plugin provides.
                 const backupBlob = await exportData(space, space.key.toHex());
                 const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-                const url = URL.createObjectURL(backupBlob);
-                // TODO(burdon): See DebugMain useFileDownload
-                const element = document.createElement('a');
-                element.setAttribute('href', url);
-                element.setAttribute('download', `${filename}.zip`);
-                element.setAttribute('target', 'download');
-                element.click();
+
+                const download = useFileDownload();
+                download(backupBlob, `${filename}.json`);
                 return true;
               }
               break;
@@ -499,6 +520,35 @@ export const SpacePlugin = ({
                   subject: intent.data.space,
                 },
               });
+            }
+
+            case SpaceAction.SELECT_DIRECTORY: {
+              const handle = await (window as any).showDirectoryPicker();
+              await set(SPACE_DIRECTORY_HANDLE, handle);
+              return handle;
+            }
+
+            case SpaceAction.SAVE_TO_DISK: {
+              const space = intent.data.space;
+              if (space instanceof SpaceProxy) {
+                let directory: FileSystemDirectoryHandle | undefined = await get(SPACE_DIRECTORY_HANDLE);
+                if (!directory) {
+                  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+                  directory = await intentPlugin?.provides.intent.dispatch({
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.SELECT_DIRECTORY,
+                  });
+                }
+                invariant(directory, 'No directory selected.');
+                if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
+                  // TODO(mykola): Is it Chrome-specific?
+                  await (directory as any).requestPermission?.();
+                }
+                return saveSpaceToDisk({ space, directory }).catch((error) => {
+                  log.catch(error);
+                });
+              }
+              break;
             }
 
             case SpaceAction.ADD_OBJECT: {
@@ -525,37 +575,19 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.REMOVE_OBJECT: {
-              if (!(intent.data.object instanceof TypedObject)) {
-                return;
-              }
-
-              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
-                await intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.ACTIVATE,
-                  data: { id: undefined },
-                });
-              }
-
-              if (intent.data.folder instanceof Folder) {
-                const index = intent.data.folder.objects.indexOf(intent.data.object);
-                index !== -1 && intent.data.folder.objects.splice(index, 1);
-              }
-
-              const space = getSpaceForObject(intent.data.object);
-
-              const folder = space?.properties[Folder.schema.typename];
-              if (folder instanceof Folder) {
-                const index = folder.objects.indexOf(intent.data.object);
-                index !== -1 && folder.objects.splice(index, 1);
-              }
-
-              if (space) {
-                space.db.remove(intent.data.object);
-                return true;
-              }
-              break;
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_POPOVER,
+                data: {
+                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
+                  component: 'dxos.org/plugin/space/RemoveObjectPopover',
+                  subject: {
+                    object: intent.data.object,
+                    folder: intent.data.folder,
+                  },
+                  caller: intent.data.caller,
+                },
+              });
             }
 
             case SpaceAction.RENAME_OBJECT: {
@@ -563,9 +595,10 @@ export const SpacePlugin = ({
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${intent.data.object.id}`,
+                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
                   component: 'dxos.org/plugin/space/RenameObjectPopover',
                   subject: intent.data.object,
+                  caller: intent.data.caller,
                 },
               });
             }
