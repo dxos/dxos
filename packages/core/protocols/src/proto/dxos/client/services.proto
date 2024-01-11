@@ -407,6 +407,9 @@ message Invitation {
 
   /// Authentication code created by host (only present if auth_method is SHARED_SECRET).
   optional string auth_code = 10;
+
+  /// Path or identifier to navigate to after successful authentication.
+  optional string target = 11;
 }
 
 message AuthenticationRequest {

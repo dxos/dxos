@@ -193,8 +193,6 @@ export const JoinPanel = ({
     },
   });
 
-  console.log('[joinState]', joinState);
-
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
       log('[state]', state);
@@ -368,6 +366,7 @@ export const JoinPanel = ({
       identityKey: joinState.context.halo.invitation?.identityKey ?? null,
       swarmKey: joinState.context.halo.invitation?.swarmKey ?? null,
       spaceKey: joinState.context.halo.invitation?.spaceKey ?? null,
+      target: joinState.context.halo.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);
 
@@ -376,6 +375,7 @@ export const JoinPanel = ({
       identityKey: joinState.context.space.invitation?.identityKey ?? null,
       swarmKey: joinState.context.space.invitation?.swarmKey ?? null,
       spaceKey: joinState.context.space.invitation?.spaceKey ?? null,
+      target: joinState.context.space.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);
 

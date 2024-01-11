@@ -29,11 +29,14 @@ enum ShellDisplay {
 }
 
 message AppContextRequest {
-  /// The display mode that shell should use
+  /// The display mode that shell should use.
   optional ShellDisplay display = 1;
 
-  /// The key of the joined space
+  /// The key of the joined space.
   optional dxos.keys.PublicKey space_key = 2;
+
+  /// Target to redirect to after a successful invitation.
+  optional string target = 3;
 }
 
 /// App RPCs for the shell.
@@ -52,9 +55,17 @@ enum ShellLayout {
 }
 
 message LayoutRequest {
+  /// Determins which panel of the shell is opened.
   ShellLayout layout = 1;
+
+  /// Invitation code to join a space.
   optional string invitation_code = 2;
+
+  /// Key of the space to share.
   optional dxos.keys.PublicKey space_key = 3;
+
+  /// Target to include in an invitation for redirecting after a successful invitation.
+  optional string target = 4;
 }
 
 /// Shell UI RPCs.
