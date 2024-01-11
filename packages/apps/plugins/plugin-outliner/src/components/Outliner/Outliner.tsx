@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EditorView } from '@codemirror/view';
 import { ArrowSquareOut, DotOutline, DotsThreeVertical, X } from '@phosphor-icons/react';
 import React, { StrictMode, useEffect, useRef, useState, type HTMLAttributes, type KeyboardEventHandler } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -15,13 +14,13 @@ import {
   type CursorInfo,
   type TextEditorRef,
   type YText,
-  link
+  link,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { OUTLINER_PLUGIN } from '../../meta';
-import { tryParseOutline } from '../../utils';
+import { pasteExtension } from './paste-extension';
 import { getItems, getLastDescendent, getNext, getParent, getPrevious, type Item } from './types';
+import { OUTLINER_PLUGIN } from '../../meta';
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
@@ -186,25 +185,7 @@ const OutlinerItem = ({
         <MarkdownEditor
           ref={editorRef}
           model={model}
-          extensions={[
-            EditorView.domEventHandlers({
-              paste: (event, view) => {
-                const text = event.clipboardData?.getData('text/plain');
-                if (!text) {
-                  return;
-                }
-
-                const outline = tryParseOutline(text);
-                if (!outline || outline.length === 0) {
-                  return;
-                }
-
-                event.preventDefault();
-                onPaste?.(outline);
-              },
-            }),
-            link({ onRender: onRenderLink })
-          ]}
+          extensions={[pasteExtension({ onPaste }), link({ onRender: onRenderLink })]}
           slots={{
             root: {
               className: 'w-full',

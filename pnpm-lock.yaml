@@ -2199,6 +2199,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@codemirror/state':
+        specifier: ^6.3.3
+        version: 6.3.3
       '@codemirror/view':
         specifier: ^6.22.2
         version: 6.22.2

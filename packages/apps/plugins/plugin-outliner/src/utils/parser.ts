@@ -5,7 +5,7 @@
 import { Tree } from '@braneframe/types';
 import { TextObject } from '@dxos/client/echo';
 
-export const tryParseOutline = (outline: string): Tree.Item[] | undefined => {
+export const parseOutline = (outline: string): Tree.Item[] | undefined => {
   if (!outline.startsWith('-')) {
     return undefined;
   }

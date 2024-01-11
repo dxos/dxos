@@ -10,17 +10,17 @@ import { Tree } from '@braneframe/types';
 import { TextObject } from '@dxos/client/echo';
 import { describe, test } from '@dxos/test';
 
-import { tryParseOutline } from './parser';
+import { parseOutline } from './parser';
 
 describe('outline parser', () => {
   test('should parse outline', () => {
-    const outline = tryParseOutline(TEXT);
+    const outline = parseOutline(TEXT);
 
     expect(equivalent(outline!, EXPECTED)).to.be.true;
   });
 
   test('does not parse plain text', () => {
-    const outline = tryParseOutline('plain text\n- bullet');
+    const outline = parseOutline('plain text\n- bullet');
 
     expect(outline).to.be.undefined;
   });
