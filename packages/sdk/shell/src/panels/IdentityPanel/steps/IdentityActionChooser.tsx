@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Plus, Power, UserGear } from '@phosphor-icons/react';
+import { CaretRight, Devices, Plus, Power, UserGear } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { useClient } from '@dxos/react-client';
@@ -70,6 +70,11 @@ export const IdentityActionChooserImpl = ({
             classNames='plb-4'
           >
             <Plus className={getSize(6)} />
+            <span className='grow mli-3'>{t('choose add device label')}</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Action>
+          <Action data-testid='manage-devices' onClick={() => send?.({ type: 'chooseDevices' })} classNames='plb-4'>
+            <Devices className={getSize(6)} />
             <span className='grow mli-3'>{t('choose devices label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Action>
