@@ -12,8 +12,9 @@ import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { defaultSlots, TextEditor, type TextEditorProps, type TextEditorRef, type TextEditorSlots } from './TextEditor';
-import { textTheme } from './themes';
+import { listener } from '../../extensions';
 import { useTextModel } from '../../hooks';
+import { textTheme } from '../../themes';
 
 const initialText = [
   '# TextEditor',
@@ -31,7 +32,7 @@ const Story = ({
   ...props
 }: { text?: string; automerge?: boolean } & Pick<TextEditorProps, 'extensions' | 'slots'>) => {
   const ref = useRef<TextEditorRef>(null);
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { useAutomergeBackend: automerge }) });
+  const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
     return null;
@@ -59,6 +60,29 @@ export default {
 export const Default = {
   render: () => (
     <Story
+      slots={defaultsDeep(
+        { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
+        defaultSlots,
+      )}
+    />
+  ),
+};
+
+export const Listener = {
+  render: () => (
+    <Story
+      slots={defaultsDeep(
+        { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
+        defaultSlots,
+      )}
+      extensions={[listener({ onChange: (text) => console.log(text) })]}
+    />
+  ),
+};
+
+export const Text = {
+  render: () => (
+    <Story
       text={initialText}
       slots={defaultsDeep(
         { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
@@ -71,12 +95,12 @@ export const Default = {
 export const Automerge = {
   render: () => (
     <Story
+      automerge
       text={initialText}
       slots={defaultsDeep(
         { editor: { theme: textTheme, placeholder: 'Enter text...' } } satisfies TextEditorSlots,
         defaultSlots,
       )}
-      automerge
     />
   ),
 };

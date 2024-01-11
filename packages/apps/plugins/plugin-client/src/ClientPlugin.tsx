@@ -2,43 +2,51 @@
 // Copyright 2023 DXOS.org
 //
 
+import { AddressBook } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import {
+  parseIntentPlugin,
   resolvePlugin,
   type GraphBuilderProvides,
   type IntentResolverProvides,
   type Plugin,
   type PluginDefinition,
+  type SettingsProvides,
   type SurfaceProvides,
   type TranslationsProvides,
-  parseIntentPlugin,
-  parseLayoutPlugin,
-  parseGraphPlugin,
 } from '@dxos/app-framework';
-import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { Client, ClientContext, type ClientOptions, PublicKey, type SystemStatus } from '@dxos/react-client';
-import { TypedObject, type TypeCollection, getSpaceForObject } from '@dxos/react-client/echo';
+import {
+  Client,
+  ClientContext,
+  PublicKey,
+  type ClientOptions,
+  type SystemStatus,
+  fromIFrame,
+} from '@dxos/react-client';
+import { type TypeCollection } from '@dxos/react-client/echo';
+import { Invitation } from '@dxos/react-client/invitations';
 
-import { ClientSettings } from './components/ClientSettings';
+import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
 
-const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 10_000;
+const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
 
 const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export enum ClientAction {
   OPEN_SHELL = `${CLIENT_ACTION}/SHELL`,
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
-  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
+  // TODO(burdon): Reconcile with SpacePlugin.
   JOIN_SPACE = `${CLIENT_ACTION}/JOIN_SPACE`,
+  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
 }
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection; appKey: string };
+export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
 
 export type ClientSettingsProps = {
   automerge?: boolean;
@@ -47,9 +55,9 @@ export type ClientSettingsProps = {
 export type ClientPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  SettingsProvides<ClientSettingsProps> &
   TranslationsProvides & {
     client: Client;
-    settings: ClientSettingsProps;
 
     /**
      * True if this is the first time the current app has been used by this identity.
@@ -60,8 +68,9 @@ export type ClientPluginProvides = SurfaceProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
+const ENABLE_VAULT_MIGRATION = !location.host.startsWith('localhost');
+
 export const ClientPlugin = ({
-  debugIdentity,
   types,
   appKey,
   ...options
@@ -73,8 +82,7 @@ export const ClientPlugin = ({
   registerSignalFactory();
 
   const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings');
-
-  const client = new Client({ config: new Config(Envs(), Local(), Defaults()), ...options });
+  let client: Client;
 
   return {
     meta,
@@ -82,8 +90,47 @@ export const ClientPlugin = ({
       let error: unknown = null;
       let firstRun = false;
 
+      client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
+
+      let oldClient: Client = null as any;
+
+      if (ENABLE_VAULT_MIGRATION) {
+        const oldConfig = new Config(
+          {
+            runtime: {
+              client: {
+                remoteSource:
+                  location.host === 'composer.dev.dxos.org'
+                    ? 'https://halo.staging.dxos.org/vault.html'
+                    : location.host === 'composer.dev.dxos.org'
+                    ? 'https://halo.dev.dxos.org/vault.html'
+                    : 'https://halo.dxos.org/vault.html',
+              },
+            },
+          },
+          await Envs(),
+          Defaults(),
+        );
+        oldClient = new Client({
+          config: oldConfig,
+          services: fromIFrame(oldConfig, { shell: false }),
+        });
+      }
+
       try {
+        if (ENABLE_VAULT_MIGRATION) {
+          await oldClient.initialize();
+        }
         await client.initialize();
+
+        // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
+        client.reloaded.on(() => {
+          client.halo.identity.subscribe(async (identity) => {
+            if (identity) {
+              window.location.href = window.location.origin;
+            }
+          });
+        });
 
         if (types) {
           client.addTypes(types);
@@ -92,10 +139,32 @@ export const ClientPlugin = ({
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
-        if (!client.halo.identity.get() && !deviceInvitationCode) {
-          await client.halo.createIdentity();
-          // TODO(wittjosiah): Ideally this would be per app rather than per identity.
-          firstRun = true;
+        const identity = client.halo.identity.get();
+        if (!identity && !deviceInvitationCode) {
+          // TODO(wittjosiah): Remove.
+          const oldIdentity = ENABLE_VAULT_MIGRATION && oldClient.halo.identity.get();
+          if (oldIdentity) {
+            alert(
+              'Composer must perform some database maintenance to upgrade your identity to the latest version. After continuing, please keep this window open until the app loads.',
+            );
+            const oldObs = oldClient.halo.share();
+            const newObs = client.halo.join(oldObs.get());
+
+            oldObs.subscribe(async (invitation) => {
+              switch (invitation.state) {
+                case Invitation.State.READY_FOR_AUTHENTICATION: {
+                  await newObs.authenticate(invitation.authCode!);
+                }
+              }
+            });
+
+            await newObs.wait();
+            void oldClient.destroy();
+          } else if (!client.halo.identity.get()) {
+            await client.halo.createIdentity();
+            // TODO(wittjosiah): Ideally this would be per app rather than per identity.
+            firstRun = true;
+          }
         } else if (client.halo.identity.get() && deviceInvitationCode) {
           // Ignore device invitation if identity already exists.
           // TODO(wittjosiah): Identity merging.
@@ -105,27 +174,8 @@ export const ClientPlugin = ({
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
       } catch (err) {
+        log.catch(err);
         error = err;
-      }
-
-      // Debugging (e.g., for monolithic mode).
-      if (debugIdentity) {
-        if (!client.halo.identity.get()) {
-          await client.halo.createIdentity();
-        }
-
-        // Handle initial connection (assumes no PIN).
-        const searchParams = new URLSearchParams(window.location.search);
-        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-        if (spaceInvitationCode) {
-          setTimeout(() => {
-            // TODO(burdon): Unsubscribe.
-            const observer = client.spaces.join(InvitationEncoder.decode(spaceInvitationCode));
-            observer.subscribe(({ state }) => {
-              log.info('invitation', { state });
-            });
-          }, 2000);
-        }
       }
 
       if (client.halo.identity.get()) {
@@ -172,60 +222,30 @@ export const ClientPlugin = ({
       translations,
       surface: {
         component: ({ data, role }) => {
-          const { component } = data;
-          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
-            return <ClientSettings />;
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <ClientSettings settings={settings.values} /> : null;
           }
+
           return null;
         },
       },
       graph: {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-          // TODO(wittjosiah): Pass graph to builders?
-          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           if (parent.id === 'root') {
-            parent.addAction(
-              {
-                id: `${CLIENT_PLUGIN}/open-shell`,
-                label: ['open shell label', { ns: CLIENT_PLUGIN }],
-                invoke: () =>
-                  intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
-                properties: {
-                  testId: 'clientPlugin.openShell',
-                },
-                keyBinding: 'meta+shift+.',
+            parent.addAction({
+              id: `${CLIENT_PLUGIN}/open-shell`,
+              label: ['open shell label', { ns: CLIENT_PLUGIN }],
+              icon: (props) => <AddressBook {...props} />,
+              keyBinding: 'meta+shift+.',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
+              properties: {
+                testId: 'clientPlugin.openShell',
               },
-              // TODO(wittjosiah): This action is likely unnecessary once keybindings can be context aware.
-              //   Each space has its own version of this action.
-              {
-                id: `${CLIENT_PLUGIN}/share-space`,
-                label: ['share space label', { ns: CLIENT_PLUGIN }],
-                invoke: () => {
-                  const active = layoutPlugin?.provides.layout.active;
-                  const graph = graphPlugin?.provides.graph;
-                  if (!active || !graph) {
-                    return;
-                  }
-
-                  const node = graph.findNode(active);
-                  if (!node || !(node.data instanceof TypedObject)) {
-                    return;
-                  }
-
-                  const space = getSpaceForObject(node.data);
-                  return intentPlugin?.provides.intent.dispatch([
-                    { plugin: CLIENT_PLUGIN, action: ClientAction.SHARE_SPACE, data: { spaceKey: space?.key } },
-                  ]);
-                },
-                properties: {
-                  testId: 'clientPlugin.shareSpace',
-                },
-                keyBinding: 'meta+.',
-              },
-            );
+            });
           }
         },
       },
@@ -238,15 +258,17 @@ export const ClientPlugin = ({
             case ClientAction.SHARE_IDENTITY:
               return client.shell.shareIdentity();
 
+            // TODO(burdon): Remove.
+            case ClientAction.JOIN_SPACE:
+              return typeof intent.data?.invitationCode === 'string'
+                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
+                : false;
+
+            // TODO(burdon): Remove.
             case ClientAction.SHARE_SPACE:
               return intent.data?.spaceKey instanceof PublicKey &&
                 !intent.data?.spaceKey.equals(client.spaces.default.key)
                 ? client.shell.shareSpace({ spaceKey: intent.data.spaceKey })
-                : false;
-
-            case ClientAction.JOIN_SPACE:
-              return typeof intent.data?.invitationCode === 'string'
-                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
                 : false;
           }
         },

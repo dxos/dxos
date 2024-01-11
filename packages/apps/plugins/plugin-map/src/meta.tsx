@@ -13,4 +13,5 @@ export default pluginMeta({
   id: MAP_PLUGIN,
   name: 'Maps',
   iconComponent: (props: IconProps) => <Compass {...props} />,
+  tags: ['experimental'],
 });

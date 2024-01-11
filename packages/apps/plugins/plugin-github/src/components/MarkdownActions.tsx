@@ -15,7 +15,7 @@ import { getSize } from '@dxos/react-ui-theme';
 import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';
 import { GITHUB_PLUGIN } from '../meta';
-import type { GhIssueIdentifier } from '../props';
+import { type GhIssueIdentifier } from '../types';
 
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
 export const MarkdownActions = ({
@@ -89,6 +89,7 @@ export const MarkdownActions = ({
             classNames='gap-2'
             disabled={!docGhId}
             onClick={() =>
+              // TODO(burdon): Intent should return content value from dialog.
               dispatch({
                 action: LayoutAction.OPEN_DIALOG,
                 data: { component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId, editorRef } },

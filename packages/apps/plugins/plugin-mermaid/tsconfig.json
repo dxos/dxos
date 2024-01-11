@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../core/echo/text-model"
     },
     {
@@ -43,6 +46,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-script"

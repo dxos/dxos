@@ -38,7 +38,7 @@ import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
 import { GITHUB_PLUGIN } from '../../meta';
-import type { EditorViewState } from '../../props';
+import type { EditorViewState } from '../../types';
 import {
   DocumentResolverProvider,
   DocumentResolverContext,
@@ -250,7 +250,7 @@ const EmbeddedLayoutImpl = () => {
               />
             </Main.Content>
           ) : (
-            <Surface role='main' data={{ composer: model, properties: document, view: 'embedded' }} />
+            <Surface role='main' data={{ model, properties: document, view: 'embedded' }} />
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>

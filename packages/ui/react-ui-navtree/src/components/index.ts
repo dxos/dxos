@@ -3,5 +3,6 @@
 //
 
 export * from './NavTree';
+export * from './NavTreeItemAction';
 export { type NavTreeContextType } from './NavTreeContext';
 export * from './NavTreeItem';

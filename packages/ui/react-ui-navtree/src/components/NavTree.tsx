@@ -6,7 +6,6 @@ import React from 'react';
 
 import { Tree } from '@dxos/react-ui';
 import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
-import { mx } from '@dxos/react-ui-theme';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeMosaicComponent } from './NavTreeItem';
@@ -55,7 +54,7 @@ export const NavTree = ({
   renderPresence,
   onOver,
   onDrop,
-  className,
+  classNames,
 }: NavTreeProps) => {
   return (
     <Mosaic.Container
@@ -67,7 +66,7 @@ export const NavTree = ({
         onDrop,
       }}
     >
-      <Tree.Root classNames={mx('flex flex-col', className)}>
+      <Tree.Root classNames={['flex flex-col', classNames]}>
         <NavTreeProvider
           current={current}
           popoverAnchorId={popoverAnchorId}

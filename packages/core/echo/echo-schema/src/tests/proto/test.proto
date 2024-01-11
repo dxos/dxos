@@ -9,6 +9,8 @@ import "dxos/schema.proto";
 package example.test;
 
 message Contact {
+  option (object) = true;
+
   message Address {
     message LatLng {
       fixed32 lat = 1;
@@ -20,8 +22,6 @@ message Contact {
     string zip = 3;
     LatLng coordinates = 4;
   }
-
-  option (object) = true;
 
   string name = 1 [default="Anonymous", required = true];
   string username = 2;
@@ -39,7 +39,7 @@ message Task {
 
     string name = 1;
   }
-  
+
   string title = 1;
   bool completed = 2;
   Contact assignee = 3;

@@ -9,6 +9,7 @@
       <w>burdon</w>
       <w>cairan</w>
       <w>callbackfn</w>
+      <w>codeblock</w>
       <w>containerd</w>
       <w>crdt</w>
       <w>ctors</w>
@@ -53,6 +54,8 @@
       <w>nanoerror</w>
       <w>nanomessage</w>
       <w>nanoresource</w>
+      <w>navtree</w>
+      <w>noreferrer</w>
       <w>observablehq</w>
       <w>oclif</w>
       <w>ollama</w>

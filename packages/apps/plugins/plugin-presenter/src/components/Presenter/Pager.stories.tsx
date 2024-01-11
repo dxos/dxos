@@ -21,7 +21,8 @@ const Story: FC<{ count?: number }> = ({ count = 20 }) => {
 };
 
 export default {
-  component: Story,
+  title: 'plugin-presenter/Pager',
+  render: Story,
   parameters: {
     layout: 'centered',
   },

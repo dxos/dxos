@@ -21,10 +21,10 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, demo, markdownBundle } from './extensions';
-import { defaultTheme, markdownTheme, textTheme } from './themes';
-import { type EditorModel } from '../../hooks';
+import { basicBundle, markdownBundle, setCommentRange } from '../../extensions';
+import { type CommentRange, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
+import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
@@ -56,9 +56,11 @@ export type TextEditorSlots = {
 
 export type TextEditorProps = {
   model: EditorModel;
+  readonly?: boolean; // TODO(burdon): Move into model.
+  comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
-  slots?: TextEditorSlots;
   editorMode?: EditorMode;
+  slots?: TextEditorSlots;
 };
 
 /**
@@ -66,16 +68,16 @@ export type TextEditorProps = {
  * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
 export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, extensions = [], slots = defaultSlots, editorMode }, forwardedRef) => {
+  ({ model, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
-
     const [root, setRoot] = useState<HTMLDivElement | null>(null);
-    const [state, setState] = useState<EditorState>();
-    const [view, setView] = useState<EditorView>();
+    const [{ state = undefined, view = undefined } = {}, setEditor] = useState<
+      { state?: EditorState; view?: EditorView } | undefined
+    >();
     useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
 
-    // TODO(burdon): Factor out?
+    // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
     useEffect(() => {
       if (awareness && peer) {
@@ -87,21 +89,34 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       }
     }, [awareness, peer, themeMode]);
 
+    // TODO(burdon): Factor out as extension.
+    useEffect(() => {
+      if (view && comments?.length) {
+        view.dispatch({
+          effects: setCommentRange.of({ model, comments }),
+        });
+      }
+    }, [view, comments]);
+
     useEffect(() => {
       if (!root) {
         return;
       }
 
+      // TODO(burdon): Remember cursor position.
+      // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: model.text(),
         extensions: [
-          // TODO(burdon): Factor out VIM mode?
+          readonly && EditorState.readOnly.of(readonly),
+
+          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
           editorMode === 'vim' && vim(),
 
           // Theme.
+          // TODO(burdon): Make theme configurable.
           EditorView.baseTheme(defaultTheme),
           EditorView.theme(slots?.editor?.theme ?? {}),
-          // TODO(burdon): themeMode doesn't change in storybooks.
           EditorView.darkTheme.of(themeMode === 'dark'),
 
           // Storage and replication.
@@ -114,17 +129,26 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 
       // NOTE: This repaints the editor.
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
-      // Ideally this should not be hit except when changing between text objects.
+      // Ideally this should not happen except when changing between text objects.
       view?.destroy();
-      setView(new EditorView({ state, parent: root }));
-      setState(state);
+      setEditor({
+        state,
+        view: new EditorView({
+          state,
+          parent: root,
+          // NOTE: Uncomment to spy on all transactions.
+          // https://codemirror.net/docs/ref/#view.EditorView.dispatch
+          // dispatch: (transaction, view) => {
+          //   view.update([transaction]);
+          // },
+        }),
+      });
 
       return () => {
         view?.destroy();
-        setView(undefined);
-        setState(undefined);
+        setEditor(undefined);
       };
-    }, [root, model, themeMode, editorMode]);
+    }, [root, model, readonly, editorMode, themeMode]);
 
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
@@ -157,25 +181,15 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
-// TODO(burdon): Allow plugins to set extensions (factory).
-const maybeDebug = (): Extension => {
-  // TODO(burdon): Parse JSON script format (with key bindings?)
-  const items = localStorage.getItem('dxos.composer.demo');
-  if (items) {
-    return demo({ items: items.split(',') });
-  }
-
-  return [];
-};
-
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const slots = defaultsDeep({}, _slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
-        extensions={[basicBundle({ themeMode, placeholder: slots?.editor?.placeholder }), maybeDebug(), ...extensions]}
+        readonly={readonly}
+        extensions={[basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
         slots={slots}
         {...props}
       />
@@ -184,17 +198,14 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 );
 
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ extensions = [], slots: _slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const slots = defaultsDeep({}, _slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
-        extensions={[
-          markdownBundle({ themeMode, placeholder: slots?.editor?.placeholder }),
-          maybeDebug(),
-          ...extensions,
-        ]}
+        readonly={readonly}
+        extensions={[markdownBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
         slots={slots}
         {...props}
       />

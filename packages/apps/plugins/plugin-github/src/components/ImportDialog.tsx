@@ -10,7 +10,7 @@ import { type TextEditorRef } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
-import type { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
+import type { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../types';
 
 export const ImportDialog = ({
   docGhId,
@@ -27,6 +27,7 @@ export const ImportDialog = ({
       try {
         const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
         const { data } = await octokit.rest.issues.get({ owner, repo, issue_number: issueNumber });
+        // TODO(burdon): Invert dependency so that the editor is not required here.
         editorRef.current.view.dispatch({
           changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: data.body ?? '' },
         });
@@ -65,7 +66,7 @@ export const ImportDialog = ({
   }, [importGhIssueContent, importGhFileContent, docGhId]);
 
   return (
-    <>
+    <Dialog.Content>
       <Dialog.Title>{t('confirm import title')}</Dialog.Title>
       <p className='plb-2'>{t('confirm import body')}</p>
       <div role='none' className='flex justify-end gap-2'>
@@ -78,6 +79,6 @@ export const ImportDialog = ({
           </Button>
         </Dialog.Close>
       </div>
-    </>
+    </Dialog.Content>
   );
 };

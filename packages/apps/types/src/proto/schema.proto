@@ -73,8 +73,17 @@ message File {
 message Document {
   option (object) = true;
 
+  message Comment {
+    // TODO(burdon): Should not be object, but arrays of plain objects are broken.
+    // option (object) = true;
+
+    Thread thread = 1;
+    string cursor = 2; // TODO(burdon): Rename cursor (start/end).
+  }
+
   string title = 1;
   dxos.schema.Text content = 2;
+  repeated Comment comments = 3;
 }
 
 /**
@@ -90,7 +99,7 @@ message Script {
 /**
  *
  */
-// TODO(burdon): Generalize to script?
+// TODO(burdon): Remove (change plugin to provide Markdown extension).
 message Mermaid {
   option (object) = true;
 
@@ -208,8 +217,16 @@ message Sketch {
 message Thread {
   option (object) = true;
 
+  // TODO(burdon): Reconcile with Message.Context.
+  message Context {
+    string space = 1;
+    string schema = 2;
+    string object = 3;
+  }
+
   string title = 1;
   repeated Message messages = 2;
+  Context context = 3;
 }
 
 /**

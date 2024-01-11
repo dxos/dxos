@@ -8,12 +8,14 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { afterTest, describe, test } from '@dxos/test';
 
 import {
+  LEGACY_TEXT_TYPE,
   TextObject,
   TypedObject,
-  isActualAutomergeObject,
+  isAutomergeObject,
   isActualTypedObject,
   setGlobalAutomergePreference,
 } from './object';
+import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase, testWithAutomerge } from './testing';
 import { Contact } from './tests/proto';
@@ -172,12 +174,12 @@ describe('Serializer from Hypergraph to Automerge', () => {
 
     {
       const { db } = await createDatabase();
-      const text = new TextObject(content, undefined, undefined, { useAutomergeBackend: false });
+      const text = new TextObject(content, undefined, undefined, { automerge: false });
       db.add(text);
       await db.flush();
       expect(text.text).to.deep.eq(content);
       expect(db.objects).to.have.length(1);
-      expect(isActualAutomergeObject(text)).to.be.false;
+      expect(isAutomergeObject(text)).to.be.false;
       expect(text instanceof TextObject).to.be.true;
 
       data = await serializer.export(db);
@@ -199,7 +201,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await serializer.import(db, data);
 
       const { objects } = db.query();
-      expect(isActualAutomergeObject(objects[0])).to.be.true;
+      expect(isAutomergeObject(objects[0])).to.be.true;
       expect(objects[0] instanceof TextObject).to.be.false;
       expect(objects).to.have.length(1);
       expect(objects[0][objects[0].field]).to.deep.eq(content);
@@ -226,15 +228,23 @@ describe('Serializer from Hypergraph to Automerge', () => {
           ],
           assignee: new Contact({ name: 'Dmytro Veremchuk' }),
         },
-        // { useAutomergeBackend: false },
+        // { automerge: false },
       );
       db.add(obj);
+
+      const yjs = new TextObject();
+      yjs.doc!.transact(() => {
+        const yMap = yjs.doc!.getMap('records');
+        yMap.set('one', { id: 'one', title: 'One' });
+        yMap.set('two', { id: 'two', title: 'Two' });
+      });
+      db.add(yjs);
+
       await db.flush();
-      expect(db.objects).to.have.length(4);
-      expect(db.objects.every((object) => !isActualAutomergeObject(object))).to.be.true;
-      expect(db.objects.every((object) => isActualTypedObject(object))).to.be.true;
+      expect(db.objects).to.have.length(5);
+      expect(db.objects.every((object) => !isAutomergeObject(object))).to.be.true;
       serialized = await serializer.export(db);
-      expect(serialized.objects).to.have.length(4);
+      expect(serialized.objects).to.have.length(5);
     }
 
     {
@@ -244,12 +254,12 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await serializer.import(db, serialized);
 
       const { objects } = db.query();
-      expect(objects).to.have.length(4);
+      expect(objects).to.have.length(5);
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;
       expect(main.subtasks).to.have.length(2);
       expect(main.assignee instanceof Contact).to.be.true;
-      expect(db.objects.every((object) => isActualAutomergeObject(object))).to.be.true;
+      expect(db.objects.every((object) => isAutomergeObject(object))).to.be.true;
       expect(db.objects.every((object) => !isActualTypedObject(object))).to.be.true;
 
       expect(main.subtasks[0]).to.be.instanceOf(TypedObject);
@@ -257,6 +267,10 @@ describe('Serializer from Hypergraph to Automerge', () => {
       expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
       expect(main.subtasks[1].title).to.eq('Subtask 2');
       expect(main.assignee.name).to.eq('Dmytro Veremchuk');
+
+      const [yjs] = db.query(Filter.typename(LEGACY_TEXT_TYPE)).objects;
+      expect(yjs.records.one.title).to.eq('One');
+      expect(yjs.records.two.title).to.eq('Two');
     }
   });
 });

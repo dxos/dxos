@@ -5,8 +5,8 @@
 import type { Browser, Page } from '@playwright/test';
 
 import { StackManager } from '@dxos/react-ui-stack/testing';
+import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
-import { ShellManager } from '@dxos/vault/testing';
 
 export class AppManager {
   page!: Page;
@@ -46,7 +46,7 @@ export class AppManager {
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click({ button: 'right' });
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 

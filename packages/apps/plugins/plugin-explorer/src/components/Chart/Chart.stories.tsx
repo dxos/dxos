@@ -16,6 +16,7 @@ import { Chart } from './Chart';
 // TODO(burdon): How to provide geo service via agent?
 
 export default {
+  title: 'plugin-explorer/Chart',
   component: Plot,
   decorators: [FullscreenDecorator()],
 };

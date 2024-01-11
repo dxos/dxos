@@ -20,7 +20,7 @@ import {
   base,
   getGlobalAutomergePreference,
   isActualTypedObject,
-  isActualAutomergeObject,
+  isAutomergeObject,
   TextObject,
 } from '../object';
 import { type Schema } from '../proto';
@@ -71,7 +71,10 @@ export class AutomergeDb {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        const doc = await asyncTimeout(this._docHandle.doc(), 1_000);
+        // TODO(mykola): Remove check for global preference or timeout?
+        const doc = getGlobalAutomergePreference()
+          ? await this._docHandle.doc()
+          : await asyncTimeout(this._docHandle.doc(), 1_000);
         const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
@@ -135,7 +138,7 @@ export class AutomergeDb {
       return obj;
     }
 
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
@@ -147,7 +150,7 @@ export class AutomergeDb {
   }
 
   remove<T extends EchoObject>(obj: T) {
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }

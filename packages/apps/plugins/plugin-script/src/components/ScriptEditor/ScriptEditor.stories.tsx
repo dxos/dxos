@@ -38,6 +38,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-script/ScriptEditor',
   component: ScriptEditor,
   render: Story,
   parameters: {

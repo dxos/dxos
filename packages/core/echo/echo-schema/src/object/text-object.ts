@@ -7,10 +7,15 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
+import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
-import { type AutomergeOptions, type TypedObject, getGlobalAutomergePreference } from './typed-object';
+import {
+  getGlobalAutomergePreference,
+  isAutomergeObject,
+  type AutomergeOptions,
+  type TypedObject,
+} from './typed-object';
 import { AutomergeObject } from '../automerge';
 
 export type TextObjectOptions = AutomergeOptions;
@@ -28,7 +33,7 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   constructor(text?: string, kind?: TextKind, field?: string, opts?: TextObjectOptions) {
     super(TextModel);
 
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    if (opts?.automerge ?? getGlobalAutomergePreference()) {
       const defaultedField = field ?? 'content';
       return new AutomergeObject(
         {
@@ -87,7 +92,7 @@ export class TextObject extends AbstractEchoObject<TextModel> {
   }
 
   toJSON() {
-    const jsonRepresentation = {
+    const jsonRepresentation: Record<string, any> = {
       // TODO(mykola): Delete backend (for debug).
       '@backend': 'hypercore',
       '@id': this.id,
@@ -96,9 +101,21 @@ export class TextObject extends AbstractEchoObject<TextModel> {
       kind: this.kind,
       field: this.model?.field,
     };
-    if (this.model?.field) {
-      (jsonRepresentation as any)[this.model.field] = this.text;
+
+    for (const [key, value] of this.model?.doc.share ?? []) {
+      if (!jsonRepresentation[key] && value._map.size > 0) {
+        try {
+          const map = this.model!.doc.getMap(key);
+          jsonRepresentation[key] = map.toJSON();
+        } catch {}
+      }
     }
+
+    try {
+      if (this.model?.field) {
+        jsonRepresentation[this.model.field] = this.text;
+      }
+    } catch {}
 
     return jsonRepresentation;
   }
@@ -133,3 +150,26 @@ export class TextObject extends AbstractEchoObject<TextModel> {
  */
 // TODO(burdon): Remove.
 export class Text extends TextObject {}
+
+/**
+ * @deprecated
+ */
+export const setTextContent = (object: TextObject, text: string) => {
+  if (isAutomergeObject(object)) {
+    (object as any).content = text;
+  } else {
+    object.content?.delete(0, object.text.length);
+    object.content?.insert(0, text as any);
+  }
+};
+
+/**
+ * @deprecated
+ */
+export const getTextContent = (object: TextObject): string => {
+  if (isAutomergeObject(object)) {
+    return (object as any).content;
+  } else {
+    return object.text;
+  }
+};

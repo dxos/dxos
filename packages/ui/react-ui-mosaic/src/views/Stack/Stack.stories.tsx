@@ -17,6 +17,7 @@ import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
+  title: 'react-ui-mosaic/Stack',
   component: Stack,
   render: (
     args: StackProps & {

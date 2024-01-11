@@ -12,8 +12,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
-const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
-
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
@@ -39,6 +37,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
+        shell: resolve(__dirname, './shell.html'),
         'script-frame': resolve(__dirname, './script-frame/index.html'),
       },
       output: {
@@ -88,17 +87,13 @@ export default defineConfig({
         }];
       }
     },
-    ConfigPlugin({
-      env: [
-        'DX_DEBUG', 'DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'
-      ],
-    }),
+    ConfigPlugin(),
     ThemePlugin({
-      extensions: [osThemeExtension],
       root: __dirname,
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269

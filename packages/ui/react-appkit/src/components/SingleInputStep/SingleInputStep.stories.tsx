@@ -13,6 +13,7 @@ import { SingleInputStep, type SingleInputStepProps } from './SingleInputStep';
 import { Group } from '../Group';
 
 export default {
+  title: 'react-appkit/SingleInputStep',
   component: SingleInputStep,
   decorators: [withTheme],
   argTypes: {
@@ -32,7 +33,7 @@ const render = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: stri
         className: 'mb-2 text-3xl',
         children: t(rootLabel),
       }}
-      className='p-5 rounded-xl max-w-md mx-auto my-4'
+      className='p-5 rounded-lg max-w-md mx-auto my-4'
     >
       <SingleInputStep {...args} className='max-w-md mx-auto my-4' />
     </Group>

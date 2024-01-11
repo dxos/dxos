@@ -31,3 +31,7 @@ export const arrayToBuffer = (array: Uint8Array): Buffer => {
 export const bufferToArray = (buffer: Buffer): Uint8Array => {
   return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 };
+
+export const stringToArray = (string: string): Uint8Array => bufferToArray(Buffer.from(string, 'hex'));
+
+export const arrayToString = (array: Uint8Array): string => arrayToBuffer(array).toString('hex');
