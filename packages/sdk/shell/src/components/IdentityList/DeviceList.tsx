@@ -22,11 +22,13 @@ export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
       {devices.map((device) => {
         const identity = {
           identityKey: device.deviceKey,
-          profile: {
-            displayName: `${device.profile?.platform} (${device.profile?.platformVersion}) on ${device.profile?.os} (${
-              device.profile?.osVersion
-            }) ${device.profile?.architecture ?? 'Unknown'}-bit`,
-          },
+          profile: device.profile
+            ? {
+                displayName: `${device.profile?.platform} (${device.profile?.platformVersion}) on ${
+                  device.profile?.os
+                } (${device.profile?.osVersion}) ${device.profile?.architecture ?? 'Unknown'}-bit`,
+              }
+            : undefined,
         };
         return (
           <IdentityListItem
