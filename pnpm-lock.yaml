@@ -3784,6 +3784,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*

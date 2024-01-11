@@ -35,7 +35,7 @@ class KeyboardContext {
   bind(config: KeyBinding) {
     // Normalize order of modifiers.
     const { binding } = config;
-    const parts = binding.split('+');
+    const parts = binding.toLowerCase().split('+');
     const mods = modifiers.filter((key) => parts.includes(key));
     invariant(mods.length === 0 || mods.length === parts.length - 1);
     if (mods.length) {

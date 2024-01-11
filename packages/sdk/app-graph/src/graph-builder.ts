@@ -7,6 +7,7 @@ import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 
 import { EventSubscriptions } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
+import { getHostPlatform } from '@dxos/util';
 
 import type { ActionArg, Action } from './action';
 import { Graph } from './graph';
@@ -142,9 +143,11 @@ export class GraphBuilder {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
-            if (action.keyBinding) {
+            const binding =
+              typeof action.keyBinding === 'object' ? action.keyBinding?.[getHostPlatform()] : action.keyBinding;
+            if (binding) {
               Keyboard.singleton.getContext(path.join('/')).bind({
-                binding: action.keyBinding!,
+                binding,
                 handler: () => {
                   action.invoke({ caller: KEY_BINDING });
                 },
