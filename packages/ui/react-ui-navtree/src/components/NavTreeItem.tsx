@@ -129,7 +129,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
-    const ContextMenuTriggerRoot = actions.length > 0 ? NavTreeItemActionContextMenu : Fragment;
+    const ContextMenuTriggerRoot = NavTreeItemActionContextMenu;
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
     const isOverCurrent = isOver(path);
