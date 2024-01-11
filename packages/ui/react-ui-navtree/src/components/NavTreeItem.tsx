@@ -129,7 +129,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
-    const ContextMenuTriggerRoot = NavTreeItemActionContextMenu;
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
     const isOverCurrent = isOver(path);
@@ -158,7 +157,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             role='treeitem'
           >
             <ActionRoot>
-              <ContextMenuTriggerRoot
+              <NavTreeItemActionContextMenu
                 actions={actions}
                 onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
               >
@@ -208,7 +207,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   )}
                   {presence && renderPresence?.(node)}
                 </div>
-              </ContextMenuTriggerRoot>
+              </NavTreeItemActionContextMenu>
             </ActionRoot>
             {!active &&
               isBranch &&
