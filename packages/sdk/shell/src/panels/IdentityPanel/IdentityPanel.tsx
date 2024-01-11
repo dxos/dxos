@@ -6,7 +6,7 @@ import React, { useEffect, useMemo } from 'react';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { type Identity, useIdentity, useDevices } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import {
   type IdentityPanelProps,
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { IdentityActionChooser, ProfileForm } from './steps';
+import { DeviceManager, IdentityActionChooser, ProfileForm } from './steps';
 import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 
@@ -54,12 +54,14 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   const title = useMemo(() => {
     switch (activeView) {
       case 'device manager':
-      case 'device invitation manager':
         return t('choose devices label');
+      case 'device invitation manager':
+        return t('choose add device label');
       default:
         return t('identity heading');
     }
   }, [activeView, t]);
+  console.log('[IdentityPanelImpl]', { activeView });
   return (
     <DensityProvider density='fine'>
       <IdentityHeading {...{ identity, titleId, title, onDone }} />
@@ -74,6 +76,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               {...rest}
               invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
+          </Viewport.View>
+          <Viewport.View id='device manager' classNames={viewStyles}>
+            <DeviceManager active={activeView === 'device manager'} {...rest} />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='update profile form'>
             <ProfileForm
@@ -105,6 +110,7 @@ export const IdentityPanel = ({
 }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
   const client = useClient();
+  const devices = useDevices();
   const identity = useIdentity();
   if (!identity) {
     console.error('IdentityPanel rendered with no active identity.');
@@ -126,6 +132,8 @@ export const IdentityPanel = ({
         return 'identity action chooser';
       case identityState.matches('managingDeviceInvitation'):
         return 'device invitation manager';
+      case identityState.matches('managingDevices'):
+        return 'device manager';
       case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
         return 'update profile form';
       // case identityState.matches('signingOut'):
@@ -135,6 +143,8 @@ export const IdentityPanel = ({
     }
   }, [identityState]);
 
+  console.log({ activeView, identityState });
+
   const onUpdateProfile = async (profile: NonNullable<Identity['profile']>) => {
     identitySend({ type: 'updateProfile' });
     await client.halo.updateProfile(profile);
@@ -143,6 +153,7 @@ export const IdentityPanel = ({
   const implProps = {
     ...props,
     identity,
+    devices,
     activeView,
     send: identitySend,
     titleId,
