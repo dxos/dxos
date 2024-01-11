@@ -1,10 +1,12 @@
-import { compositeRuntime } from "../util";
-import * as S from '@effect/schema/Schema';
+//
+// Copyright 2024 DXOS.org
+//
+
 import * as AST from '@effect/schema/AST';
-import { insert } from "effect/RedBlackTree";
-import { inspect } from "util";
-import { cons } from "effect/List";
-import { Simplify } from "effect/Types";
+import * as S from '@effect/schema/Schema';
+import { type Simplify } from 'effect/Types';
+
+import { compositeRuntime } from '../util';
 
 /**
  * Reactive object.
@@ -14,7 +16,7 @@ export type Re<T> = { [K in keyof T]: T[K] }; //
 
 export type ReactiveFn = {
   <T extends {}>(obj: T): Re<T>;
-  <T> (schema: S.Schema<T>, obj: T): Re<Simplify<S.Mutable<T>>>;
+  <T>(schema: S.Schema<T>, obj: T): Re<Simplify<S.Mutable<T>>>;
 
   // typed: <T> (schema: S.Schema<T>) => (obj: T) => Re<T>;
 };
@@ -23,15 +25,18 @@ interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**
    * Called when a proxy is created for this target.
    */
+  // TODO(burdon): Should interfaces have private methods?
   _init(target: T): void;
-  
+
   readonly _proxyMap: WeakMap<object, any>;
 }
 
-const isSuitableProxyTarget = (value: any): value is object => typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
+// TODO(burdon): Suitable? (not a good name).
+const isSuitableProxyTarget = (value: any): value is object =>
+  typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
 
 const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): Re<T> => {
-  if(!isSuitableProxyTarget(target)) {
+  if (!isSuitableProxyTarget(target)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
 
@@ -39,7 +44,7 @@ const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T
   if (existingProxy) {
     return existingProxy;
   }
-  
+
   const mutableHandler: ReactiveHandler<T> = {} as any;
   Object.setPrototypeOf(mutableHandler, handler);
 
@@ -48,16 +53,15 @@ const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T
 
   handler._proxyMap.set(target, proxy);
   return proxy;
-}
+};
 
 export class DefaultReactiveHandler implements ReactiveHandler<any> {
   signal = compositeRuntime.createSignal();
 
+  // TODO(burdon): Readonly?
   _proxyMap = new WeakMap<object, any>();
 
-  _init(target: any): void {
-
-  }
+  _init(target: any): void {}
 
   get(target: any, prop: string | symbol, receiver: any): any {
     this.signal.notifyRead();
@@ -101,10 +105,10 @@ const symbolTypeAst = Symbol('echo_type_ast');
 
 export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T> {
   signal = compositeRuntime.createSignal();
-  
+
   _proxyMap = new WeakMap<object, any>();
 
-  _init(target: T): void { }
+  _init(target: T): void {}
 
   get(target: any, prop: string | symbol, receiver: any): any {
     this.signal.notifyRead();
@@ -119,12 +123,13 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 
   set(target: any, prop: string | symbol, value: any, receiver: any): boolean {
     const ast = target[symbolTypeAst] as AST.AST;
-    
-    const propSignature = AST.getPropertySignatures(ast).find(property => property.name === prop);
-    if(!propSignature) {
+
+    const propSignature = AST.getPropertySignatures(ast).find((property) => property.name === prop);
+    if (!propSignature) {
       throw new Error(`Property ${prop.toString()} is not defined in the schema.`);
     }
-    
+
+    // TODO(burdon): Void.
     const _ = S.asserts(S.make(propSignature.type))(value);
 
     const result = Reflect.set(target, prop, value, receiver);
@@ -135,9 +140,11 @@ export class TypedReactiveHandler<T extends object> implements ReactiveHandler<T
 
 export const reactive: ReactiveFn = <T extends {}>(...args: any[]): Re<T> => {
   switch (args.length) {
-    case 1: // Untyped
+    case 1: {
+      // Untyped
       return createReactiveProxy(args[0], new DefaultReactiveHandler());
-    case 2:
+    }
+    case 2: {
       const [schema, obj] = args as [S.Schema<T>, T];
 
       // validate
@@ -149,6 +156,8 @@ export const reactive: ReactiveFn = <T extends {}>(...args: any[]): Re<T> => {
         value: schema,
       });
       return createReactiveProxy(args[1], new TypedReactiveHandler());
+    }
+
     default:
       throw new Error('Invalid arguments.');
   }
@@ -158,9 +167,9 @@ const assignAstAnnotations = (obj: any, ast: AST.AST) => {
   // console.log(inspect(ast, { depth: null, colors: true  }))
   switch (ast._tag) {
     case 'TypeLiteral': {
-      for(const property of ast.propertySignatures) {
+      for (const property of ast.propertySignatures) {
         const value = obj[property.name];
-        if(typeof value === 'object' && value !== null) {
+        if (typeof value === 'object' && value !== null) {
           assignAstAnnotations(value, property.type);
         }
       }
@@ -170,7 +179,8 @@ const assignAstAnnotations = (obj: any, ast: AST.AST) => {
       });
       break;
     }
+
     default:
       throw new Error(`Not implemented: ${ast._tag}`);
   }
-}
+};

@@ -1,16 +1,18 @@
-import { test, describe } from '@dxos/test';
+//
+// Copyright 2024 DXOS.org
+//
+
 import * as S from '@effect/schema/Schema';
-import { compositeRuntime } from '../util/signal';
+import { effect, signal, batch } from '@preact/signals-core';
 import { expect } from 'chai';
-import { effect } from '@preact/signals-core';
 
-import { signal, batch } from '@preact/signals-core';
+import { test, describe } from '@dxos/test';
 
-import { registerSignalRuntime as registerRuntimeForEcho } from '../util/signal';
 import { reactive } from './reactive';
-import { type } from 'os';
+import { registerSignalRuntime as registerRuntimeForEcho } from '../util/signal';
 
-{ // TODO(dmaretskyi): Resolve circular dependency on @dxos/echo-signals.
+{
+  // TODO(dmaretskyi): Resolve circular dependency on @dxos/echo-signals.
   registerRuntimeForEcho({
     createSignal: () => {
       const thisSignal = signal({});
@@ -99,12 +101,12 @@ describe.only('Reactive', () => {
       address: {
         street: 'Main Street',
         city: 'London',
-      }
+      },
     });
 
     person.name = 'John Doe';
 
-    expect(() =>  {
+    expect(() => {
       (person as any).address.city = 42; // Runtime error.
     }).to.throw();
   });
