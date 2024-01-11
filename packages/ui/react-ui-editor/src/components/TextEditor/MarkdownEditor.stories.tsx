@@ -265,6 +265,10 @@ export const Large = {
   render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
 };
 
+export const Empty = {
+  render: () => <Story />,
+};
+
 export const NoExtensions = {
   render: () => <Story text={document} />,
 };

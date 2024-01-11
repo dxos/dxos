@@ -2,17 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Prec } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
 import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, type KeyboardEventHandler, StrictMode, useEffect, useRef, useState } from 'react';
+import React, {
+  type HTMLAttributes,
+  type KeyboardEventHandler,
+  StrictMode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import {
-  useTextModel,
   type CursorInfo,
   type TextEditorRef,
   type YText,
   link,
+  useTextModel,
   MarkdownEditor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -59,7 +69,7 @@ const OutlinerItem = ({
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
-  const [focus, setFocus] = useState<boolean>();
+  const [focus, setFocus] = useState(false);
   useEffect(() => {
     if (focus) {
       onSelect?.();
@@ -67,20 +77,68 @@ const OutlinerItem = ({
   }, [focus]);
 
   const editorRef = useRef<TextEditorRef>(null);
+  // TODO(burdon): useImperativeHandle updates, but this isn't triggered.
+  console.log('@@', !!editorRef.current, model?.id.slice(0, 4));
   useEffect(() => {
-    if (editorRef.current && active && !focus) {
-      // TODO(burdon): Hack since ref isn't instantiated yet.
-      //  NOTE: This happens with the line is split and a new line is created and set as the active line.
-      setTimeout(() => {
-        editorRef.current?.view?.focus();
-        const from = active.from === -1 ? editorRef.current?.view?.state.doc.length : active.from;
-        if (from !== undefined) {
-          editorRef.current?.view?.dispatch({ selection: { anchor: from, head: active.to ?? from } });
-        }
-      });
+    // console.log('!!', !!active, !!editorRef.current?.view, model?.id);
+    if (editorRef.current?.view && active) {
+      editorRef.current.view.focus();
+      // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
-  }, [editorRef.current?.view, active]);
+  }, [model, editorRef.current, active]);
 
+  // TODO(burdon): Replace with single editor with document constructed from objects?
+
+  const outlinerKeymap = useMemo(() => {
+    return Prec.highest(
+      keymap.of([
+        {
+          key: 'Tab',
+          run: () => {
+            onIndent?.('right');
+            return true;
+          },
+          shift: () => {
+            onIndent?.('left');
+            return true;
+          },
+        },
+        {
+          key: 'Enter',
+          run: (view) => {
+            // TODO(burdon): Util.
+            const { head, from, to } = view.state.selection.ranges[0];
+            const { number: line } = view.state.doc.lineAt(head);
+            onEnter?.({ from, to, line, lines: view.state.doc.lines, after: view.state.sliceDoc(from) });
+            return true;
+          },
+        },
+        {
+          key: 'Backspace',
+          run: () => {
+            console.log('backspace');
+            return true;
+          },
+        },
+        {
+          key: 'shift-ArrowUp',
+          run: () => {
+            console.log('up');
+            return true;
+          },
+        },
+        {
+          key: 'shift-ArrowDown',
+          run: () => {
+            console.log('down');
+            return true;
+          },
+        },
+      ]),
+    );
+  }, []);
+
+  // TODO(burdon): Remove.
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
     const view = editorRef.current?.view;
     if (!view) {
@@ -156,7 +214,7 @@ const OutlinerItem = ({
   };
 
   return (
-    <div className='flex group' onKeyDownCapture={handleKeyDown}>
+    <div className='flex group'>
       {(isTasklist && (
         <div className='mt-0.5 mr-2.5'>
           <Input.Root>
@@ -169,7 +227,7 @@ const OutlinerItem = ({
           </Input.Root>
         </div>
       )) || (
-        <div className='mr-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
+        <div className='pt-[4px] mr-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
           <DotOutline
             weight={focus ? 'fill' : undefined}
             className={mx('shrink-0', getSize(6), active && 'text-primary-500')}
@@ -181,10 +239,10 @@ const OutlinerItem = ({
         <MarkdownEditor
           ref={editorRef}
           model={model}
-          extensions={[link({ onRender: onRenderLink })]}
+          extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
           slots={{
             root: {
-              className: 'w-full',
+              className: 'w-full pt-[4px]',
               onFocus: () => setFocus(true),
               onBlur: () => setFocus(false),
             },
@@ -326,6 +384,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       }
     }
 
+    console.log('==', (item.text as any).doc.guid);
     setActive({ itemId: item.id });
     return item;
   };

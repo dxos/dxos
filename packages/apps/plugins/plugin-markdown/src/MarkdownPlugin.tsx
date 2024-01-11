@@ -63,7 +63,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-  const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
+
+  // TODO(burdon): Remove.
+  const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: {} };
   const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
     pluginMutableRef.current = { ...nextRef };
   };

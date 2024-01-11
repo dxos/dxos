@@ -38,7 +38,7 @@ export type CursorInfo = {
 };
 
 export type TextEditorRef = {
-  root: HTMLDivElement | null;
+  root?: HTMLDivElement;
   state?: EditorState;
   view?: EditorView;
 };
@@ -75,7 +75,19 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     const [{ state = undefined, view = undefined } = {}, setEditor] = useState<
       { state?: EditorState; view?: EditorView } | undefined
     >();
-    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
+    useImperativeHandle(
+      forwardedRef,
+      () => {
+        if (root && state && view) {
+          // TODO(burdon): This doesn't seem to update useRef (in outliner).
+          console.log('++', !!root, !!state, !!view, model.id.slice(0, 4));
+          return { root, state, view };
+        } else {
+          return {};
+        }
+      },
+      [state, view],
+    );
 
     // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
@@ -131,21 +143,19 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
       // Ideally this should not happen except when changing between text objects.
       view?.destroy();
-      setEditor({
+      const newView = new EditorView({
+        parent: root,
         state,
-        view: new EditorView({
-          state,
-          parent: root,
-          // NOTE: Uncomment to spy on all transactions.
-          // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-          // dispatch: (transaction, view) => {
-          //   view.update([transaction]);
-          // },
-        }),
+        // NOTE: Uncomment to spy on all transactions.
+        // https://codemirror.net/docs/ref/#view.EditorView.dispatch
+        // dispatch: (transaction, view) => {
+        //   view.update([transaction]);
+        // },
       });
 
+      setEditor({ state, view: newView });
       return () => {
-        view?.destroy();
+        newView?.destroy();
         setEditor(undefined);
       };
     }, [root, model, readonly, editorMode, themeMode]);
@@ -154,10 +164,11 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          case 'Enter': {
-            view?.contentDOM.focus();
-            break;
-          }
+          // TODO(burdon): ???
+          // case 'Enter': {
+          //   view?.contentDOM.focus();
+          //   break;
+          // }
 
           case 'Escape': {
             editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && root?.focus();
@@ -182,15 +193,18 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 );
 
 export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultTextSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
-        slots={slots}
+        extensions={[
+          basicBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
+          ...extensions,
+        ]}
+        slots={updatedSlots}
         {...props}
       />
     );
@@ -198,15 +212,18 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
 );
 
 export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultMarkdownSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[markdownBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
-        slots={slots}
+        extensions={[
+          markdownBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
+          ...extensions,
+        ]}
+        slots={updatedSlots}
         {...props}
       />
     );
