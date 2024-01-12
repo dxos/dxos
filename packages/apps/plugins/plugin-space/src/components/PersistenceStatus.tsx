@@ -67,13 +67,11 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
     default:
       return (
         <Tooltip.Root delayDuration={400}>
-          <Tooltip.Trigger>
-            <div className='flex items-center'>
-              <CheckCircle className={mx(getSize(4), 'me-1')} />
-              {displayMessage && (
-                <span className={mx('text-sm', staticPlaceholderText)}>{t('persisted locally label')}</span>
-              )}
-            </div>
+          <Tooltip.Trigger role='status' className='flex items-center'>
+            <CheckCircle className={mx(getSize(4), 'me-1')} />
+            {displayMessage && (
+              <span className={mx('text-sm', staticPlaceholderText)}>{t('persisted locally label')}</span>
+            )}
           </Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Content>

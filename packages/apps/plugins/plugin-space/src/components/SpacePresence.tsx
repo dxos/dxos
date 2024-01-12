@@ -114,7 +114,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
               </AvatarGroupItem.Root>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-[70]'>
+              <Tooltip.Content side='bottom'>
                 <span>{name}</span>
                 <Tooltip.Arrow />
               </Tooltip.Content>
@@ -134,7 +134,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
             </AvatarGroupItem.Root>
           </Tooltip.Trigger>
           <Tooltip.Portal>
-            <Tooltip.Content side='bottom' classNames='z-[70]'>
+            <Tooltip.Content side='bottom'>
               <span>
                 {t('viewers label', { count: members.filter((member) => member.match).length })}
                 {t('members online label', { count: members.length - members.filter((member) => member.match).length })}
