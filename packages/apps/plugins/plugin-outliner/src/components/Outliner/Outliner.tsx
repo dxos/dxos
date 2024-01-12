@@ -23,8 +23,10 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
 // Item
 //
 
+// TODO(burdon): Make consistent with EditorSelection (anchor/head)
 type CursorSelection = {
   itemId: string;
+  anchor?: number;
   from?: number;
   to?: number;
 };
@@ -54,6 +56,8 @@ const OutlinerItem = ({
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
+
+  // Focus.
   const [focus, setFocus] = useState(false);
   useEffect(() => {
     if (focus) {
@@ -61,16 +65,24 @@ const OutlinerItem = ({
     }
   }, [focus]);
 
+  // Focus and selection.
+  // NOTE: The only way to set focus after creating a new item is to pass focus=true into the editor.
+  // The editorRef updated by the editor's useImperativeHandle doesn't trigger an update here.
   const editorRef = useRef<EditorView>(null);
   useEffect(() => {
-    // NOTE: useImperativeHandle does not trigger editorRef.
-    // TODO(burdon): Set initial selection.
-    if (editorRef.current && active) {
-      editorRef.current?.focus();
-      // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
-    }
-  }, [model, editorRef.current, active]);
+    if (active && editorRef.current) {
+      const { from } = editorRef.current.state.selection.ranges[0];
+      const anchor =
+        active.from === -1
+          ? editorRef.current.state.doc.length
+          : Math.min(active.from ?? from, editorRef.current.state.doc.length);
 
+      editorRef.current.dispatch({ selection: { anchor } });
+      editorRef.current.focus();
+    }
+  }, [active]);
+
+  // Keys.
   const outlinerKeymap = useMemo(() => {
     const getCursor = (view: EditorView): CursorInfo => {
       const { head, from, to } = view.state.selection.ranges[0];
@@ -121,11 +133,35 @@ const OutlinerItem = ({
           },
         },
         {
-          key: 'ArrowUp',
+          key: 'ArrowLeft',
           run: (view) => {
             const { from, line } = getCursor(view);
             if (from === 0 && line === 1) {
-              onCursor?.('up');
+              onCursor?.('up', -1);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowRight',
+          run: (view) => {
+            const { from, length } = getCursor(view);
+            if (from === length) {
+              onCursor?.('down');
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowUp',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (line === 1) {
+              onCursor?.('up', from);
               return true;
             }
 
@@ -142,9 +178,9 @@ const OutlinerItem = ({
         {
           key: 'ArrowDown',
           run: (view) => {
-            const { from, line, lines, length } = getCursor(view);
-            if (from === length && line === lines) {
-              onCursor?.('down');
+            const { line, lines, from } = getCursor(view);
+            if (line === lines) {
+              onCursor?.('down', from);
               return true;
             }
 

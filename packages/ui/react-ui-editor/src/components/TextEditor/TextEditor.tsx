@@ -53,6 +53,7 @@ export type TextEditorSlots = {
 export type TextEditorProps = {
   model: EditorModel;
   focus?: boolean;
+  selection?: { anchor: number; head?: number };
   readonly?: boolean; // TODO(burdon): Move into model.
   comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
@@ -64,18 +65,24 @@ export type TextEditorProps = {
  * Base text editor.
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ model, focus, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
+  (
+    { model, focus, selection, readonly, comments, extensions = [], editorMode, slots = defaultSlots },
+    forwardedRef,
+  ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
+
+    // The editor view ref should only be used as an escape hatch.
     const rootRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<EditorView | null>(null);
-    // NOTE: This doesn't update useRef.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+
+    // Focus.
     useEffect(() => {
-      if (focus && view) {
+      if (view && focus) {
         view.focus();
       }
-    }, [focus, view]);
+    }, [view, focus]);
 
     // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
@@ -107,6 +114,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: model.text(),
+        selection,
         extensions: [
           readonly && EditorState.readOnly.of(readonly),
 
