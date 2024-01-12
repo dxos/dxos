@@ -56,11 +56,11 @@ import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import { initializeNativeApp } from './native';
 
 const main = async () => {
+  const isSocket = !!(globalThis as any).__args;
   const config = await setupConfig();
   const services = await createClientServices(config);
 
-  // Test if socket supply native app.
-  if ((globalThis as any).__args) {
+  if (isSocket) {
     void initializeNativeApp();
   }
 
@@ -132,7 +132,8 @@ const main = async () => {
         config,
         services,
         types,
-        shell: './shell.html',
+        // TODO(wittjosiah): Currently shell is not working when running in socket.
+        shell: isSocket ? undefined : './shell.html',
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
@@ -155,7 +156,7 @@ const main = async () => {
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
-      [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')),
+      ...(isSocket ? {} : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
       [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
         containerUrl: '/script-frame/index.html',
@@ -194,7 +195,7 @@ const main = async () => {
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
-      PwaMeta.id,
+      ...(isSocket ? [] : [PwaMeta.id]),
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
