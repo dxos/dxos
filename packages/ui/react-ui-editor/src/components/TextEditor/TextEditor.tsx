@@ -35,6 +35,7 @@ export type CursorInfo = {
   to: number;
   line: number;
   lines: number;
+  length: number;
   after?: string;
 };
 

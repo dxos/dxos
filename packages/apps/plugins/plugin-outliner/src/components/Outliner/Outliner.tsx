@@ -5,15 +5,7 @@
 import { Prec } from '@codemirror/state';
 import { type EditorView, keymap } from '@codemirror/view';
 import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, {
-  type HTMLAttributes,
-  type KeyboardEventHandler,
-  StrictMode,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
@@ -80,6 +72,19 @@ const OutlinerItem = ({
   }, [model, editorRef.current, active]);
 
   const outlinerKeymap = useMemo(() => {
+    const getCursor = (view: EditorView): CursorInfo => {
+      const { head, from, to } = view.state.selection.ranges[0];
+      const { number: line } = view.state.doc.lineAt(head);
+      return {
+        from,
+        to,
+        line,
+        lines: view.state.doc.lines,
+        length: view.state.doc.length,
+        after: view.state.sliceDoc(from),
+      };
+    };
+
     return Prec.highest(
       keymap.of([
         {
@@ -96,112 +101,66 @@ const OutlinerItem = ({
         {
           key: 'Enter',
           run: (view) => {
-            const { head, from, to } = view.state.selection.ranges[0];
-            const { number: line } = view.state.doc.lineAt(head);
             // TODO(burdon): Slow, so pressing enter again happens from same line.
-            onEnter?.({ from, to, line, lines: view.state.doc.lines, after: view.state.sliceDoc(from) });
+            const cursor = getCursor(view);
+            onEnter?.(cursor);
             return true;
           },
         },
         {
           key: 'Backspace',
+          run: (view) => {
+            const cursor = getCursor(view);
+            const { from, line } = cursor;
+            if (from === 0 && line === 1) {
+              onDelete?.(cursor);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowUp',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (from === 0 && line === 1) {
+              onCursor?.('up');
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'cmd-ArrowUp',
           run: () => {
-            console.log('backspace');
+            onCursor?.('home');
             return true;
           },
         },
         {
-          key: 'shift-ArrowUp',
-          run: () => {
-            console.log('up');
-            return true;
+          key: 'ArrowDown',
+          run: (view) => {
+            const { from, line, lines, length } = getCursor(view);
+            if (from === length && line === lines) {
+              onCursor?.('down');
+              return true;
+            }
+
+            return false;
           },
         },
         {
-          key: 'shift-ArrowDown',
+          key: 'cmd-ArrowDown',
           run: () => {
-            console.log('down');
+            onCursor?.('end');
             return true;
           },
         },
       ]),
     );
   }, []);
-
-  // TODO(burdon): Remove.
-  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
-    const view = editorRef.current;
-    if (!view) {
-      return;
-    }
-
-    // TODO(burdon): Factor out util.
-    const { head, from, to } = view.state.selection.ranges[0];
-    const { number: line } = view.state.doc.lineAt(head);
-    const after = view.state.sliceDoc(from);
-    const lines = view.state.doc.lines;
-    const state = { from, to, line, lines, after };
-
-    const { key, shiftKey } = event;
-    switch (key) {
-      // TODO(burdon): Only move lines if at start/end of line.
-      case 'ArrowUp':
-        if (event.altKey) {
-          event.preventDefault();
-          onShift?.('up');
-        } else {
-          if (line === 1) {
-            event.preventDefault();
-            onCursor?.(event.metaKey ? 'home' : 'up');
-          }
-        }
-        break;
-      case 'ArrowDown':
-        if (event.altKey) {
-          event.preventDefault();
-          onShift?.('down');
-        } else {
-          if (line === lines) {
-            event.preventDefault();
-            onCursor?.(event.metaKey ? 'end' : 'down');
-          }
-        }
-        break;
-      case 'ArrowLeft': {
-        if (from === 0) {
-          event.preventDefault();
-          onCursor?.('up', -1);
-        }
-        break;
-      }
-      case 'ArrowRight': {
-        if (!after?.length) {
-          event.preventDefault();
-          onCursor?.('down', 0);
-        }
-        break;
-      }
-      case 'Tab': {
-        event.preventDefault();
-        onIndent?.(event.shiftKey ? 'left' : 'right');
-        break;
-      }
-      case 'Enter': {
-        if (!shiftKey) {
-          event.preventDefault();
-          onEnter?.(state);
-        }
-        break;
-      }
-      case 'Backspace': {
-        if (from === 0 && line === 1) {
-          event.preventDefault();
-          onDelete?.(state);
-        }
-        break;
-      }
-    }
-  };
 
   if (!model) {
     return null;
