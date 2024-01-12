@@ -100,6 +100,7 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
+  const download = useFileDownload();
 
   return {
     meta,
@@ -529,7 +530,6 @@ export const SpacePlugin = ({
                 const backupBlob = await exportData(space, space.key.toHex());
                 const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
 
-                const download = useFileDownload();
                 download(backupBlob, `${filename}.json`);
                 return true;
               }
