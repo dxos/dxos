@@ -21,7 +21,7 @@ import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 type AvatarVariant = 'square' | 'circle';
-type AvatarStatus = 'active' | 'inactive' | 'error' | 'warning';
+type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning';
 type AvatarAnimation = 'pulse' | 'none';
 
 export type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;

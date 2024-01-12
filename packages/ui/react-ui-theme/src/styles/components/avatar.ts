@@ -10,7 +10,7 @@ import { descriptionText, getSize, getSizeHeight } from '../fragments';
 export type AvatarStyleProps = Partial<{
   size: Size;
   srOnly: boolean;
-  status: 'active' | 'inactive' | 'error' | 'warning';
+  status: 'active' | 'inactive' | 'current' | 'error' | 'warning';
   animation: 'pulse' | 'none';
   variant: 'circle' | 'square';
   inGroup: boolean;
@@ -48,7 +48,9 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
   mx(
     'absolute inset-0 border-2',
     variant === 'circle' ? 'rounded-full' : 'rounded',
-    status === 'active'
+    status === 'current'
+      ? 'border-primary-400 dark:border-primary-500'
+      : status === 'active'
       ? 'border-success-400 dark:border-success-400'
       : status === 'error'
       ? 'border-error-400 dark:border-error-500'
@@ -61,8 +63,7 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
     ...etc,
   );
 
-export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
-  mx('fill-neutral-600 dark:fill-neutral-300', ...etc);
+export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('fill-white', ...etc);
 
 export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
   mx('inline-flex items-center', ...etc);

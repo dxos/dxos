@@ -7,31 +7,32 @@ import React from 'react';
 import '@dxosTheme';
 
 import { PublicKey } from '@dxos/keys';
+import { SpaceMember } from '@dxos/react-client/echo';
 import { Tooltip } from '@dxos/react-ui';
-import { getColorForValue } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { ObjectPresence, type ObjectPresenceProps } from './SpacePresence';
-import { type ObjectViewer } from '../types';
+import { FullPresence, type MemberPresenceProps, SmallPresence, type Member } from './SpacePresence';
+import translations from '../translations';
 
 export default {
-  title: 'plugin-space/ObjectPresence',
-  component: ObjectPresence,
+  title: 'plugin-space/SpacePresence',
+  decorators: [withTheme],
+  parameters: { translations },
   actions: { argTypesRegex: '^on.*' },
 };
 
-const randomColor = () => getColorForValue({ type: 'color', value: Math.random().toString(16) });
-const nViewers = (n: number): ObjectViewer[] =>
+const nViewers = (n: number, match = true): Member[] =>
   Array.from({ length: n }, () => ({
-    identityKey: PublicKey.random(),
-    spaceKey: PublicKey.random(),
-    objectId: 'cafebabe',
+    identity: {
+      identityKey: PublicKey.random(),
+    },
+    presence: SpaceMember.PresenceState.ONLINE,
+    match,
     lastSeen: Date.now(),
-    color: randomColor(),
   }));
 
-export const Normal = (props: ObjectPresenceProps) => {
-  const p: ObjectPresenceProps = {
-    onShareClick: () => console.log('onShareClick'),
+export const Full = (props: MemberPresenceProps) => {
+  const p: MemberPresenceProps = {
     ...props,
   };
 
@@ -39,58 +40,62 @@ export const Normal = (props: ObjectPresenceProps) => {
     <Tooltip.Provider>
       <div className='p-4'>
         <div className='p-3'>
-          <ObjectPresence {...p} />
+          <FullPresence members={nViewers(1)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(1)} {...p} />
+          <FullPresence members={nViewers(2)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(2)} {...p} />
+          <FullPresence members={nViewers(3)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(3)} {...p} />
+          <FullPresence members={nViewers(3, false)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(4)} {...p} />
+          <FullPresence members={nViewers(4)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(5)} {...p} />
+          <FullPresence members={nViewers(5)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(10)} {...p} />
+          <FullPresence members={nViewers(5, false)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(100)} {...p} />
+          <FullPresence members={nViewers(10)} {...p} />
+        </div>
+        <div className='p-3'>
+          <FullPresence members={nViewers(100)} {...p} />
         </div>
       </div>
     </Tooltip.Provider>
   );
 };
 
-export const SmallPresence = (props: ObjectPresenceProps) => {
-  const p: ObjectPresenceProps = {
-    size: 2,
+export const Small = (props: MemberPresenceProps) => {
+  const p: MemberPresenceProps = {
+    ...props,
   };
+
   return (
     <Tooltip.Provider>
       <div className='p-4'>
         <div className='p-3'>
-          <ObjectPresence {...p} />
+          <SmallPresence {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(1)} {...p} />
+          <SmallPresence members={nViewers(1)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(2)} {...p} />
+          <SmallPresence members={nViewers(2)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(3)} {...p} />
+          <SmallPresence members={nViewers(3)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(4)} {...p} />
+          <SmallPresence members={nViewers(4)} {...p} />
         </div>
         <div className='p-3'>
-          <ObjectPresence viewers={nViewers(5)} {...p} />
+          <SmallPresence members={nViewers(5)} {...p} />
         </div>
       </div>
     </Tooltip.Provider>
