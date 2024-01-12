@@ -227,7 +227,7 @@ export const spaceToGraphNode = ({
           id: 'save-space-to-disk',
           label: ['save space to disk label', { ns: SPACE_PLUGIN }],
           icon: (props) => <FloppyDisk {...props} />,
-          keyBinding: 'shift+meta+s',
+          keyBinding: 'meta+s',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
         },
       );

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Folder, Document, Thread, Sketch } from '@braneframe/types';
+import { Folder, Document, Thread } from '@braneframe/types';
 import { AutomergeObject } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { type TypedObject, type Space, TextObject, getRawDoc } from '@dxos/react-client/echo';
 import { type CursorConverter, cursorConverter } from '@dxos/react-ui-editor';
 
@@ -16,20 +15,37 @@ export const saveSpaceToDisk = async ({ space, directory }: { space: Space; dire
     throw new Error('No root folder.');
   }
 
-  const root = await directory.getDirectoryHandle(space.properties.name || space.key.toHex(), { create: true });
-  await saveFolderToDisk(spaceRoot, root);
+  const saveDir = await directory.getDirectoryHandle(space.properties.name || space.key.toHex(), { create: true });
+  await writeComposerMetadata({ space, directory: saveDir });
+  await saveFolderToDisk(spaceRoot, saveDir);
+};
+
+const writeComposerMetadata = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
+  const version = 1;
+  const composerDir = await directory.getDirectoryHandle('.composer', { create: true });
+  const metadataFile = await composerDir.getFileHandle('space.json', { create: true });
+  const metadata = {
+    name: space.properties.name,
+    version,
+    timestamp: new Date().toUTCString(),
+    spaceKey: space.key.toHex(),
+  };
+  const writable = await metadataFile.createWritable();
+
+  await writable.write(JSON.stringify(metadata, null, 2));
+  await writable.close();
 };
 
 const saveFolderToDisk = async (echoFolder: Folder, directory: FileSystemDirectoryHandle) => {
   const namesCount = new Map<string, number>();
-  const fixNamesCollisions = ({ name = 'Untitled', fileExtension }: { name?: string; fileExtension: string }) => {
+  const fixNamesCollisions = ({ name = 'Untitled', extension = 'json' }: Partial<FileName> = {}) => {
     if (namesCount.has(name)) {
       const count = namesCount.get(name)!;
       namesCount.set(name, count + 1);
-      return `${name} (${count}).${fileExtension}`;
+      return `${name} (${count}).${extension}`;
     } else {
       namesCount.set(name, 1);
-      return `${name}.${fileExtension}`;
+      return `${name}.${extension}`;
     }
   };
 
@@ -55,8 +71,15 @@ const saveFolderToDisk = async (echoFolder: Folder, directory: FileSystemDirecto
     await writable.close();
   }
 };
+
+//
+// Serializers
+//
+
+type FileName = { name: string; extension: string };
+
 interface TypedObjectSerializer {
-  filename(object: TypedObject): { name: string; fileExtension: string };
+  filename(object: TypedObject): FileName;
 
   serialize(object: TypedObject): Promise<string>;
   deserialize(text: string): Promise<TypedObject>;
@@ -67,7 +90,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
   [Document.schema.typename]: {
     filename: (object: Document) => ({
       name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      fileExtension: 'md',
+      extension: 'md',
     }),
 
     serialize: async (object: Document): Promise<string> => {
@@ -80,13 +103,14 @@ const serializers: Record<string, TypedObjectSerializer> = {
       };
 
       const content = object.content;
-      invariant(content instanceof AutomergeObject, 'Support only AutomergeObject.');
-      let text: string = (content as any)[(content as any).field];
+      let text: string = content instanceof AutomergeObject ? (content as any)[(content as any).field] : content.text;
 
       // Create frontmatter.
       const metadata = {
         title: object.title,
         timestamp: new Date().toUTCString(),
+        schema: object.__typename,
+        serializer_version: 1,
       };
       const frontmatter = `---\n${Object.entries(metadata)
         .map(([key, val]) => `${key}: ${val}`)
@@ -95,7 +119,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
       // Insert comments.
       const comments = object.comments;
       const threadSerializer = serializers[Thread.schema.typename];
-      if (!threadSerializer || !comments || comments.length === 0) {
+      if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextObject) {
         return `${frontmatter}\n${text}`;
       }
       const doc = getRawDoc(content, [(content as any).field]);
@@ -112,7 +136,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
           if (!range) {
             continue;
           }
-          const pointer = `[^dxos.org/comment/${index}]`;
+          const pointer = `[^${index}]`;
           insertions[range.to] = (insertions[range.to] || '') + pointer;
           footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;
         }
@@ -131,32 +155,13 @@ const serializers: Record<string, TypedObjectSerializer> = {
   [Thread.schema.typename]: {
     filename: (object: Thread) => ({
       name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      fileExtension: 'md',
+      extension: 'md',
     }),
 
     serialize: async (object: Thread): Promise<string> => {
       return (
         object.messages.map((message) => message.blocks.map((block) => `${block.text}`).join(' - ')).join(' | ') ?? ''
       );
-    },
-
-    deserialize: async (text: string) => {
-      throw new Error('Not implemented.');
-    },
-  },
-
-  [Sketch.schema.typename]: {
-    filename: (object: Sketch) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      fileExtension: 'svg',
-    }),
-
-    serialize: async (object: Sketch): Promise<string> => {
-      invariant(object.data instanceof AutomergeObject, 'Support only AutomergeObject.');
-      console.log('Sketch', object.data);
-      const text: string = (object.data as any)[(object.data as any).field];
-
-      return text ?? '';
     },
 
     deserialize: async (text: string) => {

@@ -28,7 +28,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { inferRecordOrder } from '@dxos/util';
 
@@ -40,9 +40,11 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
+  PersistenceStatus,
   PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
+  ShareSpaceButton,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -219,7 +221,6 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
-      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
       space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
       translations,
@@ -283,8 +284,32 @@ export const SpacePlugin = ({
               } else {
                 return null;
               }
-            case 'presence':
-              return isTypedObject(data.object) ? <SpacePresence object={data.object} /> : null;
+
+            case 'navbar-start': {
+              const space =
+                isGraphNode(data.activeNode) && isTypedObject(data.activeNode.data)
+                  ? getSpaceForObject(data.activeNode.data)
+                  : undefined;
+              return space ? <PersistenceStatus db={space.db} /> : null;
+            }
+            case 'navbar-end': {
+              if (!isTypedObject(data.object)) {
+                return null;
+              }
+
+              const space = getSpaceForObject(data.object);
+              return space
+                ? {
+                    node: (
+                      <>
+                        <SpacePresence object={data.object} />
+                        <ShareSpaceButton spaceKey={space.key} />
+                      </>
+                    ),
+                    disposition: 'hoist',
+                  }
+                : null;
+            }
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             default:
