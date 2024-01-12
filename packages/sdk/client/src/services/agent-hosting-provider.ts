@@ -28,10 +28,6 @@ const defaultConfig: AgentHostingProvider = {
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
 export class AgentHostingProviderClient {
   constructor(private readonly _clientConfig: Config, private readonly _config = defaultConfig) {
-    log.warn('password', {
-      config: this._clientConfig,
-      password: this._clientConfig.get('runtime.app.env.DX_ELDON_PASSWORD'),
-    });
     this._config.password = this._clientConfig.get('runtime.app.env.DX_ELDON_PASSWORD');
   }
 
