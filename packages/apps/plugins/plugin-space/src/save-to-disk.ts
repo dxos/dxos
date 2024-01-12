@@ -15,20 +15,37 @@ export const saveSpaceToDisk = async ({ space, directory }: { space: Space; dire
     throw new Error('No root folder.');
   }
 
-  const root = await directory.getDirectoryHandle(space.properties.name || space.key.toHex(), { create: true });
-  await saveFolderToDisk(spaceRoot, root);
+  const saveDir = await directory.getDirectoryHandle(space.properties.name || space.key.toHex(), { create: true });
+  await writeComposerMetadata({ space, directory: saveDir });
+  await saveFolderToDisk(spaceRoot, saveDir);
+};
+
+const writeComposerMetadata = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
+  const version = 1;
+  const composerDir = await directory.getDirectoryHandle('.composer', { create: true });
+  const metadataFile = await composerDir.getFileHandle('space.json', { create: true });
+  const metadata = {
+    name: space.properties.name,
+    version,
+    timestamp: new Date().toUTCString(),
+    spaceKey: space.key.toHex(),
+  };
+  const writable = await metadataFile.createWritable();
+
+  await writable.write(JSON.stringify(metadata, null, 2));
+  await writable.close();
 };
 
 const saveFolderToDisk = async (echoFolder: Folder, directory: FileSystemDirectoryHandle) => {
   const namesCount = new Map<string, number>();
-  const fixNamesCollisions = ({ name = 'Untitled', fileExtension }: { name?: string; fileExtension: string }) => {
+  const fixNamesCollisions = ({ name = 'Untitled', extension = 'json' }: Partial<FileName> = {}) => {
     if (namesCount.has(name)) {
       const count = namesCount.get(name)!;
       namesCount.set(name, count + 1);
-      return `${name} (${count}).${fileExtension}`;
+      return `${name} (${count}).${extension}`;
     } else {
       namesCount.set(name, 1);
-      return `${name}.${fileExtension}`;
+      return `${name}.${extension}`;
     }
   };
 
@@ -54,8 +71,15 @@ const saveFolderToDisk = async (echoFolder: Folder, directory: FileSystemDirecto
     await writable.close();
   }
 };
+
+//
+// Serializers
+//
+
+type FileName = { name: string; extension: string };
+
 interface TypedObjectSerializer {
-  filename(object: TypedObject): { name: string; fileExtension: string };
+  filename(object: TypedObject): FileName;
 
   serialize(object: TypedObject): Promise<string>;
   deserialize(text: string): Promise<TypedObject>;
@@ -66,7 +90,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
   [Document.schema.typename]: {
     filename: (object: Document) => ({
       name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      fileExtension: 'md',
+      extension: 'md',
     }),
 
     serialize: async (object: Document): Promise<string> => {
@@ -86,6 +110,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
         title: object.title,
         timestamp: new Date().toUTCString(),
         schema: object.__typename,
+        serializer_version: 1,
       };
       const frontmatter = `---\n${Object.entries(metadata)
         .map(([key, val]) => `${key}: ${val}`)
@@ -94,7 +119,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
       // Insert comments.
       const comments = object.comments;
       const threadSerializer = serializers[Thread.schema.typename];
-      if (!threadSerializer || !comments || comments.length === 0 || content instanceof Text) {
+      if (!threadSerializer || !comments || comments.length === 0 || content instanceof TextObject) {
         return `${frontmatter}\n${text}`;
       }
       const doc = getRawDoc(content, [(content as any).field]);
@@ -130,7 +155,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
   [Thread.schema.typename]: {
     filename: (object: Thread) => ({
       name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      fileExtension: 'md',
+      extension: 'md',
     }),
 
     serialize: async (object: Thread): Promise<string> => {
