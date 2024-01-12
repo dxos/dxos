@@ -15,6 +15,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useState,
+  useRef,
 } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -35,12 +36,6 @@ export type CursorInfo = {
   line: number;
   lines: number;
   after?: string;
-};
-
-export type TextEditorRef = {
-  root?: HTMLDivElement;
-  state?: EditorState;
-  view?: EditorView;
 };
 
 export type TextEditorSlots = {
@@ -65,28 +60,21 @@ export type TextEditorProps = {
 
 /**
  * Base text editor.
- * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
-export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
+export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   ({ model, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
-    const [root, setRoot] = useState<HTMLDivElement | null>(null);
-    const [{ state = undefined, view = undefined } = {}, setEditor] = useState<
-      { state?: EditorState; view?: EditorView } | undefined
-    >();
-    useImperativeHandle(
+    const { themeMode } = useThemeContext();
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [view, setView] = useState<EditorView | null>(null);
+    useImperativeHandle<EditorView | null, EditorView | null>(
       forwardedRef,
       () => {
-        if (root && state && view) {
-          // TODO(burdon): This doesn't seem to update useRef (in outliner).
-          console.log('++', !!root, !!state, !!view, model.id.slice(0, 4));
-          return { root, state, view };
-        } else {
-          return {};
-        }
+        // TODO(burdon): This doesn't update useRef (in outliner).
+        console.log('>>', model.id.slice(0, 4), !!view);
+        return view;
       },
-      [state, view],
+      [view],
     );
 
     // TODO(burdon): Factor out as extension.
@@ -111,7 +99,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     }, [view, comments]);
 
     useEffect(() => {
-      if (!root) {
+      if (!model || !rootRef.current) {
         return;
       }
 
@@ -144,7 +132,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       // Ideally this should not happen except when changing between text objects.
       view?.destroy();
       const newView = new EditorView({
-        parent: root,
+        parent: rootRef.current,
         state,
         // NOTE: Uncomment to spy on all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
@@ -153,12 +141,12 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
         // },
       });
 
-      setEditor({ state, view: newView });
+      setView(newView);
       return () => {
         newView?.destroy();
-        setEditor(undefined);
+        setView(null);
       };
-    }, [root, model, readonly, editorMode, themeMode]);
+    }, [rootRef, model, readonly, editorMode, themeMode]);
 
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
@@ -171,7 +159,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
           // }
 
           case 'Escape': {
-            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && root?.focus();
+            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && rootRef.current?.focus();
             break;
           }
         }
@@ -182,7 +170,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     return (
       <div
         key={model.id}
-        ref={setRoot}
+        ref={rootRef}
         tabIndex={0}
         {...slots?.root}
         {...(editorMode !== 'vim' && tabsterDOMAttribute)}
@@ -192,7 +180,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
-export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
+export const TextEditor = forwardRef<EditorView, TextEditorProps>(
   ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
@@ -211,7 +199,7 @@ export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
-export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
+export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
   ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);

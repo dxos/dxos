@@ -8,7 +8,7 @@ import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, StrictMode, useRef, useState } from 'react';
+import React, { type FC, StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -16,7 +16,7 @@ import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
+import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
   autocomplete,
   blast,
@@ -213,7 +213,6 @@ type StoryProps = {
 } & Pick<TextEditorProps, 'comments' | 'readonly' | 'extensions' | 'slots'>;
 
 const Story = ({ text, automerge, ...props }: StoryProps) => {
-  const ref = useRef<TextEditorRef>(null);
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
@@ -224,7 +223,7 @@ const Story = ({ text, automerge, ...props }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor ref={ref} model={model} {...props} />
+          <MarkdownEditor model={model} {...props} />
           <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>

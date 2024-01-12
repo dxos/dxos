@@ -3,7 +3,7 @@
 //
 
 import { Prec } from '@codemirror/state';
-import { keymap } from '@codemirror/view';
+import { type EditorView, keymap } from '@codemirror/view';
 import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
 import React, {
   type HTMLAttributes,
@@ -17,14 +17,7 @@ import React, {
 import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import {
-  type CursorInfo,
-  type TextEditorRef,
-  type YText,
-  link,
-  useTextModel,
-  MarkdownEditor,
-} from '@dxos/react-ui-editor';
+import { type CursorInfo, type YText, link, useTextModel, MarkdownEditor } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
@@ -76,18 +69,20 @@ const OutlinerItem = ({
     }
   }, [focus]);
 
-  const editorRef = useRef<TextEditorRef>(null);
+  // TODO(burdon): Replace with single editor?
+
+  const editorRef = useRef<EditorView>(null);
   // TODO(burdon): useImperativeHandle updates, but this isn't triggered.
-  console.log('@@', !!editorRef.current, model?.id.slice(0, 4));
+  console.log('@@', model?.id.slice(0, 4), !!editorRef.current);
   useEffect(() => {
+    console.log('!!', model?.id.slice(0, 4), !!editorRef.current);
     // console.log('!!', !!active, !!editorRef.current?.view, model?.id);
-    if (editorRef.current?.view && active) {
-      editorRef.current.view.focus();
+    if (editorRef.current && active) {
+      console.log('FOCUS', model?.id.slice(0, 4));
+      editorRef.current?.focus();
       // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
   }, [model, editorRef.current, active]);
-
-  // TODO(burdon): Replace with single editor with document constructed from objects?
 
   const outlinerKeymap = useMemo(() => {
     return Prec.highest(
@@ -140,7 +135,7 @@ const OutlinerItem = ({
 
   // TODO(burdon): Remove.
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
-    const view = editorRef.current?.view;
+    const view = editorRef.current;
     if (!view) {
       return;
     }
@@ -213,6 +208,10 @@ const OutlinerItem = ({
     }
   };
 
+  if (!model) {
+    return null;
+  }
+
   return (
     <div className='flex group'>
       {(isTasklist && (
@@ -235,45 +234,41 @@ const OutlinerItem = ({
         </div>
       )}
 
-      {model && (
-        <MarkdownEditor
-          ref={editorRef}
-          model={model}
-          extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
-          slots={{
-            root: {
-              className: 'w-full pt-[4px]',
-              onFocus: () => setFocus(true),
-              onBlur: () => setFocus(false),
-            },
-            editor: {
-              placeholder,
-            },
-          }}
-        />
-      )}
+      <MarkdownEditor
+        ref={editorRef}
+        model={model}
+        extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
+        slots={{
+          root: {
+            className: 'w-full pt-[4px]',
+            onFocus: () => setFocus(true),
+            onBlur: () => setFocus(false),
+          },
+          editor: {
+            placeholder,
+          },
+        }}
+      />
 
-      <div>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <Button variant='ghost'>
-              <DotsThreeVertical />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                {onDelete && (
-                  <DropdownMenu.Item onClick={() => onDelete()}>
-                    <X className={getSize(5)} />
-                    <p>{t('delete object label')}</p>
-                  </DropdownMenu.Item>
-                )}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
-      </div>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button variant='ghost'>
+            <DotsThreeVertical />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>
+              {onDelete && (
+                <DropdownMenu.Item onClick={() => onDelete()}>
+                  <X className={getSize(5)} />
+                  <p>{t('delete object label')}</p>
+                </DropdownMenu.Item>
+              )}
+            </DropdownMenu.Viewport>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </div>
   );
 };

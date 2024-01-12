@@ -20,7 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
-import { type TextEditorRef } from '@dxos/react-ui-editor';
+import { type EditorView } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -64,10 +64,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
-  // TODO(burdon): Remove.
-  const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: {} };
-  const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
-    pluginMutableRef.current = { ...nextRef };
+  // TODO(burdon): Remove (don't expose editor internals).
+  const pluginMutableRef: MutableRefObject<EditorView | null> = { current: null };
+  const pluginRefCallback: RefCallback<EditorView> = (nextRef: EditorView) => {
+    pluginMutableRef.current = nextRef;
   };
 
   const getCustomExtensions = (document?: DocumentType) => {
