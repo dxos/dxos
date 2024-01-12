@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Folder, Document, Thread, Sketch } from '@braneframe/types';
+import { Folder, Document, Thread } from '@braneframe/types';
 import { AutomergeObject } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { type TypedObject, type Space, TextObject, getRawDoc } from '@dxos/react-client/echo';
 import { type CursorConverter, cursorConverter } from '@dxos/react-ui-editor';
 
@@ -80,13 +79,13 @@ const serializers: Record<string, TypedObjectSerializer> = {
       };
 
       const content = object.content;
-      invariant(content instanceof AutomergeObject, 'Support only AutomergeObject.');
-      let text: string = (content as any)[(content as any).field];
+      let text: string = content instanceof AutomergeObject ? (content as any)[(content as any).field] : content.text;
 
       // Create frontmatter.
       const metadata = {
         title: object.title,
         timestamp: new Date().toUTCString(),
+        schema: object.__typename,
       };
       const frontmatter = `---\n${Object.entries(metadata)
         .map(([key, val]) => `${key}: ${val}`)
@@ -95,7 +94,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
       // Insert comments.
       const comments = object.comments;
       const threadSerializer = serializers[Thread.schema.typename];
-      if (!threadSerializer || !comments || comments.length === 0) {
+      if (!threadSerializer || !comments || comments.length === 0 || content instanceof Text) {
         return `${frontmatter}\n${text}`;
       }
       const doc = getRawDoc(content, [(content as any).field]);
@@ -112,7 +111,7 @@ const serializers: Record<string, TypedObjectSerializer> = {
           if (!range) {
             continue;
           }
-          const pointer = `[^dxos.org/comment/${index}]`;
+          const pointer = `[^${index}]`;
           insertions[range.to] = (insertions[range.to] || '') + pointer;
           footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;
         }
@@ -138,25 +137,6 @@ const serializers: Record<string, TypedObjectSerializer> = {
       return (
         object.messages.map((message) => message.blocks.map((block) => `${block.text}`).join(' - ')).join(' | ') ?? ''
       );
-    },
-
-    deserialize: async (text: string) => {
-      throw new Error('Not implemented.');
-    },
-  },
-
-  [Sketch.schema.typename]: {
-    filename: (object: Sketch) => ({
-      name: object.title?.replace(/[/\\?%*:|"<>]/g, '-'),
-      fileExtension: 'svg',
-    }),
-
-    serialize: async (object: Sketch): Promise<string> => {
-      invariant(object.data instanceof AutomergeObject, 'Support only AutomergeObject.');
-      console.log('Sketch', object.data);
-      const text: string = (object.data as any)[(object.data as any).field];
-
-      return text ?? '';
     },
 
     deserialize: async (text: string) => {
