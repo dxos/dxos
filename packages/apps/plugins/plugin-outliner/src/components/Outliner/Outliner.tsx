@@ -15,6 +15,11 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
 
+type CursorSelection = {
+  itemId: string;
+  anchor?: number;
+};
+
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
 };
@@ -22,14 +27,6 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
 //
 // Item
 //
-
-// TODO(burdon): Make consistent with EditorSelection (anchor/head)
-type CursorSelection = {
-  itemId: string;
-  anchor?: number;
-  from?: number;
-  to?: number;
-};
 
 type OutlinerItemProps = {
   item: Item;
@@ -39,7 +36,7 @@ type OutlinerItemProps = {
   onDelete?: (state?: CursorInfo) => void;
   onIndent?: (direction?: 'left' | 'right') => void;
   onShift?: (direction?: 'up' | 'down') => void;
-  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', pos?: number) => void;
+  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
 } & OutlinerOptions;
 
 const OutlinerItem = ({
@@ -70,15 +67,11 @@ const OutlinerItem = ({
   // The editorRef updated by the editor's useImperativeHandle doesn't trigger an update here.
   const editorRef = useRef<EditorView>(null);
   useEffect(() => {
-    if (active && editorRef.current) {
-      const { from } = editorRef.current.state.selection.ranges[0];
-      const anchor =
-        active.from === -1
-          ? editorRef.current.state.doc.length
-          : Math.min(active.from ?? from, editorRef.current.state.doc.length);
-
-      editorRef.current.dispatch({ selection: { anchor } });
-      editorRef.current.focus();
+    // NOTE: useImperativeHandle does not trigger editorRef.
+    // TODO(burdon): Set initial selection.
+    if (editorRef.current && active) {
+      editorRef.current?.focus();
+      // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
   }, [active]);
 
@@ -100,20 +93,8 @@ const OutlinerItem = ({
     return Prec.highest(
       keymap.of([
         {
-          key: 'Tab',
-          run: () => {
-            onIndent?.('right');
-            return true;
-          },
-          shift: () => {
-            onIndent?.('left');
-            return true;
-          },
-        },
-        {
           key: 'Enter',
           run: (view) => {
-            // TODO(burdon): Slow, so pressing enter again happens from same line.
             const cursor = getCursor(view);
             onEnter?.(cursor);
             return true;
@@ -157,6 +138,49 @@ const OutlinerItem = ({
           },
         },
         {
+          key: 'Tab',
+          run: () => {
+            onIndent?.('right');
+            return true;
+          },
+          shift: () => {
+            onIndent?.('left');
+            return true;
+          },
+        },
+
+        //
+        // Left/right
+        //
+        {
+          key: 'ArrowLeft',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (from === 0 && line === 1) {
+              onCursor?.('up', -1);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowRight',
+          run: (view) => {
+            const { from, length } = getCursor(view);
+            if (from === length) {
+              onCursor?.('down', 0);
+              return true;
+            }
+
+            return false;
+          },
+        },
+
+        //
+        // Up
+        //
+        {
           key: 'ArrowUp',
           run: (view) => {
             const { from, line } = getCursor(view);
@@ -169,12 +193,23 @@ const OutlinerItem = ({
           },
         },
         {
+          key: 'alt-ArrowUp',
+          run: () => {
+            onShift?.('up');
+            return true;
+          },
+        },
+        {
           key: 'cmd-ArrowUp',
           run: () => {
             onCursor?.('home');
             return true;
           },
         },
+
+        //
+        // Down
+        //
         {
           key: 'ArrowDown',
           run: (view) => {
@@ -185,6 +220,13 @@ const OutlinerItem = ({
             }
 
             return false;
+          },
+        },
+        {
+          key: 'alt-ArrowDown',
+          run: () => {
+            onShift?.('down');
+            return true;
           },
         },
         {
@@ -272,7 +314,7 @@ type OutlinerBranchProps = OutlinerOptions & {
   className?: string;
   root: Item;
   active?: CursorSelection;
-  onItemCursor?: (parent: Item, item: Item, direction?: string, pos?: number) => void;
+  onItemCursor?: (parent: Item, item: Item, direction?: string, anchor?: number) => void;
   onItemSelect?: (parent: Item, item: Item) => void;
   onItemCreate?: (parent: Item, item: Item, state?: CursorInfo, after?: boolean) => Item;
   onItemDelete?: (parent: Item, item: Item, state?: CursorInfo) => void;
@@ -405,14 +447,14 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
           text.insert(from, state.after.trim());
         }
 
-        setActive({ itemId: active.id, from });
+        setActive({ itemId: active.id, anchor: from });
         const items = getItems(active);
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
       const text = parent.text!.content as YText;
       const from = text.length;
-      setActive({ itemId: parent.id, from });
+      setActive({ itemId: parent.id, anchor: from });
     }
   };
 
@@ -476,17 +518,17 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   //
   // Navigation.
   //
-  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, pos) => {
+  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, anchor) => {
     switch (direction) {
       case 'home': {
-        setActive({ itemId: root.items![0].id, from: 0 });
+        setActive({ itemId: root.items![0].id, anchor: 0 });
         break;
       }
 
       case 'end': {
         const last = getLastDescendent(root.items![root.items!.length - 1]);
         if (last) {
-          setActive({ itemId: last.id, from: 0 });
+          setActive({ itemId: last.id, anchor: 0 });
         }
         break;
       }
@@ -494,7 +536,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'up': {
         const previous = getPrevious(root, item);
         if (previous) {
-          setActive({ itemId: previous.id, from: pos });
+          setActive({ itemId: previous.id, anchor });
         }
         break;
       }
@@ -502,7 +544,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'down': {
         const next = getNext(root, item);
         if (next) {
-          setActive({ itemId: next.id, from: pos });
+          setActive({ itemId: next.id, anchor });
         }
         break;
       }
