@@ -53,10 +53,16 @@ jobs:
         env:
           # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
           NODE_ENV: production
-          DX_ENVIRONMENT: staging
+          DX_ENVIRONMENT: dev
           DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
+
+      - name: Bundle Shell
+        run: pnpm nx bundle shell
+        env:
+          NODE_ENV: production
+          DX_ENVIRONMENT: dev
 
       - name: Publish to NPM
         run: |
