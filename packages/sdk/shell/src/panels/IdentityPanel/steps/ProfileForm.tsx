@@ -37,7 +37,7 @@ export const ProfileForm = (props: ProfileFormProps) => {
 };
 
 // TODO(zhenyasav): impl shouldn't need send()
-export const ProfileFormImpl = (props: ProfileFormImplProps) => {
+const ProfileFormImpl = (props: ProfileFormImplProps) => {
   const { active, profile, send, onUpdateProfile, validationMessage } = props;
   const disabled = !active;
   const { t } = useTranslation('os');
