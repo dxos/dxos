@@ -2,22 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, type KeyboardEventHandler, StrictMode, useEffect, useRef, useState } from 'react';
+import { ArrowSquareOut, DotOutline, DotsThreeVertical, X } from '@phosphor-icons/react';
+import React, { StrictMode, useEffect, useRef, useState, type HTMLAttributes, type KeyboardEventHandler } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { type Tree } from '@braneframe/types';
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import {
+  MarkdownEditor,
   useTextModel,
   type CursorInfo,
   type TextEditorRef,
   type YText,
   link,
-  MarkdownEditor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
+import { pasteExtension } from './paste-extension';
+import { getItems, getLastDescendent, getNext, getParent, getPrevious, type Item } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
@@ -43,6 +45,7 @@ type OutlinerItemProps = {
   onIndent?: (direction?: 'left' | 'right') => void;
   onShift?: (direction?: 'up' | 'down') => void;
   onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', pos?: number) => void;
+  onPaste?: (items: Tree.Item[]) => void;
 } & OutlinerOptions;
 
 const OutlinerItem = ({
@@ -56,6 +59,7 @@ const OutlinerItem = ({
   onIndent,
   onShift,
   onCursor,
+  onPaste,
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
@@ -181,7 +185,7 @@ const OutlinerItem = ({
         <MarkdownEditor
           ref={editorRef}
           model={model}
-          extensions={[link({ onRender: onRenderLink })]}
+          extensions={[pasteExtension({ onPaste }), link({ onRender: onRenderLink })]}
           slots={{
             root: {
               className: 'w-full',
@@ -248,6 +252,18 @@ const OutlinerBranch = ({
   onItemShift,
   ...props
 }: OutlinerBranchProps) => {
+  const handlePaste = (target: Item, items: Tree.Item[]) => {
+    const idx = root.items!.findIndex(({ id }) => id === target.id);
+    const replaceTarget = target.text?.text.length === 0;
+
+    root.items?.splice(replaceTarget ? idx : idx + 1, replaceTarget ? 1 : 0, ...(items as any)); // TODO(dmaretskyi): Type mismatch.
+
+    // Save children of the replaced item
+    if (replaceTarget) {
+      items[0].items.splice(0, 0, ...((target.items ?? []) as any));
+    }
+  };
+
   return (
     <div className={className}>
       {root.items?.map((item) => (
@@ -262,6 +278,7 @@ const OutlinerBranch = ({
             onDelete={(...args) => onItemDelete?.(root, item, ...args)}
             onIndent={(...args) => onItemIndent?.(root, item, ...args)}
             onShift={(...args) => onItemShift?.(root, item, ...args)}
+            onPaste={(items) => handlePaste(item, items)}
             {...props}
           />
           {(item.items?.length ?? 0) > 0 && (
