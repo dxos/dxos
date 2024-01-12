@@ -14,6 +14,7 @@ APPS=(
   ./packages/apps/todomvc
 )
 
+unset NX_CLOUD_ACCESS_TOKEN
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 ROOT=$(git rev-parse --show-toplevel)
 
@@ -40,7 +41,7 @@ function notifyStart() {
 }
 
 if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
-  notifyStart
+  DX_ENVIRONMENT=$BRANCH notifyStart
 fi
 
 failed=""
@@ -57,16 +58,15 @@ for APP in "${APPS[@]}"; do
 
   if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
-    export REMOTE_SOURCE=https://halo.dxos.org/vault.html
     export LOG_FILTER=error
     DX_CONFIG="$ROOT/.circleci/publish-config/config-production.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
+    set +e
     eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
     eval "export DX_TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
-    set +e
-    $ROOT/packages/devtools/cli/bin/run app publish \
+    $ROOT/packages/devtools/cli/bin/dx app publish \
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
       --version=$VERSION \
@@ -80,13 +80,12 @@ for APP in "${APPS[@]}"; do
     set -e
   elif [ $BRANCH = "staging" ]; then
     export DX_ENVIRONMENT=staging
-    export REMOTE_SOURCE=https://halo.staging.dxos.org/vault.html
     export LOG_FILTER=error
     DX_CONFIG="$ROOT/.circleci/publish-config/config-staging.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
     set +e
-    $ROOT/packages/devtools/cli/bin/run app publish \
+    $ROOT/packages/devtools/cli/bin/dx app publish \
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
       --version=$VERSION \
@@ -99,13 +98,12 @@ for APP in "${APPS[@]}"; do
     set -e
   else
     export DX_ENVIRONMENT=development
-    export REMOTE_SOURCE=https://halo.dev.dxos.org/vault.html
     # the default per packages/common/log/src/options.ts
     export LOG_FILTER=info
     DX_CONFIG="$ROOT/.circleci/publish-config/config-development.yml"
 
     set +e
-    $ROOT/packages/devtools/cli/bin/run app publish \
+    $ROOT/packages/devtools/cli/bin/dx app publish \
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
       --verbose

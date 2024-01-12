@@ -30,17 +30,9 @@ export type PluginContext = {
 
   /**
    * Mark plugin as enabled.
-   *
    * Requires reload to take effect.
    */
-  enablePlugin: (id: string) => void;
-
-  /**
-   * Mark plugin as disabled.
-   *
-   * Requires reload to take effect.
-   */
-  disablePlugin: (id: string) => void;
+  setPlugin: (id: string, enabled: boolean) => void;
 };
 
 const PluginContext: Context<PluginContext> = createContext<PluginContext>({
@@ -48,8 +40,7 @@ const PluginContext: Context<PluginContext> = createContext<PluginContext>({
   enabled: [],
   plugins: [],
   available: [],
-  enablePlugin: () => {},
-  disablePlugin: () => {},
+  setPlugin: () => {},
 });
 
 /**

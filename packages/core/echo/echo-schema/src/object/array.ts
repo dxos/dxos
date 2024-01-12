@@ -13,7 +13,7 @@ import {
   getGlobalAutomergePreference,
   type AutomergeOptions,
   type TypedObject,
-  isActualAutomergeObject,
+  isAutomergeObject,
 } from './typed-object';
 import { base } from './types';
 import { AutomergeArray, REFERENCE_TYPE_TAG } from '../automerge';
@@ -52,7 +52,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   constructor(items: T[] = [], opts?: AutomergeOptions) {
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    if (opts?.automerge ?? getGlobalAutomergePreference()) {
       return new AutomergeArray(items) as any;
     }
 
@@ -361,7 +361,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof AbstractEchoObject || isActualAutomergeObject(value)) {
+    if (value instanceof AbstractEchoObject || isAutomergeObject(value)) {
       return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&

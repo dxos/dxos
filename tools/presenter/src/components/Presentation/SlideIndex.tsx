@@ -23,7 +23,7 @@ export const SlideIndex: FC<PresentationProps> = ({ title, slides }) => {
   // console.log(t);
 
   useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowDown': {
           navigate(presentation.slidePath());
@@ -32,8 +32,8 @@ export const SlideIndex: FC<PresentationProps> = ({ title, slides }) => {
       }
     };
 
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
   // TODO(burdon): Factor out.

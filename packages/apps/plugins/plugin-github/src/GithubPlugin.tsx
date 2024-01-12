@@ -7,17 +7,12 @@ import { effect } from '@preact/signals-react';
 import React, { type RefObject } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { Folder, type Document } from '@braneframe/types';
-import {
-  type GraphBuilderProvides,
-  type PluginDefinition,
-  type TranslationsProvides,
-  type SurfaceProvides,
-} from '@dxos/app-framework';
+import { type PluginDefinition } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
-import { type TextEditorRef } from '@dxos/react-ui-editor';
+import { type EditorView } from '@dxos/react-ui-editor';
 
 import {
   EmbeddedMain,
@@ -26,23 +21,12 @@ import {
   Issue,
   MarkdownActions,
   OctokitProvider,
-  PatInput,
+  GitHubSettings,
   UrlDialog,
 } from './components';
-import { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
-import type { ExportViewState, GhIdentifier } from './props';
+import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
 import translations from './translations';
-
-export type GithubSettingsProps = {
-  pat: string;
-};
-
-export type GithubPluginProvides = SurfaceProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  MarkdownProvides & {
-    settings: GithubSettingsProps;
-  };
+import { type ExportViewState, type GhIdentifier, type GithubPluginProvides, type GithubSettingsProps } from './types';
 
 // TODO(dmaretskyi): Meta filters?.
 const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
@@ -51,11 +35,8 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   const settings = new LocalStorageStore<GithubSettingsProps>(GITHUB_PLUGIN);
 
   return {
-    meta: {
-      id: GITHUB_PLUGIN,
-      shortId: GITHUB_PLUGIN_SHORT_ID,
-    },
-    ready: async (plugins) => {
+    meta,
+    ready: async () => {
       settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
     },
     unload: async () => {
@@ -64,9 +45,6 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
     provides: {
       settings: settings.values,
       translations,
-      markdown: {
-        filter: (obj) => !filter(obj),
-      },
       graph: {
         builder: ({ parent }) => {
           // TODO(wittjosiah): Easier way to identify node which represents a space.
@@ -96,7 +74,9 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
           });
         },
       },
-      context: (props) => <OctokitProvider {...props} />,
+      context: (props) => (
+        <OctokitProvider pat={settings.values.pat} onPatChanged={(pat) => (settings.values.pat = pat)} {...props} />
+      ),
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
@@ -122,22 +102,22 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return (
                     <ImportDialog
                       docGhId={data.docGhId as GhIdentifier}
-                      editorRef={data.editorRef as RefObject<TextEditorRef>}
+                      editorRef={data.editorRef as RefObject<EditorView>}
                     />
                   );
                 default:
                   return null;
               }
             case 'menuitem':
-              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readOnly ? (
+              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
                 <MarkdownActions
                   model={data.model}
                   properties={data.properties}
-                  editorRef={data.editorRef as RefObject<TextEditorRef>}
+                  editorRef={data.editorRef as RefObject<EditorView>}
                 />
               ) : null;
             case 'settings':
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <PatInput /> : null;
+              return data.plugin === meta.id ? <GitHubSettings /> : null;
             default:
               return null;
           }

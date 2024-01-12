@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-client",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -30,7 +31,8 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*"
+    "@dxos/react-ui": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

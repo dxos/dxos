@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+[ -f $HOME/.agent-invitation-complete ] && exit 0
+
+while true; do
+  if [ -f /tmp/dx/run/profile/default/lockfile ] && dx halo identity --no-agent; then
+    break
+  fi
+  sleep 1
+done
+
+dx halo join --invitation=$DXOS_AGENT_INVITATION
+touch $HOME/.agent-invitation-complete

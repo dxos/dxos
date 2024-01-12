@@ -104,10 +104,13 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   override send(message: Message): void {
     invariant(this.peerId);
     void this._dataService
-      .sendSyncMessage({
-        id: this.peerId,
-        syncMessage: cbor.encode(message),
-      })
+      .sendSyncMessage(
+        {
+          id: this.peerId,
+          syncMessage: cbor.encode(message),
+        },
+        { timeout: 5_000 },
+      )
       .catch((err) => {
         log.catch(err);
       });

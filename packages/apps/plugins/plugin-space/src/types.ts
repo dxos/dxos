@@ -6,6 +6,7 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -13,6 +14,8 @@ import type { PublicKey } from '@dxos/react-client';
 import type { ItemID } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
+
+export const SPACE_DIRECTORY_HANDLE = 'dxos.org/spaces/dir-handle';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -28,8 +31,10 @@ export enum SpaceAction {
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
+  SAVE_TO_DISK = `${SPACE_ACTION}/save-to-disk`,
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
+  SELECT_DIRECTORY = `${SPACE_ACTION}/select-directory`,
 }
 
 export type ObjectViewer = {
@@ -57,7 +62,7 @@ export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides<SpaceSettingsProps> &
   TranslationsProvides & {
-    settings: Readonly<SpaceSettingsProps>;
     space: Readonly<PluginState>;
   };

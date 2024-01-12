@@ -27,10 +27,7 @@ export const __isMarkdown = (object: { [key: string]: any }): object is EditorMo
 
 export const isMarkdown = (data: unknown): data is EditorModel =>
   data && typeof data === 'object'
-    ? 'id' in data &&
-      typeof data.id === 'string' &&
-      (typeof (data as { [key: string]: any }).content === 'string' ||
-        (data as { [key: string]: any }).content instanceof YText)
+    ? 'id' in data && typeof data.id === 'string' && typeof (data as { [key: string]: any }).text === 'function'
     : false;
 
 export const isMarkdownContent = (data: unknown): data is { content: EditorModel } =>
@@ -54,7 +51,7 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
 type MarkdownPlugin = Plugin<MarkdownProvides>;
 
 export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
-  return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
+  return (plugins as MarkdownPlugin[]).filter((plugin) => Boolean(plugin.provides?.markdown));
 };
 
 const nonTitleChars = /[^\w ]/g;

@@ -41,6 +41,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               icon: (props) => <Presentation {...props} />,
               // TODO(burdon): Allow function so can generate state when activated.
               //  So can set explicit fullscreen state coordinated with current presenter state.
+              keyBinding: 'shift+meta+p',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch([
                   {
@@ -51,7 +52,6 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                     action: LayoutAction.TOGGLE_FULLSCREEN,
                   },
                 ]),
-              keyBinding: 'shift+meta+p',
             });
           }
         },

@@ -31,9 +31,11 @@ import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides, isStack } from '../types';
 
-const SectionContent: StackProps['SectionContent'] = ({ data }) => <Surface role='section' data={{ object: data }} />;
+const SectionContent: StackProps['SectionContent'] = ({ data }) => {
+  return <Surface role='section' data={{ object: data }} />;
+};
 
-export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
+export const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
@@ -45,7 +47,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => Boolean(object));
   const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, Folder.filter({ name: space?.key.toHex() }));
+  const [folder] = useQuery(space, Folder.filter());
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -119,6 +121,7 @@ export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
         SectionContent={SectionContent}
         type={StackType.Section.schema.typename}
         items={items}
+        separation={separation}
         transform={handleTransform}
         onOver={handleOver}
         onDrop={handleDrop}

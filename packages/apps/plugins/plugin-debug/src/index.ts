@@ -4,6 +4,6 @@
 
 import { DebugPlugin } from './DebugPlugin';
 
-export default DebugPlugin;
-
 export * from './DebugPlugin';
+
+export default DebugPlugin;

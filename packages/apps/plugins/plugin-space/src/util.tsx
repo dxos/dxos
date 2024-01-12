@@ -5,6 +5,7 @@
 import {
   ClockCounterClockwise,
   Download,
+  FloppyDisk,
   FolderPlus,
   PencilSimpleLine,
   Planet,
@@ -21,7 +22,7 @@ import React from 'react';
 
 import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
-import { type DispatchIntent, type MetadataResolver } from '@dxos/app-framework';
+import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -49,6 +50,8 @@ export const isSpace = (data: unknown): data is Space =>
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
+    : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
+    ? ['closed space label', { ns: SPACE_PLUGIN }]
     : space.state.get() !== SpaceState.READY
     ? ['loading space label', { ns: SPACE_PLUGIN }]
     : ['unnamed space label', { ns: SPACE_PLUGIN }];
@@ -61,7 +64,7 @@ const getFolderGraphNodePartials = ({
 }: {
   folder: Folder;
   space: Space;
-  dispatch: DispatchIntent;
+  dispatch: IntentDispatcher;
 }): Partial<NodeArg> => {
   return {
     actions: [
@@ -69,8 +72,7 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
-        // TODO(burdon): Need to bind based on context.
-        keyBinding: 'meta+k',
+        keyBinding: 'ctrl+n', // TODO(burdon): Not working since invoke is no-op.
         invoke: () => {
           // No-op.
         },
@@ -151,7 +153,7 @@ export const spaceToGraphNode = ({
   parent: Node;
   hidden?: boolean;
   version?: string;
-  dispatch: DispatchIntent;
+  dispatch: IntentDispatcher;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   let previousObjects: TypedObject[] = [];
@@ -178,7 +180,7 @@ export const spaceToGraphNode = ({
       properties: {
         ...partials.properties,
         disabled: space.state.get() === SpaceState.INACTIVE,
-        // TODO(burdon): Factor out palette constants.
+        // TODO(burdon): Change to semantic classes that are customizable.
         palette: isPersonalSpace ? 'teal' : undefined,
         testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       },
@@ -203,12 +205,15 @@ export const spaceToGraphNode = ({
           id: 'rename-space',
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
-          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space } }),
+          keyBinding: 'shift+F6',
+          invoke: (params) =>
+            dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } }),
         },
         {
           id: 'share-space',
           label: ['share space', { ns: SPACE_PLUGIN }],
           icon: (props) => <Users {...props} />,
+          keyBinding: 'meta+.',
           invoke: () =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
         },
@@ -217,6 +222,13 @@ export const spaceToGraphNode = ({
           label: ['close space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <X {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+        },
+        {
+          id: 'save-space-to-disk',
+          label: ['save space to disk label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <FloppyDisk {...props} />,
+          keyBinding: 'meta+s',
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
@@ -278,7 +290,7 @@ export const objectToGraphNode = ({
 }: {
   object: TypedObject;
   parent: Node;
-  dispatch: DispatchIntent;
+  dispatch: IntentDispatcher;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   const space = getSpaceForObject(object);
@@ -307,21 +319,23 @@ export const objectToGraphNode = ({
         id: 'rename',
         label: ['rename object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
-        invoke: () =>
+        keyBinding: 'shift+F6',
+        invoke: (params) =>
           dispatch({
             action: SpaceAction.RENAME_OBJECT,
-            data: { object },
+            data: { object, ...params },
           }),
       },
       {
         id: 'delete',
         label: ['delete object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Trash {...props} />,
-        invoke: () =>
+        keyBinding: 'shift+meta+Backspace',
+        invoke: (params) =>
           dispatch([
             {
               action: SpaceAction.REMOVE_OBJECT,
-              data: { object, folder: parent.data },
+              data: { object, folder: parent.data, ...params },
             },
           ]),
       },

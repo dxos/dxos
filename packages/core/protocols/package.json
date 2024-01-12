@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,7 +33,7 @@
     "src"
   ],
   "scripts": {
-    "tsc-cjs": "tsc --module commonjs --target es2018 --outdir ./dist/cjs"
+    "tsc-cjs": "rm -rf dist/cjs; tsc --module commonjs --target es2018 --outdir ./dist/cjs"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",

@@ -76,9 +76,6 @@
       "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/gem-spore"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -88,16 +85,13 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-shell"
+      "path": "../../sdk/shell"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../../ui/react-ui-theme"

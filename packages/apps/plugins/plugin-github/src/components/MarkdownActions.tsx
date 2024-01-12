@@ -9,13 +9,13 @@ import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
-import { type EditorModel, type TextEditorRef } from '@dxos/react-ui-editor';
+import { type EditorModel, type EditorView } from '@dxos/react-ui-editor';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';
 import { GITHUB_PLUGIN } from '../meta';
-import type { GhIssueIdentifier } from '../props';
+import { type GhIssueIdentifier } from '../types';
 
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
 export const MarkdownActions = ({
@@ -25,7 +25,7 @@ export const MarkdownActions = ({
 }: {
   model: EditorModel;
   properties: MarkdownProperties;
-  editorRef: RefObject<TextEditorRef>;
+  editorRef: RefObject<EditorView>;
 }) => {
   // TODO(burdon): Ad hoc assumption that underlying object is ECHO?
   const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;
@@ -89,6 +89,7 @@ export const MarkdownActions = ({
             classNames='gap-2'
             disabled={!docGhId}
             onClick={() =>
+              // TODO(burdon): Intent should return content value from dialog.
               dispatch({
                 action: LayoutAction.OPEN_DIALOG,
                 data: { component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId, editorRef } },

@@ -1,0 +1,49 @@
+{
+  "sourceRoot": "packages/sdk/shell/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "bundle": {
+      "executor": "@nx/vite:build",
+      "options": {
+        "outputPath": "packages/sdk/shell/dist/bundle"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/sdk/shell/src/react.ts",
+          "packages/sdk/shell/src/testing/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "e2e": {
+      "options": {
+        "playwrightConfigPath": "packages/sdk/shell/src/playwright/playwright.config.ts",
+        "serve": "stories:storybook-e2e",
+        "testPatterns": [
+          "packages/sdk/shell/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/shell/src/**/*"
+        ]
+      }
+    },
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/shell/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

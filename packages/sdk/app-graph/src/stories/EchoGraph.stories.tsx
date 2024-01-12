@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
@@ -22,7 +23,7 @@ import { GraphBuilder } from '../graph-builder';
 import { type Node } from '../node';
 
 export default {
-  title: 'Echo Graph',
+  title: 'app-graph/EchoGraph',
   decorators: [withTheme],
 };
 
@@ -229,6 +230,6 @@ const EchoGraphStory = () => {
   );
 };
 
-export const EchoGraph = {
+export const Default = {
   render: () => <ClientRepeater Component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
 };

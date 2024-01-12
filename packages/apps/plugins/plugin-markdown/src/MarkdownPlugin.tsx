@@ -5,48 +5,45 @@
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import React, { type FC, type MutableRefObject, type RefCallback, type Ref, useEffect } from 'react';
+import React, { type MutableRefObject, type RefCallback, type Ref } from 'react';
 
-import { isGraphNode } from '@braneframe/plugin-graph';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { ThreadAction } from '@braneframe/plugin-thread';
-import { Document as DocumentType, Thread as ThreadType, Folder } from '@braneframe/types';
+import { Document as DocumentType, Folder } from '@braneframe/types';
 import {
+  isObject,
+  parseIntentPlugin,
   resolvePlugin,
+  LayoutAction,
+  type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
-  type IntentPluginProvides,
-  parseIntentPlugin,
-  isObject,
-  LayoutAction,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, getSpaceForObject, isTypedObject, type Space } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { type AutocompleteResult, type EditorModel, type TextEditorRef, useTextModel } from '@dxos/react-ui-editor';
+import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { type EditorView } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
-import { nonNullable } from '@dxos/util';
 
 import {
-  EditorCard,
+  DocumentCard,
+  type DocumentItemProps,
+  DocumentMain,
+  DocumentSection,
   EditorMain,
-  EditorMainEmbedded,
-  EditorSection,
-  MarkdownMainEmpty,
+  EmbeddedLayout,
+  MainLayout,
   MarkdownSettings,
-  // SpaceMarkdownChooser,
-  StandaloneMenu,
 } from './components';
-import type { UseExtensionsOptions } from './components/extensions';
+import { getExtensions } from './extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  MarkdownAction,
+  type ExtensionsProvider,
   type MarkdownPluginProvides,
-  type MarkdownProperties,
   type MarkdownSettingsProps,
+  type OnChange,
+  MarkdownAction,
 } from './types';
-import { getFallbackTitle, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
+import { getFallbackTitle, isMarkdown, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -56,162 +53,64 @@ export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 
 export type MarkdownPluginState = {
-  onChange: NonNullable<(text: string) => void>[];
+  activeComment?: string;
+  extensions: NonNullable<ExtensionsProvider>[];
+  onChange: NonNullable<OnChange>[];
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { experimental: false });
-
-  // TODO(burdon): Why does this need to be a signal? Race condition?
-  const state = deepSignal<MarkdownPluginState>({ onChange: [] });
-
-  const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
-  const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
-    pluginMutableRef.current = { ...nextRef };
-  };
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, { viewMode: {}, experimental: false });
+  const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
-  // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc.
-  //  Should these components be inline or external?
-  const EditorMainStandalone: FC<{
-    composer: EditorModel;
-    properties: MarkdownProperties;
-  }> = ({ composer, properties }) => {
-    return (
-      <EditorMain
-        model={composer}
-        properties={properties}
-        layout='standalone'
-        editorMode={settings.values.editorMode}
-        editorRefCb={pluginRefCallback}
-      />
-    );
+  // TODO(burdon): Remove (don't expose editor internals).
+  const pluginMutableRef: MutableRefObject<EditorView | null> = { current: null };
+  const pluginRefCallback: RefCallback<EditorView> = (nextRef: EditorView) => {
+    pluginMutableRef.current = nextRef;
   };
 
-  // TODO(burdon): Better way for different plugins to configure extensions.
-  const getExtensionsConfig = (space: Space, document: DocumentType): UseExtensionsOptions => ({
-    experimental: settings.values.experimental,
-    // TODO(burdon): Change to passing in config object.
-    listener: {
+  const getCustomExtensions = (document?: DocumentType) => {
+    // Configure extensions.
+    const extensions = getExtensions({
+      document,
+      debug: settings.values.debug,
+      experimental: settings.values.experimental,
+      dispatch: intentPlugin?.provides.intent.dispatch,
       onChange: (text: string) => {
         state.onChange.forEach((onChange) => onChange(text));
       },
-    },
-    autocomplete: {
-      onSearch: (text: string) => {
-        // TODO(burdon): Specify filter (e.g., stack).
-        const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
-        return objects
-          .map<AutocompleteResult | undefined>((object) =>
-            object.title?.length && object.id !== document.id
-              ? {
-                  label: object.title,
-                  // TODO(burdon): Factor out URL builder.
-                  apply: `[${object.title}](/${object.id})`,
-                }
-              : undefined,
-          )
-          .filter(nonNullable);
-      },
-    },
-    comments: {
-      onCreate: () => {
-        if (space) {
-          // TODO(burdon): Set back ref to object.
-          const thread = space.db.add(new ThreadType());
-          return thread.id;
-        }
-      },
-      onUpdate: (info) => {
-        const { items, active } = info;
-        void intentPlugin?.provides.intent.dispatch({
-          action: ThreadAction.SELECT,
-          data: { active, threads: items.map(({ id, location }) => ({ id, y: location?.top })) },
-        });
-      },
-    },
-  });
+    });
 
-  const MarkdownMain: FC<{ content: DocumentType }> = ({ content: document }) => {
-    const identity = useIdentity();
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
-    useEffect(() => {
-      void intentPlugin?.provides.intent.dispatch({
-        action: ThreadAction.SELECT,
-      });
-    }, [document.id]);
-
-    if (!model) {
-      return null;
+    // Add extensions from other plugins.
+    for (const provider of state.extensions) {
+      const provided = typeof provider === 'function' ? provider() : provider;
+      extensions.push(...provided);
     }
 
-    return (
-      <EditorMain
-        editorMode={settings.values.editorMode}
-        model={model}
-        extensions={getExtensionsConfig(space!, document)}
-        properties={document}
-        layout='standalone'
-        editorRefCb={pluginRefCallback}
-      />
-    );
+    return extensions;
   };
 
-  const StandaloneMainMenu: FC<{ content: DocumentType }> = ({ content: document }) => {
-    const identity = useIdentity();
-    // TODO(wittjosiah): Should this be a hook?
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
-
-    if (!model) {
-      return null;
-    }
-
-    return <StandaloneMenu properties={document} model={model} editorRef={pluginMutableRef} />;
-  };
-
-  const MarkdownSection: FC<{ content: DocumentType }> = ({ content: document }) => {
-    const identity = useIdentity();
-    const space = getSpaceForObject(document);
-    const model = useTextModel({ identity, space, text: document?.content });
-    useEffect(() => {
-      void intentPlugin?.provides.intent.dispatch({
-        action: ThreadAction.SELECT,
-      });
-    }, [document.id]);
-
-    if (!model) {
-      return null;
-    }
-
-    return (
-      <EditorSection
-        editorMode={settings.values.editorMode}
-        model={model}
-        extensions={getExtensionsConfig(space!, document)}
-      />
-    );
-  };
+  // TODO(thure): this needs to be refactored into a graph node action.
+  // const _DocumentHeadingMenu = createDocumentHeadingMenu(pluginMutableRef);
 
   return {
     meta,
     ready: async (plugins) => {
       settings
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
-        .prop(settings.values.$experimental!, 'show-widgets', LocalStorageStore.bool);
+        .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
+        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool);
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-      const filters: ((document: DocumentType) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
-        if (plugin.provides.markdown.onChange) {
-          state.onChange.push(plugin.provides.markdown.onChange);
+        const { extensions, onChange } = plugin.provides.markdown;
+        if (extensions) {
+          state.extensions.push(extensions);
         }
-
-        if (plugin.provides.markdown.filter) {
-          filters.push(plugin.provides.markdown.filter);
+        if (onChange) {
+          state.onChange.push(onChange);
         }
       });
     },
@@ -229,8 +128,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       graph: {
         builder: ({ parent, plugins }) => {
           if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
-            const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
             parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
               id: `${MARKDOWN_PLUGIN}/create`,
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
@@ -253,12 +150,31 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 testId: 'markdownPlugin.createObject',
               },
             });
-          } else if (parent.data instanceof DocumentType && !parent.data.title) {
-            return effect(() => {
-              const document = parent.data;
-              parent.label = document.title ||
-                getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+          } else if (parent.data instanceof DocumentType) {
+            parent.addAction({
+              id: `${MARKDOWN_PLUGIN}/toggle-readonly`,
+              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <ArticleMedium {...props} />,
+              keyBinding: 'shift+F5',
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: MARKDOWN_PLUGIN,
+                    action: MarkdownAction.TOGGLE_VIEW,
+                    data: {
+                      objectId: parent.data.id,
+                    },
+                  },
+                ]),
             });
+
+            if (!parent.data.title) {
+              effect(() => {
+                const document = parent.data;
+                parent.label = document.title ||
+                  getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+              });
+            }
           }
         },
       },
@@ -278,76 +194,83 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
-          // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {
               if (isDocument(data.active)) {
-                return <MarkdownMain content={data.active} />;
+                const readonly = settings.values.viewMode[data.active.id];
+                return (
+                  <DocumentMain
+                    document={data.active}
+                    readonly={readonly}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.active)}
+                    editorRefCb={pluginRefCallback}
+                  />
+                );
               } else if (
-                'composer' in data &&
-                isMarkdown(data.composer) &&
+                'model' in data &&
+                isMarkdown(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                if ('view' in data && data.view === 'embedded') {
-                  return <EditorMainEmbedded composer={data.composer} properties={data.properties} />;
-                } else {
-                  return <EditorMainStandalone composer={data.composer} properties={data.properties} />;
-                }
-              } else if (
-                'composer' in data &&
-                isMarkdownPlaceholder(data.composer) &&
-                'properties' in data &&
-                isMarkdownProperties(data.properties)
-              ) {
-                return <MarkdownMainEmpty composer={data.composer} properties={data.properties} />;
-              }
-              break;
-            }
+                // TODO(burdon): Normalize with ECHO path above?
+                const main = (
+                  <EditorMain
+                    model={data.model}
+                    editorMode={settings.values.editorMode}
+                    extensions={getExtensions({
+                      onChange: (text: string) => {
+                        state.onChange.forEach((onChange) => onChange(text));
+                      },
+                    })}
+                    editorRefCb={pluginRefCallback}
+                  />
+                );
 
-            case 'heading': {
-              if (isGraphNode(data.activeNode) && isDocument(data.activeNode.data)) {
-                return <StandaloneMainMenu content={data.activeNode.data} />;
+                if ('view' in data && data.view === 'embedded') {
+                  return <EmbeddedLayout>{main}</EmbeddedLayout>;
+                } else {
+                  return <MainLayout>{main}</MainLayout>;
+                }
               }
               break;
             }
 
             case 'section': {
-              if (isDocument(data.object) && isMarkdown(data.object.content)) {
-                return <MarkdownSection content={data.object} />;
+              if (isDocument(data.object)) {
+                return (
+                  <DocumentSection
+                    document={data.object}
+                    editorMode={settings.values.editorMode}
+                    extensions={getCustomExtensions(data.object)}
+                  />
+                );
               }
               break;
             }
 
             case 'card': {
               if (isObject(data.content) && typeof data.content.id === 'string' && isDocument(data.content.object)) {
+                // isTileComponentProps is a type guard for these props.
+                // `props` will not pass this guard without transforming `data` into `item`.
                 const cardProps = {
                   ...props,
                   item: {
                     id: data.content.id,
                     object: data.content.object,
                     color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                  },
+                  } as DocumentItemProps,
                 };
 
                 return isTileComponentProps(cardProps) ? (
-                  <EditorCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
+                  <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
                 ) : null;
               }
               break;
             }
 
             case 'settings': {
-              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <MarkdownSettings /> : null;
-            }
-
-            // TODO(burdon): Review with @thure.
-            case 'dialog': {
-              if (data.subject === 'dxos.org/plugin/stack/chooser' && data.id === 'choose-stack-section-doc') {
-                // return <SpaceMarkdownChooser />;
-                return null;
-              }
-              break;
+              return data.plugin === meta.id ? <MarkdownSettings settings={settings.values} /> : null;
             }
           }
 
@@ -355,10 +278,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
+        resolver: ({ action, data }) => {
+          switch (action) {
+            case LayoutAction.FOCUS: {
+              state.activeComment = data.object;
+              break;
+            }
+
             case MarkdownAction.CREATE: {
               return { object: new DocumentType() };
+            }
+
+            // TODO(burdon): Generalize for every object.
+            case MarkdownAction.TOGGLE_VIEW: {
+              const { objectId } = data;
+              settings.values.viewMode[objectId as string] = !settings.values.viewMode[objectId];
+              break;
             }
           }
         },
