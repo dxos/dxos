@@ -22,6 +22,7 @@ export const SpaceListPanel: FC = () => {
   const spaces = useSpaces({ all: true });
   const navigate = useNavigate();
   const setState = useDevtoolsDispatch();
+  const download = useFileDownload();
 
   const handleSelect = (selection: Space | undefined) => {
     setState((state) => ({ ...state, space: selection }));
@@ -43,7 +44,6 @@ export const SpaceListPanel: FC = () => {
     const backupBlob = await exportData(space);
     const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
 
-    const download = useFileDownload();
     download(backupBlob, `${filename}.json`);
   };
 
