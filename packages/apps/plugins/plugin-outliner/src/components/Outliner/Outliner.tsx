@@ -67,15 +67,11 @@ const OutlinerItem = ({
   // The editorRef updated by the editor's useImperativeHandle doesn't trigger an update here.
   const editorRef = useRef<EditorView>(null);
   useEffect(() => {
-    if (active && editorRef.current) {
-      const { from } = editorRef.current.state.selection.ranges[0];
-      const anchor =
-        active.anchor === -1
-          ? editorRef.current.state.doc.length
-          : Math.min(active.anchor ?? from, editorRef.current.state.doc.length);
-
-      editorRef.current.dispatch({ selection: { anchor } });
-      editorRef.current.focus();
+    // NOTE: useImperativeHandle does not trigger editorRef.
+    // TODO(burdon): Set initial selection.
+    if (editorRef.current && active) {
+      editorRef.current?.focus();
+      // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
   }, [active]);
 
@@ -111,6 +107,30 @@ const OutlinerItem = ({
             const { from, line } = cursor;
             if (from === 0 && line === 1) {
               onDelete?.(cursor);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowLeft',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (from === 0 && line === 1) {
+              onCursor?.('up', -1);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowRight',
+          run: (view) => {
+            const { from, length } = getCursor(view);
+            if (from === length) {
+              onCursor?.('down');
               return true;
             }
 

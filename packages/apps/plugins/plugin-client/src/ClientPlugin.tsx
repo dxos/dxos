@@ -100,7 +100,7 @@ export const ClientPlugin = ({
             runtime: {
               client: {
                 remoteSource:
-                  location.host === 'composer.dev.dxos.org'
+                  location.host === 'composer.staging.dxos.org'
                     ? 'https://halo.staging.dxos.org/vault.html'
                     : location.host === 'composer.dev.dxos.org'
                     ? 'https://halo.dev.dxos.org/vault.html'
