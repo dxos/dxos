@@ -51,6 +51,7 @@ export type TextEditorSlots = {
 
 export type TextEditorProps = {
   model: EditorModel;
+  focus?: boolean;
   readonly?: boolean; // TODO(burdon): Move into model.
   comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
@@ -62,20 +63,18 @@ export type TextEditorProps = {
  * Base text editor.
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ model, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
+  ({ model, focus, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<EditorView | null>(null);
-    useImperativeHandle<EditorView | null, EditorView | null>(
-      forwardedRef,
-      () => {
-        // TODO(burdon): This doesn't update useRef (in outliner).
-        console.log('>>', model.id.slice(0, 4), !!view);
-        return view;
-      },
-      [view],
-    );
+    // NOTE: This doesn't update useRef.
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+    useEffect(() => {
+      if (focus && view) {
+        view.focus();
+      }
+    }, [focus, view]);
 
     // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
@@ -199,6 +198,7 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
   },
 );
 
+// TODO(burdon): Remove (Just provide bundle, slots).
 export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
   ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();

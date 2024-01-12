@@ -69,16 +69,11 @@ const OutlinerItem = ({
     }
   }, [focus]);
 
-  // TODO(burdon): Replace with single editor?
-
   const editorRef = useRef<EditorView>(null);
-  // TODO(burdon): useImperativeHandle updates, but this isn't triggered.
-  console.log('@@', model?.id.slice(0, 4), !!editorRef.current);
   useEffect(() => {
-    console.log('!!', model?.id.slice(0, 4), !!editorRef.current);
-    // console.log('!!', !!active, !!editorRef.current?.view, model?.id);
+    // NOTE: useImperativeHandle does not trigger editorRef.
+    // TODO(burdon): Set initial selection.
     if (editorRef.current && active) {
-      console.log('FOCUS', model?.id.slice(0, 4));
       editorRef.current?.focus();
       // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
@@ -101,9 +96,9 @@ const OutlinerItem = ({
         {
           key: 'Enter',
           run: (view) => {
-            // TODO(burdon): Util.
             const { head, from, to } = view.state.selection.ranges[0];
             const { number: line } = view.state.doc.lineAt(head);
+            // TODO(burdon): Slow, so pressing enter again happens from same line.
             onEnter?.({ from, to, line, lines: view.state.doc.lines, after: view.state.sliceDoc(from) });
             return true;
           },
@@ -237,6 +232,7 @@ const OutlinerItem = ({
       <MarkdownEditor
         ref={editorRef}
         model={model}
+        focus={!!active}
         extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
         slots={{
           root: {
@@ -379,7 +375,6 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       }
     }
 
-    console.log('==', (item.text as any).doc.guid);
     setActive({ itemId: item.id });
     return item;
   };
