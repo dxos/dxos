@@ -3,7 +3,8 @@
 //
 
 import { AgentHostingProviderClient } from '@dxos/client/services';
+import { type Config } from '@dxos/config';
 
-export const useAgentHostingProviderClient = (): AgentHostingProviderClient => {
-  return new AgentHostingProviderClient();
+export const useAgentHostingProviderClient = (config: Config): AgentHostingProviderClient => {
+  return new AgentHostingProviderClient(config);
 };

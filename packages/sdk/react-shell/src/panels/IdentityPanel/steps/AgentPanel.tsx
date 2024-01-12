@@ -37,7 +37,7 @@ export const AgentForm = (props: AgentFormProps) => {
   const [agentActive, setAgentActive] = useState(false);
   const client = useClient();
   const invitations = useHaloInvitations();
-  const agentHostingProviderClient = useAgentHostingProviderClient();
+  const agentHostingProviderClient = useAgentHostingProviderClient(client.config);
 
   useEffect(() => {
     const fetchAgentStatus = async () => {
