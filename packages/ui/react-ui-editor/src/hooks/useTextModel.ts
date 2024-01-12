@@ -66,7 +66,7 @@ export type UseTextModelProps = {
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = (props: UseTextModelProps): EditorModel | undefined => {
   const { identity, space, text } = props;
-  const [model, setModel] = useState<EditorModel | undefined>(() => createModel(props));
+  const [model, setModel] = useState<EditorModel | undefined>();
   useEffect(() => setModel(createModel(props)), [identity, space, text]);
   return model;
 };

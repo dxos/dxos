@@ -12,7 +12,7 @@ import React, {
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { Main, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
+import { type TextEditorProps, type EditorView, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
 import {
   baseSurface,
   focusRing,
@@ -27,15 +27,15 @@ import { MARKDOWN_PLUGIN } from '../meta';
 
 // TODO(burdon): Don't export ref.
 export type EditorMainProps = {
-  editorRefCb?: RefCallback<TextEditorRef>;
+  editorRefCb?: RefCallback<EditorView>;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
 
 export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   // TODO(burdon): Reconcile refs.
-  const editorRef = useRef<TextEditorRef>();
-  const setEditorRef: RefCallback<TextEditorRef> = (ref) => {
+  const editorRef = useRef<EditorView>();
+  const setEditorRef: RefCallback<EditorView> = (ref) => {
     editorRef.current = ref as any;
     editorRefCb?.(ref);
   };
@@ -44,7 +44,7 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const { object } = data;
-        setFocus(editorRef.current!.view!, object);
+        setFocus(editorRef.current!, object);
       }
     }
   });
@@ -89,7 +89,7 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
 // TODO(burdon): Factor out layout wrappers to be reusable across plugins.
 
 // TODO(wittjosiah): Remove ref.
-export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<TextEditorRef> }>) => {
+export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<EditorView> }>) => {
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>

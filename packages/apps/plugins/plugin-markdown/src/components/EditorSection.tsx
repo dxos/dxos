@@ -5,7 +5,7 @@
 import React, { type HTMLAttributes, useRef } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from '@dxos/react-ui-editor';
+import { MarkdownEditor, type TextEditorProps, type EditorView } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -14,7 +14,7 @@ type EditorSectionProps = Pick<TextEditorProps, 'model' | 'extensions' | 'editor
 
 export const EditorSection = (props: EditorSectionProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
-  const editorRef = useRef<TextEditorRef>(null);
+  const editorRef = useRef<EditorView>(null);
 
   return (
     <MarkdownEditor
