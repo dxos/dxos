@@ -71,9 +71,10 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
+
+    // The editor view ref should only be used as an escape hatch.
     const rootRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<EditorView | null>(null);
-    // NOTE: This doesn't update useRef.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
     // Focus.

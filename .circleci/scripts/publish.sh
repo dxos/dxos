@@ -58,7 +58,6 @@ for APP in "${APPS[@]}"; do
 
   if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
-    export REMOTE_SOURCE=https://halo.dxos.org/vault.html
     export LOG_FILTER=error
     DX_CONFIG="$ROOT/.circleci/publish-config/config-production.yml"
     VERSION=$(cat package.json | jq -r ".version")
@@ -81,7 +80,6 @@ for APP in "${APPS[@]}"; do
     set -e
   elif [ $BRANCH = "staging" ]; then
     export DX_ENVIRONMENT=staging
-    export REMOTE_SOURCE=https://halo.staging.dxos.org/vault.html
     export LOG_FILTER=error
     DX_CONFIG="$ROOT/.circleci/publish-config/config-staging.yml"
     VERSION=$(cat package.json | jq -r ".version")
@@ -100,7 +98,6 @@ for APP in "${APPS[@]}"; do
     set -e
   else
     export DX_ENVIRONMENT=development
-    export REMOTE_SOURCE=https://halo.dev.dxos.org/vault.html
     # the default per packages/common/log/src/options.ts
     export LOG_FILTER=info
     DX_CONFIG="$ROOT/.circleci/publish-config/config-development.yml"

@@ -108,7 +108,7 @@ export const NavTreeItemActionDropdownMenu = ({
 export const NavTreeItemActionContextMenu = (
   props: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>,
 ) => {
-  return (props.actions?.length ?? 0) > 0 ? <>{props.children}</> : <NavTreeItemActionContextMenuImpl {...props} />;
+  return (props.actions?.length ?? 0) > 0 ? <NavTreeItemActionContextMenuImpl {...props} /> : <>{props.children}</>;
 };
 
 const NavTreeItemActionContextMenuImpl = ({
