@@ -36,7 +36,7 @@ export default [
         'shared spaces label': 'Shared Spaces',
         'hidden spaces label': 'Hidden Spaces',
         'show hidden spaces label': 'Show closed spaces.',
-        'save files to label': 'Save files to',
+        'save files to directory label': 'Save files to directory',
         'select path label': 'Select path',
         'rename object label': 'Rename item',
         'delete object label': 'Delete item',
