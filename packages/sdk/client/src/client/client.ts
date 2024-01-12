@@ -98,6 +98,7 @@ export class Client {
     if (
       typeof window !== 'undefined' &&
       window.location.protocol !== 'https:' &&
+      window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
     ) {
       console.warn(
