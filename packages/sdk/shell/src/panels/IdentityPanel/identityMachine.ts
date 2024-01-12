@@ -58,6 +58,7 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
     states: {
       choosingAction: {},
       managingDeviceInvitation: {},
+      managingDevices: {},
       managingProfile: {
         initial: 'idle',
         states: {
@@ -73,9 +74,9 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
     },
     on: {
       unchooseAction: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
-      chooseDevices: { target: '.managingDeviceInvitation', actions: ['unsetInvitation', 'log'] },
       deselectInvitation: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
       selectInvitation: { target: '.managingDeviceInvitation', actions: ['setInvitation', 'log'] },
+      chooseDevices: { target: '.managingDevices', actions: 'log' },
       chooseProfile: { target: '.managingProfile', actions: 'log' },
       // chooseSignOut: { target: '.signingOut', actions: 'log' },
     },
