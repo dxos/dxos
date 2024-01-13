@@ -26,25 +26,14 @@ const Editor: FC<{
   item: { text: TextObject };
   commentRanges: CommentRange[];
   onCreateComment: CommentsOptions['onCreate'];
-}> = ({ item, commentRanges, onCreateComment }) => {
+  onSelectComment: CommentsOptions['onSelect'];
+}> = ({ item, commentRanges, onCreateComment, onSelectComment }) => {
   const model = useTextModel({ text: item.text });
   const extensions = useMemo(() => {
     return [
       comments({
         onCreate: onCreateComment,
-        onSelect: (state) => {
-          const debug = false;
-          if (debug) {
-            console.log(
-              'update',
-              JSON.stringify({
-                active: state.active?.slice(0, 8),
-                closest: state.closest?.slice(0, 8),
-                ranges: state.ranges.length,
-              }),
-            );
-          }
-        },
+        onSelect: onSelectComment,
       }),
     ];
   }, []);
@@ -81,6 +70,7 @@ const Editor: FC<{
 type CommentThread = {
   id: string;
   range: CommentRange;
+  yPos?: number;
   messages: TextObject[];
 };
 
@@ -146,10 +136,17 @@ const Sidebar: FC<{
   selected?: string;
   onSelect: (thread: string) => void;
 }> = ({ threads, selected, onSelect }) => {
-  // TODO(burdon): Sort by range.
+  // Sort by y-position.
+  const sortedThreads = useMemo(() => {
+    const sorted = [...threads];
+    return sorted.sort(({ yPos: a = Infinity }, { yPos: b = Infinity }) => {
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
+  }, [threads]);
+
   return (
-    <div className='flex flex-col grow overflow-y-scroll py-2 gap-4'>
-      {threads.map((thread) => (
+    <div className='flex flex-col grow overflow-y-scroll py-2 gap-4 pr-4'>
+      {sortedThreads.map((thread) => (
         <Thread
           key={thread.id}
           thread={thread}
@@ -176,21 +173,38 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   const [selected, setSelected] = useState<string>();
   const commentRanges = useMemo(() => threads.map((thread) => thread.range), [threads]);
 
-  const handleCreateComments: CommentsOptions['onCreate'] = (range) => {
+  // TODO(burdon): Get y position.
+  const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
     const id = PublicKey.random().toHex();
     setThreads((threads) => [
       ...threads,
       {
         id,
-        range: { id, cursor: range },
+        range: { id, cursor },
+        yPos: location?.top,
         messages: autoCreate
           ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 2, max: 5 } })
           : [],
       },
     ]);
     setSelected(id);
-
     return id;
+  };
+
+  // TODO(burdon): Scroll sidebar on select.
+  const handleSelectComment: CommentsOptions['onSelect'] = ({ active, closest, ranges }) => {
+    setThreads((threads) =>
+      threads.map((thread) => {
+        const range = ranges.find((range) => range.id === thread.range.id);
+        if (range) {
+          thread.yPos = range.location?.top;
+        }
+
+        return thread;
+      }),
+    );
+
+    setSelected(active ?? closest);
   };
 
   const handleSelectThread = (id: string) => {
@@ -201,7 +215,12 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout)}>
       <div className='flex justify-center h-full gap-8'>
         <div className='flex flex-col h-full overflow-hidden w-[600px]'>
-          <Editor item={item} commentRanges={commentRanges} onCreateComment={handleCreateComments} />
+          <Editor
+            item={item}
+            commentRanges={commentRanges}
+            onCreateComment={handleCreateComment}
+            onSelectComment={handleSelectComment}
+          />
         </div>
         <div className='flex flex-col h-full overflow-hidden w-[300px]'>
           <Sidebar threads={threads} selected={selected} onSelect={handleSelectThread} />

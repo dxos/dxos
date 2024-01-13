@@ -185,7 +185,7 @@ export type CommentsOptions = {
   /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (range: string) => string | undefined;
+  onCreate?: (cursor: string, location?: Rect | null) => string | undefined;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -225,10 +225,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       return false;
     }
 
-    const relPos = getCursorFromRange(cursorConverter, { from, to });
-    if (relPos) {
+    const cursor = getCursorFromRange(cursorConverter, { from, to });
+    if (cursor) {
       // Create thread via callback.
-      const id = callbackWrapper(options.onCreate)(relPos);
+      const id = callbackWrapper(options.onCreate)(cursor, view.coordsAtPos(from));
       if (id) {
         // Update range.
         view.dispatch({
