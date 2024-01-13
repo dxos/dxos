@@ -33,7 +33,7 @@ const Editor: FC<{
   const editorRef = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
   useEffect(() => {
-    if (commentSelected !== selected) {
+    if (!editorRef.current?.hasFocus && commentSelected !== selected) {
       const thread = commentRanges.find((range) => range.id === commentSelected);
       if (thread) {
         const { cursor } = thread;
@@ -212,9 +212,6 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
   const [threads, setThreads] = useState<CommentThread[]>([]);
   const commentRanges = useMemo(() => threads.map((thread) => thread.range), [threads]);
-
-  // TODO(burdon): Current circular dependency: when moving through document, the sidebar is updated with the current
-  //  closest comment. This causes the sidebar to select the associated thread, which then sets the document selection.
   const [selected, setSelected] = useState<string>();
 
   // Filter by visibility.
