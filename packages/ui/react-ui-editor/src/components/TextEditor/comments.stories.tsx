@@ -125,7 +125,7 @@ const Thread: FC<{
   }
 
   return (
-    <div className={mx('flex flex-col m-1 rounded shadow divide-y pb-1 bg-white', selected && 'ring')}>
+    <div className={mx('flex flex-col m-1 rounded shadow divide-y bg-white', selected && 'ring')}>
       <div className='flex p-2 text-xs font-mono gap-2 text-neutral-500 font-thin'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>from:{thread.selection?.from}</span>
@@ -140,7 +140,7 @@ const Thread: FC<{
         </div>
       ))}
 
-      <div ref={containerRef} onClick={() => onSelect()} className='flex'>
+      <div ref={containerRef} onClick={() => onSelect()} className='flex py-1'>
         <div className='grow'>
           <TextEditor
             ref={editorRef}
@@ -159,7 +159,7 @@ const Thread: FC<{
             ]}
           />
         </div>
-        <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
+        <Button variant='ghost' classNames='px-1 mr-1' title='Resolve' onClick={onResolve}>
           <Check />
         </Button>
       </div>
@@ -261,7 +261,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
 
   return (
     <div className={mx(fixedInsetFlexLayout, 'bg-neutral-100')}>
-      <div className='flex justify-center h-full gap-4'>
+      <div className='flex justify-center h-full gap-8'>
         <div className='flex flex-col h-full w-[600px]'>
           <Editor
             item={item}
