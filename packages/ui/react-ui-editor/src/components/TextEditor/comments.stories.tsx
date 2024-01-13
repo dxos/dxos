@@ -6,10 +6,12 @@ import '@dxosTheme';
 
 import { type EditorView, keymap } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
+import { Check } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { Button, DensityProvider } from '@dxos/react-ui';
 import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -86,7 +88,8 @@ const Thread: FC<{
   thread: CommentThread;
   selected: boolean;
   onSelect: () => void;
-}> = ({ thread, selected, onSelect }) => {
+  onResolve: () => void;
+}> = ({ thread, selected, onSelect, onResolve }) => {
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
@@ -137,23 +140,28 @@ const Thread: FC<{
         </div>
       ))}
 
-      <div ref={containerRef} onClick={() => onSelect()}>
-        <TextEditor
-          ref={editorRef}
-          model={model}
-          placeholder={'Enter comment...'}
-          extensions={[
-            keymap.of([
-              {
-                key: 'Enter',
-                run: () => {
-                  handleCreateMessage();
-                  return true;
+      <div ref={containerRef} onClick={() => onSelect()} className='flex'>
+        <div className='grow'>
+          <TextEditor
+            ref={editorRef}
+            model={model}
+            placeholder={'Enter comment...'}
+            extensions={[
+              keymap.of([
+                {
+                  key: 'Enter',
+                  run: () => {
+                    handleCreateMessage();
+                    return true;
+                  },
                 },
-              },
-            ]),
-          ]}
-        />
+              ]),
+            ]}
+          />
+        </div>
+        <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
+          <Check />
+        </Button>
       </div>
     </div>
   );
@@ -163,7 +171,8 @@ const Sidebar: FC<{
   threads: CommentThread[];
   selected?: string;
   onSelect: (thread: string) => void;
-}> = ({ threads, selected, onSelect }) => {
+  onResolve: (thread: string) => void;
+}> = ({ threads, selected, onSelect, onResolve }) => {
   // Sort by y-position.
   const sortedThreads = useMemo(() => {
     const sorted = [...threads];
@@ -173,16 +182,19 @@ const Sidebar: FC<{
   }, [threads]);
 
   return (
-    <div className='flex flex-col grow overflow-y-scroll py-2 gap-4 pr-4'>
-      {sortedThreads.map((thread) => (
-        <Thread
-          key={thread.id}
-          thread={thread}
-          selected={thread.id === selected}
-          onSelect={() => onSelect(thread.id)}
-        />
-      ))}
-    </div>
+    <DensityProvider density='fine'>
+      <div className='flex flex-col grow overflow-y-scroll py-2 gap-4 pr-4'>
+        {sortedThreads.map((thread) => (
+          <Thread
+            key={thread.id}
+            thread={thread}
+            selected={thread.id === selected}
+            onSelect={() => onSelect(thread.id)}
+            onResolve={() => onResolve(thread.id)}
+          />
+        ))}
+      </div>
+    </DensityProvider>
   );
 };
 
@@ -242,6 +254,11 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     setSelected(id);
   };
 
+  const handleResolveThread = (id: string) => {
+    setThreads((threads) => [...threads.filter((thread) => thread.id !== id)]);
+    setSelected(undefined);
+  };
+
   return (
     <div className={mx(fixedInsetFlexLayout, 'bg-neutral-100')}>
       <div className='flex justify-center h-full gap-8'>
@@ -256,7 +273,12 @@ const Story = ({ text, autoCreate }: StoryProps) => {
         </div>
 
         <div className='flex flex-col h-full w-[300px]'>
-          <Sidebar threads={visibleThreads} selected={selected} onSelect={handleSelectThread} />
+          <Sidebar
+            threads={visibleThreads}
+            selected={selected}
+            onSelect={handleSelectThread}
+            onResolve={handleResolveThread}
+          />
         </div>
       </div>
     </div>

@@ -97,7 +97,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     // TODO(burdon): Factor out as extension.
     useEffect(() => {
-      if (view && comments?.length) {
+      if (view && comments !== undefined) {
         view.dispatch({
           effects: setCommentRange.of({ model, comments }),
         });
@@ -109,10 +109,10 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         return;
       }
 
-      // TODO(burdon): Remember cursor position.
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: model.text(),
+        // TODO(burdon): Composer should store and set selection when switching documents.
         selection,
         extensions: [
           readonly && EditorState.readOnly.of(readonly),
@@ -189,17 +189,14 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 );
 
 export const TextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, extensions = [], theme = textTheme, slots, ...props }, forwardedRef) => {
+  ({ readonly, placeholder, extensions = [], theme = textTheme, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[
-          basicBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
-          ...extensions,
-        ]}
+        extensions={[basicBundle({ readonly, themeMode, placeholder }), ...extensions]}
         theme={theme}
         slots={updatedSlots}
         {...props}
@@ -210,17 +207,14 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
 
 // TODO(burdon): Remove (Just provide bundle, slots).
 export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, extensions = [], theme = markdownTheme, slots, ...props }, forwardedRef) => {
+  ({ readonly, placeholder, extensions = [], theme = markdownTheme, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[
-          markdownBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
-          ...extensions,
-        ]}
+        extensions={[markdownBundle({ readonly, themeMode, placeholder }), ...extensions]}
         theme={theme}
         slots={updatedSlots}
         {...props}
