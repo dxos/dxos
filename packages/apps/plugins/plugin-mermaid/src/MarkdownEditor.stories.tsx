@@ -12,7 +12,7 @@ import { useTextModel } from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
 
-import { mermaid } from '../extensions';
+import { mermaid } from './extensions';
 
 const str = (...lines: string[]) => lines.join('\n');
 

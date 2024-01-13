@@ -93,11 +93,11 @@ class LinkButton extends WidgetType {
     super();
   }
 
-  override eq(other: LinkButton) {
+  override eq(other: this) {
     return this._url === other._url;
   }
 
-  toDOM(view: EditorView) {
+  override toDOM(view: EditorView) {
     const el = document.createElement('span');
     this._onAttach!(el, this._url);
     return el;
@@ -109,11 +109,11 @@ class LinkText extends WidgetType {
     super();
   }
 
-  override eq(other: LinkText) {
+  override eq(other: this) {
     return this._url === other._url;
   }
 
-  toDOM(view: EditorView) {
+  override toDOM(view: EditorView) {
     const link = document.createElement('a');
     link.setAttribute('class', 'cm-link');
     link.textContent = this._text;

@@ -18,13 +18,13 @@ const Story = () => {
   const [bindings, setBindings] = useState({});
 
   useEffect(() => {
-    const handler: KeyHandler = ({ context, binding, data }) => console.log({ context, binding, data });
+    const handler: KeyHandler = ({ context, shortcut, data }) => console.log({ context, shorcut: shortcut, data });
 
     Keyboard.singleton.initialize();
-    Keyboard.singleton.bind({ binding: 'meta+k', handler, data: 'commands' });
-    Keyboard.singleton.getContext('/space/2').bind({ binding: 'meta+/', handler, data: 'space 2' });
-    Keyboard.singleton.getContext('/space/2/b').bind({ binding: 'shift+meta+.', handler });
-    Keyboard.singleton.getContext('/space/1').bind({ binding: 'meta+/', handler, data: 'space 1' });
+    Keyboard.singleton.bind({ shortcut: 'meta+k', handler, data: 'commands' });
+    Keyboard.singleton.getContext('/space/2').bind({ shortcut: 'meta+/', handler, data: 'space 2' });
+    Keyboard.singleton.getContext('/space/2/b').bind({ shortcut: 'shift+meta+.', handler });
+    Keyboard.singleton.getContext('/space/1').bind({ shortcut: 'meta+/', handler, data: 'space 1' });
 
     setBindings(Keyboard.singleton.getBindings());
 

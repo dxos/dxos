@@ -6,13 +6,13 @@ import { invariant } from '@dxos/invariant';
 
 export type KeyHandler = (props: {
   context: string;
-  binding: string;
+  shortcut: string;
   data?: any;
   event: KeyboardEvent;
 }) => boolean | void;
 
 export type KeyBinding = {
-  binding: string;
+  shortcut: string;
   handler: KeyHandler;
   disableInput?: boolean;
   data?: any;
@@ -20,6 +20,15 @@ export type KeyBinding = {
 
 // Keybinding is normalized to this order.
 const modifiers = ['alt', 'ctrl', 'shift', 'meta'];
+
+// Normalize order of modifiers.
+export const parseShortcut = (shortcut: string, delimiter = /[+-]/): string => {
+  const parts = shortcut.split(delimiter);
+  const mods = modifiers.filter((key) => parts.includes(key));
+  invariant(mods.length === 0 || mods.length === parts.length - 1);
+  // Assume single natural key.
+  return mods.length ? [...mods, parts[parts.length - 1]].join('+') : shortcut;
+};
 
 class KeyboardContext {
   readonly _keyMap = new Map<string, KeyBinding>();
@@ -33,16 +42,8 @@ class KeyboardContext {
   }
 
   bind(config: KeyBinding) {
-    // Normalize order of modifiers.
-    const { binding } = config;
-    const parts = binding.split('+');
-    const mods = modifiers.filter((key) => parts.includes(key));
-    invariant(mods.length === 0 || mods.length === parts.length - 1);
-    if (mods.length) {
-      config.binding = [...mods, parts[parts.length - 1]].join('+');
-    }
-
-    this._keyMap.set(config.binding, config);
+    config.shortcut = parseShortcut(config.shortcut);
+    this._keyMap.set(config.shortcut, config);
   }
 
   unbind(binding: string) {
@@ -101,7 +102,7 @@ export class Keyboard {
       const path = this._contexts[i];
       if (this._path.startsWith(path)) {
         this.getContext(path).bindings.forEach((binding) => {
-          bindings.set(binding.binding, binding);
+          bindings.set(binding.shortcut, binding);
         });
       }
     }
@@ -129,7 +130,7 @@ export class Keyboard {
         if (this._path.startsWith(path)) {
           const { data, handler, disableInput } = this.getContext(path).get(str) ?? {};
           if (handler && (!isInput || !disableInput)) {
-            const result = handler({ context: path, binding: str, data, event });
+            const result = handler({ context: path, shortcut: str, data, event });
             if (result !== false) {
               // TODO(burdon): This doesn't prevent actions in markdown editor.
               //  Reference: https://codemirror.net/docs/ref/#view.KeyBinding
