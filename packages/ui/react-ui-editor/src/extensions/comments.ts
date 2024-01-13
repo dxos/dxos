@@ -405,13 +405,13 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   ];
 };
 
-const getCursorFromRange = (cursorConverter: CursorConverter, range: Range) => {
+export const getCursorFromRange = (cursorConverter: CursorConverter, range: Range) => {
   const from = cursorConverter.toCursor(range.from);
   const to = cursorConverter.toCursor(range.to, -1);
   return [from, to].join(':');
 };
 
-const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
+export const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
   const parts = cursor.split(':');
   const from = cursorConverter.fromCursor(parts[0]);
   const to = cursorConverter.fromCursor(parts[1]);

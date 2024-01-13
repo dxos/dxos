@@ -12,6 +12,7 @@ export const cursorConverter = (text: Y.Text): CursorConverter => ({
   toCursor: (index, assoc) => {
     return arrayToString(Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(text, index, assoc)));
   },
+
   fromCursor: (cursor) => {
     return (
       Y.createAbsolutePositionFromRelativePosition(Y.decodeRelativePosition(stringToArray(cursor)), text.doc!)?.index ??

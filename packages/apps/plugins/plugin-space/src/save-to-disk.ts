@@ -7,6 +7,8 @@ import { AutomergeObject } from '@dxos/echo-schema';
 import { type TypedObject, type Space, TextObject, getRawDoc } from '@dxos/react-client/echo';
 import { type CursorConverter, cursorConverter } from '@dxos/react-ui-editor';
 
+// TODO(burdon): Rename file serializer.
+
 export const saveSpaceToDisk = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
   await space.waitUntilReady();
 
@@ -30,8 +32,8 @@ const writeComposerMetadata = async ({ space, directory }: { space: Space; direc
     timestamp: new Date().toUTCString(),
     spaceKey: space.key.toHex(),
   };
-  const writable = await metadataFile.createWritable();
 
+  const writable = await metadataFile.createWritable();
   await writable.write(JSON.stringify(metadata, null, 2));
   await writable.close();
 };
@@ -59,6 +61,7 @@ const saveFolderToDisk = async (echoFolder: Folder, directory: FileSystemDirecto
     if (!child.__typename) {
       continue;
     }
+
     const serializer = serializers[child.__typename];
     if (!serializer) {
       continue;
@@ -132,10 +135,12 @@ const serializers: Record<string, TypedObjectSerializer> = {
           if (!comment.cursor || !comment.thread) {
             continue;
           }
+
           const range = getRangeFromCursor(convertor, comment.cursor);
           if (!range) {
             continue;
           }
+
           const pointer = `[^${index}]`;
           insertions[range.to] = (insertions[range.to] || '') + pointer;
           footnote += `${pointer}: ${await threadSerializer.serialize(comment.thread)}\n`;

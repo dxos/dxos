@@ -24,6 +24,7 @@ const DEFAULT_CURSOR_CONVERTER: CursorConverter = {
   fromCursor: (cursor) => parseInt(cursor),
 };
 
+// TODO(burdon): Should be lower case.
 export const CursorConverter = Facet.define<CursorConverter, CursorConverter>({
   combine: (providers) => providers[0] ?? DEFAULT_CURSOR_CONVERTER,
 });

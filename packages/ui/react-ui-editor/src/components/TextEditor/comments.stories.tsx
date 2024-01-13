@@ -14,8 +14,9 @@ import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
-import { comments, type CommentsOptions } from '../../extensions';
+import { comments, type CommentsOptions, getRangeFromCursor } from '../../extensions';
 import { type CommentRange, type Range, useTextModel } from '../../hooks';
+import { CursorConverter } from '../../util';
 
 faker.seed(101);
 
@@ -38,7 +39,7 @@ const Editor: FC<{
       const thread = commentRanges.find((range) => range.id === commentSelected);
       if (thread) {
         const { cursor } = thread;
-        const range = model?.getRangeFromCursor?.(cursor);
+        const range = getRangeFromCursor(editorRef.current!.state.facet(CursorConverter), cursor);
         if (range) {
           // TODO(burdon): Scroll selection to center of screen?
           editorRef.current?.dispatch({ selection: { anchor: range.from }, scrollIntoView: true });

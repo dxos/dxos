@@ -26,6 +26,7 @@ export const cursorConverter = (handle: IDocHandle, path: Prop[]): CursorConvert
     // NOTE: Slice is needed because getCursor mutates the array.
     return automerge.getCursor(doc, path.slice(), pos);
   },
+
   fromCursor: (cursor) => {
     if (cursor === '') {
       return 0;
