@@ -31,7 +31,6 @@ export const markdownTags = {
   CodeText: Tag.define(),
   EmphasisMark: Tag.define(),
   HeaderMark: Tag.define(),
-  // HorizontalRule: Tag.define(),
   InlineCode: Tag.define(),
   LinkLabel: Tag.define(),
   LinkReference: Tag.define(),
@@ -177,13 +176,6 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
         class: blockquote,
       },
 
-      // TODO(burdon): Replace with extension.
-      // {
-      //   tag: [markdownTags.HorizontalRule],
-      //   class: mx(horizontalRule, readonly && '-indent-[100rem]'),
-      // },
-
-      // TODO(burdon): Only if being edited.
       {
         tag: [markdownTags.TableCell],
         class: 'font-mono',

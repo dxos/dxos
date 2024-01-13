@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { type EditorView, keymap } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,8 +16,11 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, TextEditor } from './TextEditor';
 import { comments, type CommentsOptions } from '../../extensions';
 import { type CommentRange, type Range, useTextModel } from '../../hooks';
+import { tokens } from '../../styles';
 
 faker.seed(101);
+
+console.log(tokens);
 
 //
 // Editor
