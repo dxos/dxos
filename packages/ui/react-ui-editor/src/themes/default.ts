@@ -86,6 +86,8 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-line': {
     paddingInline: 0,
+    // TODO(burdon): Other values leave gaps between lines when highlighted.
+    // lineHeight: 'normal',
   },
   '.cm-activeLine': {
     background: 'inherit',
@@ -124,30 +126,30 @@ export const defaultTheme: ThemeStyles = {
   // TODO(burdon): Review classnames (YJS dependent?) Note: e2e tests depend on this class.
   //
 
-  '&light .cm-ySelection, &light .cm-yLineSelection': {
-    mixBlendMode: 'multiply',
-  },
-  '&dark .cm-ySelection, &dark .cm-yLineSelection': {
-    mixBlendMode: 'screen',
-  },
-
-  '.cm-ySelectionInfo': {
-    padding: '2px 4px',
-    marginBlockStart: '-4px',
-  },
-  '.cm-ySelection, & .cm-selectionMatch': {
-    paddingBlockStart: '.15em',
-    paddingBlockEnd: '.15em',
-  },
-  '.cm-ySelectionCaret': {
-    display: 'inline-block',
-    insetBlockStart: '.1em',
-    blockSize: '1.4em',
-    verticalAlign: 'top',
-  },
-  '.cm-yLineSelection': {
-    margin: 0,
-  },
+  // '&light .cm-ySelection, &light .cm-yLineSelection': {
+  //   mixBlendMode: 'multiply',
+  // },
+  // '&dark .cm-ySelection, &dark .cm-yLineSelection': {
+  //   mixBlendMode: 'screen',
+  // },
+  //
+  // '.cm-ySelectionInfo': {
+  //   padding: '2px 4px',
+  //   marginBlockStart: '-4px',
+  // },
+  // '.cm-ySelection, & .cm-selectionMatch': {
+  //   paddingBlockStart: '.15em',
+  //   paddingBlockEnd: '.15em',
+  // },
+  // '.cm-ySelectionCaret': {
+  //   display: 'inline-block',
+  //   insetBlockStart: '.1em',
+  //   blockSize: '1.4em',
+  //   verticalAlign: 'top',
+  // },
+  // '.cm-yLineSelection': {
+  //   margin: 0,
+  // },
 
   //
   // link
@@ -229,16 +231,17 @@ export const defaultTheme: ThemeStyles = {
 
   //
   // font size
-  // TODO(thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
+  // TODO(thure): This appears to be the best or only way to set selection caret heights,
+  //  but it's far more verbose than it needs to be.
   //
-  ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
-    const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
-
-    acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
-    acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
-    acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
-    return acc;
-  }, {}),
+  // ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
+  //   const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
+  //
+  //   acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
+  //   acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
+  //   acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
+  //   return acc;
+  // }, {}),
 
   /**
    * Panels
@@ -292,7 +295,9 @@ export const textTheme: ThemeStyles = {
 };
 
 export const markdownTheme: ThemeStyles = {
-  // NOTE: Must leave base font family as is (i.e., monospace) due to fenced code blocks.
+  '.cm-scroller': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
   '.cm-placeholder': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },

@@ -3,19 +3,7 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import {
-  hoverTooltip,
-  keymap,
-  type Command,
-  Decoration,
-  type DecorationSet,
-  EditorView,
-  MatchDecorator,
-  type Rect,
-  type ViewUpdate,
-  ViewPlugin,
-  WidgetType,
-} from '@codemirror/view';
+import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
@@ -33,15 +21,6 @@ import { callbackWrapper } from '../util';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
-  '& .cm-bookmark': {
-    cursor: 'pointer',
-    margin: '4px',
-    padding: '4px',
-    backgroundColor: 'yellow',
-  },
-  '& .cm-bookmark-selected': {
-    backgroundColor: 'orange',
-  },
   '& .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
@@ -155,31 +134,6 @@ const highlightDecorations = EditorView.decorations.compute([commentsStateField]
   return Decoration.set(decorations);
 });
 
-/**
- * Optional bookmark widget at the start/end of the selection.
- * May correspond to a markdown bookmark.
- */
-class BookmarkWidget extends WidgetType {
-  constructor(private readonly _id: string, private readonly _handleClick?: () => void) {
-    super();
-    invariant(this._id);
-  }
-
-  override eq(other: this) {
-    return this._id === other._id;
-  }
-
-  override toDOM() {
-    const span = document.createElement('span');
-    span.className = 'cm-bookmark';
-    span.textContent = '※';
-    if (this._handleClick) {
-      span.onclick = () => this._handleClick!();
-    }
-    return span;
-  }
-}
-
 export type CommentsOptions = {
   key?: string;
   footnote?: boolean;
@@ -253,43 +207,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     return false;
   };
 
-  /**
-   * Bookmark widget decoration.
-   */
-  const bookmarksViewPlugin = options.footnote
-    ? ViewPlugin.fromClass(
-        class BookmarkViewPlugin {
-          // Match markdown footnotes (option).
-          // https://www.markdownguide.org/extended-syntax/#footnotes
-          static bookmarkMatcher = new MatchDecorator({
-            regexp: /\[\^(\w+)\]/g,
-            decoration: (match) => {
-              const id = match[1];
-              return Decoration.replace({ id, widget: new BookmarkWidget(id) });
-            },
-          });
-
-          bookmarks: DecorationSet;
-          constructor(view: EditorView) {
-            this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.createDeco(view);
-          }
-
-          update(update: ViewUpdate) {
-            this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.updateDeco(update, this.bookmarks);
-          }
-        },
-        {
-          decorations: (instance) => instance.bookmarks,
-          provide: (plugin) =>
-            EditorView.atomicRanges.of((view) => {
-              return view.plugin(plugin)?.bookmarks || Decoration.none;
-            }),
-        },
-      )
-    : [];
-
   return [
-    bookmarksViewPlugin,
     commentsStateField,
     highlightDecorations,
     styles,
