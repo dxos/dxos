@@ -274,11 +274,9 @@ const OutlinerItem = ({
         placeholder={placeholder}
         slots={{
           root: {
+            className: 'w-full pt-[4px]',
             onFocus: () => setFocus(true),
             onBlur: () => setFocus(false),
-          },
-          editor: {
-            className: 'w-full pt-[4px]',
           },
         }}
       />

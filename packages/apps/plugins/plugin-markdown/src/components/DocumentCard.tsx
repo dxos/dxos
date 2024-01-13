@@ -80,7 +80,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
               })}
               placeholder={t('editor placeholder')}
               slots={{
-                editor: {
+                root: {
                   className: mx(focusRing, 'h-full p-1 text-sm'),
                 },
               }}

@@ -66,7 +66,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
             }),
           ]}
           slots={{
-            editor: {
+            root: {
               className: 'flex w-full items-center pl-2 overflow-x-hidden',
             },
           }}

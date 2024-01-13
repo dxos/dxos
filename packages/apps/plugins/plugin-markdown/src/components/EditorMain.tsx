@@ -68,7 +68,7 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
         },
       }}
       slots={{
-        editor: {
+        root: {
           className: mx(
             focusRing,
             inputSurface,
@@ -76,7 +76,7 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
             'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
             'rounded',
           ),
-          'data-testid': 'composer.markdownRoot', // TODO(burdon): ???
+          'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
       }}
     />

@@ -245,7 +245,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   return (
     <div className={mx(fixedInsetFlexLayout, 'bg-neutral-100')}>
       <div className='flex justify-center h-full gap-8'>
-        <div className='flex flex-col h-full overflow-hidden w-[600px]'>
+        <div className='flex flex-col h-full w-[600px]'>
           <Editor
             item={item}
             commentSelected={selected}
@@ -255,7 +255,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
           />
         </div>
 
-        <div className='flex flex-col h-full overflow-hidden w-[300px]'>
+        <div className='flex flex-col h-full w-[300px]'>
           <Sidebar threads={visibleThreads} selected={selected} onSelect={handleSelectThread} />
         </div>
       </div>

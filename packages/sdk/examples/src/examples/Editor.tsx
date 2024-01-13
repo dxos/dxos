@@ -34,7 +34,7 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
       <MarkdownEditor
         model={model}
         slots={{
-          editor: {
+          root: {
             className: 'pli-4',
           },
         }}

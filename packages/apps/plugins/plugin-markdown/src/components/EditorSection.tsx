@@ -33,7 +33,7 @@ export const EditorSection = (props: EditorSectionProps) => {
         },
       }}
       slots={{
-        editor: {
+        root: {
           className: mx(focusRing, 'is-[calc(100%-4px)] m-0.5 py-2'),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,

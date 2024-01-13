@@ -41,12 +41,9 @@ export type CursorInfo = {
 
 export type TextEditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
-  editor?: {
-    className?: string;
-  };
-  scroller?: {
-    className?: string;
-  };
+  // editor?: {
+  //   className?: string;
+  // };
 };
 
 // TODO(burdon): Spellcheck?
@@ -59,7 +56,6 @@ export type TextEditorProps = {
   extensions?: Extension[];
   editorMode?: EditorMode;
   placeholder?: string;
-  spellCheck?: boolean; // TODO(burdon): ???
   theme?: ThemeStyles;
   slots?: TextEditorSlots;
 };
@@ -178,14 +174,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       [view, editorMode],
     );
 
-    // Apply classnames.
-    useEffect(() => {
-      if (view) {
-        view.dom.className = mx(view.dom.className, slots.editor?.className);
-        view.scrollDOM.className = mx(view.scrollDOM.className, slots.scroller?.className);
-      }
-    }, [view]);
-
     return (
       <div
         key={model.id}
@@ -242,8 +230,8 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 );
 
 export const defaultSlots: TextEditorSlots = {
-  editor: {
-    className: mx('p-2', inputSurface),
+  root: {
+    className: mx('p-2 overflow-y-auto', inputSurface),
   },
 };
 

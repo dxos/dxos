@@ -6,8 +6,8 @@ import get from 'lodash.get';
 
 import { type ThemeStyles, tokens } from '../styles';
 
-// TODO(burdon): Can we erase All of the default CM styles?
-// TODO(burdon): Theme styles seem to be added multiple times?
+// TODO(burdon): Can we use @apply and import css file?
+//  https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply?
 
 /**
  * Minimal styles.
