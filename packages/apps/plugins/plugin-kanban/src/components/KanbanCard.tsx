@@ -53,9 +53,9 @@ export const KanbanCardComponent: FC<{
           {model && (
             <MarkdownEditor
               model={model}
+              placeholder={t('item title placeholder')}
               slots={{
-                root: { className: mx(focusRing, 'p-1') },
-                editor: { placeholder: t('item title placeholder') },
+                editor: { className: mx(focusRing, 'p-1') },
               }}
             />
           )}

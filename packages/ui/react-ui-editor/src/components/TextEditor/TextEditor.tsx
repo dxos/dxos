@@ -8,7 +8,6 @@ import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
-  type ComponentProps,
   type KeyboardEvent,
   forwardRef,
   useCallback,
@@ -16,6 +15,7 @@ import React, {
   useImperativeHandle,
   useState,
   useRef,
+  type ComponentProps,
 } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -43,13 +43,13 @@ export type TextEditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
     className?: string;
-    placeholder?: string;
-    spellCheck?: boolean;
-    tabIndex?: number;
-    theme?: ThemeStyles;
+  };
+  scroller?: {
+    className?: string;
   };
 };
 
+// TODO(burdon): Spellcheck?
 export type TextEditorProps = {
   model: EditorModel;
   focus?: boolean;
@@ -58,6 +58,9 @@ export type TextEditorProps = {
   comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
   editorMode?: EditorMode;
+  placeholder?: string;
+  spellCheck?: boolean; // TODO(burdon): ???
+  theme?: ThemeStyles;
   slots?: TextEditorSlots;
 };
 
@@ -66,7 +69,7 @@ export type TextEditorProps = {
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    { model, focus, selection, readonly, comments, extensions = [], editorMode, slots = defaultSlots },
+    { model, focus, selection, readonly, comments, extensions = [], editorMode, theme, slots = defaultSlots },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -124,7 +127,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           // Theme.
           // TODO(burdon): Make theme configurable.
           EditorView.baseTheme(defaultTheme),
-          EditorView.theme(slots?.editor?.theme ?? {}),
+          EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
 
           // Storage and replication.
@@ -160,7 +163,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          // TODO(burdon): ???
+          // TODO(burdon): Is this required (for vim mode?)
           // case 'Enter': {
           //   view?.contentDOM.focus();
           //   break;
@@ -175,22 +178,30 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       [view, editorMode],
     );
 
+    // Apply classnames.
+    useEffect(() => {
+      if (view) {
+        view.dom.className = mx(view.dom.className, slots.editor?.className);
+        view.scrollDOM.className = mx(view.scrollDOM.className, slots.scroller?.className);
+      }
+    }, [view]);
+
     return (
       <div
         key={model.id}
+        role='none'
         ref={rootRef}
         tabIndex={0}
-        // TODO(burdon): Styles should be applied to cm-scroller not outer div?
-        {...slots?.root}
-        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
         onKeyUp={handleKeyUp}
+        {...slots.root}
+        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
       />
     );
   },
 );
 
 export const TextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], theme = textTheme, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     return (
@@ -201,6 +212,7 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
           basicBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
           ...extensions,
         ]}
+        theme={theme}
         slots={updatedSlots}
         {...props}
       />
@@ -210,7 +222,7 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
 
 // TODO(burdon): Remove (Just provide bundle, slots).
 export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
+  ({ readonly, extensions = [], theme = markdownTheme, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
     return (
@@ -221,6 +233,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
           markdownBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
           ...extensions,
         ]}
+        theme={theme}
         slots={updatedSlots}
         {...props}
       />
@@ -229,21 +242,15 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 );
 
 export const defaultSlots: TextEditorSlots = {
-  root: {
+  editor: {
     className: mx('p-2', inputSurface),
   },
 };
 
 export const defaultTextSlots: TextEditorSlots = {
   ...defaultSlots,
-  editor: {
-    theme: textTheme,
-  },
 };
 
 export const defaultMarkdownSlots: TextEditorSlots = {
   ...defaultSlots,
-  editor: {
-    theme: markdownTheme,
-  },
 };

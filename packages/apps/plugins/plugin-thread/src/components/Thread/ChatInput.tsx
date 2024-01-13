@@ -54,6 +54,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
       <div ref={ref} className={mx('flex w-full', inputSurface, className)} onKeyDownCapture={handleKeyDown}>
         <TextEditor
           model={model}
+          placeholder={placeholder}
           extensions={[
             tagExtension,
             listener({
@@ -65,11 +66,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
             }),
           ]}
           slots={{
-            root: {
-              className: 'flex w-full items-center pl-2 overflow-x-hidden',
-            },
             editor: {
-              placeholder,
+              className: 'flex w-full items-center pl-2 overflow-x-hidden',
             },
           }}
         />

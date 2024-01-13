@@ -20,26 +20,23 @@ export const EditorSection = (props: EditorSectionProps) => {
     <MarkdownEditor
       ref={editorRef}
       {...props}
+      placeholder={t('editor placeholder')}
+      theme={{
+        '&, & .cm-scroller': {
+          inlineSize: '100%',
+        },
+        '& .cm-content': {
+          paddingBlock: '1rem',
+        },
+        '& .cm-line': {
+          paddingInline: '0',
+        },
+      }}
       slots={{
-        root: {
-          role: 'none',
+        editor: {
           className: mx(focusRing, 'is-[calc(100%-4px)] m-0.5 py-2'),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
-        editor: {
-          placeholder: t('editor placeholder'),
-          theme: {
-            '&, & .cm-scroller': {
-              inlineSize: '100%',
-            },
-            '& .cm-content': {
-              paddingBlock: '1rem',
-            },
-            '& .cm-line': {
-              paddingInline: '0',
-            },
-          },
-        },
       }}
     />
   );

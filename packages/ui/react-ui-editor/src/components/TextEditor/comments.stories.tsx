@@ -16,11 +16,8 @@ import { withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor, TextEditor } from './TextEditor';
 import { comments, type CommentsOptions } from '../../extensions';
 import { type CommentRange, type Range, useTextModel } from '../../hooks';
-import { tokens } from '../../styles';
 
 faker.seed(101);
-
-console.log(tokens);
 
 //
 // Editor
@@ -68,22 +65,7 @@ const Editor: FC<{
   // TODO(burdon): Highlight currently selected comment.
   return (
     <div className='flex grow overflow-y-scroll'>
-      <MarkdownEditor
-        ref={editorRef}
-        model={model}
-        comments={commentRanges}
-        extensions={extensions}
-        slots={{
-          editor: {
-            // TODO(burdon): Fix default theme (classes currently applied to outer div).
-            theme: {
-              '&, & .cm-scroller': {
-                backgroundColor: 'white',
-              },
-            },
-          },
-        }}
-      />
+      <MarkdownEditor ref={editorRef} model={model} comments={commentRanges} extensions={extensions} />
     </div>
   );
 };
@@ -159,6 +141,7 @@ const Thread: FC<{
         <TextEditor
           ref={editorRef}
           model={model}
+          placeholder={'Enter comment...'}
           extensions={[
             keymap.of([
               {
@@ -170,7 +153,6 @@ const Thread: FC<{
               },
             ]),
           ]}
-          slots={{ editor: { placeholder: 'Enter comment...' } }}
         />
       </div>
     </div>
