@@ -227,7 +227,7 @@ export const spaceToGraphNode = ({
           id: 'save-space-to-disk',
           label: ['save space to disk label', { ns: SPACE_PLUGIN }],
           icon: (props) => <FloppyDisk {...props} />,
-          keyBinding: 'shift+meta+s',
+          keyBinding: 'meta+s',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
         },
       );
@@ -330,12 +330,12 @@ export const objectToGraphNode = ({
         id: 'delete',
         label: ['delete object label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Trash {...props} />,
-        keyBinding: 'meta+Backspace',
-        invoke: () =>
+        keyBinding: 'shift+meta+Backspace',
+        invoke: (params) =>
           dispatch([
             {
               action: SpaceAction.REMOVE_OBJECT,
-              data: { object, folder: parent.data },
+              data: { object, folder: parent.data, ...params },
             },
           ]),
       },

@@ -28,8 +28,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
-import { useFileDownload } from '@dxos/react-ui';
+import { type Space, SpaceProxy } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
 
 import { exportData } from './backup';
@@ -40,6 +39,7 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
+  PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
   SpaceMain,
@@ -267,6 +267,18 @@ export const SpacePlugin = ({
                 isTypedObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
+              } else if (
+                data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
+                data.subject &&
+                typeof data.subject === 'object' &&
+                isTypedObject((data.subject as Record<string, any>)?.object)
+              ) {
+                return (
+                  <PopoverRemoveObject
+                    object={(data.subject as Record<string, any>)?.object}
+                    folder={(data.subject as Record<string, any>)?.folder}
+                  />
+                );
               } else {
                 return null;
               }
@@ -491,8 +503,13 @@ export const SpacePlugin = ({
                 const backupBlob = await exportData(space, space.key.toHex());
                 const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
 
-                const download = useFileDownload();
-                download(backupBlob, `${filename}.json`);
+                const url = URL.createObjectURL(backupBlob);
+                // TODO(burdon): See DebugMain useFileDownload
+                const element = document.createElement('a');
+                element.setAttribute('href', url);
+                element.setAttribute('download', `${filename}.zip`);
+                element.setAttribute('target', 'download');
+                element.click();
                 return true;
               }
               break;
@@ -562,37 +579,19 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.REMOVE_OBJECT: {
-              if (!(intent.data.object instanceof TypedObject)) {
-                return;
-              }
-
-              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              if (layoutPlugin?.provides.layout.active === intent.data.object.id) {
-                await intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.ACTIVATE,
-                  data: { id: undefined },
-                });
-              }
-
-              if (intent.data.folder instanceof Folder) {
-                const index = intent.data.folder.objects.indexOf(intent.data.object);
-                index !== -1 && intent.data.folder.objects.splice(index, 1);
-              }
-
-              const space = getSpaceForObject(intent.data.object);
-
-              const folder = space?.properties[Folder.schema.typename];
-              if (folder instanceof Folder) {
-                const index = folder.objects.indexOf(intent.data.object);
-                index !== -1 && folder.objects.splice(index, 1);
-              }
-
-              if (space) {
-                space.db.remove(intent.data.object);
-                return true;
-              }
-              break;
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_POPOVER,
+                data: {
+                  anchorId: `dxos.org/ui/${intent.data.caller}/${intent.data.object.id}`,
+                  component: 'dxos.org/plugin/space/RemoveObjectPopover',
+                  subject: {
+                    object: intent.data.object,
+                    folder: intent.data.folder,
+                  },
+                  caller: intent.data.caller,
+                },
+              });
             }
 
             case SpaceAction.RENAME_OBJECT: {

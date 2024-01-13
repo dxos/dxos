@@ -4,13 +4,13 @@
 
 import '@dxosTheme';
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
-import { code, MarkdownEditor, type TextEditorProps, type TextEditorRef } from '@dxos/react-ui-editor';
+import { code, MarkdownEditor, type TextEditorProps } from '@dxos/react-ui-editor';
 import { useTextModel } from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { type Meta, withTheme } from '@dxos/storybook-utils';
 
 import { mermaid } from './extensions';
 
@@ -21,7 +21,6 @@ type StoryProps = {
 } & Pick<TextEditorProps, 'readonly' | 'extensions' | 'slots'>;
 
 const Story = ({ text, ...props }: StoryProps) => {
-  const ref = useRef<TextEditorRef>(null);
   const [item] = useState({ text: new TextObject(text) });
   const model = useTextModel({ text: item.text });
   if (!model) {
@@ -32,7 +31,7 @@ const Story = ({ text, ...props }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor ref={ref} model={model} {...props} />
+          <MarkdownEditor model={model} {...props} />
           <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
@@ -40,12 +39,13 @@ const Story = ({ text, ...props }: StoryProps) => {
   );
 };
 
-export default {
+const meta: Meta = {
   title: 'plugin-mermaid/extensions',
   component: MarkdownEditor,
   decorators: [withTheme],
-  render: Story,
 };
+
+export default meta;
 
 export const Mermaid = {
   render: () => (

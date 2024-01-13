@@ -15,6 +15,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useState,
+  useRef,
 } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -34,13 +35,8 @@ export type CursorInfo = {
   to: number;
   line: number;
   lines: number;
+  length: number;
   after?: string;
-};
-
-export type TextEditorRef = {
-  root: HTMLDivElement | null;
-  state?: EditorState;
-  view?: EditorView;
 };
 
 export type TextEditorSlots = {
@@ -56,6 +52,8 @@ export type TextEditorSlots = {
 
 export type TextEditorProps = {
   model: EditorModel;
+  focus?: boolean;
+  selection?: { anchor: number; head?: number };
   readonly?: boolean; // TODO(burdon): Move into model.
   comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
@@ -65,17 +63,26 @@ export type TextEditorProps = {
 
 /**
  * Base text editor.
- * NOTE: Rather than adding properties, try to create extensions that can be reused.
  */
-export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ model, readonly, comments, extensions = [], editorMode, slots = defaultSlots }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
+  (
+    { model, focus, selection, readonly, comments, extensions = [], editorMode, slots = defaultSlots },
+    forwardedRef,
+  ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
-    const [root, setRoot] = useState<HTMLDivElement | null>(null);
-    const [{ state = undefined, view = undefined } = {}, setEditor] = useState<
-      { state?: EditorState; view?: EditorView } | undefined
-    >();
-    useImperativeHandle(forwardedRef, () => ({ root, state, view }), [view, state, root]);
+    const { themeMode } = useThemeContext();
+
+    // The editor view ref should only be used as an escape hatch.
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [view, setView] = useState<EditorView | null>(null);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+
+    // Focus.
+    useEffect(() => {
+      if (view && focus) {
+        view.focus();
+      }
+    }, [view, focus]);
 
     // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
@@ -99,7 +106,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     }, [view, comments]);
 
     useEffect(() => {
-      if (!root) {
+      if (!model || !rootRef.current) {
         return;
       }
 
@@ -107,6 +114,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: model.text(),
+        selection,
         extensions: [
           readonly && EditorState.readOnly.of(readonly),
 
@@ -131,36 +139,35 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
       // Ideally this should not happen except when changing between text objects.
       view?.destroy();
-      setEditor({
+      const newView = new EditorView({
+        parent: rootRef.current,
         state,
-        view: new EditorView({
-          state,
-          parent: root,
-          // NOTE: Uncomment to spy on all transactions.
-          // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-          // dispatch: (transaction, view) => {
-          //   view.update([transaction]);
-          // },
-        }),
+        // NOTE: Uncomment to spy on all transactions.
+        // https://codemirror.net/docs/ref/#view.EditorView.dispatch
+        // dispatch: (transaction, view) => {
+        //   view.update([transaction]);
+        // },
       });
 
+      setView(newView);
       return () => {
-        view?.destroy();
-        setEditor(undefined);
+        newView?.destroy();
+        setView(null);
       };
-    }, [root, model, readonly, editorMode, themeMode]);
+    }, [rootRef, model, readonly, editorMode, themeMode]);
 
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          case 'Enter': {
-            view?.contentDOM.focus();
-            break;
-          }
+          // TODO(burdon): ???
+          // case 'Enter': {
+          //   view?.contentDOM.focus();
+          //   break;
+          // }
 
           case 'Escape': {
-            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && root?.focus();
+            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && rootRef.current?.focus();
             break;
           }
         }
@@ -171,7 +178,7 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
     return (
       <div
         key={model.id}
-        ref={setRoot}
+        ref={rootRef}
         tabIndex={0}
         {...slots?.root}
         {...(editorMode !== 'vim' && tabsterDOMAttribute)}
@@ -181,32 +188,39 @@ export const BaseTextEditor = forwardRef<TextEditorRef, TextEditorProps>(
   },
 );
 
-export const TextEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
+export const TextEditor = forwardRef<EditorView, TextEditorProps>(
+  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultTextSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[basicBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
-        slots={slots}
+        extensions={[
+          basicBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
+          ...extensions,
+        ]}
+        slots={updatedSlots}
         {...props}
       />
     );
   },
 );
 
-export const MarkdownEditor = forwardRef<TextEditorRef, TextEditorProps>(
-  ({ readonly, extensions = [], slots: _slots, ...props }, forwardedRef) => {
+// TODO(burdon): Remove (Just provide bundle, slots).
+export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
+  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const slots = defaultsDeep({}, _slots, defaultMarkdownSlots);
+    const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[markdownBundle({ readonly, themeMode, placeholder: slots?.editor?.placeholder }), ...extensions]}
-        slots={slots}
+        extensions={[
+          markdownBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
+          ...extensions,
+        ]}
+        slots={updatedSlots}
         {...props}
       />
     );

@@ -102,12 +102,15 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 'label' in data.activeNode &&
                 'parent' in data.activeNode
               ) {
-                return (
-                  <NavBarStart
-                    activeNode={data.activeNode as Node}
-                    popoverAnchorId={data.popoverAnchorId as string | undefined}
-                  />
-                );
+                return {
+                  node: (
+                    <NavBarStart
+                      activeNode={data.activeNode as Node}
+                      popoverAnchorId={data.popoverAnchorId as string | undefined}
+                    />
+                  ),
+                  disposition: 'hoist',
+                };
               }
               break;
           }

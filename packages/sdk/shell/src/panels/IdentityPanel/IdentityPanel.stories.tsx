@@ -8,6 +8,7 @@ import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
+import { DeviceKind } from '@dxos/react-client/halo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -16,6 +17,7 @@ import type { IdentityPanelImplProps } from './IdentityPanelProps';
 import { IdentityActionChooserImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
+import { osTranslations } from '../../translations';
 
 faker.seed(1234);
 
@@ -30,12 +32,13 @@ const noOpProps: IdentityPanelImplProps = {
       displayName: faker.person.firstName(),
     },
   },
+  devices: [],
 };
 
 export default {
-  title: 'Panels/Identity',
+  title: 'react-shell/IdentityPanel',
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { translations: [osTranslations], chromatic: { disableSnapshot: false } },
 };
 
 export const IdentityActionChooser = () => {
@@ -46,6 +49,45 @@ export const IdentityActionChooser = () => {
         activeView='identity action chooser'
         IdentityActionChooser={IdentityActionChooserImpl}
       />
+    </StorybookDialog>
+  );
+};
+
+export const UpdateProfileForm = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <IdentityPanelImpl
+        {...noOpProps}
+        activeView='update profile form'
+        IdentityActionChooser={IdentityActionChooserImpl}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const DeviceManager = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <IdentityPanelImpl
+        {...{
+          ...noOpProps,
+          devices: [
+            { deviceKey: PublicKey.random(), kind: DeviceKind.CURRENT },
+            { deviceKey: PublicKey.random(), kind: DeviceKind.TRUSTED },
+            { deviceKey: PublicKey.random(), kind: DeviceKind.TRUSTED },
+          ],
+        }}
+        activeView='device manager'
+        IdentityActionChooser={IdentityActionChooserImpl}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const DeviceManagerEmpty = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <IdentityPanelImpl {...noOpProps} activeView='device manager' IdentityActionChooser={IdentityActionChooserImpl} />
     </StorybookDialog>
   );
 };
