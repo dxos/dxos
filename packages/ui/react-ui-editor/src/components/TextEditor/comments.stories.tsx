@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import { type EditorView, keymap } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
-import React, { type FC, useMemo, useRef, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
 import { comments, type CommentsOptions } from '../../extensions';
-import { type CommentRange, useTextModel } from '../../hooks';
+import { type CommentRange, type Range, useTextModel } from '../../hooks';
 
 faker.seed(101);
 
@@ -24,11 +24,30 @@ faker.seed(101);
 
 const Editor: FC<{
   item: { text: TextObject };
+  commentSelected?: string;
   commentRanges: CommentRange[];
   onCreateComment: CommentsOptions['onCreate'];
   onSelectComment: CommentsOptions['onSelect'];
-}> = ({ item, commentRanges, onCreateComment, onSelectComment }) => {
+}> = ({ item, commentSelected, commentRanges, onCreateComment, onSelectComment }) => {
   const model = useTextModel({ text: item.text });
+  const editorRef = useRef<EditorView>(null);
+  const [selected, setSelected] = useState<string>();
+  useEffect(() => {
+    if (commentSelected !== selected) {
+      const thread = commentRanges.find((range) => range.id === commentSelected);
+      if (thread) {
+        const { cursor } = thread;
+        const range = model?.getRangeFromCursor?.(cursor);
+        if (range) {
+          // TODO(burdon): Scroll selection to center of screen?
+          editorRef.current?.dispatch({ selection: { anchor: range.from }, scrollIntoView: true });
+        }
+      }
+
+      setSelected(commentSelected);
+    }
+  }, [selected, commentRanges, commentSelected]);
+
   const extensions = useMemo(() => {
     return [
       comments({
@@ -45,6 +64,7 @@ const Editor: FC<{
   return (
     <div className='flex grow overflow-y-scroll'>
       <MarkdownEditor
+        ref={editorRef}
         model={model}
         comments={commentRanges}
         extensions={extensions}
@@ -71,6 +91,7 @@ type CommentThread = {
   id: string;
   range: CommentRange;
   yPos?: number;
+  selection?: Range;
   messages: TextObject[];
 };
 
@@ -81,8 +102,8 @@ const Thread: FC<{
 }> = ({ thread, selected, onSelect }) => {
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
-  const editorRef = useRef<EditorView>(null);
 
+  const editorRef = useRef<EditorView>(null);
   const handleCreateMessage = () => {
     const text = model?.text().trim();
     if (text?.length) {
@@ -100,6 +121,13 @@ const Thread: FC<{
 
   return (
     <div className={mx('flex flex-col m-1 shadow-sm divide-y bg-white', selected && 'ring')}>
+      <div className='flex p-2 text-xs font-mono gap-2'>
+        <span>id:{thread.id.slice(0, 4)}</span>
+        <span>from:{thread.selection?.from}</span>
+        <span>to:{thread.selection?.to}</span>
+        <span>y:{thread.yPos}</span>
+      </div>
+
       {thread.messages.map((message, i) => (
         // TODO(burdon): Fix default editor padding so content doesn't jump on creating message.
         <div key={i} className='p-2' onClick={() => onSelect()}>
@@ -173,6 +201,9 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   const [selected, setSelected] = useState<string>();
   const commentRanges = useMemo(() => threads.map((thread) => thread.range), [threads]);
 
+  // Filter by visibility.
+  const visibleThreads = useMemo(() => threads.filter((thread) => thread.yPos !== undefined), [threads]);
+
   // TODO(burdon): Get y position.
   const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
     const id = PublicKey.random().toHex();
@@ -181,7 +212,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       {
         id,
         range: { id, cursor },
-        yPos: location?.top,
+        yPos: location ? Math.floor(location.top) : undefined,
         messages: autoCreate
           ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 2, max: 5 } })
           : [],
@@ -197,7 +228,8 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       threads.map((thread) => {
         const range = ranges.find((range) => range.id === thread.range.id);
         if (range) {
-          thread.yPos = range.location?.top;
+          thread.yPos = range.location ? Math.floor(range.location.top) : undefined;
+          thread.selection = { from: range.from, to: range.to };
         }
 
         return thread;
@@ -212,18 +244,20 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   };
 
   return (
-    <div className={mx(fixedInsetFlexLayout)}>
+    <div className={mx(fixedInsetFlexLayout, 'bg-neutral-100')}>
       <div className='flex justify-center h-full gap-8'>
         <div className='flex flex-col h-full overflow-hidden w-[600px]'>
           <Editor
             item={item}
+            commentSelected={selected}
             commentRanges={commentRanges}
             onCreateComment={handleCreateComment}
             onSelectComment={handleSelectComment}
           />
         </div>
+
         <div className='flex flex-col h-full overflow-hidden w-[300px]'>
-          <Sidebar threads={threads} selected={selected} onSelect={handleSelectThread} />
+          <Sidebar threads={visibleThreads} selected={selected} onSelect={handleSelectThread} />
         </div>
       </div>
     </div>

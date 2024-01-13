@@ -46,6 +46,10 @@ export type EditorModel = {
    */
   // TODO(burdon): Remove.
   getCursorFromRange?: (value: Range) => string;
+  /**
+   * @deprecated Use CursorConverter.
+   */
+  // TODO(burdon): Remove.
   getRangeFromCursor?: (cursor: string) => Range | undefined;
   // TODO(burdon): Move into extension.
   awareness?: YP.Awareness;
