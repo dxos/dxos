@@ -19,12 +19,12 @@ export interface CursorConverter {
   fromCursor(cursor: string): number;
 }
 
-const DEFAULT_CURSOR_CONVERTER: CursorConverter = {
+const defaultCursorConverter: CursorConverter = {
   toCursor: (position) => position.toString(),
   fromCursor: (cursor) => parseInt(cursor),
 };
 
-// TODO(burdon): Should be lower case.
+// TODO(burdon): Should be lower-case; ideally static field of util class.
 export const CursorConverter = Facet.define<CursorConverter, CursorConverter>({
-  combine: (providers) => providers[0] ?? DEFAULT_CURSOR_CONVERTER,
+  combine: (providers) => providers[0] ?? defaultCursorConverter,
 });

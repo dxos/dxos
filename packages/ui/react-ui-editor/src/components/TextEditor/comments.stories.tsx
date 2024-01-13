@@ -15,8 +15,8 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
 import { comments, type CommentsOptions, getRangeFromCursor } from '../../extensions';
+import { CursorConverter } from '../../extensions';
 import { type CommentRange, type Range, useTextModel } from '../../hooks';
-import { CursorConverter } from '../../util';
 
 faker.seed(101);
 

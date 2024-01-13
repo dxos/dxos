@@ -23,9 +23,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
+import { CursorConverter } from './cursor';
 import { type CommentRange, type EditorModel, type Range } from '../hooks';
 import { getToken } from '../styles';
-import { callbackWrapper, CursorConverter } from '../util';
+import { callbackWrapper } from '../util';
 
 // TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
 // TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?

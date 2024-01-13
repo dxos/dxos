@@ -8,7 +8,7 @@ import type * as YP from 'y-protocols/awareness';
 import type { YText } from '@dxos/text-model';
 
 import { cursorConverter } from './cursor';
-import { CursorConverter } from '../../util';
+import { CursorConverter } from '../cursor';
 
 export const yjs = (content: YText, awareness?: YP.Awareness) => [
   CursorConverter.of(cursorConverter(content)),

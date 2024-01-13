@@ -6,7 +6,7 @@ import * as Y from 'yjs';
 
 import { arrayToString, stringToArray } from '@dxos/util';
 
-import { type CursorConverter } from '../../util';
+import { type CursorConverter } from '../cursor';
 
 export const cursorConverter = (text: Y.Text): CursorConverter => ({
   toCursor: (index, assoc) => {
