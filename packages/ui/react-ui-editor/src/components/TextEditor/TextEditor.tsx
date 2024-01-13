@@ -8,6 +8,7 @@ import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
+  type ComponentProps,
   type KeyboardEvent,
   forwardRef,
   useCallback,
@@ -15,7 +16,6 @@ import React, {
   useImperativeHandle,
   useState,
   useRef,
-  type ComponentProps,
 } from 'react';
 
 import { generateName } from '@dxos/display-name';
