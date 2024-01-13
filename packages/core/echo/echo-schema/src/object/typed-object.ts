@@ -686,6 +686,7 @@ export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
 export const getGlobalAutomergePreference = () => {
   return (
     globalAutomergePreference ??
+    // TODO(burdon): Change to DX_FORCE_AUTOMERGE.
     (globalThis as any).DXOS_FORCE_AUTOMERGE ??
     (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
     false

@@ -41,6 +41,7 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
    * Key binding.
    * NOTE: Alphanumeric characters should be declared in lowercase.
    */
+  // TODO(burdon): Rename shortcut.
   keyBinding?: string;
 
   /**

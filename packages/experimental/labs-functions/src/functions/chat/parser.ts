@@ -11,6 +11,7 @@ export type ParseResult = {
   type: string;
   content: string;
   data?: any;
+  kind?: 'code-block'
 };
 
 export const parseMessage = (content: string, type?: string): ParseResult | undefined => {
@@ -39,8 +40,14 @@ export const parseMessage = (content: string, type?: string): ParseResult | unde
       post,
       type,
       content,
+      kind: 'code-block',
       data: type === 'json' ? parseJson(content) : undefined,
     };
+  }
+
+  return {
+    content,
+    type: 'text',
   }
 };
 
