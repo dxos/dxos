@@ -45,6 +45,9 @@ export default template.define.script({
         ]
       }
     },
+    worker: {
+      format: 'es',
+    },
     `;
     // TODO(wittjosiah): Why is target esnext needed here but not composer?
     //  Why does dev server target need to be set to the default?
@@ -59,11 +62,13 @@ export default template.define.script({
       target: 'esnext',
       outDir: 'out/${name}'
     },
+    worker: {
+      format: 'es',
+    },
     `;
     return /* javascript */ plate`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
-  import { VaultPlugin } from '@dxos/vault/vite-plugin';
   ${imports}
 
   // https://vitejs.dev/config/
@@ -73,7 +78,6 @@ export default template.define.script({
     },
     ${input.monorepo ? monorepoConfig : basicConfig}
     plugins: [
-      VaultPlugin(),
       ConfigPlugin(),
       ${react
         // https://github.com/preactjs/signals/issues/269

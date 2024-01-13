@@ -35,6 +35,9 @@ export default defineConfig({
       'node-fetch': 'isomorphic-fetch',
     },
   },
+  worker: {
+    format: 'es',
+  },
   plugins: [
     ThemePlugin({
       root: __dirname,

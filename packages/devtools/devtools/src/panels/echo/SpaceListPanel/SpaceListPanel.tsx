@@ -9,7 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
+import { Button, useFileDownload } from '@dxos/react-ui';
 import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
 
 import { DialogRestoreSpace } from './DialogRestoreSpace';
@@ -22,6 +22,7 @@ export const SpaceListPanel: FC = () => {
   const spaces = useSpaces({ all: true });
   const navigate = useNavigate();
   const setState = useDevtoolsDispatch();
+  const download = useFileDownload();
 
   const handleSelect = (selection: Space | undefined) => {
     setState((state) => ({ ...state, space: selection }));
@@ -40,17 +41,10 @@ export const SpaceListPanel: FC = () => {
   const handleBackup = async (spaceKey: PublicKey) => {
     const space = spaces.find((space) => space.key.equals(spaceKey))!;
     await space.waitUntilReady();
-
     const backupBlob = await exportData(space);
     const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-    const url = URL.createObjectURL(backupBlob);
-    // TODO(burdon): See DebugMain useFileDownload
-    const element = document.createElement('a');
-    element.setAttribute('href', url);
-    element.setAttribute('download', `${filename}.json`);
-    element.setAttribute('target', 'download');
-    element.click();
-    return true;
+
+    download(backupBlob, `${filename}.json`);
   };
 
   const handleImport = async (backup: Blob) => {

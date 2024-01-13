@@ -9,6 +9,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { CompactQrCode } from './QrCode';
 
 export default {
+  title: 'react-appkit/CompactQrCode',
   component: CompactQrCode,
   decorators: [withTheme],
 };

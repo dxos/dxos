@@ -11,6 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { TreeView, mapJsonToHierarchy } from './TreeView';
 
 export default {
+  title: 'react-appkit/TreeView',
   component: TreeView,
   decorators: [withTheme],
 };

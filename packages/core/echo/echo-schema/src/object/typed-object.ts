@@ -86,7 +86,7 @@ export type AutomergeOptions = {
  */
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
   static [Symbol.hasInstance](instance: any) {
-    return !!instance?.[base] && (isActualTypedObject(instance) || isActualAutomergeObject(instance));
+    return !!instance?.[base] && (isActualTypedObject(instance) || isAutomergeObject(instance));
   }
 
   /**
@@ -702,6 +702,6 @@ export const isActualTypedObject = (object: unknown): object is TypedObject => {
 /**
  * @deprecated Temporary.
  */
-export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
+export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
   return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

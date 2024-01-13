@@ -3,9 +3,9 @@
 //
 
 import { DotOutline } from '@phosphor-icons/react';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 
-import { type Action, type Graph, type Label } from '@dxos/app-graph';
+import { KEY_BINDING, type Action, type Graph, type Label } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -14,8 +14,9 @@ import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { NAVTREE_PLUGIN } from '../meta';
 
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
-export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
+export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Graph; selected?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
+  const [selected, setSelected] = useState<string | undefined>(initial);
 
   // TODO(burdon): Factor out.
   // TODO(burdon): How to access all translations across plugins?
@@ -23,7 +24,7 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
 
   // Traverse graph.
   // TODO(burdon): Factor out commonality with shortcut dialog.
-  const actions = useMemo(() => {
+  const allActions = useMemo(() => {
     // TODO(burdon): Get from navtree (not keyboard).
     const current = Keyboard.singleton.getCurrentContext();
     const actionMap = new Set<string>();
@@ -49,6 +50,8 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
     return actions;
   }, [graph]);
 
+  const actions = selected ? allActions.find(({ id }) => id === selected)?.actions : allActions;
+
   // TODO(burdon): Remove.
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -72,10 +75,15 @@ export const CommandsDialogContent = ({ graph }: { graph?: Graph }) => {
                     return;
                   }
 
+                  if (action.actions.length > 0) {
+                    setSelected(action.id);
+                    return;
+                  }
+
                   // TODO(burdon): Remove hack to close dialog (via hook?)
                   buttonRef.current?.click();
                   setTimeout(() => {
-                    void action.invoke();
+                    void action.invoke({ caller: KEY_BINDING });
                   });
                 }}
                 classNames='flex items-center gap-2'
