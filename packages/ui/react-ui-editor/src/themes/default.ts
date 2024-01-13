@@ -122,36 +122,6 @@ export const defaultTheme: ThemeStyles = {
   },
 
   //
-  // collaboration
-  // TODO(burdon): Review classnames (YJS dependent?) Note: e2e tests depend on this class.
-  //
-
-  // '&light .cm-ySelection, &light .cm-yLineSelection': {
-  //   mixBlendMode: 'multiply',
-  // },
-  // '&dark .cm-ySelection, &dark .cm-yLineSelection': {
-  //   mixBlendMode: 'screen',
-  // },
-  //
-  // '.cm-ySelectionInfo': {
-  //   padding: '2px 4px',
-  //   marginBlockStart: '-4px',
-  // },
-  // '.cm-ySelection, & .cm-selectionMatch': {
-  //   paddingBlockStart: '.15em',
-  //   paddingBlockEnd: '.15em',
-  // },
-  // '.cm-ySelectionCaret': {
-  //   display: 'inline-block',
-  //   insetBlockStart: '.1em',
-  //   blockSize: '1.4em',
-  //   verticalAlign: 'top',
-  // },
-  // '.cm-yLineSelection': {
-  //   margin: 0,
-  // },
-
-  //
   // link
   //
   '.cm-link': {
