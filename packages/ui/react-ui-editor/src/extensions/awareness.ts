@@ -208,24 +208,22 @@ export class RemoteSelectionsDecorator implements PluginValue {
 }
 
 class RemoteCaretWidget extends WidgetType {
-  constructor(public name: string, public color: string) {
+  constructor(private readonly _name: string, private readonly _color: string) {
     super();
-    this.name = name;
-    this.color = color;
   }
 
-  toDOM(): HTMLElement {
+  override toDOM(): HTMLElement {
     const span = document.createElement('span');
     span.className = 'cm-ySelectionCaret';
-    span.style.backgroundColor = this.color;
-    span.style.borderColor = this.color;
+    span.style.backgroundColor = this._color;
+    span.style.borderColor = this._color;
 
     const dot = document.createElement('div');
     dot.className = 'cm-ySelectionCaretDot';
 
     const info = document.createElement('div');
     info.className = 'cm-ySelectionInfo';
-    info.innerText = this.name;
+    info.innerText = this._name;
 
     span.appendChild(document.createTextNode('\u2060'));
     span.appendChild(dot);
@@ -236,16 +234,12 @@ class RemoteCaretWidget extends WidgetType {
     return span;
   }
 
-  override eq(widget: this) {
-    return widget.color === this.color;
-  }
-
-  compare(widget: this) {
-    return widget.color === this.color;
-  }
-
   override updateDOM() {
     return false;
+  }
+
+  override eq(widget: this) {
+    return widget._color === this._color;
   }
 
   override get estimatedHeight() {
@@ -254,6 +248,11 @@ class RemoteCaretWidget extends WidgetType {
 
   override ignoreEvent() {
     return true;
+  }
+
+  // TODO(burdon): Not used?
+  compare(widget: this) {
+    return widget._color === this._color;
   }
 }
 

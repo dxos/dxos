@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import get from 'lodash.get';
+
+import { next as automerge } from '@dxos/automerge/automerge';
 import { Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
@@ -14,7 +17,7 @@ import {
   type AutomergeOptions,
   type TypedObject,
 } from './typed-object';
-import { AutomergeObject } from '../automerge';
+import { AutomergeObject, getRawDoc } from '../automerge';
 
 export type TextObjectOptions = AutomergeOptions;
 
@@ -158,4 +161,59 @@ export const getTextContent = (object: TextObject): string => {
   } else {
     return object.text;
   }
+};
+
+/**
+ * TODO: This API is gonna change.
+ */
+export const toCursor = (object: TextObject, pos: number) => {
+  const accessor = getRawDoc(object, ['content']);
+  const doc = accessor.handle.docSync();
+  if (!doc) {
+    return '';
+  }
+
+  const value = get(doc, accessor.path);
+  if (typeof value === 'string' && value.length <= pos) {
+    return 'end';
+  }
+
+  // NOTE: Slice is needed because getCursor mutates the array.
+  return automerge.getCursor(doc, accessor.path.slice(), pos);
+};
+
+/**
+ * TODO: This API is gonna change.
+ */
+export const fromCursor = (object: TextObject, cursor: string) => {
+  if (cursor === '') {
+    return 0;
+  }
+
+  const accessor = getRawDoc(object, ['content']);
+  const doc = accessor.handle.docSync();
+  if (!doc) {
+    return 0;
+  }
+
+  if (cursor === 'end') {
+    const value = get(doc, accessor.path);
+    if (typeof value === 'string') {
+      return value.length;
+    } else {
+      return 0;
+    }
+  }
+
+  // NOTE: Slice is needed because getCursor mutates the array.
+  return automerge.getCursorPosition(doc, accessor.path.slice(), cursor);
+};
+
+/**
+ * TODO: This API is gonna change.
+ */
+export const getTextInRange = (object: TextObject, begin: string, end: string) => {
+  const beginIdx = fromCursor(object, begin);
+  const endIdx = fromCursor(object, end);
+  return (object.content as any as string).slice(beginIdx, endIdx);
 };

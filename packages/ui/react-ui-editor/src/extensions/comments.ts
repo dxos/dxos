@@ -7,14 +7,14 @@ import {
   hoverTooltip,
   keymap,
   type Command,
-  type DecorationSet,
-  type ViewUpdate,
   Decoration,
+  type DecorationSet,
   EditorView,
   MatchDecorator,
+  type Rect,
+  type ViewUpdate,
   ViewPlugin,
   WidgetType,
-  type Rect,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 
@@ -159,17 +159,13 @@ const highlightDecorations = EditorView.decorations.compute([commentsStateField]
  * May correspond to a markdown bookmark.
  */
 class BookmarkWidget extends WidgetType {
-  constructor(
-    private readonly _anchor: number,
-    private readonly _id: string,
-    private readonly _handleClick?: () => void,
-  ) {
+  constructor(private readonly _id: string, private readonly _handleClick?: () => void) {
     super();
     invariant(this._id);
   }
 
-  override eq(other: BookmarkWidget) {
-    return this._anchor === other._anchor && this._id === other._id;
+  override eq(other: this) {
+    return this._id === other._id;
   }
 
   override toDOM() {
@@ -197,7 +193,7 @@ export type CommentsOptions = {
   /**
    * Called to render tooltip.
    */
-  onHover?: (el: Element) => void;
+  onHover?: (el: Element, shortcut: string) => void;
 };
 
 /**
@@ -213,6 +209,8 @@ export type CommentsOptions = {
  * 6). Optionally, implements a hoverTooltip to show hints when creating a selection range.
  */
 export const comments = (options: CommentsOptions = {}): Extension => {
+  const { key: shortcut = "meta-'" } = options;
+
   const handleSelect = debounce((state: CommentsState) => options.onSelect?.(state), 200);
 
   /**
@@ -257,38 +255,37 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   /**
    * Bookmark widget decoration.
    */
-  const bookmarksViewPlugin = ViewPlugin.fromClass(
-    class BookmarkViewPlugin {
-      // Match markdown footnotes (option).
-      // https://www.markdownguide.org/extended-syntax/#footnotes
-      static bookmarkMatcher = new MatchDecorator({
-        regexp: /\[\^(\w+)\]/g,
-        decoration: (match, view, pos) => {
-          const id = match[1];
-          return Decoration.replace({
-            id,
-            widget: new BookmarkWidget(pos, id),
+  const bookmarksViewPlugin = options.footnote
+    ? ViewPlugin.fromClass(
+        class BookmarkViewPlugin {
+          // Match markdown footnotes (option).
+          // https://www.markdownguide.org/extended-syntax/#footnotes
+          static bookmarkMatcher = new MatchDecorator({
+            regexp: /\[\^(\w+)\]/g,
+            decoration: (match) => {
+              const id = match[1];
+              return Decoration.replace({ id, widget: new BookmarkWidget(id) });
+            },
           });
+
+          bookmarks: DecorationSet;
+          constructor(view: EditorView) {
+            this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.createDeco(view);
+          }
+
+          update(update: ViewUpdate) {
+            this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.updateDeco(update, this.bookmarks);
+          }
         },
-      });
-
-      bookmarks: DecorationSet;
-      constructor(view: EditorView) {
-        this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.createDeco(view);
-      }
-
-      update(update: ViewUpdate) {
-        this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.updateDeco(update, this.bookmarks);
-      }
-    },
-    {
-      decorations: (instance) => instance.bookmarks,
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.bookmarks || Decoration.none;
-        }),
-    },
-  );
+        {
+          decorations: (instance) => instance.bookmarks,
+          provide: (plugin) =>
+            EditorView.atomicRanges.of((view) => {
+              return view.plugin(plugin)?.bookmarks || Decoration.none;
+            }),
+        },
+      )
+    : [];
 
   return [
     bookmarksViewPlugin,
@@ -302,7 +299,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     options.onCreate
       ? keymap.of([
           {
-            key: options?.key ?? "meta-'",
+            key: shortcut,
             run: callbackWrapper(createCommentThread),
           },
         ])
@@ -324,7 +321,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
                 create: () => {
                   // TODO(burdon): Dispatch to react callback to render (or use SSR)?
                   const el = document.createElement('div');
-                  options.onHover?.(el);
+                  options.onHover?.(el, shortcut);
                   return { dom: el, offset: { x: 0, y: 8 } };
                 },
               };
@@ -391,6 +388,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             min = d;
           }
         });
+
+        // TODO(burdon): Fire debounced callback if range selected (to show hint).
 
         if (selected.active !== active || selected.closest !== closest) {
           view.dispatch({ effects: setSelection.of(selected) });

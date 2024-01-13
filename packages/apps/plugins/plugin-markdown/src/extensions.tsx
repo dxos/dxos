@@ -15,6 +15,7 @@ import {
   type Extension,
   type ListenerOptions,
   autocomplete,
+  code,
   comments,
   image,
   link,
@@ -50,6 +51,7 @@ export const getExtensions = ({
     //
     // Common.
     //
+    code(),
     image(),
     table(),
     tasklist(),

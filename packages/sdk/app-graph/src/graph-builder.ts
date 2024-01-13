@@ -144,7 +144,7 @@ export class GraphBuilder {
             const action = this._createAction(partial);
             if (action.keyBinding) {
               Keyboard.singleton.getContext(path.join('/')).bind({
-                binding: action.keyBinding!,
+                shortcut: action.keyBinding,
                 handler: () => {
                   action.invoke({ caller: KEY_BINDING });
                 },

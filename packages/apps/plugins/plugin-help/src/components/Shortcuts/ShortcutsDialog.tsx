@@ -45,7 +45,7 @@ export const ShortcutsDialogContent = () => {
             {bindings.map((binding, i) => (
               <tr key={i}>
                 <td className='p-1 w-[120px]'>
-                  <Key binding={binding.binding} />
+                  <Key binding={binding.shortcut} />
                 </td>
                 <td className='p-1'>
                   <span className='grow truncate'>{toString(binding.data as Label)}</span>
