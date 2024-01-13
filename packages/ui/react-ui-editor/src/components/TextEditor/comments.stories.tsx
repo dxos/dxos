@@ -102,16 +102,31 @@ const Thread: FC<{
 }> = ({ thread, selected, onSelect }) => {
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
-
   const editorRef = useRef<EditorView>(null);
+
+  // TODO(burdon): Hack to focus (view is recreated when text object changes).
+  const focus = () => {
+    setTimeout(() => {
+      editorRef.current?.focus();
+    }, 100);
+  };
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selected) {
+      containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (thread.messages.length === 0) {
+        focus();
+      }
+    }
+  }, [selected]);
+
   const handleCreateMessage = () => {
     const text = model?.text().trim();
     if (text?.length) {
       thread.messages.push(item.text);
       setItem({ text: new TextObject() });
-      // TODO(burdon): Focus is lost when rendered.
-      // editorRef.current?.dispatch({ selection: { anchor: 0, head: 0 } });
-      // editorRef.current?.focus();
+      focus();
     }
   };
 
@@ -135,11 +150,9 @@ const Thread: FC<{
         </div>
       ))}
 
-      <div onClick={() => onSelect()}>
+      <div ref={containerRef} onClick={() => onSelect()}>
         <TextEditor
           ref={editorRef}
-          // TODO(burdon): Is this correct?
-          focus={true}
           model={model}
           extensions={[
             keymap.of([
@@ -198,13 +211,15 @@ type StoryProps = {
 const Story = ({ text, autoCreate }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
   const [threads, setThreads] = useState<CommentThread[]>([]);
-  const [selected, setSelected] = useState<string>();
   const commentRanges = useMemo(() => threads.map((thread) => thread.range), [threads]);
+
+  // TODO(burdon): Current circular dependency: when moving through document, the sidebar is updated with the current
+  //  closest comment. This causes the sidebar to select the associated thread, which then sets the document selection.
+  const [selected, setSelected] = useState<string>();
 
   // Filter by visibility.
   const visibleThreads = useMemo(() => threads.filter((thread) => thread.yPos !== undefined), [threads]);
 
-  // TODO(burdon): Get y position.
   const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
     const id = PublicKey.random().toHex();
     setThreads((threads) => [
@@ -281,6 +296,12 @@ const document = str(
 );
 
 export const Default = {
+  args: {
+    text: document,
+  },
+};
+
+export const Demo = {
   args: {
     text: document,
     autoCreate: true,
