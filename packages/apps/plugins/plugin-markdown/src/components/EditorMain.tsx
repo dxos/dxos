@@ -70,10 +70,10 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
       slots={{
         root: {
           className: mx(
-            focusRing,
-            inputSurface,
-            surfaceElevation({ elevation: 'group' }),
             'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
+            inputSurface,
+            focusRing,
+            surfaceElevation({ elevation: 'group' }),
             'rounded',
           ),
           'data-testid': 'composer.markdownRoot',
