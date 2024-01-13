@@ -58,7 +58,7 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
           role: 'none',
           className: mx(
             focusRing,
-            inputSurface,
+            inputSurface, // TODO(burdon): Apply to scroller.
             surfaceElevation({ elevation: 'group' }),
             'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
             'rounded',

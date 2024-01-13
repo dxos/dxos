@@ -180,6 +180,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         key={model.id}
         ref={rootRef}
         tabIndex={0}
+        // TODO(burdon): Styles should be applied to cm-scroller not outer div?
         {...slots?.root}
         {...(editorMode !== 'vim' && tabsterDOMAttribute)}
         onKeyUp={handleKeyUp}

@@ -30,7 +30,7 @@ export type Range = {
 
 export type CommentRange = {
   id: string;
-  cursor: string;
+  cursor: string; // TODO(burdon): Rename range.
 };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
@@ -44,6 +44,7 @@ export type EditorModel = {
   /**
    * @deprecated Use CursorConverter.
    */
+  // TODO(burdon): Remove.
   getCursorFromRange?: (value: Range) => string;
   getRangeFromCursor?: (cursor: string) => Range | undefined;
   // TODO(burdon): Move into extension.

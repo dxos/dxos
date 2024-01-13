@@ -351,18 +351,18 @@ export const Mention = {
 
 export const Comments = {
   render: () => {
-    const [commentsStates, setCommentStates] = useState<CommentRange[]>([]);
+    const [commentRanges, setCommentRanges] = useState<CommentRange[]>([]);
 
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}
-        comments={commentsStates}
+        comments={commentRanges}
         extensions={[
           comments({
             onHover: onCommentsHover,
-            onCreate: (relPos) => {
+            onCreate: (range) => {
               const id = PublicKey.random().toHex();
-              setCommentStates((comments) => [...comments, { id, cursor: relPos }]);
+              setCommentRanges((commentRanges) => [...commentRanges, { id, cursor: range }]);
               return id;
             },
             onSelect: (state) => {
