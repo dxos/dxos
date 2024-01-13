@@ -125,8 +125,8 @@ const Thread: FC<{
   }
 
   return (
-    <div className={mx('flex flex-col m-1 shadow-sm divide-y bg-white', selected && 'ring')}>
-      <div className='flex p-2 text-xs font-mono gap-2'>
+    <div className={mx('flex flex-col m-1 rounded shadow divide-y pb-1 bg-white', selected && 'ring')}>
+      <div className='flex p-2 text-xs font-mono gap-2 text-neutral-500 font-thin'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>from:{thread.selection?.from}</span>
         <span>to:{thread.selection?.to}</span>
@@ -183,7 +183,7 @@ const Sidebar: FC<{
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col grow overflow-y-scroll py-2 gap-4 pr-4'>
+      <div className='flex flex-col grow overflow-y-scroll py-4 gap-4 pr-4'>
         {sortedThreads.map((thread) => (
           <Thread
             key={thread.id}
@@ -261,7 +261,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
 
   return (
     <div className={mx(fixedInsetFlexLayout, 'bg-neutral-100')}>
-      <div className='flex justify-center h-full gap-8'>
+      <div className='flex justify-center h-full gap-4'>
         <div className='flex flex-col h-full w-[600px]'>
           <Editor
             item={item}
