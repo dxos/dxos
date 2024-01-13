@@ -61,6 +61,7 @@ const Editor: FC<{
     return null;
   }
 
+  // TODO(burdon): Highlight currently selected comment.
   return (
     <div className='flex grow overflow-y-scroll'>
       <MarkdownEditor
