@@ -4,6 +4,8 @@
 
 import { Facet } from '@codemirror/state';
 
+import type { Range } from '../hooks';
+
 /**
  * Converts indexes into the text document into stable peer-independent cursors.
  *
@@ -24,7 +26,21 @@ const defaultCursorConverter: CursorConverter = {
   fromCursor: (cursor) => parseInt(cursor),
 };
 
-// TODO(burdon): Should be lower-case; ideally static field of util class.
-export const CursorConverter = Facet.define<CursorConverter, CursorConverter>({
-  combine: (providers) => providers[0] ?? defaultCursorConverter,
-});
+export class Cursor {
+  static readonly converter = Facet.define<CursorConverter, CursorConverter>({
+    combine: (providers) => providers[0] ?? defaultCursorConverter,
+  });
+
+  static readonly getCursorFromRange = (cursorConverter: CursorConverter, range: Range) => {
+    const from = cursorConverter.toCursor(range.from);
+    const to = cursorConverter.toCursor(range.to, -1);
+    return [from, to].join(':');
+  };
+
+  static readonly getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
+    const parts = cursor.split(':');
+    const from = cursorConverter.fromCursor(parts[0]);
+    const to = cursorConverter.fromCursor(parts[1]);
+    return from !== undefined && to !== undefined ? { from, to } : undefined;
+  };
+}

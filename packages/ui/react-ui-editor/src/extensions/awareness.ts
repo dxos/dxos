@@ -16,7 +16,7 @@ import {
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { CursorConverter } from './cursor';
+import { Cursor, type CursorConverter } from './cursor';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;
@@ -91,7 +91,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   private _lastHead?: number = undefined;
 
   constructor(view: EditorView) {
-    this._cursorConverter = view.state.facet(CursorConverter);
+    this._cursorConverter = view.state.facet(Cursor.converter);
     this._provider = view.state.facet(AwarenessProvider);
     this._provider.open();
     this._provider.remoteStateChange.on(this._ctx, () => {

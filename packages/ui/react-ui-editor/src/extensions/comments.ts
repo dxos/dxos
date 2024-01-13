@@ -23,7 +23,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { CursorConverter } from './cursor';
+import { Cursor } from './cursor';
 import { type CommentRange, type EditorModel, type Range } from '../hooks';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
@@ -99,7 +99,7 @@ const setCommentState = StateEffect.define<CommentsState>();
 const commentsStateField = StateField.define<CommentsState>({
   create: () => ({ ranges: [] }),
   update: (value, tr) => {
-    const cursorConverter = tr.state.facet(CursorConverter);
+    const cursorConverter = tr.state.facet(Cursor.converter);
 
     for (const effect of tr.effects) {
       // Update selection.
@@ -112,7 +112,7 @@ const commentsStateField = StateField.define<CommentsState>({
         const { comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments
           .map((comment) => {
-            const range = getRangeFromCursor(cursorConverter, comment.cursor);
+            const range = Cursor.getRangeFromCursor(cursorConverter, comment.cursor);
             return range && { ...comment, ...range };
           })
           .filter(nonNullable);
@@ -218,7 +218,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
    * Create comment thread action.
    */
   const createCommentThread: Command = (view) => {
-    const cursorConverter = view.state.facet(CursorConverter);
+    const cursorConverter = view.state.facet(Cursor.converter);
 
     invariant(options.onCreate);
     const { head, from, to } = view.state.selection.main;
@@ -226,7 +226,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       return false;
     }
 
-    const cursor = getCursorFromRange(cursorConverter, { from, to });
+    const cursor = Cursor.getCursorFromRange(cursorConverter, { from, to });
     if (cursor) {
       // Create thread via callback.
       const id = callbackWrapper(options.onCreate)(cursor, view.coordsAtPos(from));
@@ -339,7 +339,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     // TODO(burdon): Is there a better (finer grained) way to do this?
     //
     EditorView.updateListener.of(({ view, state, changes }) => {
-      const cursorConverter = view.state.facet(CursorConverter);
+      const cursorConverter = view.state.facet(Cursor.converter);
 
       //
       // Test if need to recompute indexed range if document changes before the end of the range.
@@ -350,7 +350,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         changes.iterChanges((from, to, from2, to2) => {
           ranges.forEach((range) => {
             if (from2 === to2) {
-              const newRange = getRangeFromCursor(cursorConverter, range.cursor);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
               if (!newRange || newRange.to - newRange.from === 0) {
                 // TODO(burdon): Delete range if empty.
                 log.info('deleted comment', { thread: range.id });
@@ -358,7 +358,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             }
 
             if (from <= range.to) {
-              const newRange = getRangeFromCursor(cursorConverter, range.cursor);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
               Object.assign(range, newRange);
               mod = true;
             }
@@ -404,17 +404,4 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       }
     }),
   ];
-};
-
-export const getCursorFromRange = (cursorConverter: CursorConverter, range: Range) => {
-  const from = cursorConverter.toCursor(range.from);
-  const to = cursorConverter.toCursor(range.to, -1);
-  return [from, to].join(':');
-};
-
-export const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
-  const parts = cursor.split(':');
-  const from = cursorConverter.fromCursor(parts[0]);
-  const to = cursorConverter.fromCursor(parts[1]);
-  return from !== undefined && to !== undefined ? { from, to } : undefined;
 };

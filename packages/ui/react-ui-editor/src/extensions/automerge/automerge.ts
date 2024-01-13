@@ -13,7 +13,7 @@ import { type Prop } from '@dxos/automerge/automerge';
 import { cursorConverter } from './cursor';
 import { effectType, type IDocHandle, isReconcileTx, type Value } from './defs';
 import { PatchSemaphore } from './semaphore';
-import { CursorConverter } from '../cursor';
+import { Cursor } from '../cursor';
 
 const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.
@@ -85,7 +85,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
 
   return {
     extension: [
-      CursorConverter.of(cursorConverter(handle, path)),
+      Cursor.converter.of(cursorConverter(handle, path)),
       semaphoreFacet.of(semaphore),
       stateField,
       viewPlugin,
