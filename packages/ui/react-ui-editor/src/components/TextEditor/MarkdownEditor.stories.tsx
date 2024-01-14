@@ -202,7 +202,7 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-1')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
       </a>
     </StrictMode>,
   );
@@ -222,10 +222,9 @@ const Story = ({ text, automerge, ...props }: StoryProps) => {
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center overflow-y-scroll'>
-        <div className='flex flex-col w-[800px] py-16'>
+      <div className='flex h-full justify-center'>
+        <div className='flex flex-col h-full w-[800px]'>
           <MarkdownEditor model={model} {...props} />
-          <div className='flex shrink-0 h-[300px]'></div>
         </div>
       </div>
     </div>
@@ -351,18 +350,18 @@ export const Mention = {
 
 export const Comments = {
   render: () => {
-    const [commentsStates, setCommentStates] = useState<CommentRange[]>([]);
+    const [commentRanges, setCommentRanges] = useState<CommentRange[]>([]);
 
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}
-        comments={commentsStates}
+        comments={commentRanges}
         extensions={[
           comments({
             onHover: onCommentsHover,
-            onCreate: (relPos) => {
+            onCreate: (range) => {
               const id = PublicKey.random().toHex();
-              setCommentStates((comments) => [...comments, { id, cursor: relPos }]);
+              setCommentRanges((commentRanges) => [...commentRanges, { id, cursor: range }]);
               return id;
             },
             onSelect: (state) => {

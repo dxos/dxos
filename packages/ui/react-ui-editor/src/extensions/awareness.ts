@@ -16,7 +16,7 @@ import {
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { CursorConverter } from '../util';
+import { Cursor, type CursorConverter } from './cursor';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;
@@ -91,7 +91,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   private _lastHead?: number = undefined;
 
   constructor(view: EditorView) {
-    this._cursorConverter = view.state.facet(CursorConverter);
+    this._cursorConverter = view.state.facet(Cursor.converter);
     this._provider = view.state.facet(AwarenessProvider);
     this._provider.open();
     this._provider.remoteStateChange.on(this._ctx, () => {
@@ -156,7 +156,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
           to: end,
           value: Decoration.mark({
             attributes: { style: `background-color: ${lightColor}` },
-            class: 'cm-ySelection',
+            class: 'cm-collab-selection',
           }),
         });
       } else {
@@ -166,7 +166,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
           to: startLine.from + startLine.length,
           value: Decoration.mark({
             attributes: { style: `background-color: ${color}` },
-            class: 'cm-ySelection',
+            class: 'cm-collab-selection',
           }),
         });
 
@@ -176,7 +176,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
           to: end,
           value: Decoration.mark({
             attributes: { style: `background-color: ${color}` },
-            class: 'cm-ySelection',
+            class: 'cm-collab-selection',
           }),
         });
 
@@ -186,7 +186,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
             from: linePos,
             to: linePos,
             value: Decoration.line({
-              attributes: { style: `background-color: ${color}`, class: 'cm-yLineSelection' },
+              attributes: { style: `background-color: ${color}`, class: 'cm-collab-selectionLine' },
             }),
           });
         }
@@ -214,15 +214,15 @@ class RemoteCaretWidget extends WidgetType {
 
   override toDOM(): HTMLElement {
     const span = document.createElement('span');
-    span.className = 'cm-ySelectionCaret';
+    span.className = 'cm-collab-selectionCaret';
     span.style.backgroundColor = this._color;
     span.style.borderColor = this._color;
 
     const dot = document.createElement('div');
-    dot.className = 'cm-ySelectionCaretDot';
+    dot.className = 'cm-collab-selectionCaretDot';
 
     const info = document.createElement('div');
-    info.className = 'cm-ySelectionInfo';
+    info.className = 'cm-collab-selectionInfo';
     info.innerText = this._name;
 
     span.appendChild(document.createTextNode('\u2060'));
@@ -249,21 +249,15 @@ class RemoteCaretWidget extends WidgetType {
   override ignoreEvent() {
     return true;
   }
-
-  // TODO(burdon): Not used?
-  compare(widget: this) {
-    return widget._color === this._color;
-  }
 }
 
-// TODO(burdon): Rename prefix (y for yjs?)
 const styles = EditorView.baseTheme({
-  '.cm-ySelection': {},
-  '.cm-yLineSelection': {
+  '.cm-collab-selection': {},
+  '.cm-collab-selectionLine': {
     padding: 0,
     margin: '0px 2px 0px 4px',
   },
-  '.cm-ySelectionCaret': {
+  '.cm-collab-selectionCaret': {
     position: 'relative',
     borderLeft: '1px solid black',
     borderRight: '1px solid black',
@@ -272,7 +266,7 @@ const styles = EditorView.baseTheme({
     boxSizing: 'border-box',
     display: 'inline',
   },
-  '.cm-ySelectionCaretDot': {
+  '.cm-collab-selectionCaretDot': {
     borderRadius: '50%',
     position: 'absolute',
     width: '.4em',
@@ -283,11 +277,11 @@ const styles = EditorView.baseTheme({
     transition: 'transform .3s ease-in-out',
     boxSizing: 'border-box',
   },
-  '.cm-ySelectionCaret:hover > .cm-ySelectionCaretDot': {
+  '.cm-collab-selectionCaret:hover > .cm-collab-selectionCaretDot': {
     transformOrigin: 'bottom center',
     transform: 'scale(0)',
   },
-  '.cm-ySelectionInfo': {
+  '.cm-collab-selectionInfo': {
     position: 'absolute',
     top: '-1.05em',
     left: '-1px',
@@ -308,7 +302,7 @@ const styles = EditorView.baseTheme({
     transitionDelay: '0s',
     whiteSpace: 'nowrap',
   },
-  '.cm-ySelectionCaret:hover > .cm-ySelectionInfo': {
+  '.cm-collab-selectionCaret:hover > .cm-collab-selectionInfo': {
     opacity: 1,
     transitionDelay: '0s',
   },
