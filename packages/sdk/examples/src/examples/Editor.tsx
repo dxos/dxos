@@ -35,7 +35,6 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
         model={model}
         slots={{
           root: {
-            role: 'none',
             className: 'pli-4',
           },
         }}

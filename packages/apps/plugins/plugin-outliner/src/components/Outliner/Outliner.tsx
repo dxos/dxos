@@ -271,14 +271,12 @@ const OutlinerItem = ({
         model={model}
         focus={!!active}
         extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
+        placeholder={placeholder}
         slots={{
           root: {
             className: 'w-full pt-[4px]',
             onFocus: () => setFocus(true),
             onBlur: () => setFocus(false),
-          },
-          editor: {
-            placeholder,
           },
         }}
       />
