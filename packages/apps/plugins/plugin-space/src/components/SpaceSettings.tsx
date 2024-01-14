@@ -8,6 +8,7 @@ import React from 'react';
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../meta';
 import { SpaceAction, type SpaceSettingsProps } from '../types';
@@ -34,7 +35,6 @@ export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) =>
           </SettingsValue>
           <SettingsValue label={t('save files to directory label')}>
             <Button
-              variant={'primary'}
               onClick={async () => {
                 await intentPlugin.provides.intent.dispatch({
                   plugin: SPACE_PLUGIN,
@@ -42,7 +42,7 @@ export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) =>
                 });
               }}
             >
-              <FolderOpen />
+              <FolderOpen className={getSize(5)} />
             </Button>
           </SettingsValue>
         </>
