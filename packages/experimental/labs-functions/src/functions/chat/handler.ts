@@ -10,10 +10,10 @@ import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { createContext, createSequence } from './request';
+import { createResolvers } from './resolvers';
 import { createResponse } from './response';
 import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
-import { createResolvers } from './resolvers';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
@@ -51,20 +51,20 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
         let disPostStatus = false;
-        
-
 
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
-          if(!disPostStatus){
-            space.postMessage(`${thread.id}/ephemeral_status`, {
-              event: 'AI_GENERATING',
-              ts: Date.now(),
-              messageCount: thread.messages.length,
-            }).catch(() => {})
+          if (!disPostStatus) {
+            space
+              .postMessage(`${thread.id}/ephemeral_status`, {
+                event: 'AI_GENERATING',
+                ts: Date.now(),
+                messageCount: thread.messages.length,
+              })
+              .catch(() => {});
             disPostStatus = true;
           }
-          
+
           let blocks: MessageType.Block[];
           try {
             let text = message.blocks
