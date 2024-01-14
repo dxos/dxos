@@ -35,14 +35,11 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
 
   // log.info('context', { message: message.context, thread: thread.context })
 
-  // TODO(burdon): How to infer schema from message/context/prompt.
-  let schema: Schema | undefined;
   let text: string | undefined;
 
-  if (object?.__typename === 'braneframe.Grid') {
-    const { objects: schemas } = space.db.query(Schema.filter());
-    schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
-  }
+  // TODO(burdon): How to infer schema from message/context/prompt.
+  const { objects: schemas } = space.db.query(Schema.filter());
+  const schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
 
   log.info('context object', { object });
   if (object instanceof Document) {
@@ -132,12 +129,25 @@ const createSequenceFromPrompt = async (
       case ChainType.Input.Type.CONTEXT: {
         inputs[name] = () => {
           if (value) {
-            // TODO(burdon): Special case for getting schema fields for list preset.
             const text = getTextContent(value);
             if (text.length) {
               try {
-                return get(context, text);
-              } catch (err) {}
+                const result = get(context, text);
+
+                // TODO(burdon): Special case for getting schema fields for list preset.
+                // TODO(burdon): Proxied arrays don't pass Array.isArray.
+                // if (Array.isArray(result)) {
+                if (result?.length) {
+                  return result
+                    .slice(0, 3)
+                    .map((prop: any) => prop?.id)
+                    .join(',');
+                }
+
+                return result;
+              } catch (err) {
+                // TODO(burdon): Return error to user.
+              }
             }
           }
 

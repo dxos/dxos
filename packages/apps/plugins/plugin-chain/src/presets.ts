@@ -113,7 +113,7 @@ export const presets = [
           new ChainType.Input({
             type: ChainType.Input.Type.CONTEXT,
             name: 'schema',
-            value: new TextObject('schema'),
+            value: new TextObject('schema.props'),
           }),
           new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'question' }),
         ],

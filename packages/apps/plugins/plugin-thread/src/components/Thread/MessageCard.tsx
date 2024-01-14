@@ -94,7 +94,9 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
 
   return (
     <div className='flex overflow-hidden px-2 py-1 group'>
-      {block.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>}
+      {typeof block.text === 'string' && (
+        <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>
+      )}
       {block.data && (
         // TODO(burdon): Colorize (reuse codemirror or hljs?)
         <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>

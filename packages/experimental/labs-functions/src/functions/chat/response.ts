@@ -14,21 +14,61 @@ import { type PromptContext } from './request';
 
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
-export const createResponse = (space: Space, context: PromptContext, content: string): MessageType.Block[] => {
+export const createResponse = (
+  space: Space,
+  context: PromptContext,
+  content: string,
+): MessageType.Block[] | undefined => {
+  const blocks: MessageType.Block[] = [];
   const timestamp = new Date().toISOString();
 
-  const blocks: MessageType.Block[] = [];
+  // Parse JSON response.
   const result = parseMessage(content);
-  log.info('parse', { result, content });
   if (result) {
     const { pre, data, content, post, type, kind } = result;
     pre && blocks.push({ timestamp, text: pre });
+    log.info('parse', { result, content });
 
+    //
+    // Add to stack.
+    //
+    if (context.object?.__typename === StackType.schema.typename) {
+      // TODO(burdon): Insert based on prompt config.
+      log.info('adding section to stack', { stack: context.object.id });
+
+      const formatFenced = (type: string, content: string) => {
+        const tick = '```';
+        return `${tick}${type}\n${content}\n${tick}\n`;
+      };
+
+      const formattedContent =
+        type !== 'markdown' && kind === 'fenced'
+          ? '# Generated content\n\n' + formatFenced(type, content.trim())
+          : content;
+
+      context.object.sections.push(
+        new StackType.Section({
+          object: new DocumentType({ content: new TextObject(formattedContent) }),
+        }),
+      );
+
+      if (post) {
+        blocks.push({ timestamp, text: post });
+        return blocks;
+      }
+
+      return undefined;
+    }
+
+    //
+    // Convert JSON data to objects.
+    //
     if (result.type === 'json') {
       const dataArray = Array.isArray(data) ? data : [data];
       blocks.push(
         ...dataArray.map((data): MessageType.Block => {
           // Create object.
+          console.log(':::::::::::::::::::::', context.schema?.typename);
           if (context.schema) {
             const { objects: schemas } = space.db.query(Schema.filter());
             const schema = schemas.find((schema) => schema.typename === context.schema!.typename);
@@ -51,33 +91,15 @@ export const createResponse = (space: Space, context: PromptContext, content: st
           return { timestamp, data: JSON.stringify(data) };
         }),
       );
-    } else if (context.object?.__typename === StackType.schema.typename) {
-      // TODO(burdon): Insert based on prompt config.
-      log.info('adding section to stack', { stack: context.object.id });
-      const formattedContent =
-        type !== 'markdown' && kind === 'fenced'
-          ? '# Generated content\n\n' + formatFenced(type, content.trim())
-          : content;
-      context.object.sections.push(
-        new StackType.Section({
-          object: new DocumentType({ content: new TextObject(formattedContent) }),
-        }),
-      );
     }
 
-    const reply = post ?? content;
-    reply && blocks.push({ timestamp, text: reply });
-  } else {
-    blocks.push({
-      timestamp,
-      text: content,
-    });
+    return blocks;
   }
 
-  return blocks;
-};
+  blocks.push({
+    timestamp,
+    text: content,
+  });
 
-const formatFenced = (type: string, content: string) => {
-  const tick = '```';
-  return `${tick}${type}\n${content}\n${tick}\n`;
+  return blocks;
 };
