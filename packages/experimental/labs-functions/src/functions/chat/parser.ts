@@ -11,7 +11,7 @@ export type ParseResult = {
   type: string;
   content: string;
   data?: any;
-  kind?: 'code-block'
+  kind?: 'fenced'; // TODO(burdon): ???
 };
 
 export const parseMessage = (content: string, type?: string): ParseResult | undefined => {
@@ -40,15 +40,15 @@ export const parseMessage = (content: string, type?: string): ParseResult | unde
       post,
       type,
       content,
-      kind: 'code-block',
       data: type === 'json' ? parseJson(content) : undefined,
+      kind: 'fenced',
     };
   }
 
   return {
     content,
     type: 'text',
-  }
+  };
 };
 
 export const parseJson = (content: string) => {
