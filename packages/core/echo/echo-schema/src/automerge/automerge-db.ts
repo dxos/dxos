@@ -67,7 +67,6 @@ export class AutomergeDb {
 
   @synchronized
   async open(spaceState: SpaceState) {
-    debugger;
     const start = performance.now();
     if (this._ctx) {
       log.info('Already open');
