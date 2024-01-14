@@ -20,7 +20,7 @@ import type { ChainResources } from '../../chain';
 export type PromptContext = {
   object?: TypedObject;
   schema?: Schema;
-  contextText?: string;
+  text?: string;
 };
 
 export const createContext = (space: Space, message: MessageType, thread: Thread): PromptContext => {
@@ -37,7 +37,7 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
 
   // TODO(burdon): How to infer schema from message/context/prompt.
   let schema: Schema | undefined;
-  let contextText: string | undefined;
+  let text: string | undefined;
 
   if (object?.__typename === 'braneframe.Grid') {
     const { objects: schemas } = space.db.query(Schema.filter());
@@ -49,15 +49,15 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
     const comment = object.comments?.find((comment) => comment.thread === thread);
     log.info('context comment', { object });
     if (comment) {
-      contextText = getReferencedText(object, comment);
-      log.info('context text', { contextText });
+      text = getReferencedText(object, comment);
+      log.info('context text', { text });
     }
   }
 
   return {
     object,
     schema,
-    contextText,
+    text,
   };
 };
 
@@ -103,8 +103,8 @@ export const createSequence = async (
     }
   }
 
-  // TODO(burdon): Return meta -- e.g., ID.
   // Create sequence from predicates.
+  // TODO(burdon): Remove static sequences.
   const { id, generator } = sequences.find(({ test }) => test(context))!;
   log.info('sequence', { id });
   return generator(resources, () => context, options);
@@ -123,19 +123,35 @@ const createSequenceFromPrompt = async (
         inputs[name] = () => getTextContent(value);
         break;
       }
+
       case ChainType.Input.Type.PASS_THROUGH: {
         inputs[name] = new RunnablePassthrough();
         break;
       }
+
       case ChainType.Input.Type.CONTEXT: {
-        inputs[name] = () => context.contextText;
+        inputs[name] = () => {
+          if (value) {
+            // TODO(burdon): Special case for getting schema fields for list preset.
+            const text = getTextContent(value);
+            if (text.length) {
+              try {
+                return get(context, text);
+              } catch (err) {}
+            }
+          }
+
+          return context.text;
+        };
         break;
       }
+
       case ChainType.Input.Type.RETRIEVER: {
         const retriever = resources.store.vectorStore.asRetriever({});
         inputs[name] = retriever.pipe(formatDocumentsAsString);
         break;
       }
+
       case ChainType.Input.Type.RESOLVER: {
         const result = await runResolver(resolvers, getTextContent(value));
         inputs[name] = () => result;

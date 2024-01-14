@@ -56,7 +56,7 @@ export const presets = [
             '',
             'The move history of the current game is: {history}',
             '',
-            'Suggest the next move and explain your strategy.',
+            'Suggest the next move and very briefly explain your strategy.',
           ),
         ),
         inputs: [
@@ -64,7 +64,7 @@ export const presets = [
           new ChainType.Input({
             type: ChainType.Input.Type.CONTEXT,
             name: 'history',
-            value: new TextObject('$(object).pgn'),
+            value: new TextObject('object.pgn'),
           }),
         ],
       }),
@@ -74,11 +74,12 @@ export const presets = [
     title: 'Mermaid',
     prompt: () =>
       new ChainType.Prompt({
-        command: 'graph',
+        command: 'draw',
         source: new TextObject(
           str(
             //
-            'Create a valid mermaid graph from the following text.',
+            'Create a valid mermaid diagram representing the text below.',
+            'Do not explain anything.',
             '---',
             '{input}',
           ),
@@ -112,7 +113,7 @@ export const presets = [
           new ChainType.Input({
             type: ChainType.Input.Type.CONTEXT,
             name: 'schema',
-            value: new TextObject('$(schema)'),
+            value: new TextObject('schema'),
           }),
           new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'question' }),
         ],
@@ -137,7 +138,7 @@ export const presets = [
         ),
         inputs: [
           //
-          new ChainType.Input({ type: ChainType.Input.Type.CONTEXT, name: 'context' }),
+          new ChainType.Input({ type: ChainType.Input.Type.RETRIEVER, name: 'context' }),
           new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'question' }),
         ],
       }),
