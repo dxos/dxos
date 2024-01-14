@@ -78,7 +78,7 @@ export class AutomergeDb {
         const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
-        log('Error opening document', err);
+        log.error('Error opening document', err);
         await this._fallbackToNewDoc();
       }
     } else {
@@ -106,6 +106,9 @@ export class AutomergeDb {
     this._ctx = undefined;
   }
 
+  /**
+   * @deprecated
+   */
   private async _fallbackToNewDoc() {
     if (getGlobalAutomergePreference()) {
       log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
