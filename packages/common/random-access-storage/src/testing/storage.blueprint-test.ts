@@ -317,5 +317,18 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         expect(entries.length).to.equal(files.length);
       }
     });
+
+    test('list returns correct filenames', async () => {
+      const storage = createStorage();
+      const directory = storage.createDirectory('dir');
+      const FILES = ['one', 'two', 'three'];
+
+      for (const file of FILES) {
+        await directory.getOrCreateFile(file);
+      }
+
+      const entries = await directory.list();
+      expect(entries).to.deep.equal(FILES);
+    });
   });
 };

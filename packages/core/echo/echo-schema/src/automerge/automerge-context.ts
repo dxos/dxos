@@ -24,6 +24,9 @@ export class AutomergeContext {
       });
       this._repo.on('document', (doc) => {
         log.info('document', { id: doc.handle.documentId });
+        doc.handle.on('remote-heads', (e) => {
+          log.info('remote-heads', { id: doc.handle.documentId, heads: e.heads });
+        });
       });
       this._adapter.ready();
     } else {

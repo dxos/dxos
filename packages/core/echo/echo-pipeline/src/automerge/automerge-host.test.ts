@@ -11,7 +11,9 @@ import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 
-import { AutomergeHost } from './automerge-host';
+import { AutomergeHost, AutomergeStorageAdapter } from './automerge-host';
+import { randomBytes } from 'crypto';
+import { arrayToBuffer, arrayToString, bufferToArray, stringToArray } from '@dxos/util';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
@@ -73,6 +75,22 @@ describe('AutomergeHost', () => {
   });
 
   test('doubled connection', async () => {});
+
+  describe('storage', () => {
+    test.only('load range on node', async () => {
+      const storage = createStorage({ type: StorageType.NODE, root: `/tmp/${randomBytes(16).toString('hex')}` });
+      const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+      await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
+      await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
+      await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
+      const range = await adapter.loadRange(['test']);
+      expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual(['one', 'two']);
+      expect(range.map((chunk) => chunk.key)).toEqual([
+        ['test', '1'],
+        ['test', '2'],
+      ]);
+    });
+  });
 });
 
 type Context = { client: Trigger<TestAdapter>; host: Trigger<TestAdapter> };

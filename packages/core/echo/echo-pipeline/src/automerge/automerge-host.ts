@@ -17,7 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
-import { type Directory } from '@dxos/random-access-storage';
+import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
@@ -37,6 +37,15 @@ export class AutomergeHost {
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
       sharePolicy: async (peerId, documentId) => true, // Share everything.
+    });
+    this._repo.on('document', (doc) => {
+      log.info('document', { id: doc.handle.documentId });
+      doc.handle.on('unavailable', (e) => {
+        log.info('unavailable', { id: doc.handle.documentId });
+      });
+      doc.handle.on('remote-heads', (e) => {
+        log.info('remote-heads', { id: doc.handle.documentId, heads: e.heads });
+      });
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
@@ -240,9 +249,10 @@ class MeshNetworkAdapter extends NetworkAdapter {
   }
 }
 
-class AutomergeStorageAdapter extends StorageAdapter {
+export class AutomergeStorageAdapter extends StorageAdapter {
   constructor(private readonly _directory: Directory) {
     super();
+    log.info('construct', { storageType: _directory.type, path: _directory.path });
   }
 
   override async load(key: StorageKey): Promise<Uint8Array | undefined> {
@@ -256,13 +266,20 @@ class AutomergeStorageAdapter extends StorageAdapter {
     return bufferToArray(buffer);
   }
 
+  @log.method()
   override async save(key: StorageKey, data: Uint8Array): Promise<void> {
     const filename = this._getFilename(key);
+    log.info('save', { filename, data });
     const file = this._directory.getOrCreateFile(filename);
     await file.write(0, arrayToBuffer(data));
     await file.truncate?.(data.length);
 
     await file.flush?.();
+
+    // TODO(dmaretskyi): WHY????
+    if (file.type === StorageType.NODE) {
+      await file.close?.();
+    }
   }
 
   override async remove(key: StorageKey): Promise<void> {
@@ -272,9 +289,11 @@ class AutomergeStorageAdapter extends StorageAdapter {
     await file.truncate?.(0);
   }
 
+  @log.method()
   override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
     const filename = this._getFilename(keyPrefix);
     const entries = await this._directory.list();
+    log.info('range', { keyPrefix, filename, entries });
     return Promise.all(
       entries
         .filter((entry) => entry.startsWith(filename))

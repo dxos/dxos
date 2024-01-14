@@ -131,7 +131,7 @@ export class AutomergeDb {
             return;
           }
           if (`${err}`.includes('Timeout')) {
-            log.info('wraparound', { state: this._docHandle.state });
+            log.info('wraparound', { id: this._docHandle.documentId, state: this._docHandle.state });
             continue;
           }
           throw err;
