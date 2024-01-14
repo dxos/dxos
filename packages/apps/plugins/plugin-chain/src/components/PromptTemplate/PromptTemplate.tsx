@@ -119,12 +119,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
           <TextEditor
             model={model}
             extensions={[promptExtension]}
+            placeholder={t('template placeholder')}
             slots={{
               root: {
                 className: 'w-full p-2',
-              },
-              editor: {
-                placeholder: t('template placeholder'),
               },
             }}
           />
@@ -188,12 +186,10 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   return (
     <TextEditor
       model={model}
+      placeholder={t('value placeholder')}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),
-        },
-        editor: {
-          placeholder: t('value placeholder'),
         },
       }}
     />

@@ -39,10 +39,8 @@ export const codeBlock = 'mlb-2 font-mono bg-neutral-500/10 p-3 rounded';
 
 export const inlineUrl = mx(code, 'px-1');
 
-// TODO(burdon): Replace with widget.
 export const blockquote = mx('pl-1 mr-1 border-is-4 border-primary-500/70 dark:border-primary-500/30', light);
 
-// TODO(burdon): Replace with widget.
 export const horizontalRule =
   'flex mlb-4 border-b text-neutral-100 dark:text-neutral-900 border-neutral-200 dark:border-neutral-800';
 

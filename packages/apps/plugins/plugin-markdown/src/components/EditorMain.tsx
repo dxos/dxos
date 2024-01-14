@@ -53,34 +53,31 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
     <MarkdownEditor
       {...props}
       ref={setEditorRef}
+      placeholder={t('editor placeholder')}
+      theme={{
+        '&, & .cm-scroller': {
+          display: 'flex',
+          flexDirection: 'column',
+          flex: '1 0 auto',
+          inlineSize: '100%',
+        },
+        '& .cm-content': {
+          flex: '1 0 auto',
+          inlineSize: '100%',
+          paddingBlock: '1rem',
+        },
+      }}
       slots={{
         root: {
-          role: 'none',
           className: mx(
-            focusRing,
-            inputSurface,
-            surfaceElevation({ elevation: 'group' }),
             'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
+            inputSurface,
+            focusRing,
+            surfaceElevation({ elevation: 'group' }),
             'rounded',
           ),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
-        editor: {
-          placeholder: t('editor placeholder'),
-          theme: {
-            '&, & .cm-scroller': {
-              display: 'flex',
-              flexDirection: 'column',
-              flex: '1 0 auto',
-              inlineSize: '100%',
-            },
-            '& .cm-content': {
-              flex: '1 0 auto',
-              inlineSize: '100%',
-              paddingBlock: '1rem',
-            },
-          },
-        },
       }}
     />
   );
