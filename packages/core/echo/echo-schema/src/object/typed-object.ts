@@ -684,6 +684,7 @@ export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
  * @deprecated Temporary.
  */
 export const getGlobalAutomergePreference = () => {
+  // TODO(burdon): Factor out.
   const isSet = (value?: string) => value !== undefined && /^(true|1)$/i.test(value);
 
   const value =
@@ -693,7 +694,6 @@ export const getGlobalAutomergePreference = () => {
     isSet((globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE) ??
     false;
 
-  console.log('???', value);
   return value;
 };
 
