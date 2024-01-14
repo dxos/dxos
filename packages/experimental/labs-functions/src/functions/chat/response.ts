@@ -54,7 +54,10 @@ export const createResponse = (space: Space, context: PromptContext, content: st
     } else if (context.object?.__typename === StackType.schema.typename) {
       // TODO(burdon): Insert based on prompt config.
       log.info('adding section to stack', { stack: context.object.id });
-      const formattedContent = type !== 'markdown' && kind === 'fenced' ? formatFenced(type, content.trim()) : content;
+      const formattedContent =
+        type !== 'markdown' && kind === 'fenced'
+          ? '# Generated content\n\n' + formatFenced(type, content.trim())
+          : content;
       context.object.sections.push(
         new StackType.Section({
           object: new DocumentType({ content: new TextObject(formattedContent) }),

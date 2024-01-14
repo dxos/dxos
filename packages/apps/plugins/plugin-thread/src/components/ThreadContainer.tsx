@@ -3,7 +3,7 @@
 //
 
 import differenceInSeconds from 'date-fns/differenceInSeconds';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
@@ -104,43 +104,39 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
     }
   };
 
-  const [ephemeralStatus, setEphemeralStatus] = React.useState<any | undefined>(undefined);
+  const [processing, setProcessing] = useState(false);
   useEffect(() => {
-    const unsubscribe = space.listen(`${thread.id}/ephemeral_status`, (status) => {
-      console.log('new status', status);
-      setEphemeralStatus(status.payload);
+    const unsubscribe = space.listen(`status/${thread.id}`, (status) => {
+      const { event } = status.payload ?? {};
+      setProcessing(event === 'processing');
     });
-    const tid = setInterval(() => {
-      setEphemeralStatus((prev: any) => {
-        if (typeof prev?.ts === 'number' && Date.now() - prev.ts > 20_000) {
-          // Clear after 20s.
+
+    const t = setInterval(() => {
+      setProcessing((prev: any) => {
+        if (typeof prev?.ts === 'number' && Date.now() - prev.ts > 30_000) {
           return undefined;
         } else {
           return prev;
         }
       });
-    }, 1000);
+    }, 1_000);
 
     return () => {
       unsubscribe();
-      clearInterval(tid);
+      clearInterval(t);
     };
-  });
+  }, [space]);
 
   return (
     <ThreadChannel
       identityKey={identity.identityKey}
       propertiesProvider={messagePropertiesProvider(identity, members)}
       thread={thread}
+      processing={processing}
       fullWidth={fullWidth}
       onFocus={onFocus}
       onCreate={handleCreate}
       onDelete={handleDelete}
-      ephemeralStatus={
-        ephemeralStatus?.event === 'AI_GENERATING' && ephemeralStatus?.messageCount <= thread.messages.length
-          ? 'AI thinking...'
-          : undefined
-      }
     />
   );
 };

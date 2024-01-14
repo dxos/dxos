@@ -6,6 +6,7 @@ import { join } from 'node:path';
 
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -50,20 +51,10 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   if (activeThreads) {
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
-        let disPostStatus = false;
-
+        const { start, stop } = createStatus(space, thread.id);
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
-          if (!disPostStatus) {
-            space
-              .postMessage(`${thread.id}/ephemeral_status`, {
-                event: 'AI_GENERATING',
-                ts: Date.now(),
-                messageCount: thread.messages.length,
-              })
-              .catch(() => {});
-            disPostStatus = true;
-          }
+          start();
 
           let blocks: MessageType.Block[];
           try {
@@ -107,8 +98,33 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
               },
             ),
           );
+
+          stop();
         }
       }),
     );
   }
 });
+
+// TODO(burdon): Factor out.
+const createStatus = (space: Space, id: string) => {
+  let count = 0;
+  return {
+    start: () => {
+      if (count++ === 0) {
+        void space.postMessage(`status/${id}`, {
+          event: 'processing',
+          ts: Date.now(),
+        });
+      }
+    },
+    stop: () => {
+      if (--count === 0) {
+        void space.postMessage(`status/${id}`, {
+          event: 'done',
+          ts: Date.now(),
+        });
+      }
+    },
+  };
+};
