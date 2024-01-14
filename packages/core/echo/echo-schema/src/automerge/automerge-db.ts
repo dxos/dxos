@@ -71,12 +71,18 @@ export class AutomergeDb {
     if (spaceState.rootUrl) {
       try {
         this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
+
+        // if (getGlobalAutomergePreference() && !this._docHandle.isReady()) {
+        //   console.log('waiting...');
+        //   await this._docHandle.whenReady();
+        // }
+
         // TODO(mykola): Remove check for global preference or timeout?
         const doc = getGlobalAutomergePreference()
           ? await this._docHandle.doc()
           : await asyncTimeout(this._docHandle.doc(), 1_000);
-        const ojectIds = Object.keys(doc.objects ?? {});
-        this._createObjects(ojectIds);
+        const objectIds = Object.keys(doc.objects ?? {});
+        this._createObjects(objectIds);
       } catch (err) {
         log.error('Error opening document', err);
         await this._fallbackToNewDoc();
