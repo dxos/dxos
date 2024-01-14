@@ -122,7 +122,7 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
   syncRepo({ id, syncMessage }: SyncRepoRequest): Stream<SyncRepoResponse> {
     const peerId = this._getPeerId(id);
 
-    return new Stream(({ next, close }) => {
+    return new Stream(({ next, close, ready }) => {
       invariant(!this._peers.has(peerId), 'Peer already connected.');
       this._peers.set(peerId, {
         connected: true,
@@ -143,6 +143,8 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
       this.emit('peer-candidate', {
         peerId,
       });
+
+      ready();
     });
   }
 

@@ -22,6 +22,9 @@ export class AutomergeContext {
       this._repo = new Repo({
         network: [this._adapter],
       });
+      this._repo.on('document', (doc) => {
+        log.info('document', { id: doc.handle.documentId });
+      });
       this._adapter.ready();
     } else {
       this._repo = new Repo({ network: [] });
@@ -47,6 +50,9 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   private _hostInfo?: HostInfo = undefined;
   private _stream?: Stream<SyncRepoResponse> | undefined = undefined;
 
+  private _messagesReceived = 0;
+  private _messagesSent = 0;
+
   constructor(private readonly _dataService: DataService) {
     super();
   }
@@ -65,6 +71,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   override connect(peerId: PeerId): void {
     // NOTE: Expects that `AutomergeHost` host already running and listening for connections.
     invariant(!this._stream);
+    log.info('connect', { peerId });
 
     this.peerId = peerId;
     this._stream = this._dataService.syncRepo({
@@ -72,7 +79,13 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
     });
     this._stream.subscribe(
       (msg) => {
-        this.emit('message', cbor.decode(msg.syncMessage!));
+        const decoded = cbor.decode(msg.syncMessage!) as Message;
+        log.info('message received', {
+          from: decoded.senderId,
+          to: decoded.targetId,
+          messagesReceived: ++this._messagesReceived,
+        });
+        this.emit('message', decoded);
       },
       (err) => {
         // TODO(mykola): Add connection retry?
@@ -88,21 +101,25 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       },
     );
 
-    this._dataService
-      .getHostInfo()
-      .then((hostInfo) => {
-        this._hostInfo = hostInfo;
-        this.emit('peer-candidate', {
-          peerId: this._hostInfo.peerId as PeerId,
+    this._stream.onReady(() => {
+      this._dataService
+        .getHostInfo()
+        .then((hostInfo) => {
+          this._hostInfo = hostInfo;
+          log.info('peer candidate', { peerId: this._hostInfo.peerId });
+          this.emit('peer-candidate', {
+            peerId: this._hostInfo.peerId as PeerId,
+          });
+        })
+        .catch((err) => {
+          log.catch(err);
         });
-      })
-      .catch((err) => {
-        log.catch(err);
-      });
+    });
   }
 
   override send(message: Message): void {
     invariant(this.peerId);
+    log.info('message sent', { from: message.senderId, to: message.targetId, messagesSent: ++this._messagesSent });
     void this._dataService
       .sendSyncMessage(
         {

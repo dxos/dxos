@@ -3,8 +3,13 @@
 //
 
 import { Event, asyncTimeout, synchronized } from '@dxos/async';
-import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
-import { Context } from '@dxos/context';
+import {
+  type DocumentId,
+  type DocHandle,
+  type DocHandleChangePayload,
+  HandleState,
+} from '@dxos/automerge/automerge-repo';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -62,23 +67,26 @@ export class AutomergeDb {
 
   @synchronized
   async open(spaceState: SpaceState) {
+    debugger;
+    const start = performance.now();
     if (this._ctx) {
       log.info('Already open');
       return;
     }
     this._ctx = new Context();
 
+    log.info('begin opening', { indexDocId: spaceState.rootUrl, automergePreference: getGlobalAutomergePreference() });
     if (spaceState.rootUrl) {
       try {
-        this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        // TODO(mykola): Remove check for global preference or timeout?
-        const doc = getGlobalAutomergePreference()
-          ? await this._docHandle.doc()
-          : await asyncTimeout(this._docHandle.doc(), 1_000);
+        await this._initDocHandle(spaceState.rootUrl);
+
+        const doc = this._docHandle.docSync();
+        invariant(doc);
+
         const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
-        log('Error opening document', err);
+        log.catch(err);
         await this._fallbackToNewDoc();
       }
     } else {
@@ -95,8 +103,11 @@ export class AutomergeDb {
     this._ctx.onDispose(() => {
       this._docHandle.off('change', update);
     });
+
+    log.info('db opened', { indexDocId: spaceState.rootUrl, duration: performance.now() - start });
   }
 
+  // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
     if (!this._ctx) {
@@ -104,6 +115,39 @@ export class AutomergeDb {
     }
     void this._ctx.dispose();
     this._ctx = undefined;
+  }
+
+  private async _initDocHandle(rootUrl: string) {
+    this._docHandle = this.automerge.repo.find(rootUrl as DocumentId);
+    // TODO(mykola): Remove check for global preference or timeout?
+    if (getGlobalAutomergePreference()) {
+      // Loop on timeout
+      while (true) {
+        try {
+          await asyncTimeout(cancelWithContext(this._ctx!, this._docHandle.whenReady(['ready'])), 5_000); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          break;
+        } catch (err) {
+          if (err instanceof ContextDisposedError) {
+            return;
+          }
+          if (`${err}`.includes('Timeout')) {
+            log.info('wraparound', { state: this._docHandle.state });
+            continue;
+          }
+          throw err;
+        }
+      }
+    } else {
+      await asyncTimeout(
+        this._docHandle.whenReady(['ready']),
+        1_000,
+        'short doc ready timeout with automerge disabled',
+      );
+    }
+
+    if (this._docHandle.state === 'unavailable') {
+      throw new Error('Automerge document is unavailable');
+    }
   }
 
   private async _fallbackToNewDoc() {
