@@ -108,18 +108,21 @@ export class EldonAgentHostingProviderClient implements AgentHostingProviderClie
       return agent.metadata.uid;
     } catch (err) {
       if (err instanceof TypeError) {
-        log.warn('failed to parse response from agent create', { res });
+        log.warn('failed to parse response from agent get', { err });
         throw new ProviderApiError('failed to parse response from hosting provider');
       }
-      log.warn('bad response from agent create', { res });
+      log.warn('bad response from agent get', { res });
       throw new ProviderApiError('bad response from hosting provider');
     }
   }
 
   public async destroyAgent(agentID: string) {
-    const res = await fetch(new URL('agent/' + agentID, this._config.baseURL), {
-      method: 'DELETE',
-    });
+    const res = await fetch(
+      new URL('agent/' + agentID, this._config.baseURL),
+      this.requestInitWithCredentials({
+        method: 'DELETE',
+      }),
+    );
 
     if (res.status === 204) {
       return true;
