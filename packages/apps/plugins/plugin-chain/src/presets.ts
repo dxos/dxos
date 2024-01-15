@@ -144,6 +144,26 @@ export const presets = [
       }),
   },
   {
+    id: 'dxos.org/prompt/lookup',
+    title: 'Lookup',
+    prompt: () =>
+      new ChainType.Prompt({
+        command: 'lookup',
+        source: new TextObject(
+          str(
+            //
+            'Lookup and very briefly summarize the following topic in one or two sentences:',
+            '---',
+            '{input}',
+          ),
+        ),
+        inputs: [
+          //
+          new ChainType.Input({ type: ChainType.Input.Type.CONTEXT, name: 'input', value: new TextObject('text') }),
+        ],
+      }),
+  },
+  {
     id: 'dxos.org/prompt/discord',
     title: 'Summarize',
     prompt: () =>
