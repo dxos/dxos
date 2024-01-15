@@ -34,6 +34,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    minify: process.env.DX_ENVIRONMENT === 'development' ? false : undefined,
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
@@ -53,7 +54,7 @@ export default defineConfig({
       external: [
         // Provided at runtime by socket supply shell.
         'socket:application',
-      ]
+      ],
     },
   },
   resolve: {
@@ -69,23 +70,25 @@ export default defineConfig({
     {
       name: 'sandbox-importmap-integration',
       transformIndexHtml() {
-        return [{
-          tag: 'script',
-          injectTo: 'head-prepend', // Inject before vite's built-in scripts.
-          children: `
+        return [
+          {
+            tag: 'script',
+            injectTo: 'head-prepend', // Inject before vite's built-in scripts.
+            children: `
             if (window.location.hash.includes('importMap')) {
               const urlParams = new URLSearchParams(window.location.hash.slice(1));
               if (urlParams.get('importMap')) {
                 const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
                 const mapElement = document.createElement('script');
-                mapElement.type = 'importmap';
+                mapElement.type = 'importmap'; 
                 mapElement.textContent = JSON.stringify(importMap, null, 2);
                 document.head.appendChild(mapElement);
               }
             }
-          `
-        }];
-      }
+          `,
+          },
+        ];
+      },
     },
     ConfigPlugin(),
     ThemePlugin({
@@ -168,23 +171,19 @@ export default defineConfig({
   ],
 });
 
-function chunkFileNames (chunkInfo) {
-  if(chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+function chunkFileNames(chunkInfo) {
+  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
     let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);
     }
-    const ignoredNames = [
-      'dist',
-      'lib',
-      'browser'
-    ]
-    const significantSegment = segments.find(segment => !ignoredNames.includes(segment));
+    const ignoredNames = ['dist', 'lib', 'browser'];
+    const significantSegment = segments.find((segment) => !ignoredNames.includes(segment));
     if (significantSegment) {
       return `assets/${significantSegment}-[hash].js`;
     }
   }
 
   return 'assets/[name]-[hash].js';
-};
+}

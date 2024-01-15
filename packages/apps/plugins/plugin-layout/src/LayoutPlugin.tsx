@@ -46,6 +46,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     sidebarOpen: true,
     complementarySidebarOpen: false,
     enableComplementarySidebar: true,
+    showFooter: true,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -206,6 +207,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
+                  showHintsFooter={state.values.showFooter}
                   fullscreen={state.values.fullscreen}
                   showComplementarySidebar={state.values.enableComplementarySidebar}
                 />

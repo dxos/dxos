@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import type { TypedObject } from '@dxos/react-client/echo';
+import { type TypedObject, getTextContent } from '@dxos/react-client/echo';
 import { DropdownMenu, Input } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -28,7 +28,9 @@ export const Wildcard: MosaicTileComponent<any> = forwardRef(
     }
 
     // TODO(burdon): Parse schema.
-    const label = object.title ?? object.label ?? object.name ?? object.id;
+    const label = getTextContent(object.title ?? object.label ?? object.name);
+    const content = getTextContent(object.description ?? object.content);
+
     const handleSetLabel = (label: string) => {
       if (object.title) {
         object.title = label;
@@ -38,8 +40,6 @@ export const Wildcard: MosaicTileComponent<any> = forwardRef(
         object.name = label;
       }
     };
-
-    const content = object.description?.text ?? object.content?.text;
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>

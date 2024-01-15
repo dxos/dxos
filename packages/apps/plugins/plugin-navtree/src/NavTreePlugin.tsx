@@ -42,7 +42,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       Keyboard.singleton.initialize();
       // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
       Keyboard.singleton.bind({
-        binding: 'meta+k',
+        shortcut: 'meta+k',
         handler: () => {
           console.log('meta');
         },

@@ -41,15 +41,12 @@ export type CursorInfo = {
 
 export type TextEditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
-  editor?: {
-    className?: string;
-    placeholder?: string;
-    spellCheck?: boolean;
-    tabIndex?: number;
-    theme?: ThemeStyles;
-  };
+  // editor?: {
+  //   className?: string;
+  // };
 };
 
+// TODO(burdon): Spellcheck?
 export type TextEditorProps = {
   model: EditorModel;
   focus?: boolean;
@@ -58,6 +55,8 @@ export type TextEditorProps = {
   comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
   editorMode?: EditorMode;
+  placeholder?: string;
+  theme?: ThemeStyles;
   slots?: TextEditorSlots;
 };
 
@@ -66,7 +65,7 @@ export type TextEditorProps = {
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    { model, focus, selection, readonly, comments, extensions = [], editorMode, slots = defaultSlots },
+    { model, focus, selection, readonly, comments, extensions = [], editorMode, theme, slots = defaultSlots },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -98,7 +97,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     // TODO(burdon): Factor out as extension.
     useEffect(() => {
-      if (view && comments?.length) {
+      if (view && comments !== undefined) {
         view.dispatch({
           effects: setCommentRange.of({ model, comments }),
         });
@@ -110,10 +109,10 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         return;
       }
 
-      // TODO(burdon): Remember cursor position.
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: model.text(),
+        // TODO(burdon): Composer should store and set selection when switching documents.
         selection,
         extensions: [
           readonly && EditorState.readOnly.of(readonly),
@@ -124,7 +123,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           // Theme.
           // TODO(burdon): Make theme configurable.
           EditorView.baseTheme(defaultTheme),
-          EditorView.theme(slots?.editor?.theme ?? {}),
+          EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
 
           // Storage and replication.
@@ -160,7 +159,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          // TODO(burdon): ???
+          // TODO(burdon): Is this required (for vim mode?)
           // case 'Enter': {
           //   view?.contentDOM.focus();
           //   break;
@@ -178,28 +177,27 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     return (
       <div
         key={model.id}
+        role='none'
         ref={rootRef}
         tabIndex={0}
-        {...slots?.root}
-        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
         onKeyUp={handleKeyUp}
+        {...slots.root}
+        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
       />
     );
   },
 );
 
 export const TextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
+  ({ readonly, placeholder, extensions = [], theme = textTheme, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[
-          basicBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
-          ...extensions,
-        ]}
+        extensions={[basicBundle({ readonly, themeMode, placeholder }), ...extensions]}
+        theme={theme}
         slots={updatedSlots}
         {...props}
       />
@@ -209,17 +207,15 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
 
 // TODO(burdon): Remove (Just provide bundle, slots).
 export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, extensions = [], slots, ...props }, forwardedRef) => {
+  ({ readonly, placeholder, extensions = [], theme = markdownTheme, slots, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultMarkdownSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[
-          markdownBundle({ readonly, themeMode, placeholder: updatedSlots?.editor?.placeholder }),
-          ...extensions,
-        ]}
+        extensions={[markdownBundle({ readonly, themeMode, placeholder }), ...extensions]}
+        theme={theme}
         slots={updatedSlots}
         {...props}
       />
@@ -229,20 +225,14 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx('p-2', inputSurface),
+    className: mx('p-2 overflow-y-auto', inputSurface),
   },
 };
 
 export const defaultTextSlots: TextEditorSlots = {
   ...defaultSlots,
-  editor: {
-    theme: textTheme,
-  },
 };
 
 export const defaultMarkdownSlots: TextEditorSlots = {
   ...defaultSlots,
-  editor: {
-    theme: markdownTheme,
-  },
 };

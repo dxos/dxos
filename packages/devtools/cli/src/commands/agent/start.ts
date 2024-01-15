@@ -10,6 +10,7 @@ import {
   Agent,
   ChainPlugin,
   DashboardPlugin,
+  DiscordPlugin,
   EchoProxyPlugin,
   EpochMonitorPlugin,
   FunctionsPlugin,
@@ -84,6 +85,7 @@ export default class Start extends BaseCommand<typeof Start> {
       plugins: [
         new ChainPlugin(),
         new DashboardPlugin(),
+        new DiscordPlugin(),
         new EchoProxyPlugin(),
         new EpochMonitorPlugin(),
         new FunctionsPlugin(),

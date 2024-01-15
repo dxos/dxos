@@ -285,7 +285,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('list all files after reopen', async function () {
-      if (testGroupName !== StorageType.WEBFS) {
+      if (testGroupName !== StorageType.WEBFS && testGroupName !== StorageType.NODE) {
         this.skip();
       }
 
@@ -316,6 +316,21 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         const entries = await directory.list();
         expect(entries.length).to.equal(files.length);
       }
+    });
+
+    test('list returns correct filenames', async () => {
+      const FILES = ['one', 'two', 'three'];
+
+      // Create storage and check.
+      const storage = createStorage();
+      const directory = storage.createDirectory('dir');
+
+      for (const file of FILES) {
+        directory.getOrCreateFile(file);
+      }
+      await directory.flush();
+      const entries = await directory.list();
+      expect(entries).to.contain.members(FILES);
     });
   });
 };

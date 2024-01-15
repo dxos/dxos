@@ -3,7 +3,7 @@
 //
 
 import differenceInSeconds from 'date-fns/differenceInSeconds';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
@@ -104,11 +104,35 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
     }
   };
 
+  const [processing, setProcessing] = useState(false);
+  useEffect(() => {
+    const unsubscribe = space.listen(`status/${thread.id}`, (status) => {
+      const { event } = status.payload ?? {};
+      setProcessing(event === 'processing');
+    });
+
+    const t = setInterval(() => {
+      setProcessing((prev: any) => {
+        if (typeof prev?.ts === 'number' && Date.now() - prev.ts > 30_000) {
+          return undefined;
+        } else {
+          return prev;
+        }
+      });
+    }, 1_000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(t);
+    };
+  }, [space]);
+
   return (
     <ThreadChannel
       identityKey={identity.identityKey}
       propertiesProvider={messagePropertiesProvider(identity, members)}
       thread={thread}
+      processing={processing}
       fullWidth={fullWidth}
       onFocus={onFocus}
       onCreate={handleCreate}
