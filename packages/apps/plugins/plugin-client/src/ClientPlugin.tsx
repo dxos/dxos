@@ -92,7 +92,6 @@ export const ClientPlugin = ({
       let firstRun = false;
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
-
       let oldClient: Client = null as any;
 
       if (ENABLE_VAULT_MIGRATION) {
@@ -112,6 +111,7 @@ export const ClientPlugin = ({
           await Envs(),
           Defaults(),
         );
+
         oldClient = new Client({
           config: oldConfig,
           services: fromIFrame(oldConfig, { shell: false }),
@@ -259,13 +259,13 @@ export const ClientPlugin = ({
             case ClientAction.SHARE_IDENTITY:
               return client.shell.shareIdentity();
 
-            // TODO(burdon): Remove.
+            // TODO(burdon): Remove (use SpacePlugin).
             case ClientAction.JOIN_SPACE:
               return typeof intent.data?.invitationCode === 'string'
                 ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
                 : false;
 
-            // TODO(burdon): Remove.
+            // TODO(burdon): Remove (use SpacePlugin).
             case ClientAction.SHARE_SPACE:
               return intent.data?.spaceKey instanceof PublicKey &&
                 !intent.data?.spaceKey.equals(client.spaces.default.key)

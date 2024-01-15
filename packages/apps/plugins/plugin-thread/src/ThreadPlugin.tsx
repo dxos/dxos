@@ -113,12 +113,24 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'context-thread': {
               const graph = graphPlugin?.provides.graph;
               const layout = layoutPlugin?.provides.layout;
+
               const space = getActiveSpace(graph!, layout!.active);
               if (space) {
-                if (state.threads) {
+                // TODO(burdon): Hack to determine if comments should be visible.
+                let comments = false;
+                if (layout?.active) {
+                  const active = space.db.getObjectById(layout?.active);
+                  comments = (active as any)?.comments?.length > 0;
+                }
+                if (!comments) {
+                  state.threads = [];
+                }
+
+                if (state.threads?.length) {
                   const threads = state.threads
                     .map(({ id }) => space.db.getObjectById(id) as ThreadType)
                     .filter(nonNullable);
+
                   return (
                     <CommentsSidebar
                       space={space}
