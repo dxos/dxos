@@ -70,7 +70,7 @@ Examples of ways to run different test workloads:
 
 ## Storybooks
 
-All Storybooks can be run with the following command:
+The following command aggregates storybooks across :
 
 ```bash
 pnpm nx storybook stories
