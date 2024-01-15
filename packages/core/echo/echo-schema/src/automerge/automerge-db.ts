@@ -75,7 +75,13 @@ export class AutomergeDb {
     this._ctx = new Context();
 
     log.info('begin opening', { indexDocId: spaceState.rootUrl, automergePreference: getGlobalAutomergePreference() });
-    if (spaceState.rootUrl) {
+    if (!spaceState.rootUrl) {
+      if (getGlobalAutomergePreference()) {
+        throw new Error('Database opened with no rootUrl');
+      } else {
+        await this._fallbackToNewDoc();
+      }
+    } else {
       try {
         await this._initDocHandle(spaceState.rootUrl);
 
@@ -86,10 +92,12 @@ export class AutomergeDb {
         this._createObjects(ojectIds);
       } catch (err) {
         log.catch(err);
-        await this._fallbackToNewDoc();
+        if (getGlobalAutomergePreference()) {
+          throw err;
+        } else {
+          await this._fallbackToNewDoc();
+        }
       }
-    } else {
-      await this._fallbackToNewDoc();
     }
 
     const update = (event: DocHandleChangePayload<DocStructure>) => {
@@ -150,9 +158,7 @@ export class AutomergeDb {
   }
 
   private async _fallbackToNewDoc() {
-    if (getGlobalAutomergePreference()) {
-      log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
-    }
+    invariant(!getGlobalAutomergePreference());
     this._docHandle = this.automerge.repo.create();
     this._ctx!.onDispose(() => {
       this._docHandle.delete();

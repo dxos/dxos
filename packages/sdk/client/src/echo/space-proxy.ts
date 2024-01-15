@@ -293,6 +293,7 @@ export class SpaceProxy implements Space {
         automergeRoot = this._data.pipeline.currentEpoch.subject.assertion.automergeRoot;
       }
 
+      log.info('opening automerge db', { spaceKey: this.key, automergeRoot });
       await this._db.automerge.open({
         rootUrl: automergeRoot,
       });

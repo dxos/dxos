@@ -75,6 +75,8 @@ export class Agent {
       });
     }
 
+    log.info('storage path');
+
     // Create client services.
     this._clientServices = await fromHost(this._options.config, {
       lockKey: lockFilePath(this._options.profile),

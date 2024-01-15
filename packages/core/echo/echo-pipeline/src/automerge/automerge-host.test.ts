@@ -78,17 +78,27 @@ describe('AutomergeHost', () => {
 
   describe('storage', () => {
     test.only('load range on node', async () => {
-      const storage = createStorage({ type: StorageType.NODE, root: `/tmp/${randomBytes(16).toString('hex')}` });
-      const adapter = new AutomergeStorageAdapter(storage.createDirectory());
-      await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
-      await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
-      await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
-      const range = await adapter.loadRange(['test']);
-      expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual(['one', 'two']);
-      expect(range.map((chunk) => chunk.key)).toEqual([
-        ['test', '1'],
-        ['test', '2'],
-      ]);
+      const root = `/tmp/${randomBytes(16).toString('hex')}`;
+      {
+        const storage = createStorage({ type: StorageType.NODE, root: root });
+        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+
+        await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
+        await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
+        await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
+      }
+
+      {
+        const storage = createStorage({ type: StorageType.NODE, root: root });
+        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+
+        const range = await adapter.loadRange(['test']);
+        expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual(['one', 'two']);
+        expect(range.map((chunk) => chunk.key)).toEqual([
+          ['test', '1'],
+          ['test', '2'],
+        ]);
+      }
     });
   });
 });
