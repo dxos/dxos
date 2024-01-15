@@ -54,9 +54,9 @@ triggers:
     subscriptions:
       - type: 'braneframe.Message'
 
-  # - function: 'dxos.org/function/chess'
-  #   subscriptions:
-  #     - type: 'dxos.experimental.chess.Game'
+  - function: 'dxos.org/function/chess'
+    subscriptions:
+      - type: 'dxos.experimental.chess.Game'
 
   # - function: 'dxos.org/function/email'
   #   schedule: '*/30 * * * * *'
@@ -70,12 +70,12 @@ triggers:
 #        props:
 #          type: 'email'
 
-  # - function: 'dxos.org/function/embedding'
-  #   subscriptions:
-  #     - type: 'braneframe.Document'
-  #       deep: true
-  #       delay: 5
-  #     - type: 'braneframe.File'
+  - function: 'dxos.org/function/embedding'
+    subscriptions:
+      - type: 'braneframe.Document'
+        deep: true
+        delay: 5
+      - type: 'braneframe.File'
 
 #  - function: 'dxos.org/function/github'
 #    subscriptions:

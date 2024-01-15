@@ -266,6 +266,7 @@ export const tailwindConfig = ({
             from: { opacity: 0, transform: 'translateX(-2px)' },
             to: { opacity: 1, transform: 'translateX(0)' },
           },
+
           // Toast
           'toast-hide': {
             '0%': { opacity: '1' },
@@ -287,12 +288,14 @@ export const tailwindConfig = ({
               transform: 'translateX(calc(100% + 1rem))',
             },
           },
+
           // Shimmer
           'shimmer-loop': {
             '100%': {
               transform: 'translateX(100%)',
             },
           },
+
           'halo-pulse': {
             '0%': {
               opacity: 0.3,
@@ -304,6 +307,7 @@ export const tailwindConfig = ({
               opacity: 0.3,
             },
           },
+
           'progress-indeterminate': {
             '0%': {
               left: 0,
@@ -325,16 +329,16 @@ export const tailwindConfig = ({
           slideLeftAndFade: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
           slideUpAndFade: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
           slideRightAndFade: 'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+
           // Toast
           'toast-hide': 'toast-hide 100ms ease-in forwards',
           'toast-slide-in-right': 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
           'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
           'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
-          // Shimmer
+
+          spin: 'spin 1.5s linear infinite',
           shimmer: 'shimmer-loop 2s infinite',
-          // halo-pulse
           'halo-pulse': 'halo-pulse 2s ease-out infinite',
-          // progress-indeterminate
           'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
         },
       },

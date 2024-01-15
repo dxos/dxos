@@ -160,9 +160,11 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3 py-1.5'>
-                        {[ChainType.Input.Type.VALUE, ChainType.Input.Type.RESOLVER].includes(input.type) && (
-                          <ValueEditor input={input} />
-                        )}
+                        {[
+                          ChainType.Input.Type.VALUE,
+                          ChainType.Input.Type.CONTEXT,
+                          ChainType.Input.Type.RESOLVER,
+                        ].includes(input.type) && <ValueEditor input={input} />}
                       </td>
                     </tr>
                   ))}
@@ -196,7 +198,7 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   );
 };
 
-const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
+export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
   return (
     <div className={mx('border rounded-md', groupBorder)}>
       <div

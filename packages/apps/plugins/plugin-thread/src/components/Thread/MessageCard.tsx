@@ -8,7 +8,7 @@ import React, { forwardRef, useId } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/react-client';
-import { type Expando, TextObject } from '@dxos/react-client/echo';
+import { type Expando, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -94,7 +94,9 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
 
   return (
     <div className='flex overflow-hidden px-2 py-1 group'>
-      {block.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>}
+      {typeof block.text === 'string' && (
+        <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>
+      )}
       {block.data && (
         // TODO(burdon): Colorize (reuse codemirror or hljs?)
         <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
@@ -115,8 +117,8 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
 const Pill: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onRemove }, forwardRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
-    if (title instanceof TextObject) {
-      title = title.text;
+    if (typeof title !== 'string') {
+      title = getTextContent(title);
     }
 
     return (

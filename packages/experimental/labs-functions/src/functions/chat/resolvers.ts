@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Client as DiscordClient, IntentsBitField, SnowflakeUtil, type TextChannel } from 'discord.js';
-import { Config } from '@dxos/config';
-import { Event, Trigger } from '@dxos/async';
+
+import { Event } from '@dxos/async';
+import { type Config } from '@dxos/config';
 
 export type ResolverFn = () => Promise<any>;
 export type Resolvers = {
@@ -17,7 +22,7 @@ export const createResolvers = async (config: Config): Promise<Resolvers> => {
     intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent],
   });
 
-  const readyPromise = Event.wrap(client, 'ready').waitForCount(1)
+  const readyPromise = Event.wrap(client, 'ready').waitForCount(1);
   await client.login(token);
   await readyPromise;
 
@@ -42,17 +47,20 @@ export const createResolvers = async (config: Config): Promise<Resolvers> => {
                   if (!channel?.isTextBased()) {
                     return '';
                   }
+
                   const res = await channel.messages.fetch({ after: LAST_WEEK_SNOWFLAKE, limit: 100 });
                   const messagesConcatenated = res
                     .filter((msg) => msg.content.trim().length > 0)
                     .map(
-                      (msg) => `${new Date(msg.createdTimestamp).toISOString()} @${msg.author.username}: ${msg.content}`,
+                      (msg) =>
+                        `${new Date(msg.createdTimestamp).toISOString()} @${msg.author.username}: ${msg.content}`,
                     )
                     .join('\n');
                   if (messagesConcatenated.length === 0) {
                     return '';
                   }
 
+                  // TODO(burdon): ???
                   return `CONVERSATION:\n${messagesConcatenated}\n`;
                 } catch (err: any) {
                   console.log(`${channel?.name} ${err.message}`);

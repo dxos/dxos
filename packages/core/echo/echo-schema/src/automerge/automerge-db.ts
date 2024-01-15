@@ -115,6 +115,7 @@ export class AutomergeDb {
     if (!this._ctx) {
       return;
     }
+
     void this._ctx.dispose();
     this._ctx = undefined;
   }
@@ -123,7 +124,7 @@ export class AutomergeDb {
     this._docHandle = this.automerge.repo.find(rootUrl as DocumentId);
     // TODO(mykola): Remove check for global preference or timeout?
     if (getGlobalAutomergePreference()) {
-      // Loop on timeout
+      // Loop on timeout.
       while (true) {
         try {
           await asyncTimeout(cancelWithContext(this._ctx!, this._docHandle.whenReady(['ready'])), 5_000); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
@@ -132,10 +133,12 @@ export class AutomergeDb {
           if (err instanceof ContextDisposedError) {
             return;
           }
+
           if (`${err}`.includes('Timeout')) {
             log.info('wraparound', { id: this._docHandle.documentId, state: this._docHandle.state });
             continue;
           }
+
           throw err;
         }
       }
@@ -162,10 +165,10 @@ export class AutomergeDb {
 
   getObjectById(id: string): EchoObject | undefined {
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
-
     if (!obj) {
       return undefined;
     }
+
     if ((obj as any).__deleted === true) {
       return undefined;
     }
@@ -190,6 +193,7 @@ export class AutomergeDb {
       docHandle: this._docHandle,
       path: ['objects', obj.id],
     });
+
     return obj;
   }
 
