@@ -8,7 +8,7 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Chain as ChainType, Folder } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
-import { SpaceProxy, TextObject } from '@dxos/react-client/echo';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ChainMain } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
@@ -91,9 +91,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                object: new ChainType({
-                  prompts: [createPrompt()],
-                }),
+                object: new ChainType(),
               };
             }
           }
@@ -102,17 +100,3 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
     },
   };
 };
-
-const createPrompt = () =>
-  new ChainType.Prompt({
-    command: 'say',
-    source: new TextObject(['Translate the following into {language}.', '---', '{input}'].join('\n')),
-    inputs: [
-      new ChainType.Input({
-        type: ChainType.Input.Type.VALUE,
-        name: 'language',
-        value: new TextObject('japanese'),
-      }),
-      new ChainType.Input({ type: ChainType.Input.Type.PASS_THROUGH, name: 'input' }),
-    ],
-  });

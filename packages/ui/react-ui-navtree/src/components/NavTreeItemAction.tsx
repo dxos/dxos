@@ -227,7 +227,7 @@ export const NavTreeItemActionSearchList = ({
           <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] px-2 py-1']}>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
               <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
-              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[20rem] overflow-auto']}>
+              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto']}>
                 {sortedActions?.map((action) => {
                   const label = getLabel(action.label);
                   return (

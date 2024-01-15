@@ -69,16 +69,16 @@ export class WebFS implements Storage {
   }
 
   createDirectory(sub = '') {
-    return new Directory(
-      this.type,
-      getFullPath(this.path, sub),
-      (path) => this._list(path),
-      (...args) => this.getOrCreateFile(...args),
-      () => this._delete(sub),
-      async () => {
+    return new Directory({
+      type: this.type,
+      path: getFullPath(this.path, sub),
+      list: (path) => this._list(path),
+      getOrCreateFile: (...args) => this.getOrCreateFile(...args),
+      remove: () => this._delete(sub),
+      onFlush: async () => {
         await Promise.all(Array.from(this._getFiles(sub)).map(([path, file]) => file.flush()));
       },
-    );
+    });
   }
 
   getOrCreateFile(path: string, filename: string, opts?: any): File {
