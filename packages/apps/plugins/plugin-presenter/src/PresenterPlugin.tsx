@@ -6,7 +6,7 @@ import { Presentation } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
-import { isMarkdown, isMarkdownContent } from '@braneframe/plugin-markdown';
+import { isMarkdownContent } from '@braneframe/plugin-markdown';
 import { isStack } from '@braneframe/plugin-stack';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
