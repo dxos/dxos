@@ -143,11 +143,11 @@ export class GraphBuilder {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
-            const binding =
+            const shortcut =
               typeof action.keyBinding === 'object' ? action.keyBinding?.[getHostPlatform()] : action.keyBinding;
-            if (binding) {
+            if (shortcut) {
               Keyboard.singleton.getContext(path.join('/')).bind({
-                binding,
+                shortcut,
                 handler: () => {
                   action.invoke({ caller: KEY_BINDING });
                 },

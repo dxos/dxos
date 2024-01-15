@@ -13,6 +13,7 @@ import { createContext, createSequence } from './request';
 import { createResponse } from './response';
 import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
+import { createResolvers } from './resolvers';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
@@ -27,6 +28,8 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     apiKey: getKey(config, 'openai.com/api_key'),
   });
   await resources.store.initialize();
+
+  const resolvers = await createResolvers(client.config);
 
   // TODO(burdon): The handler is called before the mutation is processed!
   await sleep(500);
@@ -47,8 +50,21 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   if (activeThreads) {
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
+        let disPostStatus = false;
+        
+
+
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
+          if(!disPostStatus){
+            space.postMessage(`${thread.id}/ephemeral_status`, {
+              event: 'AI_GENERATING',
+              ts: Date.now(),
+              messageCount: thread.messages.length,
+            }).catch(() => {})
+            disPostStatus = true;
+          }
+          
           let blocks: MessageType.Block[];
           try {
             let text = message.blocks
@@ -64,15 +80,15 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
               text = match[2];
             }
 
-            const context = createContext(space, message.context);
-            const sequence = createSequence(space, resources, context, { command });
+            const context = createContext(space, message, thread);
+            const sequence = await createSequence(space, resources, context, resolvers, { command });
             const response = await sequence.invoke(text);
             log.info('response', { response });
 
             blocks = createResponse(space, context, response);
             log.info('response', { blocks });
           } catch (error) {
-            log.error('processing message', error);
+            log.error('processing message', { error });
             blocks = [{ text: 'There was an error generating the response.' }];
           }
 

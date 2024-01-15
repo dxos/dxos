@@ -3,19 +3,7 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import {
-  hoverTooltip,
-  keymap,
-  type Command,
-  type DecorationSet,
-  type ViewUpdate,
-  Decoration,
-  EditorView,
-  MatchDecorator,
-  ViewPlugin,
-  WidgetType,
-  type Rect,
-} from '@codemirror/view';
+import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
@@ -23,24 +11,16 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
+import { Cursor } from './cursor';
 import { type CommentRange, type EditorModel, type Range } from '../hooks';
 import { getToken } from '../styles';
-import { callbackWrapper, CursorConverter } from '../util';
+import { callbackWrapper } from '../util';
 
 // TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
 // TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
-  '& .cm-bookmark': {
-    cursor: 'pointer',
-    margin: '4px',
-    padding: '4px',
-    backgroundColor: 'yellow',
-  },
-  '& .cm-bookmark-selected': {
-    backgroundColor: 'orange',
-  },
   '& .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
@@ -98,7 +78,7 @@ const setCommentState = StateEffect.define<CommentsState>();
 const commentsStateField = StateField.define<CommentsState>({
   create: () => ({ ranges: [] }),
   update: (value, tr) => {
-    const cursorConverter = tr.state.facet(CursorConverter);
+    const cursorConverter = tr.state.facet(Cursor.converter);
 
     for (const effect of tr.effects) {
       // Update selection.
@@ -111,7 +91,7 @@ const commentsStateField = StateField.define<CommentsState>({
         const { comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments
           .map((comment) => {
-            const range = getRangeFromCursor(cursorConverter, comment.cursor);
+            const range = Cursor.getRangeFromCursor(cursorConverter, comment.cursor);
             return range && { ...comment, ...range };
           })
           .filter(nonNullable);
@@ -154,42 +134,13 @@ const highlightDecorations = EditorView.decorations.compute([commentsStateField]
   return Decoration.set(decorations);
 });
 
-/**
- * Optional bookmark widget at the start/end of the selection.
- * May correspond to a markdown bookmark.
- */
-class BookmarkWidget extends WidgetType {
-  constructor(
-    private readonly _anchor: number,
-    private readonly _id: string,
-    private readonly _handleClick?: () => void,
-  ) {
-    super();
-    invariant(this._id);
-  }
-
-  override eq(other: BookmarkWidget) {
-    return this._anchor === other._anchor && this._id === other._id;
-  }
-
-  override toDOM() {
-    const span = document.createElement('span');
-    span.className = 'cm-bookmark';
-    span.textContent = '※';
-    if (this._handleClick) {
-      span.onclick = () => this._handleClick!();
-    }
-    return span;
-  }
-}
-
 export type CommentsOptions = {
   key?: string;
   footnote?: boolean;
   /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (range: string) => string | undefined;
+  onCreate?: (cursor: string, location?: Rect | null) => string | undefined;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -197,7 +148,7 @@ export type CommentsOptions = {
   /**
    * Called to render tooltip.
    */
-  onHover?: (el: Element) => void;
+  onHover?: (el: Element, shortcut: string) => void;
 };
 
 /**
@@ -213,13 +164,15 @@ export type CommentsOptions = {
  * 6). Optionally, implements a hoverTooltip to show hints when creating a selection range.
  */
 export const comments = (options: CommentsOptions = {}): Extension => {
+  const { key: shortcut = "meta-'" } = options;
+
   const handleSelect = debounce((state: CommentsState) => options.onSelect?.(state), 200);
 
   /**
    * Create comment thread action.
    */
   const createCommentThread: Command = (view) => {
-    const cursorConverter = view.state.facet(CursorConverter);
+    const cursorConverter = view.state.facet(Cursor.converter);
 
     invariant(options.onCreate);
     const { head, from, to } = view.state.selection.main;
@@ -227,10 +180,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       return false;
     }
 
-    const relPos = getCursorFromRange(cursorConverter, { from, to });
-    if (relPos) {
+    const cursor = Cursor.getCursorFromRange(cursorConverter, { from, to });
+    if (cursor) {
       // Create thread via callback.
-      const id = callbackWrapper(options.onCreate)(relPos);
+      const id = callbackWrapper(options.onCreate)(cursor, view.coordsAtPos(from));
       if (id) {
         // Update range.
         view.dispatch({
@@ -254,44 +207,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     return false;
   };
 
-  /**
-   * Bookmark widget decoration.
-   */
-  const bookmarksViewPlugin = ViewPlugin.fromClass(
-    class BookmarkViewPlugin {
-      // Match markdown footnotes (option).
-      // https://www.markdownguide.org/extended-syntax/#footnotes
-      static bookmarkMatcher = new MatchDecorator({
-        regexp: /\[\^(\w+)\]/g,
-        decoration: (match, view, pos) => {
-          const id = match[1];
-          return Decoration.replace({
-            id,
-            widget: new BookmarkWidget(pos, id),
-          });
-        },
-      });
-
-      bookmarks: DecorationSet;
-      constructor(view: EditorView) {
-        this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.createDeco(view);
-      }
-
-      update(update: ViewUpdate) {
-        this.bookmarks = BookmarkViewPlugin.bookmarkMatcher.updateDeco(update, this.bookmarks);
-      }
-    },
-    {
-      decorations: (instance) => instance.bookmarks,
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.bookmarks || Decoration.none;
-        }),
-    },
-  );
-
   return [
-    bookmarksViewPlugin,
     commentsStateField,
     highlightDecorations,
     styles,
@@ -302,7 +218,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     options.onCreate
       ? keymap.of([
           {
-            key: options?.key ?? "meta-'",
+            key: shortcut,
             run: callbackWrapper(createCommentThread),
           },
         ])
@@ -324,7 +240,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
                 create: () => {
                   // TODO(burdon): Dispatch to react callback to render (or use SSR)?
                   const el = document.createElement('div');
-                  options.onHover?.(el);
+                  options.onHover?.(el, shortcut);
                   return { dom: el, offset: { x: 0, y: 8 } };
                 },
               };
@@ -341,7 +257,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     // TODO(burdon): Is there a better (finer grained) way to do this?
     //
     EditorView.updateListener.of(({ view, state, changes }) => {
-      const cursorConverter = view.state.facet(CursorConverter);
+      const cursorConverter = view.state.facet(Cursor.converter);
 
       //
       // Test if need to recompute indexed range if document changes before the end of the range.
@@ -352,7 +268,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         changes.iterChanges((from, to, from2, to2) => {
           ranges.forEach((range) => {
             if (from2 === to2) {
-              const newRange = getRangeFromCursor(cursorConverter, range.cursor);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
               if (!newRange || newRange.to - newRange.from === 0) {
                 // TODO(burdon): Delete range if empty.
                 log.info('deleted comment', { thread: range.id });
@@ -360,7 +276,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             }
 
             if (from <= range.to) {
-              const newRange = getRangeFromCursor(cursorConverter, range.cursor);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
               Object.assign(range, newRange);
               mod = true;
             }
@@ -392,6 +308,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
           }
         });
 
+        // TODO(burdon): Fire debounced callback if range selected (to show hint).
+
         if (selected.active !== active || selected.closest !== closest) {
           view.dispatch({ effects: setSelection.of(selected) });
 
@@ -404,17 +322,4 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       }
     }),
   ];
-};
-
-const getCursorFromRange = (cursorConverter: CursorConverter, range: Range) => {
-  const from = cursorConverter.toCursor(range.from);
-  const to = cursorConverter.toCursor(range.to, -1);
-  return [from, to].join(':');
-};
-
-const getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
-  const parts = cursor.split(':');
-  const from = cursorConverter.fromCursor(parts[0]);
-  const to = cursorConverter.fromCursor(parts[1]);
-  return from !== undefined && to !== undefined ? { from, to } : undefined;
 };

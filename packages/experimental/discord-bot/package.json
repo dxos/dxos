@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/discord-bot",
+  "version": "0.3.9",
+  "private": true,
+  "description": "Experimental Discord bot.",
+  "homepage": "https://github.com/dxos",
+  "bugs": "https://github.com/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "test-bot": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/test-bot.ts"
+  },
+  "dependencies": {
+    "@dxos/config": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "discord.js": "^14.14.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13"
+  }
+}

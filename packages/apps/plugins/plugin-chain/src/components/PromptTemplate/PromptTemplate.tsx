@@ -34,6 +34,14 @@ const inputTypes = [
   //   value: ChainType.Input.Type.QUERY,
   //   label: 'Query',
   // },
+  {
+    value: ChainType.Input.Type.RESOLVER,
+    label: 'Resolver',
+  },
+  {
+    value: ChainType.Input.Type.CONTEXT,
+    label: 'Context',
+  },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
@@ -111,12 +119,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
           <TextEditor
             model={model}
             extensions={[promptExtension]}
+            placeholder={t('template placeholder')}
             slots={{
               root: {
                 className: 'w-full p-2',
-              },
-              editor: {
-                placeholder: t('template placeholder'),
               },
             }}
           />
@@ -154,7 +160,9 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3 py-1.5'>
-                        {input.type === ChainType.Input.Type.VALUE && <ValueEditor input={input} />}
+                        {[ChainType.Input.Type.VALUE, ChainType.Input.Type.RESOLVER].includes(input.type) && (
+                          <ValueEditor input={input} />
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -178,12 +186,10 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   return (
     <TextEditor
       model={model}
+      placeholder={t('value placeholder')}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),
-        },
-        editor: {
-          placeholder: t('value placeholder'),
         },
       }}
     />

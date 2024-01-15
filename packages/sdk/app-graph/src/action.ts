@@ -53,6 +53,7 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
    * Key binding.
    */
   // TODO(wittjosiah): Factor out.
+  // TODO(burdon): Rename shortcut.
   keyBinding?: string | KeyBinding;
 
   /**

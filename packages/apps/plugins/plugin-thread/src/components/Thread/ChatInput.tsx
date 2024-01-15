@@ -15,12 +15,13 @@ import { tagExtension } from './extension';
 export type ChatInputProps = {
   className?: string;
   placeholder?: string;
+  isLoading?: boolean;
   onFocus?: () => void;
   onMessage: (text: string) => boolean | void;
 };
 
 export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
-  ({ className = 'rounded shadow p-2', placeholder, onFocus, onMessage }, ref) => {
+  ({ className = 'rounded shadow p-2', placeholder, isLoading, onFocus, onMessage }, ref) => {
     const [text] = useState(new TextObject());
     const model = useTextModel({ text });
 
@@ -53,6 +54,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
       <div ref={ref} className={mx('flex w-full', inputSurface, className)} onKeyDownCapture={handleKeyDown}>
         <TextEditor
           model={model}
+          placeholder={placeholder}
           extensions={[
             tagExtension,
             listener({
@@ -67,15 +69,12 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
             root: {
               className: 'flex w-full items-center pl-2 overflow-x-hidden',
             },
-            editor: {
-              placeholder,
-            },
           }}
         />
 
         <div role='none' className='flex shrink-0 pr-1'>
           <Button variant='ghost' classNames='p-1' onClick={() => handleMessage()}>
-            <PaperPlaneRight className={getSize(5)} />
+            <PaperPlaneRight className={mx(getSize(5), isLoading && 'animate-pulse')} />
           </Button>
         </div>
       </div>
