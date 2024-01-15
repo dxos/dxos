@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { randomBytes } from 'crypto';
 import expect from 'expect';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
@@ -10,10 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
+import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost, AutomergeStorageAdapter } from './automerge-host';
-import { randomBytes } from 'crypto';
-import { arrayToBuffer, arrayToString, bufferToArray, stringToArray } from '@dxos/util';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
@@ -77,10 +77,10 @@ describe('AutomergeHost', () => {
   test('doubled connection', async () => {});
 
   describe('storage', () => {
-    test.only('load range on node', async () => {
+    test('load range on node', async () => {
       const root = `/tmp/${randomBytes(16).toString('hex')}`;
       {
-        const storage = createStorage({ type: StorageType.NODE, root: root });
+        const storage = createStorage({ type: StorageType.NODE, root });
         const adapter = new AutomergeStorageAdapter(storage.createDirectory());
 
         await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
@@ -89,7 +89,7 @@ describe('AutomergeHost', () => {
       }
 
       {
-        const storage = createStorage({ type: StorageType.NODE, root: root });
+        const storage = createStorage({ type: StorageType.NODE, root });
         const adapter = new AutomergeStorageAdapter(storage.createDirectory());
 
         const range = await adapter.loadRange(['test']);
