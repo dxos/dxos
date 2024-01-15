@@ -3,12 +3,7 @@
 //
 
 import { Event, asyncTimeout, synchronized } from '@dxos/async';
-import {
-  type DocumentId,
-  type DocHandle,
-  type DocHandleChangePayload,
-  HandleState,
-} from '@dxos/automerge/automerge-repo';
+import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
