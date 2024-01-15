@@ -6,7 +6,7 @@ import { Presentation } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
-import { isMarkdownContent } from '@braneframe/plugin-markdown';
+import { isMarkdown, isMarkdownContent } from '@braneframe/plugin-markdown';
 import { isStack } from '@braneframe/plugin-stack';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
@@ -14,6 +14,7 @@ import { PresenterMain, MarkdownSlideMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
 import { PresenterContext, type PresenterPluginProvides } from './types';
+import { type EditorModel } from '../../../../ui/react-ui-editor/src';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
@@ -21,6 +22,11 @@ import { PresenterContext, type PresenterPluginProvides } from './types';
 type PresenterState = {
   presenting: boolean;
 };
+
+const isLocalMarkdownContent = (data: unknown): data is { content: EditorModel } =>
+  !!data && typeof data === 'object' && (data as { [key: string]: any }).content && typeof data === 'object'
+    ? 'id' in data && typeof data.id === 'string' && typeof (data as { [key: string]: any }).content === 'string'
+    : false;
 
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
@@ -77,7 +83,9 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                 ? { node: <PresenterMain stack={data.active} />, disposition: 'hoist' }
                 : null;
             case 'slide':
-              return isMarkdownContent(data.slide) ? <MarkdownSlideMain slide={data.slide} /> : null;
+              return isLocalMarkdownContent(data.slide.content) ? (
+                <MarkdownSlideMain slide={data.slide.content} />
+              ) : null;
           }
 
           return null;
