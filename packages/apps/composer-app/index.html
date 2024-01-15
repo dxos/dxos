@@ -22,7 +22,7 @@
     </script>
     <script>
       // Load automerge settings.
-      if (localStorage.getItem('dxos.org/settings/automerge') === 'true') {
+      if (localStorage.getItem('dxos.org/settings/automerge') !== 'false') {
         DXOS_FORCE_AUTOMERGE = true;
       }
     </script>
