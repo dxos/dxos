@@ -10,7 +10,7 @@ import { type SequenceGenerator, type SequenceTest } from '../request';
 /**
  * @deprecated
  */
-// TODO(burdon): Remove.
+// TODO(burdon): Remove and replace with runtime chains (with tests); see presets.
 export const sequences: { id: string; test: SequenceTest; generator: SequenceGenerator }[] = [
   {
     id: 'chess',

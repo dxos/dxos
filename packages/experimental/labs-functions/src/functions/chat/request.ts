@@ -137,7 +137,7 @@ const createSequenceFromPrompt = async (
                 // TODO(burdon): Special case for getting schema fields for list preset.
                 // TODO(burdon): Proxied arrays don't pass Array.isArray.
                 // if (Array.isArray(result)) {
-                if (result?.length) {
+                if (typeof result !== 'string' && result?.length) {
                   return result
                     .slice(0, 3)
                     .map((prop: any) => prop?.id)

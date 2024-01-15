@@ -56,7 +56,7 @@ export const presets = [
             '',
             'The move history of the current game is: {history}',
             '',
-            'Suggest the next move and very briefly explain your strategy.',
+            'Suggest the next move and very briefly explain your strategy in a couple of sentences.',
           ),
         ),
         inputs: [
@@ -172,10 +172,19 @@ export const presets = [
         source: new TextObject(
           str(
             //
-            '',
+            'Summarize what the team is working on and format it as a markdown table without any explanation.',
+            '---',
+            '{context}',
           ),
         ),
-        inputs: [],
+        inputs: [
+          //
+          new ChainType.Input({
+            type: ChainType.Input.Type.RESOLVER,
+            name: 'context',
+            value: new TextObject('discord.message.recent'),
+          }),
+        ],
       }),
   },
 ];
