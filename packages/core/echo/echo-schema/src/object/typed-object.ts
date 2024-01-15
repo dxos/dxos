@@ -684,13 +684,17 @@ export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
  * @deprecated Temporary.
  */
 export const getGlobalAutomergePreference = () => {
-  return (
+  // TODO(burdon): Factor out.
+  const isSet = (value?: string) => value !== undefined && /^(true|1)$/i.test(value);
+
+  const value =
     globalAutomergePreference ??
-    // TODO(burdon): Change to DX_FORCE_AUTOMERGE.
+    // TODO(burdon): DX_ is the standard prefix.
     (globalThis as any).DXOS_FORCE_AUTOMERGE ??
-    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
-    false
-  );
+    isSet((globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE) ??
+    false;
+
+  return value;
 };
 
 /**
