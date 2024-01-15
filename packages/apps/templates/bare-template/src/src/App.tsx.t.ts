@@ -28,7 +28,8 @@ export default template.define
       const coreContent = plate`
       <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
         <${ClientProvider}
-          config={config}${dxosUi ? plate`
+          config={config}
+          createWorker{createWorker}${dxosUi ? plate`
           fallback={${GenericFallback}}` : ''}
           onInitialized={async (client) => {
             ${proto && plate`client.addSchema(${types});`}
@@ -60,6 +61,12 @@ export default template.define
         ${slots.extraImports}
         
         const config = () => new ${Config}(${Local}(), ${Defaults}());
+
+        const createWorker = () =>
+          new SharedWorker(new URL('./shared-worker', import.meta.url), {
+            type: 'module',
+            name: 'dxos-client-worker',
+          });
 
         export const App = () => {
           ${pwa && plate`const serviceWorker = ${useRegisterSW}();`}

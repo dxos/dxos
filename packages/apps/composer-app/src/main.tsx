@@ -133,6 +133,11 @@ const main = async () => {
         services,
         types,
         shell: './shell.html',
+        createWorker: () =>
+          new SharedWorker(new URL('@dxos/client/shared-worker', import.meta.url), {
+            type: 'module',
+            name: 'dxos-client-worker',
+          }),
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
