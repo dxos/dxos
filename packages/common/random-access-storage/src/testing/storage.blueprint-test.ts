@@ -319,16 +319,28 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('list returns correct filenames', async () => {
-      const storage = createStorage();
-      const directory = storage.createDirectory('dir');
       const FILES = ['one', 'two', 'three'];
 
-      for (const file of FILES) {
-        await directory.getOrCreateFile(file);
+      // Create storage and check.
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory('dir');
+
+        for (const file of FILES) {
+          directory.getOrCreateFile(file);
+        }
+        await directory.flush();
+        const entries = await directory.list();
+        expect(entries).to.contain.members(FILES);
       }
 
-      const entries = await directory.list();
-      expect(entries).to.deep.equal(FILES);
+      if (testGroupName !== 'ram') {
+        // Reload storage and check again.
+        const storage = createStorage();
+        const directory = storage.createDirectory('dir');
+        const entries = await directory.list();
+        expect(entries).to.contain.members(FILES);
+      }
     });
   });
 };
