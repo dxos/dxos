@@ -3,6 +3,7 @@
 //
 
 import { type Config } from '@dxos/config';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 export type AgentHostingProvider = {
@@ -24,11 +25,26 @@ const defaultConfig: AgentHostingProvider = {
   username: 'dxos',
 };
 
+export interface AgentHostingProviderClient {
+  createAgent(invitationCode: string, identityKey: string): Promise<string>;
+  getAgent(agentID: string): Promise<string | null>;
+  destroyAgent(agentID: string): Promise<boolean>;
+}
+
 // Interface to REST API to manage agent deployments
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
-export class AgentHostingProviderClient {
-  constructor(private readonly _clientConfig: Config, private readonly _config = defaultConfig) {
-    this._config.password = this._clientConfig.get('runtime.app.env.DX_ELDON_PASSWORD');
+export class EldonAgentHostingProviderClient implements AgentHostingProviderClient {
+  private readonly _config: AgentHostingProvider;
+  constructor(private readonly _clientConfig: Config) {
+    const runtimeAgentHostingConfig = this._clientConfig.get('runtime.services.agentHosting');
+    invariant(runtimeAgentHostingConfig, 'agentHosting config not found');
+    invariant(runtimeAgentHostingConfig.server, 'agentHosting server not found');
+    this._config = {
+      ...defaultConfig,
+      baseURL: runtimeAgentHostingConfig.server,
+      password: this._clientConfig.get('runtime.app.env.DX_ELDON_PASSWORD'),
+    };
+    log.info('EldonAgentHostingProviderClient initialized', { config: this._config });
   }
 
   public requestInitWithCredentials(req: RequestInit): RequestInit {
