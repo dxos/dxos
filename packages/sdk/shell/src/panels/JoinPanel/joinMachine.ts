@@ -397,7 +397,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space,
       }),
       log: (context, event) => {
-        log.info('[transition]', {
+        log('[transition]', {
           event,
           haloInvitation: context.halo.invitation,
           spaceInvitation: context.space.invitation,
