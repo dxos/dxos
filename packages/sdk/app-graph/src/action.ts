@@ -15,6 +15,18 @@ export type InvokeParams = Partial<{
 }>;
 
 /**
+ * Platform-specific key binding.
+ */
+// NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
+export type KeyBinding = {
+  windows?: string;
+  macos?: string;
+  ios?: string;
+  linux?: string;
+  unknown?: string;
+};
+
+/**
  * An action on a node in the graph which may be invoked by sending the associated intent.
  */
 export type Action<TProperties extends Record<string, any> = Record<string, any>> = {
@@ -39,10 +51,10 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
 
   /**
    * Key binding.
-   * NOTE: Alphanumeric characters should be declared in lowercase.
    */
+  // TODO(wittjosiah): Factor out.
   // TODO(burdon): Rename shortcut.
-  keyBinding?: string;
+  keyBinding?: string | KeyBinding;
 
   /**
    * Properties of the node relevant to displaying the action.
