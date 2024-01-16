@@ -21,7 +21,7 @@ export type ThreadChannelProps = {
   onFocus?: () => void;
   onCreate?: ChatInputProps['onMessage'];
   onDelete?: (blockId: string, idx: number) => void;
-};
+} & Pick<ChatInputProps, 'processing'>;
 
 export const ThreadChannel = ({
   thread,
@@ -31,6 +31,7 @@ export const ThreadChannel = ({
   onFocus,
   onCreate,
   onDelete,
+  ...props
 }: ThreadChannelProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -44,8 +45,6 @@ export const ThreadChannel = ({
       return true;
     }
   };
-
-  // TODO(burdon): Autofocus.
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
@@ -70,7 +69,7 @@ export const ThreadChannel = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <ChatInput placeholder={t('message placeholder')} onFocus={onFocus} onMessage={handleSubmit} />
+          <ChatInput placeholder={t('message placeholder')} onFocus={onFocus} onMessage={handleSubmit} {...props} />
         </div>
       )}
     </div>

@@ -7,12 +7,12 @@ import { effect } from '@preact/signals-react';
 import React, { type RefObject } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { isEditorModel, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { Folder, type Document } from '@braneframe/types';
 import { type PluginDefinition } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
-import { type TextEditorRef } from '@dxos/react-ui-editor';
+import { type EditorView } from '@dxos/react-ui-editor';
 
 import {
   EmbeddedMain,
@@ -90,7 +90,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 case 'dxos.org/plugin/github/BindDialog':
                   return isMarkdownProperties(data.properties) ? <UrlDialog properties={data.properties} /> : null;
                 case 'dxos.org/plugin/github/ExportDialog':
-                  return isMarkdown(data.model) ? (
+                  return isEditorModel(data.model) ? (
                     <ExportDialog
                       model={data.model}
                       type={data.type as ExportViewState}
@@ -102,18 +102,18 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return (
                     <ImportDialog
                       docGhId={data.docGhId as GhIdentifier}
-                      editorRef={data.editorRef as RefObject<TextEditorRef>}
+                      editorRef={data.editorRef as RefObject<EditorView>}
                     />
                   );
                 default:
                   return null;
               }
             case 'menuitem':
-              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
+              return isEditorModel(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
                 <MarkdownActions
                   model={data.model}
                   properties={data.properties}
-                  editorRef={data.editorRef as RefObject<TextEditorRef>}
+                  editorRef={data.editorRef as RefObject<EditorView>}
                 />
               ) : null;
             case 'settings':

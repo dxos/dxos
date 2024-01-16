@@ -86,17 +86,26 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
-        <AlertDialog.Content classNames='w-[20rem]'>
+        <AlertDialog.Content classNames='w-[30rem]' data-testid='resetDialog'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
             <>
-              <button className='flex items-center' onClick={() => setShowStack((showStack) => !showStack)}>
+              <button
+                className='flex items-center'
+                onClick={() => setShowStack((showStack) => !showStack)}
+                data-testid='resetDialog.showStackTrace'
+              >
                 <Caret />
                 <span className='mis-2'>{t('show stack label')}</span>
               </button>
               {showStack && (
-                <Message.Root key={error.message} valence='error' className='mlb-4 overflow-auto max-bs-72'>
+                <Message.Root
+                  key={error.message}
+                  valence='error'
+                  className='mlb-4 overflow-auto max-bs-72'
+                  data-testid='resetDialog.stackTrace'
+                >
                   <pre className='text-xs'>{error.stack}</pre>
                 </Message.Root>
               )}

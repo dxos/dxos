@@ -16,10 +16,11 @@ import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
   fullscreen?: boolean;
+  showHintsFooter?: boolean;
   showComplementarySidebar?: boolean;
 };
 
-export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: MainLayoutProps) => {
+export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySidebar }: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
@@ -82,11 +83,9 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
                   <MenuIcon weight='light' className={getSize(4)} />
                 </Button>
 
-                <Surface role='navbar-start' limit={1} />
+                <Surface role='navbar-start' />
                 <div role='none' className='grow' />
-
-                {/* TODO(burdon): Too specific? status? contentinfo? */}
-                <Surface role='presence' limit={1} />
+                <Surface role='navbar-end' direction='inline-reverse' />
 
                 {complementarySidebarOpen !== null && showComplementarySidebar && (
                   <Button
@@ -120,9 +119,11 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
 
         {/* Help hints. */}
         {/* TODO(burdon): Make surface roles/names fully-qualified. */}
-        <div className='fixed bottom-0 left-0 right-0 z-[1] flex justify-center __pointer-events-none'>
-          <Surface role='hints' limit={1} />
-        </div>
+        {showHintsFooter && (
+          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
+            <Surface role='hints' limit={1} />
+          </div>
+        )}
 
         {/* Global popovers. */}
         <Popover.Portal>

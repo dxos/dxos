@@ -9,6 +9,7 @@ export * from './basic';
 export * from './blast';
 export * from './code';
 export * from './comments';
+export * from './cursor';
 export * from './hr';
 export * from './image';
 export * from './link';

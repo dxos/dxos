@@ -12,6 +12,7 @@ import {
 } from '@dxos/app-framework';
 
 export type LayoutSettingsProps = {
+  showFooter: boolean;
   enableComplementarySidebar: boolean;
 };
 

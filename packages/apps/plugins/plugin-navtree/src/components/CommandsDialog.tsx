@@ -10,6 +10,7 @@ import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { getHostPlatform } from '@dxos/util';
 
 import { NAVTREE_PLUGIN } from '../meta';
 
@@ -65,6 +66,8 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
         <SearchList.Content classNames={['max-bs-[30rem] overflow-auto']}>
           {actions?.map((action) => {
             const label = toString(action.label);
+            const shortcut =
+              typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
             const Icon = action.icon ?? DotOutline;
             return (
               <SearchList.Item
@@ -92,9 +95,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
               >
                 <Icon className={mx(getSize(4), 'shrink-0', !action.icon && 'invisible')} />
                 <span className='grow truncate'>{label}</span>
-                {action.keyBinding && (
-                  <span className={mx('shrink-0', descriptionText)}>{keySymbols(action.keyBinding).join('')}</span>
-                )}
+                {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
               </SearchList.Item>
             );
           })}

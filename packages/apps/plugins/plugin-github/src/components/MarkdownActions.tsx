@@ -9,7 +9,7 @@ import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
-import { type EditorModel, type TextEditorRef } from '@dxos/react-ui-editor';
+import { type EditorModel, type EditorView } from '@dxos/react-ui-editor';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './GithubApiProviders';
@@ -25,7 +25,7 @@ export const MarkdownActions = ({
 }: {
   model: EditorModel;
   properties: MarkdownProperties;
-  editorRef: RefObject<TextEditorRef>;
+  editorRef: RefObject<EditorView>;
 }) => {
   // TODO(burdon): Ad hoc assumption that underlying object is ECHO?
   const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;

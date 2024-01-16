@@ -71,7 +71,8 @@ export const ClientPlugin = ({
   // TODO(burdon): Document.
   registerSignalFactory();
 
-  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings');
+  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
+
   let client: Client;
 
   return {
@@ -81,7 +82,6 @@ export const ClientPlugin = ({
       let firstRun = false;
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
-
       let oldClient: Client = null as any;
 
       if (ENABLE_VAULT_MIGRATION) {
@@ -90,7 +90,7 @@ export const ClientPlugin = ({
             runtime: {
               client: {
                 remoteSource:
-                  location.host === 'composer.dev.dxos.org'
+                  location.host === 'composer.staging.dxos.org'
                     ? 'https://halo.staging.dxos.org/vault.html'
                     : location.host === 'composer.dev.dxos.org'
                     ? 'https://halo.dev.dxos.org/vault.html'
@@ -101,6 +101,7 @@ export const ClientPlugin = ({
           await Envs(),
           Defaults(),
         );
+
         oldClient = new Client({
           config: oldConfig,
           services: fromIFrame(oldConfig, { shell: false }),
@@ -163,17 +164,17 @@ export const ClientPlugin = ({
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
+
+        if (client.halo.identity.get()) {
+          await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+          // TODO(wittjosiah): This doesn't work currently.
+          //   There's no guaruntee that the default space will be fully synced by the time this is called.
+          // firstRun = !client.spaces.default.properties[appKey];
+          client.spaces.default.properties[appKey] = true;
+        }
       } catch (err) {
         log.catch(err);
         error = err;
-      }
-
-      if (client.halo.identity.get()) {
-        await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-        // TODO(wittjosiah): This doesn't work currently.
-        //   There's no guaruntee that the default space will be fully synced by the time this is called.
-        // firstRun = !client.spaces.default.properties[appKey];
-        client.spaces.default.properties[appKey] = true;
       }
 
       return {

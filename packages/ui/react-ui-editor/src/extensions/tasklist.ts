@@ -29,11 +29,11 @@ class CheckboxWidget extends WidgetType {
     super();
   }
 
-  override eq(other: CheckboxWidget) {
+  override eq(other: this) {
     return this._checked === other._checked && this._indent === other._indent;
   }
 
-  toDOM(view: EditorView) {
+  override toDOM(view: EditorView) {
     const wrap = document.createElement('span');
     wrap.className = 'cm-task-item';
     wrap.setAttribute('aria-hidden', 'true');

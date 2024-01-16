@@ -12,7 +12,7 @@ import React, {
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { Main, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type TextEditorRef, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
+import { type TextEditorProps, type EditorView, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
 import {
   baseSurface,
   focusRing,
@@ -27,15 +27,15 @@ import { MARKDOWN_PLUGIN } from '../meta';
 
 // TODO(burdon): Don't export ref.
 export type EditorMainProps = {
-  editorRefCb?: RefCallback<TextEditorRef>;
+  editorRefCb?: RefCallback<EditorView>;
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
 
 export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   // TODO(burdon): Reconcile refs.
-  const editorRef = useRef<TextEditorRef>();
-  const setEditorRef: RefCallback<TextEditorRef> = (ref) => {
+  const editorRef = useRef<EditorView>();
+  const setEditorRef: RefCallback<EditorView> = (ref) => {
     editorRef.current = ref as any;
     editorRefCb?.(ref);
   };
@@ -44,7 +44,7 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const { object } = data;
-        setFocus(editorRef.current!.view!, object);
+        setFocus(editorRef.current!, object);
       }
     }
   });
@@ -53,34 +53,31 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
     <MarkdownEditor
       {...props}
       ref={setEditorRef}
+      placeholder={t('editor placeholder')}
+      theme={{
+        '&, & .cm-scroller': {
+          display: 'flex',
+          flexDirection: 'column',
+          flex: '1 0 auto',
+          inlineSize: '100%',
+        },
+        '& .cm-content': {
+          flex: '1 0 auto',
+          inlineSize: '100%',
+          paddingBlock: '1rem',
+        },
+      }}
       slots={{
         root: {
-          role: 'none',
           className: mx(
-            focusRing,
-            inputSurface,
-            surfaceElevation({ elevation: 'group' }),
             'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
+            inputSurface,
+            focusRing,
+            surfaceElevation({ elevation: 'group' }),
             'rounded',
           ),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
-        editor: {
-          placeholder: t('editor placeholder'),
-          theme: {
-            '&, & .cm-scroller': {
-              display: 'flex',
-              flexDirection: 'column',
-              flex: '1 0 auto',
-              inlineSize: '100%',
-            },
-            '& .cm-content': {
-              flex: '1 0 auto',
-              inlineSize: '100%',
-              paddingBlock: '1rem',
-            },
-          },
-        },
       }}
     />
   );
@@ -89,7 +86,7 @@ export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
 // TODO(burdon): Factor out layout wrappers to be reusable across plugins.
 
 // TODO(wittjosiah): Remove ref.
-export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<TextEditorRef> }>) => {
+export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<EditorView> }>) => {
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
