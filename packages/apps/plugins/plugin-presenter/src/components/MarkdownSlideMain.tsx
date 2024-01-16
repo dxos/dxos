@@ -11,7 +11,8 @@ import { Container, Slide } from './Markdown';
 export const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
   return (
     <Container>
-      <Slide content={document.content.text} />;
+      {/* TODO: content is a YText object, but should be a string. Update after automerge migration. */}
+      <Slide content={document.content.content as any} />;
     </Container>
   );
 };
