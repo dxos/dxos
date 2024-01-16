@@ -132,8 +132,7 @@ const main = async () => {
         config,
         services,
         types,
-        // TODO(wittjosiah): Currently shell is not working when running in socket.
-        shell: isSocket ? undefined : './shell.html',
+        shell: './shell.html',
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),

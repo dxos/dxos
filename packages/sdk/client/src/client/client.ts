@@ -346,13 +346,20 @@ export class Client {
     await this._iframeManager?.open();
     await this._shellManager?.open();
     if (this._iframeManager?.iframe) {
+      // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
+      //   https://github.com/socketsupply/socket/issues/893
+      const origin =
+        this._iframeManager.source.origin === 'null'
+          ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
+          : this._iframeManager.source.origin;
+
       this._shellClientProxy = createProtoRpcPeer({
         exposed: clientServiceBundle,
         handlers: this._services.services as ClientServices,
         port: createIFramePort({
           channel: DEFAULT_CLIENT_CHANNEL,
           iframe: this._iframeManager.iframe,
-          origin: this._iframeManager.source.origin,
+          origin,
         }),
       });
 
