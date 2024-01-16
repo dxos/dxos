@@ -18,12 +18,12 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
+import { getGlobalAutomergePreference } from '@dxos/client/echo';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import * as Telemetry from '@dxos/telemetry';
 
-import { getGlobalAutomergePreference } from '@dxos/client/echo';
-import { log } from '@dxos/log';
 import { BaseCommand } from '../../base-command';
 
 export default class Start extends BaseCommand<typeof Start> {

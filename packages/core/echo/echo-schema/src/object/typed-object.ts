@@ -26,9 +26,9 @@ import {
   debug,
 } from './types';
 import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
-import { getGlobalAutomergePreference } from '../automerge-preference';
 
 const isValidKey = (key: string | symbol) => {
   return !(

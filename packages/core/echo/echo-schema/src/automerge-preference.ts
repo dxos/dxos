@@ -5,6 +5,10 @@
 /**
  * When no env or global overrides are set, this is the default.
  */
+//
+// Copyright 2024 DXOS.org
+//
+
 const DEFAULT_AUTOMERGE_PREFERENCE = true;
 
 // TODO(dmaretskyi): Remove once migration is complete.
