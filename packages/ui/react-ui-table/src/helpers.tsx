@@ -296,7 +296,6 @@ export class ColumnBuilder<TData extends RowData> {
         ? StringBuilderCell
         : (cell) => {
             let value = cell.getValue();
-            console.log('>>>>1', value);
             // TODO(burdon): Hack to support automerge.
             if (typeof value === 'object' && (value as any)?.__typename === 'dxos.Text.v0') {
               value = (value as any).content;
