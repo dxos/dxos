@@ -15,15 +15,9 @@ import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import {
-  type EchoObject,
-  base,
-  getGlobalAutomergePreference,
-  isActualTypedObject,
-  isAutomergeObject,
-  TextObject,
-} from '../object';
+import { type EchoObject, base, isActualTypedObject, isAutomergeObject, TextObject } from '../object';
 import { type Schema } from '../proto';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 export type SpaceState = {
   // Url of the root automerge document.

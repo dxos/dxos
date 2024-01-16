@@ -9,9 +9,10 @@ import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
-import { Expando, getGlobalAutomergePreference, proxy, TypedObject } from './object';
+import { Expando, proxy, TypedObject } from './object';
 import { Schema } from './proto';
 import { TestBuilder, createDatabase, testWithAutomerge } from './testing';
+import { getGlobalAutomergePreference } from './automerge-preference';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 

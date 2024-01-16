@@ -22,5 +22,6 @@ export * from './serializer';
 export { TypeCollection } from './type-collection';
 export * from './util';
 export * from './automerge';
+export { getGlobalAutomergePreference } from './automerge-preference';
 
 linkDeferred();

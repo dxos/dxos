@@ -7,10 +7,10 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
-import { Expando, TypedObject, getGlobalAutomergePreference } from './typed-object';
+import { Expando, TypedObject } from './typed-object';
 import { AutomergeArray } from '../automerge';
 import { createDatabase, testWithAutomerge } from '../testing';
-
+import { getGlobalAutomergePreference } from '../automerge-preference';
 describe('Arrays', () => {
   testWithAutomerge(() => {
     const ArrayConstructor = getGlobalAutomergePreference() ? AutomergeArray : EchoArray;

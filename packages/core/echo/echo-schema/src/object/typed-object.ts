@@ -28,6 +28,7 @@ import {
 import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 const isValidKey = (key: string | symbol) => {
   return !(
@@ -668,33 +669,6 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
-};
-
-// TODO(dmaretskyi): Remove once migration is complete.
-let globalAutomergePreference: boolean | undefined;
-
-/**
- * @deprecated Temporary.
- */
-export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
-  globalAutomergePreference = useAutomerge;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const getGlobalAutomergePreference = () => {
-  // TODO(burdon): Factor out.
-  const isSet = (value?: string) => value !== undefined && /^(true|1)$/i.test(value);
-
-  const value =
-    globalAutomergePreference ??
-    // TODO(burdon): DX_ is the standard prefix.
-    (globalThis as any).DXOS_FORCE_AUTOMERGE ??
-    isSet((globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE) ??
-    false;
-
-  return value;
 };
 
 /**
