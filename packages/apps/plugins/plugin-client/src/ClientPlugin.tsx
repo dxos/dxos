@@ -81,7 +81,7 @@ export const ClientPlugin = ({
   // TODO(burdon): Document.
   registerSignalFactory();
 
-  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
+  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: false });
 
   let client: Client;
 
