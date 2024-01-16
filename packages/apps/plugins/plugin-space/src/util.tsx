@@ -24,16 +24,16 @@ import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { clone } from '@dxos/echo-schema';
+import { clone, isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import {
   EchoDatabase,
   type Space,
-  SpaceState,
-  TypedObject,
-  getSpaceForObject,
   SpaceProxy,
+  SpaceState,
+  type TypedObject,
+  getSpaceForObject,
 } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
@@ -367,13 +367,16 @@ export const objectToGraphNode = ({
   });
 };
 
+/**
+ * @deprecated
+ */
 export const getActiveSpace = (graph: Graph, active?: string) => {
   if (!active) {
     return;
   }
 
   const node = graph.findNode(active);
-  if (!node || !(node.data instanceof TypedObject)) {
+  if (!node || !isTypedObject(node.data)) {
     return;
   }
 

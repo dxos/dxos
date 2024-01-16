@@ -48,6 +48,20 @@ const isValidKey = (key: string | symbol) => {
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
 
+/**
+ * @deprecated Temporary.
+ */
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
+};
+
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
 };
@@ -684,25 +698,15 @@ export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
  * @deprecated Temporary.
  */
 export const getGlobalAutomergePreference = () => {
-  return (
+  // TODO(burdon): Factor out.
+  const isSet = (value?: string) => value !== undefined && /^(true|1)$/i.test(value);
+
+  const value =
     globalAutomergePreference ??
-    // TODO(burdon): Change to DX_FORCE_AUTOMERGE.
+    // TODO(burdon): DX_ is the standard prefix.
     (globalThis as any).DXOS_FORCE_AUTOMERGE ??
-    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
-    false
-  );
-};
+    isSet((globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE) ??
+    false;
 
-/**
- * @deprecated Temporary.
- */
-export const isActualTypedObject = (object: unknown): object is TypedObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
+  return value;
 };

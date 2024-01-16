@@ -6,23 +6,27 @@ import React, { type FC, useEffect, useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 import type { PublicKey } from '@dxos/keys';
+import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { fixedBorder, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { ChatInput, type ChatInputProps } from './ChatInput';
 import { type BlockProperties, MessageCard } from './MessageCard';
+import { useStatus } from '../../hooks';
 import { THREAD_PLUGIN } from '../../meta';
 
 // TODO(burdon): Replace with ThreadChannel.
 export const CommentThread: FC<{
+  space: Space;
   thread: ThreadType;
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
   onFocus?: () => void;
   onCreate?: ChatInputProps['onMessage'];
   onDelete?: (messageId: string, idx: number) => void;
-}> = ({ thread, identityKey, propertiesProvider, onFocus, onCreate, onDelete }) => {
+}> = ({ space, thread, identityKey, propertiesProvider, onFocus, onCreate, onDelete }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
+  const processing = useStatus(space, thread.id);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // TODO(burdon): Check not already scrolling.
@@ -51,6 +55,7 @@ export const CommentThread: FC<{
           ref={ref}
           className='pl-1 py-2'
           placeholder={t('comment placeholder')}
+          processing={processing}
           onFocus={onFocus}
           onMessage={onCreate}
         />

@@ -15,6 +15,7 @@ export default [
         'command placeholder': 'Enter slash command...',
         'template placeholder': 'Enter template...',
         'value placeholder': 'Enter value...',
+        'select preset template placeholder': 'Select preset',
       },
     },
   },
