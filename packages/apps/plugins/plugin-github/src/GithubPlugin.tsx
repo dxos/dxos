@@ -7,7 +7,7 @@ import { effect } from '@preact/signals-react';
 import React, { type RefObject } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { isEditorModel, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { Folder, type Document } from '@braneframe/types';
 import { type PluginDefinition } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -90,7 +90,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 case 'dxos.org/plugin/github/BindDialog':
                   return isMarkdownProperties(data.properties) ? <UrlDialog properties={data.properties} /> : null;
                 case 'dxos.org/plugin/github/ExportDialog':
-                  return isMarkdown(data.model) ? (
+                  return isEditorModel(data.model) ? (
                     <ExportDialog
                       model={data.model}
                       type={data.type as ExportViewState}
@@ -109,7 +109,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return null;
               }
             case 'menuitem':
-              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
+              return isEditorModel(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
                 <MarkdownActions
                   model={data.model}
                   properties={data.properties}
