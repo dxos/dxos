@@ -150,7 +150,7 @@ export const getExtensions = ({
   }
 
   if (debug) {
-    const items = localStorage.getItem('dxos.composer.extension.demo');
+    const items = localStorage.getItem('dxos.composer.extension.typewriter');
     extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
   }
 
