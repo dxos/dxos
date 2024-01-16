@@ -143,6 +143,8 @@ export class AutomergeDb {
         }
       }
     } else {
+      console.log('>>> DXOS_FORCE_AUTOMERGE', (window as any).DXOS_FORCE_AUTOMERGE);
+      console.log('>>> getGlobalAutomergePreference', getGlobalAutomergePreference());
       await asyncTimeout(
         this._docHandle.whenReady(['ready']),
         1_000,

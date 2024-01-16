@@ -35,8 +35,10 @@
     </script>
     <script>
       // Load automerge settings.
+      console.log('>>> Composer load automerge settings')
       if (localStorage.getItem('dxos.org/settings/automerge') === 'true') {
-        DXOS_FORCE_AUTOMERGE = true;
+        console.log('>>> Set DXOS_FORCE_AUTOMERGE true')
+        window.DXOS_FORCE_AUTOMERGE = true;
       }
     </script>
     <style>
