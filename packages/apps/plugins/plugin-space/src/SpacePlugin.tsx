@@ -305,7 +305,7 @@ export const SpacePlugin = ({
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
 
-          if (!dispatch || !resolve || !client) {
+          if (!dispatch || !resolve || !client || !client.spaces.isReady.get()) {
             return;
           }
 

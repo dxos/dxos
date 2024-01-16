@@ -20,7 +20,10 @@ import {
   type IntentPluginProvides,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
+import { createStorageObjects } from '@dxos/client-services';
+import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { type Client } from '@dxos/react-client';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
@@ -32,7 +35,6 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN);
-
   let intentPlugin: Plugin<IntentPluginProvides>;
 
   return {
@@ -41,6 +43,16 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       settings
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
         .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
+
+      // Used to test how composer handles breaking protocol changes.
+      (window as any).changeStorageVersionInMetadata = async (version: number) => {
+        const client: Client = (window as any).dxos.client;
+        const config = client.config;
+        await client.destroy();
+        const { storage } = createStorageObjects(config.values?.runtime?.client?.storage ?? {});
+        await changeStorageVersionInMetadata(storage, version);
+        location.reload();
+      };
     },
     unload: async () => {
       settings.close();

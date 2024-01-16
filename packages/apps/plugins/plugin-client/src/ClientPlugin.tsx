@@ -174,17 +174,17 @@ export const ClientPlugin = ({
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
+
+        if (client.halo.identity.get()) {
+          await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+          // TODO(wittjosiah): This doesn't work currently.
+          //   There's no guaruntee that the default space will be fully synced by the time this is called.
+          // firstRun = !client.spaces.default.properties[appKey];
+          client.spaces.default.properties[appKey] = true;
+        }
       } catch (err) {
         log.catch(err);
         error = err;
-      }
-
-      if (client.halo.identity.get()) {
-        await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-        // TODO(wittjosiah): This doesn't work currently.
-        //   There's no guaruntee that the default space will be fully synced by the time this is called.
-        // firstRun = !client.spaces.default.properties[appKey];
-        client.spaces.default.properties[appKey] = true;
       }
 
       return {
