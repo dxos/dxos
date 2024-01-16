@@ -3,7 +3,7 @@
 //
 
 import differenceInSeconds from 'date-fns/differenceInSeconds';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
@@ -12,6 +12,7 @@ import { type SpaceMember, type Space, useMembers } from '@dxos/react-client/ech
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 
 import { type BlockProperties, ThreadChannel } from './Thread';
+import { useStatus } from '../hooks';
 
 // TODO(burdon): Goals.
 // - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
@@ -62,6 +63,7 @@ export type ThreadContainerProps = {
 export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
+  const processing = useStatus(space, thread.id);
 
   // TODO(burdon): Change to model.
   const handleCreate = (text: string) => {
@@ -103,29 +105,6 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
       }
     }
   };
-
-  const [processing, setProcessing] = useState(false);
-  useEffect(() => {
-    const unsubscribe = space.listen(`status/${thread.id}`, (status) => {
-      const { event } = status.payload ?? {};
-      setProcessing(event === 'processing');
-    });
-
-    const t = setInterval(() => {
-      setProcessing((prev: any) => {
-        if (typeof prev?.ts === 'number' && Date.now() - prev.ts > 30_000) {
-          return undefined;
-        } else {
-          return prev;
-        }
-      });
-    }, 1_000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(t);
-    };
-  }, [space]);
 
   return (
     <ThreadChannel
