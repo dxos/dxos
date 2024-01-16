@@ -5,3 +5,4 @@
 export * from './DeviceManager';
 export * from './IdentityActionChooser';
 export * from './ProfileForm';
+export * from './SignOutChooser';

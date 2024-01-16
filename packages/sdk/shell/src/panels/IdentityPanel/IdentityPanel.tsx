@@ -17,7 +17,7 @@ import {
   type IdentityPanelProps,
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { DeviceManager, IdentityActionChooser, ProfileForm } from './steps';
+import { DeviceManager, IdentityActionChooser, ProfileForm, SignOutChooser } from './steps';
 import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 
@@ -45,6 +45,8 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     titleId,
     activeView,
     onUpdateProfile,
+    onResetDevice,
+    onJoinNewIdentity,
     IdentityActionChooser: IdentityActionChooserComponent = IdentityActionChooser,
     InvitationManager: InvitationManagerComponent = InvitationManager,
     onDone,
@@ -61,7 +63,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
         return t('identity heading');
     }
   }, [activeView, t]);
-  console.log('[IdentityPanelImpl]', { activeView });
+
   return (
     <DensityProvider density='fine'>
       <IdentityHeading {...{ identity, titleId, title, onDone }} />
@@ -88,7 +90,14 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               onUpdateProfile={onUpdateProfile}
             />
           </Viewport.View>
-          {/* <Viewport.View id='signing out'></Viewport.View> */}
+          <Viewport.View classNames={viewStyles} id='signing out'>
+            <SignOutChooser
+              send={rest.send}
+              active={activeView === 'signing out'}
+              onResetDevice={onResetDevice}
+              onJoinNewIdentity={onJoinNewIdentity}
+            />
+          </Viewport.View>
         </Viewport.Views>
       </Viewport.Root>
     </DensityProvider>
@@ -136,14 +145,12 @@ export const IdentityPanel = ({
         return 'device manager';
       case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
         return 'update profile form';
-      // case identityState.matches('signingOut'):
-      //   return 'identity exit';
+      case identityState.matches('signingOut'):
+        return 'signing out';
       default:
         return 'identity action chooser';
     }
   }, [identityState]);
-
-  console.log({ activeView, identityState });
 
   const onUpdateProfile = async (profile: NonNullable<Identity['profile']>) => {
     identitySend({ type: 'updateProfile' });

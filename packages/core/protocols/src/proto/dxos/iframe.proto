@@ -34,6 +34,11 @@ message AppContextRequest {
 
   /// The key of the joined space
   optional dxos.keys.PublicKey space_key = 2;
+
+  /// Reload the app.
+  /// Shell cannot reload the app from within an iframe.
+  /// Used after sign out/identity reset.
+  optional bool reload = 3;
 }
 
 /// App RPCs for the shell.

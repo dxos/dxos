@@ -63,7 +63,11 @@ export class ShellManager {
     const iframe = this._iframeManager.iframe;
     iframe!.setAttribute('style', shellStyles);
     iframe!.setAttribute('data-testid', 'dxos-shell');
-    this.contextUpdate.on(({ display, spaceKey }) => {
+    this.contextUpdate.on(({ display, reload }) => {
+      if (reload) {
+        window.location.reload();
+      }
+
       iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
       if (display === ShellDisplay.NONE) {
         iframe!.blur();
