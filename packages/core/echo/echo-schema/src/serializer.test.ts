@@ -7,18 +7,12 @@ import { expect } from 'chai';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { afterTest, describe, test } from '@dxos/test';
 
-import {
-  LEGACY_TEXT_TYPE,
-  TextObject,
-  TypedObject,
-  isAutomergeObject,
-  isActualTypedObject,
-  setGlobalAutomergePreference,
-} from './object';
+import { LEGACY_TEXT_TYPE, TextObject, TypedObject, isAutomergeObject, isActualTypedObject } from './object';
 import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase, testWithAutomerge } from './testing';
 import { Contact } from './tests/proto';
+import { setGlobalAutomergePreference } from './automerge-preference';
 
 describe('Serializer', () => {
   testWithAutomerge(() => {

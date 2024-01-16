@@ -7,9 +7,10 @@ import { expect } from 'chai';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { AutomergeObject } from './automerge-object';
-import { Expando, TypedObject, base, setGlobalAutomergePreference } from '../object';
+import { Expando, TypedObject, base } from '../object';
 import { TestBuilder } from '../testing';
 import { Contact, Task } from '../tests/proto';
+import { setGlobalAutomergePreference } from '../automerge-preference';
 
 describe('AutomergeObject', () => {
   test('objects become automerge objects when global flag is set', () => {

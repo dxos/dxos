@@ -18,7 +18,7 @@ import { ComplexMap } from '@dxos/util';
 import { AutomergeContext } from '../automerge';
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { setGlobalAutomergePreference } from '../object';
+import { setGlobalAutomergePreference } from '../automerge-preference';
 import { schemaBuiltin } from '../proto';
 
 /**
