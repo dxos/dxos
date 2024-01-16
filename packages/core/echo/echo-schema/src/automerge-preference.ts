@@ -2,6 +2,11 @@
 //
 //
 
+/**
+ * When no env or global overrides are set, this is the default.
+ */
+const DEFAULT_AUTOMERGE_PREFERENCE = true;
+
 // TODO(dmaretskyi): Remove once migration is complete.
 let globalAutomergePreference: boolean | undefined;
 
@@ -24,7 +29,7 @@ export const getGlobalAutomergePreference = () => {
     // TODO(burdon): DX_ is the standard prefix.
     (globalThis as any).DXOS_FORCE_AUTOMERGE ??
     isSet((globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE) ??
-    false;
+    DEFAULT_AUTOMERGE_PREFERENCE;
 
   return value;
 };

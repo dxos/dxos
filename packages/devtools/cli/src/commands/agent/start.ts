@@ -22,6 +22,8 @@ import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
+import { getGlobalAutomergePreference } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { BaseCommand } from '../../base-command';
 
 export default class Start extends BaseCommand<typeof Start> {
@@ -73,6 +75,8 @@ export default class Start extends BaseCommand<typeof Start> {
       const { path } = parseAddress(socket);
       rmSync(path, { force: true });
     }
+
+    log.info('agent automerge preference', { automerge: getGlobalAutomergePreference() });
 
     const agent = new Agent({
       config: this.clientConfig,
