@@ -14,7 +14,7 @@ import { PresenterMain, MarkdownSlideMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
 import { PresenterContext, type PresenterPluginProvides } from './types';
-import { type EditorModel } from '../../../../ui/react-ui-editor/src';
+import { type EditorModel } from '@dxos/react-ui-editor';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
