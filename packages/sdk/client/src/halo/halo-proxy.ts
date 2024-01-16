@@ -29,6 +29,7 @@ import {
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { InvitationsProxy } from '../invitations';
+import { getGlobalAutomergePreference } from '@dxos/echo-schema';
 
 export class HaloProxy implements Halo {
   private readonly _instanceId = PublicKey.random().toHex();
@@ -173,7 +174,10 @@ export class HaloProxy implements Halo {
    */
   async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
+    const identity = await this._serviceProvider.services.IdentityService.createIdentity({
+      profile,
+      useAutomerge: getGlobalAutomergePreference(),
+    });
     this._identityChanged.emit(identity);
     return identity;
   }
