@@ -54,6 +54,7 @@ export const CommentsSidebar: FC<{
           {threads?.map((thread) => (
             <CommentThread
               key={thread.id}
+              space={space}
               identityKey={identity.identityKey}
               propertiesProvider={messagePropertiesProvider(identity, members)}
               thread={thread}

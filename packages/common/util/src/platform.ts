@@ -28,3 +28,29 @@ export const iosCheck = () => {
 // From https://stackoverflow.com/a/23522755/2804332
 export const safariCheck = () =>
   typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+/**
+ * Retrieve the host platform in a best-effort way with normalized output.
+ */
+// From https://flaming.codes/posts/how-to-determine-os-in-browser.
+export const getHostPlatform = () => {
+  if (!('navigator' in window)) {
+    return 'unknown';
+  }
+
+  // Use the modern 'web hints' provied by
+  // 'userAgentData' if available, else use
+  // the deprecated 'platform' as fallback.
+  const platform = ((navigator as any).userAgentData?.platform || navigator.platform)?.toLowerCase();
+  if (platform.startsWith('win')) {
+    return 'windows';
+  } else if (platform.startsWith('mac')) {
+    return 'macos';
+  } else if (platform.startsWith('ipad') || platform.startsWith('iphone') || platform.startsWith('ipod')) {
+    return 'ios';
+  } else if (platform.startsWith('linux')) {
+    return 'linux';
+  } else {
+    return 'unknown';
+  }
+};

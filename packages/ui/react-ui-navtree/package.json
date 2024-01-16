@@ -21,7 +21,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*"
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.0.5",
