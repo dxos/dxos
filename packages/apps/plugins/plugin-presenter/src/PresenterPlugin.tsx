@@ -6,7 +6,7 @@ import { Presentation } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
-import { isMarkdownContent } from '@braneframe/plugin-markdown';
+import { isDocument } from '@braneframe/plugin-markdown';
 import { isStack } from '@braneframe/plugin-stack';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
@@ -77,7 +77,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                 ? { node: <PresenterMain stack={data.active} />, disposition: 'hoist' }
                 : null;
             case 'slide':
-              return isMarkdownContent(data.slide) ? <MarkdownSlideMain slide={data.slide} /> : null;
+              return isDocument(data.slide) ? <MarkdownSlideMain document={data.slide} /> : null;
           }
 
           return null;
