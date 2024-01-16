@@ -143,8 +143,20 @@ export class GraphBuilder {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
-            const shortcut =
-              typeof action.keyBinding === 'object' ? action.keyBinding?.[getHostPlatform()] : action.keyBinding;
+            let shortcut: string | undefined;
+            if (typeof action.keyBinding === 'object') {
+              const availablePlatforms = Object.keys(action.keyBinding);
+              const platform = getHostPlatform();
+              shortcut = availablePlatforms.includes(platform)
+                ? action.keyBinding[platform]
+                : platform === 'ios'
+                ? action.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
+                : platform === 'linux' || platform === 'unknown'
+                ? action.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
+                : undefined;
+            } else {
+              shortcut = action.keyBinding;
+            }
             if (shortcut) {
               Keyboard.singleton.getContext(path.join('/')).bind({
                 shortcut,
