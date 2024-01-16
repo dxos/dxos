@@ -15,6 +15,11 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
 
+type CursorSelection = {
+  itemId: string;
+  anchor?: number;
+};
+
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
 };
@@ -22,12 +27,6 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
 //
 // Item
 //
-
-type CursorSelection = {
-  itemId: string;
-  from?: number;
-  to?: number;
-};
 
 type OutlinerItemProps = {
   item: Item;
@@ -37,7 +36,7 @@ type OutlinerItemProps = {
   onDelete?: (state?: CursorInfo) => void;
   onIndent?: (direction?: 'left' | 'right') => void;
   onShift?: (direction?: 'up' | 'down') => void;
-  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', pos?: number) => void;
+  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
 } & OutlinerOptions;
 
 const OutlinerItem = ({
@@ -54,6 +53,8 @@ const OutlinerItem = ({
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
+
+  // Focus.
   const [focus, setFocus] = useState(false);
   useEffect(() => {
     if (focus) {
@@ -61,6 +62,9 @@ const OutlinerItem = ({
     }
   }, [focus]);
 
+  // Focus and selection.
+  // NOTE: The only way to set focus after creating a new item is to pass focus=true into the editor.
+  // The editorRef updated by the editor's useImperativeHandle doesn't trigger an update here.
   const editorRef = useRef<EditorView>(null);
   useEffect(() => {
     // NOTE: useImperativeHandle does not trigger editorRef.
@@ -69,8 +73,9 @@ const OutlinerItem = ({
       editorRef.current?.focus();
       // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
-  }, [model, editorRef.current, active]);
+  }, [active]);
 
+  // Keys.
   const outlinerKeymap = useMemo(() => {
     const getCursor = (view: EditorView): CursorInfo => {
       const { head, from, to } = view.state.selection.ranges[0];
@@ -88,20 +93,8 @@ const OutlinerItem = ({
     return Prec.highest(
       keymap.of([
         {
-          key: 'Tab',
-          run: () => {
-            onIndent?.('right');
-            return true;
-          },
-          shift: () => {
-            onIndent?.('left');
-            return true;
-          },
-        },
-        {
           key: 'Enter',
           run: (view) => {
-            // TODO(burdon): Slow, so pressing enter again happens from same line.
             const cursor = getCursor(view);
             onEnter?.(cursor);
             return true;
@@ -121,15 +114,89 @@ const OutlinerItem = ({
           },
         },
         {
-          key: 'ArrowUp',
+          key: 'ArrowLeft',
           run: (view) => {
             const { from, line } = getCursor(view);
             if (from === 0 && line === 1) {
-              onCursor?.('up');
+              onCursor?.('up', -1);
               return true;
             }
 
             return false;
+          },
+        },
+        {
+          key: 'ArrowRight',
+          run: (view) => {
+            const { from, length } = getCursor(view);
+            if (from === length) {
+              onCursor?.('down');
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'Tab',
+          run: () => {
+            onIndent?.('right');
+            return true;
+          },
+          shift: () => {
+            onIndent?.('left');
+            return true;
+          },
+        },
+
+        //
+        // Left/right
+        //
+        {
+          key: 'ArrowLeft',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (from === 0 && line === 1) {
+              onCursor?.('up', -1);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowRight',
+          run: (view) => {
+            const { from, length } = getCursor(view);
+            if (from === length) {
+              onCursor?.('down', 0);
+              return true;
+            }
+
+            return false;
+          },
+        },
+
+        //
+        // Up
+        //
+        {
+          key: 'ArrowUp',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (line === 1) {
+              onCursor?.('up', from);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'alt-ArrowUp',
+          run: () => {
+            onShift?.('up');
+            return true;
           },
         },
         {
@@ -139,16 +206,27 @@ const OutlinerItem = ({
             return true;
           },
         },
+
+        //
+        // Down
+        //
         {
           key: 'ArrowDown',
           run: (view) => {
-            const { from, line, lines, length } = getCursor(view);
-            if (from === length && line === lines) {
-              onCursor?.('down');
+            const { line, lines, from } = getCursor(view);
+            if (line === lines) {
+              onCursor?.('down', from);
               return true;
             }
 
             return false;
+          },
+        },
+        {
+          key: 'alt-ArrowDown',
+          run: () => {
+            onShift?.('down');
+            return true;
           },
         },
         {
@@ -193,14 +271,12 @@ const OutlinerItem = ({
         model={model}
         focus={!!active}
         extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
+        placeholder={placeholder}
         slots={{
           root: {
             className: 'w-full pt-[4px]',
             onFocus: () => setFocus(true),
             onBlur: () => setFocus(false),
-          },
-          editor: {
-            placeholder,
           },
         }}
       />
@@ -236,7 +312,7 @@ type OutlinerBranchProps = OutlinerOptions & {
   className?: string;
   root: Item;
   active?: CursorSelection;
-  onItemCursor?: (parent: Item, item: Item, direction?: string, pos?: number) => void;
+  onItemCursor?: (parent: Item, item: Item, direction?: string, anchor?: number) => void;
   onItemSelect?: (parent: Item, item: Item) => void;
   onItemCreate?: (parent: Item, item: Item, state?: CursorInfo, after?: boolean) => Item;
   onItemDelete?: (parent: Item, item: Item, state?: CursorInfo) => void;
@@ -369,14 +445,14 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
           text.insert(from, state.after.trim());
         }
 
-        setActive({ itemId: active.id, from });
+        setActive({ itemId: active.id, anchor: from });
         const items = getItems(active);
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
       const text = parent.text!.content as YText;
       const from = text.length;
-      setActive({ itemId: parent.id, from });
+      setActive({ itemId: parent.id, anchor: from });
     }
   };
 
@@ -440,17 +516,17 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   //
   // Navigation.
   //
-  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, pos) => {
+  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, anchor) => {
     switch (direction) {
       case 'home': {
-        setActive({ itemId: root.items![0].id, from: 0 });
+        setActive({ itemId: root.items![0].id, anchor: 0 });
         break;
       }
 
       case 'end': {
         const last = getLastDescendent(root.items![root.items!.length - 1]);
         if (last) {
-          setActive({ itemId: last.id, from: 0 });
+          setActive({ itemId: last.id, anchor: 0 });
         }
         break;
       }
@@ -458,7 +534,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'up': {
         const previous = getPrevious(root, item);
         if (previous) {
-          setActive({ itemId: previous.id, from: pos });
+          setActive({ itemId: previous.id, anchor });
         }
         break;
       }
@@ -466,7 +542,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'down': {
         const next = getNext(root, item);
         if (next) {
-          setActive({ itemId: next.id, from: pos });
+          setActive({ itemId: next.id, anchor });
         }
         break;
       }

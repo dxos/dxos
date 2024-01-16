@@ -4,12 +4,15 @@
 
 import React, { type FC } from 'react';
 
+import { type Document as DocumentType } from '@braneframe/types';
+
 import { Container, Slide } from './Markdown';
 
-export const MarkdownSlideMain: FC<{ slide: any }> = ({ slide }) => {
+export const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
   return (
     <Container>
-      <Slide content={String(slide.content)} />;
+      {/* TODO: content is a YText object, but should be a string. Update after automerge migration. */}
+      <Slide content={document.content.content as any} />;
     </Container>
   );
 };

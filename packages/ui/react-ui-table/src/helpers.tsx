@@ -94,16 +94,24 @@ const ComboboxBuilderCell = <TData extends RowData>(cellContext: CellContext<TDa
 };
 
 const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, string>) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const { onUpdate } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
   // https://tanstack.com/table/v8/docs/examples/react/editable-data
   const initialValue = cellContext.getValue();
-  const [value, setValue] = useState(initialValue);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [value, setValue] = useState(() => {
+    // TODO(burdon): Temporary shim for automerge.
+    if ((initialValue as any)?.content) {
+      return (initialValue as any)?.content;
+    }
+
+    return initialValue;
+  });
 
   const handleSave = () => {
     if (value === initialValue) {
       return;
     }
+
     onUpdate?.(cellContext.row.original, cellContext.column.id, value);
   };
 
@@ -287,7 +295,12 @@ export class ColumnBuilder<TData extends RowData> {
       cell: onUpdate
         ? StringBuilderCell
         : (cell) => {
-            const value = cell.getValue();
+            let value = cell.getValue();
+            // TODO(burdon): Hack to support automerge.
+            if (typeof value === 'object' && (value as any)?.__typename === 'dxos.Text.v0') {
+              value = (value as any).content;
+            }
+
             return <div className={mx('truncate', textPadding, classNames)}>{value}</div>;
           },
       ...props,

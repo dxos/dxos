@@ -15,6 +15,7 @@ import {
   type Extension,
   type ListenerOptions,
   autocomplete,
+  code,
   comments,
   image,
   link,
@@ -50,6 +51,7 @@ export const getExtensions = ({
     //
     // Common.
     //
+    code(),
     image(),
     table(),
     tasklist(),
@@ -148,7 +150,7 @@ export const getExtensions = ({
   }
 
   if (debug) {
-    const items = localStorage.getItem('dxos.composer.extension.demo');
+    const items = localStorage.getItem('dxos.composer.extension.typewriter');
     extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
   }
 
