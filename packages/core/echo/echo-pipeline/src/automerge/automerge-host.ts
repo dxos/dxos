@@ -31,6 +31,7 @@ export class AutomergeHost {
   constructor(storageDirectory: Directory) {
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
+
     // TODO(mykola): Delete specific handling of IDB storage.
     this._storage =
       storageDirectory.type === StorageType.IDB
