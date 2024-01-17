@@ -29,7 +29,6 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy } from '@dxos/react-client/echo';
-import { useFileDownload } from '@dxos/react-ui';
 import { inferRecordOrder } from '@dxos/util';
 
 import { exportData } from './backup';
@@ -133,7 +132,7 @@ export const SpacePlugin = ({
       const searchParams = new URLSearchParams(location.search);
       const spaceInvitationCode = searchParams.get('spaceInvitationCode');
       if (spaceInvitationCode) {
-        void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space }) => {
+        void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
           if (!space) {
             return;
           }
@@ -148,7 +147,7 @@ export const SpacePlugin = ({
 
           await dispatch({
             action: LayoutAction.ACTIVATE,
-            data: { id: space.key.toHex() },
+            data: { id: target ?? space.key.toHex() },
           });
         });
       }
@@ -306,7 +305,7 @@ export const SpacePlugin = ({
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
 
-          if (!dispatch || !resolve || !client) {
+          if (!dispatch || !resolve || !client || !client.spaces.isReady.get()) {
             return;
           }
 
@@ -459,9 +458,11 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SHARE: {
+              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
-                const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey });
+                const target = layoutPlugin?.provides.layout.active;
+                const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
                 return members && { members };
               }
               break;
@@ -504,8 +505,13 @@ export const SpacePlugin = ({
                 const backupBlob = await exportData(space, space.key.toHex());
                 const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
 
-                const download = useFileDownload();
-                download(backupBlob, `${filename}.json`);
+                const url = URL.createObjectURL(backupBlob);
+                // TODO(burdon): See DebugMain useFileDownload
+                const element = document.createElement('a');
+                element.setAttribute('href', url);
+                element.setAttribute('download', `${filename}.zip`);
+                element.setAttribute('target', 'download');
+                element.click();
                 return true;
               }
               break;

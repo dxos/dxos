@@ -24,16 +24,16 @@ import type { Graph, Node, NodeArg } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { clone } from '@dxos/echo-schema';
+import { clone, isTypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import {
   EchoDatabase,
   type Space,
-  SpaceState,
-  TypedObject,
-  getSpaceForObject,
   SpaceProxy,
+  SpaceState,
+  type TypedObject,
+  getSpaceForObject,
 } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
@@ -72,7 +72,8 @@ const getFolderGraphNodePartials = ({
         id: `${SPACE_PLUGIN}/create`,
         label: ['create object group label', { ns: SPACE_PLUGIN }],
         icon: (props) => <Plus {...props} />,
-        keyBinding: 'ctrl+n', // TODO(burdon): Not working since invoke is no-op.
+        // TODO(burdon): Not working since invoke is no-op.
+        // keyBinding: 'ctrl+n',
         invoke: () => {
           // No-op.
         },
@@ -227,7 +228,7 @@ export const spaceToGraphNode = ({
           id: 'save-space-to-disk',
           label: ['save space to disk label', { ns: SPACE_PLUGIN }],
           icon: (props) => <FloppyDisk {...props} />,
-          keyBinding: 'shift+meta+s',
+          keyBinding: 'meta+s',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
         },
       );
@@ -366,13 +367,16 @@ export const objectToGraphNode = ({
   });
 };
 
+/**
+ * @deprecated
+ */
 export const getActiveSpace = (graph: Graph, active?: string) => {
   if (!active) {
     return;
   }
 
   const node = graph.findNode(active);
-  if (!node || !(node.data instanceof TypedObject)) {
+  if (!node || !isTypedObject(node.data)) {
     return;
   }
 

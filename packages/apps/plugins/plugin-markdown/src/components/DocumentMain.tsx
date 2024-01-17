@@ -9,17 +9,17 @@ import { type Document as DocumentType } from '@braneframe/types';
 import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type CommentRange, useTextModel, type TextEditorRef, type Extension } from '@dxos/react-ui-editor';
+import { type CommentRange, useTextModel, type EditorView, type Extension } from '@dxos/react-ui-editor';
 
 import { EditorMain, MainLayout } from './EditorMain';
 import type { MarkdownSettingsProps } from '../types';
 
 export const DocumentMain: FC<{
   document: DocumentType;
-  readonly: boolean;
+  readonly?: boolean;
   editorMode: MarkdownSettingsProps['editorMode'];
   extensions: Extension[];
-  editorRefCb: RefCallback<TextEditorRef>;
+  editorRefCb: RefCallback<EditorView>;
 }> = ({ document, readonly, editorMode, extensions, editorRefCb }) => {
   const { dispatch } = useIntent();
   const identity = useIdentity();

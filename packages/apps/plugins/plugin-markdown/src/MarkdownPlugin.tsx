@@ -20,7 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
-import { type TextEditorRef } from '@dxos/react-ui-editor';
+import { type EditorView } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
@@ -43,7 +43,7 @@ import {
   type OnChange,
   MarkdownAction,
 } from './types';
-import { getFallbackTitle, isMarkdown, isMarkdownProperties, markdownPlugins } from './util';
+import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -63,9 +63,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<MarkdownPluginState>({ extensions: [], onChange: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-  const pluginMutableRef: MutableRefObject<TextEditorRef> = { current: { root: null } };
-  const pluginRefCallback: RefCallback<TextEditorRef> = (nextRef: TextEditorRef) => {
-    pluginMutableRef.current = { ...nextRef };
+
+  // TODO(burdon): Remove (don't expose editor internals).
+  const pluginMutableRef: MutableRefObject<EditorView | null> = { current: null };
+  const pluginRefCallback: RefCallback<EditorView> = (nextRef: EditorView) => {
+    pluginMutableRef.current = nextRef;
   };
 
   const getCustomExtensions = (document?: DocumentType) => {
@@ -207,7 +209,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 );
               } else if (
                 'model' in data &&
-                isMarkdown(data.model) &&
+                isEditorModel(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {

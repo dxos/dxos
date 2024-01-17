@@ -10,13 +10,13 @@ import { Surface } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DropdownMenu } from '@dxos/react-ui';
-import { useTextModel, type EditorModel, type TextEditorRef } from '@dxos/react-ui-editor';
+import { useTextModel, type EditorModel, type EditorView } from '@dxos/react-ui-editor';
 import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 
 // TODO(thure): this needs to be refactored into a graph node action.
-export const DocumentHeadingMenu: FC<{ document: DocumentType; pluginMutableRef: MutableRefObject<TextEditorRef> }> = ({
+export const DocumentHeadingMenu: FC<{ document: DocumentType; pluginMutableRef: MutableRefObject<EditorView> }> = ({
   document,
   pluginMutableRef,
 }) => {
@@ -42,8 +42,7 @@ export const HeadingMenu = ({
 }: PropsWithChildren<{
   model: EditorModel;
   properties: MarkdownProperties;
-  // TODO(wittjosiah): ForwardRef. Remove?
-  editorRef?: RefObject<TextEditorRef>;
+  editorRef?: RefObject<EditorView>;
 }>) => {
   return (
     <DropdownMenu.Root modal={false}>

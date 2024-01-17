@@ -33,6 +33,7 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

@@ -28,11 +28,11 @@ class HorizontalRuleWidget extends WidgetType {
     super();
   }
 
-  override eq(other: WidgetType) {
+  override eq(other: this) {
     return this._pos === (other as any as HorizontalRuleWidget)._pos;
   }
 
-  toDOM(view: EditorView) {
+  override toDOM(view: EditorView) {
     // TODO(burdon): Create <hr> element? Does this clash with markdown parser?
     const el = document.createElement('div');
     el.className = 'cm-hr';

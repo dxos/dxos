@@ -42,7 +42,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       Keyboard.singleton.initialize();
       // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
       Keyboard.singleton.bind({
-        binding: 'meta+k',
+        shortcut: 'meta+k',
         handler: () => {
           console.log('meta');
         },
@@ -102,12 +102,15 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 'label' in data.activeNode &&
                 'parent' in data.activeNode
               ) {
-                return (
-                  <NavBarStart
-                    activeNode={data.activeNode as Node}
-                    popoverAnchorId={data.popoverAnchorId as string | undefined}
-                  />
-                );
+                return {
+                  node: (
+                    <NavBarStart
+                      activeNode={data.activeNode as Node}
+                      popoverAnchorId={data.popoverAnchorId as string | undefined}
+                    />
+                  ),
+                  disposition: 'hoist',
+                };
               }
               break;
           }

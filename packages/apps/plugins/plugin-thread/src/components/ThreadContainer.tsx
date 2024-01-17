@@ -12,6 +12,7 @@ import { type SpaceMember, type Space, useMembers } from '@dxos/react-client/ech
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 
 import { type BlockProperties, ThreadChannel } from './Thread';
+import { useStatus } from '../hooks';
 
 // TODO(burdon): Goals.
 // - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
@@ -62,6 +63,7 @@ export type ThreadContainerProps = {
 export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
+  const processing = useStatus(space, thread.id);
 
   // TODO(burdon): Change to model.
   const handleCreate = (text: string) => {
@@ -109,6 +111,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
       identityKey={identity.identityKey}
       propertiesProvider={messagePropertiesProvider(identity, members)}
       thread={thread}
+      processing={processing}
       fullWidth={fullWidth}
       onFocus={onFocus}
       onCreate={handleCreate}

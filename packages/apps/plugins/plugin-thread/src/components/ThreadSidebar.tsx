@@ -15,7 +15,9 @@ export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType; onFocus?: (t
   thread: controlledThread,
   onFocus,
 }) => {
+  // TODO(burdon): Remove plugin dependency.
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+
   const [thread, setThread] = useState<ThreadType | undefined>(controlledThread);
   useEffect(() => setThread(controlledThread), [controlledThread]);
   useEffect(() => {
@@ -31,7 +33,7 @@ export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType; onFocus?: (t
 
       // TODO(burdon): Get thread appropriate for context.
       if (!controlledThread) {
-        const { objects: threads } = space.db.query(ThreadType.filter());
+        const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
         if (threads.length) {
           setThread(threads[0]);
         }

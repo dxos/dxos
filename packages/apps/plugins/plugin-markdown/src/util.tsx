@@ -25,16 +25,11 @@ export const __isMarkdown = (object: { [key: string]: any }): object is EditorMo
   }
 };
 
-export const isMarkdown = (data: unknown): data is EditorModel =>
+/** Type-guard for an EditorModel */
+export const isEditorModel = (data: unknown): data is EditorModel =>
   data && typeof data === 'object'
     ? 'id' in data && typeof data.id === 'string' && typeof (data as { [key: string]: any }).text === 'function'
     : false;
-
-export const isMarkdownContent = (data: unknown): data is { content: EditorModel } =>
-  !!data &&
-  typeof data === 'object' &&
-  (data as { [key: string]: any }).content &&
-  isMarkdown((data as { [key: string]: any }).content);
 
 export const isMarkdownPlaceholder = (data: unknown): data is EditorModel =>
   data && typeof data === 'object'

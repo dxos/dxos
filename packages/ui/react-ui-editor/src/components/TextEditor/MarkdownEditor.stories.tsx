@@ -8,15 +8,16 @@ import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, StrictMode, useRef, useState } from 'react';
+import React, { type FC, StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
+import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, type TextEditorProps, type TextEditorRef } from './TextEditor';
+import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
   autocomplete,
   blast,
@@ -182,15 +183,15 @@ const Key: FC<{ char: string }> = ({ char }) => (
   </span>
 );
 
-const onCommentsHover: CommentsOptions['onHover'] = (el) => {
+const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   createRoot(el).render(
     <StrictMode>
       <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
         <div>Create comment</div>
-        {/* TODO(burdon): Unify shortcuts. */}
         <div className='flex gap-1'>
-          <Key char='⌘' />
-          <Key char="'" />
+          {keySymbols(parseShortcut(shortcut)).map((char) => (
+            <Key key={char} char={char} />
+          ))}
         </div>
       </div>
     </StrictMode>,
@@ -201,7 +202,7 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-1')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
       </a>
     </StrictMode>,
   );
@@ -213,7 +214,6 @@ type StoryProps = {
 } & Pick<TextEditorProps, 'comments' | 'readonly' | 'extensions' | 'slots'>;
 
 const Story = ({ text, automerge, ...props }: StoryProps) => {
-  const ref = useRef<TextEditorRef>(null);
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const model = useTextModel({ text: item.text });
   if (!model) {
@@ -222,10 +222,9 @@ const Story = ({ text, automerge, ...props }: StoryProps) => {
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center overflow-y-scroll'>
-        <div className='flex flex-col w-[800px] py-16'>
-          <MarkdownEditor ref={ref} model={model} {...props} />
-          <div className='flex shrink-0 h-[300px]'></div>
+      <div className='flex h-full justify-center'>
+        <div className='flex flex-col h-full w-[800px]'>
+          <MarkdownEditor model={model} {...props} />
         </div>
       </div>
     </div>
@@ -263,6 +262,10 @@ const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 
 
 export const Large = {
   render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
+};
+
+export const Empty = {
+  render: () => <Story />,
 };
 
 export const NoExtensions = {
@@ -347,18 +350,18 @@ export const Mention = {
 
 export const Comments = {
   render: () => {
-    const [commentsStates, setCommentStates] = useState<CommentRange[]>([]);
+    const [commentRanges, setCommentRanges] = useState<CommentRange[]>([]);
 
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}
-        comments={commentsStates}
+        comments={commentRanges}
         extensions={[
           comments({
             onHover: onCommentsHover,
-            onCreate: (relPos) => {
+            onCreate: (range) => {
               const id = PublicKey.random().toHex();
-              setCommentStates((comments) => [...comments, { id, cursor: relPos }]);
+              setCommentRanges((commentRanges) => [...commentRanges, { id, cursor: range }]);
               return id;
             },
             onSelect: (state) => {
