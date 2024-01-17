@@ -220,7 +220,6 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
-      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
       space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
       translations,
