@@ -18,11 +18,11 @@ export enum UndoAction {
   UNDO = `${UNDO_ACTION}/undo`,
 }
 
-export type UndoFunction = () => Promise<void>;
+export type UndoActionPair = { undo: () => Promise<void>; redo: () => Promise<void> };
 
 export type UndoProvides = {
   undo: {
-    push: (action: UndoFunction) => void;
+    exec: (actions: UndoActionPair) => Promise<void>;
   };
 };
 

@@ -2,25 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsCounterClockwise } from '@phosphor-icons/react';
+import { ArrowUUpLeft, ArrowUUpRight } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 
 import meta, { UNDO_PLUGIN } from './meta';
 import translations from './translations';
-import { UndoAction, type UndoFunction, type UndoPluginProvides } from './types';
+import { UndoAction, type UndoActionPair, type UndoPluginProvides } from './types';
 
 export const UndoPlugin = (): PluginDefinition<UndoPluginProvides> => {
-  const actions: UndoFunction[] = [];
+  let actions: UndoActionPair | undefined;
 
   return {
     meta,
     provides: {
       undo: {
-        push: (action) => {
-          actions.push(action);
-          console.log('push', actions.length);
+        exec: async ({ undo, redo }) => {
+          // TODO(burdon): Timeout.
+          // TODO(burdon): Trigger visible undo.
+          actions = { undo, redo };
+          await redo();
         },
       },
       translations,
@@ -28,16 +30,29 @@ export const UndoPlugin = (): PluginDefinition<UndoPluginProvides> => {
         builder: ({ parent, plugins }) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          // TODO(burdon): Based on state.
+          // TODO(burdon): Visibility based on state.
+
           parent.addAction({
             id: UndoAction.UNDO,
             label: ['undo label', { ns: UNDO_PLUGIN }],
-            icon: (props) => <ArrowsCounterClockwise {...props} />,
+            icon: (props) => <ArrowUUpRight {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {
                   plugin: UNDO_PLUGIN,
                   action: UndoAction.UNDO,
+                },
+              ]),
+          });
+          parent.addAction({
+            id: UndoAction.REDO,
+            label: ['redo label', { ns: UNDO_PLUGIN }],
+            icon: (props) => <ArrowUUpLeft {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: UNDO_PLUGIN,
+                  action: UndoAction.REDO,
                 },
               ]),
           });
@@ -52,13 +67,15 @@ export const UndoPlugin = (): PluginDefinition<UndoPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case UndoAction.UNDO: {
-              const action = actions.pop();
-              if (action) {
-                void action();
+              if (actions) {
+                void actions?.undo?.();
               }
               break;
             }
             case UndoAction.REDO: {
+              if (actions) {
+                void actions?.redo?.();
+              }
               break;
             }
           }

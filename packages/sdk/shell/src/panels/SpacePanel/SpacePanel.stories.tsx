@@ -129,6 +129,7 @@ export const SpaceManagerWithEvenMoreInvites = () => {
                       identityKey = PublicKey.random(),
                       swarmKey,
                       spaceKey = PublicKey.random(),
+                      target = null,
                     } = invitation;
                     return (
                       <InvitationListItemImpl
@@ -140,7 +141,7 @@ export const SpaceManagerWithEvenMoreInvites = () => {
                           invitationCode: id,
                           authCode: state === Invitation.State.READY_FOR_AUTHENTICATION ? '123414' : undefined,
                           id,
-                          result: { identityKey, swarmKey, spaceKey },
+                          result: { identityKey, swarmKey, spaceKey, target },
                           cancel: () => {},
                           authenticate: async (authCode: string) => {},
                           connect: () => {},

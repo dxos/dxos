@@ -19,12 +19,11 @@ import {
 } from '@phosphor-icons/react';
 import React, { type FC, useContext, useEffect, useMemo, useState } from 'react';
 
-import { type Space } from '@dxos/client/echo';
-import { InvitationEncoder } from '@dxos/client/invitations';
 import { type Schema, type TypedObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
-import { useSpaceInvitation } from '@dxos/react-client/echo';
+import { type Space, useSpaceInvitation } from '@dxos/react-client/echo';
+import { InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, DropdownMenu, Input, useFileDownload, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';

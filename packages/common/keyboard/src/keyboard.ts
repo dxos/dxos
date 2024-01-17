@@ -23,7 +23,7 @@ const modifiers = ['alt', 'ctrl', 'shift', 'meta'];
 
 // Normalize order of modifiers.
 export const parseShortcut = (shortcut: string, delimiter = /[+-]/): string => {
-  const parts = shortcut.split(delimiter);
+  const parts = shortcut.toLowerCase().split(delimiter);
   const mods = modifiers.filter((key) => parts.includes(key));
   invariant(mods.length === 0 || mods.length === parts.length - 1);
   // Assume single natural key.
