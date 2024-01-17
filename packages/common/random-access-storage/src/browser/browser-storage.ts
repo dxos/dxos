@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { join } from 'node:path';
 import type { RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage } from '../common';
+import { AbstractStorage, getFullPath } from '../common';
 
 /**
  * Base class for random access files based on IDB.
@@ -19,7 +18,7 @@ export abstract class BrowserStorage extends AbstractStorage {
   }
 
   protected _createFile(path: string, filename: string): RandomAccessStorage {
-    const fullPath = join(path, filename);
+    const fullPath = getFullPath(path, filename);
     return this._fileStorage(fullPath);
   }
 
