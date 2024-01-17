@@ -19,7 +19,6 @@ import {
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus, fromIFrame } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
@@ -74,11 +73,11 @@ export const ClientPlugin = ({
   const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
 
   let client: Client;
+  let error: unknown = null;
 
   return {
     meta,
     initialize: async () => {
-      let error: unknown = null;
       let firstRun = false;
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
@@ -173,7 +172,6 @@ export const ClientPlugin = ({
           client.spaces.default.properties[appKey] = true;
         }
       } catch (err) {
-        log.catch(err);
         error = err;
       }
 
@@ -193,16 +191,13 @@ export const ClientPlugin = ({
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        root: () => {
-          if (error) {
-            throw error;
-          }
-
-          return null;
-        },
       };
     },
     ready: async () => {
+      if (error) {
+        throw error;
+      }
+
       settings.prop(settings.values.$automerge!, 'automerge', LocalStorageStore.bool);
     },
     unload: async () => {

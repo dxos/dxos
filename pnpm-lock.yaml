@@ -488,9 +488,6 @@ importers:
       '@braneframe/plugin-debug':
         specifier: workspace:*
         version: link:../plugins/plugin-debug
-      '@braneframe/plugin-error':
-        specifier: workspace:*
-        version: link:../plugins/plugin-error
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugins/plugin-explorer
@@ -590,6 +587,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -617,6 +617,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -711,9 +714,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugins/plugin-client
-      '@braneframe/plugin-error':
-        specifier: workspace:*
-        version: link:../plugins/plugin-error
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
@@ -1109,49 +1109,6 @@ importers:
       '@types/react-syntax-highlighter':
         specifier: ^15.5.5
         version: 15.5.5
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-error:
-    dependencies:
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../../sdk/client-services
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-    devDependencies:
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
       react:
         specifier: ^18.2.0
         version: 18.2.0

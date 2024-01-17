@@ -10,7 +10,6 @@
   "author": "DXOS.org",
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-error": "workspace:*",
     "@braneframe/plugin-pwa": "workspace:*",
     "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
