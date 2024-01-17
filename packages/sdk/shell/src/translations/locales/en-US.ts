@@ -99,4 +99,9 @@ export const os = {
     'This will clear this device and all associated data. Type {{confirmationValue}} and confirm to continue.',
   'failed to reset identity message': 'Failed to reset identity.',
   'confirmation value': 'CONFIRM',
+  'sign out chooser title': 'DANGER ZONE',
+  'sign out chooser message': 'Proceeding with either action below will erase all data on this device.',
+  'join new identity label': 'Join a new identity',
+  'reset device label': 'Reset device',
+  'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
 };

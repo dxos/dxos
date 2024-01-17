@@ -198,6 +198,7 @@ export const TreeViewContainer = ({
                       data-joyride='welcome/settings'
                       variant='ghost'
                       classNames='pli-2.5'
+                      data-testid='treeView.openSettings'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => dispatch({ action: SettingsAction.OPEN })}
                     >

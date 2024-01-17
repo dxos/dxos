@@ -39,17 +39,19 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
     titleId,
     activeView,
     space,
+    target,
     SpaceManager: SpaceManagerComponent = SpaceManager,
     InvitationManager: InvitationManagerComponent = InvitationManager,
     ...rest
   } = props;
+
   return (
     <DensityProvider density='fine'>
       <SpacePanelHeading {...rest} {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>
-            <SpaceManagerComponent active={activeView === 'space manager'} space={space} {...rest} />
+            <SpaceManagerComponent active={activeView === 'space manager'} space={space} target={target} {...rest} />
           </Viewport.View>
           <Viewport.View id='space invitation manager' classNames={stepStyles}>
             <InvitationManagerComponent
@@ -115,6 +117,7 @@ export const SpacePanel = ({
   };
 
   return spaceState.context.invitation ? (
+    // TODO(wittjosiah): Unused? Remove?
     <SpacePanelWithInvitationImpl {...implProps} invitation={spaceState.context.invitation} />
   ) : (
     <SpacePanelImpl {...implProps} />
