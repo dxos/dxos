@@ -132,7 +132,7 @@ export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, fo
   return (
     <Button
       {...rest}
-      classNames={[isFull && 'is-full', 'bs-11 flex gap-2 mbs-2', classNames, ...buttonColorFragment(props)]}
+      classNames={[isFull && 'is-full', 'bs-11 flex gap-2 mbs-2', ...buttonColorFragment(props), classNames]}
       ref={forwardedRef}
       variant={variant}
     >
