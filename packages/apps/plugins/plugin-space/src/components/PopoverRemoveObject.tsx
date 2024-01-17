@@ -57,7 +57,12 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
     <div role='none' className='p-1'>
       <p className='mlb-1 mli-2'>{t('delete object description', { ns: 'os' })}</p>
       <Popover.Close asChild>
-        <Button ref={deleteButton} classNames='is-full' onClick={handleDelete}>
+        <Button
+          ref={deleteButton}
+          classNames='is-full'
+          onClick={handleDelete}
+          data-testid='spacePlugin.confirmDeleteObject'
+        >
           {t('delete label', { ns: 'os' })}
         </Button>
       </Popover.Close>
