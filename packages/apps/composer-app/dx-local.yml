@@ -10,3 +10,5 @@ runtime:
     ipfs:
       server: https://dev.kube.dxos.org/ipfs/api
       gateway: https://dev.kube.dxos.org/ipfs/gateway
+    agentHosting:
+      type: LOCAL_TESTING
