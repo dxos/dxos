@@ -6,12 +6,13 @@ import React, { useCallback, useRef } from 'react';
 
 import { Folder } from '@braneframe/types';
 import { LayoutAction, parseIntentPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
+import { TypedObject, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder: Folder }) => {
+// TODO: folder is of type `any` because it could be a `SpaceProxy` or `Folder` or... something else
+export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder: any }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 
@@ -44,6 +45,17 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
     if (folder instanceof Folder) {
       const index = folder.objects.indexOf(object);
       index !== -1 && folder.objects.splice(index, 1);
+    }
+
+    // if the object is a folder, move the objects inside of it to the folder above it
+    if (object instanceof Folder) {
+      let parentFolder = propsFolder;
+      if (propsFolder instanceof SpaceProxy) {
+        parentFolder = propsFolder.properties[Folder.schema.typename];
+      }
+      object.objects.forEach((obj) => {
+        parentFolder.objects.push(obj);
+      });
     }
 
     // remove the object from the space
