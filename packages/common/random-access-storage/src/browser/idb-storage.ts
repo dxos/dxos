@@ -4,13 +4,8 @@
 
 import idb from 'random-access-idb';
 
-import { Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
-
 import { BrowserStorage } from './browser-storage';
-import { StorageType, wrapFile } from '../common';
-
-const win = typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : undefined;
+import { StorageType } from '../common';
 
 /**
  * Storage interface implementation for index DB.
