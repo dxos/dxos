@@ -30,7 +30,9 @@ export class InvitationEncoder {
         swarmKey: invitation.swarmKey,
         state: invitation.state,
         timeout: invitation.timeout,
+        // TODO(wittjosiah): Make these optional to encode for greater privacy.
         ...(invitation.spaceKey ? { spaceKey: invitation.spaceKey } : {}),
+        ...(invitation.target ? { target: invitation.target } : {}),
       }),
     );
   }

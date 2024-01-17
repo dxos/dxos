@@ -18,6 +18,7 @@ Before running SSC, Composer must be built using:
 
 ```bash
 NODE_OPTIONS=--max_old_space_size=8192
+DX_HOST=true
 pnpm nx bundle composer-app
 ```
 

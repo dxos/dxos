@@ -28,7 +28,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
 
 import { exportData } from './backup';
@@ -39,9 +39,11 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
+  PersistenceStatus,
   PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
+  ShareSpaceButton,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
@@ -132,7 +134,7 @@ export const SpacePlugin = ({
       const searchParams = new URLSearchParams(location.search);
       const spaceInvitationCode = searchParams.get('spaceInvitationCode');
       if (spaceInvitationCode) {
-        void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space }) => {
+        void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
           if (!space) {
             return;
           }
@@ -147,7 +149,7 @@ export const SpacePlugin = ({
 
           await dispatch({
             action: LayoutAction.ACTIVATE,
-            data: { id: space.key.toHex() },
+            data: { id: target ?? space.key.toHex() },
           });
         });
       }
@@ -218,7 +220,6 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
-      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
       space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
       translations,
@@ -282,8 +283,31 @@ export const SpacePlugin = ({
               } else {
                 return null;
               }
-            case 'presence':
-              return isTypedObject(data.object) ? <SpacePresence object={data.object} /> : null;
+            case 'navbar-start': {
+              const space =
+                isGraphNode(data.activeNode) && isTypedObject(data.activeNode.data)
+                  ? getSpaceForObject(data.activeNode.data)
+                  : undefined;
+              return space ? <PersistenceStatus db={space.db} /> : null;
+            }
+            case 'navbar-end': {
+              if (!isTypedObject(data.object)) {
+                return null;
+              }
+
+              const space = getSpaceForObject(data.object);
+              return space
+                ? {
+                    node: (
+                      <>
+                        <SpacePresence object={data.object} />
+                        <ShareSpaceButton spaceKey={space.key} />
+                      </>
+                    ),
+                    disposition: 'hoist',
+                  }
+                : null;
+            }
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             default:
@@ -305,7 +329,7 @@ export const SpacePlugin = ({
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
 
-          if (!dispatch || !resolve || !client) {
+          if (!dispatch || !resolve || !client || !client.spaces.isReady.get()) {
             return;
           }
 
@@ -458,9 +482,11 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SHARE: {
+              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
-                const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey });
+                const target = layoutPlugin?.provides.layout.active;
+                const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
                 return members && { members };
               }
               break;

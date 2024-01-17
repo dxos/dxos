@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { type LayoutRequest, ShellDisplay, ShellLayout, type ShellRuntime } from '@dxos/react-client';
+import { type LayoutRequest, ShellDisplay, ShellLayout, type ShellRuntime, useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 
 import { IdentityDialog } from '../IdentityDialog';
@@ -13,12 +13,14 @@ import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
 
 export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: string }) => {
-  const [{ layout, invitationCode, spaceKey }, setLayout] = useState<LayoutRequest>({
+  const [{ layout, invitationCode, spaceKey, target }, setLayout] = useState<LayoutRequest>({
     layout: runtime.layout,
     invitationCode: runtime.invitationCode,
     spaceKey: runtime.spaceKey,
+    target: runtime.target,
   });
 
+  const client = useClient();
   const space = useSpace(spaceKey);
 
   useEffect(() => {
@@ -58,6 +60,11 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       return (
         <IdentityDialog
           createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
+          onResetDevice={async () => {
+            await client.reset();
+            await runtime.setAppContext({ display: ShellDisplay.NONE, reload: true });
+          }}
+          onJoinNewIdentity={() => runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY })}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
@@ -69,6 +76,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       return space ? (
         <SpaceDialog
           space={space}
+          target={target}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
@@ -82,7 +90,12 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         <JoinDialog
           initialInvitationCode={invitationCode}
           onDone={async (result) => {
-            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: result?.spaceKey ?? undefined });
+            const target = result?.target ?? undefined;
+            await runtime.setAppContext({
+              display: ShellDisplay.NONE,
+              spaceKey: result?.spaceKey ?? undefined,
+              target,
+            });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
           onExit={async () => {
