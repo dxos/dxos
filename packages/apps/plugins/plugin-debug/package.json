@@ -25,9 +25,10 @@
   "dependencies": {
     "@braneframe/plugin-settings": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

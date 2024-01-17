@@ -15,6 +15,7 @@ export type IdentityPanelImplProps = {
   titleId: string;
   activeView:
     | 'device manager'
+    | 'agent manager'
     | 'update profile form'
     | 'device invitation manager'
     | 'identity action chooser'

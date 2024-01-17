@@ -11,11 +11,18 @@ import { Main } from './Main';
 import { getConfig } from '../config';
 import { types } from '../proto';
 
+const createWorker = () =>
+  new SharedWorker(new URL('../shared-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
 export const Root = () => {
   const navigate = useNavigate();
   return (
     <ClientProvider
       config={getConfig}
+      createWorker={createWorker}
       shell='./shell.html'
       onInitialized={async (client) => {
         client.addSchema(types);

@@ -13,10 +13,11 @@ import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
 
 export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: string }) => {
-  const [{ layout, invitationCode, spaceKey }, setLayout] = useState<LayoutRequest>({
+  const [{ layout, invitationCode, spaceKey, target }, setLayout] = useState<LayoutRequest>({
     layout: runtime.layout,
     invitationCode: runtime.invitationCode,
     spaceKey: runtime.spaceKey,
+    target: runtime.target,
   });
 
   const client = useClient();
@@ -75,6 +76,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       return space ? (
         <SpaceDialog
           space={space}
+          target={target}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
@@ -88,7 +90,12 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         <JoinDialog
           initialInvitationCode={invitationCode}
           onDone={async (result) => {
-            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: result?.spaceKey ?? undefined });
+            const target = result?.target ?? undefined;
+            await runtime.setAppContext({
+              display: ShellDisplay.NONE,
+              spaceKey: result?.spaceKey ?? undefined,
+              target,
+            });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
           onExit={async () => {

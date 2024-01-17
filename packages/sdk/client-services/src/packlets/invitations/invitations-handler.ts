@@ -321,7 +321,7 @@ export class InvitationsHandler {
 
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
-              setState({ ...result, state: Invitation.State.SUCCESS });
+              setState({ ...result, target: invitation.target, state: Invitation.State.SUCCESS });
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
