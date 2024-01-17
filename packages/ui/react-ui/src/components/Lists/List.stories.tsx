@@ -11,7 +11,7 @@ import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { type FC, type ReactNode, useState } from 'react';
 
-import { getSize, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { getSize, ghostHover, ghostSelected, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { List, ListItem, type ListProps, type ListScopedProps } from './List';
 import { withTheme } from '../../testing';
@@ -190,6 +190,7 @@ export const Collapsible = {
 
 export const Listbox = {
   render: () => {
+    const [selectedId, setSelectedId] = useState<string>();
     const domAttributes = useArrowNavigationGroup({ axis: 'vertical' });
     const [items, _setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -201,8 +202,10 @@ export const Listbox = {
     return (
       <List selectable {...domAttributes}>
         {items.map(({ id, text }) => (
-          <ListItem.Root key={id}>
-            <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
+          <ListItem.Root key={id} selected={selectedId === id} onClick={() => setSelectedId(id)}>
+            <ListItem.Heading classNames={mx('grow pbs-2', ghostHover, selectedId === id && ghostSelected)}>
+              {text}
+            </ListItem.Heading>
           </ListItem.Root>
         ))}
       </List>

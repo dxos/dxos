@@ -113,7 +113,7 @@ const Thread: FC<{
       thread.messages.push(item.text);
       const newItem = { text: new TextObject() };
       setItem(newItem);
-      focus(newItem.id);
+      // focus(newItem.id);
     }
   };
 

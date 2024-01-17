@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UndoPlugin } from 'packages/apps/plugins/plugin-undo/src/UndoPlugin';
+import { UndoPlugin } from './UndoPlugin';
 
 export default UndoPlugin;
-
-export * from 'packages/apps/plugins/plugin-undo/src/UndoPlugin';
