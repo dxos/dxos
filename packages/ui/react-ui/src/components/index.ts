@@ -10,7 +10,7 @@ export * from './Dialogs';
 export * from './Menus';
 export * from './Input';
 export * from './Link';
-export * from './Lists';
+export * from './List';
 export * from './Main';
 export * from './Message';
 export * from './Popover';

@@ -107,6 +107,7 @@ const ManySizesDraggableListItem = ({
     </ListItem.Root>
   );
 };
+
 export const ManySizesDraggable = {
   render: ({ ...args }) => {
     const [items, setItems] = useState(
@@ -184,11 +185,11 @@ export const Collapsible = {
   },
   args: {
     variant: 'unordered',
-    toggleOpenLabel: 'Open/close storybook list item',
+    // toggleOpenLabel: 'Open/close storybook list item', // TODO(burdon): ???
   },
 };
 
-export const Listbox = {
+export const SelectableListbox = {
   render: () => {
     const [selectedId, setSelectedId] = useState<string>();
     const domAttributes = useArrowNavigationGroup({ axis: 'vertical' });
@@ -199,13 +200,21 @@ export const Listbox = {
       })),
     );
 
+    const handleKeyUp = (event: any) => {
+      console.log(event);
+    };
+
+    // TODO(burdon): Handle onkeyup on ListItem.Root.
     return (
-      <List selectable {...domAttributes}>
+      <List selectable {...domAttributes} onKeyUp={handleKeyUp}>
         {items.map(({ id, text }) => (
-          <ListItem.Root key={id} selected={selectedId === id} onClick={() => setSelectedId(id)}>
-            <ListItem.Heading classNames={mx('grow pbs-2', ghostHover, selectedId === id && ghostSelected)}>
-              {text}
-            </ListItem.Heading>
+          <ListItem.Root
+            key={id}
+            selected={selectedId === id}
+            onClick={() => setSelectedId(id)}
+            classNames={mx('items-center', ghostHover, selectedId === id && ghostSelected)}
+          >
+            <ListItem.Heading classNames='grow'>{text}</ListItem.Heading>
           </ListItem.Root>
         ))}
       </List>
