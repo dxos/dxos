@@ -1,23 +1,20 @@
 //
 // Copyright 2024 DXOS.org
 //
-
 import { type Space } from '@dxos/react-client/echo';
 
-import { type SerializedObject, type SerializedSpace } from './serializer';
+import { Serializer, type SerializedObject, type SerializedSpace } from './serializer';
 
-export const TypeOfExpando = 'dxos.org/typename/expando';
+export const saveSpaceToDisk = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
+  const serializer = new Serializer();
+  const serializedSpace = await serializer.serializeSpace(space);
 
-export const saveSpaceToDisk = async ({
-  space,
-  directory,
-}: {
-  space: SerializedSpace;
-  directory: FileSystemDirectoryHandle;
-}) => {
-  const saveDir = await directory.getDirectoryHandle(space.metadata.name ?? space.metadata.spaceKey, { create: true });
-  await writeComposerMetadata({ space, directory: saveDir });
-  await saveObjectsToDisk({ data: space.data, directory: saveDir });
+  const saveDir = await directory.getDirectoryHandle(
+    serializedSpace.metadata.name ?? serializedSpace.metadata.spaceKey,
+    { create: true },
+  );
+  await writeComposerMetadata({ space: serializedSpace, directory: saveDir });
+  await saveObjectsToDisk({ data: serializedSpace.data, directory: saveDir });
 };
 
 const writeComposerMetadata = async ({
@@ -33,7 +30,7 @@ const writeComposerMetadata = async ({
 
   const dropContent = (data: SerializedObject[]) => {
     const result: SerializedObject[] = [];
-    for (const item of space.data) {
+    for (const item of data) {
       if (item.type === 'folder') {
         result.push({ ...item, children: dropContent(item.children) });
       } else {

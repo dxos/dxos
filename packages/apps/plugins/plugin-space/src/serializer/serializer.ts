@@ -42,7 +42,7 @@ export class Serializer {
 
     const serializedSpace: SerializedSpace = {
       metadata: {
-        name: space.properties.name || '',
+        name: space.properties.name ?? space.key.toHex(),
         version: 1,
         timestamp: new Date().toUTCString(),
         spaceKey: space.key.toHex(),
@@ -55,7 +55,8 @@ export class Serializer {
       throw new Error('No root folder.');
     }
 
-    serializedSpace.data.push(await this._serializeFolder(spaceRoot));
+    // Skip root folder.
+    serializedSpace.data.push(...(await this._serializeFolder(spaceRoot)).children);
 
     return serializedSpace;
   }
@@ -85,7 +86,7 @@ export class Serializer {
     await space.db.flush();
   }
 
-  private async _serializeFolder(folder: Folder): Promise<SerializedObject> {
+  private async _serializeFolder(folder: Folder): Promise<SerializedObject & { type: 'folder' }> {
     const files: SerializedObject[] = [];
 
     for (const child of folder.objects) {
@@ -105,16 +106,21 @@ export class Serializer {
       const content = await serializer.serialize(child);
       files.push({
         type: 'file',
+        id: child.id,
         name: this._fixNamesCollisions(filename.name),
         extension: filename.extension,
         content,
         md5sum: md5(content),
         typename,
-        id: child.id,
       });
     }
 
-    return { type: 'folder', name: this._fixNamesCollisions(folder.name), children: files, id: folder.id };
+    return {
+      type: 'folder',
+      id: folder.id,
+      name: this._fixNamesCollisions(folder.name ?? 'New folder'),
+      children: files,
+    };
   }
 
   private async _deserializeFolder(file: SerializedObject): Promise<TypedObject> {

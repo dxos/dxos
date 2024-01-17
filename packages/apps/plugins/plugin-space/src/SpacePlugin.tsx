@@ -49,7 +49,7 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { saveSpaceToDisk, loadSpaceFromDisk } from './serializer/save-to-disk';
+import { saveSpaceToDisk, loadSpaceFromDisk } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
