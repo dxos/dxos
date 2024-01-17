@@ -86,7 +86,7 @@
           "env": "DX_TELEMETRY_API_KEY"
         },
         {
-          "env": "DX_VAULT"
+          "env": "DX_HOST"
         },
         {
           "env": "NODE_ENV"
