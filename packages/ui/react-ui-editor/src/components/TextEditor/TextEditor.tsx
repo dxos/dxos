@@ -179,11 +179,11 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       <div
         key={model.id}
         role='none'
-        ref={rootRef}
         tabIndex={0}
         onKeyUp={handleKeyUp}
         {...slots.root}
         {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        ref={rootRef}
       />
     );
   },

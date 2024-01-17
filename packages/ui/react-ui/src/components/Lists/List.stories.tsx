@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { type FC, type ReactNode, useState } from 'react';
 
@@ -184,5 +185,27 @@ export const Collapsible = {
   args: {
     variant: 'unordered',
     toggleOpenLabel: 'Open/close storybook list item',
+  },
+};
+
+export const Listbox = {
+  render: () => {
+    const domAttributes = useArrowNavigationGroup({ axis: 'vertical' });
+    const [items, _setItems] = useState(
+      [...Array(12)].map((_, index) => ({
+        id: `listItem-${index}`,
+        text: `List item ${index + 1}`,
+      })),
+    );
+
+    return (
+      <List selectable {...domAttributes}>
+        {items.map(({ id, text }) => (
+          <ListItem.Root key={id}>
+            <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
+          </ListItem.Root>
+        ))}
+      </List>
+    );
   },
 };

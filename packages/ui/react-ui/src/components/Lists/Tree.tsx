@@ -6,8 +6,8 @@ import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type Forward
 
 import {
   List,
-  LIST_ITEM_NAME,
   ListItem,
+  LIST_ITEM_NAME,
   type ListItemCollapsibleContentProps,
   type ListItemHeadingProps,
   type ListItemOpenTriggerProps,
