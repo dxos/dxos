@@ -26,6 +26,7 @@ for (const platform of ['node', 'browser'] as const) {
           automerge: 'src/automerge.ts',
           'automerge/next': 'src/automerge/next.ts',
           'automerge-repo': 'src/automerge-repo.ts',
+          'automerge-repo-storage-indexeddb': 'src/automerge-repo-storage-indexeddb.ts',
         },
     bundle: true,
     format: 'esm',
