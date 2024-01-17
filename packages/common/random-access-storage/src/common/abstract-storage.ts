@@ -68,7 +68,7 @@ export abstract class AbstractStorage implements Storage {
 
   protected async _list(path: string): Promise<string[]> {
     // TODO(dmaretskyi): Fix me.
-    return Array.from(this._getFiles(path).keys()).map((filename) => {
+    return Array.from((await this._getFiles(path)).keys()).map((filename) => {
       let name = filename.replace(path, '');
       if (name.startsWith('/')) {
         name = name.substring(1);
@@ -121,7 +121,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  protected _getFiles(path: string): Map<string, File> {
+  protected async _getFiles(path: string): Promise<Map<string, File>> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
       [...this._files.entries()].filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true),
@@ -130,14 +130,14 @@ export abstract class AbstractStorage implements Storage {
 
   private async _closeFilesInPath(path: string): Promise<void> {
     await Promise.all(
-      Array.from(this._getFiles(path).values()).map((file) => file.close().catch((err: any) => log.catch(err))),
+      Array.from((await this._getFiles(path)).values()).map((file) => file.close().catch((err: any) => log.catch(err))),
     );
   }
 
   // TODO(burdon): Delete directory (not just listed files).
   protected async _remove(path: string): Promise<void> {
     await Promise.all(
-      Array.from(this._getFiles(path)).map(([path, file]) => {
+      Array.from(await this._getFiles(path)).map(([path, file]) => {
         return file
           .destroy()
           .then(() => this._files.delete(path))

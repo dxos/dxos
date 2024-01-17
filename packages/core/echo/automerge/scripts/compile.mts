@@ -16,7 +16,7 @@ for (const platform of ['node', 'browser'] as const) {
   const result = await build({
     entryPoints:
       platform === 'node'
-        ? ['src/automerge.ts', 'src/automerge/next.ts', 'src/automerge-repo.ts']
+        ? ['src/automerge.ts', 'src/automerge/next.ts', 'src/automerge-repo.ts', 'src/automerge-repo-storage-indexeddb.ts']
         : {
           automerge_wasm_bg: join(
             dirname(await require.resolve('@automerge/automerge-wasm')),
@@ -26,6 +26,7 @@ for (const platform of ['node', 'browser'] as const) {
           automerge: 'src/automerge.ts',
           'automerge/next': 'src/automerge/next.ts',
           'automerge-repo': 'src/automerge-repo.ts',
+          'automerge-repo-storage-indexeddb': 'src/automerge-repo-storage-indexeddb.ts',
         },
     bundle: true,
     format: 'esm',
