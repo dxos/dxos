@@ -34,7 +34,7 @@
     "github-markdown-css": "^5.2.0",
     "lodash.get": "^4.4.2",
     "lodash.update": "^4.10.2",
-    "octokit": "^2.0.14"
+    "octokit": "^3.1.2"
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
