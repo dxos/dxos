@@ -997,15 +997,18 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/client':
+      '@dxos/client-services':
         specifier: workspace:*
-        version: link:../../../sdk/client
+        version: link:../../../sdk/client-services
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../../devtools/devtools
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-pipeline
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -3812,6 +3815,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -8692,6 +8698,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
     devDependencies:
       '@dnd-kit/core':
         specifier: ^6.0.5
@@ -8702,9 +8711,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
