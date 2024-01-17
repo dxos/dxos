@@ -11,6 +11,15 @@ import type { InvitationStatus } from '@dxos/react-client/invitations';
 import type { IdentityEvent } from './identityMachine';
 import type { InvitationManagerProps } from '../../steps';
 
+export type AgentFormProps = {
+  onAgentCreate?: () => Promise<void>;
+  onAgentDestroy?: () => Promise<void>;
+  agentStatus?: string;
+  agentActive?: boolean;
+  agentProviderDisabled?: boolean;
+  validationMessage?: string;
+};
+
 export type IdentityPanelImplProps = {
   titleId: string;
   activeView:
@@ -32,7 +41,8 @@ export type IdentityPanelImplProps = {
   invitationUrl?: string;
   IdentityActionChooser?: React.FC<IdentityPanelStepProps>;
   InvitationManager?: React.FC<InvitationManagerProps>;
-} & Partial<InvitationStatus>;
+} & Partial<InvitationStatus> &
+  Partial<AgentFormProps>;
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;
 
