@@ -4,7 +4,7 @@
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
@@ -13,8 +13,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 import packageJson from './package.json';
-
-const env = (value?: string) => (value ? `"${value}"` : undefined);
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -27,6 +26,7 @@ export default defineConfig({
         panel: resolve(__dirname, 'panel.html'),
       },
       output: {
+        sourcemap: true,
         manualChunks: {
           vendor: ['react', 'react-router-dom', 'react-dom'],
         },
@@ -133,5 +133,27 @@ export default defineConfig({
     //     ]
     //   }
     // })
+
+    // https://www.bundle-buddy.com/rollup
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      },
+    },
   ],
 });

@@ -49,6 +49,20 @@ const isValidKey = (key: string | symbol) => {
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
 
+/**
+ * @deprecated Temporary.
+ */
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
+};
+
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
 };
@@ -669,18 +683,4 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isActualTypedObject = (object: unknown): object is TypedObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

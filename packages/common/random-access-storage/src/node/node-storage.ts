@@ -3,13 +3,13 @@
 //
 
 import del from 'del';
-import { readdirSync, statSync, existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import raf from 'random-access-file';
 import { type RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage, type DiskInfo, type Storage, StorageType, wrapFile, type File } from '../common';
+import { AbstractStorage, type DiskInfo, type Storage, StorageType, wrapFile } from '../common';
 
 /**
  * Storage interface implementation for Node.
@@ -18,22 +18,22 @@ export class NodeStorage extends AbstractStorage implements Storage {
   public override type: StorageType = StorageType.NODE;
   private _initialized = false;
 
-  private _loadFiles(path: string) {
+  private async _loadFiles(path: string) {
     // TODO(mykola): Do not load all files at once. It is a quick fix.
     if (!existsSync(path)) {
       return;
     }
 
     // Preload all files in a directory.
-    const dir = readdirSync(path);
+    const dir = await readdir(path);
     for (const entry of dir) {
       const fullPath = join(path, entry);
       if (this._files.has(fullPath)) {
         continue;
       }
-      const entryInfo = statSync(fullPath);
+      const entryInfo = await stat(fullPath);
       if (entryInfo.isDirectory()) {
-        this._loadFiles(fullPath);
+        await this._loadFiles(fullPath);
       } else if (entryInfo.isFile()) {
         const file = this._createFile(path, entry);
         this._files.set(fullPath, wrapFile(file, this.type));
@@ -54,9 +54,9 @@ export class NodeStorage extends AbstractStorage implements Storage {
     await del(this.path, { force: true });
   }
 
-  protected override _getFiles(path: string): Map<string, File> {
+  protected override async _getFiles(path: string) {
     if (!this._initialized) {
-      this._loadFiles(this.path);
+      await this._loadFiles(this.path);
       this._initialized = true;
     }
 

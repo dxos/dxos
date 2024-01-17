@@ -27,6 +27,20 @@
       "require": "./dist/lib/node/automerge/next.cjs",
       "node": "./dist/lib/node/automerge/next.cjs",
       "types": "./dist/types/src/automerge/next.d.ts"
+    },
+    "#automerge-repo": {
+      "browser": "./dist/lib/browser/automerge-repo.js",
+      "import": "./dist/lib/browser/automerge-repo.js",
+      "require": "./dist/lib/node/automerge-repo.cjs",
+      "node": "./dist/lib/node/automerge-repo.cjs",
+      "types": "./dist/types/src/automerge-repo.d.ts"
+    },
+    "#automerge-repo-storage-indexeddb": {
+      "browser": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "import": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
     }
   },
   "exports": {
@@ -57,6 +71,13 @@
       "require": "./dist/lib/node/automerge-repo.cjs",
       "node": "./dist/lib/node/automerge-repo.cjs",
       "types": "./dist/types/src/automerge-repo.d.ts"
+    },
+    "./automerge-repo-storage-indexeddb": {
+      "browser": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "import": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
+      "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
     }
   },
   "typesVersions": {
@@ -72,6 +93,9 @@
       ],
       "automerge-wasm": [
         "dist/types/src/automerge-wasm.d.ts"
+      ],
+      "automerge-repo-storage-indexeddb": [
+        "dist/types/src/automerge-repo-storage-indexeddb.d.ts"
       ]
     }
   },
@@ -86,6 +110,7 @@
   "dependencies": {
     "@automerge/automerge": "^2.1.7",
     "@automerge/automerge-repo": "^1.0.19",
+    "@automerge/automerge-repo-storage-indexeddb": "^1.0.19",
     "@automerge/automerge-wasm": "^0.5.0",
     "bs58check": "^3.0.1",
     "cbor-x": "^1.5.4",

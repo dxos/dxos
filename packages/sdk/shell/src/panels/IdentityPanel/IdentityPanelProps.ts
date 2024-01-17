@@ -13,10 +13,18 @@ import type { InvitationManagerProps } from '../../steps';
 
 export type IdentityPanelImplProps = {
   titleId: string;
-  activeView: 'device manager' | 'update profile form' | 'device invitation manager' | 'identity action chooser';
+  activeView:
+    | 'device manager'
+    | 'agent manager'
+    | 'update profile form'
+    | 'device invitation manager'
+    | 'identity action chooser'
+    | 'signing out';
   identity: Identity;
   devices: Device[];
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
+  onResetDevice?: () => Promise<void>;
+  onJoinNewIdentity?: () => void;
   createInvitationUrl: (invitationCode: string) => string;
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onDone?: () => void;

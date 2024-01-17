@@ -43,7 +43,7 @@ import {
   type OnChange,
   MarkdownAction,
 } from './types';
-import { getFallbackTitle, isMarkdown, isMarkdownProperties, markdownPlugins } from './util';
+import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -209,7 +209,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 );
               } else if (
                 'model' in data &&
-                isMarkdown(data.model) &&
+                isEditorModel(data.model) &&
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
