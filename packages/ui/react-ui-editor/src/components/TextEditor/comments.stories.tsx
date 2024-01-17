@@ -90,12 +90,12 @@ const Thread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const [item, setItem] = useState({ id: '_new', text: new TextObject() });
+  const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
 
   // TODO(burdon): Tie editor to model.
-  const focus = useFocus(editorRef.current, model?.id);
+  const { focus, ready } = useFocus();
 
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -111,7 +111,7 @@ const Thread: FC<{
     const text = model?.text().trim();
     if (text?.length) {
       thread.messages.push(item.text);
-      const newItem = { id: '', text: new TextObject() };
+      const newItem = { text: new TextObject() };
       setItem(newItem);
       focus(newItem.id);
     }
@@ -154,6 +154,7 @@ const Thread: FC<{
                 },
               ]),
             ]}
+            onReady={ready}
           />
         </div>
         <Button variant='ghost' classNames='px-1 mr-1' title='Resolve' onClick={onResolve}>
