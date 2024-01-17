@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
 import { comments, type CommentsOptions, Cursor } from '../../extensions';
-import { type CommentRange, type Range, useTextModel } from '../../hooks';
+import { type CommentRange, type Range, useFocus, useTextModel } from '../../hooks';
 
 faker.seed(101);
 
@@ -90,23 +90,19 @@ const Thread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const [item, setItem] = useState({ text: new TextObject() });
+  const [item, setItem] = useState({ id: '_new', text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
 
-  // TODO(burdon): Hack to focus (view is recreated when text object changes).
-  const focus = () => {
-    setTimeout(() => {
-      editorRef.current?.focus();
-    }, 100);
-  };
+  // TODO(burdon): Tie editor to model.
+  const focus = useFocus(editorRef.current, model?.id);
 
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
-        focus();
+        focus('_new');
       }
     }
   }, [selected]);
@@ -115,8 +111,9 @@ const Thread: FC<{
     const text = model?.text().trim();
     if (text?.length) {
       thread.messages.push(item.text);
-      setItem({ text: new TextObject() });
-      focus();
+      const newItem = { id: '', text: new TextObject() };
+      setItem(newItem);
+      focus(newItem.id);
     }
   };
 
