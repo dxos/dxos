@@ -19,20 +19,8 @@ import { LOCK_KEY } from '../lock-key';
 /**
  * Creates services provider connected via worker.
  */
-export const fromWorker = async (
-  config: Config = new Config(),
-  options: Omit<WorkerClientServicesParams, 'config' | 'createWorker'> = {},
-) => {
-  return new WorkerClientServices({
-    config,
-    createWorker: () =>
-      new SharedWorker(new URL('./worker/shared-worker', import.meta.url), {
-        type: 'module',
-        name: 'dxos-client-worker',
-      }),
-    ...options,
-  });
-};
+export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesParams, 'config'>) =>
+  new WorkerClientServices({ config, ...options });
 
 export type WorkerClientServicesParams = {
   config: Config;

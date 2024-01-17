@@ -17,6 +17,7 @@ export type InvitationResult = {
   spaceKey: PublicKey | null;
   identityKey: PublicKey | null;
   swarmKey: PublicKey | null;
+  target: string | null;
 };
 
 interface InvitationReducerState {
@@ -98,7 +99,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     (_arg: null) => {
       return {
         status: Invitation.State.INIT,
-        result: { spaceKey: null, identityKey: null, swarmKey: null },
+        result: { spaceKey: null, identityKey: null, swarmKey: null, target: null },
         observable: initialObservable,
       };
     },
@@ -125,6 +126,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
               spaceKey: invitation.spaceKey || null,
               identityKey: invitation.identityKey || null,
               swarmKey: invitation.swarmKey || null,
+              target: invitation.target || null,
             },
           });
           break;

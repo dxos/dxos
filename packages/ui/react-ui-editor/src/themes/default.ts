@@ -161,14 +161,6 @@ export const defaultTheme: ThemeStyles = {
   },
 
   //
-  // widgets
-  //
-  '.cm-widgetBuffer': {
-    display: 'none',
-    height: 0,
-  },
-
-  //
   // table
   //
   '.cm-table *': {
