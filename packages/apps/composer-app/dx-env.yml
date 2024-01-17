@@ -9,3 +9,11 @@ LOG_PREFIX:
 REMOTE_SOURCE:
   path: runtime.client.remoteSource
   type: string
+
+AGENT_HOSTING_TYPE:
+  path: runtime.services.agentHosting.type
+  type: string
+
+AGENT_HOSTING_SERVER:
+  path: runtime.services.agentHosting.server
+  type: string
