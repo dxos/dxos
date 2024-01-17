@@ -17,7 +17,7 @@ import {
   type IdentityPanelProps,
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { DeviceManager, IdentityActionChooser, ProfileForm } from './steps';
+import { DeviceManager, IdentityActionChooser, ProfileForm, AgentForm } from './steps';
 import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 
@@ -53,8 +53,8 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   const { t } = useTranslation('os');
   const title = useMemo(() => {
     switch (activeView) {
-      case 'device manager':
-        return t('choose devices label');
+      case 'agent manager':
+        return 'Manage Agent';
       case 'device invitation manager':
         return t('choose add device label');
       default:
@@ -87,6 +87,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               profile={identity.profile}
               onUpdateProfile={onUpdateProfile}
             />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='agent manager'>
+            <AgentForm send={rest.send} active={activeView === 'agent manager'} identity={identity} />
           </Viewport.View>
           {/* <Viewport.View id='signing out'></Viewport.View> */}
         </Viewport.Views>
@@ -136,6 +139,8 @@ export const IdentityPanel = ({
         return 'device manager';
       case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
         return 'update profile form';
+      case [{ managingAgent: 'idle' }, { managingAgent: 'pending' }].some(identityState.matches):
+        return 'agent manager';
       // case identityState.matches('signingOut'):
       //   return 'identity exit';
       default:
