@@ -3148,6 +3148,52 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-undo:
+    dependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-wildcard:
     dependencies:
       '@dxos/react-client':
