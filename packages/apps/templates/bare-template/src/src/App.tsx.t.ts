@@ -29,7 +29,7 @@ export default template.define
       <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
         <${ClientProvider}
           config={config}
-          createWorker{createWorker}${dxosUi ? plate`
+          createWorker={createWorker}${dxosUi ? plate`
           fallback={${GenericFallback}}` : ''}
           onInitialized={async (client) => {
             ${proto && plate`client.addSchema(${types});`}
