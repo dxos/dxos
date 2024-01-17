@@ -162,10 +162,10 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
         columns={columns}
         data={rows}
         border
-        onColumnResize={handleColumnResize}
         role={role ?? 'grid'}
         stickyHeader={stickyHeader}
         getScrollElement={getScrollElement}
+        onColumnResize={handleColumnResize}
       />
       {debug && (
         <div className='flex text-xs'>

@@ -6,14 +6,15 @@ import { join } from 'node:path';
 
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { createContext, createSequence } from './request';
+import { createResolvers, type Resolvers } from './resolvers';
 import { createResponse } from './response';
-import { type ChainVariant, createChainResources } from '../../chain';
+import { type ChainResources, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
-import { createResolvers } from './resolvers';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
@@ -50,65 +51,95 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   if (activeThreads) {
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
-        let disPostStatus = false;
-        
-
-
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
-          if(!disPostStatus){
-            space.postMessage(`${thread.id}/ephemeral_status`, {
-              event: 'AI_GENERATING',
-              ts: Date.now(),
-              messageCount: thread.messages.length,
-            }).catch(() => {})
-            disPostStatus = true;
-          }
-          
-          let blocks: MessageType.Block[];
-          try {
-            let text = message.blocks
-              .map((message) => message.text)
-              .filter(Boolean)
-              .join('\n');
-
-            // Check for command.
-            let command: string | undefined;
-            const match = text.match(/\/(\w+)\s*(.+)?/);
-            if (match) {
-              command = match[1];
-              text = match[2];
-            }
-
-            const context = createContext(space, message, thread);
-            const sequence = await createSequence(space, resources, context, resolvers, { command });
-            const response = await sequence.invoke(text);
-            log.info('response', { response });
-
-            blocks = createResponse(space, context, response);
-            log.info('response', { blocks });
-          } catch (error) {
-            log.error('processing message', { error });
-            blocks = [{ text: 'There was an error generating the response.' }];
-          }
-
-          thread.messages.push(
-            new MessageType(
-              {
-                from: {
-                  identityKey: resources.identityKey,
+          const blocks = await processMessage(resources, resolvers, space, thread, message);
+          if (blocks) {
+            thread.messages.push(
+              new MessageType(
+                {
+                  from: {
+                    identityKey: resources.identityKey,
+                  },
+                  blocks,
                 },
-                blocks,
-              },
-              {
-                meta: {
-                  keys: [{ source: 'openai.com' }],
+                {
+                  meta: {
+                    keys: [{ source: 'openai.com' }],
+                  },
                 },
-              },
-            ),
-          );
+              ),
+            );
+          }
         }
       }),
     );
   }
 });
+
+// TODO(burdon): Create class.
+const processMessage = async (
+  resources: ChainResources,
+  resolvers: Resolvers,
+  space: Space,
+  thread: ThreadType,
+  message: MessageType,
+): Promise<MessageType.Block[] | undefined> => {
+  let blocks: MessageType.Block[] | undefined;
+  const { start, stop } = createStatusNotifier(space, thread.id);
+  try {
+    const text = message.blocks
+      .map((message) => message.text)
+      .filter(Boolean)
+      .join('\n');
+
+    const match = text.match(/\/(\w+)\s*(.+)?/);
+    if (match) {
+      const prompt = match[1];
+      const content = match[2];
+
+      start();
+      log.info('processing', { prompt, content });
+      const context = createContext(space, message, thread);
+      const sequence = await createSequence(space, resources, context, resolvers, { prompt });
+      const response = await sequence.invoke(content);
+
+      blocks = createResponse(space, context, response);
+      log.info('response', { blocks });
+    }
+  } catch (err) {
+    log.error('processing message', err);
+    blocks = [{ text: 'Error generating response.' }];
+  } finally {
+    stop();
+  }
+
+  return blocks;
+};
+
+// TODO(burdon): Factor out.
+const createStatusNotifier = (space: Space, id: string) => {
+  let start: number | undefined;
+  return {
+    start: () => {
+      if (!start) {
+        start = Date.now();
+        void space.postMessage(`status/${id}`, {
+          event: 'processing',
+          ts: start,
+        });
+      }
+    },
+    stop: () => {
+      if (start) {
+        const now = Date.now();
+        void space.postMessage(`status/${id}`, {
+          event: 'done',
+          ts: now,
+          duration: now - start,
+        });
+        start = undefined;
+      }
+    },
+  };
+};

@@ -23,6 +23,7 @@ import {
 import { type SpacePanelStepProps } from '../SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
+  target?: string;
   invitations?: CancellableInvitationObservable[];
   showInactiveInvitations?: boolean;
   inviteActions?: Record<string, ActionMenuItem>;
@@ -35,7 +36,7 @@ const activeActionKey = 'dxos:react-shell/space-manager/active-action';
 export type SpaceManagerProps = SpaceManagerImplProps & {};
 
 export const SpaceManager = (props: SpaceManagerProps) => {
-  const { space } = props;
+  const { space, target } = props;
   const { t } = useTranslation('os');
   const config = useConfig();
 
@@ -57,6 +58,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
         const invitation = space.share?.({
           type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.SHARED_SECRET,
+          target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
           invitation.subscribe(onInvitationEvent);
@@ -71,6 +73,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
         const invitation = space.share?.({
           type: Invitation.Type.MULTIUSE,
           authMethod: Invitation.AuthMethod.NONE,
+          target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
           invitation.subscribe(onInvitationEvent);

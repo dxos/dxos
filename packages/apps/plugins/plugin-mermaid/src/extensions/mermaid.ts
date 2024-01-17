@@ -140,6 +140,7 @@ const styles = EditorView.baseTheme({
   '& .cm-mermaid': {
     position: 'relative',
     display: 'inline-flex',
+    width: '100%',
     justifyContent: 'center',
     // backgroundColor: getToken('extend.colors.neutral.50'),
   },

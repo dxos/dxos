@@ -6,22 +6,21 @@ import { PromptTemplate } from 'langchain/prompts';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
 import { formatDocumentsAsString } from 'langchain/util/document';
+import get from 'lodash.get';
 
-import { Chain as ChainType, Document, Thread } from '@braneframe/types';
-import { type Message as MessageType } from '@braneframe/types';
+import { Chain as ChainType, Document, type Thread, type Message as MessageType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { fromCursor, getRawDoc, getTextContent, getTextInRange, IDocHandle, Schema, TextObject, type TypedObject } from '@dxos/echo-schema';
+import { getTextContent, getTextInRange, Schema, type TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { sequences } from './chains';
+import { type Resolvers } from './resolvers';
 import type { ChainResources } from '../../chain';
-import { Resolvers } from './resolvers';
-import get from 'lodash.get';
 
 export type PromptContext = {
   object?: TypedObject;
   schema?: Schema;
-  contextText?: string;
+  text?: string;
 };
 
 export const createContext = (space: Space, message: MessageType, thread: Thread): PromptContext => {
@@ -29,43 +28,40 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
   if (message.context?.object) {
     const { objects } = space.db.query({ id: message.context?.object });
     object = objects[0];
-  } else if(thread.context?.object) {
+  } else if (thread.context?.object) {
     const { objects } = space.db.query({ id: thread.context?.object });
     object = objects[0];
   }
 
   // log.info('context', { message: message.context, thread: thread.context })
 
+  let text: string | undefined;
+
   // TODO(burdon): How to infer schema from message/context/prompt.
-  let schema: Schema | undefined;
-  let contextText: string | undefined;
+  const { objects: schemas } = space.db.query(Schema.filter());
+  const schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
 
-  if (object?.__typename === 'braneframe.Grid') {
-    const { objects: schemas } = space.db.query(Schema.filter());
-    schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
-  }
-
-  log.info('context object', { object })
-  if(object instanceof Document) {
+  log.info('context object', { object });
+  if (object instanceof Document) {
     const comment = object.comments?.find((comment) => comment.thread === thread);
-    log.info('context comment', { object })
-    if(comment) {
-      contextText = getReferencedText(object, comment);
-      log.info('context text', { contextText })
+    log.info('context comment', { object });
+    if (comment) {
+      text = getReferencedText(object, comment);
+      log.info('context text', { text });
     }
   }
 
   return {
     object,
     schema,
-    contextText,
+    text,
   };
 };
 
 export type SequenceTest = (context: PromptContext) => boolean;
 
-type SequenceOptions = {
-  command?: string;
+export type SequenceOptions = {
+  prompt?: string;
   noVectorStore?: boolean;
   noTrainingData?: boolean;
 };
@@ -93,48 +89,82 @@ export const createSequence = async (
   });
 
   // Create sequence from command.
-  if (options.command) {
+  if (options.prompt) {
     const { objects: chains = [] } = space.db.query(ChainType.filter());
     for (const chain of chains) {
       for (const prompt of chain.prompts) {
-        if (prompt.command === options.command) {
+        if (prompt.command === options.prompt) {
           return createSequenceFromPrompt(resources, prompt, resolvers, context);
         }
       }
     }
   }
 
-  // TODO(burdon): Return meta -- e.g., ID.
   // Create sequence from predicates.
+  // TODO(burdon): Remove static sequences.
   const { id, generator } = sequences.find(({ test }) => test(context))!;
   log.info('sequence', { id });
   return generator(resources, () => context, options);
 };
 
-const createSequenceFromPrompt = async (resources: ChainResources, prompt: ChainType.Prompt, resolvers: Resolvers, context: PromptContext) => {
-  const inputs: Record<string, any> = {}
-  for(const { type, name, value } of prompt.inputs) {
+const createSequenceFromPrompt = async (
+  resources: ChainResources,
+  prompt: ChainType.Prompt,
+  resolvers: Resolvers,
+  context: PromptContext,
+) => {
+  const inputs: Record<string, any> = {};
+  for (const { type, name, value } of prompt.inputs) {
     switch (type) {
       case ChainType.Input.Type.VALUE: {
         inputs[name] = () => getTextContent(value);
         break;
       }
+
       case ChainType.Input.Type.PASS_THROUGH: {
         inputs[name] = new RunnablePassthrough();
         break;
       }
+
+      case ChainType.Input.Type.CONTEXT: {
+        inputs[name] = () => {
+          if (value) {
+            const text = getTextContent(value);
+            if (text.length) {
+              try {
+                const result = get(context, text);
+
+                // TODO(burdon): Special case for getting schema fields for list preset.
+                // TODO(burdon): Proxied arrays don't pass Array.isArray.
+                // if (Array.isArray(result)) {
+                if (typeof result !== 'string' && result?.length) {
+                  return result
+                    .slice(0, 3)
+                    .map((prop: any) => prop?.id)
+                    .join(',');
+                }
+
+                return result;
+              } catch (err) {
+                // TODO(burdon): Return error to user.
+              }
+            }
+          }
+
+          return context.text;
+        };
+        break;
+      }
+
       case ChainType.Input.Type.RETRIEVER: {
         const retriever = resources.store.vectorStore.asRetriever({});
         inputs[name] = retriever.pipe(formatDocumentsAsString);
         break;
       }
+
       case ChainType.Input.Type.RESOLVER: {
         const result = await runResolver(resolvers, getTextContent(value));
         inputs[name] = () => result;
-        break;
-      }
-      case ChainType.Input.Type.CONTEXT: {
-        inputs[name] = () => context.contextText;
         break;
       }
     }
@@ -150,27 +180,27 @@ const createSequenceFromPrompt = async (resources: ChainResources, prompt: Chain
 
 const runResolver = async (resolvers: Resolvers, name: string) => {
   try {
-    const resolver = get(resolvers, name )
-    log.info('running resolver', { resolver: name  })
+    const resolver = get(resolvers, name);
+    log.info('running resolver', { resolver: name });
     const start = performance.now();
-    const result =  typeof resolver === 'function' ? await resolver() : resolver;
-    log.info('resolver complete', { resolver: name , duration: performance.now() - start })
+    const result = typeof resolver === 'function' ? await resolver() : resolver;
+    log.info('resolver complete', { resolver: name, duration: performance.now() - start });
     return result;
   } catch (error) {
-    log.error('resolver error', { resolver: name, error })
+    log.error('resolver error', { resolver: name, error });
     return '';
   }
-}
+};
 
 /**
  * @deprecated Clean this up. Only works for automerge.
  * Text cursors should be a part of core ECHO API.
  */
 const getReferencedText = (document: Document, comment: Document.Comment): string => {
-  if(!comment.cursor) {
+  if (!comment.cursor) {
     return '';
   }
-  const [begin, end] = comment.cursor.split(':');
 
+  const [begin, end] = comment.cursor.split(':');
   return getTextInRange(document.content, begin, end);
-}
+};

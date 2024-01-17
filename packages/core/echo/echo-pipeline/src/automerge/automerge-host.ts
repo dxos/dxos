@@ -238,7 +238,7 @@ class MeshNetworkAdapter extends NetworkAdapter {
   }
 }
 
-class AutomergeStorageAdapter extends StorageAdapter {
+export class AutomergeStorageAdapter extends StorageAdapter {
   constructor(private readonly _directory: Directory) {
     super();
   }

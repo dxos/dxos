@@ -5,9 +5,9 @@
 import { faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
-import { type Space, TextObject } from '@dxos/client/echo';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
+import { type Space, TextObject } from '@dxos/react-client/echo';
 import { range } from '@dxos/util';
 
 const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
@@ -37,6 +37,7 @@ const defaultCount: Partial<Record<TestSchemaType, number>> = {
   [TestSchemaType.contact]: 160,
 };
 
+// TODO(wittjosiah): Use @dxos/echo-generator.
 export class Generator {
   private readonly _generator: SpaceObjectGenerator<TestSchemaType>;
 

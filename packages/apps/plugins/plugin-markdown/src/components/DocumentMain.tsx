@@ -16,7 +16,7 @@ import type { MarkdownSettingsProps } from '../types';
 
 export const DocumentMain: FC<{
   document: DocumentType;
-  readonly: boolean;
+  readonly?: boolean;
   editorMode: MarkdownSettingsProps['editorMode'];
   extensions: Extension[];
   editorRefCb: RefCallback<EditorView>;
