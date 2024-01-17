@@ -6,7 +6,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { useClient, useAgentHostingProviderClient } from '@dxos/react-client';
 import { type Identity, useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -26,6 +25,7 @@ export interface AgentFormProps extends Omit<IdentityPanelStepProps, 'send'> {
 export type AgentFormImplProps = AgentFormProps & {
   agentStatus?: string;
   agentActive?: boolean;
+  agentProviderDisabled?: boolean;
   validationMessage?: string;
 };
 
@@ -42,13 +42,17 @@ export const AgentForm = (props: AgentFormProps) => {
   useEffect(() => {
     const fetchAgentStatus = async () => {
       // TODO(nf): if agent exists, subscribe to updates instead of oneshot status
-      const agentStatus = await agentHostingProviderClient?.getAgent(identity?.identityKey.truncate() ?? 'foo');
-      if (agentStatus) {
-        setAgentActive(true);
-        setAgentStatus(agentStatus);
+      if (agentHostingProviderClient) {
+        const agentStatus = await agentHostingProviderClient?.getAgent(identity?.identityKey.truncate() ?? 'foo');
+        if (agentStatus) {
+          setAgentActive(true);
+          setAgentStatus(agentStatus);
+        } else {
+          setAgentActive(false);
+          setValidationMessage('No agent deployed via provider.');
+        }
       } else {
-        setAgentActive(false);
-        setValidationMessage('No agent deployed via provider.');
+        setValidationMessage('No agent provider configured.');
       }
     };
     void fetchAgentStatus();
@@ -59,14 +63,16 @@ export const AgentForm = (props: AgentFormProps) => {
     if (invitation.state === Invitation.State.CONNECTING) {
       console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
       invariant(identity, 'Identity not found');
-      try {
-        const res = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
-        // TODO(nf): human-consumable response from API
-        setAgentStatus(res);
-        setAgentActive(true);
-        setValidationMessage('');
-      } catch (err: any) {
-        setValidationMessage(`error creating agent: ${err.message}`);
+      if (agentHostingProviderClient) {
+        try {
+          const res = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
+          // TODO(nf): human-consumable response from API
+          setAgentStatus(res);
+          setAgentActive(true);
+          setValidationMessage('');
+        } catch (err: any) {
+          setValidationMessage(`error creating agent: ${err.message}`);
+        }
       }
     }
   }, []);
@@ -101,13 +107,23 @@ export const AgentForm = (props: AgentFormProps) => {
       validationMessage={validationMessage}
       agentStatus={agentStatus}
       agentActive={agentActive}
+      agentProviderDisabled={!agentHostingProviderClient}
     />
   );
 };
 
 // TODO(zhenyasav): impl shouldn't need send()
 export const AgentFormImpl = (props: AgentFormImplProps) => {
-  const { active, onAgentCreate, onAgentDestroy, send, validationMessage, agentStatus, agentActive } = props;
+  const {
+    active,
+    onAgentCreate,
+    onAgentDestroy,
+    send,
+    validationMessage,
+    agentStatus,
+    agentActive,
+    agentProviderDisabled,
+  } = props;
   const disabled = !active;
   const { t } = useTranslation('os');
   return (
@@ -122,10 +138,18 @@ export const AgentFormImpl = (props: AgentFormImplProps) => {
         />
       </div>
       <Actions>
-        <Action disabled={agentActive} onClick={() => onAgentCreate?.()} data-testid={'create-agent'}>
+        <Action
+          disabled={agentActive || agentProviderDisabled}
+          onClick={() => onAgentCreate?.()}
+          data-testid={'create-agent'}
+        >
           Create Agent
         </Action>
-        <Action disabled={!agentActive} onClick={() => onAgentDestroy?.()} data-testid={'destroy-agent'}>
+        <Action
+          disabled={!agentActive || agentProviderDisabled}
+          onClick={() => onAgentDestroy?.()}
+          data-testid={'destroy-agent'}
+        >
           Destroy Agent
         </Action>
         <Action

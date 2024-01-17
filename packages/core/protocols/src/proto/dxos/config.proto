@@ -370,11 +370,6 @@ message Runtime {
     // TODO(nf): Set API version, authentication scheme, etc.
     message AgentHosting {
       // TODO(nf): read enum from yml?
-      enum AgentHostingType {
-        NONE = 0;
-        LOCAL_TESTING = 1;
-        ELDON_API = 2;
-      }
       optional string server = 1;
       optional string type = 2;
     }
