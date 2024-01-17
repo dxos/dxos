@@ -10,6 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { AppManager } from './app-manager';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
+  await host.openSpaceManager();
   const invitationCode = await host.shell.createSpaceInvitation();
   const authCode = await host.shell.getAuthCode();
   await guest.joinSpace();
@@ -33,6 +34,39 @@ test.describe('Collaboration tests', () => {
 
     await host.init();
     await guest.init();
+  });
+
+  // TODO(wittjosiah): This currently fails because replication fails after the device invitation and requires a reload.
+  test.skip('join new identity', async () => {
+    test.slow();
+
+    await host.createSpace();
+    await host.createSpace();
+    await guest.createSpace();
+
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(3);
+      expect(await guest.getSpaceItemsCount()).to.equal(2);
+    });
+
+    await host.openIdentityManager();
+    const invitationCode = await host.shell.createDeviceInvitation();
+    const authCode = await host.shell.getAuthCode();
+    await guest.openIdentityManager();
+    await guest.shell.joinNewIdentity(invitationCode);
+    await guest.shell.authenticateDevice(authCode);
+    await host.shell.closeShell();
+
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(3);
+      expect(await guest.getSpaceItemsCount()).to.equal(3);
+    });
+
+    await host.openIdentityManager();
+    await guest.openIdentityManager();
+    await waitForExpect(async () => {
+      expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
+    });
   });
 
   test('guest joins host’s space', async () => {

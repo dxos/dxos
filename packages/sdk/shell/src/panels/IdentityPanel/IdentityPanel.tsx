@@ -31,7 +31,7 @@ const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHead
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
         </Avatar.Frame>
-        <Avatar.Label classNames='block text-center font-light text-xl'>
+        <Avatar.Label classNames='block text-center font-light text-xl' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
         </Avatar.Label>
       </Avatar.Root>

@@ -110,4 +110,18 @@ test.describe('Single-player tests', () => {
       .to.be.a('string')
       .and.satisfy((trace: string) => trace.startsWith('INVALID_STORAGE_VERSION'));
   });
+
+  test('reset device', async () => {
+    await host.createSpace();
+    await host.createSpace();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(3);
+    });
+
+    await host.openIdentityManager();
+    await host.shell.resetDevice();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(1);
+    });
+  });
 });

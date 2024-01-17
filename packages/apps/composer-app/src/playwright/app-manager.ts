@@ -8,6 +8,8 @@ import { StackManager } from '@dxos/react-ui-stack/testing';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
+// TODO(wittjosiah): Normalize data-testids between snake and camel case.
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -34,6 +36,14 @@ export class AppManager {
     this.page = page;
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
+  }
+
+  async openIdentityManager() {
+    await this.page.keyboard.press('Meta+Shift+.');
+  }
+
+  async openSpaceManager() {
+    await this.page.keyboard.press('Meta+.');
   }
 
   isAuthenticated() {
