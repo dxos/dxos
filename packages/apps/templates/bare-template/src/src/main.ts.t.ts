@@ -26,12 +26,18 @@ export default template.define.text({
     // Include any css files directly.
     ${!tailwind && '// '}import './index.css';`
     }
+
+    const createWorker = () =>
+      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      });
     
     void (async () => {
       // Grab a configuration with defaults and dynamic values from KUBE.
       const config = new Config(await Dynamics(), Local(), Defaults());
       // Create a client.
-      const client = new Client({ config });
+      const client = new Client({ config, createWorker });
       // Initialize before using.
       await client.initialize();
     

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "outDir": "out/tasks",
-    "types": ["node"]
+    "module": "ESNext",
+    "types": ["node", "sharedworker"]
   },
   "include": ["src"],
   "exclude": ["vite.config.ts"],
