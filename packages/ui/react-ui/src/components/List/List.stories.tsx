@@ -200,19 +200,20 @@ export const SelectableListbox = {
       })),
     );
 
+    // TODO(burdon): Handle up/down.
     const handleKeyUp = (event: any) => {
       console.log(event);
     };
 
-    // TODO(burdon): Handle onkeyup on ListItem.Root.
     return (
-      <List selectable {...domAttributes} onKeyUp={handleKeyUp}>
+      <List selectable {...domAttributes}>
         {items.map(({ id, text }) => (
           <ListItem.Root
             key={id}
             selected={selectedId === id}
-            onClick={() => setSelectedId(id)}
             classNames={mx('items-center', ghostHover, selectedId === id && ghostSelected)}
+            onClick={() => setSelectedId(id)}
+            onKeyUp={handleKeyUp}
           >
             <ListItem.Heading classNames='grow'>{text}</ListItem.Heading>
           </ListItem.Root>

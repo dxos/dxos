@@ -7,13 +7,13 @@ import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type Forward
 import {
   List,
   ListItem,
-  LIST_ITEM_NAME,
   type ListItemCollapsibleContentProps,
   type ListItemHeadingProps,
   type ListItemOpenTriggerProps,
   type ListItemRootProps,
   type ListProps,
   type ListScopedProps,
+  LIST_ITEM_NAME,
   useListItemContext,
 } from './List';
 import { type ThemedClassName } from '../../util';
