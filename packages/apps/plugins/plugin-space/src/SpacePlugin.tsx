@@ -132,7 +132,7 @@ export const SpacePlugin = ({
       const searchParams = new URLSearchParams(location.search);
       const spaceInvitationCode = searchParams.get('spaceInvitationCode');
       if (spaceInvitationCode) {
-        void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space }) => {
+        void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
           if (!space) {
             return;
           }
@@ -147,7 +147,7 @@ export const SpacePlugin = ({
 
           await dispatch({
             action: LayoutAction.ACTIVATE,
-            data: { id: space.key.toHex() },
+            data: { id: target ?? space.key.toHex() },
           });
         });
       }
@@ -458,9 +458,11 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SHARE: {
+              const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
-                const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey });
+                const target = layoutPlugin?.provides.layout.active;
+                const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
                 return members && { members };
               }
               break;
