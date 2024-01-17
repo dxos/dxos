@@ -4558,6 +4558,9 @@ importers:
       '@automerge/automerge-repo':
         specifier: ^1.0.19
         version: 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo-storage-indexeddb':
+        specifier: ^1.0.19
+        version: 1.0.19(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-wasm':
         specifier: ^0.5.0
         version: 0.5.0
@@ -7870,6 +7873,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9803,6 +9809,18 @@ packages:
       - supports-color
       - typescript
       - utf-8-validate
+    dev: false
+
+  /@automerge/automerge-repo-storage-indexeddb@1.0.19(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-mp2P37tVtd2CIYMOfuYQd6iiXYSSw0ooJnuugDhR53KC1Q1gIFUiNBF/m3XE/Gp+ZOZm03HHPIfHjqxqk9mSag==}
+    dependencies:
+      '@automerge/automerge-repo': 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - supports-color
+      - typescript
     dev: false
 
   /@automerge/automerge-repo@1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2):
