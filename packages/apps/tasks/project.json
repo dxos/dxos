@@ -1,4 +1,6 @@
 {
+  "name": "tasks",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/tasks/src",
   "projectType": "library",
   "targets": {
@@ -32,7 +34,7 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": ["packages/apps/tasks/src/proto/gen"]
+      "outputs": ["{projectRoot}/src/proto/gen"]
     },
     "preview": {
       "executor": "@nx/web:file-server",

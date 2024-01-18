@@ -7,8 +7,9 @@ import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
 import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
-import topLevelAwait from 'vite-plugin-top-level-await';
-import turbosnap from 'vite-plugin-turbosnap';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import TurbosnapPlugin from 'vite-plugin-turbosnap';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
@@ -61,9 +62,9 @@ export const config = (
         },
         worker: {
           format: 'es',
+          plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
         },
         plugins: [
-          topLevelAwait(),
           ThemePlugin({
             root: __dirname,
             content: [
@@ -71,7 +72,9 @@ export const config = (
               resolve(__dirname, '../../../packages/apps/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
             ],
           }),
-          turbosnap({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
+          TopLevelAwaitPlugin(),
+          WasmPlugin(),
+          TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
         ],
       } satisfies InlineConfig,
     );
