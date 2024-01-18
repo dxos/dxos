@@ -138,6 +138,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       }
       return hook;
     },
+    configurable: true,
   });
 };
 
