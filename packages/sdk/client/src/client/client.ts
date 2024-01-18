@@ -54,6 +54,8 @@ export type ClientOptions = {
   types?: TypeCollection;
   /** Shell path. */
   shell?: string;
+  /** Create client worker. */
+  createWorker?: () => SharedWorker;
 };
 
 /**
@@ -98,6 +100,7 @@ export class Client {
     if (
       typeof window !== 'undefined' &&
       window.location.protocol !== 'https:' &&
+      window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
     ) {
       console.warn(
@@ -254,7 +257,7 @@ export class Client {
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? createClientServices(this._config));
+    this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
@@ -345,13 +348,20 @@ export class Client {
     await this._iframeManager?.open();
     await this._shellManager?.open();
     if (this._iframeManager?.iframe) {
+      // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
+      //   https://github.com/socketsupply/socket/issues/893
+      const origin =
+        this._iframeManager.source.origin === 'null'
+          ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
+          : this._iframeManager.source.origin;
+
       this._shellClientProxy = createProtoRpcPeer({
         exposed: clientServiceBundle,
         handlers: this._services.services as ClientServices,
         port: createIFramePort({
           channel: DEFAULT_CLIENT_CHANNEL,
           iframe: this._iframeManager.iframe,
-          origin: this._iframeManager.source.origin,
+          origin,
         }),
       });
 

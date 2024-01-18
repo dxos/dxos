@@ -8,7 +8,8 @@ import { devtoolsFormatter } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { Expando, TypedObject, getGlobalAutomergePreference } from './typed-object';
+import { Expando, TypedObject } from './typed-object';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 describe('TypedObject', () => {
   test('instance of TypedObject', async () => {

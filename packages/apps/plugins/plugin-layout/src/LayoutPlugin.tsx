@@ -46,6 +46,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     sidebarOpen: true,
     complementarySidebarOpen: false,
     enableComplementarySidebar: true,
+    showFooter: true,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -173,9 +174,9 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                     data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
                   },
                   main: { data: { active: layout.activeNode.data } },
-                  presence: { data: { object: layout.activeNode.data } },
+                  'navbar-start': { data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId } },
+                  'navbar-end': { data: { object: layout.activeNode.data } },
                   status: { data: { active: layout.activeNode.data } },
-                  heading: { data: { activeNode: layout.activeNode } },
                   documentTitle: { data: { activeNode: layout.activeNode } },
                 },
               }
@@ -206,6 +207,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
+                  showHintsFooter={state.values.showFooter}
                   fullscreen={state.values.fullscreen}
                   showComplementarySidebar={state.values.enableComplementarySidebar}
                 />

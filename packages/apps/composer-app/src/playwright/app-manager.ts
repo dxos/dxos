@@ -46,7 +46,7 @@ export class AppManager {
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click({ button: 'right' });
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
@@ -74,6 +74,24 @@ export class AppManager {
 
   getObjectLinks() {
     return this.page.getByTestId('spacePlugin.object');
+  }
+
+  async enablePlugin(plugin: string) {
+    await this.page.getByTestId('treeView.openSettings').click();
+    await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
+    await this.page.reload();
+    await this.page.getByTestId('treeView.haloButton').waitFor();
+  }
+
+  async changeStorageVersionInMetadata(version: number) {
+    await this.page.evaluate(
+      ({ version }) => {
+        (window as any).changeStorageVersionInMetadata(version);
+      },
+      { version },
+    );
+
+    await this.page.getByTestId('resetDialog').waitFor();
   }
 
   // TODO(wittjosiah): Consider factoring out into plugin packages.

@@ -5,7 +5,7 @@ function lockfileWarning() {
   const cp = require('child_process')
   
   // get repo root
-  const repoRoot = cp.execSync('git rev-parse --show-toplevel').toString().trim()
+  const repoRoot = process.env.DX_BUILD_ROOT_DIR ?? cp.execSync('git rev-parse --show-toplevel').toString().trim()
 
   if(!fs.existsSync(`${repoRoot}/pnpm-lock.yaml`)) {
     if(!process.env.REGENERATE_LOCKFILE) {
@@ -62,12 +62,6 @@ function readPackage(packageJson, context) {
 
     case 'eslint-plugin-unused-imports': {
       packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^6.5.0';
-      break;
-    }
-
-    case '@nx/vite': {
-      // We don't use vitest.
-      delete packageJson.peerDependencies['vitest']
       break;
     }
 
@@ -137,7 +131,7 @@ function readPackage(packageJson, context) {
 
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
-      packageJson.peerDependencies['vite'] = '^4.3.0'
+      packageJson.peerDependencies['vite'] = '^5.0.0'
       break;
     }
 
@@ -167,15 +161,8 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // Ensure vuepress uses compatible vite version.
-    case '@vuepress/bundler-vite': {
-      packageJson.dependencies['vite'] = '^4.3.0'
-      break;
-    }
-
-    // Ensure vuepress uses compatible vite version.
-    case '@vitejs/plugin-vue': {
-      packageJson.peerDependencies['vite'] = '^4.3.0'
+    case 'vite-plugin-fonts': {
+      packageJson.peerDependencies['vite'] = '^5.0.0'
       break;
     }
 

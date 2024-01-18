@@ -16,9 +16,9 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext } from '../automerge';
+import { setGlobalAutomergePreference } from '../automerge-preference';
 import { EchoDatabase } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { setGlobalAutomergePreference } from '../object';
 import { schemaBuiltin } from '../proto';
 
 /**

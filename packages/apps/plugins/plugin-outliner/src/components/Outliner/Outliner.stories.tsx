@@ -12,6 +12,7 @@ import { TextObject } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider } from '@dxos/react-ui';
 import { inputSurface } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerRootProps } from './Outliner';
 import { type Item } from './types';
@@ -75,7 +76,9 @@ const Story = ({
 };
 
 export default {
+  title: 'plugin-outliner/Outliner',
   component: Outliner,
+  decorators: [withTheme],
   render: Story,
   parameters: {
     layout: 'fullscreen',

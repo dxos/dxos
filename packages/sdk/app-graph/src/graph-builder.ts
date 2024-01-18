@@ -7,10 +7,13 @@ import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 
 import { EventSubscriptions } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
+import { getHostPlatform } from '@dxos/util';
 
 import type { ActionArg, Action } from './action';
 import { Graph } from './graph';
 import type { NodeArg, Node, NodeBuilder } from './node';
+
+export const KEY_BINDING = 'KeyBinding';
 
 /**
  * The builder...
@@ -140,11 +143,25 @@ export class GraphBuilder {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
-            if (action.keyBinding) {
+            let shortcut: string | undefined;
+            if (typeof action.keyBinding === 'object') {
+              const availablePlatforms = Object.keys(action.keyBinding);
+              const platform = getHostPlatform();
+              shortcut = availablePlatforms.includes(platform)
+                ? action.keyBinding[platform]
+                : platform === 'ios'
+                ? action.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
+                : platform === 'linux' || platform === 'unknown'
+                ? action.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
+                : undefined;
+            } else {
+              shortcut = action.keyBinding;
+            }
+            if (shortcut) {
               Keyboard.singleton.getContext(path.join('/')).bind({
-                binding: action.keyBinding!,
+                shortcut,
                 handler: () => {
-                  action.invoke();
+                  action.invoke({ caller: KEY_BINDING });
                 },
                 data: action.label,
               });

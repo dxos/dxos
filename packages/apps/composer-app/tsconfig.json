@@ -25,6 +25,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -35,6 +38,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -49,10 +55,10 @@
       "path": "../../sdk/shell"
     },
     {
-      "path": "../../sdk/shell"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/react-ui-card"
     },
     {
       "path": "../../ui/react-ui-editor"
@@ -65,9 +71,6 @@
     },
     {
       "path": "../../ui/react-ui-stack"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../../ui/react-ui-theme"
@@ -86,9 +89,6 @@
     },
     {
       "path": "../plugins/plugin-debug"
-    },
-    {
-      "path": "../plugins/plugin-error"
     },
     {
       "path": "../plugins/plugin-explorer"

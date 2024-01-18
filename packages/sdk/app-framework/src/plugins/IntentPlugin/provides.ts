@@ -3,12 +3,12 @@
 //
 
 import { type IntentContext } from './IntentContext';
-import { type Intent } from './intent';
+import { type IntentResolver } from './intent';
 import { type Plugin } from '../PluginHost';
 
 export type IntentResolverProvides = {
   intent: {
-    resolver: (intent: Intent, plugins: Plugin[]) => any;
+    resolver: IntentResolver;
   };
 };
 

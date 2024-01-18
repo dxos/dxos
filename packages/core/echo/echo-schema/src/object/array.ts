@@ -9,14 +9,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { AbstractEchoObject } from './object';
-import {
-  getGlobalAutomergePreference,
-  type AutomergeOptions,
-  type TypedObject,
-  isActualAutomergeObject,
-} from './typed-object';
+import { type AutomergeOptions, type TypedObject, isAutomergeObject } from './typed-object';
 import { base } from './types';
 import { AutomergeArray, REFERENCE_TYPE_TAG } from '../automerge';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -361,7 +357,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof AbstractEchoObject || isActualAutomergeObject(value)) {
+    if (value instanceof AbstractEchoObject || isAutomergeObject(value)) {
       return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&

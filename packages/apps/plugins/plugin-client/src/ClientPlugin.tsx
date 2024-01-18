@@ -19,15 +19,7 @@ import {
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
-import {
-  Client,
-  ClientContext,
-  PublicKey,
-  type ClientOptions,
-  type SystemStatus,
-  fromIFrame,
-} from '@dxos/react-client';
+import { Client, ClientContext, type ClientOptions, type SystemStatus, fromIFrame } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 
@@ -41,9 +33,6 @@ const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export enum ClientAction {
   OPEN_SHELL = `${CLIENT_ACTION}/SHELL`,
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
-  // TODO(burdon): Reconcile with SpacePlugin.
-  JOIN_SPACE = `${CLIENT_ACTION}/JOIN_SPACE`,
-  SHARE_SPACE = `${CLIENT_ACTION}/SHARE_SPACE`,
 }
 
 export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
@@ -68,6 +57,8 @@ export type ClientPluginProvides = SurfaceProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
+const ENABLE_VAULT_MIGRATION = !location.host.startsWith('localhost') && location.protocol !== 'socket:';
+
 export const ClientPlugin = ({
   types,
   appKey,
@@ -79,35 +70,47 @@ export const ClientPlugin = ({
   // TODO(burdon): Document.
   registerSignalFactory();
 
-  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings');
+  const settings = new LocalStorageStore<ClientSettingsProps>('dxos.org/settings', { automerge: true });
+
   let client: Client;
+  let error: unknown = null;
 
   return {
     meta,
     initialize: async () => {
-      let error: unknown = null;
       let firstRun = false;
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
+      let oldClient: Client = null as any;
 
-      const oldConfig = new Config(
-        {
-          runtime: {
-            client: {
-              remoteSource: 'https://halo.dxos.org/vault.html',
+      if (ENABLE_VAULT_MIGRATION) {
+        const oldConfig = new Config(
+          {
+            runtime: {
+              client: {
+                remoteSource:
+                  location.host === 'composer.staging.dxos.org'
+                    ? 'https://halo.staging.dxos.org/vault.html'
+                    : location.host === 'composer.dev.dxos.org'
+                    ? 'https://halo.dev.dxos.org/vault.html'
+                    : 'https://halo.dxos.org/vault.html',
+              },
             },
           },
-        },
-        await Envs(),
-        Defaults(),
-      );
-      const oldClient = new Client({
-        config: oldConfig,
-        services: fromIFrame(oldConfig, { shell: false }),
-      });
+          await Envs(),
+          Defaults(),
+        );
+
+        oldClient = new Client({
+          config: oldConfig,
+          services: fromIFrame(oldConfig, { shell: false }),
+        });
+      }
 
       try {
-        await oldClient.initialize();
+        if (ENABLE_VAULT_MIGRATION) {
+          await oldClient.initialize();
+        }
         await client.initialize();
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -129,7 +132,7 @@ export const ClientPlugin = ({
         const identity = client.halo.identity.get();
         if (!identity && !deviceInvitationCode) {
           // TODO(wittjosiah): Remove.
-          const oldIdentity = oldClient.halo.identity.get();
+          const oldIdentity = ENABLE_VAULT_MIGRATION && oldClient.halo.identity.get();
           if (oldIdentity) {
             alert(
               'Composer must perform some database maintenance to upgrade your identity to the latest version. After continuing, please keep this window open until the app loads.',
@@ -147,7 +150,7 @@ export const ClientPlugin = ({
 
             await newObs.wait();
             void oldClient.destroy();
-          } else {
+          } else if (!client.halo.identity.get()) {
             await client.halo.createIdentity();
             // TODO(wittjosiah): Ideally this would be per app rather than per identity.
             firstRun = true;
@@ -160,17 +163,16 @@ export const ClientPlugin = ({
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
-      } catch (err) {
-        log.catch(err);
-        error = err;
-      }
 
-      if (client.halo.identity.get()) {
-        await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-        // TODO(wittjosiah): This doesn't work currently.
-        //   There's no guaruntee that the default space will be fully synced by the time this is called.
-        // firstRun = !client.spaces.default.properties[appKey];
-        client.spaces.default.properties[appKey] = true;
+        if (client.halo.identity.get()) {
+          await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+          // TODO(wittjosiah): This doesn't work currently.
+          //   There's no guaruntee that the default space will be fully synced by the time this is called.
+          // firstRun = !client.spaces.default.properties[appKey];
+          client.spaces.default.properties[appKey] = true;
+        }
+      } catch (err) {
+        error = err;
       }
 
       return {
@@ -189,16 +191,13 @@ export const ClientPlugin = ({
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        root: () => {
-          if (error) {
-            throw error;
-          }
-
-          return null;
-        },
       };
     },
     ready: async () => {
+      if (error) {
+        throw error;
+      }
+
       settings.prop(settings.values.$automerge!, 'automerge', LocalStorageStore.bool);
     },
     unload: async () => {
@@ -244,19 +243,6 @@ export const ClientPlugin = ({
 
             case ClientAction.SHARE_IDENTITY:
               return client.shell.shareIdentity();
-
-            // TODO(burdon): Remove.
-            case ClientAction.JOIN_SPACE:
-              return typeof intent.data?.invitationCode === 'string'
-                ? client.shell.joinSpace({ invitationCode: intent.data.invitationCode })
-                : false;
-
-            // TODO(burdon): Remove.
-            case ClientAction.SHARE_SPACE:
-              return intent.data?.spaceKey instanceof PublicKey &&
-                !intent.data?.spaceKey.equals(client.spaces.default.key)
-                ? client.shell.shareSpace({ spaceKey: intent.data.spaceKey })
-                : false;
           }
         },
       },

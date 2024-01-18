@@ -2,15 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, type KeyboardEventHandler, useEffect, useRef, useState } from 'react';
+import { Prec } from '@codemirror/state';
+import { type EditorView, keymap } from '@codemirror/view';
+import { ArrowSquareOut, DotsThreeVertical, DotOutline, X } from '@phosphor-icons/react';
+import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 
 import { Button, DensityProvider, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { TextEditor, useTextModel, type CursorInfo, type TextEditorRef, type YText } from '@dxos/react-ui-editor';
+import { type CursorInfo, type YText, link, useTextModel, MarkdownEditor } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { getNext, getParent, getPrevious, getItems, type Item, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
+
+type CursorSelection = {
+  itemId: string;
+  anchor?: number;
+};
 
 type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
@@ -20,12 +28,6 @@ type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 's
 // Item
 //
 
-type CursorSelection = {
-  itemId: string;
-  from?: number;
-  to?: number;
-};
-
 type OutlinerItemProps = {
   item: Item;
   active?: CursorSelection; // Request focus.
@@ -34,7 +36,7 @@ type OutlinerItemProps = {
   onDelete?: (state?: CursorInfo) => void;
   onIndent?: (direction?: 'left' | 'right') => void;
   onShift?: (direction?: 'up' | 'down') => void;
-  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', pos?: number) => void;
+  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
 } & OutlinerOptions;
 
 const OutlinerItem = ({
@@ -51,104 +53,199 @@ const OutlinerItem = ({
 }: OutlinerItemProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const model = useTextModel({ text: item.text });
-  const [focus, setFocus] = useState<boolean>();
+
+  // Focus.
+  const [focus, setFocus] = useState(false);
   useEffect(() => {
     if (focus) {
       onSelect?.();
     }
   }, [focus]);
 
-  const editorRef = useRef<TextEditorRef>(null);
+  // Focus and selection.
+  // NOTE: The only way to set focus after creating a new item is to pass focus=true into the editor.
+  // The editorRef updated by the editor's useImperativeHandle doesn't trigger an update here.
+  const editorRef = useRef<EditorView>(null);
   useEffect(() => {
-    if (editorRef.current && active && !focus) {
-      // TODO(burdon): Hack since ref isn't instantiated yet.
-      //  NOTE: This happens with the line is split and a new line is created and set as the active line.
-      setTimeout(() => {
-        editorRef.current?.view?.focus();
-        const from = active.from === -1 ? editorRef.current?.view?.state.doc.length : active.from;
-        if (from !== undefined) {
-          editorRef.current?.view?.dispatch({ selection: { anchor: from, head: active.to ?? from } });
-        }
-      });
+    // NOTE: useImperativeHandle does not trigger editorRef.
+    // TODO(burdon): Set initial selection.
+    if (editorRef.current && active) {
+      editorRef.current?.focus();
+      // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
-  }, [editorRef.current?.view, active]);
+  }, [active]);
 
-  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
-    const view = editorRef.current?.view;
-    if (!view) {
-      return;
-    }
+  // Keys.
+  const outlinerKeymap = useMemo(() => {
+    const getCursor = (view: EditorView): CursorInfo => {
+      const { head, from, to } = view.state.selection.ranges[0];
+      const { number: line } = view.state.doc.lineAt(head);
+      return {
+        from,
+        to,
+        line,
+        lines: view.state.doc.lines,
+        length: view.state.doc.length,
+        after: view.state.sliceDoc(from),
+      };
+    };
 
-    // TODO(burdon): Factor out util.
-    const { head, from, to } = view.state.selection.ranges[0];
-    const { number: line } = view.state.doc.lineAt(head);
-    const after = view.state.sliceDoc(from);
-    const lines = view.state.doc.lines;
-    const state = { from, to, line, lines, after };
+    return Prec.highest(
+      keymap.of([
+        {
+          key: 'Enter',
+          run: (view) => {
+            const cursor = getCursor(view);
+            onEnter?.(cursor);
+            return true;
+          },
+        },
+        {
+          key: 'Backspace',
+          run: (view) => {
+            const cursor = getCursor(view);
+            const { from, line } = cursor;
+            if (from === 0 && line === 1) {
+              onDelete?.(cursor);
+              return true;
+            }
 
-    const { key, shiftKey } = event;
-    switch (key) {
-      // TODO(burdon): Only move lines if at start/end of line.
-      case 'ArrowUp':
-        if (event.altKey) {
-          event.preventDefault();
-          onShift?.('up');
-        } else {
-          if (line === 1) {
-            event.preventDefault();
-            onCursor?.(event.metaKey ? 'home' : 'up');
-          }
-        }
-        break;
-      case 'ArrowDown':
-        if (event.altKey) {
-          event.preventDefault();
-          onShift?.('down');
-        } else {
-          if (line === lines) {
-            event.preventDefault();
-            onCursor?.(event.metaKey ? 'end' : 'down');
-          }
-        }
-        break;
-      case 'ArrowLeft': {
-        if (from === 0) {
-          event.preventDefault();
-          onCursor?.('up', -1);
-        }
-        break;
-      }
-      case 'ArrowRight': {
-        if (!after?.length) {
-          event.preventDefault();
-          onCursor?.('down', 0);
-        }
-        break;
-      }
-      case 'Tab': {
-        event.preventDefault();
-        onIndent?.(event.shiftKey ? 'left' : 'right');
-        break;
-      }
-      case 'Enter': {
-        if (!shiftKey) {
-          event.preventDefault();
-          onEnter?.(state);
-        }
-        break;
-      }
-      case 'Backspace': {
-        if (from === 0 && line === 1) {
-          event.preventDefault();
-          onDelete?.(state);
-        }
-        break;
-      }
-    }
-  };
+            return false;
+          },
+        },
+        {
+          key: 'ArrowLeft',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (from === 0 && line === 1) {
+              onCursor?.('up', -1);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowRight',
+          run: (view) => {
+            const { from, length } = getCursor(view);
+            if (from === length) {
+              onCursor?.('down');
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'Tab',
+          run: () => {
+            onIndent?.('right');
+            return true;
+          },
+          shift: () => {
+            onIndent?.('left');
+            return true;
+          },
+        },
+
+        //
+        // Left/right
+        //
+        {
+          key: 'ArrowLeft',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (from === 0 && line === 1) {
+              onCursor?.('up', -1);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'ArrowRight',
+          run: (view) => {
+            const { from, length } = getCursor(view);
+            if (from === length) {
+              onCursor?.('down', 0);
+              return true;
+            }
+
+            return false;
+          },
+        },
+
+        //
+        // Up
+        //
+        {
+          key: 'ArrowUp',
+          run: (view) => {
+            const { from, line } = getCursor(view);
+            if (line === 1) {
+              onCursor?.('up', from);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'alt-ArrowUp',
+          run: () => {
+            onShift?.('up');
+            return true;
+          },
+        },
+        {
+          key: 'cmd-ArrowUp',
+          run: () => {
+            onCursor?.('home');
+            return true;
+          },
+        },
+
+        //
+        // Down
+        //
+        {
+          key: 'ArrowDown',
+          run: (view) => {
+            const { line, lines, from } = getCursor(view);
+            if (line === lines) {
+              onCursor?.('down', from);
+              return true;
+            }
+
+            return false;
+          },
+        },
+        {
+          key: 'alt-ArrowDown',
+          run: () => {
+            onShift?.('down');
+            return true;
+          },
+        },
+        {
+          key: 'cmd-ArrowDown',
+          run: () => {
+            onCursor?.('end');
+            return true;
+          },
+        },
+      ]),
+    );
+  }, []);
+
+  if (!model) {
+    return null;
+  }
 
   return (
-    <div className='flex group' onKeyDownCapture={handleKeyDown}>
+    <div className='flex group'>
       {(isTasklist && (
         <div className='mt-0.5 mr-2.5'>
           <Input.Root>
@@ -161,7 +258,7 @@ const OutlinerItem = ({
           </Input.Root>
         </div>
       )) || (
-        <div className='mr-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
+        <div className='pt-[4px] mr-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
           <DotOutline
             weight={focus ? 'fill' : undefined}
             className={mx('shrink-0', getSize(6), active && 'text-primary-500')}
@@ -169,44 +266,40 @@ const OutlinerItem = ({
         </div>
       )}
 
-      {model && (
-        <TextEditor
-          ref={editorRef}
-          model={model}
-          slots={{
-            root: {
-              className: 'w-full',
-              onFocus: () => setFocus(true),
-              onBlur: () => setFocus(false),
-            },
-            editor: {
-              placeholder,
-            },
-          }}
-        />
-      )}
+      <MarkdownEditor
+        ref={editorRef}
+        model={model}
+        focus={!!active}
+        extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
+        placeholder={placeholder}
+        slots={{
+          root: {
+            className: 'w-full pt-[4px]',
+            onFocus: () => setFocus(true),
+            onBlur: () => setFocus(false),
+          },
+        }}
+      />
 
-      <div>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <Button variant='ghost'>
-              <DotsThreeVertical />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                {onDelete && (
-                  <DropdownMenu.Item onClick={() => onDelete()}>
-                    <X className={getSize(5)} />
-                    <p>{t('delete object label')}</p>
-                  </DropdownMenu.Item>
-                )}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
-      </div>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button variant='ghost'>
+            <DotsThreeVertical />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>
+              {onDelete && (
+                <DropdownMenu.Item onClick={() => onDelete()}>
+                  <X className={getSize(5)} />
+                  <p>{t('delete object label')}</p>
+                </DropdownMenu.Item>
+              )}
+            </DropdownMenu.Viewport>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </div>
   );
 };
@@ -219,7 +312,7 @@ type OutlinerBranchProps = OutlinerOptions & {
   className?: string;
   root: Item;
   active?: CursorSelection;
-  onItemCursor?: (parent: Item, item: Item, direction?: string, pos?: number) => void;
+  onItemCursor?: (parent: Item, item: Item, direction?: string, anchor?: number) => void;
   onItemSelect?: (parent: Item, item: Item) => void;
   onItemCreate?: (parent: Item, item: Item, state?: CursorInfo, after?: boolean) => Item;
   onItemDelete?: (parent: Item, item: Item, state?: CursorInfo) => void;
@@ -352,14 +445,14 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
           text.insert(from, state.after.trim());
         }
 
-        setActive({ itemId: active.id, from });
+        setActive({ itemId: active.id, anchor: from });
         const items = getItems(active);
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
       const text = parent.text!.content as YText;
       const from = text.length;
-      setActive({ itemId: parent.id, from });
+      setActive({ itemId: parent.id, anchor: from });
     }
   };
 
@@ -423,17 +516,17 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   //
   // Navigation.
   //
-  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, pos) => {
+  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, anchor) => {
     switch (direction) {
       case 'home': {
-        setActive({ itemId: root.items![0].id, from: 0 });
+        setActive({ itemId: root.items![0].id, anchor: 0 });
         break;
       }
 
       case 'end': {
         const last = getLastDescendent(root.items![root.items!.length - 1]);
         if (last) {
-          setActive({ itemId: last.id, from: 0 });
+          setActive({ itemId: last.id, anchor: 0 });
         }
         break;
       }
@@ -441,7 +534,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'up': {
         const previous = getPrevious(root, item);
         if (previous) {
-          setActive({ itemId: previous.id, from: pos });
+          setActive({ itemId: previous.id, anchor });
         }
         break;
       }
@@ -449,7 +542,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'down': {
         const next = getNext(root, item);
         if (next) {
-          setActive({ itemId: next.id, from: pos });
+          setActive({ itemId: next.id, anchor });
         }
         break;
       }
@@ -482,3 +575,16 @@ export const Outliner = {
 };
 
 export type { OutlinerRootProps };
+
+// TODO(burdon): Factor out style.
+const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+
+const onRenderLink = (el: Element, url: string) => {
+  createRoot(el).render(
+    <StrictMode>
+      <a href={url} rel='noreferrer' target='_blank' className={hover}>
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
+      </a>
+    </StrictMode>,
+  );
+};

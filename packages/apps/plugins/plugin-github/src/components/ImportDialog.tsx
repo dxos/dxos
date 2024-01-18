@@ -6,29 +6,24 @@ import React, { type RefObject, useCallback } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
-import { type TextEditorRef } from '@dxos/react-ui-editor';
+import { type EditorView } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
 import type { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../types';
 
-export const ImportDialog = ({
-  docGhId,
-  editorRef,
-}: {
-  docGhId: GhIdentifier;
-  editorRef: RefObject<TextEditorRef>;
-}) => {
+export const ImportDialog = ({ docGhId, editorRef }: { docGhId: GhIdentifier; editorRef: RefObject<EditorView> }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { octokit } = useOctokitContext();
 
   const importGhIssueContent = useCallback(async () => {
-    if (octokit && docGhId && 'issueNumber' in docGhId && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (octokit && docGhId && 'issueNumber' in docGhId && editorRef.current && editorRef.current?.state?.doc) {
       try {
         const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
         const { data } = await octokit.rest.issues.get({ owner, repo, issue_number: issueNumber });
-        editorRef.current.view.dispatch({
-          changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: data.body ?? '' },
+        // TODO(burdon): Invert dependency so that the editor is not required here.
+        editorRef.current.dispatch({
+          changes: { from: 0, to: editorRef.current.state.doc.length, insert: data.body ?? '' },
         });
       } catch (err) {
         log.error('Failed to import from Github issue', err);
@@ -39,13 +34,13 @@ export const ImportDialog = ({
   }, [octokit, docGhId, editorRef.current]);
 
   const importGhFileContent = useCallback(async () => {
-    if (octokit && docGhId && 'path' in docGhId && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (octokit && docGhId && 'path' in docGhId && editorRef.current && editorRef.current?.state?.doc) {
       try {
         const { owner, repo, path } = docGhId as GhFileIdentifier;
         const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
         if (!Array.isArray(data) && data.type === 'file') {
-          editorRef.current.view.dispatch({
-            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: atob(data.content) },
+          editorRef.current.dispatch({
+            changes: { from: 0, to: editorRef.current.state.doc.length, insert: atob(data.content) },
           });
         } else {
           log.error('Did not receive file with content from Github.');

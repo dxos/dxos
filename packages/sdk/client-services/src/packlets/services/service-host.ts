@@ -8,7 +8,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base } from '@dxos/echo-schema';
+import { type TypedObject, base, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -28,7 +28,7 @@ import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
-import { type CreateIdentityOptions, IdentityServiceImpl } from '../identity';
+import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
@@ -260,7 +260,7 @@ export class ClientServicesHost {
       SystemService: this._systemService,
 
       IdentityService: new IdentityServiceImpl(
-        (params) => this._createIdentity(params),
+        (params, useAutomerge) => this._createIdentity(params, useAutomerge),
         this._serviceContext.identityManager,
         this._serviceContext.keyring,
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
@@ -351,21 +351,36 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params?: CreateIdentityOptions) {
+  private async _createIdentity(params: CreateIdentityOptions, useAutomerge: boolean) {
     const identity = await this._serviceContext.createIdentity(params);
 
     // Setup default space.
     await this._serviceContext.initialized.wait();
     const space = await this._serviceContext.dataSpaceManager!.createSpace();
-    const obj: TypedObject = new Properties(undefined, { automerge: false });
+
+    const obj: TypedObject = new Properties(undefined, { automerge: useAutomerge });
     obj[defaultKey] = identity.identityKey.toHex();
-    await this._serviceRegistry.services.DataService!.write({
-      spaceKey: space.key,
-      batch: {
-        objects: [createGenesisMutationFromTypedObject(obj)],
-      },
-    });
-    await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
+
+    if (!useAutomerge) {
+      await this._serviceRegistry.services.DataService!.write({
+        spaceKey: space.key,
+        batch: {
+          objects: [createGenesisMutationFromTypedObject(obj)],
+        },
+      });
+      await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
+    } else {
+      // TODO(dmaretskyi): Refactor this.
+      const automergeIndex = space.automergeSpaceState.rootUrl;
+      invariant(automergeIndex);
+      const document = await this._serviceContext.automergeHost.repo.find(automergeIndex as any);
+      await document.whenReady();
+
+      document.change((doc: any) => {
+        doc.objects ??= {};
+        doc.objects[obj[base]._id] = getRawDoc(obj).handle.docSync();
+      });
+    }
 
     return identity;
   }

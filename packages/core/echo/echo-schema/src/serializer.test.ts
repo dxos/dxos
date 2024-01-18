@@ -7,14 +7,8 @@ import { expect } from 'chai';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { afterTest, describe, test } from '@dxos/test';
 
-import {
-  LEGACY_TEXT_TYPE,
-  TextObject,
-  TypedObject,
-  isActualAutomergeObject,
-  isActualTypedObject,
-  setGlobalAutomergePreference,
-} from './object';
+import { setGlobalAutomergePreference } from './automerge-preference';
+import { LEGACY_TEXT_TYPE, TextObject, TypedObject, isAutomergeObject, isActualTypedObject } from './object';
 import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase, testWithAutomerge } from './testing';
@@ -179,7 +173,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await db.flush();
       expect(text.text).to.deep.eq(content);
       expect(db.objects).to.have.length(1);
-      expect(isActualAutomergeObject(text)).to.be.false;
+      expect(isAutomergeObject(text)).to.be.false;
       expect(text instanceof TextObject).to.be.true;
 
       data = await serializer.export(db);
@@ -201,7 +195,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       await serializer.import(db, data);
 
       const { objects } = db.query();
-      expect(isActualAutomergeObject(objects[0])).to.be.true;
+      expect(isAutomergeObject(objects[0])).to.be.true;
       expect(objects[0] instanceof TextObject).to.be.false;
       expect(objects).to.have.length(1);
       expect(objects[0][objects[0].field]).to.deep.eq(content);
@@ -242,7 +236,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
 
       await db.flush();
       expect(db.objects).to.have.length(5);
-      expect(db.objects.every((object) => !isActualAutomergeObject(object))).to.be.true;
+      expect(db.objects.every((object) => !isAutomergeObject(object))).to.be.true;
       serialized = await serializer.export(db);
       expect(serialized.objects).to.have.length(5);
     }
@@ -259,7 +253,7 @@ describe('Serializer from Hypergraph to Automerge', () => {
       expect(main).to.exist;
       expect(main.subtasks).to.have.length(2);
       expect(main.assignee instanceof Contact).to.be.true;
-      expect(db.objects.every((object) => isActualAutomergeObject(object))).to.be.true;
+      expect(db.objects.every((object) => isAutomergeObject(object))).to.be.true;
       expect(db.objects.every((object) => !isActualTypedObject(object))).to.be.true;
 
       expect(main.subtasks[0]).to.be.instanceOf(TypedObject);

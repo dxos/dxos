@@ -14,7 +14,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
-    "dx": "./bin/run"
+    "dx": "./bin/dx"
   },
   "files": [
     "/bin",
@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "api-keys": "node ./scripts/inject_api_keys.js",
-    "bin": "./bin/run",
+    "bin": "./bin/dx",
     "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",
     "readme": "oclif readme --multi"

@@ -9,15 +9,9 @@ import { type ItemID } from '@dxos/protocols';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
+import { getGlobalAutomergePreference } from './automerge-preference';
 import { type EchoDatabase } from './database';
-import {
-  base,
-  type EchoObject,
-  LEGACY_TEXT_TYPE,
-  TextObject,
-  TypedObject,
-  getGlobalAutomergePreference,
-} from './object';
+import { base, type EchoObject, LEGACY_TEXT_TYPE, TextObject, TypedObject } from './object';
 import { Filter } from './query';
 
 /**
@@ -40,7 +34,7 @@ export type SerializedSpace = {
   /**
    * Human-readable date of creation.
    */
-  date?: string;
+  timestamp?: string;
 
   /**
    * Space key.
@@ -101,7 +95,7 @@ export class Serializer {
       }),
 
       version: Serializer.version,
-      date: new Date().toUTCString(),
+      timestamp: new Date().toUTCString(),
       spaceKey: database.spaceKey.toHex(),
     };
 

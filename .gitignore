@@ -73,6 +73,7 @@ build
 out
 tmp
 .vite-inspect
+*.tsbuildinfo
 
 # Web Extensions
 web-ext-artifacts

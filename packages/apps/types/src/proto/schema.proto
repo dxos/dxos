@@ -99,17 +99,6 @@ message Script {
 /**
  *
  */
-// TODO(burdon): Remove (change plugin to provide Markdown extension).
-message Mermaid {
-  option (object) = true;
-
-  string title = 1;
-  dxos.schema.Text source = 2;
-}
-
-/**
- *
- */
 message Stack {
   option (object) = true;
 
@@ -217,8 +206,16 @@ message Sketch {
 message Thread {
   option (object) = true;
 
+  // TODO(burdon): Reconcile with Message.Context.
+  message Context {
+    string space = 1;
+    string schema = 2;
+    string object = 3;
+  }
+
   string title = 1;
   repeated Message messages = 2;
+  Context context = 3;
 }
 
 /**
@@ -340,6 +337,8 @@ message Chain {
       RETRIEVER = 2;
       FUNCTION = 3;
       QUERY = 4;
+      RESOLVER = 5;
+      CONTEXT = 6;
     }
 
     string name = 1;

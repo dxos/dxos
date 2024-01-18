@@ -58,6 +58,12 @@ jobs:
           DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
+      - name: Bundle Shell
+        run: pnpm nx bundle shell
+        env:
+          NODE_ENV: production
+          DX_ENVIRONMENT: production
+
       - name: Publish to NPM
         run: ./.github/workflows/scripts/publish.sh
         env:

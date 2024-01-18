@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PaperPlaneRight } from '@phosphor-icons/react';
+import { PaperPlaneRight, Spinner } from '@phosphor-icons/react';
 import React, { forwardRef, type KeyboardEventHandler, useState } from 'react';
 
-import { TextObject } from '@dxos/react-client/echo';
+import { setTextContent, TextObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
-import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
+import { listener, TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { tagExtension } from './extension';
@@ -15,18 +15,20 @@ import { tagExtension } from './extension';
 export type ChatInputProps = {
   className?: string;
   placeholder?: string;
+  processing?: boolean;
+  onFocus?: () => void;
   onMessage: (text: string) => boolean | void;
 };
 
 export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
-  ({ className = 'rounded shadow p-2', placeholder, onMessage }, ref) => {
+  ({ className = 'rounded shadow p-2', placeholder, processing, onFocus, onMessage }, ref) => {
     const [text] = useState(new TextObject());
     const model = useTextModel({ text });
 
     const handleMessage = () => {
       const value = text.content!.toString();
       if (value.length && onMessage(value) !== false) {
-        text.content?.delete(0, text.content.length);
+        setTextContent(text, '');
       }
     };
 
@@ -52,20 +54,29 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
       <div ref={ref} className={mx('flex w-full', inputSurface, className)} onKeyDownCapture={handleKeyDown}>
         <TextEditor
           model={model}
-          extensions={[tagExtension]}
+          placeholder={placeholder}
+          extensions={[
+            tagExtension,
+            listener({
+              onFocus: (focused) => {
+                if (focused) {
+                  onFocus?.();
+                }
+              },
+            }),
+          ]}
           slots={{
             root: {
               className: 'flex w-full items-center pl-2 overflow-x-hidden',
-            },
-            editor: {
-              placeholder,
             },
           }}
         />
 
         <div role='none' className='flex shrink-0 pr-1'>
-          <Button variant='ghost' classNames='p-1' onClick={() => handleMessage()}>
-            <PaperPlaneRight className={getSize(5)} />
+          <Button variant='ghost' classNames='p-1' onClick={() => handleMessage()} disabled={processing}>
+            {(processing && <Spinner weight='bold' className={mx(getSize(6), 'text-blue-500 animate-spin')} />) || (
+              <PaperPlaneRight className={mx(getSize(5))} />
+            )}
           </Button>
         </div>
       </div>

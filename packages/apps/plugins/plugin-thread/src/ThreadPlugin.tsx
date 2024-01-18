@@ -11,6 +11,7 @@ import { Folder, Thread as ThreadType } from '@braneframe/types';
 import {
   LayoutAction,
   type GraphProvides,
+  type IntentPluginProvides,
   type LayoutProvides,
   type Plugin,
   type PluginDefinition,
@@ -38,7 +39,8 @@ type CommentThread = {
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  let layoutPlugin: Plugin<LayoutProvides> | undefined; // TODO(burdon): LayoutPluginProvides or LayoutProvides.
+  let layoutPlugin: Plugin<LayoutProvides> | undefined;
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   const state = deepSignal<{ active?: string | undefined; threads?: CommentThread[] }>({});
 
@@ -47,6 +49,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
     },
     provides: {
       metadata: {
@@ -75,8 +78,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
             return;
           }
-
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${THREAD_PLUGIN}/create`,
@@ -112,20 +113,39 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'context-thread': {
               const graph = graphPlugin?.provides.graph;
               const layout = layoutPlugin?.provides.layout;
+
               const space = getActiveSpace(graph!, layout!.active);
               if (space) {
-                if (state.threads) {
+                // TODO(burdon): Hack to determine if comments should be visible.
+                let comments = false;
+                if (layout?.active) {
+                  const active = space.db.getObjectById(layout?.active);
+                  comments = (active as any)?.comments?.length > 0;
+                }
+                if (!comments) {
+                  state.threads = [];
+                }
+
+                if (state.threads?.length) {
                   const threads = state.threads
                     .map(({ id }) => space.db.getObjectById(id) as ThreadType)
                     .filter(nonNullable);
+
                   return (
                     <CommentsSidebar
                       space={space}
                       threads={threads}
                       active={state.active}
-                      onSelect={(id: string) => {
-                        // TODO(burdon): Dispatch to markdown doc (scroll into view).
-                        state.active = id;
+                      onFocus={(thread: ThreadType) => {
+                        if (state.active !== thread.id) {
+                          state.active = thread.id;
+                          void intentPlugin?.provides.intent.dispatch({
+                            action: LayoutAction.FOCUS,
+                            data: {
+                              object: thread.id,
+                            },
+                          });
+                        }
                       }}
                     />
                   );

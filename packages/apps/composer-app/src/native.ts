@@ -96,7 +96,7 @@ export const initializeNativeApp = async () => {
   });
 
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
-  log.info('initialized');
+  log.info('native setup complete');
 };
 
 // TODO(burdon): Move to util.

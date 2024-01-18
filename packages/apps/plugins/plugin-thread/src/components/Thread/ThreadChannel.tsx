@@ -18,17 +18,20 @@ export type ThreadChannelProps = {
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
   fullWidth?: boolean;
+  onFocus?: () => void;
   onCreate?: ChatInputProps['onMessage'];
   onDelete?: (blockId: string, idx: number) => void;
-};
+} & Pick<ChatInputProps, 'processing'>;
 
 export const ThreadChannel = ({
   thread,
   identityKey,
   propertiesProvider,
   fullWidth = true, // TODO(burdon): Replace with className.
+  onFocus,
   onCreate,
   onDelete,
+  ...props
 }: ThreadChannelProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -66,7 +69,7 @@ export const ThreadChannel = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <ChatInput placeholder={t('message placeholder')} onMessage={handleSubmit} />
+          <ChatInput placeholder={t('message placeholder')} onFocus={onFocus} onMessage={handleSubmit} {...props} />
         </div>
       )}
     </div>

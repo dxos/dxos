@@ -12,12 +12,13 @@ import {
   type StorageKey,
   cbor,
 } from '@dxos/automerge/automerge-repo';
+import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
-import { type Directory } from '@dxos/random-access-storage';
+import { StorageType, type Directory } from '@dxos/random-access-storage';
 import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
@@ -25,12 +26,17 @@ export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
   private readonly _clientNetwork: LocalHostNetworkAdapter;
-  private readonly _storage: AutomergeStorageAdapter;
+  private readonly _storage: StorageAdapter;
 
   constructor(storageDirectory: Directory) {
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
-    this._storage = new AutomergeStorageAdapter(storageDirectory);
+
+    // TODO(mykola): Delete specific handling of IDB storage.
+    this._storage =
+      storageDirectory.type === StorageType.IDB
+        ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
+        : new AutomergeStorageAdapter(storageDirectory);
     this._repo = new Repo({
       network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
@@ -238,7 +244,7 @@ class MeshNetworkAdapter extends NetworkAdapter {
   }
 }
 
-class AutomergeStorageAdapter extends StorageAdapter {
+export class AutomergeStorageAdapter extends StorageAdapter {
   constructor(private readonly _directory: Directory) {
     super();
   }

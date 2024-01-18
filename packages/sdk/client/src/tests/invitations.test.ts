@@ -46,6 +46,7 @@ const successfulInvitation = async ({
   expect(guestError).to.be.undefined;
   expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
   expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
+  expect(guestInvitation!.target).to.eq(hostInvitation!.target);
 
   switch (hostInvitation!.kind) {
     case Invitation.Kind.SPACE:
@@ -88,6 +89,19 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
       performInvitation({
         ...params,
         options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
+    );
+
+    await successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('with target', async () => {
+    const [host, guest] = getPeers();
+    const params = getParams();
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, target: 'example' },
       }),
     );
 

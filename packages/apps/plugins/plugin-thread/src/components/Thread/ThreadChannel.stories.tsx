@@ -120,6 +120,7 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-thread/ThreadChannel',
   component: ThreadChannel,
   render: () => <ClientRepeater Component={Story} createSpace types={types} />,
   decorators: [withTheme],

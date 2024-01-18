@@ -48,6 +48,12 @@
       "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
       "node": "./dist/lib/node/testing/index.cjs"
+    },
+    "./worker": {
+      "browser": "./dist/lib/browser/worker.mjs",
+      "import": "./dist/lib/browser/worker.mjs",
+      "require": "./dist/lib/node/worker.cjs",
+      "node": "./dist/lib/node/worker.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -70,6 +76,9 @@
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "worker": [
+        "dist/types/src/worker.d.ts"
       ]
     }
   },
@@ -91,7 +100,7 @@
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
@@ -108,7 +117,7 @@
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "yjs": "^13.6.10"
   },
   "publishConfig": {

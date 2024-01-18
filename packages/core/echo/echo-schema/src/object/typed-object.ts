@@ -26,6 +26,7 @@ import {
   debug,
 } from './types';
 import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -47,6 +48,20 @@ const isValidKey = (key: string | symbol) => {
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
+
+/**
+ * @deprecated Temporary.
+ */
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
+};
 
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
@@ -86,7 +101,7 @@ export type AutomergeOptions = {
  */
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
   static [Symbol.hasInstance](instance: any) {
-    return !!instance?.[base] && (isActualTypedObject(instance) || isActualAutomergeObject(instance));
+    return !!instance?.[base] && (isActualTypedObject(instance) || isAutomergeObject(instance));
   }
 
   /**
@@ -668,40 +683,4 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
-};
-
-// TODO(dmaretskyi): Remove once migration is complete.
-let globalAutomergePreference: boolean | undefined;
-
-/**
- * @deprecated Temporary.
- */
-export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
-  globalAutomergePreference = useAutomerge;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const getGlobalAutomergePreference = () => {
-  return (
-    globalAutomergePreference ??
-    (globalThis as any).DXOS_FORCE_AUTOMERGE ??
-    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
-    false
-  );
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isActualTypedObject = (object: unknown): object is TypedObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

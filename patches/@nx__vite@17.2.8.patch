@@ -1,0 +1,51 @@
+diff --git a/src/executors/build/build.impl.js b/src/executors/build/build.impl.js
+index 613cb86fbe93222192ab3b4d4ace59ade01725de..e160da67ae278b3752e9b99e172b082f60b099ae 100644
+--- a/src/executors/build/build.impl.js
++++ b/src/executors/build/build.impl.js
+@@ -60,12 +60,12 @@ async function* viteBuildExecutor(options, context) {
+         });
+     }
+     const watcherOrOutput = await build(buildConfig);
+-    const libraryPackageJson = (0, _path.resolve)(projectRoot, 'package.json');
+-    const rootPackageJson = (0, _path.resolve)(context.root, 'package.json');
++    // const libraryPackageJson = (0, _path.resolve)(projectRoot, 'package.json');
++    // const rootPackageJson = (0, _path.resolve)(context.root, 'package.json');
+     // Here, we want the outdir relative to the workspace root.
+     // So, we calculate the relative path from the workspace root to the outdir.
+     const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
+-    const distPackageJson = (0, _path.resolve)(outDirRelativeToWorkspaceRoot, 'package.json');
++    // const distPackageJson = (0, _path.resolve)(outDirRelativeToWorkspaceRoot, 'package.json');
+     // Generate a package.json if option has been set.
+     if (options.generatePackageJson) {
+         if (context.projectGraph.nodes[context.projectName].type !== 'app') {
+@@ -84,18 +84,19 @@ async function* viteBuildExecutor(options, context) {
+         (0, _fs.writeFileSync)(`${outDirRelativeToWorkspaceRoot}/${(0, _js.getLockFileName)(packageManager)}`, lockFile, {
+             encoding: 'utf-8'
+         });
+-    } else if (!(0, _fs.existsSync)(distPackageJson) && (0, _fs.existsSync)(libraryPackageJson) && rootPackageJson !== libraryPackageJson) {
+-        await (0, _js.copyAssets)({
+-            outputPath: outDirRelativeToWorkspaceRoot,
+-            assets: [
+-                {
+-                    input: projectRoot,
+-                    output: '.',
+-                    glob: 'package.json'
+-                }
+-            ]
+-        }, context);
+     }
++    // else if (!(0, _fs.existsSync)(distPackageJson) && (0, _fs.existsSync)(libraryPackageJson) && rootPackageJson !== libraryPackageJson) {
++    //     await (0, _js.copyAssets)({
++    //         outputPath: outDirRelativeToWorkspaceRoot,
++    //         assets: [
++    //             {
++    //                 input: projectRoot,
++    //                 output: '.',
++    //                 glob: 'package.json'
++    //             }
++    //         ]
++    //     }, context);
++    // }
+     if ('on' in watcherOrOutput) {
+         const iterable = (0, _asynciterable.createAsyncIterable)(({ next })=>{
+             let success = true;

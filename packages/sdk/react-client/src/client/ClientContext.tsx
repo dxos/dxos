@@ -13,8 +13,7 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Client } from '@dxos/client';
-import { type TypeCollection } from '@dxos/client/echo';
+import { Client, type ClientOptions } from '@dxos/client';
 import { SystemStatus, type ClientServices, type ClientServicesProvider } from '@dxos/client/services';
 import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -48,7 +47,7 @@ export const useClient = () => {
   return client;
 };
 
-export interface ClientProviderProps {
+export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> & {
   children?: ReactNode;
 
   /**
@@ -72,8 +71,6 @@ export interface ClientProviderProps {
   //   (Prefering `onInitialized` for custom initialization.)
   client?: Client | Provider<Promise<Client>>;
 
-  types?: TypeCollection;
-
   /**
    * ReactNode to display until the client is available.
    */
@@ -90,7 +87,7 @@ export interface ClientProviderProps {
    * @param Client
    */
   onInitialized?: (client: Client) => MaybePromise<void>;
-}
+};
 
 /**
  * Root component that provides the DXOS client instance to child components.
@@ -101,10 +98,10 @@ export const ClientProvider = ({
   config: configProvider,
   services: createServices,
   client: clientProvider,
-  types,
   fallback: Fallback = () => null,
   registerSignalFactory: register = true,
   onInitialized,
+  ...options
 }: ClientProviderProps) => {
   useMemo(() => {
     // TODO(wittjosiah): Ideally this should be imported asynchronosly because it is optional.
@@ -143,10 +140,6 @@ export const ClientProvider = ({
       if (clientProvider) {
         // Asynchronously request client.
         const client = await getAsyncValue(clientProvider);
-        if (types) {
-          client.addTypes(types);
-        }
-
         await done(client);
       } else {
         // Asynchronously construct client (config may be undefined).
@@ -154,7 +147,7 @@ export const ClientProvider = ({
         log('resolved config', { config });
         const services = await createServices?.(config);
         log('created services', { services });
-        const client = new Client({ config, services, types });
+        const client = new Client({ config, services, ...options });
         log('created client');
         await done(client);
       }

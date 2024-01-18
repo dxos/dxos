@@ -17,9 +17,10 @@ export default template.define.text({
     const compilerOptions = {
       emitDeclarationOnly: false,
       lib: ['DOM', 'ESNext'],
+      module: 'ESNext',
       outDir: 'dist',
       skipLibCheck: true,
-      types: ['node', ...(pwa ? ['vite-plugin-pwa/client'] : [])],
+      types: ['node', 'sharedworker', ...(pwa ? ['vite-plugin-pwa/client'] : [])],
     };
 
     const include = ['src'];
