@@ -10,7 +10,7 @@ import { type KeyBinding, Keyboard } from '@dxos/keyboard';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
 import { fixedBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { Key } from './ShortcutsDialog';
+import { Key } from './Key';
 
 export const ShortcutsHints = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation('os');
