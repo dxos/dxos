@@ -79,10 +79,7 @@ export const PluginHost = ({
 const DefaultFallback = ({ error }: { error: Error }) => {
   return (
     <div style={{ padding: '1rem' }}>
-      {/* TODO(wittjosiah): Link to docs. */}
-      <p style={{ fontSize: '0.8rem', fontStyle: 'italic' }}>
-        This is the default ErrorBoundary fallback. Consider providing your own!
-      </p>
+      {/* TODO(wittjosiah): Link to docs for replacing default. */}
       <h1 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0.5rem 0' }}>{error.message}</h1>
       <pre>{error.stack}</pre>
     </div>
@@ -97,14 +94,14 @@ type RootProps = {
   placeholder: ReactNode;
 };
 
-const Root = ({ order, core, definitions, state, placeholder }: RootProps) => {
+const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: RootProps) => {
   const [error, setError] = useState<unknown>();
 
   useEffect(() => {
     log('initializing plugins', { enabled: state.enabled });
     const timeout = setTimeout(async () => {
       try {
-        const enabledIds = [...core, ...state.enabled].sort((a, b) => {
+        const enabledIds = [...corePluginIds, ...state.enabled].sort((a, b) => {
           const indexA = order.findIndex(({ id }) => id === a);
           const indexB = order.findIndex(({ id }) => id === b);
           return indexA - indexB;
