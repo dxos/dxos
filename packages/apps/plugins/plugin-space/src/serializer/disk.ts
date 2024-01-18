@@ -4,7 +4,7 @@
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
-import { Serializer, type SerializedObject, type SerializedSpace } from './serializer';
+import { Serializer, type SerializedObject, type SerializedSpace } from './file-serializer';
 
 export const saveSpaceToDisk = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
   const serializer = new Serializer();
