@@ -71,8 +71,7 @@ const setCommentState = StateEffect.define<CommentsState>();
 
 /**
  * State field (reducer) that tracks comment ranges.
- * The ranges are tracked as codemirror ranges (i.e., not relative YJS/Automerge positions), and
- * therefore must be updated when the document changes.
+ * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
 const commentsStateField = StateField.define<CommentsState>({
   create: () => ({ ranges: [] }),
@@ -86,11 +85,13 @@ const commentsStateField = StateField.define<CommentsState>({
       }
 
       // Update range from store.
-      if (effect.is(setCommentRange)) {
+      if (effect.is(setCommentRange) && effect.value.comments.length > 0) {
         const { comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments
           .map((comment) => {
+            // TODO(burdon): The range is incorrect after pasting. Race condition?
             const range = Cursor.getRangeFromCursor(cursorConverter, comment.cursor);
+            console.log('update', JSON.stringify({ range, cursor: comment.cursor }, undefined, 2));
             return range && { ...comment, ...range };
           })
           .filter(nonNullable);
@@ -160,12 +161,13 @@ export type CommentsOptions = {
   onHover?: (el: Element, shortcut: string) => void;
 };
 
-// TODO(burdon): Handle cut/restore via undo.
+// TODO(burdon): Handle cut/restore via undo (need to integrate with history?)
 const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>) => {
   // Cut/deleted comments.
+  // Tracks indexed selections within text.
   let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
 
-  const registerCopy = (event: Event, view: EditorView) => {
+  const handleCut = (event: Event, view: EditorView) => {
     const comments = view.state.field(commentsStateField);
     const { main } = view.state.selection;
     const inSel = comments.ranges.filter(
@@ -184,8 +186,8 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
 
   return [
     EditorView.domEventHandlers({
-      cut: registerCopy,
-      copy: registerCopy,
+      cut: handleCut,
+      copy: handleCut, // TODO(burdon): Can we ignore copy?
     }),
 
     // Handle paste.
@@ -199,6 +201,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
               for (let i = transactions.indexOf(paste!) + 1; i < transactions.length; i++) {
                 fromB = transactions[i].changes.mapPos(fromB);
               }
+
               found = fromB;
             }
           });
@@ -207,10 +210,15 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
             const active = state.field(commentsStateField).ranges;
             for (const moved of tracked.comments) {
               if (active.some((range) => range.id === moved.id && range.from === range.to)) {
-                const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), {
+                const range = {
                   from: found + moved.from,
                   to: found + moved.to,
-                });
+                };
+
+                // TODO(burdon): Need to update state field?
+                const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
+                const range2 = Cursor.getRangeFromCursor(state.facet(Cursor.converter), cursor);
+                console.log('paste', JSON.stringify({ moved, range, range2, cursor }, undefined, 2));
 
                 onUpdate(moved.id, cursor);
               }

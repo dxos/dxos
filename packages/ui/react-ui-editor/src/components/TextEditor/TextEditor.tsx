@@ -225,7 +225,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx('p-2 overflow-y-auto', inputSurface),
+    className: mx('w-full p-2 overflow-y-auto', inputSurface),
   },
 };
 

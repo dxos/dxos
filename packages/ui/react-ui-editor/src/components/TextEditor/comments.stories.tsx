@@ -141,7 +141,7 @@ const Thread: FC<{
 
       {thread.messages.map((message, i) => (
         // TODO(burdon): Fix default editor padding so content doesn't jump on creating message.
-        <div key={i} className='h-[40px] p-2' onClick={() => onSelect()}>
+        <div key={i} className='p-2' onClick={() => onSelect()}>
           {getTextContent(message)}
         </div>
       ))}
@@ -347,9 +347,9 @@ export const Default = {
   },
 };
 
-export const Demo = {
+export const Testing = {
   args: {
-    text: document,
-    autoCreate: true,
+    text: str('0123456789', '', 'xxxxxxxxxx'),
+    // autoCreate: true,
   },
 };
