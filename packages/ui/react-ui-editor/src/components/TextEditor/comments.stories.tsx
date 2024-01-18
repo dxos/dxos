@@ -233,7 +233,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
         range: { id, cursor },
         yPos: location ? Math.floor(location.top) : undefined,
         messages: autoCreate
-          ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 2, max: 5 } })
+          ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 1, max: 3 } })
           : [],
       },
     ]);
@@ -348,7 +348,7 @@ export const Default = {
 
 export const Testing = {
   args: {
-    text: str('0123456789', '', '0123456789'),
-    // autoCreate: true,
+    text: document,
+    autoCreate: true,
   },
 };
