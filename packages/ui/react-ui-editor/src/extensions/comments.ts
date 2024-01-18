@@ -205,7 +205,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
 
           if (found > -1) {
             const comments = tracked.comments;
-            // TODO(burdon): Hack to defeat race condition.
+            // TODO(burdon): Hack to defeat race condition (Automerge object hasn't updated yet).
             setTimeout(() => {
               const active = state.field(commentsStateField).ranges;
               for (const moved of comments) {
@@ -215,10 +215,8 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
                     to: found + moved.to,
                   };
 
-                  // TODO(burdon): Race condition? Has the document been updated?
                   const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
-                  const range2 = Cursor.getRangeFromCursor(state.facet(Cursor.converter), cursor);
-                  console.log('paste', JSON.stringify({ moved, range, range2, cursor }, undefined, 2));
+                  console.log('paste', JSON.stringify({ moved, range, cursor }, undefined, 2));
                   onUpdate(moved.id, cursor);
                 }
               }
