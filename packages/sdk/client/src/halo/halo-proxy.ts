@@ -15,6 +15,7 @@ import {
 } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
+import { getGlobalAutomergePreference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -29,7 +30,6 @@ import {
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { InvitationsProxy } from '../invitations';
-import { getGlobalAutomergePreference } from '@dxos/echo-schema';
 
 export class HaloProxy implements Halo {
   private readonly _instanceId = PublicKey.random().toHex();

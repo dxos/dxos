@@ -8,7 +8,7 @@ import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import {
-  CreateIdentityRequest,
+  type CreateIdentityRequest,
   type Identity,
   type IdentityService,
   type QueryIdentityResponse,

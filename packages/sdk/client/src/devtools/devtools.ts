@@ -134,7 +134,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     get: () => {
       if (!warningShown) {
         warningShown = true;
-        console.warn(`globalThis.dxos is an undocumented API and may changed or removed entirely without notice.`);
+        console.warn('globalThis.dxos is an undocumented API and may changed or removed entirely without notice.');
       }
       return hook;
     },
