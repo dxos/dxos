@@ -164,27 +164,32 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
   // Tracks indexed selections within text.
   let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
 
-  const handleCut = (event: Event, view: EditorView) => {
+  // Track cut or copy (enables cut-and-paste and copy-delete-paste to restore comment selection).
+  const handleTrack = (event: Event, view: EditorView) => {
     const comments = view.state.field(commentsStateField);
     const { main } = view.state.selection;
-    const inSel = comments.ranges.filter(
+    const selectedRanges = comments.ranges.filter(
       (range) => range.from >= main.from && range.to <= main.to && range.from < range.to,
     );
 
-    if (!inSel.length) {
+    if (!selectedRanges.length) {
       tracked = null;
     } else {
       tracked = {
         text: view.state.doc.slice(main.from, main.to),
-        comments: inSel.map((range) => ({ id: range.id, from: range.from - main.from, to: range.to - main.from })),
+        comments: selectedRanges.map((range) => ({
+          id: range.id,
+          from: range.from - main.from,
+          to: range.to - main.from,
+        })),
       };
     }
   };
 
   return [
     EditorView.domEventHandlers({
-      cut: handleCut,
-      copy: handleCut, // TODO(burdon): Can we ignore copy?
+      cut: handleTrack,
+      copy: handleTrack,
     }),
 
     // Handle paste.

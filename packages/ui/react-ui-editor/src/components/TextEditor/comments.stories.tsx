@@ -348,7 +348,7 @@ export const Default = {
 
 export const Testing = {
   args: {
-    text: str('0123456789', '', 'xxxxxxxxxx'),
+    text: str('0123456789', '', '0123456789'),
     // autoCreate: true,
   },
 };
