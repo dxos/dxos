@@ -9,7 +9,7 @@ import { getTypeRef } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { TypedObject, type Space, base } from '@dxos/react-client/echo';
 
-import { serializers } from './serializers';
+import { type TypedObjectSerializer, serializers } from './serializers';
 
 export const TypeOfExpando = 'dxos.org/typename/expando';
 
@@ -149,7 +149,7 @@ export class FileSerializer {
   /**
    * Default serializer.
    */
-  private defaultSerializer = {
+  private defaultSerializer: TypedObjectSerializer = {
     filename: () => ({ name: 'Untitled', extension: 'json' }),
     serialize: async (object: TypedObject) => JSON.stringify(object.toJSON(), null, 2),
     deserialize: async (text: string, object?: TypedObject) => {
