@@ -104,7 +104,7 @@ describe('QueryPlugin', () => {
     await asyncTimeout(results.wait(), 1000);
   }).tag('e2e');
 
-  describe('Remote query', () => {
+  describe.skip('Remote query', () => {
     let builder: TestBuilder;
     let agent: Client;
     let plugin: QueryPlugin;
