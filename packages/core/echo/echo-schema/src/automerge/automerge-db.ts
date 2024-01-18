@@ -66,10 +66,9 @@ export class AutomergeDb {
     log.info('begin opening', { indexDocId: spaceState.rootUrl, automergePreference: getGlobalAutomergePreference() });
     if (!spaceState.rootUrl) {
       if (getGlobalAutomergePreference()) {
-        throw new Error('Database opened with no rootUrl');
-      } else {
-        await this._fallbackToNewDoc();
+        log.error('Database opened with no rootUrl');
       }
+      await this._fallbackToNewDoc();
     } else {
       try {
         await this._initDocHandle(spaceState.rootUrl);
@@ -150,7 +149,6 @@ export class AutomergeDb {
   }
 
   private async _fallbackToNewDoc() {
-    invariant(!getGlobalAutomergePreference());
     this._docHandle = this.automerge.repo.create();
     this._ctx!.onDispose(() => {
       this._docHandle.delete();
