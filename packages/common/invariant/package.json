@@ -19,7 +19,7 @@
     "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
-    "@swc/core": "1.3.70",
+    "@swc/core": "1.3.104",
     "@types/node": "^18.11.9",
     "typescript": "^5.2.2"
   },

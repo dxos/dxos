@@ -13,12 +13,14 @@
         "script": "compile"
       },
       "outputs": [
-        "packages/core/echo/automerge/dist/lib"
+        "{projectRoot}/dist/lib"
       ]
     },
     "lint": {}
   },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ]
+  ],
+  "name": "automerge"
 }

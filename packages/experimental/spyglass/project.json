@@ -9,5 +9,7 @@
         "tsConfig": "packages/experimental/spyglass/tsconfig.json"
       }
     }
-  }
+  },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "spyglass"
 }

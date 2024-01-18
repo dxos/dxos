@@ -19,5 +19,6 @@
   "implicitDependencies": [
     "esbuild-plugins",
     "log-hook"
-  ]
+  ],
+  "name": "test"
 }
