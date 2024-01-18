@@ -1,23 +1,17 @@
 {
+  "name": "app-graph",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/app-graph/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/sdk/app-graph/src/index.ts",
-          "packages/sdk/app-graph/src/testing.ts"
-        ]
+        "entryPoints": ["packages/sdk/app-graph/src/index.ts", "packages/sdk/app-graph/src/testing.ts"]
       }
     },
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "app-graph"
+  "implicitDependencies": ["esbuild", "test"]
 }

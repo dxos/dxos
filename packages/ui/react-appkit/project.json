@@ -1,17 +1,14 @@
 {
+  "name": "react-appkit",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-appkit/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/ui/react-appkit/src/index.ts",
-          "packages/ui/react-appkit/src/telemetry/index.ts"
-        ],
-        "platforms": [
-          "browser"
-        ]
+        "entryPoints": ["packages/ui/react-appkit/src/index.ts", "packages/ui/react-appkit/src/telemetry/index.ts"],
+        "platforms": ["browser"]
       }
     },
     "lint": {},
@@ -20,14 +17,8 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
+      "outputs": ["{projectRoot}/src/proto/gen"]
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "react-appkit"
+  "implicitDependencies": ["esbuild"]
 }

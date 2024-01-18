@@ -1,12 +1,12 @@
 {
+  "name": "halo-app",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/halo-app/src",
   "projectType": "library",
   "targets": {
     "build": {
       "options": {
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
+        "transformers": ["@dxos/log-hook/transformer"]
       }
     },
     "bundle": {
@@ -14,27 +14,15 @@
       "options": {
         "outputPath": "packages/apps/halo-app/out/halo"
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "e2e": {
       "options": {
-        "ciEnvironments": [
-          "android",
-          "chromium",
-          "firefox",
-          "ios",
-          "webkit"
-        ],
+        "ciEnvironments": ["android", "chromium", "firefox", "ios", "webkit"],
         "playwrightConfigPath": "packages/apps/halo-app/src/playwright/playwright.config.ts",
         "serve": "halo-app:preview",
-        "testPatterns": [
-          "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/halo-app/src/**/*"
-        ]
+        "testPatterns": ["packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"],
+        "watchPatterns": ["packages/apps/halo-app/src/**/*"]
       }
     },
     "lint": {},
@@ -52,7 +40,5 @@
         "buildTarget": "halo-app:bundle"
       }
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "halo-app"
+  }
 }

@@ -1,4 +1,6 @@
 {
+  "name": "esbuild-plugins",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/esbuild-plugins/src",
   "projectType": "library",
   "targets": {
@@ -7,14 +9,10 @@
       "options": {
         "main": "packages/common/esbuild-plugins/src/index.ts",
         "outputPath": "packages/common/esbuild-plugins/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/common/esbuild-plugins/tsconfig.json"
       }
     },
     "lint": {}
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "esbuild-plugins"
+  }
 }

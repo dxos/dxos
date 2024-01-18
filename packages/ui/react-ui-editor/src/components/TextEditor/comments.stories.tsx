@@ -9,7 +9,7 @@ import { faker } from '@faker-js/faker';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
@@ -31,9 +31,9 @@ const Editor: FC<{
   commentRanges: CommentRange[];
   onCreateComment: CommentsOptions['onCreate'];
   onDeleteComment: CommentsOptions['onDelete'];
-  onMoveComment: CommentsOptions['onMove'];
+  onUpdateComment: CommentsOptions['onUpdate'];
   onSelectComment: CommentsOptions['onSelect'];
-}> = ({ item, commentSelected, commentRanges, onCreateComment, onDeleteComment, onMoveComment, onSelectComment }) => {
+}> = ({ item, commentSelected, commentRanges, onCreateComment, onDeleteComment, onUpdateComment, onSelectComment }) => {
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
@@ -58,7 +58,7 @@ const Editor: FC<{
       comments({
         onCreate: onCreateComment,
         onDelete: onDeleteComment,
-        onMove: onMoveComment,
+        onUpdate: onUpdateComment,
         onSelect: onSelectComment,
       }),
     ];
@@ -124,7 +124,13 @@ const Thread: FC<{
   }
 
   return (
-    <div className={mx('flex flex-col m-1 rounded shadow divide-y bg-white', selected && 'ring')}>
+    <div
+      className={mx(
+        'flex flex-col m-1 rounded shadow divide-y bg-white',
+        selected && 'ring',
+        thread.deleted && 'opacity-50',
+      )}
+    >
       <div className='flex p-2 gap-2 items-center text-xs font-mono text-neutral-500 font-thin'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>from:{thread.selection?.from}</span>
@@ -136,7 +142,7 @@ const Thread: FC<{
       {thread.messages.map((message, i) => (
         // TODO(burdon): Fix default editor padding so content doesn't jump on creating message.
         <div key={i} className='h-[40px] p-2' onClick={() => onSelect()}>
-          {message.text}
+          {getTextContent(message)}
         </div>
       ))}
 
@@ -220,6 +226,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
 
   const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
     const id = PublicKey.random().toHex();
+    console.log('create', id.slice(0, 4), cursor);
     setThreads((threads) => [
       ...threads,
       {
@@ -236,21 +243,36 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   };
 
   const handleDeleteComment: CommentsOptions['onDelete'] = (id) => {
+    console.log('delete', id.slice(0, 4));
     setThreads((threads) =>
       threads.map((thread) => {
         if (thread.id === id) {
           thread.deleted = true;
         }
+
         return thread;
       }),
     );
 
-    if (selected === id) {
-      setSelected(undefined);
-    }
+    setSelected((selected) => (selected === id ? undefined : selected));
+  };
+
+  const handleUpdateComment: CommentsOptions['onUpdate'] = (id, cursor) => {
+    console.log('update', id.slice(0, 4), cursor);
+    setThreads((threads) =>
+      threads.map((thread) => {
+        if (thread.id === id) {
+          thread.range.cursor = cursor;
+          delete thread.deleted;
+        }
+
+        return thread;
+      }),
+    );
   };
 
   const handleSelectComment: CommentsOptions['onSelect'] = ({ active, closest, ranges }) => {
+    console.log('select', active?.slice(0, 4));
     setThreads((threads) =>
       threads.map((thread) => {
         const range = ranges.find((range) => range.id === thread.range.id);
@@ -264,18 +286,6 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     );
 
     setSelected(active ?? closest);
-  };
-
-  const handleMoveComment: CommentsOptions['onMove'] = (id, cursor) => {
-    setThreads((threads) =>
-      threads.map((thread) => {
-        if (thread.id === id) {
-          thread.range.cursor = cursor;
-          delete thread.deleted;
-        }
-        return thread;
-      }),
-    );
   };
 
   const handleSelectThread = (id: string) => {
@@ -297,7 +307,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
             commentRanges={commentRanges}
             onCreateComment={handleCreateComment}
             onDeleteComment={handleDeleteComment}
-            onMoveComment={handleMoveComment}
+            onUpdateComment={handleUpdateComment}
             onSelectComment={handleSelectComment}
           />
         </div>

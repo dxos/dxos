@@ -1,4 +1,6 @@
 {
+  "name": "x",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/x/src",
   "projectType": "library",
   "targets": {
@@ -6,21 +8,15 @@
       "options": {
         "main": "tools/x/src/index.ts",
         "outputPath": "tools/x/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "tools/x/tsconfig.json"
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "x"
+  }
 }

@@ -1,4 +1,6 @@
 {
+  "name": "process",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/process/src",
   "projectType": "library",
   "targets": {
@@ -12,16 +14,10 @@
     "lint": {
       "options": {
         "format": "unix",
-        "lintFilePatterns": [
-          "packages/common/process/src/**/*.{ts,js,tsx,jsx}"
-        ],
+        "lintFilePatterns": ["packages/common/process/src/**/*.{ts,js,tsx,jsx}"],
         "quiet": true
       },
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "outputs": ["{options.outputFile}"]
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "process"
+  }
 }

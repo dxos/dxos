@@ -1,32 +1,22 @@
 {
+  "name": "teleport-extension-gossip",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/mesh/teleport-extension-gossip/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/core/mesh/teleport-extension-gossip/src/index.ts"
-        ],
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "entryPoints": ["packages/core/mesh/teleport-extension-gossip/src/index.ts"],
+        "platforms": ["browser", "node"]
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "teleport-extension-gossip"
+  "implicitDependencies": ["esbuild", "test"]
 }

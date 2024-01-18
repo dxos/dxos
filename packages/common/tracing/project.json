@@ -1,22 +1,17 @@
 {
+  "name": "tracing",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/tracing/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/tracing/src/index.ts"
-        ]
+        "entryPoints": ["packages/common/tracing/src/index.ts"]
       }
     },
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "tracing"
+  "implicitDependencies": ["esbuild", "test"]
 }

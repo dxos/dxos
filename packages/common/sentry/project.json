@@ -1,13 +1,13 @@
 {
+  "name": "sentry",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/sentry/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/sentry/src/index.ts"
-        ]
+        "entryPoints": ["packages/common/sentry/src/index.ts"]
       }
     },
     "lint": {},
@@ -17,10 +17,5 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "sentry"
+  "implicitDependencies": ["esbuild", "test"]
 }

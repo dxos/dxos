@@ -1,4 +1,6 @@
 {
+  "name": "plugin-mermaid",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-mermaid/src",
   "projectType": "library",
   "targets": {
@@ -9,16 +11,10 @@
           "packages/apps/plugins/plugin-mermaid/src/index.ts",
           "packages/apps/plugins/plugin-mermaid/src/meta.tsx"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "plugin-mermaid"
+  "implicitDependencies": ["esbuild"]
 }

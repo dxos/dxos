@@ -1,4 +1,6 @@
 {
+  "name": "plugin-search",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-search/src",
   "projectType": "library",
   "targets": {
@@ -9,9 +11,7 @@
           "packages/apps/plugins/plugin-search/src/index.ts",
           "packages/apps/plugins/plugin-search/src/meta.tsx"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {},
@@ -21,9 +21,5 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "plugin-search"
+  "implicitDependencies": ["esbuild"]
 }

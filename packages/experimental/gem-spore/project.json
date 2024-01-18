@@ -1,4 +1,6 @@
 {
+  "name": "gem-spore",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/experimental/gem-spore/src",
   "projectType": "library",
   "targets": {
@@ -13,9 +15,5 @@
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implictDependencies": [
-    "test"
-  ],
-  "name": "gem-spore"
+  "implictDependencies": ["test"]
 }

@@ -1,4 +1,6 @@
 {
+  "name": "plugin-help",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-help/src",
   "projectType": "library",
   "targets": {
@@ -9,16 +11,10 @@
           "packages/apps/plugins/plugin-help/src/index.ts",
           "packages/apps/plugins/plugin-help/src/meta.tsx"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "plugin-help"
+  "implicitDependencies": ["esbuild"]
 }

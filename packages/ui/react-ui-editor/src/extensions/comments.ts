@@ -149,8 +149,7 @@ export type CommentsOptions = {
   /**
    * Called when a comment is moved.
    */
-  // TODO(burdon): Rename onUpdate?
-  onMove?: (thread: string, cursor: string) => void;
+  onUpdate?: (thread: string, cursor: string) => void;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -162,7 +161,7 @@ export type CommentsOptions = {
 };
 
 // TODO(burdon): Handle cut/restore via undo.
-const trackPastedComments = (onMove: NonNullable<CommentsOptions['onMove']>) => {
+const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>) => {
   // Cut/deleted comments.
   let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
 
@@ -178,7 +177,7 @@ const trackPastedComments = (onMove: NonNullable<CommentsOptions['onMove']>) => 
     } else {
       tracked = {
         text: view.state.doc.slice(main.from, main.to),
-        comments: inSel.map((range) => ({ from: range.from - main.from, to: range.to - main.from, id: range.id })),
+        comments: inSel.map((range) => ({ id: range.id, from: range.from - main.from, to: range.to - main.from })),
       };
     }
   };
@@ -190,31 +189,30 @@ const trackPastedComments = (onMove: NonNullable<CommentsOptions['onMove']>) => 
     }),
 
     // Handle paste.
-    EditorView.updateListener.of((update) => {
+    EditorView.updateListener.of(({ state, transactions }) => {
       if (tracked) {
-        const paste = update.transactions.find((tr) => tr.isUserEvent('input.paste'));
+        const paste = transactions.find((tr) => tr.isUserEvent('input.paste'));
         if (paste) {
           let found = -1;
           paste.changes.iterChanges((fromA, toA, fromB, toB, text) => {
             if (text.eq(tracked!.text)) {
-              for (let i = update.transactions.indexOf(paste!) + 1; i < update.transactions.length; i++) {
-                fromB = update.transactions[i].changes.mapPos(fromB);
+              for (let i = transactions.indexOf(paste!) + 1; i < transactions.length; i++) {
+                fromB = transactions[i].changes.mapPos(fromB);
               }
               found = fromB;
             }
           });
 
           if (found > -1) {
-            const active = update.view.state.field(commentsStateField).ranges;
+            const active = state.field(commentsStateField).ranges;
             for (const moved of tracked.comments) {
               if (active.some((range) => range.id === moved.id && range.from === range.to)) {
-                onMove(
-                  moved.id,
-                  Cursor.getCursorFromRange(update.view.state.facet(Cursor.converter), {
-                    from: found + moved.from,
-                    to: found + moved.to,
-                  }),
-                );
+                const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), {
+                  from: found + moved.from,
+                  to: found + moved.to,
+                });
+
+                onUpdate(moved.id, cursor);
               }
             }
           }
@@ -331,6 +329,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         let mod = false;
         const { active, ranges } = state.field(commentsStateField);
         changes.iterChanges((from, to, from2, to2) => {
+          // TODO(burdon): Should not iterate over deleted (tracked) ranges.
           ranges.forEach((range) => {
             if (from2 === to2) {
               const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
@@ -361,6 +360,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         let min = Infinity;
         const { active, closest, ranges } = state.field(commentsStateField);
         const selected: CommentSelected = { active: undefined, closest: undefined };
+
+        // TODO(burdon): Should not iterate over deleted (tracked) ranges.
         ranges.forEach((comment) => {
           const d = Math.min(Math.abs(head - comment.from), Math.abs(head - comment.to));
           if (head >= comment.from && head <= comment.to) {
@@ -371,8 +372,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             min = d;
           }
         });
-
-        // TODO(burdon): Fire debounced callback if range selected (to show hint).
 
         if (selected.active !== active || selected.closest !== closest) {
           view.dispatch({ effects: setSelection.of(selected) });
@@ -386,6 +385,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       }
     }),
 
-    options.onMove ? trackPastedComments(options.onMove) : [],
+    options.onUpdate ? trackPastedComments(options.onUpdate) : [],
   ];
 };

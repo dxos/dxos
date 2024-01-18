@@ -1,23 +1,17 @@
 {
+  "name": "signal",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/mesh/signal/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/core/mesh/signal/src/index.ts"
-        ],
-        "platforms": [
-          "node"
-        ]
+        "entryPoints": ["packages/core/mesh/signal/src/index.ts"],
+        "platforms": ["node"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "signal"
+  "implicitDependencies": ["esbuild"]
 }

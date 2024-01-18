@@ -1,20 +1,16 @@
 {
+  "name": "react-ui-types",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-ui-types/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/ui/react-ui-types/src/index.ts"
-        ]
+        "entryPoints": ["packages/ui/react-ui-types/src/index.ts"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "react-ui-types"
+  "implicitDependencies": ["esbuild"]
 }

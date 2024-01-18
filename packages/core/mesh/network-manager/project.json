@@ -1,4 +1,6 @@
 {
+  "name": "network-manager",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/mesh/network-manager/src",
   "projectType": "library",
   "targets": {
@@ -15,11 +17,7 @@
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "firefox",
-          "nodejs"
-        ],
+        "ciEnvironments": ["chromium", "firefox", "nodejs"],
         "envVariables": {
           "SIGNAL_PORT": 12005
         },
@@ -31,10 +29,5 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "network-manager"
+  "implicitDependencies": ["esbuild", "test"]
 }

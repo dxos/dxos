@@ -1,29 +1,22 @@
 {
+  "name": "teleport-extension-object-sync",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/mesh/teleport-extension-object-sync/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/core/mesh/teleport-extension-object-sync/src/index.ts"
-        ],
+        "entryPoints": ["packages/core/mesh/teleport-extension-object-sync/src/index.ts"],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "teleport-extension-object-sync"
+  "implicitDependencies": ["esbuild", "test"]
 }

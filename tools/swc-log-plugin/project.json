@@ -1,8 +1,8 @@
 {
+  "name": "swc-log-plugin",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/swc-log-plugin/src",
   "projectType": "library",
   "targets": {},
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [],
-  "name": "swc-log-plugin"
+  "implicitDependencies": []
 }

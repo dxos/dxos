@@ -1,13 +1,13 @@
 {
+  "name": "client-protocol",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/client-protocol/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/sdk/client-protocol/src/index.ts"
-        ]
+        "entryPoints": ["packages/sdk/client-protocol/src/index.ts"]
       }
     },
     "lint": {},
@@ -16,16 +16,9 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
+      "outputs": ["{projectRoot}/src/proto/gen"]
     },
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "client-protocol"
+  "implicitDependencies": ["esbuild", "test"]
 }

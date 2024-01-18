@@ -1,4 +1,6 @@
 {
+  "name": "model-factory",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/echo/model-factory/src",
   "projectType": "library",
   "targets": {
@@ -14,10 +16,5 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "model-factory"
+  "implicitDependencies": ["esbuild", "test"]
 }

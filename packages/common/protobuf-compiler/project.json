@@ -1,4 +1,6 @@
 {
+  "name": "protobuf-compiler",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
@@ -7,36 +9,25 @@
       "options": {
         "main": "packages/common/protobuf-compiler/src/index.ts",
         "outputPath": "packages/common/protobuf-compiler/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/common/protobuf-compiler/tsconfig.json"
       }
     },
     "lint": {},
     "prebuild": {
-      "dependsOn": [
-        "^build",
-        "^compile"
-      ],
+      "dependsOn": ["^build", "^compile"],
       "executor": "nx:run-script",
       "options": {
         "script": "prebuild"
       },
-      "outputs": [
-        "{projectRoot}/test/proto/gen"
-      ]
+      "outputs": ["{projectRoot}/test/proto/gen"]
     },
     "test": {
-      "dependsOn": [
-        "prebuild"
-      ],
+      "dependsOn": ["prebuild"],
       "executor": "nx:run-script",
       "options": {
         "script": "test"
       }
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "protobuf-compiler"
+  }
 }

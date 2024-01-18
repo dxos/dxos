@@ -1,4 +1,6 @@
 {
+  "name": "plugin-stack",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-stack/src",
   "projectType": "library",
   "targets": {
@@ -9,16 +11,10 @@
           "packages/apps/plugins/plugin-stack/src/index.ts",
           "packages/apps/plugins/plugin-stack/src/meta.tsx"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "plugin-stack"
+  "implicitDependencies": ["esbuild"]
 }

@@ -1,4 +1,6 @@
 {
+  "name": "protobuf-test",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/protobuf-test/src",
   "projectType": "library",
   "targets": {
@@ -6,15 +8,9 @@
       "executor": "nx:run-script",
       "options": {
         "script": "build",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
+        "transformers": ["@dxos/log-hook/transformer"]
       },
-      "outputs": [
-        "{projectRoot}/dist"
-      ]
+      "outputs": ["{projectRoot}/dist"]
     }
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "protobuf-test"
+  }
 }

@@ -1,13 +1,13 @@
 {
+  "name": "types",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/types/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/apps/types/src/index.ts"
-        ],
+        "entryPoints": ["packages/apps/types/src/index.ts"],
         "injectGlobals": true
       }
     },
@@ -17,11 +17,7 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
+      "outputs": ["{projectRoot}/src/proto/gen"]
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "types"
+  }
 }

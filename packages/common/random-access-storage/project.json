@@ -1,23 +1,18 @@
 {
+  "name": "random-access-storage",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/random-access-storage/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/random-access-storage/src/index.ts"
-        ],
+        "entryPoints": ["packages/common/random-access-storage/src/index.ts"],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "random-access-storage"
+  "implicitDependencies": ["esbuild", "test"]
 }

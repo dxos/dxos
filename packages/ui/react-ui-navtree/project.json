@@ -1,23 +1,17 @@
 {
+  "name": "react-ui-navtree",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-ui-navtree/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/ui/react-ui-navtree/src/index.ts"
-        ],
-        "platforms": [
-          "browser"
-        ]
+        "entryPoints": ["packages/ui/react-ui-navtree/src/index.ts"],
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "react-ui-navtree"
+  "implicitDependencies": ["esbuild"]
 }

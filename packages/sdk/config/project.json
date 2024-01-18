@@ -1,39 +1,28 @@
 {
+  "name": "config",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/config/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
-      "dependsOn": [
-        "compile-lib",
-        "compile-node"
-      ],
+      "dependsOn": ["compile-lib", "compile-node"],
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "true"
-        ]
+        "commands": ["true"]
       }
     },
     "compile-lib": {
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "@dxos/esbuild:build",
       "options": {
-        "entryPoints": [
-          "packages/sdk/config/src/index.ts"
-        ],
+        "entryPoints": ["packages/sdk/config/src/index.ts"],
         "outputPath": "packages/sdk/config/dist/lib"
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "compile-node": {
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -42,21 +31,12 @@
           "packages/sdk/config/src/plugin/vite-plugin.ts"
         ],
         "outputPath": "packages/sdk/config/dist/plugin",
-        "platforms": [
-          "node"
-        ]
+        "platforms": ["node"]
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "config"
+  "implicitDependencies": ["esbuild", "test"]
 }

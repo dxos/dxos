@@ -1,20 +1,16 @@
 {
+  "name": "react-list",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/primitives/react-list/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/ui/primitives/react-list/src/index.ts"
-        ]
+        "entryPoints": ["packages/ui/primitives/react-list/src/index.ts"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "react-list"
+  "implicitDependencies": ["esbuild"]
 }

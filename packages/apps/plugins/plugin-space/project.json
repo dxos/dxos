@@ -1,4 +1,6 @@
 {
+  "name": "plugin-space",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-space/src",
   "projectType": "library",
   "targets": {
@@ -9,22 +11,14 @@
           "packages/apps/plugins/plugin-space/src/index.ts",
           "packages/apps/plugins/plugin-space/src/meta.ts"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {
       "options": {
-        "lintFilePatterns": [
-          "packages/apps/plugins/plugin-space/src/**/*.{ts,tsx,js,jsx}"
-        ]
+        "lintFilePatterns": ["packages/apps/plugins/plugin-space/src/**/*.{ts,tsx,js,jsx}"]
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "plugin-space"
+  "implicitDependencies": ["esbuild"]
 }

@@ -1,4 +1,6 @@
 {
+  "name": "react-client",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/react-client/src",
   "projectType": "library",
   "targets": {
@@ -21,30 +23,19 @@
       "options": {
         "playwrightConfigPath": "packages/sdk/react-client/src/playwright/playwright.config.ts",
         "serve": "stories:storybook-e2e",
-        "testPatterns": [
-          "packages/sdk/react-client/src/playwright/**/*.spec.{ts,js}"
-        ],
+        "testPatterns": ["packages/sdk/react-client/src/playwright/**/*.spec.{ts,js}"],
         "timeout": 60000,
-        "watchPatterns": [
-          "packages/sdk/react-client/src/**/*"
-        ]
+        "watchPatterns": ["packages/sdk/react-client/src/**/*"]
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ],
+        "ciEnvironments": ["nodejs"],
         "domRequired": true,
         "forceExit": true
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "react-client"
+  "implicitDependencies": ["esbuild", "test"]
 }

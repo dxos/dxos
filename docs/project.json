@@ -1,18 +1,15 @@
 {
+  "name": "docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "targets": {
     "apidoc": {
-      "dependsOn": [
-        "^build",
-        "typedoc"
-      ],
+      "dependsOn": ["^build", "typedoc"],
       "executor": "nx:run-script",
       "options": {
         "script": "apidoc"
       },
-      "outputs": [
-        "{projectRoot}/docs/api"
-      ]
+      "outputs": ["{projectRoot}/docs/api"]
     },
     "build": {
       "options": {
@@ -22,26 +19,17 @@
       }
     },
     "bundle": {
-      "dependsOn": [
-        "^build",
-        "^bundle",
-        "build",
-        "prebuild"
-      ],
+      "dependsOn": ["^build", "^bundle", "build", "prebuild"],
       "executor": "nx:run-script",
       "options": {
         "script": "bundle"
       },
-      "outputs": [
-        "{projectRoot}/docs/.vuepress/dist"
-      ]
+      "outputs": ["{projectRoot}/docs/.vuepress/dist"]
     },
     "lint": {
       "options": {
         "format": "unix",
-        "lintFilePatterns": [
-          "docs/src/**/*.{ts,tsx,js,jsx}"
-        ],
+        "lintFilePatterns": ["docs/src/**/*.{ts,tsx,js,jsx}"],
         "quiet": true
       }
     },
@@ -50,15 +38,10 @@
       "options": {
         "script": "prerelease"
       },
-      "outputs": [
-        "{projectRoot}/apidoc.json",
-        "{projectRoot}/docs/api"
-      ]
+      "outputs": ["{projectRoot}/apidoc.json", "{projectRoot}/docs/api"]
     },
     "serve": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "executor": "nx:run-script",
       "options": {
         "script": "serve"
@@ -68,18 +51,12 @@
       "executor": "@dxos/toolbox:exec"
     },
     "typedoc": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "executor": "nx:run-script",
       "options": {
         "script": "typedoc"
       },
-      "outputs": [
-        "{projectRoot}/apidoc.json"
-      ]
+      "outputs": ["{projectRoot}/apidoc.json"]
     }
-  },
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "name": "docs"
+  }
 }

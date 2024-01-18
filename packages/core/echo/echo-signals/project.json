@@ -1,4 +1,6 @@
 {
+  "name": "echo-signals",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/echo/echo-signals/src",
   "projectType": "library",
   "targets": {
@@ -14,9 +16,5 @@
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "echo-signals"
+  "implicitDependencies": ["esbuild"]
 }

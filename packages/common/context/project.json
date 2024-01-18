@@ -1,22 +1,17 @@
 {
+  "name": "context",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/context/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/context/src/index.ts"
-        ]
+        "entryPoints": ["packages/common/context/src/index.ts"]
       }
     },
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "context"
+  "implicitDependencies": ["esbuild", "test"]
 }

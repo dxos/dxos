@@ -1,42 +1,29 @@
 {
+  "name": "react-ui-theme",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-ui-theme/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
-      "dependsOn": [
-        "compile-lib",
-        "compile-node"
-      ],
+      "dependsOn": ["compile-lib", "compile-node"],
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "true"
-        ]
+        "commands": ["true"]
       }
     },
     "compile-lib": {
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "@dxos/esbuild:build",
       "options": {
-        "entryPoints": [
-          "packages/ui/react-ui-theme/src/index.ts"
-        ],
+        "entryPoints": ["packages/ui/react-ui-theme/src/index.ts"],
         "outputPath": "packages/ui/react-ui-theme/dist/lib",
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "compile-node": {
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -45,25 +32,15 @@
           "packages/ui/react-ui-theme/src/theme.css"
         ],
         "outputPath": "packages/ui/react-ui-theme/dist/plugin",
-        "platforms": [
-          "node"
-        ]
+        "platforms": ["node"]
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "lint": {
       "options": {
-        "lintFilePatterns": [
-          "packages/ui/react-ui-theme/src/**/*.{ts,tsx,js,jsx}"
-        ]
+        "lintFilePatterns": ["packages/ui/react-ui-theme/src/**/*.{ts,tsx,js,jsx}"]
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "react-ui-theme"
+  "implicitDependencies": ["esbuild"]
 }

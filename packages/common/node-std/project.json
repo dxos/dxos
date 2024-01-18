@@ -1,4 +1,6 @@
 {
+  "name": "node-std",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/node-std/src",
   "projectType": "library",
   "targets": {
@@ -49,16 +51,10 @@
           "packages/common/node-std/src/stream.js",
           "packages/common/node-std/src/util.js"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild"
-  ],
-  "name": "node-std"
+  "implicitDependencies": ["esbuild"]
 }

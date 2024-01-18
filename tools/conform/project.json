@@ -1,27 +1,23 @@
 {
+  "name": "conform",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/conform/src",
   "targets": {
     "build": {
       "options": {
         "main": "tools/conform/src/index.ts",
         "outputPath": "tools/conform/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "tools/conform/tsconfig.json"
       }
     },
     "dev": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "executor": "nx:run-script",
       "options": {
         "script": "dev"
       }
     },
     "lint": {}
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "conform"
+  }
 }

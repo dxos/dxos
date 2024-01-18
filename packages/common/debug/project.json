@@ -1,22 +1,17 @@
 {
+  "name": "debug",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/debug/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/debug/src/index.ts"
-        ]
+        "entryPoints": ["packages/common/debug/src/index.ts"]
       }
     },
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "debug"
+  "implicitDependencies": ["esbuild", "test"]
 }

@@ -1,30 +1,23 @@
 {
+  "name": "functions",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/functions/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/core/functions/src/index.ts"
-        ],
+        "entryPoints": ["packages/core/functions/src/index.ts"],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "environments": [
-          "nodejs"
-        ],
+        "environments": ["nodejs"],
         "forceExit": true
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "functions"
+  "implicitDependencies": ["esbuild", "test"]
 }

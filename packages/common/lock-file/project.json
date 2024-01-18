@@ -1,32 +1,23 @@
 {
+  "name": "lock-file",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/lock-file/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/lock-file/src/index.ts"
-        ],
+        "entryPoints": ["packages/common/lock-file/src/index.ts"],
         "injectGlobals": true,
-        "platforms": [
-          "node"
-        ]
+        "platforms": ["node"]
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "lock-file"
+  "implicitDependencies": ["esbuild", "test"]
 }

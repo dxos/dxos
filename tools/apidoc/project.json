@@ -1,27 +1,23 @@
 {
+  "name": "apidoc",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/apidoc/src",
   "targets": {
     "build": {
       "options": {
         "main": "tools/apidoc/src/index.ts",
         "outputPath": "tools/apidoc/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "tools/apidoc/tsconfig.json"
       }
     },
     "dev": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "executor": "nx:run-script",
       "options": {
         "script": "dev"
       }
     },
     "lint": {}
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "apidoc"
+  }
 }
