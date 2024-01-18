@@ -18,7 +18,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/experimental/chess-app/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
     },
     "serve": {
@@ -35,7 +35,9 @@
       }
     }
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ]
+  ],
+  "name": "chess-app"
 }

@@ -16,7 +16,7 @@
         "script": "gen"
       },
       "outputs": [
-        "packages/apps/templates/bare-template/test/variants"
+        "{projectRoot}/test/variants"
       ]
     },
     "lint": {},
@@ -29,5 +29,7 @@
         "forceExit": true
       }
     }
-  }
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "bare-template"
 }
