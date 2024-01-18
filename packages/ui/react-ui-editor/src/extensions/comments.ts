@@ -134,8 +134,10 @@ const highlightDecorations = EditorView.decorations.compute([commentsStateField]
 });
 
 export type CommentsOptions = {
+  /**
+   * Key shortcut to create a new thread.
+   */
   key?: string;
-  footnote?: boolean;
   /**
    * Called to create a new thread and return the thread id.
    */
@@ -143,11 +145,12 @@ export type CommentsOptions = {
   /**
    * Selection cut/deleted.
    */
-  onDelete?: (cursor: string) => void;
+  onDelete?: (thread: string) => void;
   /**
    * Called when a comment is moved.
    */
-  onMove?: (threadID: string, cursor: string) => void;
+  // TODO(burdon): Rename onUpdate?
+  onMove?: (thread: string, cursor: string) => void;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -158,8 +161,10 @@ export type CommentsOptions = {
   onHover?: (el: Element, shortcut: string) => void;
 };
 
-const trackPastedComments = (onMove: (threadID: string, cursor: string) => void) => {
-  let tracked: { text: Text; comments: { from: number; to: number; id: string }[] } | null = null;
+// TODO(burdon): Handle cut/restore via undo.
+const trackPastedComments = (onMove: NonNullable<CommentsOptions['onMove']>) => {
+  // Cut/deleted comments.
+  let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
 
   const registerCopy = (event: Event, view: EditorView) => {
     const comments = view.state.field(commentsStateField);
@@ -167,6 +172,7 @@ const trackPastedComments = (onMove: (threadID: string, cursor: string) => void)
     const inSel = comments.ranges.filter(
       (range) => range.from >= main.from && range.to <= main.to && range.from < range.to,
     );
+
     if (!inSel.length) {
       tracked = null;
     } else {
@@ -183,6 +189,7 @@ const trackPastedComments = (onMove: (threadID: string, cursor: string) => void)
       copy: registerCopy,
     }),
 
+    // Handle paste.
     EditorView.updateListener.of((update) => {
       if (tracked) {
         const paste = update.transactions.find((tr) => tr.isUserEvent('input.paste'));
@@ -196,6 +203,7 @@ const trackPastedComments = (onMove: (threadID: string, cursor: string) => void)
               found = fromB;
             }
           });
+
           if (found > -1) {
             const active = update.view.state.field(commentsStateField).ranges;
             for (const moved of tracked.comments) {
@@ -210,6 +218,7 @@ const trackPastedComments = (onMove: (threadID: string, cursor: string) => void)
               }
             }
           }
+
           tracked = null;
         }
       }
@@ -226,8 +235,7 @@ const trackPastedComments = (onMove: (threadID: string, cursor: string) => void)
  * 4). Tracks the current cursor position to:
  *     a). Update the decoration to show if the cursor is within a current selection.
  *     b). Calls a handler to indicate which is the closest selection (e.g., to update the thread sidebar).
- * 5). Optionally, inserts a markdown footnote when creating a comment thread.
- * 6). Optionally, implements a hoverTooltip to show hints when creating a selection range.
+ * 5). Optionally, implements a hoverTooltip to show hints when creating a selection range.
  */
 export const comments = (options: CommentsOptions = {}): Extension => {
   const { key: shortcut = "meta-'" } = options;
@@ -241,7 +249,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     const cursorConverter = view.state.facet(Cursor.converter);
 
     invariant(options.onCreate);
-    const { head, from, to } = view.state.selection.main;
+    const { from, to } = view.state.selection.main;
     if (from === to) {
       return false;
     }
@@ -256,15 +264,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
           effects: setSelection.of({ active: id }),
           selection: { anchor: from },
         });
-
-        // Insert footnote.
-        if (options.footnote) {
-          const tag = `[^${id}]`;
-          view.dispatch({
-            changes: { from: head, insert: tag },
-            selection: { anchor: head + tag.length },
-          });
-        }
 
         return true;
       }

@@ -52,7 +52,7 @@ export type TextEditorProps = {
   autofocus?: boolean;
   readonly?: boolean; // TODO(burdon): Move into model.
   selection?: { anchor: number; head?: number };
-  comments?: CommentRange[]; // TODO(burdon): Move into extension.
+  comments?: CommentRange[]; // TODO(burdon): Move into extension?
   extensions?: Extension[];
   editorMode?: EditorMode;
   placeholder?: string;
