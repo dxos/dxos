@@ -13,8 +13,9 @@
     <meta name="theme-color" content="#ffffff" />
     <script>
       // Load automerge settings.
-      if (localStorage.getItem('dxos.org/settings/automerge') === 'true') {
-        DXOS_FORCE_AUTOMERGE = true;
+      const preference = localStorage.getItem('dxos.org/settings/automerge');
+      if (['true', 'false'].includes(preference)) {
+        DXOS_FORCE_AUTOMERGE = JSON.parse(preference);
       }
     </script>
   </head>

@@ -44,7 +44,7 @@ describe('IdentityService', () => {
     });
 
     test('creates a new identity with a display name', async () => {
-      const identity = await identityService.createIdentity({ displayName: 'Example' });
+      const identity = await identityService.createIdentity({ profile: { displayName: 'Example' } });
 
       expect(identity.identityKey).to.be.instanceof(PublicKey);
       expect(identity.spaceKey).to.be.instanceof(PublicKey);

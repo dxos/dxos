@@ -1,4 +1,6 @@
 {
+  "name": "bare-template-monitor",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/monitors/bare-template-monitor/src",
   "projectType": "library",
   "targets": {

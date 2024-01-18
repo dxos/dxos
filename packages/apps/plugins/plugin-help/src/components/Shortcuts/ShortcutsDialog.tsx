@@ -4,56 +4,20 @@
 
 import React from 'react';
 
-import { type Label } from '@dxos/app-graph';
-import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 
-import { shortcutKey } from './styles';
+import { ShortcutsList } from './ShortcutsList';
 import { HELP_PLUGIN } from '../../meta';
-
-export const Key = ({ binding }: { binding: string }) => {
-  return (
-    <div className='flex gap-1'>
-      {keySymbols(binding).map((c, i) => (
-        <span key={i} className={shortcutKey}>
-          {c}
-        </span>
-      ))}
-    </div>
-  );
-};
 
 export const ShortcutsDialogContent = () => {
   const { t } = useTranslation(HELP_PLUGIN);
 
-  // TODO(burdon): Factor out.
-  const toString = (label: Label) => (Array.isArray(label) ? t(...label) : label);
-
-  // TODO(burdon): Get shortcuts from TextEditor.
-  const bindings = Keyboard.singleton.getBindings();
-  bindings.sort((a, b) => {
-    return toString(a.data)?.toLowerCase().localeCompare(toString(b.data)?.toLowerCase());
-  });
-
   return (
-    <Dialog.Content classNames={['max-bs-[40rem] md:max-is-[30rem] overflow-hidden']}>
+    <Dialog.Content classNames={'max-bs-[40rem] md:is-auto overflow-hidden'}>
       <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
 
       <div className='grow overflow-y-auto py-2'>
-        <table className='table-fixed border-collapse my-4'>
-          <tbody>
-            {bindings.map((binding, i) => (
-              <tr key={i}>
-                <td className='p-1 w-[120px]'>
-                  <Key binding={binding.shortcut} />
-                </td>
-                <td className='p-1'>
-                  <span className='grow truncate'>{toString(binding.data as Label)}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ShortcutsList />
       </div>
 
       <Dialog.Close asChild>
