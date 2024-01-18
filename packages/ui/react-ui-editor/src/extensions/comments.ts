@@ -15,9 +15,6 @@ import { type CommentRange, type EditorModel, type Range } from '../hooks';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
 
-// TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
-// TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
-
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
   '& .cm-comment': {
@@ -215,11 +212,10 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
                   to: found + moved.to,
                 };
 
-                // TODO(burdon): Need to update state field?
+                // TODO(burdon): Race condition? Has the document been updated?
                 const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
                 const range2 = Cursor.getRangeFromCursor(state.facet(Cursor.converter), cursor);
                 console.log('paste', JSON.stringify({ moved, range, range2, cursor }, undefined, 2));
-
                 onUpdate(moved.id, cursor);
               }
             }
