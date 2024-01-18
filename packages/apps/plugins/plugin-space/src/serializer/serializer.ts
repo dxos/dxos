@@ -164,14 +164,14 @@ export class Serializer {
         );
         deserializedObject[base]._id = id;
         return deserializedObject;
+      } else {
+        Object.entries(data)
+          .filter(([key]) => !key.startsWith('@'))
+          .forEach(([key, value]: any) => {
+            object[key] = value;
+          });
+        return object;
       }
-
-      Object.entries(data)
-        .filter(([key]) => !key.startsWith('@'))
-        .forEach(([key, value]: any) => {
-          object[key] = value;
-        });
-      return object;
     },
   };
 
