@@ -244,6 +244,10 @@ const Story = ({ text, autoCreate }: StoryProps) => {
         return thread;
       }),
     );
+
+    if (selected === id) {
+      setSelected(undefined);
+    }
   };
 
   const handleSelectComment: CommentsOptions['onSelect'] = ({ active, closest, ranges }) => {
