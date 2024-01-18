@@ -11,13 +11,9 @@ import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/ech
 import { TextModel, type Doc, type YText, type YXmlFragment } from '@dxos/text-model';
 
 import { AbstractEchoObject } from './object';
-import {
-  getGlobalAutomergePreference,
-  isAutomergeObject,
-  type AutomergeOptions,
-  type TypedObject,
-} from './typed-object';
+import { isAutomergeObject, type AutomergeOptions, type TypedObject } from './typed-object';
 import { AutomergeObject, getRawDoc } from '../automerge';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 export type TextObjectOptions = AutomergeOptions;
 
