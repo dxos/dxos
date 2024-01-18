@@ -190,7 +190,7 @@ const Sidebar: FC<{
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col grow overflow-y-scroll py-4 gap-4 pr-4'>
+      <div className='flex flex-col grow overflow-y-scroll py-4 gap-4'>
         {sortedThreads.map((thread) => (
           <Thread
             key={thread.id}
