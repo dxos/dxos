@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { LayoutAction, parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { LayoutAction, parseIntentPlugin, Surface, useResolvePlugin } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
@@ -37,15 +37,18 @@ export const SpaceMain = ({ space }: { space: Space }) => {
       className={mx(baseSurface, 'min-bs-screen is-full flex items-center justify-center p-8')}
       data-testid='composer.firstRunMessage'
     >
-      <p
-        role='alert'
-        className={mx(
-          descriptionText,
-          'border border-dashed border-neutral-400/50 rounded-lg flex items-center justify-center p-8 font-normal text-lg',
-        )}
-      >
-        {t('first run message')}
-      </p>
+      <div role='none' className='grid place-items-center grid-rows-[min-content_min-content]'>
+        <p
+          role='alert'
+          className={mx(
+            descriptionText,
+            'place-self-stretch border border-dashed border-neutral-400/50 rounded-lg text-center p-8 font-normal text-lg',
+          )}
+        >
+          {t('first run message')}
+        </p>
+        <Surface role='keyshortcuts' />
+      </div>
     </div>
   );
 };
