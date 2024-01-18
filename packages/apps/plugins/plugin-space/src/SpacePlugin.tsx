@@ -100,14 +100,16 @@ export const SpacePlugin = ({
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
 
+  let clientPlugin: Plugin<ClientProvides> | undefined;
+
   return {
     meta,
     ready: async (plugins) => {
       settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       if (!clientPlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
         return;
       }
@@ -295,8 +297,9 @@ export const SpacePlugin = ({
                 return null;
               }
 
+              const defaultSpace = clientPlugin?.provides.client.spaces.default;
               const space = getSpaceForObject(data.object);
-              return space
+              return space && space !== defaultSpace
                 ? {
                     node: (
                       <>
