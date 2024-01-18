@@ -7,7 +7,7 @@ import md5 from 'md5';
 import { Folder } from '@braneframe/types';
 import { TypedObject, type Space, base } from '@dxos/react-client/echo';
 
-import { serializers } from './object-serializers';
+import { serializers } from './serializers';
 
 export const TypeOfExpando = 'dxos.org/typename/expando';
 
