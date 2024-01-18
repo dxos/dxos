@@ -1,7 +1,9 @@
-import { defineConfig } from 'vite';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
+import { defineConfig } from 'vite';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import WasmPlugin from 'vite-plugin-wasm';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -22,6 +24,15 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+    plugins: () => [
+      TopLevelAwaitPlugin(),
+      WasmPlugin(),
+    ],
   },
-  plugins: [ConfigPlugin(), react({ jsxRuntime: 'classic' })],
+  plugins: [
+    ConfigPlugin(),
+    TopLevelAwaitPlugin(),
+    WasmPlugin(),
+    ReactPlugin({ jsxRuntime: 'classic' })
+  ],
 });
