@@ -10,7 +10,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { TextObject, setGlobalAutomergePreference } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { Serializer } from './file-serializer';
+import { FileSerializer } from './file-serializer';
 
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);
@@ -38,7 +38,7 @@ describe('FileSerializer', () => {
     const text = 'Hello world!';
     space.properties[Folder.schema.typename].objects.push(new Document({ content: new TextObject(text) }));
 
-    const serializer = new Serializer();
+    const serializer = new FileSerializer();
     const serialized = await serializer.serializeSpace(space);
 
     const newSpace = await createSpace(client, 'deserialized space');

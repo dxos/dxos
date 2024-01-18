@@ -4,10 +4,10 @@
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
-import { Serializer, type SerializedObject, type SerializedSpace } from './file-serializer';
+import { FileSerializer, type SerializedObject, type SerializedSpace } from './file-serializer';
 
 export const saveSpaceToDisk = async ({ space, directory }: { space: Space; directory: FileSystemDirectoryHandle }) => {
-  const serializer = new Serializer();
+  const serializer = new FileSerializer();
   const serializedSpace = await serializer.serializeSpace(space);
 
   const saveDir = await directory.getDirectoryHandle(
@@ -110,7 +110,7 @@ export const loadSpaceFromDisk = async ({
       data: await loadContent(directory, metadataWithoutContent.data),
     };
 
-    const serializer = new Serializer();
+    const serializer = new FileSerializer();
     return serializer.deserializeSpace(space, serializedSpace);
   } catch (err) {
     log.catch(err);
