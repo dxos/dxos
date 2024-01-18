@@ -204,21 +204,25 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
           });
 
           if (found > -1) {
-            const active = state.field(commentsStateField).ranges;
-            for (const moved of tracked.comments) {
-              if (active.some((range) => range.id === moved.id && range.from === range.to)) {
-                const range = {
-                  from: found + moved.from,
-                  to: found + moved.to,
-                };
+            const comments = tracked.comments;
+            // TODO(burdon): Hack to defeat race condition.
+            setTimeout(() => {
+              const active = state.field(commentsStateField).ranges;
+              for (const moved of comments) {
+                if (active.some((range) => range.id === moved.id && range.from === range.to)) {
+                  const range = {
+                    from: found + moved.from,
+                    to: found + moved.to,
+                  };
 
-                // TODO(burdon): Race condition? Has the document been updated?
-                const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
-                const range2 = Cursor.getRangeFromCursor(state.facet(Cursor.converter), cursor);
-                console.log('paste', JSON.stringify({ moved, range, range2, cursor }, undefined, 2));
-                onUpdate(moved.id, cursor);
+                  // TODO(burdon): Race condition? Has the document been updated?
+                  const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
+                  const range2 = Cursor.getRangeFromCursor(state.facet(Cursor.converter), cursor);
+                  console.log('paste', JSON.stringify({ moved, range, range2, cursor }, undefined, 2));
+                  onUpdate(moved.id, cursor);
+                }
               }
-            }
+            });
           }
 
           tracked = null;

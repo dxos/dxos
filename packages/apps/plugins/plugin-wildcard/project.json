@@ -1,6 +1,4 @@
 {
-  "name": "plugin-wildcard",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-wildcard/src",
   "projectType": "library",
   "targets": {
@@ -12,17 +10,27 @@
           "packages/apps/plugins/plugin-wildcard/src/meta.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-wildcard/dist/lib",
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {
       "options": {
         "format": "unix",
-        "lintFilePatterns": ["packages/apps/plugins/plugin-wildcard/src/**/*.{js,jsx,ts,tsx}"],
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-wildcard/src/**/*.{js,jsx,ts,tsx}"
+        ],
         "quiet": true
       },
-      "outputs": ["{options.outputFile}"]
+      "outputs": [
+        "{options.outputFile}"
+      ]
     }
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-wildcard"
 }

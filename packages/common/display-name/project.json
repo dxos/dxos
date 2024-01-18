@@ -1,17 +1,22 @@
 {
-  "name": "display-name",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/display-name/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/common/display-name/src/index.ts"]
+        "entryPoints": [
+          "packages/common/display-name/src/index.ts"
+        ]
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "display-name"
 }

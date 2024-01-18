@@ -1,22 +1,29 @@
 {
-  "name": "teleport-extension-replicator",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/mesh/teleport-extension-replicator/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/core/mesh/teleport-extension-replicator/src/index.ts"],
+        "entryPoints": [
+          "packages/core/mesh/teleport-extension-replicator/src/index.ts"
+        ],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": ["nodejs"]
+        "ciEnvironments": [
+          "nodejs"
+        ]
       }
     }
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "teleport-extension-replicator"
 }

@@ -1,16 +1,20 @@
 {
-  "name": "telemetry",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/telemetry/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/common/telemetry/src/index.ts"]
+        "entryPoints": [
+          "packages/common/telemetry/src/index.ts"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "telemetry"
 }

@@ -1,6 +1,4 @@
 {
-  "name": "plugin-layout",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-layout/src",
   "projectType": "library",
   "targets": {
@@ -11,10 +9,16 @@
           "packages/apps/plugins/plugin-layout/src/index.ts",
           "packages/apps/plugins/plugin-layout/src/meta.ts"
         ],
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-layout"
 }

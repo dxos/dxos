@@ -1,16 +1,20 @@
 {
-  "name": "gem-core",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/experimental/gem-core/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/experimental/gem-core/src/index.ts"]
+        "entryPoints": [
+          "packages/experimental/gem-core/src/index.ts"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "test"
+  ],
+  "name": "gem-core"
 }

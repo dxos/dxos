@@ -1,13 +1,14 @@
 {
-  "name": "echo-db",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/echo/echo-db/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/core/echo/echo-db/src/index.ts", "packages/core/echo/echo-db/src/testing/index.ts"],
+        "entryPoints": [
+          "packages/core/echo/echo-db/src/index.ts",
+          "packages/core/echo/echo-db/src/testing/index.ts"
+        ],
         "injectGlobals": true
       }
     },
@@ -25,5 +26,10 @@
       }
     }
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "echo-db"
 }

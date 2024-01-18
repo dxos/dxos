@@ -1,6 +1,4 @@
 {
-  "name": "plugin-client",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-client/src",
   "projectType": "library",
   "targets": {
@@ -11,10 +9,16 @@
           "packages/apps/plugins/plugin-client/src/index.ts",
           "packages/apps/plugins/plugin-client/src/meta.ts"
         ],
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-client"
 }

@@ -1,17 +1,22 @@
 {
-  "name": "text-model",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/echo/text-model/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/core/echo/text-model/src/index.ts"]
+        "entryPoints": [
+          "packages/core/echo/text-model/src/index.ts"
+        ]
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "text-model"
 }

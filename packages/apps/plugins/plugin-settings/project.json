@@ -1,6 +1,4 @@
 {
-  "name": "plugin-settings",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-settings/src",
   "projectType": "library",
   "targets": {
@@ -15,5 +13,9 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-settings"
 }

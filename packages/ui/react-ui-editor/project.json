@@ -1,14 +1,16 @@
 {
-  "name": "react-ui-editor",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-ui-editor/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/ui/react-ui-editor/src/index.ts"],
-        "platforms": ["browser"]
+        "entryPoints": [
+          "packages/ui/react-ui-editor/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {},
@@ -17,9 +19,15 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": ["{projectRoot}/src/testing/proto/gen"]
+      "outputs": [
+        "{projectRoot}/src/testing/proto/gen"
+      ]
     },
     "test": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "react-ui-editor"
 }

@@ -1,21 +1,30 @@
 {
-  "name": "phoenix",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/phoenix/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/common/phoenix/src/index.ts"],
+        "entryPoints": [
+          "packages/common/phoenix/src/index.ts"
+        ],
         "injectGlobals": true,
-        "platforms": ["node"]
+        "platforms": [
+          "node"
+        ]
       }
     },
     "lint": {},
     "test": {
-      "ciEnvironments": ["nodejs"]
+      "ciEnvironments": [
+        "nodejs"
+      ]
     }
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "phoenix"
 }

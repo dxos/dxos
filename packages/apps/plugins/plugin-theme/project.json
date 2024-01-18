@@ -1,6 +1,4 @@
 {
-  "name": "plugin-theme",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-theme/src",
   "projectType": "library",
   "targets": {
@@ -11,10 +9,16 @@
           "packages/apps/plugins/plugin-theme/src/index.ts",
           "packages/apps/plugins/plugin-theme/src/meta.ts"
         ],
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-theme"
 }

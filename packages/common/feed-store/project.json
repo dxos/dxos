@@ -1,18 +1,24 @@
 {
-  "name": "feed-store",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/feed-store/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/common/feed-store/src/index.ts", "packages/common/feed-store/src/testing/index.ts"],
+        "entryPoints": [
+          "packages/common/feed-store/src/index.ts",
+          "packages/common/feed-store/src/testing/index.ts"
+        ],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "feed-store"
 }

@@ -1,6 +1,4 @@
 {
-  "name": "plugin-map",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-map/src",
   "projectType": "library",
   "targets": {
@@ -11,10 +9,16 @@
           "packages/apps/plugins/plugin-map/src/index.ts",
           "packages/apps/plugins/plugin-map/src/meta.tsx"
         ],
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-map"
 }

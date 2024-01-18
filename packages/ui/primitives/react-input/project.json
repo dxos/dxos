@@ -1,28 +1,43 @@
 {
-  "name": "react-input",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/primitives/react-input/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
-      "dependsOn": ["compile-lib"],
+      "dependsOn": [
+        "compile-lib"
+      ],
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["true"]
+        "commands": [
+          "true"
+        ]
       }
     },
     "compile-lib": {
-      "dependsOn": ["^compile"],
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
-        "entryPoints": ["packages/ui/primitives/react-input/src/index.ts"],
+        "entryPoints": [
+          "packages/ui/primitives/react-input/src/index.ts"
+        ],
         "outputPath": "packages/ui/primitives/react-input/dist/lib",
-        "platforms": ["browser", "node"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "react-input"
 }

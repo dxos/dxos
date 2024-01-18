@@ -1,17 +1,23 @@
 {
-  "name": "storybook-utils",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/storybook-utils/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/ui/storybook-utils/src/index.ts"],
-        "platforms": ["browser"]
+        "entryPoints": [
+          "packages/ui/storybook-utils/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "storybook-utils"
 }
