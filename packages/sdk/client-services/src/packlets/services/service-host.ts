@@ -8,8 +8,8 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { type TypedObject, base, REFERENCE_TYPE_TAG, getRawDoc } from '@dxos/echo-schema';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
@@ -357,15 +357,30 @@ export class ClientServicesHost {
     // Setup default space.
     await this._serviceContext.initialized.wait();
     const space = await this._serviceContext.dataSpaceManager!.createSpace();
+
     const obj: TypedObject = new Properties(undefined, { automerge: useAutomerge });
     obj[defaultKey] = identity.identityKey.toHex();
-    await this._serviceRegistry.services.DataService!.write({
-      spaceKey: space.key,
-      batch: {
-        objects: [createGenesisMutationFromTypedObject(obj)],
-      },
-    });
-    await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
+
+    if (!useAutomerge) {
+      await this._serviceRegistry.services.DataService!.write({
+        spaceKey: space.key,
+        batch: {
+          objects: [createGenesisMutationFromTypedObject(obj)],
+        },
+      });
+      await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
+    } else {
+      // TODO(dmaretskyi): Refactor this.
+      const automergeIndex = space.automergeSpaceState.rootUrl;
+      invariant(automergeIndex);
+      const document = await this._serviceContext.automergeHost.repo.find(automergeIndex as any);
+      await document.whenReady();
+
+      document.change((doc: any) => {
+        doc.objects ??= {};
+        doc.objects[obj[base]._id] = getRawDoc(obj).handle.docSync();
+      });
+    }
 
     return identity;
   }
