@@ -136,6 +136,7 @@ const Thread: FC<{
         <span>from:{thread.selection?.from}</span>
         <span>to:{thread.selection?.to}</span>
         <span>y:{thread.yPos}</span>
+        <span className='grow' />
         {thread.deleted && <Trash />}
       </div>
 
@@ -147,27 +148,25 @@ const Thread: FC<{
       ))}
 
       <div ref={containerRef} onClick={() => onSelect()} className='flex'>
-        <div className='grow'>
-          <TextEditor
-            ref={editorRef}
-            autofocus={focus}
-            model={model}
-            placeholder={'Enter comment...'}
-            slots={{ root: { className: 'p-2 rounded-b' } }}
-            extensions={[
-              keymap.of([
-                {
-                  key: 'Enter',
-                  run: () => {
-                    handleCreateMessage();
-                    return true;
-                  },
+        <TextEditor
+          ref={editorRef}
+          autofocus={focus}
+          model={model}
+          placeholder={'Enter comment...'}
+          slots={{ root: { className: 'grow p-2 rounded-b' } }}
+          extensions={[
+            keymap.of([
+              {
+                key: 'Enter',
+                run: () => {
+                  handleCreateMessage();
+                  return true;
                 },
-              ]),
-            ]}
-          />
-        </div>
-        <Button variant='ghost' classNames='px-1 mr-1' title='Resolve' onClick={onResolve}>
+              },
+            ]),
+          ]}
+        />
+        <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
           <Check />
         </Button>
       </div>
