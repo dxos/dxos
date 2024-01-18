@@ -2,13 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ERROR_PLUGIN } from './meta';
-
 export default [
   {
     'en-US': {
-      [ERROR_PLUGIN]: {
-        'plugin name': 'Error',
+      composer: {
         'show stack label': 'View stack trace',
         'fatal error title': 'The app encountered an error',
         'fatal error message':
