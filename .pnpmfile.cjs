@@ -65,12 +65,6 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case '@nx/vite': {
-      // We don't use vitest.
-      delete packageJson.peerDependencies['vitest']
-      break;
-    }
-
     case '@storybook/html': {
       // Unused.
       delete packageJson.peerDependencies['@babel/core'];
@@ -137,7 +131,7 @@ function readPackage(packageJson, context) {
 
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
-      packageJson.peerDependencies['vite'] = '^4.3.0'
+      packageJson.peerDependencies['vite'] = '^5.0.0'
       break;
     }
 
@@ -167,15 +161,8 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // Ensure vuepress uses compatible vite version.
-    case '@vuepress/bundler-vite': {
-      packageJson.dependencies['vite'] = '^4.3.0'
-      break;
-    }
-
-    // Ensure vuepress uses compatible vite version.
-    case '@vitejs/plugin-vue': {
-      packageJson.peerDependencies['vite'] = '^4.3.0'
+    case 'vite-plugin-fonts': {
+      packageJson.peerDependencies['vite'] = '^5.0.0'
       break;
     }
 

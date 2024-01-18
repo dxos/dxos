@@ -819,11 +819,6 @@
         },
         {
           "type": "json",
-          "path": "tools/presenter/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/protobuf-test/package.json",
           "jsonpath": "$.version"
         },
