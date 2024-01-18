@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension, StateEffect, StateField } from '@codemirror/state';
+import { type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
 import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 
@@ -142,6 +142,10 @@ export type CommentsOptions = {
    */
   onCreate?: (cursor: string, location?: Rect | null) => string | undefined;
   /**
+   * Called when a comment is moved.
+   */
+  onMove?: (threadID: string, cursor: string) => void;
+  /**
    * Called to notify which thread is currently closest to the cursor.
    */
   onSelect?: (state: CommentsState) => void;
@@ -149,6 +153,65 @@ export type CommentsOptions = {
    * Called to render tooltip.
    */
   onHover?: (el: Element, shortcut: string) => void;
+};
+
+const trackPastedComments = (onMove: (threadID: string, cursor: string) => void) => {
+  let tracked: { text: Text; comments: { from: number; to: number; id: string }[] } | null = null;
+
+  const registerCopy = (event: Event, view: EditorView) => {
+    const comments = view.state.field(commentsStateField);
+    const { main } = view.state.selection;
+    const inSel = comments.ranges.filter(
+      (range) => range.from >= main.from && range.to <= main.to && range.from < range.to,
+    );
+    if (!inSel.length) {
+      tracked = null;
+    } else {
+      tracked = {
+        text: view.state.doc.slice(main.from, main.to),
+        comments: inSel.map((range) => ({ from: range.from - main.from, to: range.to - main.from, id: range.id })),
+      };
+    }
+  };
+
+  return [
+    EditorView.domEventHandlers({
+      cut: registerCopy,
+      copy: registerCopy,
+    }),
+
+    EditorView.updateListener.of((update) => {
+      if (tracked) {
+        const paste = update.transactions.find((tr) => tr.isUserEvent('input.paste'));
+        if (paste) {
+          let found = -1;
+          paste.changes.iterChanges((fromA, toA, fromB, toB, text) => {
+            if (text.eq(tracked!.text)) {
+              for (let i = update.transactions.indexOf(paste!) + 1; i < update.transactions.length; i++) {
+                fromB = update.transactions[i].changes.mapPos(fromB);
+              }
+              found = fromB;
+            }
+          });
+          if (found > -1) {
+            const active = update.view.state.field(commentsStateField).ranges;
+            for (const moved of tracked.comments) {
+              if (active.some((range) => range.id === moved.id && range.from === range.to)) {
+                onMove(
+                  moved.id,
+                  Cursor.getCursorFromRange(update.view.state.facet(Cursor.converter), {
+                    from: found + moved.from,
+                    to: found + moved.to,
+                  }),
+                );
+              }
+            }
+          }
+          tracked = null;
+        }
+      }
+    }),
+  ];
 };
 
 /**
@@ -321,5 +384,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         }
       }
     }),
+
+    options.onMove ? trackPastedComments(options.onMove) : [],
   ];
 };

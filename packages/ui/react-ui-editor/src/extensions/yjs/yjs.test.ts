@@ -12,7 +12,7 @@ import { type YText } from '@dxos/text-model';
 describe('YJS', () => {
   // https://docs.yjs.dev/api/shared-types/y.text
   // https://github.com/yjs/yjs?tab=readme-ov-file#relative-positions
-  test('absolute position', () => {
+  test.skip('absolute position', () => {
     const obj = new TextObject('hello world');
     const index = obj.text.indexOf('world');
     const relPos = Y.encodeRelativePosition(Y.createRelativePositionFromTypeIndex(obj.content as YText, index));

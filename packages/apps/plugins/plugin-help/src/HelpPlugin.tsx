@@ -10,7 +10,7 @@ import { type Step } from 'react-joyride';
 import { LayoutAction, type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
-import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints } from './components';
+import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
 import meta, { HELP_PLUGIN } from './meta';
 import translations from './translations';
 import { HelpAction, type HelpPluginProvides } from './types';
@@ -85,6 +85,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
               return settings.values.showHints ? (
                 <ShortcutsHints onClose={() => (settings.values.showHints = false)} />
               ) : null;
+            case 'keyshortcuts':
+              return settings.values.showHints ? <ShortcutsList /> : null;
           }
 
           switch (data.component) {
