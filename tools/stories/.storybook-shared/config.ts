@@ -62,10 +62,7 @@ export const config = (
         },
         worker: {
           format: 'es',
-          plugins: () => [
-            TopLevelAwaitPlugin(),
-            WasmPlugin(),
-          ],
+          plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
         },
         plugins: [
           ThemePlugin({
