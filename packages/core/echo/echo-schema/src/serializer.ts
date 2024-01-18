@@ -144,17 +144,9 @@ export class Serializer {
       invariant(data.field);
       obj = new TextObject(data[data.field], data.kind, data.field);
     } else {
-      let typeRef: Reference | undefined;
-      if (typeof type === 'object' && type !== null) {
-        typeRef = new Reference(type.itemId, type.protocol, type.host);
-      } else if (typeof type === 'string') {
-        // TODO(mykola): Never reached?
-        typeRef = Reference.fromLegacyTypename(type);
-      }
-
       obj = new TypedObject(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))), {
         meta,
-        type: typeRef,
+        type: getTypeRef(type),
       });
     }
 
@@ -167,3 +159,12 @@ export class Serializer {
     await database.flush();
   }
 }
+
+export const getTypeRef = (type?: SerializedReference | string): Reference | undefined => {
+  if (typeof type === 'object' && type !== null) {
+    return new Reference(type.itemId, type.protocol, type.host);
+  } else if (typeof type === 'string') {
+    // TODO(mykola): Never reached?
+    return Reference.fromLegacyTypename(type);
+  }
+};

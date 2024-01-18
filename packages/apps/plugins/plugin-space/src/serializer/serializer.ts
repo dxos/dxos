@@ -5,6 +5,8 @@
 import md5 from 'md5';
 
 import { Folder } from '@braneframe/types';
+import { getTypeRef } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { TypedObject, type Space, base } from '@dxos/react-client/echo';
 
 import { serializers } from './serializers';
@@ -105,36 +107,41 @@ export class Serializer {
     return {
       type: 'folder',
       id: folder.id,
-      name: this._fixNamesCollisions(folder.name ?? 'New folder'),
+      // TODO(mykola): Use folder.name instead of folder.title.
+      name: this._fixNamesCollisions((folder as any).title ?? 'New folder'),
       children: files,
     };
   }
 
   private async _deserializeFolder(folder: Folder, data: SerializedObject[]): Promise<void> {
     for (const object of data) {
-      let child = folder.objects.find((item) => item.id === object.id);
-      switch (object.type) {
-        case 'folder': {
-          if (!child) {
-            child = new Folder({ name: object.name });
-            child[base]._id = object.id;
-            folder.objects.push(child);
-          }
+      try {
+        let child = folder.objects.find((item) => item.id === object.id);
+        switch (object.type) {
+          case 'folder': {
+            if (!child) {
+              child = new Folder({ name: object.name });
+              child[base]._id = object.id;
+              folder.objects.push(child);
+            }
 
-          await this._deserializeFolder(child as Folder, object.children);
-          break;
-        }
-        case 'file': {
-          const child = folder.objects.find((item) => item.id === object.id);
-          const serializer = serializers[object.typename] ?? this.defaultSerializer;
-          const deserialized = await serializer.deserialize(object.content!, child);
-
-          if (!child) {
-            deserialized[base]._id = object.id;
-            folder.objects.push(deserialized);
+            await this._deserializeFolder(child as Folder, object.children);
+            break;
           }
-          break;
+          case 'file': {
+            const child = folder.objects.find((item) => item.id === object.id);
+            const serializer = serializers[object.typename] ?? this.defaultSerializer;
+            const deserialized = await serializer.deserialize(object.content!, child);
+
+            if (!child) {
+              deserialized[base]._id = object.id;
+              folder.objects.push(deserialized);
+            }
+            break;
+          }
         }
+      } catch (err) {
+        log.error('Failed to deserialize object:', object);
       }
     }
   }
@@ -145,7 +152,27 @@ export class Serializer {
   private defaultSerializer = {
     filename: () => ({ name: 'Untitled', extension: 'json' }),
     serialize: async (object: TypedObject) => JSON.stringify(object.toJSON(), null, 2),
-    deserialize: async (text: string) => new TypedObject(JSON.parse(text)),
+    deserialize: async (text: string, object?: TypedObject) => {
+      const { '@id': id, '@type': type, '@meta': meta, ...data } = JSON.parse(text);
+      if (!object) {
+        const deserializedObject = new TypedObject(
+          Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@'))),
+          {
+            meta,
+            type: getTypeRef(type),
+          },
+        );
+        deserializedObject[base]._id = id;
+        return deserializedObject;
+      }
+
+      Object.entries(data)
+        .filter(([key]) => !key.startsWith('@'))
+        .forEach(([key, value]: any) => {
+          object[key] = value;
+        });
+      return object;
+    },
   };
 
   private readonly _namesCount = new Map<string, number>();
