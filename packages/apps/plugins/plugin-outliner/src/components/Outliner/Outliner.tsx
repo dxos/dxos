@@ -269,7 +269,7 @@ const OutlinerItem = ({
       <MarkdownEditor
         ref={editorRef}
         model={model}
-        // focus={!!active} // TODO(burdon): !!!
+        autofocus={!!active}
         extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
         placeholder={placeholder}
         slots={{

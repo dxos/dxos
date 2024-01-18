@@ -49,15 +49,15 @@ export type TextEditorSlots = {
 // TODO(burdon): Spellcheck?
 export type TextEditorProps = {
   model: EditorModel;
-  selection?: { anchor: number; head?: number };
+  autofocus?: boolean;
   readonly?: boolean; // TODO(burdon): Move into model.
+  selection?: { anchor: number; head?: number };
   comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
   editorMode?: EditorMode;
   placeholder?: string;
   theme?: ThemeStyles;
   slots?: TextEditorSlots;
-  onReady?: (view: EditorView, model: EditorModel) => void;
 };
 
 /**
@@ -65,7 +65,7 @@ export type TextEditorProps = {
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    { model, selection, readonly, comments, extensions = [], editorMode, theme, slots = defaultSlots, onReady },
+    { model, autofocus, readonly, selection, comments, extensions = [], editorMode, theme, slots = defaultSlots },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -77,12 +77,11 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
-    // Notify view has been changed (e.g., to set focus).
     useEffect(() => {
-      if (view) {
-        onReady?.(view, model);
+      if (autofocus) {
+        view?.focus();
       }
-    }, [view]);
+    }, [autofocus, view]);
 
     // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;

@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
 import { comments, type CommentsOptions, Cursor } from '../../extensions';
-import { type CommentRange, type Range, useFocus, useTextModel } from '../../hooks';
+import { type CommentRange, type Range, useTextModel } from '../../hooks';
 
 faker.seed(101);
 
@@ -90,19 +90,17 @@ const Thread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
+  const [focus, setFocus] = useState(false);
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
-
-  // TODO(burdon): Tie editor to model.
-  const { focus, ready } = useFocus();
 
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
-        focus('_new');
+        setFocus(true);
       }
     }
   }, [selected]);
@@ -111,9 +109,8 @@ const Thread: FC<{
     const text = model?.text().trim();
     if (text?.length) {
       thread.messages.push(item.text);
-      const newItem = { text: new TextObject() };
-      setItem(newItem);
-      // focus(newItem.id);
+      setItem({ text: new TextObject() });
+      setFocus(true);
     }
   };
 
@@ -141,6 +138,7 @@ const Thread: FC<{
         <div className='grow'>
           <TextEditor
             ref={editorRef}
+            autofocus={focus}
             model={model}
             placeholder={'Enter comment...'}
             extensions={[
@@ -154,7 +152,6 @@ const Thread: FC<{
                 },
               ]),
             ]}
-            onReady={ready}
           />
         </div>
         <Button variant='ghost' classNames='px-1 mr-1' title='Resolve' onClick={onResolve}>
