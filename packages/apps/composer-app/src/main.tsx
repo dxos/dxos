@@ -25,6 +25,9 @@ import MapMeta from '@braneframe/plugin-map/meta';
 import MarkdownMeta from '@braneframe/plugin-markdown/meta';
 import MermaidMeta from '@braneframe/plugin-mermaid/meta';
 import MetadataMeta from '@braneframe/plugin-metadata/meta';
+
+import NativeMeta from '../../plugins/plugin-native/src/meta';
+
 import NavTreeMeta from '@braneframe/plugin-navtree/meta';
 import OutlinerMeta from '@braneframe/plugin-outliner/meta';
 import PresenterMeta from '@braneframe/plugin-presenter/meta';
@@ -87,6 +90,7 @@ const main = async () => {
       ThemeMeta,
       // Outside of error boundary so that updates are not blocked by errors.
       PwaMeta,
+      NativeMeta,
 
       // UX
       LayoutMeta,
@@ -205,6 +209,8 @@ const main = async () => {
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
+      // TODO(mjamesderocher): Change so that actually applies when not socket...
+      NativeMeta.id,
       ...(isSocket ? [] : [PwaMeta.id]),
       RegistryMeta.id,
       SettingsMeta.id,
