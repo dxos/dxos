@@ -26,6 +26,7 @@
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

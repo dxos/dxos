@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
 import { Serializer, type SerializedObject, type SerializedSpace } from './serializer';
@@ -74,4 +75,44 @@ export const loadSpaceFromDisk = async ({
 }: {
   space: Space;
   directory: FileSystemDirectoryHandle;
-}) => {};
+}) => {
+  try {
+    if (!('TextDecoder' in window)) {
+      throw new Error('Sorry, this browser does not support TextDecoder...');
+    }
+
+    const composerDir = await directory.getDirectoryHandle('.composer', { create: false });
+    const metadataFile = await composerDir.getFileHandle('space.json', { create: false });
+    const metadataWithoutContent: SerializedSpace = JSON.parse(
+      new TextDecoder().decode(await (await metadataFile.getFile()).arrayBuffer()),
+    );
+
+    const loadContent = async (
+      directory: FileSystemDirectoryHandle,
+      data: SerializedObject[],
+    ): Promise<SerializedObject[]> => {
+      const result: SerializedObject[] = [];
+      for (const item of data) {
+        if (item.type === 'folder') {
+          const childDirectory = await directory.getDirectoryHandle(item.name, { create: false });
+          result.push({ ...item, children: await loadContent(childDirectory, item.children) });
+        } else {
+          const fileHandle = await directory.getFileHandle(`${item.name}.${item.extension}`, { create: false });
+          const content = await (await fileHandle.getFile()).text();
+          result.push({ ...item, content });
+        }
+      }
+      return result;
+    };
+
+    const serializedSpace: SerializedSpace = {
+      ...metadataWithoutContent,
+      data: await loadContent(directory, metadataWithoutContent.data),
+    };
+
+    const serializer = new Serializer();
+    return serializer.deserializeSpace(space, serializedSpace);
+  } catch (err) {
+    log.catch(err);
+  }
+};

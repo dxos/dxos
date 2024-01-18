@@ -2,10 +2,59 @@
 // Copyright 2024 DXOS.org
 //
 
+import get from 'lodash.get';
+
 import { Document, Thread } from '@braneframe/types';
-import { AutomergeObject } from '@dxos/echo-schema';
+import { next as automerge, type Prop } from '@dxos/automerge/automerge';
+import { AutomergeObject, type IDocHandle } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { type TypedObject, TextObject, getRawDoc } from '@dxos/react-client/echo';
-import { type CursorConverter, cursorConverter } from '@dxos/react-ui-editor';
+
+export interface CursorConverter {
+  toCursor(position: number, assoc?: -1 | 1 | undefined): string;
+  fromCursor(cursor: string): number;
+}
+
+// TODO(mykola): Factor out.
+const cursorConverter = (handle: IDocHandle, path: Prop[]) => ({
+  // TODO(burdon): Handle assoc to associate with a previous character.
+  toCursor: (pos: number): string => {
+    const doc = handle.docSync();
+    if (!doc) {
+      return '';
+    }
+
+    const value = get(doc, path);
+    if (typeof value === 'string' && value.length <= pos) {
+      return 'end';
+    }
+
+    // NOTE: Slice is needed because getCursor mutates the array.
+    return automerge.getCursor(doc, path.slice(), pos);
+  },
+  fromCursor: (cursor: string): number => {
+    if (cursor === '') {
+      return 0;
+    }
+
+    const doc = handle.docSync();
+    if (!doc) {
+      return 0;
+    }
+
+    if (cursor === 'end') {
+      const value = get(doc, path);
+      if (typeof value === 'string') {
+        return value.length;
+      } else {
+        return 0;
+      }
+    }
+
+    // NOTE: Slice is needed because getCursor mutates the array.
+    return automerge.getCursorPosition(doc, path.slice(), cursor);
+  },
+});
 
 export type FileName = { name: string; extension: string };
 
@@ -13,7 +62,11 @@ export interface TypedObjectSerializer {
   filename(object: TypedObject): FileName;
 
   serialize(object: TypedObject): Promise<string>;
-  deserialize(text: string): Promise<TypedObject>;
+
+  /**
+   * @param object Deserializing into an existing object. If not provided, a new object is created.
+   */
+  deserialize(text: string, object?: TypedObject): Promise<TypedObject>;
 }
 
 // TODO(mykola): Factor out to respective plugins as providers.
@@ -67,8 +120,15 @@ export const serializers: Record<string, TypedObjectSerializer> = {
       return `${text}\n\n${footnote}`;
     },
 
-    deserialize: async (text: string) => {
-      return new Document({ content: new TextObject(text) });
+    deserialize: async (text: string, existingDoc?: TypedObject) => {
+      if (existingDoc) {
+        invariant(existingDoc instanceof Document, 'Invalid document');
+        invariant(existingDoc.content instanceof AutomergeObject, 'Invalid content');
+        (existingDoc.content as any)[(existingDoc.content as any).field] = text;
+        return existingDoc;
+      } else {
+        return new Document({ content: new TextObject(text) });
+      }
     },
   },
 
