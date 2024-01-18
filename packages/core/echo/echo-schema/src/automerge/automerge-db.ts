@@ -13,16 +13,10 @@ import { log } from '@dxos/log';
 import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import {
-  type EchoObject,
-  base,
-  getGlobalAutomergePreference,
-  isActualTypedObject,
-  isAutomergeObject,
-  TextObject,
-} from '../object';
+import { type EchoObject, base, isActualTypedObject, isAutomergeObject, TextObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -72,10 +66,9 @@ export class AutomergeDb {
     log.info('begin opening', { indexDocId: spaceState.rootUrl, automergePreference: getGlobalAutomergePreference() });
     if (!spaceState.rootUrl) {
       if (getGlobalAutomergePreference()) {
-        throw new Error('Database opened with no rootUrl');
-      } else {
-        await this._fallbackToNewDoc();
+        log.error('Database opened with no rootUrl');
       }
+      await this._fallbackToNewDoc();
     } else {
       try {
         await this._initDocHandle(spaceState.rootUrl);
@@ -156,7 +149,6 @@ export class AutomergeDb {
   }
 
   private async _fallbackToNewDoc() {
-    invariant(!getGlobalAutomergePreference());
     this._docHandle = this.automerge.repo.create();
     this._ctx!.onDispose(() => {
       this._docHandle.delete();
