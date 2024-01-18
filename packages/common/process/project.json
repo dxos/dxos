@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/common/process/src/index.ts",
         "outputPath": "packages/common/process/dist",
@@ -11,7 +10,6 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

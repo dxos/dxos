@@ -3,7 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/templates/bare-template/src/config.t.ts",
         "outputPath": "packages/apps/templates/bare-template/dist",

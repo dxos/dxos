@@ -3,6 +3,7 @@
 //
 
 // TODO(burdon): Options object?
+// TODO(wittjosiah): Change name. Merge w/ os?
 export const appkit = (appName?: string) => ({
   'current app name': appName ?? 'This app',
   'loading translations': 'Loading translations…',

@@ -5,7 +5,7 @@
 import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
-import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
+import { Config, Defaults } from '@dxos/react-client';
 import {
   AlertDialog,
   Button,
@@ -15,9 +15,7 @@ import {
   type AlertDialogRootProps,
   Tooltip,
 } from '@dxos/react-ui';
-import { type Provider, getAsyncValue, safariCheck } from '@dxos/util';
-
-import { ERROR_PLUGIN } from '../meta';
+import { type Provider } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -51,7 +49,7 @@ export const ResetDialog = ({
   open,
   onOpenChange,
 }: FatalErrorProps) => {
-  const { t } = useTranslation(ERROR_PLUGIN);
+  const { t } = useTranslation('composer');
   const error = propsError && parseError(t, propsError);
   const [showStack, setShowStack] = useState(false);
 
@@ -60,20 +58,12 @@ export const ResetDialog = ({
   }, [error]);
 
   const handleReset = async () => {
-    // Safari does not use remote vault.
-    if (safariCheck()) {
-      const config = new Config(Defaults());
+    const config = new Config(Defaults());
 
-      const { ClientServicesHost } = await import('@dxos/client-services');
-      const services = new ClientServicesHost({ config });
-      await services.reset();
-      return;
-    }
-
-    // TODO(wittjosiah): This is a hack.
-    //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
-    const config = await getAsyncValue(configProvider);
-    window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_VAULT_URL}#reset`, '_blank');
+    const { ClientServicesHost } = await import('@dxos/client-services');
+    const services = new ClientServicesHost({ config });
+    await services.reset();
+    window.location.reload();
   };
 
   const Caret = showStack ? CaretDown : CaretRight;
