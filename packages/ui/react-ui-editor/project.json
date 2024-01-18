@@ -20,14 +20,12 @@
         "script": "prebuild"
       },
       "outputs": [
-        "{projectRoot}/src/testing/proto/gen"
+        "packages/ui/react-ui-editor/src/testing/proto/gen"
       ]
     },
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-ui-editor"
+  ]
 }

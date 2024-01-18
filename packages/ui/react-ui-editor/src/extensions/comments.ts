@@ -8,7 +8,6 @@ import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
@@ -141,6 +140,10 @@ export type CommentsOptions = {
    * Called to create a new thread and return the thread id.
    */
   onCreate?: (cursor: string, location?: Rect | null) => string | undefined;
+  /**
+   * Selection cut/deleted.
+   */
+  onDelete?: (cursor: string) => void;
   /**
    * Called when a comment is moved.
    */
@@ -333,8 +336,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             if (from2 === to2) {
               const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
               if (!newRange || newRange.to - newRange.from === 0) {
-                // TODO(burdon): Delete range if empty.
-                log.info('deleted comment', { thread: range.id });
+                options.onDelete?.(range.id);
               }
             }
 

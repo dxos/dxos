@@ -49,9 +49,9 @@ export type TextEditorSlots = {
 // TODO(burdon): Spellcheck?
 export type TextEditorProps = {
   model: EditorModel;
-  focus?: boolean;
-  selection?: { anchor: number; head?: number };
+  autofocus?: boolean;
   readonly?: boolean; // TODO(burdon): Move into model.
+  selection?: { anchor: number; head?: number };
   comments?: CommentRange[]; // TODO(burdon): Move into extension.
   extensions?: Extension[];
   editorMode?: EditorMode;
@@ -65,7 +65,7 @@ export type TextEditorProps = {
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    { model, focus, selection, readonly, comments, extensions = [], editorMode, theme, slots = defaultSlots },
+    { model, autofocus, readonly, selection, comments, extensions = [], editorMode, theme, slots = defaultSlots },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -74,14 +74,14 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     // The editor view ref should only be used as an escape hatch.
     const rootRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<EditorView | null>(null);
+    // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
-    // Focus.
     useEffect(() => {
-      if (view && focus) {
-        view.focus();
+      if (autofocus) {
+        view?.focus();
       }
-    }, [view, focus]);
+    }, [autofocus, view]);
 
     // TODO(burdon): Factor out as extension.
     const { awareness, peer } = model;
@@ -178,11 +178,11 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       <div
         key={model.id}
         role='none'
-        ref={rootRef}
         tabIndex={0}
         onKeyUp={handleKeyUp}
         {...slots.root}
         {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        ref={rootRef}
       />
     );
   },
