@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import { type EditorView, keymap } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
-import { Check } from '@phosphor-icons/react';
+import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -30,9 +30,10 @@ const Editor: FC<{
   commentSelected?: string;
   commentRanges: CommentRange[];
   onCreateComment: CommentsOptions['onCreate'];
+  onDeleteComment: CommentsOptions['onDelete'];
   onMoveComment: CommentsOptions['onMove'];
   onSelectComment: CommentsOptions['onSelect'];
-}> = ({ item, commentSelected, commentRanges, onCreateComment, onMoveComment, onSelectComment }) => {
+}> = ({ item, commentSelected, commentRanges, onCreateComment, onDeleteComment, onMoveComment, onSelectComment }) => {
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
@@ -56,6 +57,7 @@ const Editor: FC<{
     return [
       comments({
         onCreate: onCreateComment,
+        onDelete: onDeleteComment,
         onMove: onMoveComment,
         onSelect: onSelectComment,
       }),
@@ -84,6 +86,7 @@ type CommentThread = {
   yPos?: number;
   selection?: Range;
   messages: TextObject[];
+  deleted?: boolean;
 };
 
 const Thread: FC<{
@@ -122,27 +125,29 @@ const Thread: FC<{
 
   return (
     <div className={mx('flex flex-col m-1 rounded shadow divide-y bg-white', selected && 'ring')}>
-      <div className='flex p-2 text-xs font-mono gap-2 text-neutral-500 font-thin'>
+      <div className='flex p-2 gap-2 items-center text-xs font-mono text-neutral-500 font-thin'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>from:{thread.selection?.from}</span>
         <span>to:{thread.selection?.to}</span>
         <span>y:{thread.yPos}</span>
+        {thread.deleted && <Trash />}
       </div>
 
       {thread.messages.map((message, i) => (
         // TODO(burdon): Fix default editor padding so content doesn't jump on creating message.
-        <div key={i} className='p-2' onClick={() => onSelect()}>
+        <div key={i} className='h-[40px] p-2' onClick={() => onSelect()}>
           {message.text}
         </div>
       ))}
 
-      <div ref={containerRef} onClick={() => onSelect()} className='flex py-1'>
+      <div ref={containerRef} onClick={() => onSelect()} className='flex'>
         <div className='grow'>
           <TextEditor
             ref={editorRef}
             autofocus={focus}
             model={model}
             placeholder={'Enter comment...'}
+            slots={{ root: { className: 'p-2 rounded-b' } }}
             extensions={[
               keymap.of([
                 {
@@ -230,7 +235,17 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     return id;
   };
 
-  // TODO(burdon): Scroll sidebar on select.
+  const handleDeleteComment: CommentsOptions['onDelete'] = (id) => {
+    setThreads((threads) =>
+      threads.map((thread) => {
+        if (thread.id === id) {
+          thread.deleted = true;
+        }
+        return thread;
+      }),
+    );
+  };
+
   const handleSelectComment: CommentsOptions['onSelect'] = ({ active, closest, ranges }) => {
     setThreads((threads) =>
       threads.map((thread) => {
@@ -252,6 +267,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       threads.map((thread) => {
         if (thread.id === id) {
           thread.range.cursor = cursor;
+          delete thread.deleted;
         }
         return thread;
       }),
@@ -276,6 +292,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
             commentSelected={selected}
             commentRanges={commentRanges}
             onCreateComment={handleCreateComment}
+            onDeleteComment={handleDeleteComment}
             onMoveComment={handleMoveComment}
             onSelectComment={handleSelectComment}
           />
