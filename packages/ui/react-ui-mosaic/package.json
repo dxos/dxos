@@ -40,7 +40,7 @@
     "@dxos/gem-core": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@phosphor-icons/react": "^2.0.5",
     "@types/d3": "^7.4.2",
     "@types/lodash.defaultsdeep": "^4.6.6",

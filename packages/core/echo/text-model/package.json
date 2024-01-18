@@ -32,7 +32,7 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@faker-js/faker": "^8.0.2"
+    "@faker-js/faker": "^8.3.1"
   },
   "publishConfig": {
     "access": "public"
