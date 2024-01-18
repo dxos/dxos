@@ -99,6 +99,7 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    *
    * @param plugins All plugins which successfully initialized.
    */
+  // TODO(wittjosiah): Rename `ready` to a verb?
   ready?: (plugins: Plugin[]) => Promise<void>;
 
   /**
