@@ -28,6 +28,6 @@ describe('Search', () => {
 
     const { objects } = space.db.query();
     const results = filterObjects(objects, /quo/i);
-    expect(results).to.have.length(8);
+    expect(results).to.have.length(1);
   });
 });

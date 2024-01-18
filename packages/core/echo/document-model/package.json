@@ -31,7 +31,7 @@
     "yjs": "^13.6.10"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7"
