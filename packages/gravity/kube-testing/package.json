@@ -40,7 +40,7 @@
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
     "debug": "^4.3.4",
