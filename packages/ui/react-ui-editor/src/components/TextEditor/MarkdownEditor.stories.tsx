@@ -33,6 +33,7 @@ import {
   typewriter,
   type CommentsOptions,
   type LinkOptions,
+  outliner,
 } from '../../extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
@@ -304,6 +305,15 @@ export const Image = {
 
 export const Tasklist = {
   render: () => <Story text={str(text.tasks, '', text.list, text.footer)} extensions={[tasklist()]} />,
+};
+
+export const Outliner = {
+  render: () => (
+    <Story
+      text={str('# Outliner', '', 'Block', ': this is a block', ': with multiple lines', text.footer)}
+      extensions={[outliner()]}
+    />
+  ),
 };
 
 export const Autocomplete = {
