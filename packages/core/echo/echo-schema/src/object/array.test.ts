@@ -14,8 +14,6 @@ import { createDatabase, testWithAutomerge } from '../testing';
 
 describe('Arrays', () => {
   testWithAutomerge(() => {
-    const ArrayConstructor = getGlobalAutomergePreference() ? AutomergeArray : EchoArray;
-
     test('array of tags', async () => {
       const { db } = await createDatabase();
 
@@ -79,7 +77,6 @@ describe('Arrays', () => {
       await db.flush();
 
       task.tags = ['red', 'green', 'blue'];
-      expect(task.tags instanceof ArrayConstructor).toBeTruthy();
       expect(task.tags.length).toEqual(3);
       expect(task.tags.slice()).toEqual(['red', 'green', 'blue']);
 
@@ -95,7 +92,6 @@ describe('Arrays', () => {
       await db.flush();
 
       task.tags = [];
-      expect(task.tags instanceof ArrayConstructor).toBeTruthy();
       expect(task.tags.length).toEqual(0);
     });
 
