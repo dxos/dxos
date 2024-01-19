@@ -1,5 +1,6 @@
 //
 // Copyright 2023 DXOS.org
+// Copyright 2024 Automerge
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 

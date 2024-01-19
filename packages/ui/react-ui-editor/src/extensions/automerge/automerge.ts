@@ -25,19 +25,20 @@ export type AutomergeOptions = {
 };
 
 export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
-  // TODO(burdon): Rename.
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
       lastHeads: A.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
       path: path.slice(),
     }),
+
     update: (value: Value, tr: Transaction) => {
       const result: Value = {
         lastHeads: value.lastHeads,
         unreconciledTransactions: value.unreconciledTransactions.slice(),
         path: path.slice(),
       };
+
       let clearUnreconciled = false;
       for (const effect of tr.effects) {
         if (effect.is(effectType)) {
@@ -45,6 +46,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
           clearUnreconciled = true;
         }
       }
+
       if (clearUnreconciled) {
         result.unreconciledTransactions = [];
       } else {
@@ -52,6 +54,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
           result.unreconciledTransactions.push(tr);
         }
       }
+
       return result;
     },
   });
@@ -59,7 +62,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
   const semaphore = new PatchSemaphore(stateField);
 
   const viewPlugin = ViewPlugin.fromClass(
-    class AutomergeCodemirrorViewPlugin implements PluginValue {
+    class AutomergeViewPlugin implements PluginValue {
       constructor(private readonly _view: EditorView) {
         handle.addListener('change', this._handleChange);
       }
