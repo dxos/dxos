@@ -7710,9 +7710,15 @@ importers:
       vite:
         specifier: ^5.0.11
         version: 5.0.11(@types/node@18.11.9)
+      vite-plugin-top-level-await:
+        specifier: ^1.4.1
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
+      vite-plugin-wasm:
+        specifier: ^3.3.0
+        version: 3.3.0(vite@5.0.11)
 
   packages/sdk/migrations:
     dependencies:
@@ -12597,12 +12603,12 @@ packages:
     dependencies:
       '@rollup/pluginutils': 4.2.1
       '@webcomponents/custom-elements': 1.5.1
-      acorn-walk: 8.2.0
+      acorn-walk: 8.3.2
       cheerio: 1.0.0-rc.12
       connect-injector: 0.4.4
       debug: 4.3.4(supports-color@8.1.1)
       es-module-lexer: 0.10.5
-      fast-glob: 3.2.12
+      fast-glob: 3.3.2
       fs-extra: 10.1.0
       jsesc: 3.0.2
       magic-string: 0.26.7
@@ -17935,7 +17941,6 @@ packages:
         optional: true
     dependencies:
       rollup: 3.23.0
-    dev: true
 
   /@rollup/pluginutils@3.1.0(rollup@2.79.1):
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
@@ -39236,7 +39241,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
   /rollup@4.9.1:
     resolution: {integrity: sha512-pgPO9DWzLoW/vIhlSoDByCzcpX92bKEorbgXuZrqxByte3JFk2xSW2JEeAcyLc9Ru9pqcNNW+Ob7ntsk2oT/Xw==}
@@ -42341,7 +42345,6 @@ packages:
   /uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
-    dev: true
 
   /uvu@0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
@@ -42570,7 +42573,6 @@ packages:
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
-    dev: true
 
   /vite-plugin-turbosnap@1.0.2:
     resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
@@ -42581,7 +42583,6 @@ packages:
       vite: ^2 || ^3 || ^4 || ^5
     dependencies:
       vite: 5.0.11(@types/node@18.11.9)
-    dev: true
 
   /vite-plugin-web-extension@4.1.1(@types/node@18.11.9):
     resolution: {integrity: sha512-YUObXUXilgYuNGLdn5v+VUCcIQY4Aodo/1tgv6DrNAeZTLnvfa0fKSXjq86FB+XTplbumVZ6UANLrOxZItWOvw==}
