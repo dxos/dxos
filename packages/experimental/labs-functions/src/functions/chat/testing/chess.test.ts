@@ -7,7 +7,7 @@ import { describe, test } from '@dxos/test';
 
 import { generator } from './chess';
 import { getResources } from './testing';
-import { type PromptContext } from '../request';
+import { type PromptContext } from '../context';
 
 describe.skip('chess', () => {
   test('basic', async () => {

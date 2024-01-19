@@ -7,8 +7,8 @@ import { Expando, type Space } from '@dxos/client/echo';
 import { Schema, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { type PromptContext } from './context';
 import { parseMessage, type ParseResult } from './parser';
-import { type PromptContext } from './request';
 
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions

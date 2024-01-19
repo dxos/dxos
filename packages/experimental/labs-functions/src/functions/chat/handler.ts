@@ -10,10 +10,12 @@ import { type Space } from '@dxos/client/echo';
 import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { createContext, createSequence } from './request';
+import { createContext } from './context';
+import { createSequence } from './request';
 import { type ResolverMap } from './resolvers';
 import { createResolvers } from './resolvers';
 import { createResponse } from './response';
+import { createStatusNotifier } from './status';
 import { type ChainResources, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
 
@@ -118,31 +120,4 @@ const processMessage = async (
   }
 
   return blocks;
-};
-
-// TODO(burdon): Factor out.
-const createStatusNotifier = (space: Space, id: string) => {
-  let start: number | undefined;
-  return {
-    start: () => {
-      if (!start) {
-        start = Date.now();
-        void space.postMessage(`status/${id}`, {
-          event: 'processing',
-          ts: start,
-        });
-      }
-    },
-    stop: () => {
-      if (start) {
-        const now = Date.now();
-        void space.postMessage(`status/${id}`, {
-          event: 'done',
-          ts: now,
-          duration: now - start,
-        });
-        start = undefined;
-      }
-    },
-  };
 };
