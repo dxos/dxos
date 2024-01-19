@@ -8,7 +8,6 @@ import {
   FloppyDisk,
   FolderPlus,
   PencilSimpleLine,
-  Planet,
   Plus,
   Placeholder,
   Trash,
@@ -175,7 +174,6 @@ export const spaceToGraphNode = ({
       id: space.key.toHex(),
       label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
       description: space.properties.description,
-      icon: (props) => <Planet {...props} />,
       data: space,
       ...partials,
       properties: {
