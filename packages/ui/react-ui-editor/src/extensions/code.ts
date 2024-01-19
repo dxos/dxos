@@ -53,22 +53,20 @@ const getLineRange = (lines: BlockInfo[], from: number, to: number) => {
 };
 
 export const code = () => {
-  const getDecorations = (view: EditorView) => {
+  const buildDecorations = (view: EditorView) => {
     const decorations: Range<Decoration>[] = [];
-    if (!view.hasFocus || view.state.readOnly) {
-      const text = view.state.doc.sliceString(0);
-      const matches = text.matchAll(CODE_REGEX);
-      const blocks = view.viewportLineBlocks;
-      for (const match of matches) {
-        const range = getLineRange(blocks, match.index!, match.index! + match[0].length);
-        for (let i = range[0]; i <= range[1]; i++) {
-          const block = blocks[i];
-          decorations.push(
-            Decoration.line({
-              class: mx('cm-codeblock', i === range[0] && 'cm-codeblock-first', i === range[1] && 'cm-codeblock-last'),
-            }).range(block.from),
-          );
-        }
+    const text = view.state.doc.sliceString(0);
+    const matches = text.matchAll(CODE_REGEX);
+    const blocks = view.viewportLineBlocks;
+    for (const match of matches) {
+      const range = getLineRange(blocks, match.index!, match.index! + match[0].length);
+      for (let i = range[0]; i <= range[1]; i++) {
+        const block = blocks[i];
+        decorations.push(
+          Decoration.line({
+            class: mx('cm-codeblock', i === range[0] && 'cm-codeblock-first', i === range[1] && 'cm-codeblock-last'),
+          }).range(block.from),
+        );
       }
     }
 
@@ -81,7 +79,7 @@ export const code = () => {
         hasFocus = false;
         decorations: DecorationSet;
         constructor(view: EditorView) {
-          this.decorations = getDecorations(view);
+          this.decorations = buildDecorations(view);
         }
 
         update(update: ViewUpdate) {
@@ -93,7 +91,7 @@ export const code = () => {
             update.viewportChanged
           ) {
             this.hasFocus = update.view.hasFocus;
-            this.decorations = getDecorations(update.view);
+            this.decorations = buildDecorations(update.view);
           }
         }
       },
