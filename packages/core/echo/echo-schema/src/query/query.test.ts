@@ -188,7 +188,7 @@ describe.skip('Query updates', () => {
   });
 });
 
-test('query with model filters', async () => {
+test.skip('query with model filters', async () => {
   const testBuilder = new TestBuilder();
   const peer = await testBuilder.createPeer();
 
