@@ -21,27 +21,23 @@ import {
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
-type Doc<T> = automerge.Doc<T>;
-type Heads = automerge.Heads;
-
-type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads | undefined;
-
 /**
- * TODO(burdon): Comment.
+ * Implements three-way merge (on each mutation/key-stroke).
  */
 export class PatchSemaphore {
   _inReconcile = false;
-  _queue: Array<ChangeFn> = [];
 
-  constructor(private readonly _field: StateField<Value>) {}
+  constructor(private readonly _handle: IDocHandle, private readonly _field: StateField<Value>) {}
 
-  reconcile = (handle: IDocHandle, view: EditorView) => {
+  reconcile = (view: EditorView) => {
     if (this._inReconcile) {
       return;
     }
     this._inReconcile = true;
 
     const path = getPath(view.state, this._field);
+
+    // Get the heads before the unreconciled transactions are applied.
     const oldHeads = getLastHeads(view.state, this._field);
     let selection = view.state.selection;
 
@@ -58,16 +54,18 @@ export class PatchSemaphore {
     }
 
     // Apply the unreconciled transactions to the document.
-    let newHeads = updateAutomerge(this._field, handle, transactions, view.state);
+    let newHeads = updateAutomerge(this._field, this._handle, transactions, view.state);
 
     // NOTE: null and undefined each come from automerge and repo respectively.
     if (newHeads === null || newHeads === undefined) {
       // TODO: @alexjg this is the call that's resetting the editor state on click
-      newHeads = automerge.getHeads(handle.docSync()!);
+      newHeads = automerge.getHeads(this._handle.docSync()!);
     }
 
     // Now get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
-    const diff = automerge.equals(oldHeads, newHeads) ? [] : automerge.diff(handle.docSync()!, oldHeads, newHeads);
+    const diff = automerge.equals(oldHeads, newHeads)
+      ? []
+      : automerge.diff(this._handle.docSync()!, oldHeads, newHeads);
     updateCodeMirror(view, selection, path, diff);
 
     view.dispatch({

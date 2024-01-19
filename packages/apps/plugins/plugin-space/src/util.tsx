@@ -6,9 +6,9 @@ import {
   ClockCounterClockwise,
   Download,
   FloppyDisk,
+  FolderOpen,
   FolderPlus,
   PencilSimpleLine,
-  Planet,
   Plus,
   Placeholder,
   Trash,
@@ -175,7 +175,6 @@ export const spaceToGraphNode = ({
       id: space.key.toHex(),
       label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
       description: space.properties.description,
-      icon: (props) => <Planet {...props} />,
       data: space,
       ...partials,
       properties: {
@@ -230,6 +229,13 @@ export const spaceToGraphNode = ({
           icon: (props) => <FloppyDisk {...props} />,
           keyBinding: 'meta+s',
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE_TO_DISK, data: { space } }),
+        },
+        {
+          id: 'load-space-from-disk',
+          label: ['load space from disk label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <FolderOpen {...props} />,
+          keyBinding: 'meta+shift+l',
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD_FROM_DISK, data: { space } }),
         },
       );
     } else if (space.state.get() === SpaceState.INACTIVE) {
