@@ -9,12 +9,16 @@
           "packages/apps/plugins/plugin-native/src/index.ts",
           "packages/apps/plugins/plugin-native/src/meta.ts"
         ],
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": ["esbuild"],
+  "implicitDependencies": [
+    "esbuild"
+  ],
   "name": "plugin-native"
 }
