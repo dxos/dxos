@@ -11,7 +11,8 @@ import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { createContext, createSequence } from './request';
-import { createResolvers, type Resolvers } from './resolvers';
+import { type ResolverMap } from './resolvers';
+import { createResolvers } from './resolvers';
 import { createResponse } from './response';
 import { type ChainResources, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
@@ -24,6 +25,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   }
 
   const config = client.config;
+
   const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
     baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
     apiKey: getKey(config, 'openai.com/api_key'),
@@ -80,7 +82,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 // TODO(burdon): Create class.
 const processMessage = async (
   resources: ChainResources,
-  resolvers: Resolvers,
+  resolvers: ResolverMap,
   space: Space,
   thread: ThreadType,
   message: MessageType,
@@ -102,10 +104,11 @@ const processMessage = async (
       log.info('processing', { prompt, content });
       const context = createContext(space, message, thread);
       const sequence = await createSequence(space, resources, context, resolvers, { prompt });
-      const response = await sequence.invoke(content);
-
-      blocks = createResponse(space, context, response);
-      log.info('response', { blocks });
+      if (sequence) {
+        const response = await sequence.invoke(content);
+        blocks = createResponse(space, context, response);
+        log.info('response', { blocks });
+      }
     }
   } catch (err) {
     log.error('processing message', err);

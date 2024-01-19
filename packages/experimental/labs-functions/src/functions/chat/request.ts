@@ -13,8 +13,7 @@ import { type Space } from '@dxos/client/echo';
 import { getTextContent, getTextInRange, Schema, type TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { sequences } from './chains';
-import { type Resolvers } from './resolvers';
+import { type ResolverMap } from './resolvers';
 import type { ChainResources } from '../../chain';
 
 export type PromptContext = {
@@ -77,9 +76,9 @@ export const createSequence = async (
   space: Space,
   resources: ChainResources,
   context: PromptContext,
-  resolvers: Resolvers,
-  options: SequenceOptions = {},
-): Promise<RunnableSequence> => {
+  resolvers: ResolverMap,
+  options: SequenceOptions,
+): Promise<RunnableSequence | undefined> => {
   log.info('create sequence', {
     context: {
       object: { id: context.object?.id, schema: context.object?.__typename },
@@ -89,28 +88,22 @@ export const createSequence = async (
   });
 
   // Create sequence from command.
-  if (options.prompt) {
-    const { objects: chains = [] } = space.db.query(ChainType.filter());
-    for (const chain of chains) {
-      for (const prompt of chain.prompts) {
-        if (prompt.command === options.prompt) {
-          return createSequenceFromPrompt(resources, prompt, resolvers, context);
-        }
+  const { objects: chains = [] } = space.db.query(ChainType.filter());
+  for (const chain of chains) {
+    for (const prompt of chain.prompts) {
+      if (prompt.command === options.prompt) {
+        return createSequenceFromPrompt(resources, prompt, resolvers, context);
       }
     }
   }
 
-  // Create sequence from predicates.
-  // TODO(burdon): Remove static sequences.
-  const { id, generator } = sequences.find(({ test }) => test(context))!;
-  log.info('sequence', { id });
-  return generator(resources, () => context, options);
+  return undefined;
 };
 
 const createSequenceFromPrompt = async (
   resources: ChainResources,
   prompt: ChainType.Prompt,
-  resolvers: Resolvers,
+  resolvers: ResolverMap,
   context: PromptContext,
 ) => {
   const inputs: Record<string, any> = {};
@@ -178,7 +171,7 @@ const createSequenceFromPrompt = async (
   ]);
 };
 
-const runResolver = async (resolvers: Resolvers, name: string) => {
+const runResolver = async (resolvers: ResolverMap, name: string) => {
   try {
     const resolver = get(resolvers, name);
     log.info('running resolver', { resolver: name });
