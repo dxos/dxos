@@ -46,7 +46,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     sidebarOpen: true,
     complementarySidebarOpen: false,
     enableComplementarySidebar: true,
-    showFooter: true,
+    showFooter: false,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -58,6 +58,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
     active: undefined,
     previous: undefined,
 
+    // TODO(burdon): Should not be on this object.
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
       return this.active && graphPlugin.provides.graph.findNode(this.active);
@@ -76,7 +77,8 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
-        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
+        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
+        .prop(state.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
