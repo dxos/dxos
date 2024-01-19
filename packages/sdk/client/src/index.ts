@@ -19,6 +19,7 @@ export {
   InvalidInvitationExtensionRoleError,
   IdentityNotInitializedError,
   InvalidInvitationError,
+  AlreadyJoinedError,
   InvalidStorageVersionError,
   SpaceNotFoundError,
   EntityNotFoundError,
