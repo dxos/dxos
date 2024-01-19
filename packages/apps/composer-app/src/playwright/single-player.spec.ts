@@ -47,19 +47,39 @@ test.describe('Single-player tests', () => {
     });
   });
 
-  test('delete folder', async () => {
-    await host.createSpace();
-    await host.createFolder();
-    // create an item inside the folder
-    await host.createObject('markdownPlugin');
-    await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(2);
-    });
-    // delete the folder
-    await host.deleteObject(0);
+  test.describe('deleting folders', () => {
+    test.only('moves item out of folder', async () => {
+      await host.createSpace();
+      await host.createFolder();
+      // create an item inside the folder
+      await host.createObject('markdownPlugin');
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+      // delete the containing folder
+      await host.deleteObject(0);
 
-    await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(2);
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+    });
+
+    test.only('moves folder with item out of folder', async () => {
+      await host.createSpace();
+      await host.createFolder();
+      // create a folder inside the folder
+      await host.createFolder();
+      // create an item inside the contained folder
+      await host.createObject('markdownPlugin');
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+      // delete the containing folder
+      await host.deleteObject(0);
+
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
     });
   });
 
