@@ -2714,6 +2714,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../../core/echo/automerge
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2762,6 +2765,12 @@ importers:
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      md5:
+        specifier: ^2.3.0
+        version: 2.3.0
       react-drag-drop-files:
         specifier: ^2.3.8
         version: 2.3.8(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
@@ -2796,6 +2805,12 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/md5':
+        specifier: ^2.3.5
+        version: 2.3.5
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -7753,9 +7768,15 @@ importers:
       vite:
         specifier: ^5.0.11
         version: 5.0.11(@types/node@18.11.9)
+      vite-plugin-top-level-await:
+        specifier: ^1.4.1
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
+      vite-plugin-wasm:
+        specifier: ^3.3.0
+        version: 3.3.0(vite@5.0.11)
 
   packages/sdk/migrations:
     dependencies:
@@ -12640,12 +12661,12 @@ packages:
     dependencies:
       '@rollup/pluginutils': 4.2.1
       '@webcomponents/custom-elements': 1.5.1
-      acorn-walk: 8.2.0
+      acorn-walk: 8.3.2
       cheerio: 1.0.0-rc.12
       connect-injector: 0.4.4
       debug: 4.3.4(supports-color@8.1.1)
       es-module-lexer: 0.10.5
-      fast-glob: 3.2.12
+      fast-glob: 3.3.2
       fs-extra: 10.1.0
       jsesc: 3.0.2
       magic-string: 0.26.7
@@ -17978,7 +17999,6 @@ packages:
         optional: true
     dependencies:
       rollup: 3.23.0
-    dev: true
 
   /@rollup/pluginutils@3.1.0(rollup@2.79.1):
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
@@ -21095,6 +21115,10 @@ packages:
     dependencies:
       '@types/linkify-it': 3.0.2
       '@types/mdurl': 1.0.2
+    dev: true
+
+  /@types/md5@2.3.5:
+    resolution: {integrity: sha512-/i42wjYNgE6wf0j2bcTX6kuowmdL/6PE4IVitMpm2eYKBUuYCprdcWVK+xEF0gcV6ufMCRhtxmReGfc6hIK7Jw==}
     dev: true
 
   /@types/mdast@3.0.10:
@@ -39279,7 +39303,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
   /rollup@4.9.1:
     resolution: {integrity: sha512-pgPO9DWzLoW/vIhlSoDByCzcpX92bKEorbgXuZrqxByte3JFk2xSW2JEeAcyLc9Ru9pqcNNW+Ob7ntsk2oT/Xw==}
@@ -42384,7 +42407,6 @@ packages:
   /uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
-    dev: true
 
   /uvu@0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
@@ -42613,7 +42635,6 @@ packages:
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
-    dev: true
 
   /vite-plugin-turbosnap@1.0.2:
     resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
@@ -42624,7 +42645,6 @@ packages:
       vite: ^2 || ^3 || ^4 || ^5
     dependencies:
       vite: 5.0.11(@types/node@18.11.9)
-    dev: true
 
   /vite-plugin-web-extension@4.1.1(@types/node@18.11.9):
     resolution: {integrity: sha512-YUObXUXilgYuNGLdn5v+VUCcIQY4Aodo/1tgv6DrNAeZTLnvfa0fKSXjq86FB+XTplbumVZ6UANLrOxZItWOvw==}

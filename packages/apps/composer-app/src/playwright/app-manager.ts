@@ -11,6 +11,7 @@ import { setupPage } from '@dxos/test/playwright';
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
+  initialUrl!: string;
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
@@ -28,10 +29,11 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, {
+    const { page, initialUrl } = await setupPage(this._browser, {
       waitFor: (page) => page.getByTestId('treeView.haloButton').isVisible(),
     });
     this.page = page;
+    this.initialUrl = initialUrl;
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
   }
@@ -79,7 +81,7 @@ export class AppManager {
   async enablePlugin(plugin: string) {
     await this.page.getByTestId('treeView.openSettings').click();
     await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
-    await this.page.reload();
+    await this.page.goto(this.initialUrl);
     await this.page.getByTestId('treeView.haloButton').waitFor();
   }
 

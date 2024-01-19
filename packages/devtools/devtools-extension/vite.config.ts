@@ -62,42 +62,43 @@ export default defineConfig({
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
 
-    chromeExtensionPlugin({
-      manifest: {
-        manifest_version: 3,
-        version: packageJson.version,
-        author: 'DXOS.org',
-        name: 'DXOS Client Developer Tools',
-        short_name: 'DXOS DevTools',
-        description: 'Debugging tools for DXOS Client in the Chrome developer console.',
-        icons: {
-          '48': 'assets/img/icon-dxos-48.png',
-          '128': 'assets/img/icon-dxos-128.png',
-        },
-        action: {
-          default_icon: 'assets/img/icon-dxos-48.png',
-          default_title: 'DXOS',
-          default_popup: '/popup.html',
-        },
-        content_security_policy: {
-          extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
-        },
-        sandbox: {
-          pages: ['/sandbox.html'],
-        },
-        devtools_page: '/main.html',
-        background: {
-          service_worker: '/src/background.ts',
-        },
-        content_scripts: [
-          {
-            matches: ['http://*/*', 'https://*/*'],
-            js: ['/src/content.ts'],
-            run_at: 'document_start',
-          },
-        ],
-      },
-    }),
+    // TODO(wittjosiah): Fix extension bundle.
+    // chromeExtensionPlugin({
+    //   manifest: {
+    //     manifest_version: 3,
+    //     version: packageJson.version,
+    //     author: 'DXOS.org',
+    //     name: 'DXOS Client Developer Tools',
+    //     short_name: 'DXOS DevTools',
+    //     description: 'Debugging tools for DXOS Client in the Chrome developer console.',
+    //     icons: {
+    //       '48': 'assets/img/icon-dxos-48.png',
+    //       '128': 'assets/img/icon-dxos-128.png',
+    //     },
+    //     action: {
+    //       default_icon: 'assets/img/icon-dxos-48.png',
+    //       default_title: 'DXOS',
+    //       default_popup: '/popup.html',
+    //     },
+    //     content_security_policy: {
+    //       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    //     },
+    //     sandbox: {
+    //       pages: ['/sandbox.html'],
+    //     },
+    //     devtools_page: '/main.html',
+    //     background: {
+    //       service_worker: '/src/background.ts',
+    //     },
+    //     content_scripts: [
+    //       {
+    //         matches: ['http://*/*', 'https://*/*'],
+    //         js: ['/src/content.ts'],
+    //         run_at: 'document_start',
+    //       },
+    //     ],
+    //   },
+    // }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
     // TODO(wittjosiah): Seems to have some conflict with the chrome extension plugin.
