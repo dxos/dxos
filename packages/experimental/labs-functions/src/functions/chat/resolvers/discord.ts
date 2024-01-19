@@ -43,19 +43,15 @@ export const createResolver = async (config: Config): Promise<ResolverMap> => {
                   return '';
                 }
 
-                const res = await channel.messages.fetch({ after, limit: 100 });
-                const messagesConcatenated = res
+                const results = await channel.messages.fetch({ after, limit: 100 });
+
+                const messages = results
                   .filter((msg) => msg.content.trim().length > 0)
                   .map(
                     (msg) => `${new Date(msg.createdTimestamp).toISOString()} @${msg.author.username}: ${msg.content}`,
-                  )
-                  .join('\n');
-                if (messagesConcatenated.length === 0) {
-                  return '';
-                }
+                  );
 
-                // TODO(burdon): ???
-                return `CONVERSATION:\n${messagesConcatenated}\n`;
+                return ['Messages:', messages].join('\n');
               } catch (err: any) {
                 console.log(`${channel?.name} ${err.message}`);
                 return '';
@@ -64,7 +60,9 @@ export const createResolver = async (config: Config): Promise<ResolverMap> => {
           )
         ).flat();
 
-        return messages.join('');
+        console.log(messages);
+
+        return messages.join('\n');
       },
     },
   };
