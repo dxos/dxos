@@ -251,6 +251,7 @@ class RemoteCaretWidget extends WidgetType {
   }
 }
 
+// TODO(burdon): Mixed case?
 const styles = EditorView.baseTheme({
   '.cm-collab-selection': {},
   '.cm-collab-selectionLine': {
@@ -297,7 +298,7 @@ const styles = EditorView.baseTheme({
     zIndex: 101,
     transition: 'opacity .3s ease-in-out',
     backgroundColor: 'inherit',
-    // these should be separate
+    // These should be separate.
     opacity: 0,
     transitionDelay: '0s',
     whiteSpace: 'nowrap',
