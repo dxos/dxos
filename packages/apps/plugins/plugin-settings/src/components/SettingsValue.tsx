@@ -9,10 +9,11 @@ import { Input } from '@dxos/react-ui';
 type SettingValueProps = {
   label: string;
   description?: JSX.Element;
+  secondary?: JSX.Element;
 };
 
-export const SettingsValue = ({ label, description, children }: PropsWithChildren<SettingValueProps>) => {
-  return (
+export const SettingsValue = ({ label, description, secondary, children }: PropsWithChildren<SettingValueProps>) => {
+  const primary = (
     <div role='none' className='flex w-full gap-4 py-1'>
       <Input.Root>
         <div role='none' className='flex flex-col w-full'>
@@ -33,4 +34,16 @@ export const SettingsValue = ({ label, description, children }: PropsWithChildre
       </Input.Root>
     </div>
   );
+
+  if (secondary) {
+    // console.log(secondary);
+    return (
+      <div role='none' className='flex flex-col w-full'>
+        {primary}
+        {secondary}
+      </div>
+    );
+  }
+
+  return primary;
 };

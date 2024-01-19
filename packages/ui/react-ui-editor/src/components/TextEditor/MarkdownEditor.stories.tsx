@@ -26,7 +26,6 @@ import {
   defaultOptions,
   hr,
   image,
-  listener,
   link,
   mention,
   table,
@@ -34,6 +33,7 @@ import {
   typewriter,
   type CommentsOptions,
   type LinkOptions,
+  outliner,
 } from '../../extensions';
 import { type CommentRange, useTextModel } from '../../hooks';
 
@@ -304,17 +304,14 @@ export const Image = {
 };
 
 export const Tasklist = {
+  render: () => <Story text={str(text.tasks, '', text.list, text.footer)} extensions={[tasklist()]} />,
+};
+
+export const Outliner = {
   render: () => (
     <Story
-      text={str(text.tasks, '', text.list, text.footer)}
-      extensions={[
-        tasklist(),
-        listener({
-          onChange: (text) => {
-            console.log(text);
-          },
-        }),
-      ]}
+      text={str('# Outliner', '', 'Block', ': this is a block', ': with multiple lines', text.footer)}
+      extensions={[outliner()]}
     />
   ),
 };
@@ -384,8 +381,15 @@ export const Comments = {
   },
 };
 
+const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+
 export const Typewriter = {
-  render: () => <Story text={str('# Typewriter', '', text.paragraphs, text.footer)} extensions={[typewriter()]} />,
+  render: () => (
+    <Story
+      text={str('# Typewriter', '', text.paragraphs, text.footer)}
+      extensions={[typewriter({ items: typewriterItems })]}
+    />
+  ),
 };
 
 export const Blast = {
@@ -393,9 +397,7 @@ export const Blast = {
     <Story
       text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        typewriter({
-          items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
-        }),
+        typewriter({ items: typewriterItems }),
         blast(
           defaultsDeep(
             {
