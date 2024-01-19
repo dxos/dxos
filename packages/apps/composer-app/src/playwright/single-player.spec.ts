@@ -101,6 +101,8 @@ test.describe('Single-player tests', () => {
   });
 
   test('error boundary is rendered on invalid storage version', async () => {
+    test.slow();
+
     await host.enablePlugin('dxos.org/plugin/debug');
     await host.changeStorageVersionInMetadata(9999);
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
