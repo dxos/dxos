@@ -269,8 +269,8 @@ const OutlinerItem = ({
       <MarkdownEditor
         ref={editorRef}
         model={model}
-        focus={!!active}
         extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
+        autofocus={!!active}
         placeholder={placeholder}
         slots={{
           root: {

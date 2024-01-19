@@ -8,16 +8,13 @@ import sortBy from 'lodash.sortby';
 
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
+import { semaphoreFacet } from './automerge/defs';
 import { Cursor } from './cursor';
 import { type CommentRange, type EditorModel, type Range } from '../hooks';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
-
-// TODO(burdon): Handle delete, cut, copy, and paste (separately) text that includes comment range.
-// TODO(burdon): Consider breaking into separate plugin (since not standalone)? Like mermaid?
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
@@ -60,7 +57,7 @@ export const setFocus = (view: EditorView, thread: string) => {
   view.dispatch({
     effects: setSelection.of({ active: thread }),
     selection: { anchor: range.from },
-    scrollIntoView: true,
+    scrollIntoView: true, // TODO(burdon): Scroll to y-position (or center of screen?)
   });
 };
 
@@ -72,8 +69,7 @@ const setCommentState = StateEffect.define<CommentsState>();
 
 /**
  * State field (reducer) that tracks comment ranges.
- * The ranges are tracked as codemirror ranges (i.e., not relative YJS/Automerge positions), and
- * therefore must be updated when the document changes.
+ * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
 const commentsStateField = StateField.define<CommentsState>({
   create: () => ({ ranges: [] }),
@@ -87,11 +83,12 @@ const commentsStateField = StateField.define<CommentsState>({
       }
 
       // Update range from store.
-      if (effect.is(setCommentRange)) {
+      if (effect.is(setCommentRange) && effect.value.comments.length > 0) {
         const { comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments
           .map((comment) => {
             const range = Cursor.getRangeFromCursor(cursorConverter, comment.cursor);
+            // console.log('update', JSON.stringify({ range, cursor: comment.cursor }, undefined, 2));
             return range && { ...comment, ...range };
           })
           .filter(nonNullable);
@@ -135,16 +132,22 @@ const highlightDecorations = EditorView.decorations.compute([commentsStateField]
 });
 
 export type CommentsOptions = {
+  /**
+   * Key shortcut to create a new thread.
+   */
   key?: string;
-  footnote?: boolean;
   /**
    * Called to create a new thread and return the thread id.
    */
   onCreate?: (cursor: string, location?: Rect | null) => string | undefined;
   /**
+   * Selection cut/deleted.
+   */
+  onDelete?: (thread: string) => void;
+  /**
    * Called when a comment is moved.
    */
-  onMove?: (threadID: string, cursor: string) => void;
+  onUpdate?: (thread: string, cursor: string) => void;
   /**
    * Called to notify which thread is currently closest to the cursor.
    */
@@ -155,58 +158,78 @@ export type CommentsOptions = {
   onHover?: (el: Element, shortcut: string) => void;
 };
 
-const trackPastedComments = (onMove: (threadID: string, cursor: string) => void) => {
-  let tracked: { text: Text; comments: { from: number; to: number; id: string }[] } | null = null;
+// TODO(burdon): Handle cut/restore via undo (need to integrate with history?)
+const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>) => {
+  // Cut/deleted comments.
+  // Tracks indexed selections within text.
+  let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
 
-  const registerCopy = (event: Event, view: EditorView) => {
+  // Track cut or copy (enables cut-and-paste and copy-delete-paste to restore comment selection).
+  const handleTrack = (event: Event, view: EditorView) => {
     const comments = view.state.field(commentsStateField);
     const { main } = view.state.selection;
-    const inSel = comments.ranges.filter(
+    const selectedRanges = comments.ranges.filter(
       (range) => range.from >= main.from && range.to <= main.to && range.from < range.to,
     );
-    if (!inSel.length) {
+
+    if (!selectedRanges.length) {
       tracked = null;
     } else {
       tracked = {
         text: view.state.doc.slice(main.from, main.to),
-        comments: inSel.map((range) => ({ from: range.from - main.from, to: range.to - main.from, id: range.id })),
+        comments: selectedRanges.map((range) => ({
+          id: range.id,
+          from: range.from - main.from,
+          to: range.to - main.from,
+        })),
       };
     }
   };
 
   return [
     EditorView.domEventHandlers({
-      cut: registerCopy,
-      copy: registerCopy,
+      cut: handleTrack,
+      copy: handleTrack,
     }),
 
-    EditorView.updateListener.of((update) => {
+    // Handle paste.
+    EditorView.updateListener.of(({ view, state, transactions }) => {
       if (tracked) {
-        const paste = update.transactions.find((tr) => tr.isUserEvent('input.paste'));
+        const paste = transactions.find((tr) => tr.isUserEvent('input.paste'));
         if (paste) {
           let found = -1;
           paste.changes.iterChanges((fromA, toA, fromB, toB, text) => {
             if (text.eq(tracked!.text)) {
-              for (let i = update.transactions.indexOf(paste!) + 1; i < update.transactions.length; i++) {
-                fromB = update.transactions[i].changes.mapPos(fromB);
+              for (let i = transactions.indexOf(paste!) + 1; i < transactions.length; i++) {
+                fromB = transactions[i].changes.mapPos(fromB);
               }
+
               found = fromB;
             }
           });
+
           if (found > -1) {
-            const active = update.view.state.field(commentsStateField).ranges;
-            for (const moved of tracked.comments) {
+            const comments = tracked.comments;
+
+            // Sync before recomputing cursor/range.
+            // TODO(burdon): Decouple from automerge?
+            view.state.facet(semaphoreFacet).reconcile(view);
+
+            const active = state.field(commentsStateField).ranges;
+            for (const moved of comments) {
               if (active.some((range) => range.id === moved.id && range.from === range.to)) {
-                onMove(
-                  moved.id,
-                  Cursor.getCursorFromRange(update.view.state.facet(Cursor.converter), {
-                    from: found + moved.from,
-                    to: found + moved.to,
-                  }),
-                );
+                const range = {
+                  from: found + moved.from,
+                  to: found + moved.to,
+                };
+
+                const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
+                // console.log('paste', JSON.stringify({ moved, range, cursor }, undefined, 2));
+                onUpdate(moved.id, cursor);
               }
             }
           }
+
           tracked = null;
         }
       }
@@ -223,8 +246,7 @@ const trackPastedComments = (onMove: (threadID: string, cursor: string) => void)
  * 4). Tracks the current cursor position to:
  *     a). Update the decoration to show if the cursor is within a current selection.
  *     b). Calls a handler to indicate which is the closest selection (e.g., to update the thread sidebar).
- * 5). Optionally, inserts a markdown footnote when creating a comment thread.
- * 6). Optionally, implements a hoverTooltip to show hints when creating a selection range.
+ * 5). Optionally, implements a hoverTooltip to show hints when creating a selection range.
  */
 export const comments = (options: CommentsOptions = {}): Extension => {
   const { key: shortcut = "meta-'" } = options;
@@ -238,7 +260,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     const cursorConverter = view.state.facet(Cursor.converter);
 
     invariant(options.onCreate);
-    const { head, from, to } = view.state.selection.main;
+    const { from, to } = view.state.selection.main;
     if (from === to) {
       return false;
     }
@@ -253,15 +275,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
           effects: setSelection.of({ active: id }),
           selection: { anchor: from },
         });
-
-        // Insert footnote.
-        if (options.footnote) {
-          const tag = `[^${id}]`;
-          view.dispatch({
-            changes: { from: head, insert: tag },
-            selection: { anchor: head + tag.length },
-          });
-        }
 
         return true;
       }
@@ -301,7 +314,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
                 end: selection.to,
                 above: true,
                 create: () => {
-                  // TODO(burdon): Dispatch to react callback to render (or use SSR)?
                   const el = document.createElement('div');
                   options.onHover?.(el, shortcut);
                   return { dom: el, offset: { x: 0, y: 8 } };
@@ -329,12 +341,12 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         let mod = false;
         const { active, ranges } = state.field(commentsStateField);
         changes.iterChanges((from, to, from2, to2) => {
+          // TODO(burdon): Skip deleted (tracked) ranges.
           ranges.forEach((range) => {
             if (from2 === to2) {
               const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
               if (!newRange || newRange.to - newRange.from === 0) {
-                // TODO(burdon): Delete range if empty.
-                log.info('deleted comment', { thread: range.id });
+                options.onDelete?.(range.id);
               }
             }
 
@@ -360,6 +372,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         let min = Infinity;
         const { active, closest, ranges } = state.field(commentsStateField);
         const selected: CommentSelected = { active: undefined, closest: undefined };
+
+        // TODO(burdon): Skip deleted (tracked) ranges.
         ranges.forEach((comment) => {
           const d = Math.min(Math.abs(head - comment.from), Math.abs(head - comment.to));
           if (head >= comment.from && head <= comment.to) {
@@ -370,8 +384,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
             min = d;
           }
         });
-
-        // TODO(burdon): Fire debounced callback if range selected (to show hint).
 
         if (selected.active !== active || selected.closest !== closest) {
           view.dispatch({ effects: setSelection.of(selected) });
@@ -385,6 +397,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       }
     }),
 
-    options.onMove ? trackPastedComments(options.onMove) : [],
+    options.onUpdate ? trackPastedComments(options.onUpdate) : [],
   ];
 };
