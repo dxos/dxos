@@ -83,7 +83,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       }
     }, [autofocus, view]);
 
-    // TODO(burdon): Factor out as extension.
+    // TODO(burdon): Factor out as extension/hook.
     const { awareness, peer } = model;
     useEffect(() => {
       if (awareness && peer) {
@@ -95,7 +95,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       }
     }, [awareness, peer, themeMode]);
 
-    // TODO(burdon): Factor out as extension.
+    // TODO(burdon): Factor out as extension/hook.
     useEffect(() => {
       if (view && comments !== undefined) {
         view.dispatch({

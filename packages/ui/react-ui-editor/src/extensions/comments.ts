@@ -83,7 +83,7 @@ const commentsStateField = StateField.define<CommentsState>({
       }
 
       // Update range from store.
-      if (effect.is(setCommentRange) && effect.value.comments.length > 0) {
+      if (effect.is(setCommentRange)) {
         const { comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments
           .map((comment) => {
@@ -184,6 +184,8 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
         })),
       };
     }
+
+    // console.log('track', JSON.stringify({ tracked }, undefined, 2));
   };
 
   return [
@@ -212,7 +214,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
             const comments = tracked.comments;
 
             // Sync before recomputing cursor/range.
-            // TODO(burdon): Decouple from automerge?
+            // TODO(burdon): Generalize sync facet to decouple from automerge?
             view.state.facet(semaphoreFacet).reconcile(view);
 
             const active = state.field(commentsStateField).ranges;
@@ -315,7 +317,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
                 above: true,
                 create: () => {
                   const el = document.createElement('div');
-                  options.onHover?.(el, shortcut);
+                  options.onHover!(el, shortcut);
                   return { dom: el, offset: { x: 0, y: 8 } };
                 },
               };
@@ -323,7 +325,11 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
             return null;
           },
-          { hideOnChange: true, hoverTime: 1000 },
+          {
+            // TODO(burdon): Hide on change triggered immediately?
+            // hideOnChange: true,
+            hoverTime: 1_000,
+          },
         )
       : [],
 
