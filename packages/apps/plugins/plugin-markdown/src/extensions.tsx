@@ -28,7 +28,10 @@ import {
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
+import type { MarkdownSettingsProps } from './types';
+
 export type ExtensionsOptions = {
+  settings?: MarkdownSettingsProps;
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
@@ -38,13 +41,7 @@ export type ExtensionsOptions = {
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({
-  document,
-  debug,
-  experimental,
-  dispatch,
-  onChange,
-}: ExtensionsOptions): Extension[] => {
+export const getExtensions = ({ settings, document, dispatch, onChange }: ExtensionsOptions): Extension[] => {
   const space = document ? getSpaceForObject(document) : undefined;
 
   const extensions: Extension[] = [
@@ -149,13 +146,12 @@ export const getExtensions = ({
     }
   }
 
-  if (debug) {
-    // TODO(burdon): Create from settings.
-    const items = localStorage.getItem('dxos.org/plugin/markdown/typewriter');
-    extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
+  if (settings?.debug) {
+    const items = settings.typewriter ?? '';
+    extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(nonNullable));
   }
 
-  if (experimental) {
+  if (settings?.experimental) {
     extensions.push(...[].filter(nonNullable));
   }
 

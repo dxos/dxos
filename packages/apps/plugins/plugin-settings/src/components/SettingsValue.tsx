@@ -35,14 +35,15 @@ export const SettingsValue = ({ label, description, secondary, children }: Props
     </div>
   );
 
-  // if (secondary) {
-  //   return (
-  //     <div role='none' className='flex flex-col w-full'>
-  //       {primary}
-  //       {secondary}
-  //     </div>
-  //   );
-  // }
+  if (secondary) {
+    // console.log(secondary);
+    return (
+      <div role='none' className='flex flex-col w-full'>
+        {primary}
+        {secondary}
+      </div>
+    );
+  }
 
   return primary;
 };
