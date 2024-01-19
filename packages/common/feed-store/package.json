@@ -39,11 +39,11 @@
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@types/lodash.defaultsdeep": "^4.6.6"
   },
   "optionalDependencies": {
-    "@faker-js/faker": "^8.0.2"
+    "@faker-js/faker": "^8.3.1"
   },
   "publishConfig": {
     "access": "public"
