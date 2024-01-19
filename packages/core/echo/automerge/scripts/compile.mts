@@ -2,7 +2,7 @@ import { build } from 'esbuild';
 import { copyFile, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path, { dirname, join } from 'node:path';
-import { esbuildPlugin } from './wasm-esbuild-plugin.mjs'
+// import { esbuildPlugin } from './wasm-esbuild-plugin.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -11,23 +11,28 @@ for (const platform of ['node', 'browser'] as const) {
 
   try {
     await rm(outdir, { recursive: true });
-  } catch { }
+  } catch {}
 
   const result = await build({
     entryPoints:
       platform === 'node'
-        ? ['src/automerge.ts', 'src/automerge/next.ts', 'src/automerge-repo.ts', 'src/automerge-repo-storage-indexeddb.ts']
+        ? [
+            'src/automerge.ts',
+            'src/automerge/next.ts',
+            'src/automerge-repo.ts',
+            'src/automerge-repo-storage-indexeddb.ts',
+          ]
         : {
-          automerge_wasm_bg: join(
-            dirname(await require.resolve('@automerge/automerge-wasm')),
-            '../bundler/automerge_wasm_bg.js',
-          ),
-          'automerge-wasm': 'src/automerge-wasm.ts',
-          automerge: 'src/automerge.ts',
-          'automerge/next': 'src/automerge/next.ts',
-          'automerge-repo': 'src/automerge-repo.ts',
-          'automerge-repo-storage-indexeddb': 'src/automerge-repo-storage-indexeddb.ts',
-        },
+            // automerge_wasm_bg: join(
+            //   dirname(await require.resolve('@automerge/automerge-wasm')),
+            //   '../bundler/automerge_wasm_bg.js',
+            // ),
+            // 'automerge-wasm': 'src/automerge-wasm.ts',
+            automerge: 'src/automerge.ts',
+            'automerge/next': 'src/automerge/next.ts',
+            'automerge-repo': 'src/automerge-repo.ts',
+            'automerge-repo-storage-indexeddb': 'src/automerge-repo-storage-indexeddb.ts',
+          },
     bundle: true,
     format: 'esm',
     platform: platform,
@@ -36,7 +41,7 @@ for (const platform of ['node', 'browser'] as const) {
     outExtension: { '.js': platform === 'node' ? '.cjs' : '.js' },
     metafile: true,
     plugins: [
-      esbuildPlugin(),
+      // esbuildPlugin(),
       {
         name: 'external-deps',
         setup: (build) => {
@@ -48,16 +53,16 @@ for (const platform of ['node', 'browser'] as const) {
               };
             }
 
-            if(args.kind !== 'entry-point' && !args.path.startsWith('.') && !args.path.startsWith('@automerge/')) {
+            if (args.kind !== 'entry-point' && !args.path.startsWith('.') && !args.path.startsWith('@automerge/')) {
               return {
                 external: true,
                 path: args.path,
-              }
+              };
             }
-          }); 
+          });
         },
       },
-    ], 
+    ],
   });
 
   if (platform === 'node') {

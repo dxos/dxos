@@ -100,7 +100,7 @@
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
@@ -117,7 +117,7 @@
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "yjs": "^13.6.10"
   },
   "publishConfig": {

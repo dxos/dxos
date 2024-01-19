@@ -47,13 +47,13 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
             <>
               <Breadcrumb.ListItem>
                 <Breadcrumb.Link asChild onClick={() => activeNode.parent && handleActivate(activeNode.parent)}>
-                  <Button variant='ghost' classNames='shrink text-sm pli-1 -mli-1 gap-1 overflow-hidden'>
+                  <Button variant='ghost' classNames='hidden sm:flex shrink text-sm pli-1 -mli-1 gap-1 overflow-hidden'>
                     {activeNode.parent.icon && <activeNode.parent.icon className='shrink-0' />}
                     <span className='min-is-0  flex-1 truncate'>{getTreeItemLabel(activeNode.parent, t)}</span>
                   </Button>
                 </Breadcrumb.Link>
               </Breadcrumb.ListItem>
-              <Breadcrumb.Separator />
+              <Breadcrumb.Separator classNames='hidden sm:flex' />
             </>
           )}
           <Breadcrumb.ListItem>

@@ -6,8 +6,10 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
+import { VitePWA } from 'vite-plugin-pwa';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -39,6 +41,10 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+    plugins: () => [
+      TopLevelAwaitPlugin(),
+      WasmPlugin(),
+    ],
   },
   plugins: [
     {
@@ -58,6 +64,8 @@ export default defineConfig({
       ],
       extensions: []
     }),
+    TopLevelAwaitPlugin(),
+    WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
     VitePWA({

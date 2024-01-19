@@ -22,10 +22,10 @@
     "@dxos/echo-typegen": "latest",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^3.0.1",
+    "@vitejs/plugin-react": "^4.2.1",
     "faker": "^5.5.3",
     "noise-protocol": "3.0.1",
     "typescript": "^5.2.2",
-    "vite": "^4.3.9"
+    "vite": "^5.0.11"
   }
 }

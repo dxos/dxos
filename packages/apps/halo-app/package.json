@@ -10,7 +10,6 @@
   "author": "DXOS.org",
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-error": "workspace:*",
     "@braneframe/plugin-pwa": "workspace:*",
     "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
@@ -37,10 +36,12 @@
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^3.0.1",
+    "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.2.2",
-    "vite": "^4.3.9",
-    "vite-plugin-pwa": "^0.14.1",
-    "workbox-window": "^6.5.4"
+    "vite": "^5.0.11",
+    "vite-plugin-pwa": "^0.17.4",
+    "vite-plugin-top-level-await": "^1.4.1",
+    "vite-plugin-wasm": "^3.3.0",
+    "workbox-window": "^7.0.0"
   }
 }
