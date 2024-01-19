@@ -26,7 +26,6 @@ import {
   defaultOptions,
   hr,
   image,
-  listener,
   link,
   mention,
   table,
@@ -304,19 +303,7 @@ export const Image = {
 };
 
 export const Tasklist = {
-  render: () => (
-    <Story
-      text={str(text.tasks, '', text.list, text.footer)}
-      extensions={[
-        tasklist(),
-        listener({
-          onChange: (text) => {
-            console.log(text);
-          },
-        }),
-      ]}
-    />
-  ),
+  render: () => <Story text={str(text.tasks, '', text.list, text.footer)} extensions={[tasklist()]} />,
 };
 
 export const Autocomplete = {
@@ -384,8 +371,15 @@ export const Comments = {
   },
 };
 
+const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+
 export const Typewriter = {
-  render: () => <Story text={str('# Typewriter', '', text.paragraphs, text.footer)} extensions={[typewriter()]} />,
+  render: () => (
+    <Story
+      text={str('# Typewriter', '', text.paragraphs, text.footer)}
+      extensions={[typewriter({ items: typewriterItems })]}
+    />
+  ),
 };
 
 export const Blast = {
@@ -393,9 +387,7 @@ export const Blast = {
     <Story
       text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        typewriter({
-          items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
-        }),
+        typewriter({ items: typewriterItems }),
         blast(
           defaultsDeep(
             {

@@ -150,7 +150,8 @@ export const getExtensions = ({
   }
 
   if (debug) {
-    const items = localStorage.getItem('dxos.composer.extension.typewriter');
+    // TODO(burdon): Create from settings.
+    const items = localStorage.getItem('dxos.org/plugin/markdown/typewriter');
     extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
   }
 
