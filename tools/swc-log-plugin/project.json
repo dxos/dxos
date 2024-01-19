@@ -3,5 +3,6 @@
   "projectType": "library",
   "targets": {},
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": []
+  "implicitDependencies": [],
+  "name": "swc-log-plugin"
 }

@@ -47,28 +47,26 @@ export default template.define.script({
     },
     worker: {
       format: 'es',
+      plugins: () => [topLevelAwait(), wasm()],
     },
     `;
     // TODO(wittjosiah): Why is target esnext needed here but not composer?
     //  Why does dev server target need to be set to the default?
     //  https://github.com/vitejs/vite/issues/13756#issuecomment-1646981372
     const basicConfig = plate`
-    optimizeDeps: {
-      esbuildOptions: {
-        target: 'esnext',
-      },
-    },
     build: {
-      target: 'esnext',
       outDir: 'out/${name}'
     },
     worker: {
       format: 'es',
+      plugins: () => [topLevelAwait(), wasm()],
     },
     `;
     return /* javascript */ plate`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
+  import topLevelAwait from 'vite-plugin-top-level-await';
+  import wasm from 'vite-plugin-wasm';
   ${imports}
 
   // https://vitejs.dev/config/
@@ -79,6 +77,8 @@ export default template.define.script({
     ${input.monorepo ? monorepoConfig : basicConfig}
     plugins: [
       ConfigPlugin(),
+      topLevelAwait(),
+      wasm(),
       ${react
         // https://github.com/preactjs/signals/issues/269
         ?`${reactPlugin()}({ jsxRuntime: 'classic' }),`

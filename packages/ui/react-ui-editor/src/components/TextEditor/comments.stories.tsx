@@ -30,8 +30,9 @@ const Editor: FC<{
   commentSelected?: string;
   commentRanges: CommentRange[];
   onCreateComment: CommentsOptions['onCreate'];
+  onMoveComment: CommentsOptions['onMove'];
   onSelectComment: CommentsOptions['onSelect'];
-}> = ({ item, commentSelected, commentRanges, onCreateComment, onSelectComment }) => {
+}> = ({ item, commentSelected, commentRanges, onCreateComment, onMoveComment, onSelectComment }) => {
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
@@ -55,6 +56,7 @@ const Editor: FC<{
     return [
       comments({
         onCreate: onCreateComment,
+        onMove: onMoveComment,
         onSelect: onSelectComment,
       }),
     ];
@@ -250,6 +252,17 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     setSelected(active ?? closest);
   };
 
+  const handleMoveComment: CommentsOptions['onMove'] = (id, cursor) => {
+    setThreads((threads) =>
+      threads.map((thread) => {
+        if (thread.id === id) {
+          thread.range.cursor = cursor;
+        }
+        return thread;
+      }),
+    );
+  };
+
   const handleSelectThread = (id: string) => {
     setSelected(id);
   };
@@ -268,6 +281,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
             commentSelected={selected}
             commentRanges={commentRanges}
             onCreateComment={handleCreateComment}
+            onMoveComment={handleMoveComment}
             onSelectComment={handleSelectComment}
           />
         </div>

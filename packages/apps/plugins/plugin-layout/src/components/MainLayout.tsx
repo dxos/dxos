@@ -35,6 +35,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
 
   return (
     <Popover.Root
+      modal
       open={!!(popoverAnchorId && popoverOpen)}
       onOpenChange={(nextOpen) => {
         if (nextOpen && popoverAnchorId) {
@@ -116,14 +117,6 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
         <div role='none' aria-label={t('status label')} className='fixed bottom-0 right-0 z-[1]'>
           <Surface role='status' limit={1} />
         </div>
-
-        {/* Help hints. */}
-        {/* TODO(burdon): Make surface roles/names fully-qualified. */}
-        {showHintsFooter && (
-          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
-            <Surface role='hints' limit={1} />
-          </div>
-        )}
 
         {/* Global popovers. */}
         <Popover.Portal>

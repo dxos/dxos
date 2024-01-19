@@ -128,10 +128,6 @@ test.describe('Single-player tests', () => {
     await host.enablePlugin('dxos.org/plugin/debug');
     await host.changeStorageVersionInMetadata(9999);
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
-
-    await host.page.getByTestId('resetDialog.showStackTrace').click();
-    expect(await host.page.getByTestId('resetDialog.stackTrace').innerText())
-      .to.be.a('string')
-      .and.satisfy((trace: string) => trace.startsWith('INVALID_STORAGE_VERSION'));
+    expect(await host.page.getByTestId('resetDialog').locator('h2').innerText()).to.equal('Invalid storage version');
   });
 });

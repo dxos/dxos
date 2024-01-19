@@ -24,7 +24,7 @@ export namespace Features {
     devDependencies: {
       '@types/react': '^18.0.21',
       '@types/react-dom': '^18.0.6',
-      '@vitejs/plugin-react': '^3.0.1',
+      '@vitejs/plugin-react': '^4.2.1',
     },
   });
 
@@ -54,21 +54,21 @@ export namespace Features {
       storybook: 'start-storybook -p 9009 --no-open',
     },
     devDependencies: {
-      '@storybook/addon-essentials': '^7.0.6',
-      '@storybook/addon-interactions': '^7.0.6',
-      '@storybook/addon-links': '^7.0.6',
-      '@storybook/builder-vite': '^7.0.6',
-      '@storybook/core-server': '^7.0.6',
-      '@storybook/mdx2-csf': '^1.0.0',
-      '@storybook/react': '^7.0.6',
-      '@storybook/react-vite': '^7.0.6',
+      '@storybook/addon-essentials': '8.0.0-alpha.11',
+      '@storybook/addon-interactions': '8.0.0-alpha.11',
+      '@storybook/addon-links': '8.0.0-alpha.11',
+      '@storybook/builder-vite': '8.0.0-alpha.11',
+      '@storybook/core-server': '8.0.0-alpha.11',
+      '@storybook/mdx2-csf': '^1.1.0',
+      '@storybook/react': '8.0.0-alpha.11',
+      '@storybook/react-vite': '8.0.0-alpha.11',
     },
   });
 
   export const pwa = (): Partial<PackageJson> => ({
     devDependencies: {
-      'vite-plugin-pwa': '^0.14.1',
-      'workbox-window': '^6.5.4',
+      'vite-plugin-pwa': '^0.17.4',
+      'workbox-window': '^7.0.0',
     },
   });
 
@@ -109,7 +109,9 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
       typescript: '^5.0.4',
-      vite: '^4.3.9',
+      vite: '^5.0.11',
+      'vite-plugin-top-level-await': '^1.4.1',
+      'vite-plugin-wasm': '^3.3.0',
     },
   };
 };

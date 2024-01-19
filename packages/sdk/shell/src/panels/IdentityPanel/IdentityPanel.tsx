@@ -6,7 +6,7 @@ import React, { useEffect, useMemo } from 'react';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { type Identity, useIdentity, useDevices } from '@dxos/react-client/halo';
+import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
@@ -18,6 +18,7 @@ import {
 } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
 import { AgentForm, DeviceManager, IdentityActionChooser, ProfileForm, SignOutChooser } from './steps';
+import { useAgentHandlers } from './useAgentHandlers';
 import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 
@@ -99,7 +100,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
             />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='agent manager'>
-            <AgentForm send={rest.send} active={activeView === 'agent manager'} identity={identity} />
+            <AgentForm send={rest.send} active={activeView === 'agent manager'} {...rest} />
           </Viewport.View>
         </Viewport.Views>
       </Viewport.Root>
@@ -124,6 +125,8 @@ export const IdentityPanel = ({
   const client = useClient();
   const devices = useDevices();
   const identity = useIdentity();
+  const invitations = useHaloInvitations();
+  const agentProps = useAgentHandlers({ client, identity, invitations });
   if (!identity) {
     console.error('IdentityPanel rendered with no active identity.');
     return null;
@@ -171,6 +174,7 @@ export const IdentityPanel = ({
     titleId,
     createInvitationUrl,
     onUpdateProfile,
+    ...agentProps,
   } satisfies IdentityPanelImplProps;
 
   return identityState.context.invitation ? (

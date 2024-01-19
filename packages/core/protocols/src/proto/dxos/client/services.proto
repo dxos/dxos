@@ -107,9 +107,14 @@ message SignPresentationRequest {
   optional bytes nonce = 2;
 }
 
+message CreateIdentityRequest {
+  optional halo.credentials.ProfileDocument profile = 1;
+  optional bool use_automerge = 2;
+}
+
 // TODO(wittjosiah): Align pluralization with other services.
 service IdentityService {
-  rpc CreateIdentity(halo.credentials.ProfileDocument) returns (Identity);
+  rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);

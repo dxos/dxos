@@ -1,43 +1,21 @@
 {
   // https://nx.dev/reference/nx-json
   "extends": "nx/presets/npm.json",
-  "npmScope": "dxos",
   "affected": {
     "defaultBase": "main"
   },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "cacheableOperations": [
-          "build",
-          "bundle",
-          "compile",
-          "compile-lib",
-          "compile-node",
-          "e2e",
-          "lint",
-          "prebuild",
-          "prerelease",
-          "storybook-build",
-          "test"
-        ],
-        "parallel": 6
-      }
-    }
-  },
+  "parallel": 6,
   // Named inputs explained here: https://nx.dev/more-concepts/customizing-inputs
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
     // Nx assumes the use of tsconfig.base.json.
     // https://nx.dev/more-concepts/customizing-inputs#global-settings.
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/.eslintrc*.js",
-      { "runtime": "node --version" }
+      {
+        "runtime": "node --version"
+      }
     ],
     "production": [
       "default",
@@ -57,14 +35,9 @@
         "tsConfig": "{projectRoot}/tsconfig.json"
       },
       "inputs": ["production", "^production"],
-      "outputs": [
-        "{options.outputPath}"
-      ],
-      "dependsOn": [
-        "^build",
-        "prebuild",
-        "compile"
-      ]
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": ["^build", "prebuild", "compile"],
+      "cache": true
     },
     "bundle": {
       "inputs": [
@@ -109,7 +82,8 @@
         //   Some experimental/deprecated projects still depend on build for transpiling.
         "^build",
         "prebuild"
-      ]
+      ],
+      "cache": true
     },
     "compile": {
       "executor": "@dxos/esbuild:build",
@@ -117,13 +91,9 @@
         "outputPath": "{projectRoot}/dist/lib"
       },
       "inputs": ["production", "^production"],
-      "outputs": [
-        "{options.outputPath}"
-      ],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": ["^compile", "prebuild"],
+      "cache": true
     },
     "e2e": {
       "executor": "@dxos/test:run",
@@ -145,50 +115,39 @@
           "env": "LOG_PROCESSOR"
         }
       ],
-      "dependsOn": [
-        "prebuild",
-        "^compile"
-      ]
+      "dependsOn": ["prebuild", "^compile"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/linter:eslint",
       "inputs": ["default"],
       "options": {
         "format": "unix",
-        "lintFilePatterns": [
-          "{projectRoot}/**/*.{ts,tsx,js,jsx}"
-        ],
+        "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"],
         "quiet": true
-      }
+      },
+      "cache": true
     },
     "prebuild": {
       "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile"
-      ]
+      "dependsOn": ["^compile"],
+      "cache": true
     },
     "prerelease": {
       "inputs": ["default", "^production"],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"],
+      "cache": true
     },
     "preview": {
       "inputs": ["production", "^production"]
     },
     "serve": {
       "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
+      "dependsOn": ["^compile", "prebuild"]
     },
     "serve-with-vault": {
       "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ]
+      "dependsOn": ["^compile", "prebuild"]
     },
     "test": {
       "executor": "@dxos/test:run",
@@ -196,12 +155,8 @@
         "coveragePath": "coverage/{projectRoot}",
         "outputPath": "tmp/mocha/{projectRoot}",
         "resultsPath": "test-results/{projectRoot}",
-        "testPatterns": [
-          "{projectRoot}/{src,test}/**/*.test.{ts,tsx,js,jsx}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/{src,test}/**/*"
-        ]
+        "testPatterns": ["{projectRoot}/{src,test}/**/*.test.{ts,tsx,js,jsx}"],
+        "watchPatterns": ["{projectRoot}/{src,test}/**/*"]
       },
       "inputs": [
         "default",
@@ -216,15 +171,18 @@
           "env": "LOG_PROCESSOR"
         }
       ],
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ],
-      "dependsOn": [
-        "prebuild",
-        "^compile"
-      ]
+      "outputs": ["{options.coveragePath}", "{options.outputPath}", "{options.resultsPath}"],
+      "dependsOn": ["prebuild", "^compile"],
+      "cache": true
+    },
+    "compile-lib": {
+      "cache": true
+    },
+    "compile-node": {
+      "cache": true
+    },
+    "storybook-build": {
+      "cache": true
     }
   }
 }
