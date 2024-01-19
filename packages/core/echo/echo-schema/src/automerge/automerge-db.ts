@@ -63,7 +63,6 @@ export class AutomergeDb {
     }
     this._ctx = new Context();
 
-    log.info('begin opening', { indexDocId: spaceState.rootUrl, automergePreference: getGlobalAutomergePreference() });
     if (!spaceState.rootUrl) {
       if (getGlobalAutomergePreference()) {
         log.error('Database opened with no rootUrl');
@@ -99,7 +98,10 @@ export class AutomergeDb {
       this._docHandle.off('change', update);
     });
 
-    log.info('db opened', { indexDocId: spaceState.rootUrl, duration: performance.now() - start });
+    const elapsed = performance.now() - start;
+    if (elapsed > 1000) {
+      log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
+    }
   }
 
   // TODO(dmaretskyi): Cant close while opening.
