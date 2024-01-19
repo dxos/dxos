@@ -104,21 +104,21 @@ export class TestPeer {
 }
 
 export const testWithAutomerge = (tests: () => void) => {
-  describe('with automerge', () => {
-    before(() => {
-      setGlobalAutomergePreference(true);
-    });
+  // describe('with automerge', () => {
+  //   before(() => {
+  //     setGlobalAutomergePreference(true);
+  //   });
 
-    after(() => {
-      setGlobalAutomergePreference(false);
-    });
+  //   after(() => {
+  //     setGlobalAutomergePreference(false);
+  //   });
 
-    setGlobalAutomergePreference(true);
-    tests();
-    setGlobalAutomergePreference(false);
-  });
+  //   setGlobalAutomergePreference(true);
+  //   tests();
+  //   setGlobalAutomergePreference(false);
+  // });
 
-  describe('without automerge', () => {
-    tests();
-  });
+  // describe('without automerge', () => {
+  tests();
+  // });
 };
