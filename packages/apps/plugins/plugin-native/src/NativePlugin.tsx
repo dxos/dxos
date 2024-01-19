@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginDefinition } from '@dxos/app-framework';
+import type { Plugin, PluginDefinition } from '@dxos/app-framework';
+import { LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { captureException } from '@dxos/sentry';
 
 import meta from './meta';
 
@@ -16,12 +16,19 @@ const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
  * https://www.npmjs.com/package/@socketsupply/socket
  * https://github.com/socketsupply/socket-examples
  */
-export const initializeNativeApp = async () => {
+export const initializeNativeApp = async (plugins: Plugin[]) => {
   // SocketSupply implements the dynamic import.
   const module = 'socket:application';
   const app = await import(/* @vite-ignore */ module);
   const { meta_title: appName } = app.config;
-  // console.log(JSON.stringify(app.config, undefined, 2));
+  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+  const handleNavigate = (id: string) => {
+    void intentPlugin?.provides.intent.dispatch({
+      action: LayoutAction.ACTIVATE,
+      data: { id },
+    });
+  };
 
   //
   // Window size.
@@ -89,11 +96,7 @@ export const initializeNativeApp = async () => {
     const slug = event.url.host;
 
     if (slug.match(/^[a-z0-9]{64}$/)) {
-      history.pushState({}, '', `/${event.url.host}`);
-
-      // Send a fake popstate event to trigger app navigation.
-      const urlEvent = new Event('popstate');
-      window.dispatchEvent(urlEvent);
+      handleNavigate(slug);
     } else {
       alert('URL is not supported\nPlease check that it was copied or entered correctly.');
     }
@@ -116,6 +119,6 @@ export const safeParseJson = <T extends object>(data: string | undefined | null,
 export const NativePlugin = (): PluginDefinition => ({
   meta,
   ready: async (plugins) => {
-    void initializeNativeApp();
+    void initializeNativeApp(plugins);
   },
 });
