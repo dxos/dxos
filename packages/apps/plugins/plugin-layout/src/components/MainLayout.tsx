@@ -35,6 +35,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
 
   return (
     <Popover.Root
+      modal
       open={!!(popoverAnchorId && popoverOpen)}
       onOpenChange={(nextOpen) => {
         if (nextOpen && popoverAnchorId) {

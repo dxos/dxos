@@ -30,7 +30,7 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@types/isomorphic-fetch": "^0.0.36",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",

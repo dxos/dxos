@@ -66,10 +66,7 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [
-      TopLevelAwaitPlugin(),
-      WasmPlugin(),
-    ],
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
     // Required for the script plugin.

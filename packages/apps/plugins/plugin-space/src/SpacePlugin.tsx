@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
+import { type IconProps, Folder as FolderIcon, Plus, SignIn, FolderOpen } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import { set, get } from 'idb-keyval';
@@ -49,7 +49,7 @@ import {
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { saveSpaceToDisk } from './save-to-disk';
+import { saveSpaceToDisk, loadSpaceFromDisk } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
@@ -382,6 +382,19 @@ export const SpacePlugin = ({
                     },
                   ]),
               },
+              {
+                id: 'load-directory',
+                label: ['load directory label', { ns: 'os' }],
+                icon: (props) => <FolderOpen {...props} />,
+                properties: {
+                  testId: 'spacePlugin.loadDirectory',
+                },
+                invoke: () =>
+                  dispatch({
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.LOAD_FROM_DISK,
+                  }),
+              },
             ],
             properties: {
               testId: 'spacePlugin.sharedSpaces',
@@ -580,6 +593,15 @@ export const SpacePlugin = ({
                 return saveSpaceToDisk({ space, directory }).catch((error) => {
                   log.catch(error);
                 });
+              }
+              break;
+            }
+
+            case SpaceAction.LOAD_FROM_DISK: {
+              const space = intent.data.space;
+              if (space instanceof SpaceProxy) {
+                const directory = await (window as any).showDirectoryPicker();
+                await loadSpaceFromDisk({ space, directory });
               }
               break;
             }

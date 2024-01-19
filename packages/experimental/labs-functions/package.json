@@ -71,7 +71,7 @@
   "devDependencies": {
     "@dxos/agent": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@mediapipe/tasks-text": "^0.10.7",
     "@types/html-to-text": "^9.0.0",
     "@types/imap": "^0.8.35",
@@ -86,6 +86,6 @@
     "ts-node": "10.9.1"
   },
   "optionalDependencies": {
-    "@faker-js/faker": "^8.0.2"
+    "@faker-js/faker": "^8.3.1"
   }
 }

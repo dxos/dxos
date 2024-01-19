@@ -6,11 +6,12 @@ import '@dxosTheme';
 
 import { type EditorView, keymap } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
-import { Check } from '@phosphor-icons/react';
+import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -30,9 +31,10 @@ const Editor: FC<{
   commentSelected?: string;
   commentRanges: CommentRange[];
   onCreateComment: CommentsOptions['onCreate'];
-  onMoveComment: CommentsOptions['onMove'];
+  onDeleteComment: CommentsOptions['onDelete'];
+  onUpdateComment: CommentsOptions['onUpdate'];
   onSelectComment: CommentsOptions['onSelect'];
-}> = ({ item, commentSelected, commentRanges, onCreateComment, onMoveComment, onSelectComment }) => {
+}> = ({ item, commentSelected, commentRanges, onCreateComment, onDeleteComment, onUpdateComment, onSelectComment }) => {
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
@@ -56,7 +58,8 @@ const Editor: FC<{
     return [
       comments({
         onCreate: onCreateComment,
-        onMove: onMoveComment,
+        onDelete: onDeleteComment,
+        onUpdate: onUpdateComment,
         onSelect: onSelectComment,
       }),
     ];
@@ -84,6 +87,7 @@ type CommentThread = {
   yPos?: number;
   selection?: Range;
   messages: TextObject[];
+  deleted?: boolean;
 };
 
 const Thread: FC<{
@@ -92,23 +96,17 @@ const Thread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
+  const [focus, setFocus] = useState(false);
   const [item, setItem] = useState({ text: new TextObject() });
   const model = useTextModel({ text: item.text });
   const editorRef = useRef<EditorView>(null);
-
-  // TODO(burdon): Hack to focus (view is recreated when text object changes).
-  const focus = () => {
-    setTimeout(() => {
-      editorRef.current?.focus();
-    }, 100);
-  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
-        focus();
+        setFocus(true);
       }
     }
   }, [selected]);
@@ -118,7 +116,7 @@ const Thread: FC<{
     if (text?.length) {
       thread.messages.push(item.text);
       setItem({ text: new TextObject() });
-      focus();
+      setFocus(true);
     }
   };
 
@@ -127,41 +125,49 @@ const Thread: FC<{
   }
 
   return (
-    <div className={mx('flex flex-col m-1 rounded shadow divide-y bg-white', selected && 'ring')}>
-      <div className='flex p-2 text-xs font-mono gap-2 text-neutral-500 font-thin'>
+    <div
+      className={mx(
+        'flex flex-col m-1 rounded shadow divide-y bg-white',
+        selected && 'ring',
+        thread.deleted && 'opacity-50',
+      )}
+    >
+      <div className='flex p-2 gap-2 items-center text-xs font-mono text-neutral-500 font-thin'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>from:{thread.selection?.from}</span>
         <span>to:{thread.selection?.to}</span>
         <span>y:{thread.yPos}</span>
+        <span className='grow' />
+        {thread.deleted && <Trash />}
       </div>
 
       {thread.messages.map((message, i) => (
         // TODO(burdon): Fix default editor padding so content doesn't jump on creating message.
         <div key={i} className='p-2' onClick={() => onSelect()}>
-          {message.text}
+          {getTextContent(message)}
         </div>
       ))}
 
-      <div ref={containerRef} onClick={() => onSelect()} className='flex py-1'>
-        <div className='grow'>
-          <TextEditor
-            ref={editorRef}
-            model={model}
-            placeholder={'Enter comment...'}
-            extensions={[
-              keymap.of([
-                {
-                  key: 'Enter',
-                  run: () => {
-                    handleCreateMessage();
-                    return true;
-                  },
+      <div ref={containerRef} onClick={() => onSelect()} className='flex'>
+        <TextEditor
+          ref={editorRef}
+          autofocus={focus}
+          model={model}
+          placeholder={'Enter comment...'}
+          slots={{ root: { className: 'grow p-2 rounded-b' } }}
+          extensions={[
+            keymap.of([
+              {
+                key: 'Enter',
+                run: () => {
+                  handleCreateMessage();
+                  return true;
                 },
-              ]),
-            ]}
-          />
-        </div>
-        <Button variant='ghost' classNames='px-1 mr-1' title='Resolve' onClick={onResolve}>
+              },
+            ]),
+          ]}
+        />
+        <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
           <Check />
         </Button>
       </div>
@@ -185,7 +191,7 @@ const Sidebar: FC<{
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col grow overflow-y-scroll py-4 gap-4 pr-4'>
+      <div className='flex flex-col grow overflow-y-scroll py-4 gap-4'>
         {sortedThreads.map((thread) => (
           <Thread
             key={thread.id}
@@ -220,6 +226,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
 
   const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
     const id = PublicKey.random().toHex();
+    log.info('create', { id: id.slice(0, 4), cursor });
     setThreads((threads) => [
       ...threads,
       {
@@ -227,7 +234,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
         range: { id, cursor },
         yPos: location ? Math.floor(location.top) : undefined,
         messages: autoCreate
-          ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 2, max: 5 } })
+          ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 1, max: 3 } })
           : [],
       },
     ]);
@@ -235,8 +242,37 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     return id;
   };
 
-  // TODO(burdon): Scroll sidebar on select.
+  const handleDeleteComment: CommentsOptions['onDelete'] = (id) => {
+    log.info('delete', { id: id.slice(0, 4) });
+    setThreads((threads) =>
+      threads.map((thread) => {
+        if (thread.id === id) {
+          thread.deleted = true;
+        }
+
+        return thread;
+      }),
+    );
+
+    setSelected((selected) => (selected === id ? undefined : selected));
+  };
+
+  const handleUpdateComment: CommentsOptions['onUpdate'] = (id, cursor) => {
+    log.info('update', { id: id.slice(0, 4), cursor });
+    setThreads((threads) =>
+      threads.map((thread) => {
+        if (thread.id === id) {
+          thread.range.cursor = cursor;
+          delete thread.deleted;
+        }
+
+        return thread;
+      }),
+    );
+  };
+
   const handleSelectComment: CommentsOptions['onSelect'] = ({ active, closest, ranges }) => {
+    log.info('select', { active: active?.slice(0, 4), closest: closest?.slice(0, 4) });
     setThreads((threads) =>
       threads.map((thread) => {
         const range = ranges.find((range) => range.id === thread.range.id);
@@ -250,17 +286,6 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     );
 
     setSelected(active ?? closest);
-  };
-
-  const handleMoveComment: CommentsOptions['onMove'] = (id, cursor) => {
-    setThreads((threads) =>
-      threads.map((thread) => {
-        if (thread.id === id) {
-          thread.range.cursor = cursor;
-        }
-        return thread;
-      }),
-    );
   };
 
   const handleSelectThread = (id: string) => {
@@ -281,7 +306,8 @@ const Story = ({ text, autoCreate }: StoryProps) => {
             commentSelected={selected}
             commentRanges={commentRanges}
             onCreateComment={handleCreateComment}
-            onMoveComment={handleMoveComment}
+            onDeleteComment={handleDeleteComment}
+            onUpdateComment={handleUpdateComment}
             onSelectComment={handleSelectComment}
           />
         </div>
@@ -321,7 +347,7 @@ export const Default = {
   },
 };
 
-export const Demo = {
+export const Testing = {
   args: {
     text: document,
     autoCreate: true,

@@ -658,8 +658,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -867,7 +867,7 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -1055,8 +1055,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@preact/signals-react':
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
@@ -1189,8 +1189,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1460,8 +1460,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1527,7 +1527,7 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -1594,8 +1594,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.2.0
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1722,8 +1722,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2112,8 +2112,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2179,7 +2179,7 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -2261,8 +2261,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2353,8 +2353,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2465,8 +2465,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2523,8 +2523,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2639,8 +2639,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2671,6 +2671,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../../core/echo/automerge
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2719,6 +2722,12 @@ importers:
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      md5:
+        specifier: ^2.3.0
+        version: 2.3.0
       react-drag-drop-files:
         specifier: ^2.3.8
         version: 2.3.8(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
@@ -2753,6 +2762,12 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/md5':
+        specifier: ^2.3.5
+        version: 2.3.5
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2885,8 +2900,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -3096,8 +3111,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -3145,7 +3160,7 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -3521,8 +3536,8 @@ importers:
         version: 2.3.2
     devDependencies:
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@types/binary-parser':
         specifier: ^1.5.1
         version: 1.5.1
@@ -3646,7 +3661,7 @@ importers:
         version: 2.12.5
     optionalDependencies:
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
     devDependencies:
       '@types/lodash.defaultsdeep':
@@ -3705,8 +3720,8 @@ importers:
         specifier: workspace:*
         version: link:../tracing
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@types/randombytes':
         specifier: ^2.0.0
         version: 2.0.0
@@ -4482,7 +4497,7 @@ importers:
         version: 18.18.9
     devDependencies:
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
 
   packages/core/echo/automerge:
@@ -4558,8 +4573,8 @@ importers:
         version: 13.6.10
     devDependencies:
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@types/lodash.clonedeep':
         specifier: ^4.5.6
         version: 4.5.7
@@ -4640,8 +4655,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/node-std
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
 
   packages/core/echo/echo-pipeline:
     dependencies:
@@ -4777,8 +4792,8 @@ importers:
         specifier: workspace:*
         version: link:../echo-generator
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
 
   packages/core/echo/echo-schema:
     dependencies:
@@ -5009,8 +5024,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/feed-store
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
 
   packages/core/functions:
     dependencies:
@@ -6507,7 +6522,7 @@ importers:
         version: 18.2.0(react@18.2.0)
     optionalDependencies:
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
     devDependencies:
       '@babel/core':
@@ -6680,7 +6695,7 @@ importers:
         version: 3.22.0(zod@3.22.4)
     optionalDependencies:
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
     devDependencies:
       '@dxos/agent':
@@ -6790,8 +6805,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@swc-node/register':
         specifier: 1.6.8
         version: 1.6.8(@swc/core@1.3.104)(typescript@5.2.2)
@@ -6945,8 +6960,8 @@ importers:
         version: 5.0.0
     devDependencies:
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@types/isomorphic-fetch':
         specifier: ^0.0.36
         version: 0.0.36
@@ -6991,8 +7006,8 @@ importers:
         specifier: ^11.9.0
         version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
@@ -7103,8 +7118,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       chartjs-node-canvas:
         specifier: ^4.1.6
         version: 4.1.6(chart.js@3.9.1)
@@ -7293,8 +7308,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7681,7 +7696,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -7710,9 +7725,15 @@ importers:
       vite:
         specifier: ^5.0.11
         version: 5.0.11(@types/node@18.11.9)
+      vite-plugin-top-level-await:
+        specifier: ^1.4.1
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
+      vite-plugin-wasm:
+        specifier: ^3.3.0
+        version: 3.3.0(vite@5.0.11)
 
   packages/sdk/migrations:
     dependencies:
@@ -7769,7 +7790,7 @@ importers:
         specifier: workspace:*
         version: link:../../core/echo/text-model
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       yjs:
         specifier: ^13.6.10
@@ -7888,7 +7909,7 @@ importers:
         specifier: workspace:*
         version: link:../../ui/storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -8268,8 +8289,8 @@ importers:
         specifier: workspace:*
         version: link:../react-ui-theme
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8320,7 +8341,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -8486,7 +8507,7 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
+        specifier: ^8.3.1
         version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
@@ -8595,8 +8616,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8665,8 +8686,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8711,8 +8732,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.2.0
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8763,8 +8784,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -8836,8 +8857,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^8.3.1
+        version: 8.3.1
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -12597,12 +12618,12 @@ packages:
     dependencies:
       '@rollup/pluginutils': 4.2.1
       '@webcomponents/custom-elements': 1.5.1
-      acorn-walk: 8.2.0
+      acorn-walk: 8.3.2
       cheerio: 1.0.0-rc.12
       connect-injector: 0.4.4
       debug: 4.3.4(supports-color@8.1.1)
       es-module-lexer: 0.10.5
-      fast-glob: 3.2.12
+      fast-glob: 3.3.2
       fs-extra: 10.1.0
       jsesc: 3.0.2
       magic-string: 0.26.7
@@ -13443,16 +13464,6 @@ packages:
   /@eslint/js@8.49.0:
     resolution: {integrity: sha512-1S8uAY/MTJqVx0SC4epBq+N2yhuwtNwLbJYNZyhL2pO1ZVKn5HFXav5T41Ryzy9K9V7ZId2JB2oy/W4aCd9/2w==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-
-  /@faker-js/faker@8.0.2:
-    resolution: {integrity: sha512-Uo3pGspElQW91PCvKSIAXoEgAUlRnH29sX2/p89kg7sP1m2PzCufHINd0FhTXQf6DYGiUlVncdSPa2F9wxed2A==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
-
-  /@faker-js/faker@8.2.0:
-    resolution: {integrity: sha512-VacmzZqVxdWdf9y64lDOMZNDMM/FQdtM9IsaOPKOm2suYwEatb8VkdHqOzXcDnZbk7YDE2BmsJmy/2Hmkn563g==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
-    requiresBuild: true
-    dev: true
 
   /@faker-js/faker@8.3.1:
     resolution: {integrity: sha512-FdgpFxY6V6rLZE9mmIBb9hM0xpfvQOSNOLnzolzKwsE1DH+gC7lEKV1p1IbR0lAYyvYd5a4u3qWJzowUkw1bIw==}
@@ -17945,7 +17956,6 @@ packages:
         optional: true
     dependencies:
       rollup: 3.23.0
-    dev: true
 
   /@rollup/pluginutils@3.1.0(rollup@2.79.1):
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
@@ -21062,6 +21072,10 @@ packages:
     dependencies:
       '@types/linkify-it': 3.0.2
       '@types/mdurl': 1.0.2
+    dev: true
+
+  /@types/md5@2.3.5:
+    resolution: {integrity: sha512-/i42wjYNgE6wf0j2bcTX6kuowmdL/6PE4IVitMpm2eYKBUuYCprdcWVK+xEF0gcV6ufMCRhtxmReGfc6hIK7Jw==}
     dev: true
 
   /@types/mdast@3.0.10:
@@ -39246,7 +39260,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
   /rollup@4.9.1:
     resolution: {integrity: sha512-pgPO9DWzLoW/vIhlSoDByCzcpX92bKEorbgXuZrqxByte3JFk2xSW2JEeAcyLc9Ru9pqcNNW+Ob7ntsk2oT/Xw==}
@@ -42351,7 +42364,6 @@ packages:
   /uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
-    dev: true
 
   /uvu@0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
@@ -42580,7 +42592,6 @@ packages:
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
-    dev: true
 
   /vite-plugin-turbosnap@1.0.2:
     resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
@@ -42591,7 +42602,6 @@ packages:
       vite: ^2 || ^3 || ^4 || ^5
     dependencies:
       vite: 5.0.11(@types/node@18.11.9)
-    dev: true
 
   /vite-plugin-web-extension@4.1.1(@types/node@18.11.9):
     resolution: {integrity: sha512-YUObXUXilgYuNGLdn5v+VUCcIQY4Aodo/1tgv6DrNAeZTLnvfa0fKSXjq86FB+XTplbumVZ6UANLrOxZItWOvw==}
