@@ -56,7 +56,7 @@ export const setFocus = (view: EditorView, thread: string) => {
   view.dispatch({
     effects: setSelection.of({ active: thread }),
     selection: { anchor: range.from },
-    scrollIntoView: true,
+    scrollIntoView: true, // TODO(burdon): Scroll to y-position (or center of screen?)
   });
 };
 
@@ -340,7 +340,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         let mod = false;
         const { active, ranges } = state.field(commentsStateField);
         changes.iterChanges((from, to, from2, to2) => {
-          // TODO(burdon): Should not iterate over deleted (tracked) ranges.
+          // TODO(burdon): Skip deleted (tracked) ranges.
           ranges.forEach((range) => {
             if (from2 === to2) {
               const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
@@ -372,7 +372,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         const { active, closest, ranges } = state.field(commentsStateField);
         const selected: CommentSelected = { active: undefined, closest: undefined };
 
-        // TODO(burdon): Should not iterate over deleted (tracked) ranges.
+        // TODO(burdon): Skip deleted (tracked) ranges.
         ranges.forEach((comment) => {
           const d = Math.min(Math.abs(head - comment.from), Math.abs(head - comment.to));
           if (head >= comment.from && head <= comment.to) {
