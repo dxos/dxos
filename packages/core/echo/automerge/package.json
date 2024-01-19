@@ -8,8 +8,8 @@
   "author": "info@dxos.org",
   "imports": {
     "#automerge-wasm": {
-      "browser": "./dist/lib/browser/automerge-wasm.js",
-      "import": "./dist/lib/browser/automerge-wasm.js",
+      "browser": "./exports/browser/automerge-wasm.mjs",
+      "import": "./exports/browser/automerge-wasm.mjs",
       "require": "./exports/node/automerge-wasm.cjs",
       "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
@@ -45,8 +45,8 @@
   },
   "exports": {
     "./automerge-wasm": {
-      "browser": "./dist/lib/browser/automerge-wasm.js",
-      "import": "./dist/lib/browser/automerge-wasm.js",
+      "browser": "./exports/browser/automerge-wasm.mjs",
+      "import": "./exports/browser/automerge-wasm.mjs",
       "require": "./exports/node/automerge-wasm.cjs",
       "node": "./exports/node/automerge-wasm.cjs",
       "types": "./dist/types/src/automerge-wasm.d.ts"
