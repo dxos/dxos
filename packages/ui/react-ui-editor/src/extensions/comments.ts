@@ -210,6 +210,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
 
           if (found > -1) {
             const comments = tracked.comments;
+
             // TODO(burdon): Hack to defeat race condition (Automerge object hasn't updated yet).
             queueMicrotask(() => {
               const active = state.field(commentsStateField).ranges;

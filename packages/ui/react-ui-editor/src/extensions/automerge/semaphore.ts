@@ -22,7 +22,7 @@ import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
 /**
- * TODO(burdon): Comment.
+ * Implements three-way merge (on each mutation/key-stroke).
  */
 export class PatchSemaphore {
   _inReconcile = false;
@@ -36,6 +36,8 @@ export class PatchSemaphore {
     this._inReconcile = true;
 
     const path = getPath(view.state, this._field);
+
+    // Get the heads before the unreconciled transactions are applied.
     const oldHeads = getLastHeads(view.state, this._field);
     let selection = view.state.selection;
 
