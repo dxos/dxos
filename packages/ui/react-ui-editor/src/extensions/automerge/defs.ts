@@ -32,7 +32,7 @@ export const reconcileAnnotationType = Annotation.define<unknown>();
 
 export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
 
-// TODO(burdon): Rename.
+// TODO(burdon): Rename sync/create generic def (like cursor) to decouple automerge deps.
 export const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.
 });
