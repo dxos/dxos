@@ -107,6 +107,7 @@ const createSequenceFromPrompt = async (
   context: PromptContext,
 ) => {
   const inputs: Record<string, any> = {};
+
   for (const { type, name, value } of prompt.inputs) {
     switch (type) {
       case ChainType.Input.Type.VALUE: {
@@ -174,6 +175,10 @@ const createSequenceFromPrompt = async (
 const runResolver = async (resolvers: ResolverMap, name: string) => {
   try {
     const resolver = get(resolvers, name);
+    if (!resolver) {
+      return '';
+    }
+
     log.info('running resolver', { resolver: name });
     const start = performance.now();
     const result = typeof resolver === 'function' ? await resolver() : resolver;

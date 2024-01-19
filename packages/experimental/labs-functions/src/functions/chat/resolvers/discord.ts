@@ -6,6 +6,7 @@ import { Client as DiscordClient, IntentsBitField, SnowflakeUtil, type TextChann
 
 import { Event } from '@dxos/async';
 import { type Config } from '@dxos/config';
+import { log } from '@dxos/log';
 
 import { type ResolverMap } from './type';
 
@@ -38,11 +39,11 @@ export const createResolver = async (config: Config): Promise<ResolverMap> => {
         const messages = (
           await Promise.all(
             allChannels.map(async (channel) => {
-              try {
-                if (!channel?.isTextBased()) {
-                  return '';
-                }
+              if (!channel?.isTextBased()) {
+                return '';
+              }
 
+              try {
                 const results = await channel.messages.fetch({ after, limit: 100 });
 
                 const messages = results
@@ -53,14 +54,12 @@ export const createResolver = async (config: Config): Promise<ResolverMap> => {
 
                 return ['Messages:', messages].join('\n');
               } catch (err: any) {
-                console.log(`${channel?.name} ${err.message}`);
+                log.error('processing channel', err);
                 return '';
               }
             }),
           )
         ).flat();
-
-        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>', messages);
 
         return messages.join('\n');
       },
