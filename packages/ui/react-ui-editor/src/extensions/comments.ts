@@ -10,6 +10,7 @@ import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
+import { semaphoreFacet } from './automerge/defs';
 import { Cursor } from './cursor';
 import { type CommentRange, type EditorModel, type Range } from '../hooks';
 import { getToken } from '../styles';
@@ -86,9 +87,8 @@ const commentsStateField = StateField.define<CommentsState>({
         const { comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments
           .map((comment) => {
-            // TODO(burdon): The range is incorrect after pasting. Race condition?
             const range = Cursor.getRangeFromCursor(cursorConverter, comment.cursor);
-            console.log('update', JSON.stringify({ range, cursor: comment.cursor }, undefined, 2));
+            // console.log('update', JSON.stringify({ range, cursor: comment.cursor }, undefined, 2));
             return range && { ...comment, ...range };
           })
           .filter(nonNullable);
@@ -193,7 +193,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
     }),
 
     // Handle paste.
-    EditorView.updateListener.of(({ state, transactions }) => {
+    EditorView.updateListener.of(({ view, state, transactions }) => {
       if (tracked) {
         const paste = transactions.find((tr) => tr.isUserEvent('input.paste'));
         if (paste) {
@@ -211,22 +211,23 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
           if (found > -1) {
             const comments = tracked.comments;
 
-            // TODO(burdon): Hack to defeat race condition (Automerge object hasn't updated yet).
-            queueMicrotask(() => {
-              const active = state.field(commentsStateField).ranges;
-              for (const moved of comments) {
-                if (active.some((range) => range.id === moved.id && range.from === range.to)) {
-                  const range = {
-                    from: found + moved.from,
-                    to: found + moved.to,
-                  };
+            // Sync before recomputing cursor/range.
+            // TODO(burdon): Decouple from automerge?
+            view.state.facet(semaphoreFacet).reconcile(view);
 
-                  const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
-                  console.log('paste', JSON.stringify({ moved, range, cursor }, undefined, 2));
-                  onUpdate(moved.id, cursor);
-                }
+            const active = state.field(commentsStateField).ranges;
+            for (const moved of comments) {
+              if (active.some((range) => range.id === moved.id && range.from === range.to)) {
+                const range = {
+                  from: found + moved.from,
+                  to: found + moved.to,
+                };
+
+                const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
+                // console.log('paste', JSON.stringify({ moved, range, cursor }, undefined, 2));
+                onUpdate(moved.id, cursor);
               }
-            });
+            }
           }
 
           tracked = null;
@@ -313,7 +314,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
                 end: selection.to,
                 above: true,
                 create: () => {
-                  // TODO(burdon): Dispatch to react callback to render (or use SSR)?
                   const el = document.createElement('div');
                   options.onHover?.(el, shortcut);
                   return { dom: el, offset: { x: 0, y: 8 } };

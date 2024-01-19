@@ -4,16 +4,11 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import {
-  Annotation,
-  StateEffect,
-  type StateField,
-  type EditorState,
-  type Transaction,
-  type TransactionSpec,
-} from '@codemirror/state';
+import { Annotation, StateEffect, type StateField, type EditorState, type Transaction, Facet } from '@codemirror/state';
 
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
+
+import { type PatchSemaphore } from './semaphore';
 
 export type Value = {
   lastHeads: Heads;
@@ -21,7 +16,7 @@ export type Value = {
   unreconciledTransactions: Transaction[];
 };
 
-type UpdateHeads = {
+export type UpdateHeads = {
   newHeads: Heads;
 };
 
@@ -37,6 +32,12 @@ export const reconcileAnnotationType = Annotation.define<unknown>();
 
 export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
 
+// TODO(burdon): Rename.
+export const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
+  combine: (values) => values.at(-1)!, // Take last.
+});
+
+/*
 export const makeReconcile = (tr: TransactionSpec) => {
   if (tr.annotations != null) {
     if (tr.annotations instanceof Array) {
@@ -47,11 +48,13 @@ export const makeReconcile = (tr: TransactionSpec) => {
   } else {
     tr.annotations = [reconcileAnnotationType.of({})];
   }
+
   // return {
   //   ...tr,
   //   annotations: reconcileAnnotationType.of({})
   // }
 };
+*/
 
 export type IDocHandle<T = any> = {
   docSync(): Doc<T> | undefined;

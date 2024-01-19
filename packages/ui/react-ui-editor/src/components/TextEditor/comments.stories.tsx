@@ -11,6 +11,7 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -225,7 +226,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
 
   const handleCreateComment: CommentsOptions['onCreate'] = (cursor, location) => {
     const id = PublicKey.random().toHex();
-    console.log('create', id.slice(0, 4), cursor);
+    log.info('create', { id: id.slice(0, 4), cursor });
     setThreads((threads) => [
       ...threads,
       {
@@ -242,7 +243,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   };
 
   const handleDeleteComment: CommentsOptions['onDelete'] = (id) => {
-    console.log('delete', id.slice(0, 4));
+    log.info('delete', { id: id.slice(0, 4) });
     setThreads((threads) =>
       threads.map((thread) => {
         if (thread.id === id) {
@@ -257,7 +258,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   };
 
   const handleUpdateComment: CommentsOptions['onUpdate'] = (id, cursor) => {
-    console.log('update', id.slice(0, 4), cursor);
+    log.info('update', { id: id.slice(0, 4), cursor });
     setThreads((threads) =>
       threads.map((thread) => {
         if (thread.id === id) {
@@ -271,7 +272,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   };
 
   const handleSelectComment: CommentsOptions['onSelect'] = ({ active, closest, ranges }) => {
-    console.log('select', active?.slice(0, 4));
+    log.info('select', { active: active?.slice(0, 4), closest: closest?.slice(0, 4) });
     setThreads((threads) =>
       threads.map((thread) => {
         const range = ranges.find((range) => range.id === thread.range.id);
