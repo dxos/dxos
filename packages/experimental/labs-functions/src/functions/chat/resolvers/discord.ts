@@ -60,7 +60,7 @@ export const createResolver = async (config: Config): Promise<ResolverMap> => {
           )
         ).flat();
 
-        console.log(messages);
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>', messages);
 
         return messages.join('\n');
       },
