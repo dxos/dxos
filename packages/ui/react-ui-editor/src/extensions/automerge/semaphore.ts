@@ -21,17 +21,17 @@ import {
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
-type Doc<T> = automerge.Doc<T>;
-type Heads = automerge.Heads;
+// type Doc<T> = automerge.Doc<T>;
+// type Heads = automerge.Heads;
 
-type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads | undefined;
+// type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads | undefined;
 
 /**
  * TODO(burdon): Comment.
  */
 export class PatchSemaphore {
   _inReconcile = false;
-  _queue: Array<ChangeFn> = [];
+  // _queue: Array<ChangeFn> = [];
 
   constructor(private readonly _field: StateField<Value>) {}
 
