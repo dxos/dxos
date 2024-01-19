@@ -6,7 +6,6 @@ import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type Forward
 
 import {
   List,
-  LIST_ITEM_NAME,
   ListItem,
   type ListItemCollapsibleContentProps,
   type ListItemHeadingProps,
@@ -14,6 +13,7 @@ import {
   type ListItemRootProps,
   type ListProps,
   type ListScopedProps,
+  LIST_ITEM_NAME,
   useListItemContext,
 } from './List';
 import { type ThemedClassName } from '../../util';

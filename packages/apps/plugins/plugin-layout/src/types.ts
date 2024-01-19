@@ -12,8 +12,8 @@ import {
 } from '@dxos/app-framework';
 
 export type LayoutSettingsProps = {
-  showFooter: boolean;
   enableComplementarySidebar: boolean;
+  showFooter: boolean;
 };
 
 export type LayoutPluginProvides = SurfaceProvides &

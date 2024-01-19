@@ -33,15 +33,19 @@ class HorizontalRuleWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
-    // TODO(burdon): Create <hr> element? Does this clash with markdown parser?
     const el = document.createElement('div');
     el.className = 'cm-hr';
     return el;
   }
 }
 
+// TODO(burdon): Like Tasklist, allow cursor to move into range.
+
+// NOTE: Without a blank line before this markup will treat the previous line as a heading.
+// https://www.markdownguide.org/basic-syntax/#horizontal-rules
 const placeholderMatcher = new MatchDecorator({
-  regexp: /^---$/g,
+  // regexp: /(?<=\n\n)---/gs,
+  regexp: /^---$/gs,
   decoration: (match, view, pos) =>
     Decoration.replace({
       widget: new HorizontalRuleWidget(pos),
@@ -63,11 +67,6 @@ export const hr = () => [
     },
     {
       decorations: (instance) => instance.rules,
-      // TODO(burdon): Is this really atomic (cursor can move into ---).
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.rules || Decoration.none;
-        }),
     },
   ),
 ];
