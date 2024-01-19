@@ -6,13 +6,13 @@
 import { syntaxTree } from '@codemirror/language';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import {
-  Decoration,
-  type EditorView,
-  WidgetType,
   hoverTooltip,
+  Decoration,
+  type DecorationSet,
+  type EditorView,
   ViewPlugin,
   type ViewUpdate,
-  type DecorationSet,
+  WidgetType,
 } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 

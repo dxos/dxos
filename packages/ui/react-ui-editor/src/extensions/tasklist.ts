@@ -64,6 +64,7 @@ export const tasklist = (options: TasklistOptions = {}) => {
     },
     {
       decorations: (v) => v.decorations,
+      // TODO(burdon): Is this still required?
       provide: (plugin) =>
         EditorView.atomicRanges.of((view) => {
           return view.plugin(plugin)?.decorations || Decoration.none;
