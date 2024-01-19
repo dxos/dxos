@@ -7,12 +7,12 @@ import { describe, test } from '@dxos/test';
 
 import { generator } from './chess';
 import { getResources } from './testing';
-import { type PromptContext } from '../context';
+import { type RequestContext } from '../context';
 
 describe.skip('chess', () => {
   test('basic', async () => {
     const resources = getResources();
-    const context: PromptContext = {
+    const context: RequestContext = {
       object: {
         pgn: '1. e4 e5',
       } as any as TypedObject,

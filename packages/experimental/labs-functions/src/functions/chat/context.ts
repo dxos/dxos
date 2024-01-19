@@ -7,13 +7,13 @@ import { type Space } from '@dxos/client/echo';
 import { getTextInRange, Schema, type TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-export type PromptContext = {
+export type RequestContext = {
   object?: TypedObject;
   schema?: Schema;
   text?: string;
 };
 
-export const createContext = (space: Space, message: MessageType, thread: ThreadType): PromptContext => {
+export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
   let object: TypedObject | undefined;
   if (message.context?.object) {
     const { objects } = space.db.query({ id: message.context?.object });
@@ -22,8 +22,6 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
     const { objects } = space.db.query({ id: thread.context?.object });
     object = objects[0];
   }
-
-  // log.info('context', { message: message.context, thread: thread.context })
 
   let text: string | undefined;
 
@@ -41,11 +39,7 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
     }
   }
 
-  return {
-    object,
-    schema,
-    text,
-  };
+  return { object, schema, text };
 };
 
 /**

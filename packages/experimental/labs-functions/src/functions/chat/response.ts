@@ -7,12 +7,18 @@ import { Expando, type Space } from '@dxos/client/echo';
 import { Schema, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { type PromptContext } from './context';
+import { type RequestContext } from './context';
 import { parseMessage, type ParseResult } from './parser';
+
+// TODO(burdon): Create formatter class abstraction.
 
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
-export const createResponse = (space: Space, context: PromptContext, text: string): MessageType.Block[] | undefined => {
+export const createResponse = (
+  space: Space,
+  context: RequestContext,
+  text: string,
+): MessageType.Block[] | undefined => {
   const blocks: MessageType.Block[] = [];
 
   const result = parseMessage(text);
@@ -31,7 +37,7 @@ export const createResponse = (space: Space, context: PromptContext, text: strin
   return blocks;
 };
 
-const processResult = (space: Space, context: PromptContext, result: ParseResult): MessageType.Block[] => {
+const processResult = (space: Space, context: RequestContext, result: ParseResult): MessageType.Block[] => {
   const timestamp = new Date().toISOString();
   const { data, content, type, kind } = result;
   log.info('parse', { result });
