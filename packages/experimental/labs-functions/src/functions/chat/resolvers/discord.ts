@@ -12,6 +12,9 @@ import { type ResolverMap } from './type';
 export const createResolver = async (config: Config): Promise<ResolverMap> => {
   const { value: token } = config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
   const { value: channelId } = config.find('runtime.keys', { name: 'discord.com/channel' }) ?? {};
+  if (!token) {
+    throw new Error('Missing token.');
+  }
 
   // https://github.com/discordjs/discord.js
   // GPT Demo: https://youtu.be/CB76_GDrPsE?si=M97FHRxPe8SGZtkS
@@ -26,10 +29,6 @@ export const createResolver = async (config: Config): Promise<ResolverMap> => {
   return {
     messages: {
       recent: async () => {
-        if (!token) {
-          throw new Error('Missing token.');
-        }
-
         const after = SnowflakeUtil.generate({
           timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3 /* days */,
         }).toString();

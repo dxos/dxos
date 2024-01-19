@@ -9,6 +9,7 @@ import { type ResolverMap } from './type';
 
 export * from './type';
 
+// TODO(burdon): Deferred constructor.
 export const createResolvers = async (config: Config): Promise<ResolverMap> => ({
   discord: await discord(config),
 });
