@@ -92,7 +92,7 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
     });
   }
 
-  return { context, page };
+  return { context, page, initialUrl: url };
 };
 
 export const extensionId = async (context: BrowserContext) => {
