@@ -65,8 +65,6 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
 
       update(update: ViewUpdate) {
         if (update.transactions.length > 0 && update.transactions.some((tr) => !isReconcileTx(tr))) {
-          // TODO(burdon): This is a hack to ensure that the view is updated after the transaction is applied.
-          //  Cannot trigger update while update is in progress.
           queueMicrotask(() => {
             this._view.state.facet(semaphoreFacet).reconcile(this._view);
           });
