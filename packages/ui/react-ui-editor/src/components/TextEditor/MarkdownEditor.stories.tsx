@@ -367,9 +367,9 @@ export const Comments = {
                 console.log(
                   'update',
                   JSON.stringify({
-                    active: state.active?.slice(0, 8),
-                    closest: state.closest?.slice(0, 8),
-                    ranges: state.comments.length,
+                    comments: state.comments.length,
+                    active: state.selection.active?.slice(0, 8),
+                    closest: state.selection.closest?.slice(0, 8),
                   }),
                 );
               }

@@ -168,7 +168,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case ThreadAction.CREATE: {
               return { object: new ThreadType() };
             }
+
             case ThreadAction.SELECT: {
+              console.log('!!!!', intent);
               state.active = intent.data?.active;
               state.threads = intent.data?.threads;
               break;
