@@ -7,7 +7,7 @@ import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable';
 
 import { str } from '../../../util';
-import { type SequenceGenerator, type SequenceTest } from '../request';
+import { type SequenceGenerator, type SequenceTest } from '../processor';
 
 export const test: SequenceTest = ({ schema, object }) => !!(schema && object?.__typename === 'braneframe.Grid');
 

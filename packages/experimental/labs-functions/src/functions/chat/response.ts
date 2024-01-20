@@ -7,98 +7,103 @@ import { Expando, type Space } from '@dxos/client/echo';
 import { Schema, TextObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { parseMessage, type ParseResult } from './parser';
-import { type PromptContext } from './request';
+import { type RequestContext } from './context';
+import { type ParseResult } from './parser';
 
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
-export const createResponse = (space: Space, context: PromptContext, text: string): MessageType.Block[] | undefined => {
-  const blocks: MessageType.Block[] = [];
+export class ResponseBuilder {
+  constructor(private _space: Space, private _context: RequestContext) {}
 
-  const result = parseMessage(text);
-  const { timestamp, pre, post } = result;
+  build(result: ParseResult): MessageType.Block[] | undefined {
+    const blocks: MessageType.Block[] = [];
+    const { timestamp, pre, post } = result;
+    log('build', { result });
 
-  if (pre) {
-    blocks.push({ timestamp, text: pre });
+    if (pre) {
+      blocks.push({ timestamp, text: pre });
+    }
+
+    const processed = this.processResult(result);
+    if (processed) {
+      blocks.push(...processed);
+    }
+
+    if (post) {
+      blocks.push({ timestamp, text: post });
+    }
+
+    return blocks;
   }
 
-  blocks.push(...processResult(space, context, result));
+  processResult(result: ParseResult): MessageType.Block[] | undefined {
+    const timestamp = new Date().toISOString();
+    const { data, content, type, kind } = result;
 
-  if (post) {
-    blocks.push({ timestamp, text: post });
-  }
+    //
+    // Add to stack.
+    //
+    if (this._context.object?.__typename === StackType.schema.typename) {
+      // TODO(burdon): Insert based on prompt config.
+      log.info('adding section to stack', { stack: this._context.object.id });
 
-  return blocks;
-};
+      const formatFenced = (type: string, content: string) => {
+        const tick = '```';
+        return `${tick}${type}\n${content}\n${tick}\n`;
+      };
 
-const processResult = (space: Space, context: PromptContext, result: ParseResult): MessageType.Block[] => {
-  const timestamp = new Date().toISOString();
-  const { data, content, type, kind } = result;
-  log.info('parse', { result });
+      const formattedContent =
+        type !== 'markdown' && kind === 'fenced'
+          ? '# Generated content\n\n' + formatFenced(type, content.trim())
+          : content;
 
-  //
-  // Add to stack.
-  //
-  if (context.object?.__typename === StackType.schema.typename) {
-    // TODO(burdon): Insert based on prompt config.
-    log.info('adding section to stack', { stack: context.object.id });
+      this._context.object.sections.push(
+        new StackType.Section({
+          object: new DocumentType({ content: new TextObject(formattedContent) }),
+        }),
+      );
 
-    const formatFenced = (type: string, content: string) => {
-      const tick = '```';
-      return `${tick}${type}\n${content}\n${tick}\n`;
-    };
+      return undefined;
+    }
 
-    const formattedContent =
-      type !== 'markdown' && kind === 'fenced'
-        ? '# Generated content\n\n' + formatFenced(type, content.trim())
-        : content;
-
-    context.object.sections.push(
-      new StackType.Section({
-        object: new DocumentType({ content: new TextObject(formattedContent) }),
-      }),
-    );
-
-    return [];
-  }
-
-  //
-  // Convert JSON data to objects.
-  //
-  if (result.type === 'json') {
-    const dataArray = Array.isArray(data) ? data : [data];
-    return dataArray.map((data): MessageType.Block => {
-      // Create object.
-      if (context.schema) {
-        const { objects: schemas } = space.db.query(Schema.filter());
-        const schema = schemas.find((schema) => schema.typename === context.schema!.typename);
-        if (schema) {
-          data['@type'] = context.schema.typename;
-          for (const prop of schema.props) {
-            if (data[prop.id!]) {
-              if (typeof data[prop.id!] === 'string') {
-                data[prop.id!] = new TextObject(data[prop.id!]);
+    //
+    // Convert JSON data to objects.
+    //
+    if (result.type === 'json') {
+      const dataArray = Array.isArray(data) ? data : [data];
+      return dataArray.map((data): MessageType.Block => {
+        // Create object.
+        if (this._context.schema) {
+          const { objects: schemas } = this._space.db.query(Schema.filter());
+          const schema = schemas.find((schema) => schema.typename === this._context.schema!.typename);
+          if (schema) {
+            data['@type'] = this._context.schema.typename;
+            for (const prop of schema.props) {
+              if (data[prop.id!]) {
+                if (typeof data[prop.id!] === 'string') {
+                  data[prop.id!] = new TextObject(data[prop.id!]);
+                }
               }
             }
+
+            const object = new Expando(data, { schema });
+            return { timestamp, object };
           }
-
-          const object = new Expando(data, { schema });
-          return { timestamp, object };
         }
-      }
 
-      // TODO(burdon): Create ref?
-      return { timestamp, data: JSON.stringify(data) };
-    });
+        // TODO(burdon): Create ref?
+        return { timestamp, data: JSON.stringify(data) };
+      });
+    }
+
+    //
+    // Default
+    //
+    return [
+      {
+        timestamp,
+        text: content,
+      },
+    ];
   }
-
-  //
-  // Default
-  //
-  return [
-    {
-      timestamp,
-      text: content,
-    },
-  ];
-};
+}
