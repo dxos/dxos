@@ -88,6 +88,9 @@ const getFolderGraphNodePartials = ({
                 action: SpaceAction.ADD_OBJECT,
                 data: { target: folder, object: new Folder() },
               }),
+            properties: {
+              testId: 'spacePlugin.createFolder',
+            },
           },
         ],
         properties: {
@@ -345,6 +348,9 @@ export const objectToGraphNode = ({
               data: { object, folder: parent.data, ...params },
             },
           ]),
+        properties: {
+          testId: 'spacePlugin.deleteObject',
+        },
       },
     );
 
