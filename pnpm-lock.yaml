@@ -1831,6 +1831,9 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework

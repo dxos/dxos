@@ -20,3 +20,13 @@ export const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
     </Main.Content>
   );
 };
+
+export const MapSection: FC<{ map: TypedObject }> = ({ map }) => {
+  return (
+    <div className='bs-96 mlb-2 overflow-auto'>
+      <MapContainer className='flex-1 w-full h-screen border-t border-neutral-200 dark:border-neutral-800'>
+        <MapControl />
+      </MapContainer>
+    </div>
+  );
+};

@@ -12,6 +12,7 @@ export default [
         'object title placeholder': 'New map',
         'create object label': 'Create map',
         'delete object label': 'Delete',
+        'create stack section label': 'Create map',
       },
     },
   },
