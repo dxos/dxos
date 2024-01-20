@@ -14,8 +14,9 @@ import { getTextContent } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
+import { parseMessage } from './parser';
 import type { ResolverMap } from './resolvers';
-import { createResponse } from './response';
+import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
 import type { ChainResources } from '../../chain';
 
@@ -67,8 +68,10 @@ export class RequestProcessor {
         const sequence = await this.createSequence(space, context, { prompt });
         if (sequence) {
           const response = await sequence.invoke(content);
+          const result = parseMessage(response);
 
-          blocks = createResponse(space, context, response);
+          const builder = new ResponseBuilder(space, context);
+          blocks = builder.build(result);
           log.info('response', { blocks });
         }
       }
@@ -175,7 +178,7 @@ export class RequestProcessor {
     ]);
   }
 
-  // TODO(burdon): Remove: build into resolver abstraction.
+  // TODO(burdon): Remove (build into resolver abstraction).
   private async execResolver(name: string) {
     try {
       const resolver = get(this._resolvers, name);

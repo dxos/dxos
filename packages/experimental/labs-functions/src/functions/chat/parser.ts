@@ -5,6 +5,8 @@
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { safeParseJson } from '../../util';
+
 export type ParseResult = {
   timestamp: string;
   type: string;
@@ -21,18 +23,18 @@ export const parseMessage = (content: string, type?: string): ParseResult => {
 
   // Check if raw JSON.
   if (!type || type === 'json') {
-    const value = parseJson(content);
+    const value = safeParseJson(content);
     if (value) {
       return {
         timestamp,
         type: 'json',
-        content: value,
+        content,
         data: value,
       };
     }
   }
 
-  // Check for embedded block content.
+  // Check for fenced content.
   const regexp = new RegExp('(.+)?```\\s*(' + (type ?? '\\w+') + ')?\\s+(.+)```', 's');
   const match = regexp.exec(content);
   log.info('match', { match });
@@ -44,7 +46,7 @@ export const parseMessage = (content: string, type?: string): ParseResult => {
       pre,
       post,
       content,
-      data: type === 'json' ? parseJson(content) : undefined,
+      data: type === 'json' ? safeParseJson(content) : undefined,
       kind: 'fenced',
     };
   }
@@ -54,12 +56,4 @@ export const parseMessage = (content: string, type?: string): ParseResult => {
     type: 'text',
     content,
   };
-};
-
-export const parseJson = (content: string) => {
-  try {
-    return JSON.parse(content);
-  } catch (err) {
-    return null;
-  }
 };
