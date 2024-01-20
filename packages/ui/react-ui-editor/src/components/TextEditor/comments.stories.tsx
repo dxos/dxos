@@ -51,7 +51,7 @@ const Editor: FC<{
       const thread = commentRanges.find((range) => range.id === selectedValue);
       if (thread) {
         const { cursor } = thread;
-        const range = cursor && Cursor.getRangeFromCursor(editorRef.current!.state.facet(Cursor.converter), cursor);
+        const range = cursor && Cursor.getRangeFromCursor(editorRef.current!.state, cursor);
         if (range) {
           // TODO(burdon): Scroll selection to center of screen?
           editorRef.current?.dispatch({ selection: { anchor: range.from }, scrollIntoView: true });

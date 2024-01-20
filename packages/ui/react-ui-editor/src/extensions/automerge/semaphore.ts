@@ -20,11 +20,12 @@ import {
 } from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
+import { type Syncer } from '../sync';
 
 /**
- * Implements three-way merge (on each mutation/key-stroke).
+ * Implements three-way merge (on each mutation/keystroke).
  */
-export class PatchSemaphore {
+export class PatchSemaphore implements Syncer {
   private _inReconcile = false;
 
   // prettier-ignore
@@ -35,7 +36,7 @@ export class PatchSemaphore {
   ) {}
 
   // NOTE: Cannot destruct view.state.
-  reconcile = (view: EditorView) => {
+  reconcile(view: EditorView) {
     if (this._inReconcile) {
       return;
     }
@@ -80,5 +81,5 @@ export class PatchSemaphore {
     });
 
     this._inReconcile = false;
-  };
+  }
 }

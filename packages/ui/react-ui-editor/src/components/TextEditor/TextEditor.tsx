@@ -22,7 +22,7 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle, setCommentRange } from '../../extensions';
+import { basicBundle, markdownBundle, setComments, syncFacet } from '../../extensions';
 import { type Comment, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
@@ -60,6 +60,31 @@ export type TextEditorProps = {
   slots?: TextEditorSlots;
 };
 
+// TODO(burdon): Factor out?
+export const useComments = (view?: EditorView | null, comments?: Comment[]) => {
+  useEffect(() => {
+    if (view && comments !== undefined) {
+      view.dispatch({
+        effects: setComments.of(comments),
+      });
+    }
+  }, [view, comments]);
+};
+
+// TODO(burdon): Factor out?
+export const useAwareness = ({ awareness, peer }: EditorModel) => {
+  const { themeMode } = useThemeContext();
+  useEffect(() => {
+    if (awareness && peer) {
+      awareness.setLocalStateField('user', {
+        name: peer.name ?? generateName(peer.id),
+        color: getColorForValue({ value: peer.id, type: 'color' }),
+        colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
+      });
+    }
+  }, [awareness, peer, themeMode]);
+};
+
 /**
  * Base text editor.
  */
@@ -77,32 +102,18 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
+    // Focus.
     useEffect(() => {
       if (autofocus) {
         view?.focus();
       }
-    }, [autofocus, view]);
+    }, [view, autofocus]);
 
     // TODO(burdon): Factor out as extension/hook.
-    const { awareness, peer } = model;
-    useEffect(() => {
-      if (awareness && peer) {
-        awareness.setLocalStateField('user', {
-          name: peer.name ?? generateName(peer.id),
-          color: getColorForValue({ value: peer.id, type: 'color' }),
-          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-        });
-      }
-    }, [awareness, peer, themeMode]);
+    useAwareness(model);
 
     // TODO(burdon): Factor out as extension/hook.
-    useEffect(() => {
-      if (view && comments !== undefined) {
-        view.dispatch({
-          effects: setCommentRange.of({ model, comments }),
-        });
-      }
-    }, [view, comments]);
+    useComments(view, comments);
 
     useEffect(() => {
       if (!model || !rootRef.current) {
@@ -143,9 +154,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         state,
         // NOTE: Uncomment to spy on all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-        // dispatch: (transaction, view) => {
-        //   view.update([transaction]);
-        // },
+        dispatch: (transaction, view) => {
+          view.update([transaction]);
+
+          // TODO(burdon): Is there a place to register this?
+          view.state.facet(syncFacet)?.reconcile(view);
+        },
       });
 
       setView(newView);
