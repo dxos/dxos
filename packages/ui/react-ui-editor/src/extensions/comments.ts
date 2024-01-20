@@ -110,7 +110,6 @@ const commentsState = StateField.define<CommentsState>({
 /**
  * Decorate ranges.
  */
-// TODO(burdon): Remove index from selection (fix types).
 const highlightDecorations = EditorView.decorations.compute([commentsState], (state) => {
   const {
     selection: { active },
@@ -120,7 +119,6 @@ const highlightDecorations = EditorView.decorations.compute([commentsState], (st
   const decorations = sortBy(comments ?? [], (range) => range.range.from)
     ?.flatMap((comment) => {
       const range = comment.range;
-      // const range = selection.comment.cursor && Cursor.getRangeFromCursor(state, selection.comment.cursor
       if (!range || range.from === range.to) {
         console.warn('Invalid range:', range);
         return undefined;
@@ -345,80 +343,74 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       : [],
 
     //
-    // Monitor cursor movement and text updates.
-    // TODO(burdon): Is there a better (finer grained) way to do this?
+    // Track deleted ranges and update ranges for decorations.
     //
     EditorView.updateListener.of(({ view, state, changes }) => {
-      //
-      // Test if range deleted.
-      //
-      {
-        let mod = false;
-        const { comments, ...value } = state.field(commentsState);
-        changes.iterChanges((from, to, from2, to2) => {
-          comments.forEach(({ comment, range }) => {
-            if (from2 === to2) {
-              const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor!);
-              if (!newRange || newRange.to - newRange.from === 0) {
-                options.onDelete?.(comment.id);
-              }
-            }
-
-            // TODO(burdon): This shouldn't be necessary.
-            if (from <= range.to) {
-              const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor!);
-              Object.assign(range, newRange);
-              mod = true;
-            }
-          });
-        });
-
-        if (mod) {
-          view.dispatch({ effects: setCommentState.of({ comments, ...value }) });
-        }
-      }
-
-      //
-      // Track the current selection.
-      //
-      {
-        const { head } = state.selection.main;
-
-        let min = Infinity;
-        const {
-          selection: { active, closest },
-          comments,
-        } = state.field(commentsState);
-
-        const selection: SelectionState = {};
+      let mod = false;
+      const { comments, ...value } = state.field(commentsState);
+      changes.iterChanges((from, to, from2, to2) => {
         comments.forEach(({ comment, range }) => {
-          if (head >= range.from && head <= range.to) {
-            selection.active = comment.id;
-            selection.closest = undefined;
-          }
-
-          if (!selection.active) {
-            const d = Math.min(Math.abs(head - range.from), Math.abs(head - range.to));
-            if (d < min) {
-              selection.closest = comment.id;
-              min = d;
+          // Test if range deleted.
+          if (from2 === to2) {
+            const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor!);
+            if (!newRange || newRange.to - newRange.from === 0) {
+              options.onDelete?.(comment.id);
             }
           }
+
+          // Update range.
+          if (from <= range.to) {
+            const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor!);
+            Object.assign(range, newRange);
+            mod = true;
+          }
         });
+      });
 
-        if (selection.active !== active || selection.closest !== closest) {
-          view.dispatch({ effects: setSelection.of(selection) });
+      if (mod) {
+        view.dispatch({ effects: setCommentState.of({ comments, ...value }) });
+      }
+    }),
 
-          // Update callback.
-          handleSelect({
-            selection,
-            comments: comments.map(({ comment, range }) => ({
-              comment,
-              range,
-              location: view.coordsAtPos(range.from),
-            })),
-          });
+    //
+    // Track selection/proximity.
+    //
+    EditorView.updateListener.of(({ view, state, changes }) => {
+      let min = Infinity;
+      const {
+        selection: { active, closest },
+        comments,
+      } = state.field(commentsState);
+
+      const { head } = state.selection.main;
+      const selection: SelectionState = {};
+      comments.forEach(({ comment, range }) => {
+        if (head >= range.from && head <= range.to) {
+          selection.active = comment.id;
+          selection.closest = undefined;
         }
+
+        if (!selection.active) {
+          const d = Math.min(Math.abs(head - range.from), Math.abs(head - range.to));
+          if (d < min) {
+            selection.closest = comment.id;
+            min = d;
+          }
+        }
+      });
+
+      if (selection.active !== active || selection.closest !== closest) {
+        view.dispatch({ effects: setSelection.of(selection) });
+
+        // Update callback.
+        handleSelect({
+          selection,
+          comments: comments.map(({ comment, range }) => ({
+            comment,
+            range,
+            location: view.coordsAtPos(range.from),
+          })),
+        });
       }
     }),
 
