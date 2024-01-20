@@ -27,7 +27,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = space.db.query(ThreadType.filter());
   const activeThreads = objects.reduce((activeThreads, message) => {
-    const thread = threads.find((thread) => thread.messages.some((message) => message.id === message.id));
+    const thread = threads.find((thread) => thread.messages.some((m) => m.id === message.id));
     if (thread) {
       activeThreads.add(thread);
     }
@@ -52,7 +52,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
         const message = thread.messages[thread.messages.length - 1];
         if (message.__meta.keys.length === 0) {
           const blocks = await processor.processThread(space, thread, message);
-          if (blocks) {
+          if (blocks?.length) {
             thread.messages.push(
               new MessageType(
                 {
@@ -63,7 +63,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
                 },
                 {
                   meta: {
-                    keys: [{ source: 'openai.com' }],
+                    keys: [{ source: 'openai.com' }], // TODO(burdon): Get from chain resources.
                   },
                 },
               ),

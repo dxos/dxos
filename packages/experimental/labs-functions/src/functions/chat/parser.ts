@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { safeParseJson } from '../../util';
 
@@ -37,7 +36,6 @@ export const parseMessage = (content: string, type?: string): ParseResult => {
   // Check for fenced content.
   const regexp = new RegExp('(.+)?```\\s*(' + (type ?? '\\w+') + ')?\\s+(.+)```', 's');
   const match = regexp.exec(content);
-  log.info('match', { match });
   if (match) {
     const [_, pre, type, content, post] = match;
     return {

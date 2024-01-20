@@ -5,7 +5,6 @@
 import { Document as DocumentType, type Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { getTextInRange, Schema, type TypedObject } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 
 export type RequestContext = {
   object?: TypedObject;
@@ -29,13 +28,10 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
   const { objects: schemas } = space.db.query(Schema.filter());
   const schema = schemas.find((schema) => schema.typename === 'example.com/schema/project');
 
-  log.info('context object', { object });
   if (object instanceof DocumentType) {
     const comment = object.comments?.find((comment) => comment.thread === thread);
-    log.info('context comment', { object });
     if (comment) {
       text = getReferencedText(object, comment);
-      log.info('context text', { text });
     }
   }
 

@@ -103,7 +103,7 @@ export class RequestProcessor {
     for (const chain of chains) {
       for (const prompt of chain.prompts) {
         if (prompt.command === options.prompt) {
-          return this.createSequenceFromPrompt(prompt, context);
+          return await this.createSequenceFromPrompt(prompt, context);
         }
       }
     }

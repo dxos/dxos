@@ -15,16 +15,19 @@ import { type ParseResult } from './parser';
 export class ResponseBuilder {
   constructor(private _space: Space, private _context: RequestContext) {}
 
-  build(result: ParseResult): MessageType.Block[] {
+  build(result: ParseResult): MessageType.Block[] | undefined {
     const blocks: MessageType.Block[] = [];
     const { timestamp, pre, post } = result;
-    log.info('build', { result });
+    log('build', { result });
 
     if (pre) {
       blocks.push({ timestamp, text: pre });
     }
 
-    blocks.push(...this.processResult(result));
+    const processed = this.processResult(result);
+    if (processed) {
+      blocks.push(...processed);
+    }
 
     if (post) {
       blocks.push({ timestamp, text: post });
@@ -33,7 +36,7 @@ export class ResponseBuilder {
     return blocks;
   }
 
-  processResult(result: ParseResult): MessageType.Block[] {
+  processResult(result: ParseResult): MessageType.Block[] | undefined {
     const timestamp = new Date().toISOString();
     const { data, content, type, kind } = result;
 
@@ -60,7 +63,7 @@ export class ResponseBuilder {
         }),
       );
 
-      return [];
+      return undefined;
     }
 
     //
