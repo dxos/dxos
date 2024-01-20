@@ -64,7 +64,7 @@ test.describe('Single-player tests', () => {
       });
     });
 
-    test.only('moves folder with item out of folder', async () => {
+    test('moves folder with item out of folder', async () => {
       await host.createSpace();
       await host.createFolder();
       // create a folder inside the folder
