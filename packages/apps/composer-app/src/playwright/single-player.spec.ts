@@ -48,7 +48,7 @@ test.describe('Single-player tests', () => {
   });
 
   test.describe('deleting folders', () => {
-    test.only('moves item out of folder', async () => {
+    test('moves item out of folder', async () => {
       await host.createSpace();
       await host.createFolder();
       // create an item inside the folder
