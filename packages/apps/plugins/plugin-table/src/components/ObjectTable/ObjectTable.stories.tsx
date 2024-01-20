@@ -17,7 +17,6 @@ import { ObjectTable } from './ObjectTable';
 
 faker.seed(1);
 
-// TODO(burdon): Move into ClientSpaceDecorator callback.
 const Story = () => {
   const client = useClient();
   const [table, setTable] = useState<TableType>();
