@@ -12,11 +12,11 @@ import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { useTextModel } from '../../hooks';
 
 test('TextEditor', () => {
-  const component = renderer.create(<Test value={100} />);
+  const value = 100;
+  const component = renderer.create(<Test value={value} />);
   const result = component.toJSON();
-  console.log(':::', result);
   expect(result.type).to.eq('div');
-  expect(result.children).to.deep.eq([String(100)]);
+  expect(result.children).to.deep.eq([String(value)]);
 });
 
 const Test: FC<{ value: number }> = ({ value: initialValue }) => {
