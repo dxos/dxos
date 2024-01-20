@@ -7,10 +7,11 @@ import '@dxosTheme';
 import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { type FC, type ReactNode, useState } from 'react';
 
-import { getSize, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { getSize, ghostHover, ghostSelected, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { List, ListItem, type ListProps, type ListScopedProps } from './List';
 import { withTheme } from '../../testing';
@@ -106,6 +107,7 @@ const ManySizesDraggableListItem = ({
     </ListItem.Root>
   );
 };
+
 export const ManySizesDraggable = {
   render: ({ ...args }) => {
     const [items, setItems] = useState(
@@ -183,6 +185,40 @@ export const Collapsible = {
   },
   args: {
     variant: 'unordered',
-    toggleOpenLabel: 'Open/close storybook list item',
+    // toggleOpenLabel: 'Open/close storybook list item', // TODO(burdon): ???
+  },
+};
+
+export const SelectableListbox = {
+  render: () => {
+    const [selectedId, setSelectedId] = useState<string>();
+    const domAttributes = useArrowNavigationGroup({ axis: 'vertical' });
+    const [items, _setItems] = useState(
+      [...Array(12)].map((_, index) => ({
+        id: `listItem-${index}`,
+        text: `List item ${index + 1}`,
+      })),
+    );
+
+    // TODO(burdon): Handle up/down.
+    const handleKeyUp = (event: any) => {
+      console.log(event);
+    };
+
+    return (
+      <List selectable {...domAttributes}>
+        {items.map(({ id, text }) => (
+          <ListItem.Root
+            key={id}
+            selected={selectedId === id}
+            classNames={mx('items-center', ghostHover, selectedId === id && ghostSelected)}
+            onClick={() => setSelectedId(id)}
+            onKeyUp={handleKeyUp}
+          >
+            <ListItem.Heading classNames='grow'>{text}</ListItem.Heading>
+          </ListItem.Root>
+        ))}
+      </List>
+    );
   },
 };

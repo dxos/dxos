@@ -8,7 +8,7 @@ import { RunnablePassthrough, RunnableSequence } from 'langchain/schema/runnable
 import { formatDocumentsAsString } from 'langchain/util/document';
 
 import { str } from '../../../util';
-import { type SequenceGenerator, type SequenceTest } from '../request';
+import { type SequenceGenerator, type SequenceTest } from '../processor';
 
 export const test: SequenceTest = () => true;
 

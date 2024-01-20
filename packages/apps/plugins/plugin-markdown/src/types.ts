@@ -59,6 +59,7 @@ export type MarkdownSettingsProps = {
   editorMode?: EditorMode;
   experimental?: boolean;
   debug?: boolean;
+  typewriter?: string;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &

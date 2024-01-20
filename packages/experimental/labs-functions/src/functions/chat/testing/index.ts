@@ -5,7 +5,7 @@
 import * as chess from './chess';
 import * as list from './list';
 import * as rag from './rag';
-import { type SequenceGenerator, type SequenceTest } from '../request';
+import { type SequenceGenerator, type SequenceTest } from '../processor';
 
 /**
  * @deprecated
