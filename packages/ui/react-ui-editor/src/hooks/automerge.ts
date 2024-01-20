@@ -8,7 +8,8 @@ import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { isNotNullOrUndefined } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
-import { type EditorModel, modelState, type UseTextModelProps } from './useTextModel';
+import { type EditorModel, modelState } from './defs';
+import { type UseTextModelProps } from './useTextModel';
 import { automerge, awareness, AwarenessProvider } from '../extensions';
 import { cursorColor } from '../styles';
 
