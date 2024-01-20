@@ -9,7 +9,7 @@ import { type Document as DocumentType } from '@braneframe/types';
 import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type CommentRange, useTextModel, type EditorView, type Extension } from '@dxos/react-ui-editor';
+import { type Comment, useTextModel, type EditorView, type Extension } from '@dxos/react-ui-editor';
 
 import { EditorMain, MainLayout } from './EditorMain';
 import type { MarkdownSettingsProps } from '../types';
@@ -25,7 +25,7 @@ export const DocumentMain: FC<{
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document.content });
-  const comments = useMemo<CommentRange[]>(() => {
+  const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
 

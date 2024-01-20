@@ -42,7 +42,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let layoutPlugin: Plugin<LayoutProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
-  const state = deepSignal<{ active?: string | undefined; threads?: CommentThread[] }>({});
+  const state = deepSignal<{ active?: string | undefined; threads?: CommentThread[]; focus?: boolean }>({});
 
   return {
     meta,
@@ -126,8 +126,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   state.threads = [];
                 }
 
+                // TODO(burdon): Determine if should focus.
                 if (state.threads?.length) {
                   const threads = state.threads
+                    .sort((a, b) => a.y - b.y)
                     .map(({ id }) => space.db.getObjectById(id) as ThreadType)
                     .filter(nonNullable);
 
@@ -136,6 +138,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       space={space}
                       threads={threads}
                       active={state.active}
+                      focus={state.focus}
                       onFocus={(thread: ThreadType) => {
                         if (state.active !== thread.id) {
                           state.active = thread.id;
@@ -168,9 +171,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case ThreadAction.CREATE: {
               return { object: new ThreadType() };
             }
+
             case ThreadAction.SELECT: {
-              state.active = intent.data?.active;
               state.threads = intent.data?.threads;
+              state.active = intent.data?.active;
+              state.focus = intent.data?.focus;
               break;
             }
           }

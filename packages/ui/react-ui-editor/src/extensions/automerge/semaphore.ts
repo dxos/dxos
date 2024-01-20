@@ -20,16 +20,23 @@ import {
 } from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
+import { type Syncer } from '../sync';
 
 /**
- * Implements three-way merge (on each mutation/key-stroke).
+ * Implements three-way merge (on each mutation/keystroke).
  */
-export class PatchSemaphore {
-  _inReconcile = false;
+export class PatchSemaphore implements Syncer {
+  private _inReconcile = false;
 
-  constructor(private readonly _handle: IDocHandle, private readonly _field: StateField<Value>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _handle: IDocHandle,
+    // TODO(burdon): Rename.
+    private readonly _field: StateField<Value>
+  ) {}
 
-  reconcile = (view: EditorView) => {
+  // NOTE: Cannot destruct view.state.
+  reconcile(view: EditorView) {
     if (this._inReconcile) {
       return;
     }
@@ -58,7 +65,7 @@ export class PatchSemaphore {
 
     // NOTE: null and undefined each come from automerge and repo respectively.
     if (newHeads === null || newHeads === undefined) {
-      // TODO: @alexjg this is the call that's resetting the editor state on click
+      // TODO(alexjg): this is the call that's resetting the editor state on click.
       newHeads = automerge.getHeads(this._handle.docSync()!);
     }
 
@@ -74,5 +81,5 @@ export class PatchSemaphore {
     });
 
     this._inReconcile = false;
-  };
+  }
 }
