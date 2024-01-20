@@ -8603,6 +8603,15 @@ importers:
       react-test-renderer:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.0.11
+        version: 5.0.11(@types/node@18.11.9)
+      vite-plugin-top-level-await:
+        specifier: ^1.4.1
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+      vite-plugin-wasm:
+        specifier: ^3.3.0
+        version: 3.3.0(vite@5.0.11)
       vitest:
         specifier: ^1.2.1
         version: 1.2.1(@types/node@18.11.9)(@vitest/ui@1.2.1)(jsdom@20.0.1)
