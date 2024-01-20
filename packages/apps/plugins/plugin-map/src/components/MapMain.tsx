@@ -21,6 +21,7 @@ export const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
   );
 };
 
+// TODO(burdon): Query stack for objects with location.
 export const MapSection: FC<{ map: TypedObject }> = ({ map }) => {
   return (
     <div className='bs-96 mlb-2 overflow-auto'>
