@@ -41,9 +41,6 @@ export type CursorInfo = {
 
 export type TextEditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
-  // editor?: {
-  //   className?: string;
-  // };
 };
 
 // TODO(burdon): Spellcheck?
@@ -169,12 +166,15 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       };
     }, [rootRef, model, readonly, editorMode, themeMode]);
 
+    // TODO(burdon): Replace with keymap?
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
           case 'Escape': {
-            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && rootRef.current?.focus();
+            if (editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey)) {
+              rootRef.current?.focus();
+            }
             break;
           }
         }

@@ -119,7 +119,7 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
             void dispatch([
               {
                 action: ThreadAction.SELECT,
-                data: { active: thread.id, threads: [{ id: thread.id }] },
+                data: { active: thread.id, threads: [{ id: thread.id }], focus: true },
               },
               {
                 action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,

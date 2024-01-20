@@ -267,6 +267,16 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       return false;
     }
 
+    // Don't allow selection at end of document.
+    if (to === view.state.doc.length) {
+      view.dispatch({
+        changes: {
+          from: to,
+          insert: '\n',
+        },
+      });
+    }
+
     const cursor = Cursor.getCursorFromRange(view.state, { from, to });
     if (cursor) {
       // Create thread via callback.
@@ -297,6 +307,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       ? keymap.of([
           {
             key: shortcut,
+            // TODO(burdon): Check if there's a better way?
             run: callbackWrapper(createCommentThread),
           },
         ])
