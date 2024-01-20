@@ -12,7 +12,7 @@ import { nonNullable } from '@dxos/util';
 
 import { semaphoreFacet } from './automerge/defs';
 import { Cursor } from './cursor';
-import { type CommentRange, type EditorModel, type Range } from '../hooks';
+import { type Comment, type EditorModel, type Range } from '../hooks';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
 
@@ -31,39 +31,38 @@ const marks = {
   highlightActive: Decoration.mark({ class: 'cm-comment-active' }),
 };
 
-// TODO(burdon): Should this be part of state?
-type CommentSelected = {
+type CommentState = {
+  comment: Comment;
+  range: Range;
+  location?: Rect | null;
+};
+
+type SelectionState = {
   active?: string;
   closest?: string;
 };
 
-// TODO(burdon): Rename.
-type ExtendedCommentRange = Range &
-  CommentRange & {
-    // TODO(burdon): Not part of state; just required for callback.
-    location?: Rect | null;
-  };
-
-export type CommentsState = CommentSelected & {
-  ranges: ExtendedCommentRange[];
+export type CommentsState = {
+  comments: CommentState[];
+  selection: SelectionState;
 };
 
 export const setFocus = (view: EditorView, thread: string) => {
-  const range = view.state.field(commentsState).ranges.find((range) => range.id === thread);
-  if (!range) {
+  const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === thread);
+  if (!comment) {
     return;
   }
 
   view.dispatch({
     effects: setSelection.of({ active: thread }),
-    selection: { anchor: range.from },
+    selection: { anchor: comment.range.from },
     scrollIntoView: true, // TODO(burdon): Scroll to y-position (or center of screen?)
   });
 };
 
-export const setCommentRange = StateEffect.define<{ model: EditorModel; comments: CommentRange[] }>();
+export const setCommentRange = StateEffect.define<{ model: EditorModel; comments: Comment[] }>();
 
-export const setSelection = StateEffect.define<CommentSelected>();
+export const setSelection = StateEffect.define<SelectionState>();
 
 const setCommentState = StateEffect.define<CommentsState>();
 
@@ -72,20 +71,19 @@ const setCommentState = StateEffect.define<CommentsState>();
  * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
 const commentsState = StateField.define<CommentsState>({
-  create: () => ({ ranges: [] }),
+  create: () => ({ comments: [], selection: {} }),
   update: (value, tr) => {
     const cursorConverter = tr.state.facet(Cursor.converter);
 
     for (const effect of tr.effects) {
       // Update selection.
       if (effect.is(setSelection)) {
-        return { ...value, ...effect.value };
+        return { ...value, selection: effect.value };
       }
 
       // Update range from store.
       if (effect.is(setCommentRange)) {
-        const { comments } = effect.value;
-        const ranges: ExtendedCommentRange[] = comments
+        const comments: CommentState[] = effect.value.comments
           .map((comment) => {
             // Skip cut/deleted comments.
             if (!comment.cursor) {
@@ -94,11 +92,11 @@ const commentsState = StateField.define<CommentsState>({
 
             const range = Cursor.getRangeFromCursor(cursorConverter, comment.cursor);
             // console.log('update', JSON.stringify({ range, cursor: comment.cursor }, undefined, 2));
-            return range && { ...comment, ...range };
+            return range && { comment, range };
           })
           .filter(nonNullable);
 
-        return { ...value, ranges };
+        return { ...value, comments };
       }
 
       // Update entire state.
@@ -118,19 +116,21 @@ const commentsState = StateField.define<CommentsState>({
 const highlightDecorations = EditorView.decorations.compute([commentsState], (state) => {
   // const cursorConverter = state.facet(Cursor.converter);
 
-  // TODO(burdon): Update if document changed?
-  const { active, ranges } = state.field(commentsState);
-  const decorations = sortBy(ranges ?? [], (range) => range.from)
+  const {
+    selection: { active },
+    comments,
+  } = state.field(commentsState);
+
+  const decorations = sortBy(comments ?? [], (range) => range.range.from)
     ?.flatMap((selection) => {
-      const range = selection;
-      // const range = selection.cursor && Cursor.getRangeFromCursor(cursorConverter, selection.cursor);
+      const range = selection.range;
+      // const range = selection.comment.cursor && Cursor.getRangeFromCursor(cursorConverter, selection.comment.cursor
       if (!range || range.from === range.to) {
         console.warn('Invalid range:', range);
         return undefined;
       }
 
-      // const range = { from: selection.from, to: selection.to };
-      if (selection.id === active) {
+      if (selection.comment.id === active) {
         return marks.highlightActive.range(range.from, range.to);
       } else {
         return marks.highlight.range(range.from, range.to);
@@ -172,14 +172,15 @@ export type CommentsOptions = {
 const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>) => {
   // Cut/deleted comments.
   // Tracks indexed selections within text.
+  // TODO(burdon): Add to global state field?
   let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
 
   // Track cut or copy (enables cut-and-paste and copy-delete-paste to restore comment selection).
   const handleTrack = (event: Event, view: EditorView) => {
     const comments = view.state.field(commentsState);
     const { main } = view.state.selection;
-    const selectedRanges = comments.ranges.filter(
-      (range) => range.from >= main.from && range.to <= main.to && range.from < range.to,
+    const selectedRanges = comments.comments.filter(
+      ({ range }) => range.from >= main.from && range.to <= main.to && range.from < range.to,
     );
 
     if (!selectedRanges.length) {
@@ -187,8 +188,8 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
     } else {
       tracked = {
         text: view.state.doc.slice(main.from, main.to),
-        comments: selectedRanges.map((range) => ({
-          id: range.id,
+        comments: selectedRanges.map(({ comment, range }) => ({
+          id: comment.id,
           from: range.from - main.from,
           to: range.to - main.from,
         })),
@@ -352,19 +353,19 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       //
       {
         let mod = false;
-        const { active, ranges } = state.field(commentsState);
+        const { comments, ...value } = state.field(commentsState);
         changes.iterChanges((from, to, from2, to2) => {
-          ranges.forEach((range) => {
+          comments.forEach(({ comment, range }) => {
             if (from2 === to2) {
-              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor!);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, comment.cursor!);
               if (!newRange || newRange.to - newRange.from === 0) {
-                options.onDelete?.(range.id);
+                options.onDelete?.(comment.id);
               }
             }
 
             // TODO(burdon): This shouldn't be necessary.
             if (from <= range.to) {
-              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor!);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, comment.cursor!);
               Object.assign(range, newRange);
               mod = true;
             }
@@ -372,7 +373,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         });
 
         if (mod) {
-          view.dispatch({ effects: setCommentState.of({ active, ranges }) });
+          view.dispatch({ effects: setCommentState.of({ comments, ...value }) });
         }
       }
 
@@ -383,27 +384,38 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         const { head } = state.selection.main;
 
         let min = Infinity;
-        const { active, closest, ranges } = state.field(commentsState);
-        const selected: CommentSelected = { active: undefined, closest: undefined };
+        const {
+          selection: { active, closest },
+          comments,
+        } = state.field(commentsState);
 
-        ranges.forEach((comment) => {
-          const d = Math.min(Math.abs(head - comment.from), Math.abs(head - comment.to));
-          if (head >= comment.from && head <= comment.to) {
-            selected.active = comment.id;
+        const selection: SelectionState = {};
+        comments.forEach(({ comment, range }) => {
+          if (head >= range.from && head <= range.to) {
+            selection.active = comment.id;
+            selection.closest = undefined;
           }
-          if (d < min) {
-            selected.closest = comment.id;
-            min = d;
+
+          if (!selection.active) {
+            const d = Math.min(Math.abs(head - range.from), Math.abs(head - range.to));
+            if (d < min) {
+              selection.closest = comment.id;
+              min = d;
+            }
           }
         });
 
-        if (selected.active !== active || selected.closest !== closest) {
-          view.dispatch({ effects: setSelection.of(selected) });
+        if (selection.active !== active || selection.closest !== closest) {
+          view.dispatch({ effects: setSelection.of(selection) });
 
           // Update callback.
           handleSelect({
-            ...selected,
-            ranges: ranges.map((range) => ({ ...range, location: view.coordsAtPos(range.from) })),
+            selection,
+            comments: comments.map(({ comment, range }) => ({
+              comment,
+              range,
+              location: view.coordsAtPos(range.from),
+            })),
           });
         }
       }

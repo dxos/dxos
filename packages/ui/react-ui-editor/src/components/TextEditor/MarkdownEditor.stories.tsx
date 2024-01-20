@@ -35,7 +35,7 @@ import {
   type LinkOptions,
   outliner,
 } from '../../extensions';
-import { type CommentRange, useTextModel } from '../../hooks';
+import { type Comment, useTextModel } from '../../hooks';
 
 // Extensions:
 // TODO(burdon): Table of contents.
@@ -347,7 +347,7 @@ export const Mention = {
 
 export const Comments = {
   render: () => {
-    const [commentRanges, setCommentRanges] = useState<CommentRange[]>([]);
+    const [commentRanges, setCommentRanges] = useState<Comment[]>([]);
 
     return (
       <Story
@@ -369,7 +369,7 @@ export const Comments = {
                   JSON.stringify({
                     active: state.active?.slice(0, 8),
                     closest: state.closest?.slice(0, 8),
-                    ranges: state.ranges.length,
+                    ranges: state.comments.length,
                   }),
                 );
               }

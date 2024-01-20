@@ -130,13 +130,13 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
             return thread.id;
           },
           onSelect: (state) => {
-            const { active, ranges } = state;
+            const { active, comments } = state;
             void dispatch([
               {
                 action: ThreadAction.SELECT,
                 data: {
                   active,
-                  threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
+                  threads: comments?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
                 },
               },
             ]);

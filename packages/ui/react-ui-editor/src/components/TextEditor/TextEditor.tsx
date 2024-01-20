@@ -23,7 +23,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { basicBundle, markdownBundle, setCommentRange } from '../../extensions';
-import { type CommentRange, type EditorModel } from '../../hooks';
+import { type Comment, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 
@@ -52,7 +52,7 @@ export type TextEditorProps = {
   autofocus?: boolean;
   readonly?: boolean; // TODO(burdon): Move into model.
   selection?: { anchor: number; head?: number };
-  comments?: CommentRange[]; // TODO(burdon): Move into extension?
+  comments?: Comment[]; // TODO(burdon): Move into extension?
   extensions?: Extension[];
   editorMode?: EditorMode;
   placeholder?: string;

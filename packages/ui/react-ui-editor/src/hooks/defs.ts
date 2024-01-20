@@ -15,7 +15,7 @@ export type Range = {
 };
 
 // Persistent data structure.
-export type CommentRange = {
+export type Comment = {
   id: string;
   cursor?: string;
 };
