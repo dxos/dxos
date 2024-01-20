@@ -17,6 +17,7 @@ export const createStatusNotifier = (space: Space, id: string) => {
         });
       }
     },
+
     stop: () => {
       if (start) {
         const now = Date.now();

@@ -43,7 +43,7 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
 };
 
 /**
- * @deprecated Clean this up. Only works for automerge.
+ * @deprecated Clean this up.
  * Text cursors should be a part of core ECHO API.
  */
 const getReferencedText = (document: DocumentType, comment: DocumentType.Comment): string => {

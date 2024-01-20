@@ -17,8 +17,8 @@ export class ResponseBuilder {
 
   build(result: ParseResult): MessageType.Block[] {
     const blocks: MessageType.Block[] = [];
-
     const { timestamp, pre, post } = result;
+    log.info('build', { result });
 
     if (pre) {
       blocks.push({ timestamp, text: pre });
@@ -36,7 +36,6 @@ export class ResponseBuilder {
   processResult(result: ParseResult): MessageType.Block[] {
     const timestamp = new Date().toISOString();
     const { data, content, type, kind } = result;
-    log.info('parse', { result });
 
     //
     // Add to stack.
