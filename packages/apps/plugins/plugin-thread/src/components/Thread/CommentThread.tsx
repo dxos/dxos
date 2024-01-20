@@ -21,21 +21,23 @@ export const CommentThread: FC<{
   thread: ThreadType;
   identityKey: PublicKey;
   propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
+  active?: boolean;
+  focus?: boolean;
   onFocus?: () => void;
   onCreate?: ChatInputProps['onMessage'];
   onDelete?: (messageId: string, idx: number) => void;
-}> = ({ space, thread, identityKey, propertiesProvider, onFocus, onCreate, onDelete }) => {
+}> = ({ space, thread, identityKey, propertiesProvider, active, focus, onFocus, onCreate, onDelete }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const processing = useStatus(space, thread.id);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // TODO(burdon): Check not already scrolling.
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [ref, onCreate]);
+    if (active) {
+      ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [ref, active]);
 
   return (
     <div
-      // TODO(burdon): Use border rather than opacity.
       className={mx('flex flex-col rounded shadow divide-y', inputSurface, fixedBorder, onCreate ? '' : 'opacity-60')}
       onClick={() => onFocus?.()}
     >
@@ -51,14 +53,17 @@ export const CommentThread: FC<{
       ))}
 
       {onCreate && (
-        <ChatInput
-          ref={ref}
-          className='pl-1 py-2'
-          placeholder={t('comment placeholder')}
-          processing={processing}
-          onFocus={onFocus}
-          onMessage={onCreate}
-        />
+        // NOTE: Should always render so that the input doesn't lose state.
+        <div ref={ref} role='none' className={mx(!active && 'hidden')}>
+          <ChatInput
+            className='pl-1 py-2'
+            autoFocus={focus}
+            placeholder={t('comment placeholder')}
+            processing={processing}
+            onFocus={onFocus}
+            onMessage={onCreate}
+          />
+        </div>
       )}
     </div>
   );
