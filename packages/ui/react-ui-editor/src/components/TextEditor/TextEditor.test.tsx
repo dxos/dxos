@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import React, { useState } from 'react';
+import React, { type FC, useState } from 'react';
 import renderer from 'react-test-renderer';
 import { test } from 'vitest';
 
@@ -12,12 +12,15 @@ import { getTextContent, TextObject } from '@dxos/echo-schema';
 import { useTextModel } from '../../hooks';
 
 test('TextEditor', () => {
-  const component = renderer.create(<Test />);
-  expect(component).to.exist;
+  const component = renderer.create(<Test value={100} />);
+  const result = component.toJSON();
+  console.log(':::', result);
+  expect(result.type).to.eq('div');
+  expect(result.children).to.deep.eq([String(100)]);
 });
 
-const Test = () => {
-  const [value] = useState(100);
+const Test: FC<{ value: number }> = ({ value: initialValue }) => {
+  const [value] = useState(initialValue);
   return <div>{value}</div>;
 };
 
