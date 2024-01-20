@@ -22,8 +22,8 @@ import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle, setCommentRange } from '../../extensions';
-import { type CommentRange, type EditorModel } from '../../hooks';
+import { basicBundle, markdownBundle, setComments, syncFacet } from '../../extensions';
+import { type Comment, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 
@@ -41,9 +41,6 @@ export type CursorInfo = {
 
 export type TextEditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
-  // editor?: {
-  //   className?: string;
-  // };
 };
 
 // TODO(burdon): Spellcheck?
@@ -52,12 +49,37 @@ export type TextEditorProps = {
   autofocus?: boolean;
   readonly?: boolean; // TODO(burdon): Move into model.
   selection?: { anchor: number; head?: number };
-  comments?: CommentRange[]; // TODO(burdon): Move into extension?
+  comments?: Comment[]; // TODO(burdon): Move into extension?
   extensions?: Extension[];
   editorMode?: EditorMode;
   placeholder?: string;
   theme?: ThemeStyles;
   slots?: TextEditorSlots;
+};
+
+// TODO(burdon): Factor out?
+export const useComments = (view?: EditorView | null, comments?: Comment[]) => {
+  useEffect(() => {
+    if (view && comments !== undefined) {
+      view.dispatch({
+        effects: setComments.of(comments),
+      });
+    }
+  }, [view, comments]);
+};
+
+// TODO(burdon): Factor out?
+export const useAwareness = ({ awareness, peer }: EditorModel) => {
+  const { themeMode } = useThemeContext();
+  useEffect(() => {
+    if (awareness && peer) {
+      awareness.setLocalStateField('user', {
+        name: peer.name ?? generateName(peer.id),
+        color: getColorForValue({ value: peer.id, type: 'color' }),
+        colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
+      });
+    }
+  }, [awareness, peer, themeMode]);
 };
 
 /**
@@ -77,32 +99,18 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
+    // Focus.
     useEffect(() => {
       if (autofocus) {
         view?.focus();
       }
-    }, [autofocus, view]);
+    }, [view, autofocus]);
 
     // TODO(burdon): Factor out as extension/hook.
-    const { awareness, peer } = model;
-    useEffect(() => {
-      if (awareness && peer) {
-        awareness.setLocalStateField('user', {
-          name: peer.name ?? generateName(peer.id),
-          color: getColorForValue({ value: peer.id, type: 'color' }),
-          colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-        });
-      }
-    }, [awareness, peer, themeMode]);
+    useAwareness(model);
 
     // TODO(burdon): Factor out as extension/hook.
-    useEffect(() => {
-      if (view && comments !== undefined) {
-        view.dispatch({
-          effects: setCommentRange.of({ model, comments }),
-        });
-      }
-    }, [view, comments]);
+    useComments(view, comments);
 
     useEffect(() => {
       if (!model || !rootRef.current) {
@@ -117,16 +125,16 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         extensions: [
           readonly && EditorState.readOnly.of(readonly),
 
-          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
-          editorMode === 'vim' && vim(),
-
           // Theme.
           // TODO(burdon): Make theme configurable.
           EditorView.baseTheme(defaultTheme),
           EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
 
-          // Storage and replication.
+          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
+          editorMode === 'vim' && vim(),
+
+          // Storage and replication (NOTE: must come before other extensions).
           model.extension,
 
           // Custom.
@@ -143,9 +151,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         state,
         // NOTE: Uncomment to spy on all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-        // dispatch: (transaction, view) => {
-        //   view.update([transaction]);
-        // },
+        dispatch: (transaction, view) => {
+          view.update([transaction]);
+
+          // TODO(burdon): Is there a place to register this?
+          view.state.facet(syncFacet)?.reconcile(view);
+        },
       });
 
       setView(newView);
@@ -155,18 +166,15 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       };
     }, [rootRef, model, readonly, editorMode, themeMode]);
 
+    // TODO(burdon): Replace with keymap?
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          // TODO(burdon): Is this required (for vim mode?)
-          // case 'Enter': {
-          //   view?.contentDOM.focus();
-          //   break;
-          // }
-
           case 'Escape': {
-            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && rootRef.current?.focus();
+            if (editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey)) {
+              rootRef.current?.focus();
+            }
             break;
           }
         }

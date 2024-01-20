@@ -14,7 +14,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { type GossipMessage } from '@dxos/react-client/mesh';
 import type { YText } from '@dxos/text-model';
 
-import { type EditorModel, modelState, type UseTextModelProps } from './useTextModel';
+import { type EditorModel, modelState } from './defs';
+import { type UseTextModelProps } from './useTextModel';
 import { yjs } from '../extensions';
 
 export const createYjsModel = ({ identity, space, text }: UseTextModelProps): EditorModel => {

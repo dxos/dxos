@@ -16,8 +16,9 @@ export const CommentsSidebar: FC<{
   space: Space;
   threads?: ThreadType[];
   active?: string;
+  focus?: boolean;
   onFocus?: (thread: ThreadType) => void;
-}> = ({ space, threads = [], active, onFocus }) => {
+}> = ({ space, threads = [], active, focus, onFocus }) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
 
@@ -46,26 +47,30 @@ export const CommentsSidebar: FC<{
     }
   };
 
-  // TODO(burdon): Scroll document when selected.
   return (
     <DensityProvider density='fine'>
       <div role='none' className='flex flex-col grow w-[400px] overflow-y-auto'>
         <div role='none' className='flex flex-col w-full p-2 gap-4'>
+          {/* Overscroll area. */}
+          {/* <div role='none' className='bs-[80dvh]' /> */}
+
           {threads?.map((thread) => (
             <CommentThread
               key={thread.id}
               space={space}
               identityKey={identity.identityKey}
               propertiesProvider={messagePropertiesProvider(identity, members)}
+              active={thread.id === active}
+              focus={focus}
               thread={thread}
               onFocus={() => onFocus?.(thread)}
-              onCreate={thread.id === active ? (text) => handleSubmit(thread, text) : undefined}
+              onCreate={(text) => handleSubmit(thread, text)}
               onDelete={(messageId: string, idx: number) => handleDelete(thread, messageId, idx)}
             />
           ))}
 
           {/* Overscroll area. */}
-          <div role='none' className='bs-[50dvh]' />
+          <div role='none' className='bs-[100dvh]' />
         </div>
       </div>
     </DensityProvider>

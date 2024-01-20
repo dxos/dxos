@@ -4,15 +4,14 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { Annotation, StateEffect, type StateField, type EditorState, type Transaction, Facet } from '@codemirror/state';
+import { Annotation, StateEffect, type StateField, type EditorState, type Transaction } from '@codemirror/state';
 
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 
-import { type PatchSemaphore } from './semaphore';
-
+// TODO(burdon): Rename and document.
 export type Value = {
-  lastHeads: Heads;
   path: Prop[];
+  lastHeads: Heads;
   unreconciledTransactions: Transaction[];
 };
 
@@ -22,21 +21,17 @@ export type UpdateHeads = {
 
 export const effectType = StateEffect.define<UpdateHeads>({});
 
-export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
-
-export const getLastHeads = (state: EditorState, field: StateField<Value>): Heads => state.field(field).lastHeads;
+export const reconcileAnnotationType = Annotation.define<unknown>();
 
 export const getPath = (state: EditorState, field: StateField<Value>): Prop[] => state.field(field).path;
 
-export const reconcileAnnotationType = Annotation.define<unknown>();
+export const getLastHeads = (state: EditorState, field: StateField<Value>): Heads => state.field(field).lastHeads;
+
+export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
 
 export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
 
-// TODO(burdon): Rename sync/create generic def (like cursor) to decouple automerge deps.
-export const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
-  combine: (values) => values.at(-1)!, // Take last.
-});
-
+// TODO(burdon): Remove?
 /*
 export const makeReconcile = (tr: TransactionSpec) => {
   if (tr.annotations != null) {
