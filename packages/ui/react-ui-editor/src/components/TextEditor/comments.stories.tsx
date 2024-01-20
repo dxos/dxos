@@ -43,7 +43,7 @@ const Editor: FC<{
       const thread = commentRanges.find((range) => range.id === commentSelected);
       if (thread) {
         const { cursor } = thread;
-        const range = Cursor.getRangeFromCursor(editorRef.current!.state.facet(Cursor.converter), cursor);
+        const range = cursor && Cursor.getRangeFromCursor(editorRef.current!.state.facet(Cursor.converter), cursor);
         if (range) {
           // TODO(burdon): Scroll selection to center of screen?
           editorRef.current?.dispatch({ selection: { anchor: range.from }, scrollIntoView: true });
@@ -247,6 +247,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     setThreads((threads) =>
       threads.map((thread) => {
         if (thread.id === id) {
+          thread.range.cursor = undefined;
           thread.deleted = true;
         }
 

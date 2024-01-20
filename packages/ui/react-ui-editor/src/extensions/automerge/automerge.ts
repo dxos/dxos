@@ -4,11 +4,10 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { StateField, type Extension, type Transaction } from '@codemirror/state';
+import { StateField, type Extension } from '@codemirror/state';
 import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
 
-import { next as A } from '@dxos/automerge/automerge';
-import { type Prop } from '@dxos/automerge/automerge';
+import { type Prop, next as A } from '@dxos/automerge/automerge';
 
 import { cursorConverter } from './cursor';
 import { effectType, type IDocHandle, isReconcileTx, semaphoreFacet, type Value } from './defs';
@@ -21,14 +20,15 @@ export type AutomergeOptions = {
 };
 
 export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
-  const stateField: StateField<Value> = StateField.define({
+  // TODO(burdon): Rename and comment.
+  const stateField = StateField.define<Value>({
     create: () => ({
       lastHeads: A.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
       path: path.slice(),
     }),
 
-    update: (value: Value, tr: Transaction) => {
+    update: (value, tr) => {
       const result: Value = {
         lastHeads: value.lastHeads,
         unreconciledTransactions: value.unreconciledTransactions.slice(),
@@ -65,14 +65,16 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
 
       update(update: ViewUpdate) {
         if (update.transactions.length > 0 && update.transactions.some((tr) => !isReconcileTx(tr))) {
+          // TODO(burdon): Async causes problems; update via a state field instead of view?
+          //  Handle in dispatch?
           queueMicrotask(() => {
-            this._view.state.facet(semaphoreFacet).reconcile(this._view);
+            this._handleChange();
           });
         }
       }
 
       destroy() {
-        handle.addListener('change', this._handleChange);
+        handle.removeListener('change', this._handleChange);
       }
 
       private _handleChange = () => {

@@ -10,6 +10,7 @@ import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } fr
 
 import { type PatchSemaphore } from './semaphore';
 
+// TODO(burdon): Rename and document.
 export type Value = {
   lastHeads: Heads;
   path: Prop[];
@@ -37,6 +38,7 @@ export const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
   combine: (values) => values.at(-1)!, // Take last.
 });
 
+// TODO(burdon): Remove.
 /*
 export const makeReconcile = (tr: TransactionSpec) => {
   if (tr.annotations != null) {

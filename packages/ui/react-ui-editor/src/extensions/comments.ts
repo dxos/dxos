@@ -49,7 +49,7 @@ export type CommentsState = CommentSelected & {
 };
 
 export const setFocus = (view: EditorView, thread: string) => {
-  const range = view.state.field(commentsStateField).ranges.find((range) => range.id === thread);
+  const range = view.state.field(commentsState).ranges.find((range) => range.id === thread);
   if (!range) {
     return;
   }
@@ -71,7 +71,7 @@ const setCommentState = StateEffect.define<CommentsState>();
  * State field (reducer) that tracks comment ranges.
  * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
-const commentsStateField = StateField.define<CommentsState>({
+const commentsState = StateField.define<CommentsState>({
   create: () => ({ ranges: [] }),
   update: (value, tr) => {
     const cursorConverter = tr.state.facet(Cursor.converter);
@@ -87,6 +87,11 @@ const commentsStateField = StateField.define<CommentsState>({
         const { comments } = effect.value;
         const ranges: ExtendedCommentRange[] = comments
           .map((comment) => {
+            // Skip cut/deleted comments.
+            if (!comment.cursor) {
+              return undefined;
+            }
+
             const range = Cursor.getRangeFromCursor(cursorConverter, comment.cursor);
             // console.log('update', JSON.stringify({ range, cursor: comment.cursor }, undefined, 2));
             return range && { ...comment, ...range };
@@ -109,24 +114,29 @@ const commentsStateField = StateField.define<CommentsState>({
 /**
  * Decorate ranges.
  */
-const highlightDecorations = EditorView.decorations.compute([commentsStateField], (state) => {
-  const { active, ranges } = state.field(commentsStateField);
-  const decorations =
-    sortBy(ranges ?? [], (range) => range.from)
-      ?.flatMap((selection) => {
-        // TODO(burdon): Invalid range (e.g., deleted).
-        if (selection.from === selection.to) {
-          return undefined;
-        }
+// TODO(burdon): Remove index from selection (fix types).
+const highlightDecorations = EditorView.decorations.compute([commentsState], (state) => {
+  // const cursorConverter = state.facet(Cursor.converter);
 
-        const range = { from: selection.from, to: selection.to };
-        if (selection.id === active) {
-          return marks.highlightActive.range(range.from, range.to);
-        } else {
-          return marks.highlight.range(range.from, range.to);
-        }
-      })
-      .filter(nonNullable) ?? [];
+  // TODO(burdon): Update if document changed?
+  const { active, ranges } = state.field(commentsState);
+  const decorations = sortBy(ranges ?? [], (range) => range.from)
+    ?.flatMap((selection) => {
+      const range = selection;
+      // const range = selection.cursor && Cursor.getRangeFromCursor(cursorConverter, selection.cursor);
+      if (!range || range.from === range.to) {
+        console.warn('Invalid range:', range);
+        return undefined;
+      }
+
+      // const range = { from: selection.from, to: selection.to };
+      if (selection.id === active) {
+        return marks.highlightActive.range(range.from, range.to);
+      } else {
+        return marks.highlight.range(range.from, range.to);
+      }
+    })
+    .filter(nonNullable);
 
   return Decoration.set(decorations);
 });
@@ -166,7 +176,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
 
   // Track cut or copy (enables cut-and-paste and copy-delete-paste to restore comment selection).
   const handleTrack = (event: Event, view: EditorView) => {
-    const comments = view.state.field(commentsStateField);
+    const comments = view.state.field(commentsState);
     const { main } = view.state.selection;
     const selectedRanges = comments.ranges.filter(
       (range) => range.from >= main.from && range.to <= main.to && range.from < range.to,
@@ -195,6 +205,8 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
     }),
 
     // Handle paste.
+    // TODO(burdon): Convert to state field to expose `tracked` to other elements below.
+    //  Also, pass in state via setCommentRange of orphaned comments.
     EditorView.updateListener.of(({ view, state, transactions }) => {
       if (tracked) {
         const paste = transactions.find((tr) => tr.isUserEvent('input.paste'));
@@ -211,24 +223,19 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
           });
 
           if (found > -1) {
-            const comments = tracked.comments;
-
             // Sync before recomputing cursor/range.
             // TODO(burdon): Generalize sync facet to decouple from automerge?
             view.state.facet(semaphoreFacet).reconcile(view);
 
-            const active = state.field(commentsStateField).ranges;
-            for (const moved of comments) {
-              if (active.some((range) => range.id === moved.id && range.from === range.to)) {
-                const range = {
-                  from: found + moved.from,
-                  to: found + moved.to,
-                };
+            for (const moved of tracked.comments) {
+              const range = {
+                from: found + moved.from,
+                to: found + moved.to,
+              };
 
-                const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
-                // console.log('paste', JSON.stringify({ moved, range, cursor }, undefined, 2));
-                onUpdate(moved.id, cursor);
-              }
+              const cursor = Cursor.getCursorFromRange(state.facet(Cursor.converter), range);
+              // console.log('paste', JSON.stringify({ moved, range, cursor }, undefined, 2));
+              onUpdate(moved.id, cursor);
             }
           }
 
@@ -286,7 +293,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
   };
 
   return [
-    commentsStateField,
+    commentsState,
     highlightDecorations,
     styles,
 
@@ -341,23 +348,23 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const cursorConverter = view.state.facet(Cursor.converter);
 
       //
-      // Test if need to recompute indexed range if document changes before the end of the range.
+      // Test if range deleted.
       //
       {
         let mod = false;
-        const { active, ranges } = state.field(commentsStateField);
+        const { active, ranges } = state.field(commentsState);
         changes.iterChanges((from, to, from2, to2) => {
-          // TODO(burdon): Skip deleted (tracked) ranges.
           ranges.forEach((range) => {
             if (from2 === to2) {
-              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor!);
               if (!newRange || newRange.to - newRange.from === 0) {
                 options.onDelete?.(range.id);
               }
             }
 
+            // TODO(burdon): This shouldn't be necessary.
             if (from <= range.to) {
-              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor);
+              const newRange = Cursor.getRangeFromCursor(cursorConverter, range.cursor!);
               Object.assign(range, newRange);
               mod = true;
             }
@@ -376,10 +383,9 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         const { head } = state.selection.main;
 
         let min = Infinity;
-        const { active, closest, ranges } = state.field(commentsStateField);
+        const { active, closest, ranges } = state.field(commentsState);
         const selected: CommentSelected = { active: undefined, closest: undefined };
 
-        // TODO(burdon): Skip deleted (tracked) ranges.
         ranges.forEach((comment) => {
           const d = Math.min(Math.abs(head - comment.from), Math.abs(head - comment.to));
           if (head >= comment.from && head <= comment.to) {

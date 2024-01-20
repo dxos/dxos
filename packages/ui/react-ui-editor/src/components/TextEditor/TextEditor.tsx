@@ -117,16 +117,16 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         extensions: [
           readonly && EditorState.readOnly.of(readonly),
 
-          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
-          editorMode === 'vim' && vim(),
-
           // Theme.
           // TODO(burdon): Make theme configurable.
           EditorView.baseTheme(defaultTheme),
           EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
 
-          // Storage and replication.
+          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
+          editorMode === 'vim' && vim(),
+
+          // Storage and replication (NOTE: must come before other extensions).
           model.extension,
 
           // Custom.
@@ -159,12 +159,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
-          // TODO(burdon): Is this required (for vim mode?)
-          // case 'Enter': {
-          //   view?.contentDOM.focus();
-          //   break;
-          // }
-
           case 'Escape': {
             editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && rootRef.current?.focus();
             break;
