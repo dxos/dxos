@@ -65,38 +65,29 @@ export const EditorMain = ({ editorRefCb, comments, ...props }: EditorMainProps)
 
   return (
     <MarkdownEditor
-      {...props}
       ref={setEditorRef}
       placeholder={t('editor placeholder')}
       slots={{
         root: {
-          className: mx(
-            'flex flex-col grow m-0.5 overflow-y-auto rounded',
-            inputSurface,
-            focusRing,
-            surfaceElevation({ elevation: 'group' }),
-          ),
+          className: mx('flex flex-col grow m-0.5', inputSurface, focusRing, surfaceElevation({ elevation: 'group' })),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {
-          className: 'h-full pli-10 py-2',
+          className: 'h-full pli-10 py-4 rounded',
         },
       }}
+      {...props}
     />
   );
 };
 
 // TODO(wittjosiah): Remove ref.
 export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<EditorView> }>) => {
-  // TODO(burdon): Fix scrolling issues (compare with stack).
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
-      <div role='none' className={mx(textBlockWidth, 'flex h-full pli-2 overflow-hidden')}>
-        <div role='none' className='flex flex-col h-full min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
+      <div role='none' className={mx('flex flex-col h-full pli-2', textBlockWidth)}>
+        <div role='none' className='flex flex-col grow pb-8 overflow-y-auto'>
           {children}
-
-          {/* Overscroll area. */}
-          <div role='none' className='bs-[50dvh]' />
         </div>
       </div>
     </Main.Content>
