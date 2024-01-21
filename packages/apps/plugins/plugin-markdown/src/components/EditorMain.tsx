@@ -5,14 +5,21 @@
 import React, {
   type HTMLAttributes,
   type RefCallback,
-  useRef,
   type PropsWithChildren,
   type MutableRefObject,
+  useRef,
 } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { Main, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type EditorView, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
+import {
+  type TextEditorProps,
+  type Comment,
+  type EditorView,
+  MarkdownEditor,
+  setFocus,
+  useComments,
+} from '@dxos/react-ui-editor';
 import {
   baseSurface,
   focusRing,
@@ -28,17 +35,21 @@ import { MARKDOWN_PLUGIN } from '../meta';
 // TODO(burdon): Don't export ref.
 export type EditorMainProps = {
   editorRefCb?: RefCallback<EditorView>;
-} & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
+  comments: Comment[];
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'extensions' | 'editorMode'>;
 
-export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
+export const EditorMain = ({ editorRefCb, comments, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
-  // TODO(burdon): Reconcile refs.
   const editorRef = useRef<EditorView>();
+
+  // TODO(burdon): Remove.
   const setEditorRef: RefCallback<EditorView> = (ref) => {
     editorRef.current = ref as any;
     editorRefCb?.(ref);
   };
+
+  useComments(editorRef.current, comments);
 
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {

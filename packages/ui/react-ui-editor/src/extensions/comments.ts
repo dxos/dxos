@@ -5,13 +5,13 @@
 import { type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
 import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
+import { useEffect } from 'react';
 
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
-import { syncFacet } from './sync';
 import { type Comment, type Range } from '../hooks';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
@@ -95,7 +95,6 @@ const commentsState = StateField.define<CommentsState>({
             }
 
             const range = Cursor.getRangeFromCursor(tr.state, comment.cursor);
-            // console.log('update', JSON.stringify({ range, cursor: comment.cursor }, undefined, 2));
             return range && { comment, range };
           })
           .filter(nonNullable);
@@ -170,7 +169,6 @@ export type CommentsOptions = {
 
 // TODO(burdon): Handle cut/restore via undo (need to integrate with history?)
 const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>) => {
-  // Cut/deleted comments.
   // Tracks indexed selections within text.
   // TODO(burdon): Move to main state field?
   let tracked: { text: Text; comments: { id: string; from: number; to: number }[] } | null = null;
@@ -195,8 +193,6 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
         })),
       };
     }
-
-    // console.log('track', JSON.stringify({ tracked }, undefined, 2));
   };
 
   return [
@@ -222,10 +218,6 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
           });
 
           if (found > -1) {
-            // Sync before recomputing cursor/range.
-            // TODO(burdon): Try to avoid this? See TextEditor dispatch.
-            state.facet(syncFacet)?.reconcile(view);
-
             for (const moved of tracked.comments) {
               const range = {
                 from: found + moved.from,
@@ -233,7 +225,6 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
               };
 
               const cursor = Cursor.getCursorFromRange(state, range);
-              // console.log('paste', JSON.stringify({ moved, range, cursor }, undefined, 2));
               onUpdate(moved.id, cursor);
             }
           }
@@ -421,4 +412,17 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
     options.onUpdate ? trackPastedComments(options.onUpdate) : [],
   ];
+};
+
+/**
+ * Update state field.
+ */
+export const useComments = (view?: EditorView | null, comments?: Comment[]) => {
+  useEffect(() => {
+    if (view && comments) {
+      view.dispatch({
+        effects: setComments.of(comments),
+      });
+    }
+  }, [view, comments]);
 };

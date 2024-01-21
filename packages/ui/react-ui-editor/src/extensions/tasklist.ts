@@ -6,8 +6,6 @@ import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, WidgetType, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 
-<<<<<<< Updated upstream
-=======
 import { getToken } from '../styles';
 
 // TODO(burdon): Reconcile with theme.
@@ -16,12 +14,11 @@ const styles = EditorView.baseTheme({
     color: getToken('extend.colors.blue.500'),
   },
   '& .cm-task-checkbox': {
-    marginLeft: 4,
-    marginRight: 4,
+    marginLeft: '4px',
+    marginRight: '4px',
   },
 });
 
->>>>>>> Stashed changes
 class CheckboxWidget extends WidgetType {
   constructor(private _checked: boolean) {
     super();
@@ -59,8 +56,8 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
-const checkedDeco = Decoration.replace({ widget: new CheckboxWidget(true) });
-const uncheckedDeco = Decoration.replace({ widget: new CheckboxWidget(false) });
+const checkedDecoration = Decoration.replace({ widget: new CheckboxWidget(true) });
+const uncheckedDecoration = Decoration.replace({ widget: new CheckboxWidget(false) });
 
 const buildDecorations = (view: EditorView): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
@@ -90,54 +87,20 @@ const buildDecorations = (view: EditorView): DecorationSet => {
 export type TasklistOptions = {};
 
 export const tasklist = (options: TasklistOptions = {}) => {
-  return ViewPlugin.fromClass(
-    class {
-      decorations: DecorationSet;
+  return [
+    ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet;
 
-      constructor(view: EditorView) {
-        this.decorations = buildDecorations(view);
-      }
-
-      update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged || update.selectionSet) {
-          this.decorations = buildDecorations(update.view);
+        constructor(view: EditorView) {
+          this.decorations = buildDecorations(view);
         }
-<<<<<<< Updated upstream
-      }
-    },
-    {
-      decorations: (v) => v.decorations,
-      // TODO(burdon): Is this still required?
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.decorations || Decoration.none;
-        }),
-    },
-  );
-};
 
-const buildDecorations = (view: EditorView): DecorationSet => {
-  const builder = new RangeSetBuilder<Decoration>();
-  const { state } = view;
-  const cursor = state.selection.main.head;
-
-  for (const { from, to } of view.visibleRanges) {
-    syntaxTree(state).iterate({
-      enter: (node) => {
-        // Check if cursor is inside text.
-        if (node.name === 'TaskMarker' && (cursor < node.from || cursor > node.to)) {
-          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-          builder.add(node.from, node.to, checked ? checkedDeco : uncheckedDeco);
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.viewportChanged || update.selectionSet) {
+            this.decorations = buildDecorations(update.view);
+          }
         }
-      },
-      from,
-      to,
-    });
-  }
-
-  return builder.finish();
-};
-=======
       },
       {
         decorations: (v) => v.decorations,
@@ -146,4 +109,3 @@ const buildDecorations = (view: EditorView): DecorationSet => {
     styles,
   ];
 };
->>>>>>> Stashed changes

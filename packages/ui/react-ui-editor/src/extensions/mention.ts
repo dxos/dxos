@@ -9,11 +9,14 @@ export type MentionOptions = {
   onSearch: (text: string) => string[];
 };
 
+// TODO(burdon): Can only have a single autocompletion?
 export const mention = ({ onSearch }: MentionOptions): Extension => {
   return autocompletion({
     activateOnTyping: true,
-    closeOnBlur: false, // For debugging.
-    defaultKeymap: false,
+    selectOnOpen: true,
+    closeOnBlur: true, // For debugging.
+    // defaultKeymap: false,
+    icons: false,
     override: [
       (context: CompletionContext): CompletionResult | null => {
         console.log('::::', context);

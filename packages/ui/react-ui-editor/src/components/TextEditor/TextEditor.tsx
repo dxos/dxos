@@ -14,17 +14,16 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useState,
   useRef,
+  useState,
 } from 'react';
 
-import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
-import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
+import { inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle, setComments } from '../../extensions';
-import { type Comment, type EditorModel } from '../../hooks';
+import { basicBundle, markdownBundle, useAwareness } from '../../extensions';
+import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
 
@@ -56,7 +55,6 @@ export type TextEditorProps = {
   autofocus?: boolean;
   readonly?: boolean; // TODO(burdon): Move into model.
   selection?: { anchor: number; head?: number };
-  comments?: Comment[]; // TODO(burdon): Move into extension?
   extensions?: Extension[];
   editorMode?: EditorMode;
   placeholder?: string;
@@ -64,37 +62,12 @@ export type TextEditorProps = {
   slots?: TextEditorSlots;
 };
 
-// TODO(burdon): Factor out?
-export const useComments = (view?: EditorView | null, comments?: Comment[]) => {
-  useEffect(() => {
-    if (view && comments !== undefined) {
-      view.dispatch({
-        effects: setComments.of(comments),
-      });
-    }
-  }, [view, comments]);
-};
-
-// TODO(burdon): Factor out?
-export const useAwareness = ({ awareness, peer }: EditorModel) => {
-  const { themeMode } = useThemeContext();
-  useEffect(() => {
-    if (awareness && peer) {
-      awareness.setLocalStateField('user', {
-        name: peer.name ?? generateName(peer.id),
-        color: getColorForValue({ value: peer.id, type: 'color' }),
-        colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-      });
-    }
-  }, [awareness, peer, themeMode]);
-};
-
 /**
  * Base text editor.
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    { model, autofocus, readonly, selection, comments, extensions = [], editorMode, theme, slots = defaultSlots },
+    { model, autofocus, readonly, selection, extensions = [], editorMode, theme, slots = defaultSlots },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -106,18 +79,13 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     // NOTE: This does not cause the parent to re-render, so the ref is not available immediately.
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
-    // Focus.
     useEffect(() => {
       if (autofocus) {
         view?.focus();
       }
     }, [view, autofocus]);
 
-    // TODO(burdon): Factor out as extension/hook.
     useAwareness(model);
-
-    // TODO(burdon): Factor out as extension/hook.
-    useComments(view, comments);
 
     useEffect(() => {
       if (!model || !rootRef.current) {
@@ -127,12 +95,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: model.text(),
-        // TODO(burdon): Composer should store and set selection when switching documents.
+        // TODO(burdon): Set stored selection/scroll position when switching documents.
         selection,
         extensions: [
           EditorState.readOnly.of(!!readonly),
 
-          // TODO(burdon): Doesn't catch keymap functions.
+          // TODO(burdon): Doesn't catch errors in keymap functions.
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
@@ -145,11 +113,11 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
-          // Storage and replication (NOTE: must come before other extensions).
-          model.extension,
-
           // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
           editorMode === 'vim' && vim(),
+
+          // Storage and replication.
+          model.extension,
 
           // Custom.
           ...extensions,
@@ -163,7 +131,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       const newView = new EditorView({
         parent: rootRef.current,
         state,
-        // NOTE: Uncomment to spy on all transactions.
+        // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
         // dispatch: (transaction, view) => {
         //   view.update([transaction]);
@@ -177,11 +145,17 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       };
     }, [rootRef, model, readonly, editorMode, themeMode]);
 
-    // TODO(burdon): Replace with keymap?
+    // Handles tab/focus.
+    // Pressing Escape focuses the outer div (to support tab navigation); pressing Enter refocuses the editor.
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
         switch (key) {
+          case 'Enter': {
+            view?.focus();
+            break;
+          }
+
           case 'Escape': {
             if (editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey)) {
               rootRef.current?.focus();
@@ -244,7 +218,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx('w-full overflow-y-auto p-2', inputSurface),
+    className: mx('w-full h-full overflow-y-auto p-4', inputSurface),
   },
 };
 

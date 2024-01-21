@@ -8,7 +8,7 @@ import { EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, StrictMode, useState } from 'react';
+import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -34,6 +34,7 @@ import {
   type CommentsOptions,
   type LinkOptions,
   outliner,
+  useComments,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 
@@ -55,8 +56,8 @@ const text = {
     '- [x] decorator',
     '- [ ] checkbox',
     '  - [ ] state',
-    '  - [ ] indent',
-    '  - [x] style',
+    '    - [ ] indent',
+    '    - [x] style',
     '',
   ),
 
@@ -162,6 +163,8 @@ const links = [
   { label: 'StackEdit', apply: '[StackEdit](https://stackedit.io/app)' },
 ];
 
+const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
+
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
@@ -213,9 +216,11 @@ type StoryProps = {
   automerge?: boolean;
 } & Pick<TextEditorProps, 'comments' | 'readonly' | 'extensions' | 'slots'>;
 
-const Story = ({ text, automerge, ...props }: StoryProps) => {
+const Story = ({ text, automerge, comments, ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
+  const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
+  useComments(view.current, comments);
   if (!model) {
     return null;
   }
@@ -224,7 +229,7 @@ const Story = ({ text, automerge, ...props }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <MarkdownEditor model={model} {...props} />
+          <MarkdownEditor ref={view} model={model} {...props} />
         </div>
       </div>
     </div>
@@ -238,7 +243,7 @@ export default {
   render: Story,
 };
 
-const extensions = [
+const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
@@ -246,16 +251,19 @@ const extensions = [
   hr(),
   image(),
   link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
+  // mention({
+  //   onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
+  // }),
   table(),
   tasklist(),
 ];
 
 export const Default = {
-  render: () => <Story text={document} extensions={extensions} />,
+  render: () => <Story text={document} extensions={defaults} />,
 };
 
 export const Readonly = {
-  render: () => <Story text={document} extensions={extensions} readonly />,
+  render: () => <Story text={document} extensions={defaults} readonly />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
@@ -302,8 +310,10 @@ export const Image = {
   render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
 
-export const Tasklist = {
-  render: () => <Story text={str(text.tasks, '', text.list, text.footer)} extensions={[tasklist()]} />,
+export const Lists = {
+  render: () => (
+    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[tasklist()]} />
+  ),
 };
 
 export const Outliner = {
@@ -322,18 +332,12 @@ export const Autocomplete = {
       extensions={[
         link({ onRender: onRenderLink }),
         autocomplete({
-          onSearch: (text) =>
-            links.filter(({ label }) => {
-              console.log(label);
-              return label.toLowerCase().includes(text.toLowerCase());
-            }),
+          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
       ]}
     />
   ),
 };
-
-const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 export const Mention = {
   render: () => (
