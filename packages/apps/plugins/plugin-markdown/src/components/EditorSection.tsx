@@ -20,9 +20,12 @@ export const EditorSection = (props: EditorSectionProps) => {
       placeholder={t('editor placeholder')}
       slots={{
         root: {
-          className: mx('flex flex-col grow m-0.5 my-4', inputSurface, focusRing),
+          className: mx('flex flex-col grow m-0.5', inputSurface, focusRing),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
+        editor: {
+          className: 'h-full py-4',
+        },
       }}
       {...props}
     />
