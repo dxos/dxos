@@ -13,6 +13,10 @@ const styles = EditorView.baseTheme({
   '& .cm-task': {
     color: getToken('extend.colors.blue.500'),
   },
+  '& .cm-task-checkbox': {
+    marginLeft: '4px',
+    marginRight: '4px',
+  },
 });
 
 class CheckboxWidget extends WidgetType {
@@ -26,6 +30,7 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
+    input.className = 'cm-task-checkbox';
     input.type = 'checkbox';
     input.checked = this._checked;
     if (view.state.readOnly) {
@@ -54,6 +59,31 @@ class CheckboxWidget extends WidgetType {
 const checkedDecoration = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedDecoration = Decoration.replace({ widget: new CheckboxWidget(false) });
 
+const buildDecorations = (view: EditorView): DecorationSet => {
+  const builder = new RangeSetBuilder<Decoration>();
+  const { state } = view;
+  const cursor = state.selection.main.head;
+
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(state).iterate({
+      enter: (node) => {
+        if (node.name === 'TaskMarker') {
+          // Check if cursor is inside text.
+          if (cursor < node.from || cursor > node.to) {
+            const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+            builder.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
+            builder.add(node.from, node.to, checked ? checkedDecoration : uncheckedDecoration);
+          }
+        }
+      },
+      from,
+      to,
+    });
+  }
+
+  return builder.finish();
+};
+
 export type TasklistOptions = {};
 
 export const tasklist = (options: TasklistOptions = {}) => {
@@ -74,41 +104,8 @@ export const tasklist = (options: TasklistOptions = {}) => {
       },
       {
         decorations: (v) => v.decorations,
-        // TODO(burdon): Is this still required?
-        provide: (plugin) =>
-          EditorView.atomicRanges.of((view) => {
-            return view.plugin(plugin)?.decorations || Decoration.none;
-          }),
       },
     ),
     styles,
   ];
-};
-
-const buildDecorations = (view: EditorView): DecorationSet => {
-  const builder = new RangeSetBuilder<Decoration>();
-  const { state } = view;
-  const cursor = state.selection.main.head;
-
-  for (const { from, to } of view.visibleRanges) {
-    syntaxTree(state).iterate({
-      enter: (node) => {
-        switch (node.name) {
-          case 'TaskMarker': {
-            // Check if cursor is inside text.
-            if (cursor < node.from || cursor > node.to) {
-              const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-              builder.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
-              builder.add(node.from, node.to, checked ? checkedDecoration : uncheckedDecoration);
-            }
-            break;
-          }
-        }
-      },
-      from,
-      to,
-    });
-  }
-
-  return builder.finish();
 };

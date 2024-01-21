@@ -16,23 +16,21 @@ import {
   reconcileAnnotationType,
   updateHeads,
   type IDocHandle,
-  type Value,
+  type State,
 } from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
-import { type Syncer } from '../sync';
 
 /**
  * Implements three-way merge (on each mutation/keystroke).
  */
-export class PatchSemaphore implements Syncer {
+export class PatchSemaphore {
   private _inReconcile = false;
 
   // prettier-ignore
   constructor(
     private readonly _handle: IDocHandle,
-    // TODO(burdon): Rename.
-    private readonly _field: StateField<Value>
+    private readonly _state: StateField<State>
   ) {}
 
   // NOTE: Cannot destruct view.state.
@@ -42,14 +40,14 @@ export class PatchSemaphore implements Syncer {
     }
     this._inReconcile = true;
 
-    const path = getPath(view.state, this._field);
+    const path = getPath(view.state, this._state);
 
     // Get the heads before the unreconciled transactions are applied.
-    const oldHeads = getLastHeads(view.state, this._field);
+    const oldHeads = getLastHeads(view.state, this._state);
     let selection = view.state.selection;
 
     // First undo all the unreconciled transactions.
-    const transactions = view.state.field(this._field).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
+    const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
     const toInvert = transactions.slice().reverse();
     for (const tx of toInvert) {
       const inverted = tx.changes.invert(tx.startState.doc);
@@ -61,7 +59,7 @@ export class PatchSemaphore implements Syncer {
     }
 
     // Apply the unreconciled transactions to the document.
-    let newHeads = updateAutomerge(this._field, this._handle, transactions, view.state);
+    let newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
 
     // NOTE: null and undefined each come from automerge and repo respectively.
     if (newHeads === null || newHeads === undefined) {
@@ -69,12 +67,16 @@ export class PatchSemaphore implements Syncer {
       newHeads = automerge.getHeads(this._handle.docSync()!);
     }
 
+    // TODO(burdon): Selection is in the wrong place when bracket matching.
+
     // Now get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
     const diff = automerge.equals(oldHeads, newHeads)
       ? []
       : automerge.diff(this._handle.docSync()!, oldHeads, newHeads);
+
     updateCodeMirror(view, selection, path, diff);
 
+    // Update automerge state.
     view.dispatch({
       effects: updateHeads(newHeads),
       annotations: reconcileAnnotationType.of({}),

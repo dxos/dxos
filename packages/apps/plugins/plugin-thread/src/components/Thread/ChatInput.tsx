@@ -51,8 +51,8 @@ export const ChatInput = ({
     <div className={mx('flex w-full', inputSurface, className)}>
       <TextEditor
         ref={ref}
-        autofocus={focus}
         model={model}
+        autofocus={focus}
         placeholder={placeholder}
         extensions={[
           tagExtension,
@@ -82,7 +82,7 @@ export const ChatInput = ({
         ]}
         slots={{
           root: {
-            className: 'flex w-full items-center pl-2 overflow-x-hidden',
+            className: 'w-full items-center',
           },
         }}
       />
