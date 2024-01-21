@@ -9,9 +9,14 @@ export type MentionOptions = {
   onSearch: (text: string) => string[];
 };
 
+// TODO(burdon): Can only have a single autocompletion. Merge configuration with autocomplete.
 export const mention = ({ onSearch }: MentionOptions): Extension => {
   return autocompletion({
-    closeOnBlur: false, // For debugging.
+    activateOnTyping: true,
+    selectOnOpen: true,
+    closeOnBlur: true, // For debugging.
+    // defaultKeymap: false,
+    icons: false,
     override: [
       (context: CompletionContext): CompletionResult | null => {
         const match = context.matchBefore(/@(\w+)?/);

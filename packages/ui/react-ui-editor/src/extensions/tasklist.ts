@@ -6,6 +6,19 @@ import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, WidgetType, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 
+import { getToken } from '../styles';
+
+// TODO(burdon): Reconcile with theme.
+const styles = EditorView.baseTheme({
+  '& .cm-task': {
+    color: getToken('extend.colors.blue.500'),
+  },
+  '& .cm-task-checkbox': {
+    marginLeft: '4px',
+    marginRight: '4px',
+  },
+});
+
 class CheckboxWidget extends WidgetType {
   constructor(private _checked: boolean) {
     super();
@@ -17,6 +30,7 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
+    input.className = 'cm-task-checkbox';
     input.type = 'checkbox';
     input.checked = this._checked;
     if (view.state.readOnly) {
@@ -42,36 +56,8 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
-const checkedDeco = Decoration.replace({ widget: new CheckboxWidget(true) });
-const uncheckedDeco = Decoration.replace({ widget: new CheckboxWidget(false) });
-
-export type TasklistOptions = {};
-
-export const tasklist = (options: TasklistOptions = {}) => {
-  return ViewPlugin.fromClass(
-    class {
-      decorations: DecorationSet;
-
-      constructor(view: EditorView) {
-        this.decorations = buildDecorations(view);
-      }
-
-      update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged || update.selectionSet) {
-          this.decorations = buildDecorations(update.view);
-        }
-      }
-    },
-    {
-      decorations: (v) => v.decorations,
-      // TODO(burdon): Is this still required?
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.decorations || Decoration.none;
-        }),
-    },
-  );
-};
+const checkedDecoration = Decoration.replace({ widget: new CheckboxWidget(true) });
+const uncheckedDecoration = Decoration.replace({ widget: new CheckboxWidget(false) });
 
 const buildDecorations = (view: EditorView): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
@@ -81,10 +67,13 @@ const buildDecorations = (view: EditorView): DecorationSet => {
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(state).iterate({
       enter: (node) => {
-        // Check if cursor is inside text.
-        if (node.name === 'TaskMarker' && (cursor < node.from || cursor > node.to)) {
-          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-          builder.add(node.from, node.to, checked ? checkedDeco : uncheckedDeco);
+        if (node.name === 'TaskMarker') {
+          // Check if cursor is inside text.
+          if (cursor < node.from || cursor > node.to) {
+            const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+            builder.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
+            builder.add(node.from, node.to, checked ? checkedDecoration : uncheckedDecoration);
+          }
         }
       },
       from,
@@ -93,4 +82,30 @@ const buildDecorations = (view: EditorView): DecorationSet => {
   }
 
   return builder.finish();
+};
+
+export type TasklistOptions = {};
+
+export const tasklist = (options: TasklistOptions = {}) => {
+  return [
+    ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet;
+
+        constructor(view: EditorView) {
+          this.decorations = buildDecorations(view);
+        }
+
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.viewportChanged || update.selectionSet) {
+            this.decorations = buildDecorations(update.view);
+          }
+        }
+      },
+      {
+        decorations: (v) => v.decorations,
+      },
+    ),
+    styles,
+  ];
 };

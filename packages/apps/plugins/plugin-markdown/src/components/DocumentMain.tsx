@@ -19,6 +19,9 @@ export const DocumentMain: FC<{
   readonly?: boolean;
   editorMode: MarkdownSettingsProps['editorMode'];
   extensions: Extension[];
+  /**
+   * @deprecated
+   */
   editorRefCb: RefCallback<EditorView>;
 }> = ({ document, readonly, editorMode, extensions, editorRefCb }) => {
   const { dispatch } = useIntent();

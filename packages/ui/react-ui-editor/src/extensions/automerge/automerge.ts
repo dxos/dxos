@@ -5,14 +5,14 @@
 //
 
 import { StateField, type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
 import { type Prop, next as A } from '@dxos/automerge/automerge';
 
 import { cursorConverter } from './cursor';
-import { effectType, type IDocHandle, isReconcileTx, type Value } from './defs';
+import { effectType, type IDocHandle, isReconcileTx, type State } from './defs';
 import { PatchSemaphore } from './semaphore';
 import { Cursor } from '../cursor';
-import { syncFacet } from '../sync';
 
 export type AutomergeOptions = {
   handle: IDocHandle;
@@ -21,7 +21,7 @@ export type AutomergeOptions = {
 
 export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
   // TODO(burdon): Rename and comment.
-  const stateField = StateField.define<Value>({
+  const state = StateField.define<State>({
     create: () => ({
       path: path.slice(),
       lastHeads: A.getHeads(handle.docSync()!),
@@ -29,7 +29,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     }),
 
     update: (value, tr) => {
-      const result: Value = {
+      const result: State = {
         path: path.slice(),
         lastHeads: value.lastHeads,
         unreconciledTransactions: value.unreconciledTransactions.slice(),
@@ -55,9 +55,16 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     },
   });
 
-  const semaphore = new PatchSemaphore(handle, stateField);
+  const semaphore = new PatchSemaphore(handle, state);
 
-  return {
-    extension: [Cursor.converter.of(cursorConverter(handle, path)), syncFacet.of(semaphore), stateField],
-  };
+  return [
+    Cursor.converter.of(cursorConverter(handle, path)),
+    EditorView.updateListener.of(({ view, changes }) => {
+      if (!changes.empty) {
+        // TODO(burdon): Loses cursor position if auto closing brackets. Call explicitly?
+        semaphore.reconcile(view);
+      }
+    }),
+    state,
+  ];
 };
