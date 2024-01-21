@@ -12,12 +12,13 @@ export type MentionOptions = {
 // TODO(burdon): Can only have a single autocompletion. Merge configuration with autocomplete.
 export const mention = ({ onSearch }: MentionOptions): Extension => {
   return autocompletion({
+    // TODO(burdon): Not working.
     activateOnTyping: true,
-    activateOnTypingDelay: 100,
+    // activateOnTypingDelay: 100,
     // selectOnOpen: true,
-    // closeOnBlur: true, // For debugging.
+    closeOnBlur: false, // For debugging.
     // defaultKeymap: false,
-    // icons: false,
+    icons: false,
     override: [
       (context: CompletionContext): CompletionResult | null => {
         console.log(context);
