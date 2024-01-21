@@ -59,21 +59,17 @@ export class PatchSemaphore {
     }
 
     // Apply the unreconciled transactions to the document.
-    let newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
-
     // NOTE: null and undefined each come from automerge and repo respectively.
+    let newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
     if (newHeads === null || newHeads === undefined) {
       // TODO(alexjg): this is the call that's resetting the editor state on click.
       newHeads = automerge.getHeads(this._handle.docSync()!);
     }
 
-    // TODO(burdon): Selection is in the wrong place when bracket matching.
-
     // Now get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
     const diff = automerge.equals(oldHeads, newHeads)
       ? []
       : automerge.diff(this._handle.docSync()!, oldHeads, newHeads);
-
     updateCodeMirror(view, selection, path, diff);
 
     // Update automerge state.
