@@ -116,16 +116,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <TextEditor
-            model={model}
-            extensions={[promptExtension]}
-            placeholder={t('template placeholder')}
-            slots={{
-              root: {
-                className: 'w-full p-2',
-              },
-            }}
-          />
+          <TextEditor model={model} placeholder={t('template placeholder')} extensions={[promptExtension]} />
         </Section>
 
         {prompt.inputs?.length > 0 && (
@@ -189,6 +180,7 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
     <TextEditor
       model={model}
       placeholder={t('value placeholder')}
+      multiline={false}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),
