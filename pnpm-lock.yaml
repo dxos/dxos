@@ -4552,17 +4552,17 @@ importers:
   packages/core/echo/automerge:
     dependencies:
       '@automerge/automerge':
-        specifier: ^2.1.7
-        version: 2.1.7
+        specifier: ^2.1.10
+        version: 2.1.10
       '@automerge/automerge-repo':
         specifier: ^1.0.19
-        version: 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        version: 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: ^1.0.19
-        version: 1.0.19(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        version: 1.0.19
       '@automerge/automerge-wasm':
-        specifier: ^0.5.0
-        version: 0.5.0
+        specifier: ^0.9.0
+        version: 0.9.0
       bs58check:
         specifier: ^3.0.1
         version: 3.0.1
@@ -4571,7 +4571,7 @@ importers:
         version: 1.5.4
       debug:
         specifier: ^4.3.4
-        version: 4.3.4(supports-color@5.5.0)
+        version: 4.3.4
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -4677,11 +4677,11 @@ importers:
         version: link:../../../common/util
     devDependencies:
       '@automerge/automerge':
-        specifier: ^2.1.7
-        version: 2.1.7
+        specifier: ^2.1.10
+        version: 2.1.10
       '@automerge/automerge-repo':
         specifier: ^1.0.19
-        version: 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        version: 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -9695,10 +9695,10 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@automerge/automerge-repo-storage-indexeddb@1.0.19(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
+  /@automerge/automerge-repo-storage-indexeddb@1.0.19:
     resolution: {integrity: sha512-mp2P37tVtd2CIYMOfuYQd6iiXYSSw0ooJnuugDhR53KC1Q1gIFUiNBF/m3XE/Gp+ZOZm03HHPIfHjqxqk9mSag==}
     dependencies:
-      '@automerge/automerge-repo': 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -9710,7 +9710,7 @@ packages:
   /@automerge/automerge-repo@1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq):
     resolution: {integrity: sha512-IcfX9xkbk+YY7IhG+ZCoUVccou2MmHGXvu/XGOICFmUIaG1mkQAPzZU2u5r2JUX0cpr/2PcIPOeCletJMssnWw==}
     dependencies:
-      '@automerge/automerge': 2.1.7
+      '@automerge/automerge': 2.1.10
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.3.4
@@ -9726,7 +9726,6 @@ packages:
       - '@types/node'
       - supports-color
       - typescript
-    dev: true
     patched: true
 
   /@automerge/automerge-repo@1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
@@ -9748,16 +9747,28 @@ packages:
       - '@types/node'
       - supports-color
       - typescript
+    dev: false
     patched: true
 
   /@automerge/automerge-wasm@0.5.0:
     resolution: {integrity: sha512-01hAzCG0QlP6Ts/kbF2TGFhSK8ndg+HtUEqmX4SMHIdIrpLBipFsRc/U9iGtouNSe8cXdkXshfX68A7lVN1BpA==}
+    dev: false
+
+  /@automerge/automerge-wasm@0.9.0:
+    resolution: {integrity: sha512-wTPcW3wVk20D1x0DOko/RsfZV1mlc8HJynqgTRhVocOxFIU/RCilnYRfJmSb8LwCG2uZzfqg0DLsEBqQZ53KBQ==}
+
+  /@automerge/automerge@2.1.10:
+    resolution: {integrity: sha512-xj8R3fQHZmDYnrYW5WrBqWm/r5sLV9Z7mu89pJ10wGLVS2V+iAB2os85DoOGI2etzjmQsoHyrd97GBmszjH4zQ==}
+    dependencies:
+      '@automerge/automerge-wasm': 0.9.0
+      uuid: 9.0.1
 
   /@automerge/automerge@2.1.7:
     resolution: {integrity: sha512-/EO7OJyQ+5PXjQShfUn9yrwKSNy23XQujGQC1azL9vgRSwjf2jNc0eZZwxK5gWpjKeMsz3TB4vqoNVMtjKmrxA==}
     dependencies:
       '@automerge/automerge-wasm': 0.5.0
       uuid: 9.0.0
+    dev: false
 
   /@aw-web-design/x-default-browser@1.4.126:
     resolution: {integrity: sha512-Xk1sIhyNC/esHGGVjL/niHLowM0csl/kFO5uawBy4IrWwy0o1G8LGt3jP6nmWGz+USxeeqbihAmp/oVZju6wug==}
@@ -41570,7 +41581,6 @@ packages:
       make-error: 1.3.6
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    dev: true
     patched: true
 
   /ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
