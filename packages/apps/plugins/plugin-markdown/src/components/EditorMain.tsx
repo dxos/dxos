@@ -71,7 +71,7 @@ export const EditorMain = ({ editorRefCb, comments, ...props }: EditorMainProps)
       slots={{
         root: {
           className: mx(
-            'flex flex-col grow m-0.5 rounded',
+            'flex flex-col grow m-0.5 overflow-y-auto rounded',
             inputSurface,
             focusRing,
             surfaceElevation({ elevation: 'group' }),
@@ -91,13 +91,13 @@ export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: Mutable
   // TODO(burdon): Fix scrolling issues (compare with stack).
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
-      <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
+      <div role='none' className={mx(textBlockWidth, 'flex h-full pli-2 overflow-hidden')}>
+        <div role='none' className='flex flex-col h-full min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
           {children}
-        </div>
 
-        {/* Overscroll area. */}
-        <div role='none' className='bs-[50dvh]' />
+          {/* Overscroll area. */}
+          <div role='none' className='bs-[50dvh]' />
+        </div>
       </div>
     </Main.Content>
   );

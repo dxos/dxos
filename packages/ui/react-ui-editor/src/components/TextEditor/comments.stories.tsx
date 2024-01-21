@@ -156,7 +156,7 @@ const Thread: FC<{
           autofocus={focus}
           model={model}
           placeholder={'Enter comment...'}
-          slots={{ root: { className: 'grow p-2 rounded-b' } }}
+          slots={{ root: { className: 'grow rounded-b' } }}
           extensions={[
             keymap.of([
               {
