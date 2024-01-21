@@ -66,8 +66,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   // TODO(burdon): Remove (don't expose editor internals).
   const pluginMutableRef: MutableRefObject<EditorView | null> = { current: null };
-  const pluginRefCallback: RefCallback<EditorView> = (nextRef: EditorView) => {
-    pluginMutableRef.current = nextRef;
+  const pluginRefCallback: RefCallback<EditorView> = (view: EditorView) => {
+    pluginMutableRef.current = view;
   };
 
   const getCustomExtensions = (document?: DocumentType) => {
