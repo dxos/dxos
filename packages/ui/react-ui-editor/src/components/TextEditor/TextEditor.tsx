@@ -94,13 +94,17 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     // Monitor awareness.
     useAwareness(model);
 
-    // Create editor.
+    // Create editor state and view.
+    // The view is recreated if the model or extensions are changed.
     useEffect(() => {
       if (!model || !rootRef.current) {
         return;
       }
 
+      //
+      // EditorState
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
+      //
       const state = EditorState.create({
         doc: model.text(),
         selection,
@@ -133,7 +137,10 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         ].filter(Boolean) as Extension[],
       });
 
+      //
+      // EditorView
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
+      //
       const newView = new EditorView({
         state,
         parent: rootRef.current,
@@ -149,7 +156,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         },
       });
 
-      // The view is recreated if the model or extensions are changed.
       view?.destroy();
       setView(newView);
 
@@ -232,7 +238,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    // TODO(burdon): Add focusRing?
+    // TODO(burdon): Add focusRing by default/as property?
     className: mx('flex flex-col grow overflow-y-auto', inputSurface),
   },
   editor: {
