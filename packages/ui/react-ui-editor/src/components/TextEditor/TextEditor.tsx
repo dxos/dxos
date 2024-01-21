@@ -7,7 +7,6 @@ import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
-import { logChanges } from 'packages/ui/react-ui-editor/src/util';
 import React, {
   type ComponentProps,
   type KeyboardEvent,
@@ -27,6 +26,7 @@ import { basicBundle, markdownBundle, useAwareness } from '../../extensions';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
+import { logChanges } from '../../util';
 
 // TODO(burdon): Change to enum?
 export const EditorModes = ['default', 'vim'] as const;
@@ -142,7 +142,10 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
         dispatchTransactions: (trs, view) => {
           view.update(trs);
-          logChanges(trs);
+          const debug = false;
+          if (debug) {
+            logChanges(trs);
+          }
         },
       });
 

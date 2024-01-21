@@ -12,7 +12,6 @@ import {
   type ViewUpdate,
   WidgetType,
 } from '@codemirror/view';
-import type { EditorModel } from 'packages/ui/react-ui-editor/src/hooks';
 import { useEffect } from 'react';
 
 import { Event } from '@dxos/async';
@@ -22,6 +21,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue } from '@dxos/react-ui-theme';
 
 import { Cursor, type CursorConverter } from './cursor';
+import { type EditorModel } from '../hooks';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;
