@@ -20,7 +20,6 @@ export type AutomergeOptions = {
 };
 
 export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
-  // TODO(burdon): Rename and comment.
   const state = StateField.define<State>({
     create: () => ({
       path: path.slice(),

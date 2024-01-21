@@ -33,7 +33,6 @@ import {
   typewriter,
   type CommentsOptions,
   type LinkOptions,
-  outliner,
   useComments,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
@@ -267,27 +266,18 @@ export const Readonly = {
   render: () => <Story text={document} extensions={defaults} readonly />,
 };
 
-const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
-
-export const Large = {
-  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
+export const NoExtensions = {
+  render: () => <Story text={document} />,
 };
+
+const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
 export const Empty = {
   render: () => <Story />,
 };
 
-export const NoExtensions = {
-  render: () => <Story text={document} />,
-};
-
-export const HorizontalRule = {
-  render: () => (
-    <Story
-      text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
-      extensions={[hr()]}
-    />
-  ),
+export const Scrolling = {
+  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
 };
 
 export const Links = {
@@ -303,10 +293,6 @@ export const Code = {
   render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
 };
 
-export const Table = {
-  render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
-};
-
 export const Image = {
   render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
@@ -317,14 +303,18 @@ export const Lists = {
   ),
 };
 
-export const Outliner = {
-  render: () => (
-    <Story
-      text={str('# Outliner', '', 'Block', ': this is a block', ': with multiple lines', text.footer)}
-      extensions={[outliner()]}
-    />
-  ),
+export const Table = {
+  render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
 };
+
+// export const Outliner = {
+//   render: () => (
+//     <Story
+//       text={str('# Outliner', '', 'Block', ': this is a block', ': with multiple lines', text.footer)}
+//       extensions={[outliner()]}
+//     />
+//   ),
+// };
 
 export const Autocomplete = {
   render: () => (
@@ -387,6 +377,15 @@ export const Comments = {
       />
     );
   },
+};
+
+export const HorizontalRule = {
+  render: () => (
+    <Story
+      text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
+      extensions={[hr()]}
+    />
+  ),
 };
 
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');

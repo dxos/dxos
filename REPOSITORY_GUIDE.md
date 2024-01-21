@@ -87,6 +87,14 @@ When adding a package name in `dependencies` or `devDependencies`, `vscode` shou
 
 Once the required changes have been made, re-run `pnpm i`.
 
+## Updating dependencies
+
+Run `pnpm up` to update dependencies from the root directory. For example:
+
+```bash
+pnpm up --latest -i -r "@codemirror/*"
+```
+
 ## Tasks in `nx` targets
 
 Each package has a `project.json` which describes the "targets" or runnable actions/scripts that package can perform. 
