@@ -8,8 +8,8 @@ import { Annotation, StateEffect, type StateField, type EditorState, type Transa
 
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 
-// TODO(burdon): Rename and document.
-export type Value = {
+// TODO(burdon): Rename.
+export type State = {
   path: Prop[];
   lastHeads: Heads;
   unreconciledTransactions: Transaction[];
@@ -23,33 +23,13 @@ export const effectType = StateEffect.define<UpdateHeads>({});
 
 export const reconcileAnnotationType = Annotation.define<unknown>();
 
-export const getPath = (state: EditorState, field: StateField<Value>): Prop[] => state.field(field).path;
+export const getPath = (state: EditorState, field: StateField<State>): Prop[] => state.field(field).path;
 
-export const getLastHeads = (state: EditorState, field: StateField<Value>): Heads => state.field(field).lastHeads;
+export const getLastHeads = (state: EditorState, field: StateField<State>): Heads => state.field(field).lastHeads;
 
 export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
 
 export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
-
-// TODO(burdon): Remove?
-/*
-export const makeReconcile = (tr: TransactionSpec) => {
-  if (tr.annotations != null) {
-    if (tr.annotations instanceof Array) {
-      tr.annotations = [...tr.annotations, reconcileAnnotationType.of({})];
-    } else {
-      tr.annotations = [tr.annotations, reconcileAnnotationType.of({})];
-    }
-  } else {
-    tr.annotations = [reconcileAnnotationType.of({})];
-  }
-
-  // return {
-  //   ...tr,
-  //   annotations: reconcileAnnotationType.of({})
-  // }
-};
-*/
 
 export type IDocHandle<T = any> = {
   docSync(): Doc<T> | undefined;

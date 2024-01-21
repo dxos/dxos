@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import { EditorView } from '@codemirror/view';
+import { type EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -213,10 +213,11 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 
 type StoryProps = {
   text?: string;
+  comments?: Comment[];
   automerge?: boolean;
-} & Pick<TextEditorProps, 'comments' | 'readonly' | 'extensions' | 'slots'>;
+} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'slots' | 'extensions'>;
 
-const Story = ({ text, automerge, comments, ...props }: StoryProps) => {
+const Story = ({ text, comments, automerge, placeholder = 'New document.', ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
   const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
@@ -229,7 +230,7 @@ const Story = ({ text, automerge, comments, ...props }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <MarkdownEditor ref={view} model={model} {...props} />
+          <MarkdownEditor ref={view} model={model} placeholder={placeholder} {...props} />
         </div>
       </div>
     </div>
@@ -417,20 +418,6 @@ export const Blast = {
             defaultOptions,
           ),
         ),
-      ]}
-    />
-  ),
-};
-
-export const Diagnostics = {
-  render: () => (
-    <Story
-      text={document}
-      extensions={[
-        // Cursor moved.
-        EditorView.updateListener.of((update) => {
-          console.log('update', update.view.state.selection.main.head);
-        }),
       ]}
     />
   ),

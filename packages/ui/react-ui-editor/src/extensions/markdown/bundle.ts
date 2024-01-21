@@ -23,20 +23,15 @@ import {
 import type { ThemeMode } from '@dxos/react-ui';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
+import { type TextEditorProps } from '../../components';
 
 export type MarkdownBundleOptions = {
-  readonly?: boolean;
   themeMode?: ThemeMode;
-  placeholder?: string;
-};
-
-export const isDefined = <T>(value: T): value is Exclude<T, '' | false | null | undefined> => !!value;
+} & Pick<TextEditorProps, 'readonly' | 'placeholder'>;
 
 /**
  * Markdown bundle.
  * Refs:
- * https://github.com/codemirror/basic-setup
- * https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts#L50
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
@@ -51,6 +46,7 @@ export const markdownBundle = ({
     EditorState.tabSize.of(2),
     EditorView.lineWrapping,
 
+    // https://github.com/codemirror/basic-setup
     bracketMatching(),
     closeBrackets(),
     crosshairCursor(),
