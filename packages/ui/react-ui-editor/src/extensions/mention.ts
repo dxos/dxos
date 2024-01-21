@@ -11,9 +11,12 @@ export type MentionOptions = {
 
 export const mention = ({ onSearch }: MentionOptions): Extension => {
   return autocompletion({
+    activateOnTyping: true,
     closeOnBlur: false, // For debugging.
+    defaultKeymap: false,
     override: [
       (context: CompletionContext): CompletionResult | null => {
+        console.log('::::', context);
         const match = context.matchBefore(/@(\w+)?/);
         if (!match || (match.from === match.to && !context.explicit)) {
           return null;

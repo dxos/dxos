@@ -30,6 +30,8 @@ export type MarkdownBundleOptions = {
   placeholder?: string;
 };
 
+export const isDefined = <T>(value: T): value is Exclude<T, '' | false | null | undefined> => !!value;
+
 /**
  * Markdown bundle.
  * Refs:
@@ -49,8 +51,6 @@ export const markdownBundle = ({
     EditorState.tabSize.of(2),
     EditorView.lineWrapping,
 
-    customKeymap(),
-
     bracketMatching(),
     closeBrackets(),
     crosshairCursor(),
@@ -59,7 +59,7 @@ export const markdownBundle = ({
     highlightActiveLine(),
     history(),
     indentOnInput(),
-    _placeholder && placeholder(_placeholder),
+    _placeholder ? placeholder(_placeholder) : [],
 
     // Main extension.
     // https://github.com/codemirror/lang-markdown
@@ -87,20 +87,18 @@ export const markdownBundle = ({
 
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle(readonly)),
-  ].filter(Boolean) as Extension[];
-};
 
-// https://codemirror.net/docs/ref/#view.keymap
-const customKeymap = () =>
-  keymap.of([
-    // https://codemirror.net/docs/ref/#commands.indentWithTab
-    indentWithTab,
-    // https://codemirror.net/docs/ref/#commands.standardKeymap
-    ...standardKeymap,
-    // https://codemirror.net/docs/ref/#commands.historyKeymap
-    ...historyKeymap,
-    // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
-    ...closeBracketsKeymap,
-    // https://codemirror.net/docs/ref/#search.searchKeymap
-    ...searchKeymap,
-  ]);
+    keymap.of([
+      // https://codemirror.net/docs/ref/#commands.indentWithTab
+      indentWithTab,
+      // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
+      ...closeBracketsKeymap,
+      // https://codemirror.net/docs/ref/#commands.historyKeymap
+      ...historyKeymap,
+      // https://codemirror.net/docs/ref/#search.searchKeymap
+      ...searchKeymap,
+      // https://codemirror.net/docs/ref/#commands.standardKeymap
+      ...standardKeymap,
+    ]),
+  ];
+};

@@ -272,11 +272,10 @@ export const NoExtensions = {
   render: () => <Story text={document} />,
 };
 
-// TODO(burdon): Cursor bug if no newline after BR (cursor down just loops back to start of each paragraph).
 export const HorizontalRule = {
   render: () => (
     <Story
-      text={str('# Horizontal Rule', '', text.paragraphs, '---', '', text.paragraphs, '---', '', text.paragraphs)}
+      text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
       extensions={[hr()]}
     />
   ),
@@ -319,11 +318,15 @@ export const Outliner = {
 export const Autocomplete = {
   render: () => (
     <Story
-      text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
+      text={str('# Autocomplete', '', 'Press Ctrl-Space...', text.footer)}
       extensions={[
         link({ onRender: onRenderLink }),
         autocomplete({
-          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+          onSearch: (text) =>
+            links.filter(({ label }) => {
+              console.log(label);
+              return label.toLowerCase().includes(text.toLowerCase());
+            }),
         }),
       ]}
     />

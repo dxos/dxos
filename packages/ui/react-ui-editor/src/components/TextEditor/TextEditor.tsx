@@ -19,10 +19,11 @@ import React, {
 } from 'react';
 
 import { generateName } from '@dxos/display-name';
+import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { getColorForValue, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle, setComments, syncFacet } from '../../extensions';
+import { basicBundle, markdownBundle, setComments } from '../../extensions';
 import { type Comment, type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
@@ -41,6 +42,12 @@ export type CursorInfo = {
 
 export type TextEditorSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
+  editor?: {
+    className?: string;
+  };
+  content?: {
+    className?: string;
+  };
 };
 
 // TODO(burdon): Spellcheck?
@@ -123,19 +130,26 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         // TODO(burdon): Composer should store and set selection when switching documents.
         selection,
         extensions: [
-          readonly && EditorState.readOnly.of(readonly),
+          EditorState.readOnly.of(!!readonly),
+
+          // TODO(burdon): Doesn't catch keymap functions.
+          EditorView.exceptionSink.of((err) => {
+            log.catch(err);
+          }),
 
           // Theme.
           // TODO(burdon): Make theme configurable.
           EditorView.baseTheme(defaultTheme),
           EditorView.theme(theme ?? {}),
           EditorView.darkTheme.of(themeMode === 'dark'),
-
-          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
-          editorMode === 'vim' && vim(),
+          EditorView.editorAttributes.of({ class: slots.editor?.className ?? '' }),
+          EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
           // Storage and replication (NOTE: must come before other extensions).
           model.extension,
+
+          // TODO(burdon): Factor out VIM mode? (manage via MarkdownPlugin).
+          editorMode === 'vim' && vim(),
 
           // Custom.
           ...extensions,
@@ -151,12 +165,9 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         state,
         // NOTE: Uncomment to spy on all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-        dispatch: (transaction, view) => {
-          view.update([transaction]);
-
-          // TODO(burdon): Is there a place to register this?
-          view.state.facet(syncFacet)?.reconcile(view);
-        },
+        // dispatch: (transaction, view) => {
+        //   view.update([transaction]);
+        // },
       });
 
       setView(newView);
@@ -233,7 +244,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 
 export const defaultSlots: TextEditorSlots = {
   root: {
-    className: mx('w-full p-2 overflow-y-auto', inputSurface),
+    className: mx('w-full overflow-y-auto p-2', inputSurface),
   },
 };
 

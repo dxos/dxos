@@ -7,12 +7,12 @@ import { log } from '@dxos/log';
 /**
  * CodeMirror callbacks swallow errors so wrap handlers.
  */
-// TODO(burdon): Figure out how to systematize this.
+// TODO(burdon): EditorView.exceptionSink should catch errors.
 export const callbackWrapper = <T extends Function>(fn: T): T =>
   ((...args: any[]) => {
     try {
       return fn(...args);
-    } catch (error) {
-      log.catch(error);
+    } catch (err) {
+      log.catch(err);
     }
   }) as unknown as T;

@@ -47,17 +47,23 @@ export type CommentsState = {
   selection: SelectionState;
 };
 
-export const setFocus = (view: EditorView, thread: string) => {
-  const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === thread);
-  if (!comment) {
+export const setFocus = (view: EditorView, id: string, center = true) => {
+  const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === id);
+  if (!comment?.comment.cursor) {
     return;
   }
 
-  view.dispatch({
-    effects: setSelection.of({ active: thread }),
-    selection: { anchor: comment.range.from },
-    scrollIntoView: true, // TODO(burdon): Scroll to y-position (or center of screen?)
-  });
+  const range = Cursor.getRangeFromCursor(view.state, comment.comment.cursor);
+  if (range) {
+    view.dispatch({
+      selection: { anchor: range.from },
+      effects: [
+        //
+        EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined),
+        setSelection.of({ active: id }),
+      ],
+    });
+  }
 };
 
 export const setComments = StateEffect.define<Comment[]>();
@@ -278,7 +284,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     const cursor = Cursor.getCursorFromRange(view.state, { from, to });
     if (cursor) {
       // Create thread via callback.
-      const id = callbackWrapper(options.onCreate)(cursor, view.coordsAtPos(from));
+      const id = options.onCreate?.(cursor, view.coordsAtPos(from));
       if (id) {
         // Update range.
         view.dispatch({
@@ -305,7 +311,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       ? keymap.of([
           {
             key: shortcut,
-            // TODO(burdon): Check if there's a better way?
             run: callbackWrapper(createCommentThread),
           },
         ])

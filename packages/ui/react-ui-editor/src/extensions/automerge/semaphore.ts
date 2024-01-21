@@ -20,12 +20,11 @@ import {
 } from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
-import { type Syncer } from '../sync';
 
 /**
  * Implements three-way merge (on each mutation/keystroke).
  */
-export class PatchSemaphore implements Syncer {
+export class PatchSemaphore {
   private _inReconcile = false;
 
   // prettier-ignore

@@ -35,16 +35,19 @@ export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
     // https://codemirror.net/examples/autocompletion
     // https://codemirror.net/docs/ref/#autocomplete.autocompletion
     autocompletion({
+      activateOnTyping: true,
+      closeOnBlur: true,
       defaultKeymap: false,
-
-      // Don't start unless key press.
-      activateOnTyping: false,
+      // tooltipClass: ''
+      // addToOptions
     }),
 
     // TODO(burdon): Option to create new page?
     // TODO(burdon): Optional decoration via addToOptions
     markdownLanguage.data.of({
       autocomplete: (context: CompletionContext): CompletionResult | null => {
+        console.log('::::');
+
         const match = context.matchBefore(/\w*/);
         if (!match || (match.from === match.to && !context.explicit)) {
           return null;
