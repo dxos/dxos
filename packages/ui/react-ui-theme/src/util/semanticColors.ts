@@ -20,22 +20,20 @@ export const semanticColors = plugin(({ addUtilities, theme, e }) => {
       [`.fg-${e(`${key}`)}`]: {
         color: `${value.fg?.light ?? value.light}`,
       },
+      [`.dark .fg-${e(`${key}`)}`]: {
+        color: `${value.fg?.dark ?? value.dark}`,
+      },
       [`.surface-${e(`${key}`)}`]: {
         backgroundColor: `${value.light}`,
+      },
+      [`.dark .surface-${e(`${key}`)}`]: {
+        backgroundColor: `${value.dark}`,
       },
       [`.separator-${e(`${key}`)}`]: {
         borderColor: `${value.light}`,
       },
-      '.dark': {
-        [`& .fg-${e(`${key}`)}`]: {
-          color: `${value.fg?.dark ?? value.dark}`,
-        },
-        [`& .surface-${e(`${key}`)}`]: {
-          backgroundColor: `${value.dark}`,
-        },
-        [`& .separator-${e(`${key}`)}`]: {
-          borderColor: `${value.dark}`,
-        },
+      [`.dark .separator-${e(`${key}`)}`]: {
+        borderColor: `${value.dark}`,
       },
     } as CSSRuleObject;
   });

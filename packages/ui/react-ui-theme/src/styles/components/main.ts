@@ -49,7 +49,7 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
       : inlineEndSidebarOpen
       ? 'inline-end-0'
       : mx('-inline-end-[100vw]', sidebarSlots.end.sidebar),
-    side === 'inline-start' ? 'border-ie' : 'border-is',
+    side === 'inline-start' ? 'border-ie-4' : 'border-is-4',
     fixedSurface,
     ...etc,
   );
@@ -71,7 +71,7 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (
   ...etc
 ) =>
   mx(
-    'fixed inset-0 z-[9] bg-transparent',
+    'fixed inset-0 z-[9] surface-scrim',
     'transition-opacity duration-200 ease-in-out',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'opacity-100' : 'opacity-0',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'block' : 'hidden',
