@@ -71,6 +71,9 @@ jobs:
             type=ref,event=pr
             type=sha
             type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+          labels: |
+            org.opencontainers.image.title=DXOS Agent
+            org.opencontainers.image.description=The DXOS Agent provides offline backup and synchronization capabilities.
       - name: Docker meta for composer
         id: composer-meta
         uses: docker/metadata-action@v5
@@ -84,6 +87,9 @@ jobs:
             type=ref,event=pr
             type=sha
             type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+          labels: |
+            org.opencontainers.image.title=DXOS Composer
+            org.opencontainers.image.description=DXOS Composer
       - name: Build and push agent
         uses: docker/build-push-action@v5
         with:
