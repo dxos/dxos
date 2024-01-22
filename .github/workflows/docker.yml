@@ -92,6 +92,8 @@ jobs:
           tags: ${{ steps.agent-meta.outputs.tags }}
           labels: ${{ steps.agent-meta.outputs.labels }}
           annotations: ${{ steps.agent-meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
             DX_VERSION=${{ env.DX_VERSION }}
@@ -109,6 +111,8 @@ jobs:
           tags: ${{ steps.composer-meta.outputs.tags }}
           labels: ${{ steps.composer-meta.outputs.labels }}
           annotations: ${{ steps.composer-meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
             DX_VERSION=${{ env.DX_VERSION }}
