@@ -172,7 +172,7 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
 /**
  * Used to replicate with other peers over the network.
  */
-class MeshNetworkAdapter extends NetworkAdapter {
+export class MeshNetworkAdapter extends NetworkAdapter {
   private readonly _extensions: Map<string, AutomergeReplicator> = new Map();
 
   /**
@@ -233,10 +233,13 @@ class MeshNetworkAdapter extends NetworkAdapter {
           this.emit('message', message);
         },
         onClose: async () => {
-          peerInfo &&
-            this.emit('peer-disconnected', {
-              peerId: peerInfo.id as PeerId,
-            });
+          if (!peerInfo) {
+            return;
+          }
+          this.emit('peer-disconnected', {
+            peerId: peerInfo.id as PeerId,
+          });
+          this._extensions.delete(peerInfo.id);
         },
       },
     );
