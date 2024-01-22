@@ -12,19 +12,19 @@ import { mx } from '@dxos/react-ui-theme';
 import { THREAD_PLUGIN } from '../../meta';
 import { MessageCard } from '../MessageCard';
 import { MessageInput, type MessageInputProps } from '../MessageInput';
-import { type BlockPropertiesProvider } from '../util';
+import { type MessagePropertiesProvider } from '../util';
 
-export type ThreadChannelProps = {
+export type ChatThreadProps = {
   thread: ThreadType;
   identityKey: PublicKey;
-  propertiesProvider: BlockPropertiesProvider;
+  propertiesProvider: MessagePropertiesProvider;
   fullWidth?: boolean;
   onFocus?: () => void;
   onCreate?: MessageInputProps['onMessage'];
   onDelete?: (blockId: string, idx: number) => void;
 } & Pick<MessageInputProps, 'processing'>;
 
-export const ThreadChannel = ({
+export const ChatThread = ({
   thread,
   identityKey,
   propertiesProvider,
@@ -33,7 +33,7 @@ export const ThreadChannel = ({
   onCreate,
   onDelete,
   ...props
-}: ThreadChannelProps) => {
+}: ChatThreadProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 

@@ -15,14 +15,16 @@ import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM } from '../../meta';
-import { type BlockPropertiesProvider, safeParseJson } from '../util';
+import { type MessagePropertiesProvider, safeParseJson } from '../util';
 
 // TODO(burdon): Replace rendering via CM TextEditor instance in readonly mode.
+//  Messages can be multi-part markdown documents that include fenced code blocks, etc.
+//  Consider multiple sizes (e.g., phone narrow, vs. desktop/tablet screen wide).
 
 export type MessageCardProps = {
   className?: string;
   message: MessageType;
-  propertiesProvider?: BlockPropertiesProvider;
+  propertiesProvider?: MessagePropertiesProvider;
   onDelete?: (messageId: string, idx: number) => void;
 };
 

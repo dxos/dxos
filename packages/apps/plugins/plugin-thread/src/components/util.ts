@@ -7,12 +7,27 @@ import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 
-export type BlockProperties = {
+export type MessageProperties = {
   displayName?: string;
   classes?: string;
 };
 
-export type BlockPropertiesProvider = (identityKey: PublicKey | undefined) => BlockProperties;
+export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageProperties;
+
+export const createPropertiesProvider = (identity: Identity, members: SpaceMember[]): MessagePropertiesProvider => {
+  return (identityKey: PublicKey | undefined) => {
+    const author =
+      identityKey && PublicKey.equals(identityKey, identity.identityKey)
+        ? identity
+        : members.find((member) => identityKey && PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
+
+    const key = author?.identityKey ?? identityKey;
+    return {
+      displayName: author?.profile?.displayName ?? (identityKey ? generateName(identityKey.toHex()) : ''),
+      classes: key ? colorHash(key) : undefined,
+    };
+  };
+};
 
 const colors = [
   'text-blue-300',
@@ -29,21 +44,6 @@ const colors = [
 const colorHash = (key: PublicKey) => {
   const num = Number('0x' + key.toHex().slice(0, 8));
   return colors[num % colors.length];
-};
-
-export const createPropertiesProvider = (identity: Identity, members: SpaceMember[]): BlockPropertiesProvider => {
-  return (identityKey: PublicKey | undefined) => {
-    const author =
-      identityKey && PublicKey.equals(identityKey, identity.identityKey)
-        ? identity
-        : members.find((member) => identityKey && PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
-
-    const key = author?.identityKey ?? identityKey;
-    return {
-      displayName: author?.profile?.displayName ?? (identityKey ? generateName(identityKey.toHex()) : ''),
-      classes: key ? colorHash(key) : undefined,
-    };
-  };
 };
 
 export const safeParseJson = (data: string) => {

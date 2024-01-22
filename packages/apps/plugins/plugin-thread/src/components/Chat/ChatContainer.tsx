@@ -10,11 +10,11 @@ import { PublicKey } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { ThreadChannel } from './ThreadChannel';
+import { ChatThread } from './ChatThread';
 import { useStatus } from '../../hooks';
 import { createPropertiesProvider } from '../util';
 
-export type ThreadContainerProps = {
+export type ChatContainerProps = {
   space: Space;
   thread: ThreadType;
   activeObjectId?: string;
@@ -22,7 +22,7 @@ export type ThreadContainerProps = {
   onFocus?: () => void;
 };
 
-export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ThreadContainerProps) => {
+export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ChatContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
   const processing = useStatus(space, thread.id);
@@ -69,7 +69,7 @@ export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocu
   };
 
   return (
-    <ThreadChannel
+    <ChatThread
       identityKey={identity.identityKey}
       propertiesProvider={createPropertiesProvider(identity, members)}
       thread={thread}

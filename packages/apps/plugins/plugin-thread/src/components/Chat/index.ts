@@ -4,4 +4,4 @@
 
 export * from './ChatContainer';
 export * from './ChatSidebar';
-export * from './ThreadChannel';
+export * from './ChatThread';

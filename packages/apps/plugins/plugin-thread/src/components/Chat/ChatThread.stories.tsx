@@ -7,52 +7,18 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
-import { Thread as ThreadType, Message as MessageType, types } from '@braneframe/types';
-import { PublicKey, useClient } from '@dxos/react-client';
+import { type Thread as ThreadType, Message as MessageType, types } from '@braneframe/types';
+import { useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ThreadChannel } from './ThreadChannel';
+import { ChatThread } from './ChatThread';
+import { createChatThread } from '../testing';
 import { createPropertiesProvider } from '../util';
 
 faker.seed(1);
-
-const createThread = (identity: Identity) => {
-  return new ThreadType({
-    messages: Array.from({ length: 8 }).map(
-      () =>
-        new MessageType({
-          from: {
-            identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
-          },
-          blocks: faker.helpers.multiple(
-            () =>
-              faker.datatype.boolean({ probability: 0.8 })
-                ? {
-                    text: faker.lorem.sentences(3),
-                  }
-                : {
-                    data: JSON.stringify(
-                      faker.helpers.multiple(
-                        () => ({
-                          id: PublicKey.random().truncate(),
-                          name: faker.lorem.word(),
-                          content: faker.lorem.sentences(3),
-                        }),
-                        {
-                          count: faker.number.int({ min: 2, max: 5 }),
-                        },
-                      ),
-                    ),
-                  },
-            { count: faker.number.int({ min: 1, max: 3 }) },
-          ),
-        }),
-    ),
-  });
-};
 
 const Story = () => {
   const client = useClient();
@@ -65,7 +31,7 @@ const Story = () => {
     if (identity) {
       setTimeout(async () => {
         const space = await client.spaces.create();
-        const thread = space.db.add(createThread(identity));
+        const thread = space.db.add(createChatThread(identity));
         setSpace(space);
         setThread(thread);
       });
@@ -109,7 +75,7 @@ const Story = () => {
   return (
     <div className='flex w-full justify-center'>
       <div className='flex w-[600px] overflow-x-hidden'>
-        <ThreadChannel
+        <ChatThread
           thread={thread}
           identityKey={identity.identityKey}
           propertiesProvider={createPropertiesProvider(identity, members)}
@@ -122,8 +88,8 @@ const Story = () => {
 };
 
 export default {
-  title: 'plugin-thread/ThreadChannel',
-  component: ThreadChannel,
+  title: 'plugin-thread/ChatThread',
+  component: ChatThread,
   render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
 };
