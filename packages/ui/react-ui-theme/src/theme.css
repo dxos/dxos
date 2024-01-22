@@ -89,9 +89,9 @@
 }
 
 .dark {
-  --surface-bg: theme(colors.neutral.825);
-  --input-bg: theme(colors.neutral.800);
-  --input-bg-hover: theme(colors.neutral.750);
+  --surface-bg: theme(colors.neutral.850);
+  --input-bg: theme(colors.neutral.825);
+  --input-bg-hover: theme(colors.neutral.800);
   --surface-text: white;
   --description-text: theme(colors.neutral.500);
 }
@@ -104,10 +104,10 @@
 }
 
 .dark .base-surface {
-  background-color: theme(colors.neutral.825);
-  --surface-bg: theme(colors.neutral.825);
-  --input-bg: theme(colors.neutral.800);
-  --input-bg-hover: theme(colors.neutral.750);
+  background-color: theme(colors.neutral.850);
+  --surface-bg: theme(colors.neutral.850);
+  --input-bg: theme(colors.neutral.825);
+  --input-bg-hover: theme(colors.neutral.800);
 }
 
 .fixed-surface {
@@ -118,19 +118,19 @@
 }
 
 .dark .fixed-surface {
-  background-color: theme(colors.neutral.825 / 90%);
-  --surface-bg: theme(colors.neutral.825);
-  --input-bg: theme(colors.neutral.800);
-  --input-bg-hover: theme(colors.neutral.750);
+  background-color: theme(colors.neutral.850 / 90%);
+  --surface-bg: theme(colors.neutral.850);
+  --input-bg: theme(colors.neutral.825);
+  --input-bg-hover: theme(colors.neutral.800);
 }
 
 .modal-surface {
-  background-color: #FFFFFFE6;
+  background-color: #FFFFFF;
   --surface-bg: white;
 }
 
 .dark .modal-surface {
-  background-color: theme(colors.neutral.750 / 90%);
+  background-color: theme(colors.neutral.750);
   --surface-bg: theme(colors.neutral.750);
 }
 
@@ -140,8 +140,8 @@
 }
 
 .dark .attention-surface {
-  background-color: theme(colors.neutral.875);
-  --surface-bg: theme(colors.neutral.875);
+  background-color: theme(colors.neutral.900);
+  --surface-bg: theme(colors.neutral.900);
 }
 
 html {

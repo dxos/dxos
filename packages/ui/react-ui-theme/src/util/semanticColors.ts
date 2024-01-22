@@ -30,10 +30,10 @@ export const semanticColors = plugin(({ addUtilities, theme, e }) => {
         backgroundColor: `${value.dark}`,
       },
       [`.separator-${e(`${key}`)}`]: {
-        borderColor: `${value.light}`,
+        borderColor: `${value.fg?.light ?? value.light}`,
       },
       [`.dark .separator-${e(`${key}`)}`]: {
-        borderColor: `${value.dark}`,
+        borderColor: `${value.fg?.dark ?? value.dark}`,
       },
     } as CSSRuleObject;
   });

@@ -155,10 +155,10 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
     hueTorsion: -30 * dtor,
   },
   secondary: {
-    keyColor: '#02d1ef',
+    keyColor: '#02bcef',
     darkCp: 1,
     lightCp: 1,
-    hueTorsion: -42 * dtor,
+    hueTorsion: -51.5 * dtor,
   },
 };
 
@@ -223,15 +223,15 @@ export const tailwindConfig = ({
       description: { light: configColors.neutral['300'], dark: configColors.neutral['500'] },
       baseGlass: { light: `${configColors.neutral['25']}E6`, dark: `${configColors.neutral['850']}E6` },
       input: { light: configColors.neutral['50'], dark: configColors.neutral['825'] },
-      modal: { light: '#FFFFFFE6', dark: `${configColors.neutral['750']}E6` },
+      modal: { light: '#FFFFFF', dark: `${configColors.neutral['750']}` },
       modalSelected: { light: configColors.neutral['50'], dark: configColors.neutral['825'] },
       hover: { light: configColors.neutral['37'], dark: configColors.neutral['800'] },
       accent: {
         light: configColors.primary['550'],
-        dark: configColors.secondary['500'],
-        fg: { light: configColors.primary['550'], dark: configColors.secondary['450'] },
+        dark: configColors.secondary['450'],
+        fg: { light: configColors.primary['550'], dark: configColors.secondary['400'] },
       },
-      accentHover: { light: configColors.primary['600'], dark: configColors.secondary['400'] },
+      accentHover: { light: configColors.primary['600'], dark: configColors.secondary['350'] },
       separator: { light: configColors.neutral['75'], dark: configColors.neutral['750'] },
       inverse: { light: '#FFFFFF', dark: configColors.neutral['850'] },
       unavailable: { light: configColors.neutral['100'], dark: configColors.neutral['600'] },

@@ -28,14 +28,14 @@ export const menuContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) =
 export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
     'flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-2 text-sm',
-    'text-neutral-900 data-[highlighted]:bg-neutral-50 dark:text-neutral-100 dark:data-[highlighted]:bg-neutral-900',
+    'data-[highlighted]:surface-hover',
     subduedFocus,
     dataDisabled,
     ...etc,
   );
 
 export const menuSeparator: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('mlb-1 mli-2 bs-px bg-neutral-200 dark:bg-neutral-700', ...etc);
+  mx('mlb-1 mli-2 bs-px surface-separator', ...etc);
 
 export const menuGroupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(descriptionText, 'select-none pli-2 plb-2', ...etc);

@@ -55,8 +55,7 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) =
     resolvedVariant === 'default' && defaultButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
     resolvedVariant === 'primary' && primaryButtonColors,
-    resolvedVariant === 'outline' &&
-      'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
+    resolvedVariant === 'outline' && 'border separator-base',
     !props.disabled && focusRing,
     // Register all radix states
     'group',

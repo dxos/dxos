@@ -100,7 +100,7 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-base rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   textInputSurfaceHover,
-  props.focused && 'bg-white dark:bg-neutral-925',
+  props.focused && 'surface-attention',
   placeholderText,
   inputValence(props.validationValence),
   props.disabled && staticDisabled,
@@ -146,7 +146,7 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
 export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-white rounded-full border-neutral-100 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
+    'block bg-white rounded-full separator-separator transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 
@@ -154,7 +154,7 @@ export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props
   mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
 export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
+  mx('block text-sm font-medium', props.srOnly && 'sr-only', ...etc);
 
 export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly && 'sr-only', ...etc);
