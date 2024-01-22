@@ -8,6 +8,7 @@ import { StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { type Prop, next as A } from '@dxos/automerge/automerge';
+import { invariant } from '@dxos/invariant';
 
 import { cursorConverter } from './cursor';
 import { effectType, type IDocHandle, isReconcileTx, type State } from './defs';
@@ -62,11 +63,12 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     ViewPlugin.fromClass(
       class {
         constructor(private readonly _view: EditorView) {
-          handle.addListener('change', this._handleChange);
+          invariant(this._view);
+          handle.addListener('change', this._handleChange.bind(this));
         }
 
         destroy() {
-          handle.removeListener('change', this._handleChange);
+          handle.removeListener('change', this._handleChange.bind(this));
         }
 
         _handleChange() {
