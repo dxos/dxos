@@ -23,7 +23,7 @@ import {
 import {
   baseSurface,
   focusRing,
-  inputSurface,
+  attentionSurface,
   mx,
   surfaceElevation,
   textBlockWidth,
@@ -69,7 +69,12 @@ export const EditorMain = ({ editorRefCb, comments, ...props }: EditorMainProps)
       placeholder={t('editor placeholder')}
       slots={{
         root: {
-          className: mx('flex flex-col grow m-0.5', inputSurface, focusRing, surfaceElevation({ elevation: 'group' })),
+          className: mx(
+            'flex flex-col grow m-0.5',
+            attentionSurface,
+            focusRing,
+            surfaceElevation({ elevation: 'group' }),
+          ),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {

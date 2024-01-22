@@ -79,87 +79,69 @@
 
 :root {
   font-synthesis: none;
-  --surface-bg: theme(colors.neutral.12);
+  --surface-bg: theme(colors.neutral.25);
   --input-bg: theme(colors.neutral.50);
-  --input-bg-hover: theme(colors.neutral.50 / 60%);
-  --surface-text: theme(colors.neutral.900);
-  --description-text: theme(colors.neutral.650);
+  --input-bg-hover: theme(colors.neutral.75);
+  --surface-text: black;
+  --description-text: theme(colors.neutral.300);
   --topbar-size: theme(spacing.12);
   --sticky-top: 0;
 }
 
 .dark {
-  --surface-bg: theme(colors.neutral.900);
-  --input-bg: theme(colors.neutral.850);
-  --input-bg-hover: theme(colors.neutral.850 / 60%);
-  --surface-text: theme(colors.neutral.50);
-  --description-text: theme(colors.neutral.300);
+  --surface-bg: theme(colors.neutral.825);
+  --input-bg: theme(colors.neutral.800);
+  --input-bg-hover: theme(colors.neutral.750);
+  --surface-text: white;
+  --description-text: theme(colors.neutral.500);
 }
 
 .base-surface {
-  background-color: theme(colors.neutral.12);
-  --surface-bg: theme(colors.neutral.12);
+  background-color: theme(colors.neutral.25);
+  --surface-bg: theme(colors.neutral.25);
   --input-bg: theme(colors.neutral.50);
-  --input-bg-hover: theme(colors.neutral.50 / 60%);
+  --input-bg-hover: theme(colors.neutral.75);
 }
 
 .dark .base-surface {
-  background-color: theme(colors.neutral.900);
-  --surface-bg: theme(colors.neutral.900);
-  --input-bg: theme(colors.neutral.850);
-  --input-bg-hover: theme(colors.neutral.850 / 60%);
+  background-color: theme(colors.neutral.825);
+  --surface-bg: theme(colors.neutral.825);
+  --input-bg: theme(colors.neutral.800);
+  --input-bg-hover: theme(colors.neutral.750);
 }
 
 .fixed-surface {
-  background-color: theme(colors.neutral.12 / 30%);
-  --surface-bg: theme(colors.neutral.12);
+  background-color: theme(colors.neutral.25 / 90%);
+  --surface-bg: theme(colors.neutral.25);
   --input-bg: theme(colors.neutral.50);
-  --input-bg-hover: theme(colors.neutral.50 / 60%);
+  --input-bg-hover: theme(colors.neutral.75);
 }
 
 .dark .fixed-surface {
-  background-color: theme(colors.neutral.900 / 40%);
-  --surface-bg: theme(colors.neutral.900);
-  --input-bg: theme(colors.neutral.850);
-  --input-bg-hover: theme(colors.neutral.850 / 60%);
+  background-color: theme(colors.neutral.825 / 90%);
+  --surface-bg: theme(colors.neutral.825);
+  --input-bg: theme(colors.neutral.800);
+  --input-bg-hover: theme(colors.neutral.750);
 }
 
-.group-surface {
-  background-color: theme(colors.neutral.50);
-  --surface-bg: theme(colors.neutral.50);
-  --input-bg: theme(colors.neutral.12);
-  --input-bg-hover: theme(colors.neutral.12 / 60%);
+.modal-surface {
+  background-color: #FFFFFFE6;
+  --surface-bg: white;
 }
 
-.dark .group-surface {
-  background-color: theme(colors.neutral.850);
-  --surface-bg: theme(colors.neutral.850);
-  --input-bg: theme(colors.neutral.900);
-  --input-bg-hover: theme(colors.neutral.900 / 60%);
+.dark .modal-surface {
+  background-color: theme(colors.neutral.750 / 90%);
+  --surface-bg: theme(colors.neutral.750);
 }
 
-.chrome-surface {
-  background-color: theme(colors.neutral.12);
-  --surface-bg: theme(colors.neutral.12);
-  --input-bg: theme(colors.neutral.50);
-  --input-bg-hover: theme(colors.neutral.50 / 60%);
-}
-
-.dark .chrome-surface {
-  background-color: theme(colors.neutral.800);
-  --surface-bg: theme(colors.neutral.800);
-  --input-bg: theme(colors.neutral.850);
-  --input-bg-hover: theme(colors.neutral.850 / 60%);
-}
-
-.input-surface {
+.attention-surface {
   background-color: white;
   --surface-bg: white;
 }
 
-.dark .input-surface {
-  background-color: theme(colors.neutral.925);
-  --surface-bg: theme(colors.neutral.925);
+.dark .attention-surface {
+  background-color: theme(colors.neutral.875);
+  --surface-bg: theme(colors.neutral.875);
 }
 
 html {

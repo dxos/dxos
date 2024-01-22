@@ -7,7 +7,7 @@ import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 import { mx } from '../../util';
 import {
   arrow,
-  chromeSurface,
+  modalSurface,
   dataDisabled,
   descriptionText,
   popperMotion,
@@ -23,7 +23,7 @@ export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) 
   mx('rounded-md p-1 max-bs-[--radix-dropdown-menu-content-available-height] overflow-y-auto', ...etc);
 
 export const menuContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('is-48 rounded-md md:is-56 z-[30]', popperMotion, chromeSurface, surfaceElevation({ elevation: 'group' }), ...etc);
+  mx('is-48 rounded-md md:is-56 z-[30]', popperMotion, modalSurface, surfaceElevation({ elevation: 'group' }), ...etc);
 
 export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(

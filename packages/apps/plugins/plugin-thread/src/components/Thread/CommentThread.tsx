@@ -8,7 +8,7 @@ import { type Thread as ThreadType } from '@braneframe/types';
 import type { PublicKey } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { fixedBorder, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { ChatInput, type ChatInputProps } from './ChatInput';
 import { type BlockProperties, MessageCard } from './MessageCard';
@@ -38,7 +38,12 @@ export const CommentThread: FC<{
 
   return (
     <div
-      className={mx('flex flex-col rounded shadow divide-y', inputSurface, fixedBorder, onCreate ? '' : 'opacity-60')}
+      className={mx(
+        'flex flex-col rounded shadow divide-y',
+        attentionSurface,
+        fixedBorder,
+        onCreate ? '' : 'opacity-60',
+      )}
       onClick={() => onFocus?.()}
     >
       {/* TODO(burdon): Don't show avatar/display name if same as previous. */}

@@ -16,6 +16,8 @@ import { type Config, type ThemeConfig } from 'tailwindcss/types/config';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
+import { semanticColors } from '../util/semanticColors';
+
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
 
@@ -31,8 +33,8 @@ const shadeNumbers: number[] = /* [...Array(19)].map((_, i) => 50 + i * 50); */ 
 ];
 
 const broadShadeNumbers: number[] = [
-  12, 25, 37, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925,
-  950, 975,
+  12, 25, 37, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 825, 850, 875,
+  900, 925, 950, 975,
 ];
 
 const dtor = Math.PI / 180;
@@ -152,11 +154,17 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
     lightCp: 1,
     hueTorsion: -30 * dtor,
   },
+  secondary: {
+    keyColor: '#02d1ef',
+    darkCp: 1,
+    lightCp: 1,
+    hueTorsion: -42 * dtor,
+  },
 };
 
 export const configColors = Object.keys(paletteConfigs).reduce(
   (acc: Record<string, Record<string, string>>, palette) => {
-    const isBroad = palette === 'neutral' || palette === 'primary';
+    const isBroad = palette === 'neutral' || palette === 'primary' || palette === 'secondary';
     const paletteConfig = paletteConfigs[palette] as PaletteConfig;
     const curve = curvePathFromPalette({
       ...paletteConfig,
@@ -203,6 +211,30 @@ export const tailwindConfig = ({
     fontFamily: {
       body: ['Inter Variable', ...defaultConfig.theme.fontFamily.sans],
       mono: ['JetBrains Mono Variable', ...defaultConfig.theme.fontFamily.mono],
+    },
+    semanticColors: {
+      scrim: { light: `${configColors.neutral['75']}A6`, dark: `${configColors.neutral['900']}A6` },
+      attention: { light: 'white', dark: configColors.neutral['875'] },
+      base: {
+        light: configColors.neutral['25'],
+        dark: configColors.neutral['825'],
+        fg: { light: '#FFFFFF', dark: '#000000' },
+      },
+      description: { light: configColors.neutral['300'], dark: configColors.neutral['500'] },
+      baseGlass: { light: `${configColors.neutral['25']}E6`, dark: `${configColors.neutral['825']}E6` },
+      input: { light: configColors.neutral['50'], dark: configColors.neutral['800'] },
+      modal: { light: '#FFFFFFE6', dark: `${configColors.neutral['750']}E6` },
+      modalSelected: { light: configColors.neutral['50'], dark: configColors.neutral['825'] },
+      hover: { light: configColors.neutral['75'], dark: configColors.neutral['750'] },
+      accent: {
+        light: configColors.primary['550'],
+        dark: configColors.secondary['500'],
+        fg: { light: configColors.primary['550'], dark: configColors.secondary['450'] },
+      },
+      accentHover: { light: configColors.primary['600'], dark: configColors.secondary['400'] },
+      separator: { light: configColors.neutral['75'], dark: configColors.neutral['750'] },
+      inverse: { light: '#FFFFFF', dark: configColors.neutral['850'] },
+      unavailable: { light: configColors.neutral['100'], dark: configColors.neutral['600'] },
     },
     extend: merge(
       {
@@ -345,7 +377,7 @@ export const tailwindConfig = ({
       ...extensions,
     ),
   },
-  plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
+  plugins: [semanticColors, tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
   ...(env === 'development' && { mode: 'jit' }),
   content,
   future: {

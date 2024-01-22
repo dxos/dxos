@@ -5,7 +5,7 @@
 import { type CellContext } from '@tanstack/react-table';
 
 import {
-  chromeSurface,
+  modalSurface,
   fixedSurface,
   focusRing,
   ghostSelected,
@@ -98,9 +98,9 @@ export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...e
 export type TfootStyleProps = Partial<TableContextValue<any>>;
 
 export const tfootRoot: ComponentFunction<TfootStyleProps> = (_props, ...etc) =>
-  mx('sticky block-end-0 z-10', chromeSurface, ...etc);
+  mx('sticky block-end-0 z-10', modalSurface, ...etc);
 
 export const tfootTr: ComponentFunction<TfootStyleProps> = (_props, ...etc) => mx(...etc);
 
 export const tfootTh: ComponentFunction<TfootStyleProps> = ({ border }, ...etc) =>
-  mx(textPadding, chromeSurface, border && groupBorder, ...etc);
+  mx(textPadding, modalSurface, border && groupBorder, ...etc);
