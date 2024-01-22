@@ -8,9 +8,9 @@ import { Thread as ThreadType } from '@braneframe/types';
 import { parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type Space, isTypedObject } from '@dxos/react-client/echo';
 
-import { ThreadContainer } from './ThreadContainer';
+import { ChatContainer } from './ChatContainer';
 
-export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType; onFocus?: (thread: ThreadType) => void }> = ({
+export const ChatSidebar: FC<{ space: Space; thread?: ThreadType; onFocus?: (thread: ThreadType) => void }> = ({
   space,
   thread: controlledThread,
   onFocus,
@@ -46,7 +46,7 @@ export const ThreadSidebar: FC<{ space: Space; thread?: ThreadType; onFocus?: (t
   }
 
   return (
-    <ThreadContainer
+    <ChatContainer
       space={space}
       thread={thread}
       activeObjectId={layoutPlugin?.provides.layout.active}

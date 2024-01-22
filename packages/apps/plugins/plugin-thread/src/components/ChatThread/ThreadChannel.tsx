@@ -9,19 +9,20 @@ import { type PublicKey } from '@dxos/client';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ChatInput, type ChatInputProps } from './ChatInput';
-import { type BlockProperties, MessageCard } from './MessageCard';
 import { THREAD_PLUGIN } from '../../meta';
+import { MessageCard } from '../MessageCard';
+import { MessageInput, type MessageInputProps } from '../MessageInput';
+import { type BlockPropertiesProvider } from '../util';
 
 export type ThreadChannelProps = {
   thread: ThreadType;
   identityKey: PublicKey;
-  propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
+  propertiesProvider: BlockPropertiesProvider;
   fullWidth?: boolean;
   onFocus?: () => void;
-  onCreate?: ChatInputProps['onMessage'];
+  onCreate?: MessageInputProps['onMessage'];
   onDelete?: (blockId: string, idx: number) => void;
-} & Pick<ChatInputProps, 'processing'>;
+} & Pick<MessageInputProps, 'processing'>;
 
 export const ThreadChannel = ({
   thread,
@@ -69,7 +70,7 @@ export const ThreadChannel = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <ChatInput placeholder={t('message placeholder')} onFocus={onFocus} onMessage={handleSubmit} {...props} />
+          <MessageInput placeholder={t('message placeholder')} onFocus={onFocus} onMessage={handleSubmit} {...props} />
         </div>
       )}
     </div>

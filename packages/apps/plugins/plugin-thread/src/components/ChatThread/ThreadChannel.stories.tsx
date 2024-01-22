@@ -10,65 +10,67 @@ import React, { useEffect, useState } from 'react';
 import { Thread as ThreadType, Message as MessageType, types } from '@braneframe/types';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ThreadChannel } from './ThreadChannel';
-import { messagePropertiesProvider } from '../ThreadContainer';
+import { createPropertiesProvider } from '../util';
 
 faker.seed(1);
 
+const createThread = (identity: Identity) => {
+  return new ThreadType({
+    messages: Array.from({ length: 8 }).map(
+      () =>
+        new MessageType({
+          from: {
+            identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
+          },
+          blocks: faker.helpers.multiple(
+            () =>
+              faker.datatype.boolean({ probability: 0.8 })
+                ? {
+                    text: faker.lorem.sentences(3),
+                  }
+                : {
+                    data: JSON.stringify(
+                      faker.helpers.multiple(
+                        () => ({
+                          id: PublicKey.random().truncate(),
+                          name: faker.lorem.word(),
+                          content: faker.lorem.sentences(3),
+                        }),
+                        {
+                          count: faker.number.int({ min: 2, max: 5 }),
+                        },
+                      ),
+                    ),
+                  },
+            { count: faker.number.int({ min: 1, max: 3 }) },
+          ),
+        }),
+    ),
+  });
+};
+
 const Story = () => {
   const client = useClient();
-  const identity = useIdentity()!;
-
+  const identity = useIdentity();
   const [space, setSpace] = useState<Space>();
   const [thread, setThread] = useState<ThreadType | null>();
   const members = useMembers(space?.key);
 
   useEffect(() => {
-    // TODO(burdon): Factor out.
-    setTimeout(async () => {
-      const space = await client.spaces.create();
-      const thread = space.db.add(
-        new ThreadType({
-          messages: Array.from({ length: 8 }).map(
-            () =>
-              new MessageType({
-                from: {
-                  identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
-                },
-                blocks: faker.helpers.multiple(
-                  () =>
-                    faker.datatype.boolean({ probability: 0.8 })
-                      ? {
-                          text: faker.lorem.sentences(3),
-                        }
-                      : {
-                          data: JSON.stringify(
-                            faker.helpers.multiple(
-                              () => ({
-                                id: PublicKey.random().truncate(),
-                                name: faker.lorem.word(),
-                                content: faker.lorem.sentences(3),
-                              }),
-                              {
-                                count: faker.number.int({ min: 2, max: 5 }),
-                              },
-                            ),
-                          ),
-                        },
-                  { count: faker.number.int({ min: 1, max: 3 }) },
-                ),
-              }),
-          ),
-        }),
-      );
-      setSpace(space);
-      setThread(thread);
-    });
-  }, []);
+    if (identity) {
+      setTimeout(async () => {
+        const space = await client.spaces.create();
+        const thread = space.db.add(createThread(identity));
+        setSpace(space);
+        setThread(thread);
+      });
+    }
+  }, [identity]);
 
   if (!identity || !thread) {
     return null;
@@ -110,7 +112,7 @@ const Story = () => {
         <ThreadChannel
           thread={thread}
           identityKey={identity.identityKey}
-          propertiesProvider={messagePropertiesProvider(identity, members)}
+          propertiesProvider={createPropertiesProvider(identity, members)}
           onCreate={handleSubmit}
           onDelete={handleDelete}
         />
@@ -122,7 +124,7 @@ const Story = () => {
 export default {
   title: 'plugin-thread/ThreadChannel',
   component: ThreadChannel,
-  render: () => <ClientRepeater Component={Story} createSpace types={types} />,
+  render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
 };
 

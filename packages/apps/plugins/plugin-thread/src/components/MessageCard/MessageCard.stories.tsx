@@ -10,7 +10,8 @@ import { Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { type BlockProperties, MessageCard } from './MessageCard';
+import { MessageCard } from './MessageCard';
+import { type BlockProperties } from '../util';
 
 const getBlockProperties = (identityKey: PublicKey | undefined): BlockProperties => ({
   displayName: identityKey?.toHex() ?? 'anonymous',

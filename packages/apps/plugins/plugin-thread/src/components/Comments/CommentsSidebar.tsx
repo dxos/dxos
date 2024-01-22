@@ -9,8 +9,8 @@ import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { DensityProvider } from '@dxos/react-ui';
 
-import { CommentThread } from './Thread';
-import { messagePropertiesProvider } from './ThreadContainer';
+import { CommentsThread } from './CommentsThread';
+import { createPropertiesProvider } from '../util';
 
 export const CommentsSidebar: FC<{
   space: Space;
@@ -55,11 +55,11 @@ export const CommentsSidebar: FC<{
           {/* <div role='none' className='bs-[80dvh]' /> */}
 
           {threads?.map((thread) => (
-            <CommentThread
+            <CommentsThread
               key={thread.id}
               space={space}
               identityKey={identity.identityKey}
-              propertiesProvider={messagePropertiesProvider(identity, members)}
+              propertiesProvider={createPropertiesProvider(identity, members)}
               active={thread.id === active}
               focus={focus}
               thread={thread}

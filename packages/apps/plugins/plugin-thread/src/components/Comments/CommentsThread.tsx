@@ -10,21 +10,22 @@ import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { fixedBorder, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { ChatInput, type ChatInputProps } from './ChatInput';
-import { type BlockProperties, MessageCard } from './MessageCard';
 import { useStatus } from '../../hooks';
 import { THREAD_PLUGIN } from '../../meta';
+import { MessageCard } from '../MessageCard';
+import { MessageInput, type MessageInputProps } from '../MessageInput';
+import { type BlockPropertiesProvider } from '../util';
 
 // TODO(burdon): Replace with ThreadChannel.
-export const CommentThread: FC<{
+export const CommentsThread: FC<{
   space: Space;
   thread: ThreadType;
   identityKey: PublicKey;
-  propertiesProvider: (identityKey: PublicKey | undefined) => BlockProperties;
+  propertiesProvider: BlockPropertiesProvider;
   active?: boolean;
   focus?: boolean;
   onFocus?: () => void;
-  onCreate?: ChatInputProps['onMessage'];
+  onCreate?: MessageInputProps['onMessage'];
   onDelete?: (messageId: string, idx: number) => void;
 }> = ({ space, thread, identityKey, propertiesProvider, active, focus, onFocus, onCreate, onDelete }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
@@ -55,7 +56,7 @@ export const CommentThread: FC<{
       {onCreate && (
         // NOTE: Should always render so that the input doesn't lose state.
         <div ref={ref} role='none' className={mx(!active && 'hidden')}>
-          <ChatInput
+          <MessageInput
             className='pl-1 py-2'
             autoFocus={focus}
             placeholder={t('comment placeholder')}

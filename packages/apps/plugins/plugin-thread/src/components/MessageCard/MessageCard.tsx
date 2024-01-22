@@ -15,16 +15,14 @@ import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM } from '../../meta';
+import { type BlockPropertiesProvider, safeParseJson } from '../util';
 
-export type BlockProperties = {
-  displayName?: string;
-  classes?: string;
-};
+// TODO(burdon): Replace rendering via CM TextEditor instance in readonly mode.
 
 export type MessageCardProps = {
   className?: string;
   message: MessageType;
-  propertiesProvider?: (identityKey: PublicKey | undefined) => BlockProperties;
+  propertiesProvider?: BlockPropertiesProvider;
   onDelete?: (messageId: string, idx: number) => void;
 };
 
@@ -43,7 +41,6 @@ export const MessageCard = ({
     propertiesProvider?.(message.from?.identityKey ? PublicKey.from(message.from?.identityKey) : undefined) ?? {};
   const date = message2.timestamp ? new Date(message2.timestamp) : undefined;
 
-  // TODO(burdon): Use aurora cards.
   // TODO(burdon): Reply button.
   return (
     <DensityProvider density='fine'>
@@ -98,7 +95,7 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
         <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>
       )}
       {block.data && (
-        // TODO(burdon): Colorize (reuse codemirror or hljs?)
+        // TODO(burdon): Render via CM editor in readonly.
         <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
           <code>{JSON.stringify(safeParseJson(block.data), undefined, 2)}</code>
         </pre>
@@ -132,12 +129,3 @@ const Pill: MosaicTileComponent<Expando> = forwardRef(
     );
   },
 );
-
-// TODO(burdon): Move to util.
-export const safeParseJson = (data: string) => {
-  try {
-    return JSON.parse(data);
-  } catch (err) {
-    return data;
-  }
-};

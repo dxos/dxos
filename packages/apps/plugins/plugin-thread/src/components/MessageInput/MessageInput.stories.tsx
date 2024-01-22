@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ChatInput } from './ChatInput';
+import { MessageInput } from './MessageInput';
 
 const Story = () => {
   const [processing, setProcessing] = useState(false);
@@ -25,7 +25,7 @@ const Story = () => {
 
   return (
     <div className='flex w-[500px] gap-2'>
-      <ChatInput
+      <MessageInput
         className='p-2'
         placeholder='Enter message...'
         processing={processing}
@@ -39,8 +39,8 @@ const Story = () => {
 };
 
 export default {
-  title: 'plugin-thread/ChatInput',
-  component: ChatInput,
+  title: 'plugin-thread/MessageInput',
+  component: MessageInput,
   render: Story,
   decorators: [withTheme],
 };
