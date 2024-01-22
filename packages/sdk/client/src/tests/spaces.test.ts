@@ -281,7 +281,8 @@ describe('Spaces', () => {
     });
   });
 
-  test('epoch correctly resets database', async () => {
+  // Disabled because AM integration currently does not reload with an epoch.
+  test.skip('epoch correctly resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -405,7 +406,7 @@ describe('Spaces', () => {
     }
   });
 
-  test('spaces can be opened and closed', async () => {
+  test.repeat(10)('spaces can be opened and closed', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });

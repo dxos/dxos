@@ -4,7 +4,7 @@
 
 import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
-import { cancelWithContext, Context } from '@dxos/context';
+import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed } from '@dxos/debug';
 import {
   type MetadataStore,
@@ -233,7 +233,7 @@ export class DataSpace {
         this.metrics.pipelineInitBegin = new Date();
         await this.initializeDataPipeline();
       } catch (err) {
-        if (err instanceof CancelledError) {
+        if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
           return;
         }
