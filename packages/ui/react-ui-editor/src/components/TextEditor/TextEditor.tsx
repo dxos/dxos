@@ -148,11 +148,11 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
         dispatchTransactions: (trs, view) => {
-          view.update(trs);
-          const debug = false;
+          const debug = true;
           if (debug) {
             logChanges(trs);
           }
+          view.update(trs);
         },
       });
 

@@ -5,7 +5,7 @@
 //
 
 import { StateField, type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { type Prop, next as A } from '@dxos/automerge/automerge';
 
@@ -58,6 +58,23 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
 
   return [
     Cursor.converter.of(cursorConverter(handle, path)),
+    // Reconcile external updates.
+    ViewPlugin.fromClass(
+      class {
+        constructor(private readonly _view: EditorView) {
+          handle.addListener('change', this._handleChange);
+        }
+
+        destroy() {
+          handle.removeListener('change', this._handleChange);
+        }
+
+        _handleChange() {
+          semaphore.reconcile(this._view);
+        }
+      },
+    ),
+    // Reconcile local updates.
     EditorView.updateListener.of(({ view, changes }) => {
       if (!changes.empty) {
         // TODO(burdon): Loses cursor position if auto closing brackets. Call explicitly?
