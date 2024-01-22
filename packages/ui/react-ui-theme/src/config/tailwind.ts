@@ -214,18 +214,18 @@ export const tailwindConfig = ({
     },
     semanticColors: {
       scrim: { light: `${configColors.neutral['75']}A6`, dark: `${configColors.neutral['900']}A6` },
-      attention: { light: 'white', dark: configColors.neutral['875'] },
+      attention: { light: 'white', dark: configColors.neutral['900'] },
       base: {
         light: configColors.neutral['25'],
-        dark: configColors.neutral['825'],
+        dark: configColors.neutral['850'],
         fg: { light: '#FFFFFF', dark: '#000000' },
       },
       description: { light: configColors.neutral['300'], dark: configColors.neutral['500'] },
-      baseGlass: { light: `${configColors.neutral['25']}E6`, dark: `${configColors.neutral['825']}E6` },
-      input: { light: configColors.neutral['50'], dark: configColors.neutral['800'] },
+      baseGlass: { light: `${configColors.neutral['25']}E6`, dark: `${configColors.neutral['850']}E6` },
+      input: { light: configColors.neutral['50'], dark: configColors.neutral['825'] },
       modal: { light: '#FFFFFFE6', dark: `${configColors.neutral['750']}E6` },
       modalSelected: { light: configColors.neutral['50'], dark: configColors.neutral['825'] },
-      hover: { light: configColors.neutral['75'], dark: configColors.neutral['750'] },
+      hover: { light: configColors.neutral['37'], dark: configColors.neutral['800'] },
       accent: {
         light: configColors.primary['550'],
         dark: configColors.secondary['500'],

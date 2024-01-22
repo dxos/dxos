@@ -12,7 +12,7 @@
 export const baseSurface = 'base-surface';
 
 // Sidebars, main heading (“topbar”), and nothing else.
-export const fixedSurface = 'fixed-surface backdrop-blur-md dark:backdrop-blur-lg';
+export const fixedSurface = 'base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg';
 export const fixedBorder = 'separator-separator';
 
 // Generic grouping style
