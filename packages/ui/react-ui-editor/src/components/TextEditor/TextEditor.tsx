@@ -64,6 +64,7 @@ export type TextEditorProps = {
   theme?: ThemeStyles;
   slots?: TextEditorSlots;
   extensions?: Extension[];
+  debug?: boolean;
 };
 
 /**
@@ -71,7 +72,18 @@ export type TextEditorProps = {
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    { model, readonly, autofocus, scrollTo, selection, editorMode, theme, slots = defaultSlots, extensions = [] },
+    {
+      model,
+      readonly,
+      autofocus,
+      scrollTo,
+      selection,
+      editorMode,
+      theme,
+      slots = defaultSlots,
+      extensions = [],
+      debug,
+    },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -148,7 +160,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
         dispatchTransactions: (trs, view) => {
-          const debug = true;
           if (debug) {
             logChanges(trs);
           }
