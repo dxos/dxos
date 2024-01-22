@@ -22,11 +22,11 @@ export const staticDefaultButtonColors = 'surface-input';
 
 export const defaultButtonColors =
   staticDefaultButtonColors +
-  ' aria-pressed:text-primary-800 aria-pressed:bg-primary-100 dark:aria-pressed:text-primary-50 dark:aria-pressed:bg-primary-700 data-[state=open]:text-primary-800 data-[state=open]:bg-primary-100 dark:data-[state=open]:text-primary-50 dark:data-[state=open]:bg-primary-700 aria-checked:text-primary-800 aria-checked:bg-primary-100 dark:aria-checked:text-primary-50 dark:aria-checked:bg-primary-700';
+  ' data-[state=open]:surface-input aria-pressed:fg-accent aria-pressed:surface-base aria-checked:fg-accent aria-checked:surface-base';
 
 export const ghostButtonColors =
   ghostHover +
-  ' hover:text-inherit dark:hover:text-inherit aria-pressed:bg-neutral-450/5 dark:aria-pressed:bg-neutral-25/5 data-[state=open]:bg-neutral-450/5 dark:data-[state=open]:bg-neutral-25/5 aria-checked:bg-neutral-450/5 dark:aria-checked:bg-neutral-25/5';
+  ' hover:text-inherit data-[state=open]:surface-input aria-pressed:fg-accent aria-pressed:surface-base aria-checked:fg-accent aria-checked:surface-base';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
