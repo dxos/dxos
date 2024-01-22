@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
@@ -12,7 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor, type TextEditorProps } from './TextEditor';
 import { listener } from '../../extensions';
-import { useTextModel } from '../../hooks';
+import { type EditorModel, useTextModel } from '../../hooks';
 
 const initialText = [
   '# TextEditor',
@@ -69,4 +69,18 @@ export const Listener = {
   render: () => (
     <Story placeholder='Enter text...' extensions={[listener({ onChange: (text) => console.log(text) })]} />
   ),
+};
+
+export const Test = {
+  render: () => {
+    const model: EditorModel = useMemo(
+      () => ({
+        id: 'test',
+        text: () => 'hello',
+        content: 'hello',
+      }),
+      [],
+    );
+    return <TextEditor model={model} />;
+  },
 };

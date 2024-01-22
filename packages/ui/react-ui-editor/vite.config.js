@@ -10,7 +10,9 @@ import { defineConfig } from 'vitest/config';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  env: 'jsdom',
+  test: {
+    environment: 'jsdom',
+  },
   plugins: [topLevelAwait(), wasm()],
   // worker: {
   //   plugins: () => [topLevelAwait(), wasm()],
