@@ -23,7 +23,7 @@ import {
 import { type TypedObject, SpaceProxy } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
-import { CommentsSidebar, ThreadMain, ThreadSidebar } from './components';
+import { ChatSidebar, CommentsSidebar, ThreadMain } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
@@ -153,7 +153,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     />
                   );
                 } else {
-                  return <ThreadSidebar space={space} />;
+                  return <ChatSidebar space={space} />;
                 }
               } else {
                 return null;

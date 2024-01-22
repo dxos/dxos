@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './Channel';
 export * from './Comments';
 export * from './MessageCard';
 export * from './MessageInput';

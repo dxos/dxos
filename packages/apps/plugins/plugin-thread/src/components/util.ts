@@ -3,7 +3,7 @@
 //
 
 import { generateName } from '@dxos/display-name';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 

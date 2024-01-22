@@ -9,7 +9,7 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { ChatContainer } from './ChatThread';
+import { ChatContainer } from './Channel';
 
 export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   const space = getSpaceForObject(thread);
