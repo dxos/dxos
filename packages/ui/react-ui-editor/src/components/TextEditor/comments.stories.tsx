@@ -241,7 +241,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
           : [],
       },
     ]);
-    setSelected(id);
+    setSelected(id); // TODO(burdon): Not required.
     return id;
   };
 
@@ -273,8 +273,8 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     );
   };
 
-  const handleSelectComment: CommentsOptions['onSelect'] = ({ comments, selection: { active, closest } }) => {
-    log.info('select', { active: active?.slice(0, 4), closest: closest?.slice(0, 4) });
+  const handleSelectComment: CommentsOptions['onSelect'] = ({ comments, selection: { current, closest } }) => {
+    log.info('select', { active: current?.slice(0, 4), closest: closest?.slice(0, 4) });
     setThreads((threads) =>
       threads.map((thread) => {
         const comment = comments.find(({ comment }) => comment.id === thread.id);
@@ -287,7 +287,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       }),
     );
 
-    setSelected(active ?? closest);
+    setSelected(current ?? closest);
   };
 
   const handleSelectThread = (id: string) => {

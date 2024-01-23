@@ -66,7 +66,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface role='context' name='complementary' />
+            <Surface role='complementary' name='context' />
           </Main.ComplementarySidebar>
         )}
 
