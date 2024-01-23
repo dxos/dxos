@@ -54,6 +54,7 @@ export const HeadingMenu = ({
       <DropdownMenu.Portal>
         <DropdownMenu.Content sideOffset={8} classNames='z-10'>
           <DropdownMenu.Viewport>
+            {/* TODO(burdon): Remove ref. */}
             <Surface data={{ model, properties, editorRef }} role='menuitem' />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />

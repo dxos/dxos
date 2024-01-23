@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type PropsWithChildren, type MutableRefObject } from 'react';
+import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { Main, useTranslation } from '@dxos/react-ui';
 import {
   type TextEditorProps,
   type Comment,
-  type EditorView,
   MarkdownEditor,
   setFocus,
   useComments,
@@ -68,8 +67,7 @@ export const EditorMain = ({ comments, ...props }: EditorMainProps) => {
   );
 };
 
-// TODO(wittjosiah): Remove ref.
-export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<EditorView> }>) => {
+export const MainLayout = ({ children }: PropsWithChildren) => {
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <div role='none' className={mx('flex flex-col h-full pli-2', textBlockWidth)}>
