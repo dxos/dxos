@@ -38,6 +38,7 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
  * The `Component` property is rendered n times, once for each peer.
  */
 // TODO(wittjosiah): Rename.
+// TODO(burdon): This should be a decorator?
 export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
   const {
     count = 1,

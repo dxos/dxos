@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 
 import { Message as MessageType, type Thread as ThreadType } from '@braneframe/types';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { DensityProvider } from '@dxos/react-ui';
 
-import { CommentThread } from './Thread';
-import { messagePropertiesProvider } from './ThreadContainer';
+import { CommentsThread, type CommentsThreadProps } from './CommentsThread';
+import { useStatus } from '../../hooks';
+import { createPropertiesProvider } from '../util';
 
 export const CommentsSidebar: FC<{
   space: Space;
@@ -55,13 +56,13 @@ export const CommentsSidebar: FC<{
           {/* <div role='none' className='bs-[80dvh]' /> */}
 
           {threads?.map((thread) => (
-            <CommentThread
+            <CommentsThreadImpl
               key={thread.id}
               space={space}
               identityKey={identity.identityKey}
-              propertiesProvider={messagePropertiesProvider(identity, members)}
+              propertiesProvider={createPropertiesProvider(identity, members)}
               active={thread.id === active}
-              focus={focus}
+              autoFocus={focus}
               thread={thread}
               onFocus={() => onFocus?.(thread)}
               onCreate={(text) => handleSubmit(thread, text)}
@@ -75,4 +76,21 @@ export const CommentsSidebar: FC<{
       </div>
     </DensityProvider>
   );
+};
+
+const CommentsThreadImpl = ({
+  space,
+  thread,
+  active,
+  ...props
+}: { space: Space } & Omit<CommentsThreadProps, 'processing'>) => {
+  const processing = useStatus(space, thread.id);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (active) {
+      ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [ref, active]);
+
+  return <CommentsThread ref={ref} active={active} thread={thread} processing={processing} {...props} />;
 };

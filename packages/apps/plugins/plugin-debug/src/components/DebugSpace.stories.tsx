@@ -15,9 +15,15 @@ import { DebugSpace } from './DebugSpace';
 const Story: FC = () => {
   const [space] = useSpaces();
   useEffect(() => {
-    const generator = createSpaceObjectGenerator(space);
-    generator.addSchemas();
+    if (space) {
+      const generator = createSpaceObjectGenerator(space);
+      generator.addSchemas();
+    }
   }, [space]);
+
+  if (!space) {
+    return null;
+  }
 
   return <DebugSpace space={space} />;
 };
