@@ -41,4 +41,4 @@ const styles = HighlightStyle.define([
   },
 ]);
 
-export const tagExtension: Extension = [parser, syntaxHighlighting(styles)];
+export const command: Extension = [parser, syntaxHighlighting(styles)];

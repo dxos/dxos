@@ -6,53 +6,15 @@ import differenceInSeconds from 'date-fns/differenceInSeconds';
 import React from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
-import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
-import { type SpaceMember, type Space, useMembers } from '@dxos/react-client/echo';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { type Space, useMembers } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
-import { type BlockProperties, ThreadChannel } from './Thread';
-import { useStatus } from '../hooks';
+import { ChatThread } from './ChatThread';
+import { useStatus } from '../../hooks';
+import { createPropertiesProvider } from '../util';
 
-// TODO(burdon): Goals.
-// - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
-// - Create and navigate between threads.
-// - Lightweight threads for document comments, inline AI, etc.
-//    (Similar reusable components everywhere; same data structure).
-
-const colors = [
-  'text-blue-300',
-  'text-green-300',
-  'text-red-300',
-  'text-cyan-300',
-  'text-indigo-300',
-  'text-teal-300',
-  'text-orange-300',
-  'text-purple-300',
-];
-
-// TODO(burdon): Move to key.
-const colorHash = (key: PublicKey) => {
-  const num = Number('0x' + key.toHex().slice(0, 8));
-  return colors[num % colors.length];
-};
-
-export const messagePropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
-  return (identityKey: PublicKey | undefined) => {
-    const author =
-      identityKey && PublicKey.equals(identityKey, identity.identityKey)
-        ? identity
-        : members.find((member) => identityKey && PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
-
-    const key = author?.identityKey ?? identityKey;
-    return {
-      displayName: author?.profile?.displayName ?? (identityKey ? generateName(identityKey.toHex()) : ''),
-      classes: key ? colorHash(key) : undefined,
-    } satisfies BlockProperties;
-  };
-};
-
-export type ThreadContainerProps = {
+export type ChatContainerProps = {
   space: Space;
   thread: ThreadType;
   activeObjectId?: string;
@@ -60,7 +22,7 @@ export type ThreadContainerProps = {
   onFocus?: () => void;
 };
 
-export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ThreadContainerProps) => {
+export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ChatContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
   const processing = useStatus(space, thread.id);
@@ -107,9 +69,9 @@ export const ThreadContainer = ({ space, thread, activeObjectId, fullWidth, onFo
   };
 
   return (
-    <ThreadChannel
+    <ChatThread
       identityKey={identity.identityKey}
-      propertiesProvider={messagePropertiesProvider(identity, members)}
+      propertiesProvider={createPropertiesProvider(identity, members)}
       thread={thread}
       processing={processing}
       fullWidth={fullWidth}

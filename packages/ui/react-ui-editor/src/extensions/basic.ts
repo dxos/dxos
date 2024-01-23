@@ -15,14 +15,14 @@ import { type TextEditorProps } from '../components';
 
 export type BasicBundleOptions = {
   themeMode?: ThemeMode;
-} & Pick<TextEditorProps, 'placeholder' | 'multiline'>;
+} & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
 
 export const basicBundle = ({
   themeMode,
   placeholder: _placeholder,
-  multiline = true,
+  lineWrapping = true,
 }: BasicBundleOptions): Extension[] => [
-  multiline ? EditorView.lineWrapping : [],
+  lineWrapping ? EditorView.lineWrapping : [],
 
   // https://codemirror.net/docs/ref/#codemirror.minimalSetup
   bracketMatching(),
