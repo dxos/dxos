@@ -14,3 +14,8 @@ export type MobileType = (typeof MobileTypes)[number];
 export const TestEnvironments = ['nodejs', ...BrowserTypes, ...MobileTypes] as const;
 
 export type TestEnvironment = (typeof TestEnvironments)[number];
+
+export type ExecutionResult = {
+  exitCode?: number | null;
+  signal?: NodeJS.Signals | null;
+};

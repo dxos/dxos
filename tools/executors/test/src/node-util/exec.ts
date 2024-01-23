@@ -5,12 +5,17 @@
 // TODO(wittjosiah): Factor out.
 
 import { spawn, type SpawnSyncOptionsWithBufferEncoding } from 'node:child_process';
+import { ExecutionResult } from '../types';
 
 export const getBin = (root: string, binary: string) => {
   return `${root}/node_modules/.bin/${binary}`;
 };
 
-export const execTool = async (name: string, args: string[] = [], opts: SpawnSyncOptionsWithBufferEncoding = {}) => {
+export const execTool = async (
+  name: string,
+  args: string[] = [],
+  opts: SpawnSyncOptionsWithBufferEncoding = {},
+): Promise<ExecutionResult> => {
   const child = spawn(name, args, opts);
 
   // NOTE: Inheriting stdio of child process breaks Nx CLI output.
@@ -23,5 +28,5 @@ export const execTool = async (name: string, args: string[] = [], opts: SpawnSyn
     });
   });
 
-  return exitCode;
+  return { exitCode, signal: child.signalCode };
 };

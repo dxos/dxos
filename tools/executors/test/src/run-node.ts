@@ -8,6 +8,7 @@ import { join } from 'node:path';
 
 import { execTool, getBin, resolveFiles } from './node-util';
 import { formatArgs, mochaComment } from './util';
+import { ExecutionResult } from './types';
 
 const LOG_TRANSFORM_CONFIG = {
   symbols: [
@@ -53,11 +54,11 @@ export type NodeOptions = {
   profile: boolean;
 };
 
-export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
+export const runNode = async (context: ExecutorContext, options: NodeOptions): Promise<ExecutionResult> => {
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
   console.log(`$ ${mocha} ${args.join(' ')}`);
-  const exitCode = await execTool(
+  const result = await execTool(
     mocha,
     args,
 
@@ -96,7 +97,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     },
   );
 
-  return exitCode;
+  return result;
 };
 
 const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
