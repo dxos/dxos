@@ -8527,15 +8527,6 @@ importers:
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
-      y-codemirror.next:
-        specifier: ^0.3.2
-        version: 0.3.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.0)(yjs@13.6.10)
-      y-protocols:
-        specifier: ^1.0.5
-        version: 1.0.5
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
     devDependencies:
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: ^1.0.19
@@ -44369,19 +44360,6 @@ packages:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
 
-  /y-codemirror.next@0.3.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.0)(yjs@13.6.10):
-    resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
-    peerDependencies:
-      '@codemirror/state': ^6.0.0
-      '@codemirror/view': ^6.0.0
-      yjs: ^13.5.6
-    dependencies:
-      '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.0
-      lib0: 0.2.87
-      yjs: 13.6.10
-    dev: false
-
   /y-monaco@0.1.4(monaco-editor@0.44.0)(yjs@13.6.10):
     resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
     peerDependencies:
@@ -44391,12 +44369,6 @@ packages:
       lib0: 0.2.78
       monaco-editor: 0.44.0
       yjs: 13.6.10
-    dev: false
-
-  /y-protocols@1.0.5:
-    resolution: {integrity: sha512-Wil92b7cGk712lRHDqS4T90IczF6RkcvCwAD0A2OPg+adKmOe+nOiT/N2hvpQIWS3zfjmtL4CPaH5sIW1Hkm/A==}
-    dependencies:
-      lib0: 0.2.78
     dev: false
 
   /y18n@3.2.2:

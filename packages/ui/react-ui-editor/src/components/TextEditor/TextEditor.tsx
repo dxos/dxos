@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { basicBundle, markdownBundle, useAwareness } from '../../extensions';
+import { basicBundle, markdownBundle } from '../../extensions';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
@@ -102,9 +102,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         view?.focus();
       }
     }, [view, autofocus]);
-
-    // Monitor awareness.
-    useAwareness(model);
 
     // Create editor state and view.
     // The view is recreated if the model or extensions are changed.
