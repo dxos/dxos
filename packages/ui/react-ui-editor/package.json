@@ -51,10 +51,7 @@
     "lodash.get": "^4.4.2",
     "lodash.pick": "^4.4.0",
     "lodash.sortby": "^4.7.0",
-    "style-mod": "^4.1.0",
-    "y-codemirror.next": "^0.3.2",
-    "y-protocols": "^1.0.5",
-    "yjs": "^13.6.10"
+    "style-mod": "^4.1.0"
   },
   "devDependencies": {
     "@automerge/automerge-repo-network-broadcastchannel": "^1.0.19",
