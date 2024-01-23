@@ -36,8 +36,7 @@ test.describe('Collaboration tests', () => {
     await guest.init();
   });
 
-  // TODO(wittjosiah): This currently fails because replication fails after the device invitation and requires a reload.
-  test.skip('join new identity', async () => {
+  test('join new identity', async () => {
     test.slow();
 
     await host.createSpace();
@@ -57,10 +56,11 @@ test.describe('Collaboration tests', () => {
     await guest.shell.authenticateDevice(authCode);
     await host.shell.closeShell();
 
+    // Wait for replication to complete.
     await waitForExpect(async () => {
       expect(await host.getSpaceItemsCount()).to.equal(3);
       expect(await guest.getSpaceItemsCount()).to.equal(3);
-    });
+    }, 15_000);
 
     await host.openIdentityManager();
     await guest.openIdentityManager();
@@ -88,8 +88,7 @@ test.describe('Collaboration tests', () => {
     });
   });
 
-  // TODO(wittjosiah): Update cursor classes.
-  test.skip('host and guest can see each others’ presence when same document is in focus', async () => {
+  test('host and guest can see each others’ presence when same document is in focus', async () => {
     test.slow();
 
     await host.createSpace();
@@ -101,17 +100,23 @@ test.describe('Collaboration tests', () => {
     await waitForExpect(async () => {
       expect(await guest.getObjectsCount()).to.equal(2);
     });
+
     await guest.getObjectLinks().last().click();
     await guest.waitForMarkdownTextbox();
     await waitForExpect(async () => {
       expect(await host.getCollaboratorCursors().count()).to.equal(0);
       expect(await guest.getCollaboratorCursors().count()).to.equal(0);
     });
+
     await host.getMarkdownTextbox().focus();
     await guest.getMarkdownTextbox().focus();
     await waitForExpect(async () => {
-      expect(await host.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
-      expect(await guest.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
+      expect(await host.getCollaboratorCursors().count()).to.equal(1);
+      expect(await guest.getCollaboratorCursors().count()).to.equal(1);
+
+      // TODO(wittjosiah): Cursors are missing display names. https://github.com/dxos/dxos/issues/5363
+      // expect(await host.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
+      // expect(await guest.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
     });
   });
 
@@ -134,6 +139,7 @@ test.describe('Collaboration tests', () => {
     await waitForExpect(async () => {
       expect(await guest.getObjectsCount()).to.equal(2);
     });
+
     await guest.getObjectLinks().last().click();
     await guest.waitForMarkdownTextbox();
     await host.getMarkdownTextbox().type(parts[0]);

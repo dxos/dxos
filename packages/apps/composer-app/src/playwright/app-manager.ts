@@ -134,7 +134,7 @@ export class AppManager {
 
   getMarkdownActiveLineText() {
     return this.getMarkdownTextbox()
-      .locator('.cm-activeLine > span:not([class=cm-ySelectionCaret])')
+      .locator('.cm-activeLine > span:not([class=cm-collab-selectionCaret])')
       .first()
       .textContent();
   }
@@ -148,7 +148,7 @@ export class AppManager {
   }
 
   getCollaboratorCursors() {
-    return this.page.locator('.cm-ySelectionInfo');
+    return this.page.locator('.cm-collab-selectionInfo');
   }
 
   // Stack Plugin

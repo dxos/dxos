@@ -79,11 +79,14 @@ export class ShellManager extends ScopedShellManager {
     await this.inputInvitation('device', invitationCode, this.shell);
   }
 
-  async authenticateDevice(authCode: string) {
+  async authenticateDevice(authCode: string, skipDone = true) {
     // Wait for focus to shift before typing.
     await sleep(1500);
     await this.authenticateInvitation('device', authCode, this.shell);
-    await this.doneInvitation('device', this.shell);
+    // TODO(wittjosiah): When "signing out" and joinging a new identity, the done step seems to be skipped.
+    if (!skipDone) {
+      await this.doneInvitation('device', this.shell);
+    }
   }
 
   async closeShell() {

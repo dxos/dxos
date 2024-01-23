@@ -147,7 +147,7 @@ export class InvitationsManager extends ScopedShellManager {
     const peer = this.peer(id);
     // TODO(wittjosiah): Update ids.
     if (type === 'device') {
-      await peer.getByTestId('join-identity').click();
+      await peer.getByTestId('identity-chooser.join-identity').click();
     }
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).waitFor({ timeout: 500 });
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).fill(invitation);
