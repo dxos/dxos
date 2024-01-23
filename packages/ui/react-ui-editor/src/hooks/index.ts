@@ -7,4 +7,5 @@ export * from './awareness-provider';
 export * from './defs';
 export * from './yjs';
 
+export * from './useTextEditor';
 export * from './useTextModel';
