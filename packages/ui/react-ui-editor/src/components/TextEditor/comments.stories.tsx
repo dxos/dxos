@@ -17,8 +17,8 @@ import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
-import { comments, type CommentsOptions, Cursor } from '../../extensions';
-import { type CommentRange, type Range, useTextModel } from '../../hooks';
+import { comments, type CommentsOptions, setFocus, useComments } from '../../extensions';
+import { type Comment, type Range, useTextModel } from '../../hooks';
 
 faker.seed(101);
 
@@ -28,31 +28,34 @@ faker.seed(101);
 
 const Editor: FC<{
   item: { text: TextObject };
-  commentSelected?: string;
-  commentRanges: CommentRange[];
+  comments: Comment[];
+  selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
   onDeleteComment: CommentsOptions['onDelete'];
   onUpdateComment: CommentsOptions['onUpdate'];
   onSelectComment: CommentsOptions['onSelect'];
-}> = ({ item, commentSelected, commentRanges, onCreateComment, onDeleteComment, onUpdateComment, onSelectComment }) => {
+}> = ({
+  item,
+  selected: selectedValue,
+  comments: commentRanges,
+  onCreateComment,
+  onDeleteComment,
+  onUpdateComment,
+  onSelectComment,
+}) => {
   const model = useTextModel({ text: item.text });
-  const editorRef = useRef<EditorView>(null);
+  const view = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
   useEffect(() => {
-    if (!editorRef.current?.hasFocus && commentSelected !== selected) {
-      const thread = commentRanges.find((range) => range.id === commentSelected);
-      if (thread) {
-        const { cursor } = thread;
-        const range = Cursor.getRangeFromCursor(editorRef.current!.state.facet(Cursor.converter), cursor);
-        if (range) {
-          // TODO(burdon): Scroll selection to center of screen?
-          editorRef.current?.dispatch({ selection: { anchor: range.from }, scrollIntoView: true });
-        }
+    if (!view.current?.hasFocus && selectedValue !== selected) {
+      setSelected(selectedValue);
+      if (selectedValue) {
+        setFocus(view.current!, selectedValue);
       }
-
-      setSelected(commentSelected);
     }
-  }, [selected, commentRanges, commentSelected]);
+  }, [selected, commentRanges, selectedValue]);
+
+  useComments(view.current, commentRanges);
 
   const extensions = useMemo(() => {
     return [
@@ -72,7 +75,7 @@ const Editor: FC<{
   // TODO(burdon): Highlight currently selected comment.
   return (
     <div className='flex grow overflow-y-scroll'>
-      <MarkdownEditor ref={editorRef} model={model} comments={commentRanges} extensions={extensions} />
+      <MarkdownEditor ref={view} model={model} extensions={extensions} />
     </div>
   );
 };
@@ -83,11 +86,10 @@ const Editor: FC<{
 
 type CommentThread = {
   id: string;
-  range: CommentRange;
+  cursor?: string;
+  range?: Range;
   yPos?: number;
-  selection?: Range;
   messages: TextObject[];
-  deleted?: boolean;
 };
 
 const Thread: FC<{
@@ -129,16 +131,16 @@ const Thread: FC<{
       className={mx(
         'flex flex-col m-1 rounded shadow divide-y bg-white',
         selected && 'ring',
-        thread.deleted && 'opacity-50',
+        !thread.cursor && 'opacity-50',
       )}
     >
       <div className='flex p-2 gap-2 items-center text-xs font-mono text-neutral-500 font-thin'>
         <span>id:{thread.id.slice(0, 4)}</span>
-        <span>from:{thread.selection?.from}</span>
-        <span>to:{thread.selection?.to}</span>
+        <span>from:{thread.range?.from}</span>
+        <span>to:{thread.range?.to}</span>
         <span>y:{thread.yPos}</span>
         <span className='grow' />
-        {thread.deleted && <Trash />}
+        {!thread.cursor && <Trash />}
       </div>
 
       {thread.messages.map((message, i) => (
@@ -154,7 +156,7 @@ const Thread: FC<{
           autofocus={focus}
           model={model}
           placeholder={'Enter comment...'}
-          slots={{ root: { className: 'grow p-2 rounded-b' } }}
+          slots={{ root: { className: 'grow rounded-b' } }}
           extensions={[
             keymap.of([
               {
@@ -218,8 +220,9 @@ type StoryProps = {
 const Story = ({ text, autoCreate }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text) });
   const [threads, setThreads] = useState<CommentThread[]>([]);
-  const commentRanges = useMemo(() => threads.map((thread) => thread.range), [threads]);
   const [selected, setSelected] = useState<string>();
+
+  const comments = useMemo<Comment[]>(() => threads.map(({ id, cursor }) => ({ id, cursor })), [threads]);
 
   // Filter by visibility.
   const visibleThreads = useMemo(() => threads.filter((thread) => thread.yPos !== undefined), [threads]);
@@ -231,7 +234,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       ...threads,
       {
         id,
-        range: { id, cursor },
+        cursor,
         yPos: location ? Math.floor(location.top) : undefined,
         messages: autoCreate
           ? faker.helpers.multiple(() => new TextObject(faker.lorem.sentence()), { count: { min: 1, max: 3 } })
@@ -247,7 +250,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     setThreads((threads) =>
       threads.map((thread) => {
         if (thread.id === id) {
-          thread.deleted = true;
+          thread.cursor = undefined;
         }
 
         return thread;
@@ -262,8 +265,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     setThreads((threads) =>
       threads.map((thread) => {
         if (thread.id === id) {
-          thread.range.cursor = cursor;
-          delete thread.deleted;
+          thread.cursor = cursor;
         }
 
         return thread;
@@ -271,14 +273,14 @@ const Story = ({ text, autoCreate }: StoryProps) => {
     );
   };
 
-  const handleSelectComment: CommentsOptions['onSelect'] = ({ active, closest, ranges }) => {
+  const handleSelectComment: CommentsOptions['onSelect'] = ({ comments, selection: { active, closest } }) => {
     log.info('select', { active: active?.slice(0, 4), closest: closest?.slice(0, 4) });
     setThreads((threads) =>
       threads.map((thread) => {
-        const range = ranges.find((range) => range.id === thread.range.id);
-        if (range) {
-          thread.yPos = range.location ? Math.floor(range.location.top) : undefined;
-          thread.selection = { from: range.from, to: range.to };
+        const comment = comments.find(({ comment }) => comment.id === thread.id);
+        if (comment) {
+          thread.yPos = comment.location ? Math.floor(comment.location.top) : undefined;
+          thread.range = { from: comment.range.from, to: comment.range.to };
         }
 
         return thread;
@@ -303,8 +305,8 @@ const Story = ({ text, autoCreate }: StoryProps) => {
         <div className='flex flex-col h-full w-[600px]'>
           <Editor
             item={item}
-            commentSelected={selected}
-            commentRanges={commentRanges}
+            selected={selected}
+            comments={comments}
             onCreateComment={handleCreateComment}
             onDeleteComment={handleDeleteComment}
             onUpdateComment={handleUpdateComment}

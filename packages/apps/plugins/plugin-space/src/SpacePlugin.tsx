@@ -5,7 +5,7 @@
 import { type IconProps, Folder as FolderIcon, Plus, SignIn, FolderOpen } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
-import { set, get } from 'idb-keyval';
+import localforage from 'localforage';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -99,6 +99,7 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
+  let directory: FileSystemDirectoryHandle | null;
 
   let clientPlugin: Plugin<ClientProvides> | undefined;
 
@@ -569,15 +570,18 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SELECT_DIRECTORY: {
-              const handle = await (window as any).showDirectoryPicker();
-              await set(SPACE_DIRECTORY_HANDLE, handle);
+              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              directory = handle;
+              await localforage.setItem(SPACE_DIRECTORY_HANDLE, handle);
               return handle;
             }
 
             case SpaceAction.SAVE_TO_DISK: {
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
-                let directory: FileSystemDirectoryHandle | undefined = await get(SPACE_DIRECTORY_HANDLE);
+                if (!directory) {
+                  directory = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
+                }
                 if (!directory) {
                   const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
                   directory = await intentPlugin?.provides.intent.dispatch({
@@ -588,7 +592,7 @@ export const SpacePlugin = ({
                 invariant(directory, 'No directory selected.');
                 if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
                   // TODO(mykola): Is it Chrome-specific?
-                  await (directory as any).requestPermission?.();
+                  await (directory as any).requestPermission?.({ mode: 'readwrite' });
                 }
                 return saveSpaceToDisk({ space, directory }).catch((error) => {
                   log.catch(error);
@@ -600,7 +604,7 @@ export const SpacePlugin = ({
             case SpaceAction.LOAD_FROM_DISK: {
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
-                const directory = await (window as any).showDirectoryPicker();
+                const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
                 await loadSpaceFromDisk({ space, directory });
               }
               break;

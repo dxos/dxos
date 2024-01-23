@@ -66,16 +66,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   // TODO(burdon): Remove (don't expose editor internals).
   const pluginMutableRef: MutableRefObject<EditorView | null> = { current: null };
-  const pluginRefCallback: RefCallback<EditorView> = (nextRef: EditorView) => {
-    pluginMutableRef.current = nextRef;
+  const pluginRefCallback: RefCallback<EditorView> = (view: EditorView) => {
+    pluginMutableRef.current = view;
   };
 
   const getCustomExtensions = (document?: DocumentType) => {
     // Configure extensions.
     const extensions = getExtensions({
+      settings: settings.values,
       document,
-      debug: settings.values.debug,
-      experimental: settings.values.experimental,
       dispatch: intentPlugin?.provides.intent.dispatch,
       onChange: (text: string) => {
         state.onChange.forEach((onChange) => onChange(text));
@@ -100,7 +99,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       settings
         .prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string)
         .prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool)
-        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool);
+        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
+        .prop(settings.values.$typewriter!, 'typewriter', LocalStorageStore.string);
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 

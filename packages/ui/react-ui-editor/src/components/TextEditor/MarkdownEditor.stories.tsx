@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { EditorView } from '@codemirror/view';
+import { type EditorView } from '@codemirror/view';
 import { faker } from '@faker-js/faker';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, StrictMode, useState } from 'react';
+import React, { type FC, StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextObject } from '@dxos/echo-schema';
@@ -26,7 +26,6 @@ import {
   defaultOptions,
   hr,
   image,
-  listener,
   link,
   mention,
   table,
@@ -34,8 +33,9 @@ import {
   typewriter,
   type CommentsOptions,
   type LinkOptions,
+  useComments,
 } from '../../extensions';
-import { type CommentRange, useTextModel } from '../../hooks';
+import { type Comment, useTextModel } from '../../hooks';
 
 // Extensions:
 // TODO(burdon): Table of contents.
@@ -55,8 +55,8 @@ const text = {
     '- [x] decorator',
     '- [ ] checkbox',
     '  - [ ] state',
-    '  - [ ] indent',
-    '  - [x] style',
+    '    - [ ] indent',
+    '    - [x] style',
     '',
   ),
 
@@ -162,6 +162,8 @@ const links = [
   { label: 'StackEdit', apply: '[StackEdit](https://stackedit.io/app)' },
 ];
 
+const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
+
 const hover =
   'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
@@ -210,12 +212,15 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 
 type StoryProps = {
   text?: string;
+  comments?: Comment[];
   automerge?: boolean;
-} & Pick<TextEditorProps, 'comments' | 'readonly' | 'extensions' | 'slots'>;
+} & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'slots' | 'extensions'>;
 
-const Story = ({ text, automerge, ...props }: StoryProps) => {
+const Story = ({ text, comments, automerge, placeholder = 'New document.', ...props }: StoryProps) => {
   const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
+  const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
+  useComments(view.current, comments);
   if (!model) {
     return null;
   }
@@ -224,7 +229,7 @@ const Story = ({ text, automerge, ...props }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
         <div className='flex flex-col h-full w-[800px]'>
-          <MarkdownEditor model={model} {...props} />
+          <MarkdownEditor ref={view} model={model} placeholder={placeholder} {...props} />
         </div>
       </div>
     </div>
@@ -238,7 +243,7 @@ export default {
   render: Story,
 };
 
-const extensions = [
+const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
@@ -246,40 +251,33 @@ const extensions = [
   hr(),
   image(),
   link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
+  // mention({
+  //   onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
+  // }),
   table(),
   tasklist(),
 ];
 
 export const Default = {
-  render: () => <Story text={document} extensions={extensions} />,
+  render: () => <Story text={document} extensions={defaults} />,
 };
 
 export const Readonly = {
-  render: () => <Story text={document} extensions={extensions} readonly />,
-};
-
-const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
-
-export const Large = {
-  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
-};
-
-export const Empty = {
-  render: () => <Story />,
+  render: () => <Story text={document} extensions={defaults} readonly />,
 };
 
 export const NoExtensions = {
   render: () => <Story text={document} />,
 };
 
-// TODO(burdon): Cursor bug if no newline after BR (cursor down just loops back to start of each paragraph).
-export const HorizontalRule = {
-  render: () => (
-    <Story
-      text={str('# Horizontal Rule', '', text.paragraphs, '---', '', text.paragraphs, '---', '', text.paragraphs)}
-      extensions={[hr()]}
-    />
-  ),
+const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
+
+export const Empty = {
+  render: () => <Story />,
+};
+
+export const Scrolling = {
+  render: () => <Story text={str('# Large Document', '', large)} extensions={[]} />,
 };
 
 export const Links = {
@@ -295,34 +293,33 @@ export const Code = {
   render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
 };
 
-export const Table = {
-  render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
-};
-
 export const Image = {
   render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
 };
 
-export const Tasklist = {
+export const Lists = {
   render: () => (
-    <Story
-      text={str(text.tasks, '', text.list, text.footer)}
-      extensions={[
-        tasklist(),
-        listener({
-          onChange: (text) => {
-            console.log(text);
-          },
-        }),
-      ]}
-    />
+    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[tasklist()]} />
   ),
 };
+
+export const Table = {
+  render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
+};
+
+// export const Outliner = {
+//   render: () => (
+//     <Story
+//       text={str('# Outliner', '', 'Block', ': this is a block', ': with multiple lines', text.footer)}
+//       extensions={[outliner()]}
+//     />
+//   ),
+// };
 
 export const Autocomplete = {
   render: () => (
     <Story
-      text={str('# Autocomplete', '', 'Press CTRL-SPACE', text.footer)}
+      text={str('# Autocomplete', '', 'Press Ctrl-Space...', text.footer)}
       extensions={[
         link({ onRender: onRenderLink }),
         autocomplete({
@@ -332,8 +329,6 @@ export const Autocomplete = {
     />
   ),
 };
-
-const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 export const Mention = {
   render: () => (
@@ -350,7 +345,7 @@ export const Mention = {
 
 export const Comments = {
   render: () => {
-    const [commentRanges, setCommentRanges] = useState<CommentRange[]>([]);
+    const [commentRanges, setCommentRanges] = useState<Comment[]>([]);
 
     return (
       <Story
@@ -370,9 +365,9 @@ export const Comments = {
                 console.log(
                   'update',
                   JSON.stringify({
-                    active: state.active?.slice(0, 8),
-                    closest: state.closest?.slice(0, 8),
-                    ranges: state.ranges.length,
+                    comments: state.comments.length,
+                    active: state.selection.active?.slice(0, 8),
+                    closest: state.selection.closest?.slice(0, 8),
                   }),
                 );
               }
@@ -384,8 +379,24 @@ export const Comments = {
   },
 };
 
+export const HorizontalRule = {
+  render: () => (
+    <Story
+      text={str('# Horizontal Rule', '', text.paragraphs, '---', text.paragraphs, '---', text.paragraphs)}
+      extensions={[hr()]}
+    />
+  ),
+};
+
+const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+
 export const Typewriter = {
-  render: () => <Story text={str('# Typewriter', '', text.paragraphs, text.footer)} extensions={[typewriter()]} />,
+  render: () => (
+    <Story
+      text={str('# Typewriter', '', text.paragraphs, text.footer)}
+      extensions={[typewriter({ items: typewriterItems })]}
+    />
+  ),
 };
 
 export const Blast = {
@@ -393,9 +404,7 @@ export const Blast = {
     <Story
       text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
       extensions={[
-        typewriter({
-          items: localStorage.getItem('dxos.composer.extension.demo')?.split(','),
-        }),
+        typewriter({ items: typewriterItems }),
         blast(
           defaultsDeep(
             {
@@ -408,20 +417,6 @@ export const Blast = {
             defaultOptions,
           ),
         ),
-      ]}
-    />
-  ),
-};
-
-export const Diagnostics = {
-  render: () => (
-    <Story
-      text={document}
-      extensions={[
-        // Cursor moved.
-        EditorView.updateListener.of((update) => {
-          console.log('update', update.view.state.selection.main.head);
-        }),
       ]}
     />
   ),

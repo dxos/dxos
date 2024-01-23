@@ -13,6 +13,7 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
+  type LinkOptions,
   type ListenerOptions,
   autocomplete,
   code,
@@ -23,12 +24,14 @@ import {
   table,
   tasklist,
   typewriter,
-  type LinkOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
+import type { MarkdownSettingsProps } from './types';
+
 export type ExtensionsOptions = {
+  settings?: MarkdownSettingsProps;
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
@@ -38,13 +41,7 @@ export type ExtensionsOptions = {
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({
-  document,
-  debug,
-  experimental,
-  dispatch,
-  onChange,
-}: ExtensionsOptions): Extension[] => {
+export const getExtensions = ({ settings, document, dispatch, onChange }: ExtensionsOptions): Extension[] => {
   const space = document ? getSpaceForObject(document) : undefined;
 
   const extensions: Extension[] = [
@@ -122,7 +119,7 @@ export const getExtensions = ({
             void dispatch([
               {
                 action: ThreadAction.SELECT,
-                data: { active: thread.id, threads: [{ id: thread.id }] },
+                data: { active: thread.id, threads: [{ id: thread.id }], focus: true },
               },
               {
                 action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
@@ -133,13 +130,18 @@ export const getExtensions = ({
             return thread.id;
           },
           onSelect: (state) => {
-            const { active, ranges } = state;
+            const {
+              comments,
+              selection: { active, closest },
+            } = state;
             void dispatch([
               {
                 action: ThreadAction.SELECT,
                 data: {
-                  active,
-                  threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
+                  active: active ?? closest,
+                  threads: comments?.map(({ comment: { id }, location }) => ({ id, y: location?.top })) ?? [
+                    { id: active },
+                  ],
                 },
               },
             ]);
@@ -149,12 +151,12 @@ export const getExtensions = ({
     }
   }
 
-  if (debug) {
-    const items = localStorage.getItem('dxos.composer.extension.typewriter');
-    extensions.push(...[items ? typewriter({ items: items!.split(',') }) : undefined].filter(nonNullable));
+  if (settings?.debug) {
+    const items = settings.typewriter ?? '';
+    extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(nonNullable));
   }
 
-  if (experimental) {
+  if (settings?.experimental) {
     extensions.push(...[].filter(nonNullable));
   }
 

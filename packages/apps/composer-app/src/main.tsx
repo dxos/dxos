@@ -57,10 +57,10 @@ import { initializeNativeApp } from './native';
 import translations from './translations';
 
 const main = async () => {
-  const isSocket = !!(globalThis as any).__args;
   const config = await setupConfig();
   const services = await createClientServices(config);
 
+  const isSocket = !!(globalThis as any).__args;
   if (isSocket) {
     void initializeNativeApp();
   }
@@ -213,7 +213,8 @@ const main = async () => {
       TelemetryMeta.id,
       WildcardMeta.id,
     ],
-    defaults: [MarkdownMeta.id, StackMeta.id],
+    // TODO(burdon): Add DebugMeta if dev build.
+    defaults: [MarkdownMeta.id, StackMeta.id, ThreadMeta.id, SketchMeta.id],
   });
 
   createRoot(document.getElementById('root')!).render(
