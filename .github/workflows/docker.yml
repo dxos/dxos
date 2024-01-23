@@ -38,8 +38,6 @@ jobs:
       - name: Get version
         shell: bash
         run: echo "DX_VERSION=$(cat package.json | jq -r .version)" >> $GITHUB_ENV
-      - name: debug
-        run: git diff -p
       # TODO(nf): build for arm64 as well, build currently hangs after install
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
