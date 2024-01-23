@@ -170,10 +170,8 @@ export type CommentsOptions = {
 
 type TrackedComment = { id: string; from: number; to: number };
 
-// TODO(burdon): Handle cut/restore via undo (need to integrate with history?)
 const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>) => {
   // Tracks indexed selections within text.
-  // TODO(burdon): Move to main state field?
   let tracked: { text: Text; comments: TrackedComment[] } | null = null;
 
   // Track cut or copy (enables cut-and-paste and copy-delete-paste to restore comment selection).
@@ -204,6 +202,7 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
       copy: handleTrack,
     }),
 
+    // Track deleted comments.
     invertedEffects.of((tr) => {
       const { comments } = tr.startState.field(commentsState);
       const effects: StateEffect<any>[] = [];
@@ -213,10 +212,12 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
           range: { from, to },
         } of comments) {
           if (from < to && from >= fromA && to <= toA) {
+            console.log('deleted', id);
             effects.push(restoreCommentEffect.of({ id, from, to }));
           }
         }
       });
+
       return effects;
     }),
 
@@ -278,9 +279,8 @@ const mapTrackedComment = (comment: TrackedComment, changes: ChangeDesc) => ({
   to: changes.mapPos(comment.to, 1),
 });
 
-// These are attached to undone/redone transactions in the editor for
-// the purpose of restoring comments that were deleted by the original
-// changes.
+// These are attached to undone/redone transactions in the editor for the purpose of restoring comments
+// that were deleted by the original changes.
 const restoreCommentEffect = StateEffect.define<TrackedComment>({ map: mapTrackedComment });
 
 /**
