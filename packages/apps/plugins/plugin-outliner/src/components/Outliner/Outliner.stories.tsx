@@ -19,8 +19,6 @@ import { type Item } from './types';
 
 faker.seed(100);
 
-(globalThis as any)[TextObject.name] = TextObject;
-
 const Story = ({
   isTasklist,
   count = 1,

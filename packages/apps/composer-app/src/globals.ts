@@ -8,7 +8,7 @@ import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
 import { EchoDatabase, SpaceProxy, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
-import { migrations } from './migrations/migrations';
+import { migrations } from './migrations';
 
 export const appKey = 'composer.dxos.org';
 
