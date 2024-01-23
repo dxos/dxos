@@ -20,7 +20,7 @@ import {
   parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { type TypedObject, type Space, SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { type TypedObject, SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { ChatContainer, CommentsSidebar, ThreadMain } from './components';
@@ -192,26 +192,4 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
     },
   };
-};
-
-const Comments = ({
-  space,
-  state,
-  onFocus,
-}: {
-  space: Space;
-  state: ThreadState;
-  onFocus: (thread: ThreadType) => void;
-}) => {
-  // Sort threads by y-position.
-  // TODO(burdon): Should just use document position?
-  // TODO(burdon): RTE if don't copy array.
-  const threads = [...(state.threads ?? [])]
-    .sort((a, b) => a.y - b.y)
-    .map(({ id }) => space.db.getObjectById(id) as ThreadType)
-    .filter(nonNullable);
-
-  return (
-    <CommentsSidebar space={space} threads={threads} active={state.active} focus={state.focus} onFocus={onFocus} />
-  );
 };
