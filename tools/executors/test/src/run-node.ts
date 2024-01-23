@@ -7,8 +7,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { execTool, getBin, resolveFiles } from './node-util';
+import { type ExecutionResult } from './types';
 import { formatArgs, mochaComment } from './util';
-import { ExecutionResult } from './types';
 
 const LOG_TRANSFORM_CONFIG = {
   symbols: [

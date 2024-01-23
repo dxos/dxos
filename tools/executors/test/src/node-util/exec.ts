@@ -5,7 +5,8 @@
 // TODO(wittjosiah): Factor out.
 
 import { spawn, type SpawnSyncOptionsWithBufferEncoding } from 'node:child_process';
-import { ExecutionResult } from '../types';
+
+import { type ExecutionResult } from '../types';
 
 export const getBin = (root: string, binary: string) => {
   return `${root}/node_modules/.bin/${binary}`;
