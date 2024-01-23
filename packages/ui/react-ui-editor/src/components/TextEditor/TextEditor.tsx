@@ -100,7 +100,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     useEffect(() => {
       if (autoFocus) {
         view?.focus();
-        console.log(view, autoFocus);
       }
     }, [view, autoFocus]);
 

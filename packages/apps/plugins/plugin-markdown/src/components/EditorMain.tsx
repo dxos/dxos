@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, type RefCallback, type PropsWithChildren, type MutableRefObject } from 'react';
+import React, { type HTMLAttributes, type PropsWithChildren, type MutableRefObject } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { Main, useTranslation } from '@dxos/react-ui';
@@ -28,15 +28,10 @@ import {
 import { MARKDOWN_PLUGIN } from '../meta';
 
 export type EditorMainProps = {
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Don't export ref.
-  editorRefCb?: RefCallback<EditorView>;
   comments?: Comment[];
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'editorMode' | 'extensions'>;
 
-export const EditorMain = ({ editorRefCb, comments, ...props }: EditorMainProps) => {
+export const EditorMain = ({ comments, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   const [editorRef, editorView] = useTextEditor();
