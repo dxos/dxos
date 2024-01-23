@@ -2,13 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, {
-  type HTMLAttributes,
-  type RefCallback,
-  type PropsWithChildren,
-  type MutableRefObject,
-  useRef,
-} from 'react';
+import React, { type HTMLAttributes, type RefCallback, type PropsWithChildren, type MutableRefObject } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { Main, useTranslation } from '@dxos/react-ui';
@@ -19,6 +13,7 @@ import {
   MarkdownEditor,
   setFocus,
   useComments,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import {
   baseSurface,
@@ -32,11 +27,11 @@ import {
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
-// TODO(burdon): Don't export ref.
 export type EditorMainProps = {
   /**
    * @deprecated
    */
+  // TODO(burdon): Don't export ref.
   editorRefCb?: RefCallback<EditorView>;
   comments?: Comment[];
 } & Pick<TextEditorProps, 'model' | 'readonly' | 'editorMode' | 'extensions'>;
@@ -44,28 +39,25 @@ export type EditorMainProps = {
 export const EditorMain = ({ editorRefCb, comments, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
-  const editorRef = useRef<EditorView>();
-
-  // TODO(burdon): Remove.
-  const setEditorRef: RefCallback<EditorView> = (ref) => {
-    editorRef.current = ref as any;
-    editorRefCb?.(ref);
-  };
-
-  useComments(editorRef.current, comments);
+  const [editorRef, editorView] = useTextEditor();
+  useComments(editorView, comments);
 
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const { object } = data;
-        setFocus(editorRef.current!, object);
+        if (editorView) {
+          setFocus(editorView, object);
+        }
+        break;
       }
     }
   });
 
   return (
     <MarkdownEditor
-      ref={setEditorRef}
+      ref={editorRef}
+      autoFocus
       placeholder={t('editor placeholder')}
       slots={{
         root: {

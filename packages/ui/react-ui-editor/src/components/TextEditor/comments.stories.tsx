@@ -153,7 +153,7 @@ const Thread: FC<{
       <div ref={containerRef} onClick={() => onSelect()} className='flex'>
         <TextEditor
           ref={editorRef}
-          autofocus={focus}
+          autoFocus={focus}
           model={model}
           placeholder={'Enter comment...'}
           slots={{ root: { className: 'grow rounded-b' } }}

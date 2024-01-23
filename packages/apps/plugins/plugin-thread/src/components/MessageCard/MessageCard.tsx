@@ -68,7 +68,7 @@ export const MessageCard = ({
 
             <div className='overflow-hidden pb-1'>
               {message.blocks.map((block, i) => (
-                <ThreadBlock key={i} block={block} onDelete={onDelete && (() => onDelete(message.id, i))} />
+                <MessageBlock key={i} block={block} onDelete={onDelete && (() => onDelete(message.id, i))} />
               ))}
             </div>
           </div>
@@ -78,14 +78,15 @@ export const MessageCard = ({
   );
 };
 
-const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?: () => void }) => {
+const MessageBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?: () => void }) => {
   const id = useId();
 
+  // Draggable inline object.
   if (block.object) {
     return (
       <div className='flex overflow-hidden px-2 py-1 group'>
-        <Mosaic.Container id={id} Component={Pill}>
-          <Mosaic.DraggableTile type={THREAD_ITEM} path={id} item={block.object} Component={Pill} onRemove={onDelete} />
+        <Mosaic.Container id={id} Component={Tile}>
+          <Mosaic.DraggableTile type={THREAD_ITEM} path={id} item={block.object} Component={Tile} onRemove={onDelete} />
         </Mosaic.Container>
       </div>
     );
@@ -96,6 +97,7 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
       {typeof block.text === 'string' && (
         <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>
       )}
+
       {block.data && (
         // TODO(burdon): Render via CM editor in readonly.
         <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
@@ -112,8 +114,8 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
   );
 };
 
-// TODO(burdon): Reuse SearchResult component.
-const Pill: MosaicTileComponent<Expando> = forwardRef(
+// TODO(burdon): Reuse SearchResult component?
+const Tile: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onRemove }, forwardRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {

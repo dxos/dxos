@@ -52,7 +52,7 @@ export const MessageInput = ({
       <TextEditor
         ref={ref}
         model={model}
-        autofocus={focus}
+        autoFocus={focus}
         placeholder={placeholder}
         extensions={[
           command,

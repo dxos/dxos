@@ -270,7 +270,7 @@ const OutlinerItem = ({
         ref={editorRef}
         model={model}
         extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
-        autofocus={!!active}
+        autoFocus={!!active}
         placeholder={placeholder}
         slots={{
           root: {

@@ -213,7 +213,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 'properties' in data &&
                 isMarkdownProperties(data.properties)
               ) {
-                // TODO(burdon): Normalize with ECHO path above?
                 const main = (
                   <EditorMain
                     model={data.model}

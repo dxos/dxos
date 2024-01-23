@@ -28,7 +28,7 @@ export const ChatThread = ({
   thread,
   identityKey,
   propertiesProvider,
-  fullWidth = true, // TODO(burdon): Replace with className.
+  fullWidth = true,
   onFocus,
   onCreate,
   onDelete,

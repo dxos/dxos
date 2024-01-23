@@ -134,6 +134,7 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
               comments,
               selection: { active, closest },
             } = state;
+
             void dispatch([
               {
                 action: ThreadAction.SELECT,

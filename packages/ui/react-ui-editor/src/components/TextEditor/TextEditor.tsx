@@ -53,10 +53,10 @@ export type TextEditorSlots = {
 
 // TODO(burdon): Spellcheck?
 export type TextEditorProps = {
-  model: EditorModel;
+  model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
-  autofocus?: boolean;
-  multiline?: boolean;
+  autoFocus?: boolean;
+  lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
   editorMode?: EditorMode; // TODO(burdon): Factor out.
@@ -75,7 +75,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     {
       model,
       readonly,
-      autofocus,
+      autoFocus,
       scrollTo,
       selection,
       editorMode,
@@ -98,10 +98,11 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     // Set focus.
     useEffect(() => {
-      if (autofocus) {
+      if (autoFocus) {
         view?.focus();
+        console.log(view, autoFocus);
       }
-    }, [view, autofocus]);
+    }, [view, autoFocus]);
 
     // Monitor awareness.
     useAwareness(model);
@@ -214,14 +215,14 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
 // TODO(burdon): Single-line/scroll.
 export const TextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, placeholder, multiline, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
+  ({ readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[basicBundle({ themeMode, placeholder, multiline }), ...extensions]}
+        extensions={[basicBundle({ themeMode, placeholder, lineWrapping }), ...extensions]}
         theme={theme}
         slots={updatedSlots}
         {...props}

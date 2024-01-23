@@ -415,11 +415,11 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 };
 
 /**
- * Update state field.
+ * Update comments state field.
  */
-export const useComments = (view?: EditorView | null, comments?: Comment[]) => {
+export const useComments = (view: EditorView | null, comments: Comment[] = []) => {
   useEffect(() => {
-    if (view && comments) {
+    if (view) {
       view.dispatch({
         effects: setComments.of(comments),
       });
