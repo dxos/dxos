@@ -67,9 +67,6 @@
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-error"
-    },
-    {
       "path": "../plugins/plugin-pwa"
     },
     {

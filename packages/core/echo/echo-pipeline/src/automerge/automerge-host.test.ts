@@ -4,16 +4,17 @@
 
 import { randomBytes } from 'crypto';
 import expect from 'expect';
+import waitForExpect from 'wait-for-expect';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
+import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
+import { afterTest, describe, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
-import { AutomergeHost, AutomergeStorageAdapter } from './automerge-host';
+import { AutomergeHost, AutomergeStorageAdapter, MeshNetworkAdapter } from './automerge-host';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
@@ -46,13 +47,12 @@ describe('AutomergeHost', () => {
   });
 
   test('basic networking', async () => {
-    type Context = { client: Trigger<TestAdapter>; host: Trigger<TestAdapter> };
-    const context: Context = {
-      client: new Trigger<TestAdapter>(),
-      host: new Trigger<TestAdapter>(),
-    };
-    const hostAdapter = new TestAdapter(context, 'host');
-    const clientAdapter = new TestAdapter(context, 'client');
+    const hostAdapter: TestAdapter = new TestAdapter({
+      send: (message: Message) => clientAdapter.receive(message),
+    });
+    const clientAdapter: TestAdapter = new TestAdapter({
+      send: (message: Message) => hostAdapter.receive(message),
+    });
 
     const host = new Repo({
       network: [hostAdapter],
@@ -62,6 +62,8 @@ describe('AutomergeHost', () => {
     });
     hostAdapter.ready();
     clientAdapter.ready();
+    hostAdapter.peerCandidate(clientAdapter.peerId!);
+    clientAdapter.peerCandidate(hostAdapter.peerId!);
 
     const handle = host.create();
     const text = 'Hello world';
@@ -70,11 +72,145 @@ describe('AutomergeHost', () => {
     });
 
     const docOnClient = client.find(handle.url);
-    await asyncTimeout(docOnClient.whenReady(), 3_000);
-    expect(docOnClient.docSync().text).toEqual(text);
+    expect((await asyncTimeout(docOnClient.doc(), 1000)).text).toEqual(text);
   });
 
-  test('doubled connection', async () => {});
+  test('recovering from a lost connection', async () => {
+    let connectionState: 'on' | 'off' = 'on';
+
+    const hostAdapter: TestAdapter = new TestAdapter({
+      send: (message: Message) => connectionState === 'on' && sleep(10).then(() => clientAdapter.receive(message)),
+    });
+    const clientAdapter: TestAdapter = new TestAdapter({
+      send: (message: Message) => connectionState === 'on' && sleep(10).then(() => hostAdapter.receive(message)),
+    });
+
+    const host = new Repo({
+      network: [hostAdapter],
+    });
+    const client = new Repo({
+      network: [clientAdapter],
+    });
+
+    // Establish connection.
+    hostAdapter.ready();
+    clientAdapter.ready();
+    hostAdapter.peerCandidate(clientAdapter.peerId!);
+    clientAdapter.peerCandidate(hostAdapter.peerId!);
+
+    const handle = host.create();
+    const docOnClient = client.find(handle.url);
+    {
+      const sanityText = 'Hello world';
+      handle.change((doc: any) => {
+        doc.sanityText = sanityText;
+      });
+
+      expect((await asyncTimeout(docOnClient.doc(), 1000)).sanityText).toEqual(sanityText);
+    }
+
+    // Disrupt connection.
+    const offlineText = 'This has been written while the connection was off';
+    {
+      connectionState = 'off';
+
+      handle.change((doc: any) => {
+        doc.offlineText = offlineText;
+      });
+
+      await sleep(100);
+      expect((await asyncTimeout(docOnClient.doc(), 1000)).offlineText).toBeUndefined();
+    }
+
+    // Re-establish connection.
+    const onlineText = 'This has been written after the connection was re-established';
+    {
+      connectionState = 'on';
+      hostAdapter.peerDisconnected(clientAdapter.peerId!);
+      clientAdapter.peerDisconnected(hostAdapter.peerId!);
+      hostAdapter.peerCandidate(clientAdapter.peerId!);
+      clientAdapter.peerCandidate(hostAdapter.peerId!);
+
+      handle.change((doc: any) => {
+        doc.onlineText = onlineText;
+      });
+      await sleep(100);
+      expect((await asyncTimeout(docOnClient.doc(), 1000)).onlineText).toEqual(onlineText);
+      expect((await asyncTimeout(docOnClient.doc(), 1000)).offlineText).toEqual(offlineText);
+    }
+  });
+
+  test('integration test with teleport', async () => {
+    const createAutomergeRepo = () => {
+      const meshAdapter = new MeshNetworkAdapter();
+      const repo = new Repo({
+        network: [meshAdapter],
+      });
+      meshAdapter.ready();
+      return { repo, meshAdapter };
+    };
+    const peer1 = createAutomergeRepo();
+    const peer2 = createAutomergeRepo();
+    const handle = peer1.repo.create();
+
+    const teleportBuilder = new TeleportBuilder();
+    afterTest(() => teleportBuilder.destroy());
+
+    const [teleportPeer1, teleportPeer2] = teleportBuilder.createPeers({ factory: () => new TeleportPeer() });
+    {
+      // Initiate connection.
+      const [connection1, connection2] = await teleportBuilder.connect(teleportPeer1, teleportPeer2);
+      connection1.teleport.addExtension('automerge', peer1.meshAdapter.createExtension());
+      connection2.teleport.addExtension('automerge', peer2.meshAdapter.createExtension());
+
+      // Test connection.
+      const text = 'Hello world';
+      handle.change((doc: any) => {
+        doc.text = text;
+      });
+      const docOnPeer2 = peer2.repo.find(handle.url);
+      await waitForExpect(async () => expect((await asyncTimeout(docOnPeer2.doc(), 1000)).text).toEqual(text), 1000);
+    }
+
+    const offlineText = 'This has been written while the connection was off';
+    {
+      // Disconnect peers.
+      await teleportBuilder.disconnect(teleportPeer1, teleportPeer2);
+
+      // Make offline changes.
+      const offlineText = 'This has been written while the connection was off';
+      handle.change((doc: any) => {
+        doc.offlineText = offlineText;
+      });
+      const docOnPeer2 = peer2.repo.find(handle.url);
+      await sleep(100);
+      expect((await asyncTimeout(docOnPeer2.doc(), 1000)).offlineText).toBeUndefined();
+    }
+
+    {
+      // Reconnect peers.
+      const [connection1, connection2] = await teleportBuilder.connect(teleportPeer1, teleportPeer2);
+      connection1.teleport.addExtension('automerge', peer1.meshAdapter.createExtension());
+      connection2.teleport.addExtension('automerge', peer2.meshAdapter.createExtension());
+
+      // Wait for offline changes to be synced.
+      const docOnPeer2 = peer2.repo.find(handle.url);
+      await waitForExpect(
+        async () => expect((await asyncTimeout(docOnPeer2.doc(), 1000)).offlineText).toEqual(offlineText),
+        1000,
+      );
+
+      // Test connection.
+      const onlineText = 'This has been written after the connection was re-established';
+      handle.change((doc: any) => {
+        doc.onlineText = onlineText;
+      });
+      await waitForExpect(
+        async () => expect((await asyncTimeout(docOnPeer2.doc(), 1000)).onlineText).toEqual(onlineText),
+        1000,
+      );
+    }
+  });
 
   describe('storage', () => {
     test('load range on node', async () => {
@@ -103,10 +239,8 @@ describe('AutomergeHost', () => {
   });
 });
 
-type Context = { client: Trigger<TestAdapter>; host: Trigger<TestAdapter> };
-
 class TestAdapter extends NetworkAdapter {
-  constructor(public readonly context: Context, public readonly role: 'host' | 'client') {
+  constructor(private readonly _params: { send: (message: Message) => void }) {
     super();
   }
 
@@ -118,32 +252,24 @@ class TestAdapter extends NetworkAdapter {
 
   override connect(peerId: PeerId) {
     this.peerId = peerId;
-    this.context[this.role].wake(this);
-    this.context[this.role === 'host' ? 'client' : 'host']
-      .wait()
-      .then((adapter) => {
-        invariant(adapter.peerId, 'Peer id is not set');
-        this.emit('peer-candidate', { peerId: adapter.peerId });
-      })
-      .catch((error) => {
-        log.catch(error);
-      });
+  }
+
+  peerCandidate(peerId: PeerId) {
+    invariant(peerId, 'PeerId is required');
+    this.emit('peer-candidate', { peerId });
+  }
+
+  peerDisconnected(peerId: PeerId) {
+    invariant(peerId, 'PeerId is required');
+    this.emit('peer-disconnected', { peerId });
   }
 
   override send(message: Message) {
-    this.context[this.role === 'host' ? 'client' : 'host']
-      .wait()
-      .then((adapter) => {
-        adapter.receive(message);
-      })
-      .catch((error) => {
-        log.catch(error);
-      });
+    this._params.send(message);
   }
 
   override disconnect() {
     this.peerId = undefined;
-    this.context[this.role].reset();
   }
 
   receive(message: Message) {

@@ -6,7 +6,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.1
+  nx: nrwl/nx@1.6.2
 
 parameters:
   mode:
@@ -138,17 +138,17 @@ jobs:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
           environment:
             # TODO(wittjosiah): Remove. Currently need because e2e seems to be re-running bundling.
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
           environment:
             # TODO(wittjosiah): Remove? Seems to be needed after automerge was added.
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
           when: always
       - *send_test_report
       - *codecov_upload
@@ -192,7 +192,7 @@ jobs:
           command: ./.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
       - run:
           command: ./.circleci/scripts/publish-extension.sh
           environment:

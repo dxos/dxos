@@ -38,14 +38,27 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
           </Select.Portal>
         </Select.Root>
       </SettingsValue>
+
+      <SettingsValue
+        label={t('settings markdown debug label')}
+        secondary={
+          <Input.Root>
+            <Input.TextArea
+              rows={5}
+              value={settings.typewriter}
+              onChange={({ target: { value } }) => (settings.typewriter = value)}
+            />
+          </Input.Root>
+        }
+      >
+        <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
+      </SettingsValue>
+
       <SettingsValue label={t('settings markdown experimental label')}>
         <Input.Switch
           checked={settings.experimental}
           onCheckedChange={(checked) => (settings.experimental = !!checked)}
         />
-      </SettingsValue>
-      <SettingsValue label={t('settings markdown debug label')}>
-        <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
       </SettingsValue>
     </>
   );

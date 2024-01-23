@@ -100,6 +100,8 @@ for APP in "${APPS[@]}"; do
     export DX_ENVIRONMENT=development
     # the default per packages/common/log/src/options.ts
     export LOG_FILTER=info
+    export AGENT_HOSTING_TYPE=ELDON_API
+    export AGENT_HOSTING_SERVER=https://api.dev.eldon.dxos.network:8082/v1alpha1/
     DX_CONFIG="$ROOT/.circleci/publish-config/config-development.yml"
 
     set +e

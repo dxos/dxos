@@ -2,57 +2,53 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  EditorView,
-  Decoration,
-  WidgetType,
-  MatchDecorator,
-  ViewPlugin,
-  type DecorationSet,
-  type ViewUpdate,
-} from '@codemirror/view';
+import { syntaxTree } from '@codemirror/language';
+import { RangeSetBuilder } from '@codemirror/state';
+import { EditorView, Decoration, WidgetType, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
+
+import { getToken } from '../styles';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
-  '& .cm-task-item': {
-    paddingLeft: '4px',
-    paddingRight: '8px',
+  '& .cm-task': {
+    color: getToken('extend.colors.blue.500'),
+  },
+  '& .cm-task-checkbox': {
+    marginLeft: '4px',
+    marginRight: '4px',
   },
 });
 
 class CheckboxWidget extends WidgetType {
-  constructor(
-    private _checked: boolean,
-    private readonly _indent: number,
-    private readonly _onCheck?: (check: boolean) => void,
-  ) {
+  constructor(private _checked: boolean) {
     super();
   }
 
   override eq(other: this) {
-    return this._checked === other._checked && this._indent === other._indent;
+    return this._checked === other._checked;
   }
 
   override toDOM(view: EditorView) {
-    const wrap = document.createElement('span');
-    wrap.className = 'cm-task-item';
-    wrap.setAttribute('aria-hidden', 'true');
-    wrap.style.setProperty('margin-left', this._indent * 24 + 'px');
-
-    const input = wrap.appendChild(document.createElement('input'));
+    const input = document.createElement('input');
+    input.className = 'cm-task-checkbox';
     input.type = 'checkbox';
     input.checked = this._checked;
-    if (!this._onCheck) {
+    if (view.state.readOnly) {
       input.setAttribute('disabled', 'true');
-    }
-    if (this._onCheck) {
-      input.onchange = (event: Event) => {
-        this._onCheck?.((event.target as any).checked);
-        return true;
+    } else {
+      input.onmousedown = (event: Event) => {
+        const pos = view.posAtDOM(input);
+        const text = view.state.sliceDoc(pos, pos + 3);
+        if (text === (this._checked ? '[x]' : '[ ]')) {
+          view.dispatch({
+            changes: { from: pos + 1, to: pos + 2, insert: this._checked ? ' ' : 'x' },
+          });
+          event.preventDefault();
+        }
       };
     }
 
-    return wrap;
+    return input;
   }
 
   override ignoreEvent() {
@@ -60,60 +56,56 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
+const checkedDecoration = Decoration.replace({ widget: new CheckboxWidget(true) });
+const uncheckedDecoration = Decoration.replace({ widget: new CheckboxWidget(false) });
+
+const buildDecorations = (view: EditorView): DecorationSet => {
+  const builder = new RangeSetBuilder<Decoration>();
+  const { state } = view;
+  const cursor = state.selection.main.head;
+
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(state).iterate({
+      enter: (node) => {
+        if (node.name === 'TaskMarker') {
+          // Check if cursor is inside text.
+          if (cursor < node.from || cursor > node.to) {
+            const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+            builder.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
+            builder.add(node.from, node.to, checked ? checkedDecoration : uncheckedDecoration);
+          }
+        }
+      },
+      from,
+      to,
+    });
+  }
+
+  return builder.finish();
+};
+
 export type TasklistOptions = {};
 
 export const tasklist = (options: TasklistOptions = {}) => {
-  // TODO(burdon): Matcher isn't as precise as syntax tree.
-  //  Allows for indents to be greater than AST would allow.
-  const taskMatcher = new MatchDecorator({
-    regexp: /^(\s*)- \[([ xX])\]\s/g,
-    decoration: (match, view, pos) => {
-      const indent = Math.floor(match[1].length / 2);
-      const checked = match[2] === 'x' || match[2] === 'X';
-      return Decoration.replace({
-        widget: new CheckboxWidget(
-          checked,
-          indent,
-          view.state.readOnly
-            ? undefined
-            : (checked) => {
-                const idx = pos + match[0].indexOf('[') + 1;
-                view.dispatch({
-                  changes: {
-                    from: idx,
-                    to: idx + 1,
-                    insert: checked ? 'x' : ' ',
-                  },
-                  // TODO(burdon): Restore cursor position? More useful to move to end of line (can indent).
-                  selection: {
-                    anchor: idx + 3,
-                  },
-                });
-              },
-        ),
-      });
-    },
-  });
+  return [
+    ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet;
 
-  const tasks = ViewPlugin.fromClass(
-    class {
-      tasks: DecorationSet;
-      constructor(view: EditorView) {
-        this.tasks = taskMatcher.createDeco(view);
-      }
+        constructor(view: EditorView) {
+          this.decorations = buildDecorations(view);
+        }
 
-      update(update: ViewUpdate) {
-        this.tasks = taskMatcher.updateDeco(update, this.tasks);
-      }
-    },
-    {
-      decorations: (value) => value.tasks,
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
-          return view.plugin(plugin)?.tasks || Decoration.none;
-        }),
-    },
-  );
-
-  return [tasks, styles];
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.viewportChanged || update.selectionSet) {
+            this.decorations = buildDecorations(update.view);
+          }
+        }
+      },
+      {
+        decorations: (v) => v.decorations,
+      },
+    ),
+    styles,
+  ];
 };

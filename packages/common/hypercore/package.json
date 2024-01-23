@@ -35,7 +35,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
+    "@faker-js/faker": "^8.3.1",
     "@types/randombytes": "^2.0.0",
     "@types/readable-stream": "^2.3.9",
     "hypercore": "^9.12.0",

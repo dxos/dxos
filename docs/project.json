@@ -11,7 +11,7 @@
         "script": "apidoc"
       },
       "outputs": [
-        "docs/docs/api"
+        "{projectRoot}/docs/api"
       ]
     },
     "build": {
@@ -33,7 +33,7 @@
         "script": "bundle"
       },
       "outputs": [
-        "docs/docs/.vuepress/dist"
+        "{projectRoot}/docs/.vuepress/dist"
       ]
     },
     "lint": {
@@ -51,8 +51,8 @@
         "script": "prerelease"
       },
       "outputs": [
-        "docs/apidoc.json",
-        "docs/docs/api"
+        "{projectRoot}/apidoc.json",
+        "{projectRoot}/docs/api"
       ]
     },
     "serve": {
@@ -76,10 +76,10 @@
         "script": "typedoc"
       },
       "outputs": [
-        "docs/apidoc.json"
+        "{projectRoot}/apidoc.json"
       ]
     }
   },
   "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "root": "docs"
+  "name": "docs"
 }

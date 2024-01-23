@@ -4,5 +4,7 @@
 
 export * from './automerge';
 export * from './awareness-provider';
-export * from './useTextModel';
+export * from './defs';
 export * from './yjs';
+
+export * from './useTextModel';
