@@ -2406,6 +2406,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../../core/mesh/rpc
@@ -2427,12 +2430,6 @@ importers:
       monaco-editor:
         specifier: ^0.44.0
         version: 0.44.0
-      y-monaco:
-        specifier: ^0.1.0
-        version: 0.1.4(monaco-editor@0.44.0)(yjs@13.6.10)
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -44359,17 +44356,6 @@ packages:
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
-
-  /y-monaco@0.1.4(monaco-editor@0.44.0)(yjs@13.6.10):
-    resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
-    peerDependencies:
-      monaco-editor: '>=0.20.0'
-      yjs: ^13.3.1
-    dependencies:
-      lib0: 0.2.78
-      monaco-editor: 0.44.0
-      yjs: 13.6.10
-    dev: false
 
   /y18n@3.2.2:
     resolution: {integrity: sha512-uGZHXkHnhF0XeeAPgnKfPv1bgKAYyVvmNL1xlKsPYZPaIHxGti2hHqvOCQv71XMsLxu1QjergkqogUnms5D3YQ==}
