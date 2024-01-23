@@ -8,12 +8,13 @@ import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
+import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
+  type Plugin,
   LayoutAction,
   resolvePlugin,
   parseIntentPlugin,
@@ -101,7 +102,7 @@ export const SpacePlugin = ({
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
   let directory: FileSystemDirectoryHandle | null;
 
-  let clientPlugin: Plugin<ClientProvides> | undefined;
+  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
 
   return {
     meta,
