@@ -11,6 +11,7 @@ import {
   Grid as GridType,
   Kanban as KanbanType,
   Mailbox as MailboxType,
+  Map as MapType,
   Sketch as SketchType,
   Stack as StackType,
   Table as TableType,
@@ -32,6 +33,7 @@ export * from './proto';
 (globalThis as any)[GridType.name] = GridType;
 (globalThis as any)[KanbanType.name] = KanbanType;
 (globalThis as any)[MailboxType.name] = MailboxType;
+(globalThis as any)[MapType.name] = MapType;
 (globalThis as any)[SketchType.name] = SketchType;
 (globalThis as any)[StackType.name] = StackType;
 (globalThis as any)[TableType.name] = TableType;

@@ -180,7 +180,7 @@ const ValueEditor = ({ input }: { input: ChainType.Input }) => {
     <TextEditor
       model={model}
       placeholder={t('value placeholder')}
-      multiline={false}
+      lineWrapping={false}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),

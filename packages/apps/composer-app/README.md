@@ -3,7 +3,7 @@
 To run the app with HALO.
 
 ```bash
-pnpm -w nx run composer-app:serve-with-vault
+pnpm -w nx run composer-app:serve
 ```
 
 ## Native Bundling
@@ -42,6 +42,7 @@ ssc build -r --port 5173
 To reset the app, inspect and delete local storage properties.
 
 ## Docker
+
 Note: experimental.
 
 The app can be run using Docker.
