@@ -45,10 +45,6 @@ import {
 } from './types';
 import { getFallbackTitle, isEditorModel, isMarkdownProperties, markdownPlugins } from './util';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Document.name] = Document;
-
 export const isDocument = (data: unknown): data is DocumentType =>
   isTypedObject(data) && DocumentType.schema.typename === data.__typename;
 

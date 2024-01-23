@@ -15,10 +15,6 @@ import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
 import { GridAction, type GridPluginProvides, isGrid } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[GridType.name] = GridType;
-
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
     meta,

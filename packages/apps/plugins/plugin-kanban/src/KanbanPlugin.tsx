@@ -15,10 +15,6 @@ import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
 import { KanbanAction, type KanbanPluginProvides, isKanban } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[KanbanType.name] = KanbanType;
-
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   return {
     meta,

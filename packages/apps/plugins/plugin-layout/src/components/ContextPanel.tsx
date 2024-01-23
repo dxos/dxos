@@ -16,6 +16,7 @@ export const ContextPanel = () => {
   return (
     <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
       <div className='flex shrink-0 overflow-hidden'>
+        {'<<'}
         <Surface role={Role.SEARCH} />
       </div>
       <div className='flex flex-1 overflow-hidden'>

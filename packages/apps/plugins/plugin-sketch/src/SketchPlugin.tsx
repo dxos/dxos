@@ -15,10 +15,6 @@ import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchPluginProvides, isSketch } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[SketchType.name] = SketchType;
-
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
     meta,
