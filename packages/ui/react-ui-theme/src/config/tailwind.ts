@@ -155,10 +155,10 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
     hueTorsion: -30 * dtor,
   },
   secondary: {
-    keyColor: '#02caef',
-    darkCp: 1,
-    lightCp: 1,
-    hueTorsion: -51.5 * dtor,
+    keyColor: '#23a9dc',
+    darkCp: 0.75,
+    lightCp: 0.62,
+    hueTorsion: -30.5 * dtor,
   },
 };
 
@@ -252,12 +252,11 @@ export const tailwindConfig = ({
       },
       accent: {
         light: configColors.primary['550'],
-        dark: configColors.secondary['450'],
-        fg: { light: configColors.primary['550'], dark: configColors.secondary['400'] },
+        dark: configColors.secondary['300'],
       },
       accentHover: {
         light: configColors.primary['600'],
-        dark: configColors.secondary['350'],
+        dark: configColors.secondary['250'],
       },
       separator: {
         light: configColors.neutral['75'],

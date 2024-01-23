@@ -16,7 +16,7 @@ import {
 } from '../fragments';
 
 export const primaryButtonColors =
-  'surface-accent hover:surface-accentHover text-white aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 aria-pressed:text-primary-100 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 data-[state=open]:text-primary-100 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100 hover:text-white dark:hover:text-white';
+  'fg-inverse surface-accent hover:surface-accentHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
 
 export const staticDefaultButtonColors = 'surface-input';
 
