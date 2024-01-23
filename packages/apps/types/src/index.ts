@@ -21,6 +21,7 @@ import {
 
 export * from './proto';
 
+// TODO(burdon): Are these still required?
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[AddressBookType.name] = AddressBookType;
