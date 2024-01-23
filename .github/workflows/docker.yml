@@ -95,6 +95,7 @@ jobs:
       - name: Build and push agent
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           target: agent
           tags: ${{ steps.agent-meta.outputs.tags }}
@@ -114,6 +115,7 @@ jobs:
       - name: Build and push composer
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           target: composer-app
           tags: ${{ steps.composer-meta.outputs.tags }}
