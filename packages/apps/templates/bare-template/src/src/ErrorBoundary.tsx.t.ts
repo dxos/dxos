@@ -42,5 +42,5 @@ export default template.define.text({
           `}
         );
       };
-    }`,
+    `,
 });
