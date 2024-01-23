@@ -3,19 +3,20 @@
 //
 
 import {
-  Chain as ChainType,
-  Grid as GridType,
-  Mailbox as MailboxType,
   AddressBook as AddressBookType,
   Calendar as CalendarType,
-  View as ViewType,
-  Kanban as KanbanType,
-  Tree as TreeType,
-  Sketch as SketchType,
+  Chain as ChainType,
+  Document as DocumentType,
   Folder as FolderType,
+  Grid as GridType,
+  Kanban as KanbanType,
+  Mailbox as MailboxType,
+  Sketch as SketchType,
   Stack as StackType,
   Table as TableType,
   Thread as ThreadType,
+  Tree as TreeType,
+  View as ViewType,
 } from './proto';
 
 export * from './proto';
