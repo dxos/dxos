@@ -154,17 +154,11 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
     lightCp: 1,
     hueTorsion: -30 * dtor,
   },
-  secondary: {
-    keyColor: '#23a9dc',
-    darkCp: 0.75,
-    lightCp: 0.62,
-    hueTorsion: -30.5 * dtor,
-  },
 };
 
 export const configColors = Object.keys(paletteConfigs).reduce(
   (acc: Record<string, Record<string, string>>, palette) => {
-    const isBroad = palette === 'neutral' || palette === 'primary' || palette === 'secondary';
+    const isBroad = palette === 'neutral' || palette === 'primary';
     const paletteConfig = paletteConfigs[palette] as PaletteConfig;
     const curve = curvePathFromPalette({
       ...paletteConfig,
@@ -252,11 +246,12 @@ export const tailwindConfig = ({
       },
       accent: {
         light: configColors.primary['550'],
-        dark: configColors.secondary['300'],
+        dark: configColors.primary['550'],
+        fg: { light: configColors.primary['550'], dark: configColors.primary['400'] },
       },
       accentHover: {
         light: configColors.primary['600'],
-        dark: configColors.secondary['250'],
+        dark: configColors.primary['500'],
       },
       separator: {
         light: configColors.neutral['75'],
@@ -264,7 +259,7 @@ export const tailwindConfig = ({
       },
       inverse: {
         light: '#ffffff',
-        dark: configColors.neutral['850'],
+        dark: '#ffffff',
       },
       unavailable: {
         light: configColors.neutral['100'],
