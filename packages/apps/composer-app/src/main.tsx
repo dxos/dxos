@@ -60,8 +60,8 @@ const main = async () => {
   const config = await setupConfig();
   const services = await createClientServices(config);
   const isSocket = !!(globalThis as any).__args;
+
   const App = createApp({
-    
     fallback: ({ error }) => (
       <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
         <Tooltip.Provider>
