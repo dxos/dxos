@@ -23,16 +23,18 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-settings": "workspace:*",
     "@codemirror/language": "^6.10.0",
     "@codemirror/state": "^6.4.0",
     "@codemirror/view": "^6.23.0",
     "@dxos/display-name": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-react": "^1.3.6",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.3.1",
     "deepsignal": "1.4.0-shallow.0",
     "lodash.get": "^4.4.2"
   },

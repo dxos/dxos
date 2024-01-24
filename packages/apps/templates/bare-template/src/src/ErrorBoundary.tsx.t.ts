@@ -5,12 +5,13 @@ export default template.define.text({
   content: ({ input: { react, dxosUi } }) =>
     react &&
     plate`
-      import React, { Component, FC, PropsWithChildren } from 'react';
+      import React, { Component, PropsWithChildren } from 'react';
 
       type State = { error: Error | null }
 
-      export class ErrorBoundary extends Component<{}, State> {
-        constructor() {
+      export class ErrorBoundary extends Component<PropsWithChildren<{}>, State> {
+        constructor(props) {
+          super(props);
           this.state = { error: null }
         }
 

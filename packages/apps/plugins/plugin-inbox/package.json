@@ -27,7 +27,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.3.1",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
