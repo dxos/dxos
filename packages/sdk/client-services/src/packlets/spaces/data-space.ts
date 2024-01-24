@@ -92,7 +92,7 @@ export class DataSpace {
   private readonly _automergeHost: AutomergeHost;
 
   // TODO(dmaretskyi): Move into Space?
-  private readonly _automergeSpaceState = new AutomergeSpaceState();
+  private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) => this._onNewAutomergeRoot(rootUrl));
 
   private _state = SpaceState.CLOSED;
 
@@ -361,6 +361,11 @@ export class DataSpace {
       // Set this after credentials are notarized so that on failure we will retry.
       await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
     }
+  }
+
+  private _onNewAutomergeRoot(rootUrl: string) {
+    log.info('loading automerge root doc for space', { space: this.key, rootUrl });
+    this._automergeHost.repo.find(rootUrl as any);
   }
 
   // TODO(dmaretskyi): Use profile from signing context.

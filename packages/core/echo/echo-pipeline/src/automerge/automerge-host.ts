@@ -42,7 +42,8 @@ export class AutomergeHost {
       storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
-      sharePolicy: async (peerId, documentId) => true, // Share everything.
+      // Hosts, running in the worker, don't share documents unless requested by other peers.
+      sharePolicy: async (peerId, documentId) => false, // Share everything.
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
