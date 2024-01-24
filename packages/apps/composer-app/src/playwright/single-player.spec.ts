@@ -39,6 +39,50 @@ test.describe('Single-player tests', () => {
     });
   });
 
+  test('create folder', async () => {
+    await host.createSpace();
+    await host.createFolder();
+    await waitForExpect(async () => {
+      expect(await host.getFoldersCount()).to.equal(1);
+    });
+  });
+
+  test.describe('deleting folders', () => {
+    test('moves item out of folder', async () => {
+      await host.createSpace();
+      await host.createFolder();
+      // create an item inside the folder
+      await host.createObject('markdownPlugin');
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+      // delete the containing folder
+      await host.deleteObject(0);
+
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+    });
+
+    test('moves folder with item out of folder', async () => {
+      await host.createSpace();
+      await host.createFolder();
+      // create a folder inside the folder
+      await host.createFolder();
+      // create an item inside the contained folder
+      await host.createObject('markdownPlugin');
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+      // delete the containing folder
+      await host.deleteObject(0);
+
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+    });
+  });
+
   test.describe('stacks', () => {
     test('create', async () => {
       await host.createSpace();

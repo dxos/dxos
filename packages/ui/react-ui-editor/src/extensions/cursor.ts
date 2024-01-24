@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Facet } from '@codemirror/state';
+import { type EditorState, Facet } from '@codemirror/state';
 
 import type { Range } from '../hooks';
 
@@ -31,13 +31,17 @@ export class Cursor {
     combine: (providers) => providers[0] ?? defaultCursorConverter,
   });
 
-  static readonly getCursorFromRange = (cursorConverter: CursorConverter, range: Range) => {
+  static readonly getCursorFromRange = (state: EditorState, range: Range) => {
+    const cursorConverter = state.facet(Cursor.converter);
+
     const from = cursorConverter.toCursor(range.from);
     const to = cursorConverter.toCursor(range.to, -1);
     return [from, to].join(':');
   };
 
-  static readonly getRangeFromCursor = (cursorConverter: CursorConverter, cursor: string) => {
+  static readonly getRangeFromCursor = (state: EditorState, cursor: string) => {
+    const cursorConverter = state.facet(Cursor.converter);
+
     const parts = cursor.split(':');
     const from = cursorConverter.fromCursor(parts[0]);
     const to = cursorConverter.fromCursor(parts[1]);

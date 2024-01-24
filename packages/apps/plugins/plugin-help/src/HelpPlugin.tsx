@@ -27,8 +27,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
     meta,
     ready: async () => {
       settings
-        .prop(settings.values.$showHints!, 'showHints', LocalStorageStore.bool)
-        .prop(settings.values.$showWelcome!, 'showWelcome', LocalStorageStore.bool);
+        .prop(settings.values.$showHints!, 'show-hints', LocalStorageStore.bool)
+        .prop(settings.values.$showWelcome!, 'show-welcome', LocalStorageStore.bool);
     },
     provides: {
       context: ({ children }) => {
@@ -44,7 +44,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
           if (parent.id === 'root') {
             parent.addAction({
-              id: 'start-help', // TODO(burdon): Standarize.
+              id: 'start-help', // TODO(burdon): Standardize.
               label: ['open help tour', { ns: HELP_PLUGIN }],
               icon: (props) => <Info {...props} />,
               invoke: () => {

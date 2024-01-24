@@ -62,6 +62,20 @@ export class AppManager {
     return this.page.getByTestId(`${plugin}.createObject`).last().click();
   }
 
+  async createFolder() {
+    await this.page.getByTestId('spacePlugin.createObject').last().click();
+    return this.page.getByTestId('spacePlugin.createFolder').last().click();
+  }
+
+  async deleteObject(itemNumber: number) {
+    // TODO: Would prefer to use testId of `spacePlugin.object`, but for folders, it refers to the entire block
+    // including all of the containing item, so the click doesn't land on the folder, but in the middle of the
+    // folder's containing items.
+    await this.page.getByTestId('navtree.treeItem.actionsLevel2').nth(itemNumber).click({ button: 'right' });
+    await this.page.getByTestId('spacePlugin.deleteObject').last().click();
+    return this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+  }
+
   async getSpaceItemsCount() {
     const [openCount, closedCount] = await Promise.all([
       this.page.getByTestId('spacePlugin.personalSpace').count(),
@@ -72,6 +86,10 @@ export class AppManager {
 
   getObjectsCount() {
     return this.page.getByTestId('spacePlugin.object').count();
+  }
+
+  getFoldersCount() {
+    return this.page.getByTestId('spacePlugin.folder').count();
   }
 
   getObjectLinks() {

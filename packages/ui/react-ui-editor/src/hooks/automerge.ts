@@ -4,11 +4,13 @@
 
 import get from 'lodash.get';
 
+import { generateName } from '@dxos/display-name';
 import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { isNotNullOrUndefined } from '@dxos/util';
 
 import { SpaceAwarenessProvider } from './awareness-provider';
-import { type EditorModel, modelState, type UseTextModelProps } from './useTextModel';
+import { type EditorModel, modelState } from './defs';
+import { type UseTextModelProps } from './useTextModel';
 import { automerge, awareness, AwarenessProvider } from '../extensions';
 import { cursorColor } from '../styles';
 
@@ -22,7 +24,7 @@ export const createAutomergeModel = ({ space, identity, text }: UseTextModelProp
       space,
       channel: `automerge.awareness.${obj.id}`,
       info: {
-        displayName: identity?.profile?.displayName ?? '',
+        displayName: identity ? identity.profile?.displayName ?? generateName(identity.identityKey.toHex()) : undefined,
         color: cursorColor.color,
         lightColor: cursorColor.light,
       },
