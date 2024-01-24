@@ -2,6 +2,7 @@ package org.dxos.test
 
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.runners.ExecutionEnvironment
+import com.intellij.ide.util.PropertiesComponent
 import com.intellij.javascript.debugger.CommandLineDebugConfigurator
 import com.intellij.javascript.nodejs.execution.NodeTargetRun
 import com.intellij.javascript.nodejs.execution.NodeTargetRunOptions
@@ -35,11 +36,16 @@ class DxosMochaRunProfileState(
         )
         targetRun.envData = runSettings.envData
         targetRun.commandLineBuilder.apply {
-            setExePath("pnpm")
+            setExePath(resolvePnpmPath())
             setWorkingDirectory(guessProjectDir())
             buildNxCommands().forEach { addParameter(it) }
         }
         return targetRun.startProcess()
+    }
+
+    private fun resolvePnpmPath(): String {
+        val propertiesComponent = PropertiesComponent.getInstance(project)
+        return propertiesComponent.getValue("nodejs_package_manager_path") ?: "pnpm"
     }
 
     private fun buildNxCommands(): List<String> {

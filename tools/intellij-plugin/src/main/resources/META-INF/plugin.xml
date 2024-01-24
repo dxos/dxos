@@ -1,6 +1,6 @@
 <idea-plugin>
   <id>org.dxos.developertools</id>
-  <name>Dxos Developer Tools</name>
+  <name>DXOS Dev Tools</name>
   <vendor email="info@dxos.org" url="https://dxos.org/">Dxos</vendor>
   <idea-version since-build="222"/>
 

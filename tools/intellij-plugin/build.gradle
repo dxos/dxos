@@ -29,7 +29,7 @@ runIde {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
   type = 'IU'
-  pluginName = 'DxosDeveloperTools'
+  pluginName = 'DXOSDevTools'
   plugins = ['JavaScript', 'NodeJS']
   version = '2023.2'
   type = "PS"
