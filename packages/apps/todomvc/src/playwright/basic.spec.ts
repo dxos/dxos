@@ -46,6 +46,7 @@ test.describe('Basic test', () => {
         return;
       }
 
+      await host.openShareSpace();
       const invitationCode = await host.shell.createSpaceInvitation();
       const authCode = await host.shell.getAuthCode();
 

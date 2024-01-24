@@ -2,8 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { curvePathFromPalette, paletteShadesFromCurve } from '@fluent-blocks/colors';
-import { hex_to_LCH as hexToLch, Lab_to_hex as labToHex } from '@fluent-blocks/colors/types/lib/palettes';
+import {
+  curvePathFromPalette,
+  paletteShadesFromCurve,
+  hex_to_LCH as hexToLch,
+  Lab_to_hex as labToHex,
+} from '@fluent-blocks/colors';
 
 export type PaletteConfig = {
   keyColor: string;

@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { ConsoleMessage, Page } from '@playwright/test';
+import type { ConsoleMessage, Dialog, Page } from '@playwright/test';
 
 import { sleep, Trigger } from '@dxos/async';
 
 import { ScopedShellManager } from './scoped-shell-manager';
+
+// TODO(wittjosiah): Normalize data-testids between snake and camel case.
 
 export class ShellManager extends ScopedShellManager {
   private _invitationCode = new Trigger<string>();
@@ -27,6 +29,10 @@ export class ShellManager extends ScopedShellManager {
 
   // Getters
 
+  async getDisplayName(): Promise<string | null> {
+    return this.shell.getByTestId('identityHeading.displayName').textContent();
+  }
+
   async isCurrentSpaceViewVisible(): Promise<boolean> {
     return await this.shell.getByTestId('current-space-view').isVisible();
   }
@@ -44,29 +50,50 @@ export class ShellManager extends ScopedShellManager {
     await this.shell.getByTestId('halo-invitation-accepted-done').click();
   }
 
+  async createDeviceInvitation(): Promise<string> {
+    this._invitationCode = new Trigger<string>();
+    this._authCode = new Trigger<string>();
+    await this.shell.getByTestId('devices-panel.create-invitation').click();
+    return await this._invitationCode.wait();
+  }
+
+  async resetDevice() {
+    const handleDialog = async (dialog: Dialog) => {
+      if (dialog.type() === 'confirm') {
+        await dialog.accept();
+      }
+    };
+
+    this.page.on('dialog', handleDialog);
+    await this.shell.getByTestId('devices-panel.sign-out').click();
+    await this.shell.getByTestId('sign-out.reset-device').click();
+    this.page.off('dialog', handleDialog);
+  }
+
+  async joinNewIdentity(invitationCode: string) {
+    await this.shell.getByTestId('devices-panel.sign-out').click();
+    await this.shell.getByTestId('sign-out.join-new-identity').click();
+    await this.shell.getByTestId('reset-identity-input').fill('CONFIRM');
+    await this.shell.getByTestId('reset-identity-input-confirm').click();
+    await this.shell.getByTestId('identity-chooser.join-identity').click();
+    await this.inputInvitation('device', invitationCode, this.shell);
+  }
+
+  async authenticateDevice(authCode: string, skipDone = true) {
+    // Wait for focus to shift before typing.
+    await sleep(1500);
+    await this.authenticateInvitation('device', authCode, this.shell);
+    // TODO(wittjosiah): When "signing out" and joinging a new identity, the done step seems to be skipped.
+    if (!skipDone) {
+      await this.doneInvitation('device', this.shell);
+    }
+  }
+
   async closeShell() {
     await this.page.keyboard.press('Escape');
   }
 
-  // TODO(wittjosiah): These shortcuts are no longer within the SDK so these commands should live elsewhere.
-  async openCurrentSpace() {
-    await this.page.keyboard.press('Meta+.');
-  }
-
-  async openSpaceList() {
-    await this.page.keyboard.press('Meta+Shift+>');
-  }
-
-  async showAllSpaces() {
-    await this.shell.getByTestId('show-all-spaces').click();
-  }
-
-  async showCurrentSpace() {
-    await this.shell.getByTestId('show-current-space').click();
-  }
-
   async createSpaceInvitation(): Promise<string> {
-    await this.openCurrentSpace();
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
     await this.shell.getByTestId('spaces-panel.create-invitation').click();
