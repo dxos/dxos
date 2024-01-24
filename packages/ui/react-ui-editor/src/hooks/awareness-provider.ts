@@ -39,9 +39,9 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   private readonly _peerId: string;
   private readonly _info: AwarenessInfo;
 
-  private _localState?: AwarenessState;
-  private _postTask?: DeferredTask;
   private _ctx?: Context;
+  private _postTask?: DeferredTask;
+  private _localState?: AwarenessState;
 
   constructor(params: AwarenessProviderParams) {
     this._space = params.space;

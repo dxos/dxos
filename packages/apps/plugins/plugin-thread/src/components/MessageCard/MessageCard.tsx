@@ -12,24 +12,24 @@ import { type Expando, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM } from '../../meta';
+import { type MessagePropertiesProvider, safeParseJson } from '../util';
 
-export type BlockProperties = {
-  displayName?: string;
-  classes?: string;
-};
+// TODO(burdon): Replace rendering via CM TextEditor instance in readonly mode.
+//  Messages can be multi-part markdown documents that include fenced code blocks, etc.
+//  Consider multiple sizes (e.g., phone narrow, vs. desktop/tablet screen wide).
 
 export type MessageCardProps = {
   className?: string;
   message: MessageType;
-  propertiesProvider?: (identityKey: PublicKey | undefined) => BlockProperties;
+  propertiesProvider?: MessagePropertiesProvider;
   onDelete?: (messageId: string, idx: number) => void;
 };
 
 export const MessageCard = ({
-  className = mx(inputSurface, 'rounded shadow'),
+  className = mx(attentionSurface, 'rounded shadow'),
   message,
   propertiesProvider,
   onDelete,
@@ -43,7 +43,6 @@ export const MessageCard = ({
     propertiesProvider?.(message.from?.identityKey ? PublicKey.from(message.from?.identityKey) : undefined) ?? {};
   const date = message2.timestamp ? new Date(message2.timestamp) : undefined;
 
-  // TODO(burdon): Use aurora cards.
   // TODO(burdon): Reply button.
   return (
     <DensityProvider density='fine'>
@@ -69,7 +68,7 @@ export const MessageCard = ({
 
             <div className='overflow-hidden pb-1'>
               {message.blocks.map((block, i) => (
-                <ThreadBlock key={i} block={block} onDelete={onDelete && (() => onDelete(message.id, i))} />
+                <MessageBlock key={i} block={block} onDelete={onDelete && (() => onDelete(message.id, i))} />
               ))}
             </div>
           </div>
@@ -79,14 +78,15 @@ export const MessageCard = ({
   );
 };
 
-const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?: () => void }) => {
+const MessageBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?: () => void }) => {
   const id = useId();
 
+  // Draggable inline object.
   if (block.object) {
     return (
       <div className='flex overflow-hidden px-2 py-1 group'>
-        <Mosaic.Container id={id} Component={Pill}>
-          <Mosaic.DraggableTile type={THREAD_ITEM} path={id} item={block.object} Component={Pill} onRemove={onDelete} />
+        <Mosaic.Container id={id} Component={Tile}>
+          <Mosaic.DraggableTile type={THREAD_ITEM} path={id} item={block.object} Component={Tile} onRemove={onDelete} />
         </Mosaic.Container>
       </div>
     );
@@ -97,8 +97,9 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
       {typeof block.text === 'string' && (
         <div className='grow overflow-hidden break-words mr-2 text-sm'>{block.text}</div>
       )}
+
       {block.data && (
-        // TODO(burdon): Colorize (reuse codemirror or hljs?)
+        // TODO(burdon): Render via CM editor in readonly.
         <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
           <code>{JSON.stringify(safeParseJson(block.data), undefined, 2)}</code>
         </pre>
@@ -113,8 +114,8 @@ const ThreadBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?:
   );
 };
 
-// TODO(burdon): Reuse SearchResult component.
-const Pill: MosaicTileComponent<Expando> = forwardRef(
+// TODO(burdon): Reuse SearchResult component?
+const Tile: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onRemove }, forwardRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
@@ -132,12 +133,3 @@ const Pill: MosaicTileComponent<Expando> = forwardRef(
     );
   },
 );
-
-// TODO(burdon): Move to util.
-export const safeParseJson = (data: string) => {
-  try {
-    return JSON.parse(data);
-  } catch (err) {
-    return data;
-  }
-};

@@ -5,6 +5,7 @@
 import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
+import { generateName } from '@dxos/display-name';
 import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isAutomergeObject, type Space, type TextObject } from '@dxos/react-client/echo';
@@ -41,7 +42,7 @@ const createModel = ({ space, identity, text }: UseTextModelProps) => {
       space,
       channel: `automerge.awareness.${obj.id}`,
       info: {
-        displayName: identity?.profile?.displayName ?? '',
+        displayName: identity ? identity.profile?.displayName ?? generateName(identity.identityKey.toHex()) : undefined,
         color: cursorColor.color,
         lightColor: cursorColor.light,
       },

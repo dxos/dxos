@@ -9,11 +9,11 @@ import React, { useRef, useState } from 'react';
 import { setTextContent, TextObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { listener, TextEditor, useTextModel } from '@dxos/react-ui-editor';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
 
-import { tagExtension } from './extension';
+import { command } from './extension';
 
-export type ChatInputProps = {
+export type MessageInputProps = {
   className?: string;
   autoFocus?: boolean;
   placeholder?: string;
@@ -22,14 +22,14 @@ export type ChatInputProps = {
   onMessage: (text: string) => boolean | void;
 };
 
-export const ChatInput = ({
+export const MessageInput = ({
   className = 'rounded shadow p-2',
   autoFocus,
   placeholder,
   processing,
   onFocus,
   onMessage,
-}: ChatInputProps) => {
+}: MessageInputProps) => {
   const [focus, setFocus] = useState(autoFocus);
   const [text, setText] = useState(new TextObject());
   const model = useTextModel({ text });
@@ -48,14 +48,14 @@ export const ChatInput = ({
   }
 
   return (
-    <div className={mx('flex w-full', inputSurface, className)}>
+    <div className={mx('flex w-full', attentionSurface, className)}>
       <TextEditor
         ref={ref}
         model={model}
-        autofocus={focus}
+        autoFocus={focus}
         placeholder={placeholder}
         extensions={[
-          tagExtension,
+          command,
           keymap.of([
             {
               key: 'Enter',

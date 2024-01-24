@@ -8,12 +8,13 @@ import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
+import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
+  type Plugin,
   LayoutAction,
   resolvePlugin,
   parseIntentPlugin,
@@ -62,12 +63,6 @@ import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-(globalThis as any)[PublicKey.name] = PublicKey;
-(globalThis as any)[Folder.name] = Folder;
-
 export type SpacePluginOptions = {
   version?: string;
   /**
@@ -101,14 +96,16 @@ export const SpacePlugin = ({
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
   let directory: FileSystemDirectoryHandle | null;
 
+  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+
   return {
     meta,
     ready: async (plugins) => {
       settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       if (!clientPlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
         return;
       }
@@ -296,8 +293,9 @@ export const SpacePlugin = ({
                 return null;
               }
 
+              const defaultSpace = clientPlugin?.provides.client.spaces.default;
               const space = getSpaceForObject(data.object);
-              return space
+              return space && space !== defaultSpace
                 ? {
                     node: (
                       <>

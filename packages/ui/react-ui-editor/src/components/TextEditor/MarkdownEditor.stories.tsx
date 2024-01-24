@@ -366,7 +366,7 @@ export const Comments = {
                   'update',
                   JSON.stringify({
                     comments: state.comments.length,
-                    active: state.selection.active?.slice(0, 8),
+                    active: state.selection.current?.slice(0, 8),
                     closest: state.selection.closest?.slice(0, 8),
                   }),
                 );
