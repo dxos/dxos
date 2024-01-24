@@ -10,9 +10,9 @@ import { focusRing, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
-type EditorSectionProps = Pick<TextEditorProps, 'model' | 'editorMode' | 'extensions'>;
+export type EditorSectionProps = Pick<TextEditorProps, 'model' | 'editorMode' | 'extensions'>;
 
-export const EditorSection = (props: EditorSectionProps) => {
+const EditorSection = (props: EditorSectionProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   return (
@@ -31,3 +31,7 @@ export const EditorSection = (props: EditorSectionProps) => {
     />
   );
 };
+
+export default EditorSection;
+
+export type EditorSection = typeof EditorSection;

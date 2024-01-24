@@ -1870,6 +1870,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1925,9 +1928,6 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/plugin-thread':
-        specifier: workspace:*
-        version: link:../plugin-thread
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework

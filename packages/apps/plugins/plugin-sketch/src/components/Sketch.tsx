@@ -8,8 +8,8 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { type Sketch as SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
-import { Main, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
+import { useThemeContext } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Vite config: https://github.com/tldraw/examples/tree/main/tldraw-vite-example
 // TODO(burdon): Self-hosted: https://docs.tldraw.dev/usage#Self-hosting-static-assets
@@ -30,7 +30,7 @@ export type SketchComponentProps = {
   maxZoom?: number;
 };
 
-export const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
+const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
   const { themeMode } = useThemeContext();
 
   const [editor, setEditor] = useState<Editor>();
@@ -109,10 +109,4 @@ export const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, ma
   );
 };
 
-export const SketchMain: FC<SketchComponentProps> = (props) => {
-  return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <SketchComponent {...props} />{' '}
-    </Main.Content>
-  );
-};
+export default SketchComponent;
