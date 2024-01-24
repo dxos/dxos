@@ -45,16 +45,19 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent, plugins) => {
+        resolver: (intent) => {
           switch (intent.action) {
             case SettingsAction.OPEN: {
-              // TODO(wittjosiah): This will always be available because we're in an intent resolver.
-              //  The resolver should have intent dispatch as an argument.
-              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.OPEN_DIALOG,
-                data: { component: `${SETTINGS_PLUGIN}/Settings` },
-              });
+              return {
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.OPEN_DIALOG,
+                      data: { component: `${SETTINGS_PLUGIN}/Settings` },
+                    },
+                  ],
+                ],
+              };
             }
           }
         },

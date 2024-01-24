@@ -15,7 +15,7 @@ export type IntentContext = {
 };
 
 const IntentContext: Context<IntentContext> = createContext<IntentContext>({
-  dispatch: async () => {},
+  dispatch: async () => ({}),
   registerResolver: () => () => {},
 });
 

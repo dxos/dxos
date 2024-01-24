@@ -112,13 +112,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case InboxAction.CREATE_MAILBOX: {
-              return { object: new MailboxType() };
+              return { data: new MailboxType() };
             }
             case InboxAction.CREATE_ADDRESSBOOK: {
-              return { object: new AddressBookType() };
+              return { data: new AddressBookType() };
             }
             case InboxAction.CREATE_CALENDAR: {
-              return { object: new CalendarType() };
+              return { data: new CalendarType() };
             }
           }
         },

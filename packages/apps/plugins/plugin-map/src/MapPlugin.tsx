@@ -94,7 +94,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case MapAction.CREATE: {
-              return { object: new MapType() };
+              return { data: new MapType() };
             }
           }
         },
