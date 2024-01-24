@@ -150,4 +150,23 @@ test.describe('Single-player tests', () => {
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
     expect(await host.page.getByTestId('resetDialog').locator('h2').innerText()).to.equal('Invalid storage version');
   });
+
+  test('reset device', async ({ browserName }) => {
+    // TODO(wittjosiah): Accepting browser confirm dialog only seems to work in chromium.
+    if (browserName !== 'chromium') {
+      test.skip();
+    }
+
+    await host.createSpace();
+    await host.createSpace();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(3);
+    });
+
+    await host.openIdentityManager();
+    await host.shell.resetDevice();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(1);
+    });
+  });
 });
