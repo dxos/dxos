@@ -6,11 +6,10 @@ import MonacoEditor, { type Monaco, useMonaco } from '@monaco-editor/react';
 import get from 'lodash.get';
 import { editor } from 'monaco-editor';
 import React, { useEffect } from 'react';
-import { MonacoBinding } from 'y-monaco';
 
+import { getTextContent, type TextObject } from '@dxos/client/echo';
 import { type ThemeMode } from '@dxos/react-ui';
 import { mx, tailwindConfig } from '@dxos/react-ui-theme';
-import { type YText } from '@dxos/text-model';
 
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructionOptions;
@@ -19,7 +18,7 @@ import ThemeLight from './themes/GitHubLight.json?json';
 
 export type ScriptEditorProps = {
   id: string;
-  content: YText;
+  source?: TextObject;
   language?: string;
   themeMode?: ThemeMode;
   className?: string;
@@ -31,7 +30,7 @@ export type ScriptEditorProps = {
  * https://www.npmjs.com/package/@monaco-editor
  * https://microsoft.github.io/monaco-editor/playground.html
  */
-export const ScriptEditor = ({ id, content, language, themeMode, className, onBeforeMount }: ScriptEditorProps) => {
+export const ScriptEditor = ({ id, source, language, themeMode, className, onBeforeMount }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
@@ -60,12 +59,8 @@ export const ScriptEditor = ({ id, content, language, themeMode, className, onBe
     monaco?.editor.setTheme(themeMode === 'dark' ? 'vs-dark' : 'light');
   }, [monaco, themeMode]);
 
-  // Connect editor model to YJS.
-  const handleMount = (editor: IStandaloneCodeEditor, _: Monaco) => {
-    if (content) {
-      const _ = new MonacoBinding(content, editor.getModel()!, new Set([editor]));
-    }
-  };
+  // Connect editor model.
+  const handleMount = (editor: IStandaloneCodeEditor, _: Monaco) => {};
 
   // https://www.npmjs.com/package/@monaco-editor/react#props
   return (
@@ -77,7 +72,7 @@ export const ScriptEditor = ({ id, content, language, themeMode, className, onBe
       options={options}
       language={language}
       path={`${id}.tsx`} // Required to support JSX.
-      value={String(content)}
+      value={source ? getTextContent(source) : undefined}
       beforeMount={onBeforeMount}
       onMount={handleMount}
     />
