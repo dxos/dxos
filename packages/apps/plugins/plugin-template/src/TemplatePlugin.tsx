@@ -15,10 +15,6 @@ import meta, { TEMPLATE_PLUGIN } from './meta';
 import translations from './translations';
 import { TemplateAction, type TemplatePluginProvides, isObject } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Expando.name] = Expando;
-
 const typename = 'template'; // Type.schema.typename
 
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {

@@ -268,7 +268,6 @@ class RemoteCaretWidget extends WidgetType {
   }
 }
 
-// TODO(burdon): Mixed case?
 const styles = EditorView.baseTheme({
   '.cm-collab-selection': {},
   '.cm-collab-selectionLine': {
@@ -283,38 +282,40 @@ const styles = EditorView.baseTheme({
     marginRight: '-1px',
     boxSizing: 'border-box',
     display: 'inline',
+    cursor: 'pointer',
   },
   '.cm-collab-selectionCaretDot': {
     borderRadius: '50%',
     position: 'absolute',
-    width: '.4em',
-    height: '.4em',
-    top: '-.2em',
-    left: '-.2em',
+    width: '.5em',
+    height: '.5em',
+    top: '-.25em',
+    left: '-.25em',
     backgroundColor: 'inherit',
     transition: 'transform .3s ease-in-out',
     boxSizing: 'border-box',
   },
   '.cm-collab-selectionCaret:hover > .cm-collab-selectionCaretDot': {
-    transformOrigin: 'bottom center',
     transform: 'scale(0)',
+    transformOrigin: 'center',
   },
   '.cm-collab-selectionInfo': {
     position: 'absolute',
-    top: '-1.05em',
-    left: '-1px',
+    transform: 'translate(-50%, 0)',
+    top: '-20px',
+    left: 0,
     fontSize: '.75em',
-    fontFamily: 'serif',
+    fontFamily: 'sans-serif',
     fontStyle: 'normal',
     fontWeight: 'normal',
     lineHeight: 'normal',
     userSelect: 'none',
     color: 'white',
-    paddingLeft: '2px',
-    paddingRight: '2px',
+    padding: '2px',
     zIndex: 101,
     transition: 'opacity .3s ease-in-out',
     backgroundColor: 'inherit',
+    borderRadius: '2px',
     // These should be separate.
     opacity: 0,
     transitionDelay: '0s',

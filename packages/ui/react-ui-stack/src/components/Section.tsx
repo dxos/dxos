@@ -29,7 +29,7 @@ import {
   hoverableFocusedControls,
   hoverableFocusedKeyboardControls,
   hoverableOpenControlItem,
-  inputSurface,
+  attentionSurface,
   mx,
   staticFocusRing,
   staticHoverableControls,
@@ -91,7 +91,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           role='none'
           className={mx(
             surfaceElevation({ elevation: 'group' }),
-            inputSurface,
+            attentionSurface,
             hoverableControls,
             'flex',
             separation ? 'rounded min-bs-[4rem]' : 'group-first:rounded-bs group-last:rounded-be',

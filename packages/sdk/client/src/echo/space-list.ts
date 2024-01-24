@@ -196,7 +196,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   get default(): Space {
     const identityKey = this._getIdentityKey();
-    invariant(identityKey, 'No identity. Default space is created with an identity.');
+    invariant(identityKey, 'Identity must be set.');
     const space = this.get().find((space) => space.properties[defaultKey] === identityKey.toHex());
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;

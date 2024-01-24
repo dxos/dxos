@@ -3,24 +3,15 @@
 //
 
 import { Document, Folder, File, Grid, Kanban, Table, Sketch, Stack } from '@braneframe/types';
-import { AutomergeArray, AutomergeObject } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
-import { EchoDatabase, SpaceProxy, SpaceState, TypedObject } from '@dxos/react-client/echo';
+import { SpaceState } from '@dxos/react-client/echo';
 
-import { migrations } from './migrations/migrations';
+import { migrations } from './migrations';
 
 export const appKey = 'composer.dxos.org';
 
 Migrations.define(appKey, migrations);
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TypedObject.name] = TypedObject;
-(globalThis as any)[EchoDatabase.name] = EchoDatabase;
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-(globalThis as any)[AutomergeObject.name] = AutomergeObject;
-(globalThis as any)[AutomergeArray.name] = AutomergeArray;
 
 const dxosTypes = {
   Document,

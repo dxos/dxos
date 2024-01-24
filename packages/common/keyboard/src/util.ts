@@ -39,7 +39,7 @@ const meta: Record<string, string> = {
 
 const getSymbol = (part: string) => {
   const platform = getHostPlatform();
-  switch (part) {
+  switch (part.toLowerCase()) {
     // Mods.
     case 'alt':
       return alt[platform];
@@ -50,15 +50,15 @@ const getSymbol = (part: string) => {
     case 'shift':
       return '⇧';
     // Special keys.
-    case 'Backspace':
+    case 'backspace':
       return '⌫';
-    case 'Enter':
+    case 'enter':
       return '⏎';
-    case 'Escape':
+    case 'escape':
       return '⎋';
-    case 'Space':
+    case 'space':
       return '␣';
-    case 'Tab':
+    case 'tab':
       return '⇥';
     default:
       return part.toUpperCase();
