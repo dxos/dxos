@@ -16,7 +16,7 @@ const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
  * https://www.npmjs.com/package/@socketsupply/socket
  * https://github.com/socketsupply/socket-examples
  */
-export const initializeNativeApp = async (plugins: Plugin[]) => {
+const initializeNativeApp = async (plugins: Plugin[]) => {
   // SocketSupply implements the dynamic import.
   const module = 'socket:application';
   const app = await import(/* @vite-ignore */ module);
