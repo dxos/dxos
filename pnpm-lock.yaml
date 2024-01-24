@@ -1058,8 +1058,8 @@ importers:
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1563,8 +1563,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2087,8 +2087,8 @@ importers:
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -3086,8 +3086,8 @@ importers:
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -4475,8 +4475,8 @@ importers:
         specifier: workspace:*
         version: link:../mesh/websocket-rpc
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       express:
         specifier: ^4.17.1
         version: 4.18.2
@@ -5886,8 +5886,8 @@ importers:
         specifier: ^3.11.2
         version: 3.12.0
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       do-wrapper:
         specifier: ^4.5.1
         version: 4.5.1
@@ -6060,8 +6060,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -6671,8 +6671,8 @@ importers:
         specifier: ^5.3.6
         version: 5.5.2
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       discord.js:
         specifier: ^14.14.1
         version: 14.14.1
@@ -8206,6 +8206,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.3.1
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
@@ -8784,8 +8787,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(react-dom@18.2.0)(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
     devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
@@ -12076,6 +12079,12 @@ packages:
     dependencies:
       regenerator-runtime: 0.14.0
     dev: true
+
+  /@babel/runtime@7.23.8:
+    resolution: {integrity: sha512-Y7KbAP984rn1VGMbGqKmBLio9V7y5Je9GvU4rQPCPinCyNfUcToxIXl06d59URp/F3LwinvODxab5N/G6qggkw==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      regenerator-runtime: 0.14.1
 
   /@babel/template@7.20.7:
     resolution: {integrity: sha512-8SegXApWe6VoNw0r9JHpSteLKTpTiLZ4rMlGIm9JQ18KiCtyQiAMEazujAHrUS5flrcqYZa75ukev3P6QmUwUw==}
@@ -25105,7 +25114,7 @@ packages:
     hasBin: true
     dependencies:
       chalk: 4.1.2
-      date-fns: 2.29.3
+      date-fns: 2.30.0
       lodash: 4.17.21
       rxjs: 7.8.1
       shell-quote: 1.7.4
@@ -26003,9 +26012,16 @@ packages:
       whatwg-mimetype: 3.0.0
       whatwg-url: 11.0.0
 
-  /date-fns@2.29.3:
-    resolution: {integrity: sha512-dDCnyH2WnnKusqvZZ6+jA1O51Ibt8ZMRNkDZdyAyK4YfbDwa/cEmuztzG5pk6hqlp9aSBPYcjOlktquahGwGeA==}
+  /date-fns@2.30.0:
+    resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
     engines: {node: '>=0.11'}
+    dependencies:
+      '@babel/runtime': 7.23.8
+    dev: true
+
+  /date-fns@3.3.1:
+    resolution: {integrity: sha512-y8e109LYGgoQDveiEBD3DYXKba1jWf5BA8YU1FL5Tvm0BTdEfy54WLCwnuYWZNnzzvALy/QQ4Hov+Q9RVRv+Zw==}
+    dev: false
 
   /dateformat@4.6.3:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
@@ -38525,7 +38541,7 @@ packages:
   /redux@4.2.0:
     resolution: {integrity: sha512-oSBmcKKIuIR4ME29/AeNUnl5L+hvBq7OaJWzaptTQJAntaPvxIJqfnjbaEiCzzaIz+XmVILfqAM3Ob0aXLPfjA==}
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.8
     dev: false
 
   /reflect.getprototypeof@1.0.4:
@@ -38562,10 +38578,13 @@ packages:
   /regenerator-runtime@0.14.0:
     resolution: {integrity: sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==}
 
+  /regenerator-runtime@0.14.1:
+    resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
+
   /regenerator-transform@0.15.0:
     resolution: {integrity: sha512-LsrGtPmbYg19bcPHwdtmXwbW+TqNvtY4riE3P83foeHRroMbH6/2ddFBfab3t7kbzc7v7p4wbkIecHImqt0QNg==}
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.8
 
   /regenerator-transform@0.15.2:
     resolution: {integrity: sha512-hfMp2BoF0qOk3uc5V20ALGDS2ddjQaLrdl7xrGXvAIow7qeWRM2VA2HuCHkUKk9slq3VwEwLNK3DFBqDfPGYtg==}
@@ -39175,7 +39194,7 @@ packages:
   /rtl-css-js@1.16.1:
     resolution: {integrity: sha512-lRQgou1mu19e+Ya0LsTvKrVJ5TYUbqCVPAiImX3UfLTenarvPUl1QFdvu5Z3PYmHT9RCcwIfbjRQBntExyj3Zg==}
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.8
     dev: false
 
   /run-applescript@5.0.0:
