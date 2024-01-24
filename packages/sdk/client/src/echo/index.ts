@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { SpaceProxy } from './space-proxy';
+
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 export { type ItemID, DocumentModel } from '@dxos/document-model';
 // TODO(burdon): Remove/Rename Item.
@@ -46,3 +48,7 @@ export { TextModel } from '@dxos/text-model';
 export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
 export { createDefaultModelFactory, getSpaceForObject } from './util';
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[SpaceProxy.name] = SpaceProxy;

@@ -63,12 +63,6 @@ import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-(globalThis as any)[PublicKey.name] = PublicKey;
-(globalThis as any)[Folder.name] = Folder;
-
 export type SpacePluginOptions = {
   version?: string;
   /**
