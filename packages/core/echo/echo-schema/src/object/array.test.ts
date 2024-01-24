@@ -9,6 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
 import { Expando, TypedObject } from './typed-object';
+import { base } from './types';
 import { AutomergeArray } from '../automerge';
 import { getGlobalAutomergePreference } from '../automerge-preference';
 import { createDatabase, testWithAutomerge } from '../testing';
@@ -161,37 +162,42 @@ describe('Arrays', () => {
               log.info('get', { target, prop, receiver });
               return Reflect.get(target, prop, receiver);
             },
-            getOwnPropertyDescriptor: (target, p) => {
-              log.info('getOwnPropertyDescriptor', { target, p });
-              return Reflect.getOwnPropertyDescriptor(target, p);
-            },
-            getPrototypeOf: (target) => {
-              log.info('getPrototypeOf', { target });
-              return Reflect.getPrototypeOf(target);
-            },
-            apply: (target, thisArg, argArray) => {
-              log.info('apply', { target, thisArg, argArray });
-              return Reflect.apply(target as any, thisArg, argArray);
-            },
-            has: (target, p) => {
-              log.info('has', { target, p });
-              return Reflect.has(target, p);
-            },
-            ownKeys: (target) => {
-              log.info('ownKeys', { target });
-              return Reflect.ownKeys(target);
-            },
-            isExtensible: (target) => {
-              log.info('isExtensible', { target });
-              return Reflect.isExtensible(target);
-            },
+            //   getOwnPropertyDescriptor: (target, p) => {
+            //     log.info('getOwnPropertyDescriptor', { target, p });
+            //     return Reflect.getOwnPropertyDescriptor(target, p);
+            //   },
+            //   getPrototypeOf: (target) => {
+            //     log.info('getPrototypeOf', { target });
+            //     return Reflect.getPrototypeOf(target);
+            //   },
+            //   apply: (target, thisArg, argArray) => {
+            //     log.info('apply', { target, thisArg, argArray });
+            //     return Reflect.apply(target as any, thisArg, argArray);
+            //   },
+            //   has: (target, p) => {
+            //     log.info('has', { target, p });
+            //     return Reflect.has(target, p);
+            //   },
+            //   ownKeys: (target) => {
+            //     log.info('ownKeys', { target });
+            //     return Reflect.ownKeys(target);
+            //   },
+            //   isExtensible: (target) => {
+            //     log.info('isExtensible', { target });
+            //     return Reflect.isExtensible(target);
+            //   },
           }),
         ),
       );
-      // const root = new TypedObject();
-      // root.array = [];
+      const root = new TypedObject();
+      root.array = [];
 
-      // expect(Array.isArray(root.array)).toEqual(true);
+      log.info('isArray', {
+        isArray: Array.isArray(root.array),
+        array: root.array,
+        isArrayBase: Array.isArray(root.array[base]),
+      });
+      // expect(root.array instanceof Array).toEqual(true);
     });
   });
 });
