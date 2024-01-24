@@ -17,6 +17,7 @@ import {
   performInvitation,
 } from '@dxos/client-services/testing';
 import { invariant } from '@dxos/invariant';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -80,6 +81,14 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     const [host, guest] = getPeers();
     const [hostResult, guestResult] = await Promise.all(performInvitation(getParams()));
     await successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('already joined', async () => {
+    const [host, guest] = getPeers();
+    const [hostResult, guestResult] = await Promise.all(performInvitation(getParams()));
+    await successfulInvitation({ host, guest, hostResult, guestResult });
+    const [_, result] = performInvitation(getParams());
+    expect((await result).error).to.be.instanceof(AlreadyJoinedError);
   });
 
   test('with shared secret', async () => {
