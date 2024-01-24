@@ -24,6 +24,9 @@
       "path": "../../../common/display-name"
     },
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -52,6 +55,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

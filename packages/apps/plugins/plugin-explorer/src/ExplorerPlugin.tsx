@@ -15,10 +15,6 @@ import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
 import { ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[ViewType.name] = ViewType;
-
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
   return {
     meta,

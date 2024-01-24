@@ -14,14 +14,9 @@ import ThemeMeta from '@braneframe/plugin-theme/meta';
 import { Plugin, type PluginDefinition, type TranslationsProvides, createApp } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { fromHost, fromIFrame } from '@dxos/react-client';
-import { TypedObject } from '@dxos/react-client/echo';
 
 import { OpenVault, ProgressBar } from './components';
 import translations from './translations';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TypedObject.name] = TypedObject;
 
 const appKey = 'halo.dxos.org';
 const HaloMeta = {

@@ -74,6 +74,7 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> & {
   /**
    * ReactNode to display until the client is available.
    */
+  // TODO(wittjosiah): Rename to `placeholder`.
   fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
   /**

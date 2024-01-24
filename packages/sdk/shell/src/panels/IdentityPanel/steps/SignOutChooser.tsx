@@ -62,6 +62,7 @@ const SignOutChooserImpl = ({ disabled, onResetDevice, onJoinNewIdentity, onBack
         </Action>
         <Action
           variant='primary'
+          data-testid='sign-out.join-new-identity'
           classNames='!bg-error-500 hover:!bg-error-550'
           disabled={disabled}
           onClick={onJoinNewIdentity}
@@ -70,6 +71,7 @@ const SignOutChooserImpl = ({ disabled, onResetDevice, onJoinNewIdentity, onBack
         </Action>
         <Action
           variant='primary'
+          data-testid='sign-out.reset-device'
           classNames='!bg-error-500 hover:!bg-error-550'
           disabled={disabled}
           onClick={onResetDevice}

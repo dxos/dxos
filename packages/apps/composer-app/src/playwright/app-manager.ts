@@ -8,6 +8,8 @@ import { StackManager } from '@dxos/react-ui-stack/testing';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
+// TODO(wittjosiah): Normalize data-testids between snake and camel case.
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -38,6 +40,14 @@ export class AppManager {
     this._initialized = true;
   }
 
+  async openIdentityManager() {
+    await this.page.keyboard.press('Meta+Shift+.');
+  }
+
+  async openSpaceManager() {
+    await this.page.keyboard.press('Meta+.');
+  }
+
   isAuthenticated() {
     return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
   }
@@ -62,6 +72,20 @@ export class AppManager {
     return this.page.getByTestId(`${plugin}.createObject`).last().click();
   }
 
+  async createFolder() {
+    await this.page.getByTestId('spacePlugin.createObject').last().click();
+    return this.page.getByTestId('spacePlugin.createFolder').last().click();
+  }
+
+  async deleteObject(itemNumber: number) {
+    // TODO: Would prefer to use testId of `spacePlugin.object`, but for folders, it refers to the entire block
+    // including all of the containing item, so the click doesn't land on the folder, but in the middle of the
+    // folder's containing items.
+    await this.page.getByTestId('navtree.treeItem.actionsLevel2').nth(itemNumber).click({ button: 'right' });
+    await this.page.getByTestId('spacePlugin.deleteObject').last().click();
+    return this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+  }
+
   async getSpaceItemsCount() {
     const [openCount, closedCount] = await Promise.all([
       this.page.getByTestId('spacePlugin.personalSpace').count(),
@@ -72,6 +96,10 @@ export class AppManager {
 
   getObjectsCount() {
     return this.page.getByTestId('spacePlugin.object').count();
+  }
+
+  getFoldersCount() {
+    return this.page.getByTestId('spacePlugin.folder').count();
   }
 
   getObjectLinks() {
@@ -106,7 +134,7 @@ export class AppManager {
 
   getMarkdownActiveLineText() {
     return this.getMarkdownTextbox()
-      .locator('.cm-activeLine > span:not([class=cm-ySelectionCaret])')
+      .locator('.cm-activeLine > span:not([class=cm-collab-selectionCaret])')
       .first()
       .textContent();
   }
@@ -120,7 +148,7 @@ export class AppManager {
   }
 
   getCollaboratorCursors() {
-    return this.page.locator('.cm-ySelectionInfo');
+    return this.page.locator('.cm-collab-selectionInfo');
   }
 
   // Stack Plugin
