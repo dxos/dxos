@@ -6,10 +6,12 @@ import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
+import type { AvatarStatus } from '@dxos/react-ui';
 
 export type MessageProperties = {
   displayName?: string;
-  classes?: string;
+  profileImgSrc?: string;
+  status?: AvatarStatus;
 };
 
 export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageProperties;

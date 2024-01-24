@@ -10,7 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { fixedBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_PLUGIN } from '../../meta';
-import { MessageCard } from '../MessageCard';
+import { Message } from '../MessageCard';
 import { MessageInput, type MessageInputProps } from '../MessageInput';
 import { type MessagePropertiesProvider } from '../util';
 
@@ -57,13 +57,7 @@ export const CommentsThread = forwardRef(
       >
         {/* TODO(burdon): Don't show avatar/display name if same as previous. */}
         {thread.messages.map((message) => (
-          <MessageCard
-            key={message.id}
-            className='p-1'
-            message={message}
-            propertiesProvider={propertiesProvider}
-            onDelete={onDelete}
-          />
+          <Message key={message.id} message={message} propertiesProvider={propertiesProvider} onDelete={onDelete} />
         ))}
 
         {/* TODO(burdon): Resolve button. */}

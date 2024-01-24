@@ -57,7 +57,7 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
       : status === 'warning'
       ? 'border-warning-400 dark:border-warning-500'
       : status === 'inactive'
-      ? 'border-neutral-400 dark:border-neutral-500'
+      ? 'separator-separator'
       : 'border-[color:var(--surface-bg)]',
     animation === 'pulse' ? 'animate-halo-pulse' : '',
     ...etc,

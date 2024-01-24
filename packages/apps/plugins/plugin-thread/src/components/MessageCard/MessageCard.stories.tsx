@@ -10,7 +10,7 @@ import { Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/keys';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { MessageCard } from './MessageCard';
+import { Message } from './Message';
 import { type MessageProperties } from '../util';
 
 const getBlockProperties = (identityKey: PublicKey | undefined): MessageProperties => ({
@@ -34,14 +34,14 @@ const Story = () => {
 
   return (
     <div className='flex w-[400px]'>
-      <MessageCard message={message} propertiesProvider={getBlockProperties} />
+      <Message message={message} propertiesProvider={getBlockProperties} />
     </div>
   );
 };
 
 export default {
   title: 'plugin-thread/MessageCard',
-  component: MessageCard,
+  component: Message,
   render: Story,
   decorators: [withTheme],
 };

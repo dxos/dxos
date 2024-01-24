@@ -4,8 +4,8 @@
 
 import { enUS as dtLocaleEnUs, type Locale } from 'date-fns/locale';
 import i18Next, { type Resource } from 'i18next';
-import React, { type ReactNode, useEffect, createContext, useState, Suspense } from 'react';
-import { initReactI18next } from 'react-i18next';
+import React, { type ReactNode, useEffect, createContext, useState, Suspense, useContext } from 'react';
+import { initReactI18next, useTranslation as useI18NextTranslation } from 'react-i18next';
 
 const initialLng = 'en-US';
 const initialNs = 'dxos-common';
@@ -42,6 +42,12 @@ export const TranslationsContext = createContext({
   appNs: initialNs,
   dtLocale: initialDtLocale,
 });
+
+export const useTranslation = (...args: Parameters<typeof useI18NextTranslation>) => {
+  const result = useI18NextTranslation(...args);
+  const { dtLocale } = useContext(TranslationsContext);
+  return { ...result, dtLocale };
+};
 
 export const TranslationsProvider = ({
   fallback,

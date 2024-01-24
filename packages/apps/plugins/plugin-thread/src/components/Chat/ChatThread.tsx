@@ -10,7 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { THREAD_PLUGIN } from '../../meta';
-import { MessageCard } from '../MessageCard';
+import { Message } from '../MessageCard';
 import { MessageInput, type MessageInputProps } from '../MessageInput';
 import { type MessagePropertiesProvider } from '../util';
 
@@ -61,7 +61,7 @@ export const ChatThread = ({
               )}
             >
               <div className={mx('flex flex-col', fullWidth ? 'w-full' : 'md:min-w-[400px] max-w-[600px]')}>
-                <MessageCard message={message} propertiesProvider={propertiesProvider} onDelete={onDelete} />
+                <Message message={message} propertiesProvider={propertiesProvider} onDelete={onDelete} />
               </div>
             </div>
           ))

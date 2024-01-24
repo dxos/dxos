@@ -16,6 +16,7 @@ export default [
         'message placeholder': 'Enter message...',
         'comment placeholder': 'Enter comment...',
         'settings standalone label': 'Enable standalone thread creation',
+        'anonymous label': 'Anonymous',
       },
     },
   },
