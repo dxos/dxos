@@ -3,7 +3,7 @@
 //
 
 import { type ComponentFunction, type Density, type Theme } from '@dxos/react-ui';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 const defaults = {
   width: 'min-w-[256px]',
@@ -22,7 +22,7 @@ export const cardRoot: ComponentFunction<CardStyleProps> = ({ grow, square, roun
     'flex flex-col group/card overflow-hidden',
     grow && 'h-full',
     defaults.width,
-    inputSurface,
+    attentionSurface,
     'shadow', // TODO(burdon): Elevation?
     rounded && 'rounded',
     square && 'aspect-square',

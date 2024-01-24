@@ -35,6 +35,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
 
   return (
     <Popover.Root
+      modal
       open={!!(popoverAnchorId && popoverOpen)}
       onOpenChange={(nextOpen) => {
         if (nextOpen && popoverAnchorId) {
@@ -65,7 +66,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface role='context' name='complementary' />
+            <Surface role='complementary' name='context' />
           </Main.ComplementarySidebar>
         )}
 
@@ -117,6 +118,14 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
           <Surface role='status' limit={1} />
         </div>
 
+        {/* Help hints. */}
+        {/* TODO(burdon): Make surface roles/names fully-qualified. */}
+        {showHintsFooter && (
+          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
+            <Surface role='hints' limit={1} />
+          </div>
+        )}
+
         {/* Global popovers. */}
         <Popover.Portal>
           <Popover.Content
@@ -132,7 +141,6 @@ export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySideb
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
-
         {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
           <DensityProvider density='fine'>

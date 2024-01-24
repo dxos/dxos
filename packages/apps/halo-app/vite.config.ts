@@ -54,10 +54,7 @@ export default defineConfig({
     }),
     ThemePlugin({
       root: __dirname,
-      content: [
-        resolve(__dirname, './*.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
+      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
@@ -124,10 +121,12 @@ export default defineConfig({
   ],
   worker: {
     format: 'es',
-    plugins: [
+    plugins: () => [
       ConfigPlugin({
         env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
       }),
+      TopLevelAwaitPlugin(),
+      WasmPlugin(),
     ],
   },
 });

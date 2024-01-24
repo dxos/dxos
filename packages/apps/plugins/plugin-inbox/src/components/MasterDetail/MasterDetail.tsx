@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { fixedBorder, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Factor out.
 
@@ -16,7 +16,7 @@ export const MasterDetail = ({ children, detail }: MasterDetailProps) => {
   return (
     <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
       <div className='flex shrink-0 w-[400px] border-r'>{children}</div>
-      <div className={mx('flex w-full overflow-auto p-4', inputSurface)}>{detail}</div>
+      <div className={mx('flex w-full overflow-auto p-4', attentionSurface)}>{detail}</div>
     </div>
   );
 };
