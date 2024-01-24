@@ -50,8 +50,8 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
   const handleRepair = async () => {
     try {
-      await client.repair();
-      handleToast({ title: t('settings repair success') });
+      const info = await client.repair();
+      handleToast({ title: t('settings repair success'), description: JSON.stringify(info, undefined, 2) });
     } catch (err: any) {
       handleToast({ title: t('settings repair failed'), description: err.message });
     }

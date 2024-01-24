@@ -244,7 +244,25 @@ export class Client {
   /**
    * Test and repair database.
    */
-  async repair(): Promise<any> {}
+  async repair(): Promise<any> {
+    // TODO(burdon): Factor out.
+    const spaces = this.spaces.get();
+    const docs = spaces.map((space) =>
+      (space as any)._data.pipeline.currentEpoch.subject.assertion.automergeRoot.slice('automerge:'.length),
+    );
+
+    let removed = 0;
+    const dir = await navigator.storage.getDirectory();
+    for await (const filename of dir.keys()) {
+      if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
+        await dir.removeEntry(filename);
+        removed++;
+      }
+    }
+
+    log.info('Repair succeeded', { removed });
+    return { removed };
+  }
 
   /**
    * Initializes internal resources in an idempotent way.
