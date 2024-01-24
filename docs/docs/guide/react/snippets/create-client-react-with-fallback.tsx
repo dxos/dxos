@@ -4,15 +4,17 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
-import { GenericFallback } from '@dxos/react-appkit';
 
 const client = new Client();
 
+const Fallback = () => <div>Loading...</div>;
+
 const App = () => {
   return (
-    <ClientProvider client={client} fallback={GenericFallback}>
+    <ClientProvider client={client} fallback={Fallback}>
       {/* ... */}
     </ClientProvider>
   );
