@@ -1,43 +1,20 @@
 {
-  // https://nx.dev/reference/nx-json
   "extends": "nx/presets/npm.json",
-  "npmScope": "dxos",
   "affected": {
     "defaultBase": "main"
   },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "cacheableOperations": [
-          "build",
-          "bundle",
-          "compile",
-          "compile-lib",
-          "compile-node",
-          "e2e",
-          "lint",
-          "prebuild",
-          "prerelease",
-          "storybook-build",
-          "test"
-        ],
-        "parallel": 6
-      }
-    }
-  },
-  // Named inputs explained here: https://nx.dev/more-concepts/customizing-inputs
+  "parallel": 6,
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
       "sharedGlobals"
     ],
-    // Nx assumes the use of tsconfig.base.json.
-    // https://nx.dev/more-concepts/customizing-inputs#global-settings.
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/.eslintrc*.js",
-      { "runtime": "node --version" }
+      {
+        "runtime": "node --version"
+      }
     ],
     "production": [
       "default",
@@ -56,7 +33,10 @@
         "outputPath": "{projectRoot}/dist/types",
         "tsConfig": "{projectRoot}/tsconfig.json"
       },
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "outputs": [
         "{options.outputPath}"
       ],
@@ -64,7 +44,8 @@
         "^build",
         "prebuild",
         "compile"
-      ]
+      ],
+      "cache": true
     },
     "bundle": {
       "inputs": [
@@ -105,25 +86,28 @@
         }
       ],
       "dependsOn": [
-        // TODO(wittjosiah): This might be able to be ^compile to speed up deploys.
-        //   Some experimental/deprecated projects still depend on build for transpiling.
         "^build",
         "prebuild"
-      ]
+      ],
+      "cache": true
     },
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
         "outputPath": "{projectRoot}/dist/lib"
       },
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "outputs": [
         "{options.outputPath}"
       ],
       "dependsOn": [
         "^compile",
         "prebuild"
-      ]
+      ],
+      "cache": true
     },
     "e2e": {
       "executor": "@dxos/test:run",
@@ -148,43 +132,64 @@
       "dependsOn": [
         "prebuild",
         "^compile"
-      ]
+      ],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/linter:eslint",
-      "inputs": ["default"],
+      "inputs": [
+        "default"
+      ],
       "options": {
         "format": "unix",
         "lintFilePatterns": [
           "{projectRoot}/**/*.{ts,tsx,js,jsx}"
         ],
         "quiet": true
-      }
+      },
+      "cache": true
     },
     "prebuild": {
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "dependsOn": [
         "^compile"
-      ]
+      ],
+      "cache": true
     },
     "prerelease": {
-      "inputs": ["default", "^production"],
+      "inputs": [
+        "default",
+        "^production"
+      ],
       "dependsOn": [
         "^build"
-      ]
+      ],
+      "cache": true
     },
     "preview": {
-      "inputs": ["production", "^production"]
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "serve": {
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "dependsOn": [
         "^compile",
         "prebuild"
       ]
     },
     "serve-with-vault": {
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "dependsOn": [
         "^compile",
         "prebuild"
@@ -224,7 +229,17 @@
       "dependsOn": [
         "prebuild",
         "^compile"
-      ]
+      ],
+      "cache": true
+    },
+    "compile-lib": {
+      "cache": true
+    },
+    "compile-node": {
+      "cache": true
+    },
+    "storybook-build": {
+      "cache": true
     }
   }
 }

@@ -3,7 +3,7 @@
 To run the app with HALO.
 
 ```bash
-pnpm -w nx run composer-app:serve-with-vault
+pnpm -w nx run composer-app:serve
 ```
 
 ## Native Bundling
@@ -19,7 +19,7 @@ Before running SSC, Composer must be built using:
 ```bash
 NODE_OPTIONS=--max_old_space_size=8192
 DX_HOST=true
-pnpm nx bundle composer-app
+pnpm nx -w bundle composer-app
 ```
 
 Then, to bundle the native app, in this directory, run:
@@ -38,9 +38,11 @@ To run against the vite dev server:
 pnpm nx serve-with-vault composer-app
 ssc build -r --port 5173
 ```
+
 To reset the app, inspect and delete local storage properties.
 
 ## Docker
+
 Note: experimental.
 
 The app can be run using Docker.

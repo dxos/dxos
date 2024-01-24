@@ -17,13 +17,15 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/sdk/client-protocol/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
     },
     "test": {}
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ]
+  ],
+  "name": "client-protocol"
 }

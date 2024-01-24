@@ -11,6 +11,7 @@ import { setupPage } from '@dxos/test/playwright';
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
+  initialUrl!: string;
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
@@ -28,10 +29,11 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, {
+    const { page, initialUrl } = await setupPage(this._browser, {
       waitFor: (page) => page.getByTestId('treeView.haloButton').isVisible(),
     });
     this.page = page;
+    this.initialUrl = initialUrl;
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
   }
@@ -60,6 +62,20 @@ export class AppManager {
     return this.page.getByTestId(`${plugin}.createObject`).last().click();
   }
 
+  async createFolder() {
+    await this.page.getByTestId('spacePlugin.createObject').last().click();
+    return this.page.getByTestId('spacePlugin.createFolder').last().click();
+  }
+
+  async deleteObject(itemNumber: number) {
+    // TODO: Would prefer to use testId of `spacePlugin.object`, but for folders, it refers to the entire block
+    // including all of the containing item, so the click doesn't land on the folder, but in the middle of the
+    // folder's containing items.
+    await this.page.getByTestId('navtree.treeItem.actionsLevel2').nth(itemNumber).click({ button: 'right' });
+    await this.page.getByTestId('spacePlugin.deleteObject').last().click();
+    return this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+  }
+
   async getSpaceItemsCount() {
     const [openCount, closedCount] = await Promise.all([
       this.page.getByTestId('spacePlugin.personalSpace').count(),
@@ -72,6 +88,10 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').count();
   }
 
+  getFoldersCount() {
+    return this.page.getByTestId('spacePlugin.folder').count();
+  }
+
   getObjectLinks() {
     return this.page.getByTestId('spacePlugin.object');
   }
@@ -79,7 +99,7 @@ export class AppManager {
   async enablePlugin(plugin: string) {
     await this.page.getByTestId('treeView.openSettings').click();
     await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
-    await this.page.reload();
+    await this.page.goto(this.initialUrl);
     await this.page.getByTestId('treeView.haloButton').waitFor();
   }
 

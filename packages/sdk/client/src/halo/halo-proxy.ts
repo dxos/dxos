@@ -15,6 +15,7 @@ import {
 } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
+import { getGlobalAutomergePreference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -173,7 +174,10 @@ export class HaloProxy implements Halo {
    */
   async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
+    const identity = await this._serviceProvider.services.IdentityService.createIdentity({
+      profile,
+      useAutomerge: getGlobalAutomergePreference(),
+    });
     this._identityChanged.emit(identity);
     return identity;
   }

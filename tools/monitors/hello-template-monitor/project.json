@@ -1,4 +1,6 @@
 {
+  "name": "hello-template-monitor",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/monitors/hello-template-monitor/src",
   "projectType": "library",
   "targets": {

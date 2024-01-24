@@ -45,7 +45,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/apps/todomvc/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
     },
     "preview": {
@@ -61,5 +61,7 @@
         "buildTarget": "todomvc:bundle"
       }
     }
-  }
+  },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "todomvc"
 }

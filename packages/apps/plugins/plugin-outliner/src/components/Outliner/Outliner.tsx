@@ -71,7 +71,6 @@ const OutlinerItem = ({
     // TODO(burdon): Set initial selection.
     if (editorRef.current && active) {
       editorRef.current?.focus();
-      // editorRef.current.view.dispatch({ selection: { anchor: from, head: active.to ?? from } });
     }
   }, [active]);
 
@@ -246,35 +245,34 @@ const OutlinerItem = ({
 
   return (
     <div className='flex group'>
-      {(isTasklist && (
-        <div className='mt-0.5 mr-2.5'>
+      <div className='flex flex-col shrink-0 justify-center h-[40px] cursor-pointer' title={item.id.slice(0, 8)}>
+        {(isTasklist && (
           <Input.Root>
             <Input.Checkbox
+              classNames='ml-2'
               checked={item.done}
               onCheckedChange={(checked) => {
                 item.done = !!checked;
               }}
             />
           </Input.Root>
-        </div>
-      )) || (
-        <div className='pt-[4px] mr-1 cursor-pointer' title={item.id.slice(0, 8)} onClick={() => onSelect?.()}>
+        )) || (
           <DotOutline
             weight={focus ? 'fill' : undefined}
-            className={mx('shrink-0', getSize(6), active && 'text-primary-500')}
+            className={mx('cursor-pointer', getSize(6), active && 'text-primary-500')}
+            onClick={() => onSelect?.()}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <MarkdownEditor
         ref={editorRef}
         model={model}
-        focus={!!active}
         extensions={[outlinerKeymap, link({ onRender: onRenderLink })]}
+        autoFocus={!!active}
         placeholder={placeholder}
         slots={{
           root: {
-            className: 'w-full pt-[4px]',
             onFocus: () => setFocus(true),
             onBlur: () => setFocus(false),
           },

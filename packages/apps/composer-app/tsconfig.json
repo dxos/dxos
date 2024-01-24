@@ -25,6 +25,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -35,6 +38,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -83,9 +89,6 @@
     },
     {
       "path": "../plugins/plugin-debug"
-    },
-    {
-      "path": "../plugins/plugin-error"
     },
     {
       "path": "../plugins/plugin-explorer"

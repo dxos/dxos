@@ -10,7 +10,7 @@ import { type Step } from 'react-joyride';
 import { LayoutAction, type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
-import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints } from './components';
+import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
 import meta, { HELP_PLUGIN } from './meta';
 import translations from './translations';
 import { HelpAction, type HelpPluginProvides } from './types';
@@ -27,8 +27,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
     meta,
     ready: async () => {
       settings
-        .prop(settings.values.$showHints!, 'showHints', LocalStorageStore.bool)
-        .prop(settings.values.$showWelcome!, 'showWelcome', LocalStorageStore.bool);
+        .prop(settings.values.$showHints!, 'show-hints', LocalStorageStore.bool)
+        .prop(settings.values.$showWelcome!, 'show-welcome', LocalStorageStore.bool);
     },
     provides: {
       context: ({ children }) => {
@@ -44,7 +44,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
           if (parent.id === 'root') {
             parent.addAction({
-              id: 'start-help', // TODO(burdon): Standarize.
+              id: 'start-help', // TODO(burdon): Standardize.
               label: ['open help tour', { ns: HELP_PLUGIN }],
               icon: (props) => <Info {...props} />,
               invoke: () => {
@@ -85,6 +85,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
               return settings.values.showHints ? (
                 <ShortcutsHints onClose={() => (settings.values.showHints = false)} />
               ) : null;
+            case 'keyshortcuts':
+              return settings.values.showHints ? <ShortcutsList /> : null;
           }
 
           switch (data.component) {

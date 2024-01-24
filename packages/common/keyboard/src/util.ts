@@ -4,18 +4,12 @@
 
 import { getHostPlatform } from '@dxos/util';
 
+// Resources.
 // https://www.w3.org/TR/DOM-Level-3-Events/#events-keyboardevents
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+// https://developer.apple.com/design/human-interface-guidelines/designing-for-macos
 // https://support.apple.com/en-us/HT201236
 // https://support.apple.com/guide/mac-help/what-are-those-symbols-shown-in-menus-cpmh0011/mac
-
-const alt: Record<string, string> = {
-  macos: '⌥',
-  ios: '⌥',
-  windows: 'Alt',
-  linux: 'Alt',
-  unknown: 'Alt',
-};
 
 const ctrl: Record<string, string> = {
   macos: '⌃',
@@ -23,6 +17,14 @@ const ctrl: Record<string, string> = {
   windows: 'Ctrl',
   linux: 'Ctrl',
   unknown: 'Ctrl',
+};
+
+const alt: Record<string, string> = {
+  macos: '⌥',
+  ios: '⌥',
+  windows: 'Alt',
+  linux: 'Alt',
+  unknown: 'Alt',
 };
 
 const meta: Record<string, string> = {
@@ -37,7 +39,7 @@ const meta: Record<string, string> = {
 
 const getSymbol = (part: string) => {
   const platform = getHostPlatform();
-  switch (part) {
+  switch (part.toLowerCase()) {
     // Mods.
     case 'alt':
       return alt[platform];
@@ -48,15 +50,15 @@ const getSymbol = (part: string) => {
     case 'shift':
       return '⇧';
     // Special keys.
-    case 'Backspace':
+    case 'backspace':
       return '⌫';
-    case 'Enter':
+    case 'enter':
       return '⏎';
-    case 'Escape':
+    case 'escape':
       return '⎋';
-    case 'Space':
+    case 'space':
       return '␣';
-    case 'Tab':
+    case 'tab':
       return '⇥';
     default:
       return part.toUpperCase();
