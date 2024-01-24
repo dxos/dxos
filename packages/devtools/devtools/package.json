@@ -45,7 +45,7 @@
     "@types/bytes": "^3.1.1",
     "bytes": "^3.1.2",
     "change-case": "^4.1.2",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.3.1",
     "deepsignal": "1.4.0-shallow.0",
     "flame-chart-js": "^2.3.1",
     "isomorphic-ws": "^4.0.1",

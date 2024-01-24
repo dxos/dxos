@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import formatDistance from 'date-fns/formatDistance';
+import { formatDistance } from 'date-fns/formatDistance';
 import React, { type FC } from 'react';
 
 import { type Config } from '@dxos/react-client';
