@@ -30,8 +30,6 @@ export type AwarenessProviderParams = {
 };
 
 export class SpaceAwarenessProvider implements AwarenessProvider {
-  public readonly remoteStateChange = new Event<void>();
-
   private readonly _remoteStates = new Map<string, AwarenessState>();
 
   private readonly _space: Space;
@@ -42,6 +40,8 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   private _ctx?: Context;
   private _postTask?: DeferredTask;
   private _localState?: AwarenessState;
+
+  public readonly remoteStateChange = new Event<void>();
 
   constructor(params: AwarenessProviderParams) {
     this._space = params.space;
@@ -63,19 +63,20 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
       }
     });
 
-    const unsubscribe = this._space.listen(this._channel, (message: GossipMessage) => {
-      switch (message.payload.kind) {
-        case 'query': {
-          this._handleQueryMessage();
-          break;
+    this._ctx.onDispose(
+      this._space.listen(this._channel, (message: GossipMessage) => {
+        switch (message.payload.kind) {
+          case 'query': {
+            this._handleQueryMessage();
+            break;
+          }
+          case 'post': {
+            this._handlePostMessage(message.payload);
+            break;
+          }
         }
-        case 'post': {
-          this._handlePostMessage(message.payload);
-          break;
-        }
-      }
-    });
-    this._ctx.onDispose(unsubscribe);
+      }),
+    );
 
     void this._space
       .postMessage(this._channel, {
