@@ -9,6 +9,7 @@ import {
   Invitation,
 } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
+import { AlreadyJoinedError } from '@dxos/protocols';
 
 export const hostInvitation = async ({
   observable,
@@ -88,6 +89,11 @@ export const acceptInvitation = async ({
       }
     },
     (err) => {
+      if (err instanceof AlreadyJoinedError) {
+        done.wake(observable.get());
+        return;
+      }
+
       throw err;
     },
   );

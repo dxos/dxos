@@ -15,12 +15,12 @@ export {
   InvalidConfigError,
   InvalidInvitationError,
   InvalidInvitationExtensionRoleError,
+  AlreadyJoinedError,
   IdentityNotInitializedError,
   InvalidStorageVersionError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
   DataCorruptionError,
-  SpaceNotFoundError,
   EntityNotFoundError,
   UnknownModelError,
 } from '@dxos/protocols';
