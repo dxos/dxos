@@ -50,7 +50,7 @@ export const ResetIdentityImpl = ({ disabled, validationMessage, onConfirm }: Re
           {...{ validationMessage }}
           label={<StepHeading>{t('reset identity input label', { confirmationValue })}</StepHeading>}
           disabled={disabled}
-          data-testid='identity-input'
+          data-testid='reset-identity-input'
           placeholder={confirmationValue}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
