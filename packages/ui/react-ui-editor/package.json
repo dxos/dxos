@@ -13,7 +13,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "dxtype src/testing/proto/schema.proto src/testing/proto/gen/schema.ts"
+    "test": "true"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.12.0",
