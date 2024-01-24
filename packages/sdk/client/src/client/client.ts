@@ -237,8 +237,14 @@ export class Client {
         ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
         : undefined,
     });
+
     return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }
+
+  /**
+   * Test and repair database.
+   */
+  async repair(): Promise<any> {}
 
   /**
    * Initializes internal resources in an idempotent way.
