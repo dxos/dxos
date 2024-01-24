@@ -70,10 +70,13 @@ export class SimplePeerTransportProxy implements Transport {
           write: (chunk, _, callback) => {
             const then = performance.now();
             this._params.bridgeService
-              .sendData({
-                proxyId: this._proxyId,
-                payload: chunk,
-              })
+              .sendData(
+                {
+                  proxyId: this._proxyId,
+                  payload: chunk,
+                },
+                { timeout: 10_000 },
+              )
               .then(
                 () => {
                   if (performance.now() - then > RESP_MIN_THRESHOLD) {

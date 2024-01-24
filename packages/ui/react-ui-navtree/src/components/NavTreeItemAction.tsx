@@ -8,7 +8,7 @@ import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, 
 import { type Label } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation } from '@dxos/react-ui';
-import { type MosaicActiveType } from '@dxos/react-ui-mosaic';
+import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
@@ -121,12 +121,14 @@ const NavTreeItemActionContextMenuImpl = ({
 }: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>) => {
   const { t } = useTranslation(translationKey);
   const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
+  const { activeItem } = useMosaic();
 
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content classNames='z-[31]'>
+        {/* ContextMenu’s `open` state is not controllable, so if it happens to be/become open during dragging, the best we can do is hide it. */}
+        <ContextMenu.Content classNames={mx('z-[31]', activeItem && 'hidden')}>
           <ContextMenu.Viewport>
             {actions?.map((action) => {
               const shortcut =

@@ -182,7 +182,7 @@ export const presets = [
           new ChainType.Input({
             type: ChainType.Input.Type.RESOLVER,
             name: 'context',
-            value: new TextObject('discord.message.recent'),
+            value: new TextObject('discord.messages.recent'),
           }),
         ],
       }),

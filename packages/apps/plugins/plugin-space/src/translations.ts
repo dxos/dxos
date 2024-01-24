@@ -26,6 +26,7 @@ export default [
         'migrate space label': 'Migrate space',
         'share space': 'Share space',
         'save space to disk label': 'Save to disk',
+        'load space from disk label': 'Load from disk',
         'confirm restore title': 'Overwrite files in this space?',
         'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',
         'upload file message': 'Drag file here or click to browse',

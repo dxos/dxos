@@ -26,6 +26,7 @@
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -40,8 +41,10 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-react": "^1.3.6",
     "deepsignal": "1.4.0-shallow.0",
-    "idb-keyval": "^6.2.1",
     "jszip": "^3.10.1",
+    "localforage": "^1.10.0",
+    "lodash.get": "^4.4.2",
+    "md5": "^2.3.0",
     "react-drag-drop-files": "^2.3.8",
     "react-is": "^18.2.0"
   },
@@ -55,11 +58,13 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
+    "@types/lodash.get": "^4.4.7",
+    "@types/md5": "^2.3.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^4.3.9"
+    "vite": "^5.0.11"
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",

@@ -35,10 +35,13 @@ export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
     // https://codemirror.net/examples/autocompletion
     // https://codemirror.net/docs/ref/#autocomplete.autocompletion
     autocompletion({
-      defaultKeymap: false,
+      activateOnTyping: true,
 
-      // Don't start unless key press.
-      activateOnTyping: false,
+      // closeOnBlur: false,
+      // defaultKeymap: false,
+
+      // TODO(burdon): Styles/fragments.
+      tooltipClass: () => 'shadow rounded',
     }),
 
     // TODO(burdon): Option to create new page?

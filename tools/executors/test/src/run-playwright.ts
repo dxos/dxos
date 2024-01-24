@@ -35,7 +35,7 @@ export const runPlaywright = async (context: ExecutorContext, options: Playwrigh
     { '--debug': options.inspect },
   ]);
   const playwright = getBin(context.root, options.coverage ? 'nyc' : 'playwright');
-  const exitCode = await execTool(playwright, args, {
+  const result = await execTool(playwright, args, {
     env: {
       ...process.env,
       BROWSERS: options.browsers.join(','),
@@ -49,7 +49,7 @@ export const runPlaywright = async (context: ExecutorContext, options: Playwrigh
     },
   });
 
-  return exitCode;
+  return result;
 };
 
 const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boolean) => {

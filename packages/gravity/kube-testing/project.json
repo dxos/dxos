@@ -24,5 +24,7 @@
       }
     },
     "lint": {}
-  }
+  },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "kube-testing"
 }

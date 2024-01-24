@@ -3,33 +3,29 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, type RefObject, type FC, type MutableRefObject } from 'react';
+import React, { type PropsWithChildren, type FC } from 'react';
 
 import { type Document as DocumentType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DropdownMenu } from '@dxos/react-ui';
-import { useTextModel, type EditorModel, type EditorView } from '@dxos/react-ui-editor';
+import { useTextModel, type EditorModel } from '@dxos/react-ui-editor';
 import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 
-// TODO(thure): this needs to be refactored into a graph node action.
-export const DocumentHeadingMenu: FC<{ document: DocumentType; pluginMutableRef: MutableRefObject<EditorView> }> = ({
-  document,
-  pluginMutableRef,
-}) => {
+// TODO(thure): This needs to be refactored into a graph node action.
+export const DocumentHeadingMenu: FC<{ document: DocumentType }> = ({ document }) => {
   const identity = useIdentity();
   // TODO(wittjosiah): Should this be a hook?
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document?.content });
-
   if (!model) {
     return null;
   }
 
-  return <HeadingMenu properties={document} model={model} editorRef={pluginMutableRef} />;
+  return <HeadingMenu properties={document} model={model} />;
 };
 
 /**
@@ -38,11 +34,9 @@ export const DocumentHeadingMenu: FC<{ document: DocumentType; pluginMutableRef:
 export const HeadingMenu = ({
   model,
   properties,
-  editorRef,
 }: PropsWithChildren<{
   model: EditorModel;
   properties: MarkdownProperties;
-  editorRef?: RefObject<EditorView>;
 }>) => {
   return (
     <DropdownMenu.Root modal={false}>
@@ -54,7 +48,7 @@ export const HeadingMenu = ({
       <DropdownMenu.Portal>
         <DropdownMenu.Content sideOffset={8} classNames='z-10'>
           <DropdownMenu.Viewport>
-            <Surface data={{ model, properties, editorRef }} role='menuitem' />
+            <Surface data={{ model, properties }} role='menuitem' />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>

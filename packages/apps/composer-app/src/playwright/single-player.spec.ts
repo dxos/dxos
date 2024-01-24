@@ -39,6 +39,50 @@ test.describe('Single-player tests', () => {
     });
   });
 
+  test('create folder', async () => {
+    await host.createSpace();
+    await host.createFolder();
+    await waitForExpect(async () => {
+      expect(await host.getFoldersCount()).to.equal(1);
+    });
+  });
+
+  test.describe('deleting folders', () => {
+    test('moves item out of folder', async () => {
+      await host.createSpace();
+      await host.createFolder();
+      // create an item inside the folder
+      await host.createObject('markdownPlugin');
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+      // delete the containing folder
+      await host.deleteObject(0);
+
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+    });
+
+    test('moves folder with item out of folder', async () => {
+      await host.createSpace();
+      await host.createFolder();
+      // create a folder inside the folder
+      await host.createFolder();
+      // create an item inside the contained folder
+      await host.createObject('markdownPlugin');
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+      // delete the containing folder
+      await host.deleteObject(0);
+
+      await waitForExpect(async () => {
+        expect(await host.getObjectsCount()).to.equal(2);
+      });
+    });
+  });
+
   test.describe('stacks', () => {
     test('create', async () => {
       await host.createSpace();
@@ -104,10 +148,25 @@ test.describe('Single-player tests', () => {
     await host.enablePlugin('dxos.org/plugin/debug');
     await host.changeStorageVersionInMetadata(9999);
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
+    expect(await host.page.getByTestId('resetDialog').locator('h2').innerText()).to.equal('Invalid storage version');
+  });
 
-    await host.page.getByTestId('resetDialog.showStackTrace').click();
-    expect(await host.page.getByTestId('resetDialog.stackTrace').innerText())
-      .to.be.a('string')
-      .and.satisfy((trace: string) => trace.startsWith('INVALID_STORAGE_VERSION'));
+  test('reset device', async ({ browserName }) => {
+    // TODO(wittjosiah): Accepting browser confirm dialog only seems to work in chromium.
+    if (browserName !== 'chromium') {
+      test.skip();
+    }
+
+    await host.createSpace();
+    await host.createSpace();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(3);
+    });
+
+    await host.openIdentityManager();
+    await host.shell.resetDevice();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(1);
+    });
   });
 });

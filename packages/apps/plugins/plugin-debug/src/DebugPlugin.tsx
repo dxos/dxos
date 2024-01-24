@@ -51,7 +51,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         await client.destroy();
         const { storage } = createStorageObjects(config.values?.runtime?.client?.storage ?? {});
         await changeStorageVersionInMetadata(storage, version);
-        location.reload();
+        location.pathname = '/';
       };
     },
     unload: async () => {

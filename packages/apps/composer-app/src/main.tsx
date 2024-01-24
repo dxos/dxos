@@ -4,14 +4,13 @@
 
 import '@dxosTheme';
 
-import React from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
-import ErrorMeta from '@braneframe/plugin-error/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
@@ -46,26 +45,35 @@ import { types, Document } from '@braneframe/types';
 import { createApp, LayoutAction, Plugin } from '@dxos/app-framework';
 import { createClientServices, Config, Defaults } from '@dxos/react-client';
 import { TextObject } from '@dxos/react-client/echo';
-import { Status, ThemeProvider } from '@dxos/react-ui';
+import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey } from './globals';
 import { steps } from './help';
 import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import { initializeNativeApp } from './native';
+import translations from './translations';
 
 const main = async () => {
-  const isSocket = !!(globalThis as any).__args;
   const config = await setupConfig();
   const services = await createClientServices(config);
 
+  const isSocket = !!(globalThis as any).__args;
   if (isSocket) {
     void initializeNativeApp();
   }
 
   const App = createApp({
-    fallback: (
+    fallback: ({ error }) => (
+      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+        <Tooltip.Provider>
+          <ResetDialog error={error} config={config} />
+        </Tooltip.Provider>
+      </ThemeProvider>
+    ),
+    placeholder: (
       <ThemeProvider tx={defaultTx}>
         <div className='flex bs-[100dvh] justify-center items-center'>
           <Status indeterminate aria-label='Initializing' />
@@ -79,8 +87,6 @@ const main = async () => {
       ThemeMeta,
       // Outside of error boundary so that updates are not blocked by errors.
       PwaMeta,
-      // TODO(wittjosiah): Factor out to app framework.
-      ErrorMeta,
 
       // UX
       LayoutMeta,
@@ -142,7 +148,6 @@ const main = async () => {
               }),
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
-      [ErrorMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-error')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
@@ -195,7 +200,6 @@ const main = async () => {
     },
     core: [
       ClientMeta.id,
-      ErrorMeta.id,
       GraphMeta.id,
       HelpMeta.id,
       LayoutMeta.id,
@@ -209,13 +213,14 @@ const main = async () => {
       TelemetryMeta.id,
       WildcardMeta.id,
     ],
-    defaults: [MarkdownMeta.id, StackMeta.id],
+    // TODO(burdon): Add DebugMeta if dev build.
+    defaults: [MarkdownMeta.id, StackMeta.id, ThreadMeta.id, SketchMeta.id],
   });
 
   createRoot(document.getElementById('root')!).render(
-    // <StrictMode>
-    <App />,
-    // </StrictMode>,
+    <StrictMode>
+      <App />
+    </StrictMode>,
   );
 };
 

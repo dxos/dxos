@@ -6,7 +6,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.1
+  nx: nrwl/nx@1.6.2
 
 parameters:
   mode:
@@ -92,16 +92,13 @@ jobs:
 
     # Run the job on ramdisk for optimal performance.
     # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
-    working_directory: /mnt/ramdisk/work
-
     steps:
-      - *ram_cache_configure
       - checkout
-      - *ram_cache_restore
+      - *cache_restore
       - run: pnpm set verify-store-integrity false
       - run: pnpm install --prefer-offline
       - run: pnpm install-playwright
-      - *ram_cache_save
+      - *cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
@@ -138,17 +135,17 @@ jobs:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
           environment:
             # TODO(wittjosiah): Remove. Currently need because e2e seems to be re-running bundling.
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
           environment:
             # TODO(wittjosiah): Remove? Seems to be needed after automerge was added.
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
           when: always
       - *send_test_report
       - *codecov_upload
@@ -192,7 +189,7 @@ jobs:
           command: ./.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=12288
+            NODE_OPTIONS: --max_old_space_size=8192
       - run:
           command: ./.circleci/scripts/publish-extension.sh
           environment:

@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
+import { InvitationEncoder, type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -13,15 +13,7 @@ import { ServiceContext } from '../services';
  * Strip secrets from invitation before giving it to the peer.
  */
 export const sanitizeInvitation = (invitation: Invitation): Invitation => {
-  return {
-    invitationId: invitation.invitationId,
-    type: invitation.type,
-    kind: invitation.kind,
-    authMethod: invitation.authMethod,
-    swarmKey: invitation.swarmKey,
-    state: invitation.state,
-    timeout: invitation.timeout,
-  };
+  return InvitationEncoder.decode(InvitationEncoder.encode(invitation));
 };
 
 export type InvitationHost = {
