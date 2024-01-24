@@ -185,6 +185,25 @@ test.describe('Invitations', () => {
       expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
+    test('already joined', async () => {
+      await manager.createIdentity(0);
+      await manager.createSpace(0);
+      await manager.openPanel(0, 1);
+      const invitation1 = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
+      const invitation2 = await manager.createInvitation(0, 'space');
+
+      await manager.createIdentity(1);
+      await manager.openPanel(1, 'join');
+      await manager.acceptInvitation(1, 'space', invitation1);
+      await manager.doneInvitation('space', manager.peer(1));
+
+      await manager.openPanel(1, 'join');
+      await manager.acceptInvitation(1, 'space', invitation2);
+      await manager.doneInvitation('space', manager.peer(1));
+
+      expect(await manager.getSpaceMembersCount(0)).to.equal(2);
+    });
+
     test('no auth method', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
