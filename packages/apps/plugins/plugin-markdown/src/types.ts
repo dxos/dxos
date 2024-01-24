@@ -43,10 +43,6 @@ export type MarkdownProvides = {
   };
 };
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DocumentType.name] = DocumentType;
-
 // TODO(wittjosiah): Factor out to graph plugin?
 type StackProvides = {
   stack: {

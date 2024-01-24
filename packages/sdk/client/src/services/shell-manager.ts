@@ -62,6 +62,7 @@ export class ShellManager {
 
     const iframe = this._iframeManager.iframe;
     iframe!.setAttribute('style', shellStyles);
+    iframe!.setAttribute('name', 'dxos-shell');
     iframe!.setAttribute('data-testid', 'dxos-shell');
     this.contextUpdate.on(({ display, reload }) => {
       if (reload) {

@@ -359,3 +359,9 @@ message Chain {
   string title = 1;
   repeated Prompt prompts = 2;
 }
+
+message Map {
+  option (object) = true;
+
+  string title = 1;
+};

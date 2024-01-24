@@ -353,9 +353,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../packages/core/protocols
-      '@dxos/react-appkit':
-        specifier: workspace:*
-        version: link:../packages/ui/react-appkit
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../packages/sdk/react-client
@@ -1831,6 +1828,9 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2406,6 +2406,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../../core/mesh/rpc
@@ -2427,12 +2430,6 @@ importers:
       monaco-editor:
         specifier: ^0.44.0
         version: 0.44.0
-      y-monaco:
-        specifier: ^0.1.0
-        version: 0.1.4(monaco-editor@0.44.0)(yjs@13.6.10)
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -6435,9 +6432,6 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
-      '@dxos/react-appkit':
-        specifier: workspace:*
-        version: link:../../ui/react-appkit
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -8090,115 +8084,6 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
 
-  packages/ui/react-appkit:
-    dependencies:
-      '@dnd-kit/core':
-        specifier: ^6.0.5
-        version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5)(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.0
-        version: 3.2.0(react@18.2.0)
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/sentry':
-        specifier: workspace:*
-        version: link:../../common/sentry
-      '@dxos/telemetry':
-        specifier: workspace:*
-        version: link:../../common/telemetry
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-navigation-menu':
-        specifier: ^1.1.2
-        version: 1.1.2(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-popover':
-        specifier: ^1.0.6
-        version: 1.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-portal':
-        specifier: ^1.0.3
-        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-select':
-        specifier: ^1.2.1
-        version: 1.2.1(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-toolbar':
-        specifier: ^1.0.3
-        version: 1.0.3(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      localforage:
-        specifier: ^1.10.0
-        version: 1.10.0
-      lodash.merge:
-        specifier: ^4.6.2
-        version: 4.6.2
-      lodash.throttle:
-        specifier: ^4.1.1
-        version: 4.1.1
-      qrcode.react:
-        specifier: ^3.1.0
-        version: 3.1.0(react@18.2.0)
-      url-join:
-        specifier: ^5.0.0
-        version: 5.0.0
-    devDependencies:
-      '@dxos/echo-typegen':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-typegen
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.throttle':
-        specifier: ^4.1.7
-        version: 4.1.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      '@vitejs/plugin-react':
-        specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-router-dom:
-        specifier: ^6.4.0
-        version: 6.4.2(react-dom@18.2.0)(react@18.2.0)
-      vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
-
   packages/ui/react-icons:
     devDependencies:
       '@dxos/react-ui':
@@ -8527,15 +8412,6 @@ importers:
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
-      y-codemirror.next:
-        specifier: ^0.3.2
-        version: 0.3.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.0)(yjs@13.6.10)
-      y-protocols:
-        specifier: ^1.0.5
-        version: 1.0.5
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
     devDependencies:
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: ^1.0.19
@@ -16924,31 +16800,6 @@ packages:
       react-remove-scroll: 2.5.5(@types/react@18.0.21)(react@18.2.0)
     dev: false
 
-  /@radix-ui/react-navigation-menu@1.1.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-1fSjOAGTThYSgJ5pENG2V8we7+6KDbfbiyt66HmLTeo0W3PAmmciclm0o97VlcVZW7q5Vg2hN7Cbj4XKo5u2sw==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.21.0
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-collection': 1.0.2(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
-      '@radix-ui/react-context': 1.0.0(react@18.2.0)
-      '@radix-ui/react-direction': 1.0.0(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.3(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-id': 1.0.0(react@18.2.0)
-      '@radix-ui/react-presence': 1.0.0(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-use-callback-ref': 1.0.0(react@18.2.0)
-      '@radix-ui/react-use-controllable-state': 1.0.0(react@18.2.0)
-      '@radix-ui/react-use-layout-effect': 1.0.0(react@18.2.0)
-      '@radix-ui/react-use-previous': 1.0.0(react@18.2.0)
-      '@radix-ui/react-visually-hidden': 1.0.2(react-dom@18.2.0)(react@18.2.0)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
   /@radix-ui/react-popover@1.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-cZ4defGpkZ0qTRtlIBzJLSzL6ht7ofhhW4i1+pkemjV1IKXm0wgCRnee154qlV6r9Ttunmh2TNZhMfV2bavUyA==}
     peerDependencies:
@@ -21038,12 +20889,6 @@ packages:
 
   /@types/lodash.startcase@4.4.8:
     resolution: {integrity: sha512-LVIbtpZ60Z65NvZ30KQ+dsDPZSGNuBRJwWmnSNazm1FUv034vJOW5GlSLY0ce78UtmPWAnDPfMc/MjiwOvppoQ==}
-    dependencies:
-      '@types/lodash': 4.14.191
-    dev: true
-
-  /@types/lodash.throttle@4.1.7:
-    resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
     dependencies:
       '@types/lodash': 4.14.191
     dev: true
@@ -37754,14 +37599,6 @@ packages:
     resolution: {integrity: sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==}
     dev: false
 
-  /qrcode.react@3.1.0(react@18.2.0):
-    resolution: {integrity: sha512-oyF+Urr3oAMUG/OiOuONL3HXM+53wvuH3mtIWQrYmsXoAq0DkvZp2RYUWFSMFtbdOpuS++9v+WAkzNVkMlNW6Q==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      react: 18.2.0
-    dev: false
-
   /qrcode@1.5.3:
     resolution: {integrity: sha512-puyri6ApkEHYiVl4CFzo1tDkAZ+ATcnbJrJ6RiBM1Fhctdn/ix9MTE3hRph33omisEbC/2fcfemsseiKgBPKZg==}
     engines: {node: '>=10.13.0'}
@@ -44368,36 +44205,6 @@ packages:
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
-
-  /y-codemirror.next@0.3.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.0)(yjs@13.6.10):
-    resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
-    peerDependencies:
-      '@codemirror/state': ^6.0.0
-      '@codemirror/view': ^6.0.0
-      yjs: ^13.5.6
-    dependencies:
-      '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.0
-      lib0: 0.2.87
-      yjs: 13.6.10
-    dev: false
-
-  /y-monaco@0.1.4(monaco-editor@0.44.0)(yjs@13.6.10):
-    resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
-    peerDependencies:
-      monaco-editor: '>=0.20.0'
-      yjs: ^13.3.1
-    dependencies:
-      lib0: 0.2.78
-      monaco-editor: 0.44.0
-      yjs: 13.6.10
-    dev: false
-
-  /y-protocols@1.0.5:
-    resolution: {integrity: sha512-Wil92b7cGk712lRHDqS4T90IczF6RkcvCwAD0A2OPg+adKmOe+nOiT/N2hvpQIWS3zfjmtL4CPaH5sIW1Hkm/A==}
-    dependencies:
-      lib0: 0.2.78
-    dev: false
 
   /y18n@3.2.2:
     resolution: {integrity: sha512-uGZHXkHnhF0XeeAPgnKfPv1bgKAYyVvmNL1xlKsPYZPaIHxGti2hHqvOCQv71XMsLxu1QjergkqogUnms5D3YQ==}

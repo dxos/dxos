@@ -236,6 +236,28 @@ describe('AutomergeHost', () => {
         ]);
       }
     });
+
+    test('removeRange on node', async () => {
+      const root = `/tmp/${randomBytes(16).toString('hex')}`;
+      {
+        const storage = createStorage({ type: StorageType.NODE, root });
+        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
+        await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
+        await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
+      }
+
+      {
+        const storage = createStorage({ type: StorageType.NODE, root });
+        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        await adapter.removeRange(['test']);
+        const range = await adapter.loadRange(['test']);
+        expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual([]);
+        const range2 = await adapter.loadRange(['bar']);
+        expect(range2.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual(['bar']);
+        expect(range2.map((chunk) => chunk.key)).toEqual([['bar', '1']]);
+      }
+    });
   });
 });
 
