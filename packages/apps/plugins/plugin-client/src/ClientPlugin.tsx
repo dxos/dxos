@@ -19,9 +19,8 @@ import {
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Client, ClientContext, type ClientOptions, type SystemStatus, fromIFrame } from '@dxos/react-client';
+import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 import { type TypeCollection } from '@dxos/react-client/echo';
-import { Invitation } from '@dxos/react-client/invitations';
 
 import { ClientSettings } from './components';
 import meta, { CLIENT_PLUGIN } from './meta';
@@ -57,8 +56,6 @@ export type ClientPluginProvides = SurfaceProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
-const ENABLE_VAULT_MIGRATION = !location.host.startsWith('localhost') && location.protocol !== 'socket:';
-
 export const ClientPlugin = ({
   types,
   appKey,
@@ -81,36 +78,8 @@ export const ClientPlugin = ({
       let firstRun = false;
 
       client = new Client({ config: new Config(await Envs(), Local(), Defaults()), ...options });
-      let oldClient: Client = null as any;
-
-      if (ENABLE_VAULT_MIGRATION) {
-        const oldConfig = new Config(
-          {
-            runtime: {
-              client: {
-                remoteSource:
-                  location.host === 'composer.staging.dxos.org'
-                    ? 'https://halo.staging.dxos.org/vault.html'
-                    : location.host === 'composer.dev.dxos.org'
-                    ? 'https://halo.dev.dxos.org/vault.html'
-                    : 'https://halo.dxos.org/vault.html',
-              },
-            },
-          },
-          await Envs(),
-          Defaults(),
-        );
-
-        oldClient = new Client({
-          config: oldConfig,
-          services: fromIFrame(oldConfig, { shell: false }),
-        });
-      }
 
       try {
-        if (ENABLE_VAULT_MIGRATION) {
-          await oldClient.initialize();
-        }
         await client.initialize();
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -131,30 +100,9 @@ export const ClientPlugin = ({
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         const identity = client.halo.identity.get();
         if (!identity && !deviceInvitationCode) {
-          // TODO(wittjosiah): Remove.
-          const oldIdentity = ENABLE_VAULT_MIGRATION && oldClient.halo.identity.get();
-          if (oldIdentity) {
-            alert(
-              'Composer must perform some database maintenance to upgrade your identity to the latest version. After continuing, please keep this window open until the app loads.',
-            );
-            const oldObs = oldClient.halo.share();
-            const newObs = client.halo.join(oldObs.get());
-
-            oldObs.subscribe(async (invitation) => {
-              switch (invitation.state) {
-                case Invitation.State.READY_FOR_AUTHENTICATION: {
-                  await newObs.authenticate(invitation.authCode!);
-                }
-              }
-            });
-
-            await newObs.wait();
-            void oldClient.destroy();
-          } else if (!client.halo.identity.get()) {
-            await client.halo.createIdentity();
-            // TODO(wittjosiah): Ideally this would be per app rather than per identity.
-            firstRun = true;
-          }
+          await client.halo.createIdentity();
+          // TODO(wittjosiah): Ideally this would be per app rather than per identity.
+          firstRun = true;
         } else if (client.halo.identity.get() && deviceInvitationCode) {
           // Ignore device invitation if identity already exists.
           // TODO(wittjosiah): Identity merging.

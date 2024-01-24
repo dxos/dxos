@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -69,6 +70,33 @@ describe('services/space-invitations-protocol', () => {
       await space1.close();
       await space2.close();
     }
+  });
+
+  test('invitation when already joined', async () => {
+    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+
+    const space1 = await host.dataSpaceManager!.createSpace();
+    const spaceKey = space1.key;
+
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
+
+    {
+      const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
+      const space2 = guest.dataSpaceManager!.spaces.get(spaceKey)!;
+      expect(space1).not.to.be.undefined;
+      expect(space2).not.to.be.undefined;
+
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+    }
+
+    const [_, guestResult] = performInvitation({
+      host,
+      guest,
+      options: { kind: Invitation.Kind.SPACE, spaceKey },
+    });
+
+    expect((await guestResult).error).to.be.instanceOf(AlreadyJoinedError);
   });
 
   test('creates and accepts invitation with retry', async () => {

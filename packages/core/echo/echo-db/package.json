@@ -50,7 +50,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@automerge/automerge": "^2.1.7",
+    "@automerge/automerge": "^2.1.10",
     "@automerge/automerge-repo": "^1.0.19",
     "@dxos/feed-store": "workspace:*",
     "@dxos/text-model": "workspace:*",

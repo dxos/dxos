@@ -31,7 +31,6 @@ export namespace Features {
   export const dxosUi = ({ depVersion }: Context): Partial<PackageJson> => ({
     dependencies: {
       '@dxos/react-ui': depVersion,
-      '@dxos/react-appkit': depVersion,
       '@phosphor-icons/react': '^2.0.5',
       'react-router-dom': '^6.4.0',
     },

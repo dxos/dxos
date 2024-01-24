@@ -2,21 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, {
-  type HTMLAttributes,
-  type RefCallback,
-  useRef,
-  type PropsWithChildren,
-  type MutableRefObject,
-} from 'react';
+import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
 import { Main, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, type EditorView, MarkdownEditor, setFocus } from '@dxos/react-ui-editor';
+import {
+  type TextEditorProps,
+  type Comment,
+  MarkdownEditor,
+  setFocus,
+  useComments,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import {
   baseSurface,
   focusRing,
-  inputSurface,
+  attentionSurface,
   mx,
   surfaceElevation,
   textBlockWidth,
@@ -25,77 +26,59 @@ import {
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
-// TODO(burdon): Don't export ref.
 export type EditorMainProps = {
-  editorRefCb?: RefCallback<EditorView>;
-} & Pick<TextEditorProps, 'model' | 'readonly' | 'comments' | 'extensions' | 'editorMode'>;
+  comments?: Comment[];
+} & Pick<TextEditorProps, 'model' | 'readonly' | 'editorMode' | 'extensions'>;
 
-export const EditorMain = ({ editorRefCb, ...props }: EditorMainProps) => {
+export const EditorMain = ({ comments, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
-  // TODO(burdon): Reconcile refs.
-  const editorRef = useRef<EditorView>();
-  const setEditorRef: RefCallback<EditorView> = (ref) => {
-    editorRef.current = ref as any;
-    editorRefCb?.(ref);
-  };
+  const [editorRef, editorView] = useTextEditor();
+  useComments(editorView, comments);
 
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
         const { object } = data;
-        setFocus(editorRef.current!, object);
+        if (editorView) {
+          setFocus(editorView, object);
+        }
+        break;
       }
     }
   });
 
   return (
     <MarkdownEditor
-      {...props}
-      ref={setEditorRef}
+      ref={editorRef}
+      autoFocus
       placeholder={t('editor placeholder')}
-      theme={{
-        '&, & .cm-scroller': {
-          display: 'flex',
-          flexDirection: 'column',
-          flex: '1 0 auto',
-          inlineSize: '100%',
-        },
-        '& .cm-content': {
-          flex: '1 0 auto',
-          inlineSize: '100%',
-          paddingBlock: '1rem',
-        },
-      }}
       slots={{
         root: {
           className: mx(
-            'flex flex-col shrink-0 grow pli-10 m-0.5 py-2',
-            inputSurface,
+            'flex flex-col grow m-0.5',
+            attentionSurface,
             focusRing,
             surfaceElevation({ elevation: 'group' }),
-            'rounded',
           ),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
+        editor: {
+          className: 'h-full pli-10 py-4 rounded',
+        },
       }}
+      {...props}
     />
   );
 };
 
-// TODO(burdon): Factor out layout wrappers to be reusable across plugins.
-
-// TODO(wittjosiah): Remove ref.
-export const MainLayout = ({ children }: PropsWithChildren<{ editorRef?: MutableRefObject<EditorView> }>) => {
+export const MainLayout = ({ children }: PropsWithChildren) => {
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
-      <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
+      <div role='none' className={mx('flex flex-col h-full pli-2', textBlockWidth)}>
+        <div role='none' className='flex flex-col grow pb-8 overflow-y-auto'>
           {children}
         </div>
-
-        {/* Overscroll area. */}
-        <div role='none' className='bs-[50dvh]' />
       </div>
     </Main.Content>
   );

@@ -5,15 +5,16 @@
 import { type IconProps, Folder as FolderIcon, Plus, SignIn, FolderOpen } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
-import { set, get } from 'idb-keyval';
+import localforage from 'localforage';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
+import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
+  type Plugin,
   LayoutAction,
   resolvePlugin,
   parseIntentPlugin,
@@ -62,12 +63,6 @@ import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[SpaceProxy.name] = SpaceProxy;
-(globalThis as any)[PublicKey.name] = PublicKey;
-(globalThis as any)[Folder.name] = Folder;
-
 export type SpacePluginOptions = {
   version?: string;
   /**
@@ -99,6 +94,9 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
+  let directory: FileSystemDirectoryHandle | null;
+
+  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
 
   return {
     meta,
@@ -106,8 +104,8 @@ export const SpacePlugin = ({
       settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       if (!clientPlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
         return;
       }
@@ -295,8 +293,9 @@ export const SpacePlugin = ({
                 return null;
               }
 
+              const defaultSpace = clientPlugin?.provides.client.spaces.default;
               const space = getSpaceForObject(data.object);
-              return space
+              return space && space !== defaultSpace
                 ? {
                     node: (
                       <>
@@ -566,15 +565,18 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SELECT_DIRECTORY: {
-              const handle = await (window as any).showDirectoryPicker();
-              await set(SPACE_DIRECTORY_HANDLE, handle);
+              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              directory = handle;
+              await localforage.setItem(SPACE_DIRECTORY_HANDLE, handle);
               return handle;
             }
 
             case SpaceAction.SAVE_TO_DISK: {
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
-                let directory: FileSystemDirectoryHandle | undefined = await get(SPACE_DIRECTORY_HANDLE);
+                if (!directory) {
+                  directory = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
+                }
                 if (!directory) {
                   const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
                   directory = await intentPlugin?.provides.intent.dispatch({
@@ -585,7 +587,7 @@ export const SpacePlugin = ({
                 invariant(directory, 'No directory selected.');
                 if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
                   // TODO(mykola): Is it Chrome-specific?
-                  await (directory as any).requestPermission?.();
+                  await (directory as any).requestPermission?.({ mode: 'readwrite' });
                 }
                 return saveSpaceToDisk({ space, directory }).catch((error) => {
                   log.catch(error);
@@ -597,7 +599,7 @@ export const SpacePlugin = ({
             case SpaceAction.LOAD_FROM_DISK: {
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
-                const directory = await (window as any).showDirectoryPicker();
+                const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
                 await loadSpaceFromDisk({ space, directory });
               }
               break;

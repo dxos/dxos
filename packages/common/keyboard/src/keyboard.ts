@@ -19,9 +19,10 @@ export type KeyBinding = {
 };
 
 // Keybinding is normalized to this order.
-const modifiers = ['alt', 'ctrl', 'shift', 'meta'];
+// https://support.apple.com/en-us/HT201236
+const modifiers = ['ctrl', 'shift', 'alt', 'meta'];
 
-// Normalize order of modifiers.
+// Normalize order and case of modifiers.
 export const parseShortcut = (shortcut: string, delimiter = /[+-]/): string => {
   const parts = shortcut.toLowerCase().split(delimiter);
   const mods = modifiers.filter((key) => parts.includes(key));

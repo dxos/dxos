@@ -16,33 +16,38 @@ import {
   reconcileAnnotationType,
   updateHeads,
   type IDocHandle,
-  type Value,
+  type State,
 } from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
 /**
- * Implements three-way merge (on each mutation/key-stroke).
+ * Implements three-way merge (on each mutation/keystroke).
  */
 export class PatchSemaphore {
-  _inReconcile = false;
+  private _inReconcile = false;
 
-  constructor(private readonly _handle: IDocHandle, private readonly _field: StateField<Value>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _handle: IDocHandle,
+    private readonly _state: StateField<State>
+  ) {}
 
-  reconcile = (view: EditorView) => {
+  // NOTE: Cannot destruct view.state.
+  reconcile(view: EditorView) {
     if (this._inReconcile) {
       return;
     }
     this._inReconcile = true;
 
-    const path = getPath(view.state, this._field);
+    const path = getPath(view.state, this._state);
 
     // Get the heads before the unreconciled transactions are applied.
-    const oldHeads = getLastHeads(view.state, this._field);
+    const oldHeads = getLastHeads(view.state, this._state);
     let selection = view.state.selection;
 
     // First undo all the unreconciled transactions.
-    const transactions = view.state.field(this._field).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
+    const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
     const toInvert = transactions.slice().reverse();
     for (const tx of toInvert) {
       const inverted = tx.changes.invert(tx.startState.doc);
@@ -54,11 +59,10 @@ export class PatchSemaphore {
     }
 
     // Apply the unreconciled transactions to the document.
-    let newHeads = updateAutomerge(this._field, this._handle, transactions, view.state);
-
     // NOTE: null and undefined each come from automerge and repo respectively.
+    let newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
     if (newHeads === null || newHeads === undefined) {
-      // TODO: @alexjg this is the call that's resetting the editor state on click
+      // TODO(alexjg): this is the call that's resetting the editor state on click.
       newHeads = automerge.getHeads(this._handle.docSync()!);
     }
 
@@ -68,11 +72,12 @@ export class PatchSemaphore {
       : automerge.diff(this._handle.docSync()!, oldHeads, newHeads);
     updateCodeMirror(view, selection, path, diff);
 
+    // Update automerge state.
     view.dispatch({
       effects: updateHeads(newHeads),
       annotations: reconcileAnnotationType.of({}),
     });
 
     this._inReconcile = false;
-  };
+  }
 }

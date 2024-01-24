@@ -40,14 +40,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
-      // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
-      Keyboard.singleton.bind({
-        shortcut: 'meta+k',
-        handler: () => {
-          console.log('meta');
-        },
-        data: 'Command menu',
-      });
     },
     unload: async () => {
       Keyboard.singleton.destroy();
@@ -124,6 +116,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             return;
           }
 
+          // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           parent.addAction({
             id: 'dxos.org/plugin/navtree/open-commands',

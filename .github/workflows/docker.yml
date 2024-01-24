@@ -71,6 +71,9 @@ jobs:
             type=ref,event=pr
             type=sha
             type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+          labels: |
+            org.opencontainers.image.title=DXOS Agent
+            org.opencontainers.image.description=The DXOS Agent provides offline backup and synchronization capabilities.
       - name: Docker meta for composer
         id: composer-meta
         uses: docker/metadata-action@v5
@@ -84,12 +87,20 @@ jobs:
             type=ref,event=pr
             type=sha
             type=semver,pattern={{version}},value=${{ env.DX_VERSION }}
+          labels: |
+            org.opencontainers.image.title=DXOS Composer
+            org.opencontainers.image.description=DXOS Composer
       - name: Build and push agent
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           target: agent
           tags: ${{ steps.agent-meta.outputs.tags }}
+          labels: ${{ steps.agent-meta.outputs.labels }}
+          annotations: ${{ steps.agent-meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
             DX_VERSION=${{ env.DX_VERSION }}
@@ -102,9 +113,14 @@ jobs:
       - name: Build and push composer
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           target: composer-app
           tags: ${{ steps.composer-meta.outputs.tags }}
+          labels: ${{ steps.composer-meta.outputs.labels }}
+          annotations: ${{ steps.composer-meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             DX_ENVIRONMENT=${{ env.DX_ENVIRONMENT }}
             DX_VERSION=${{ env.DX_VERSION }}
@@ -124,7 +140,7 @@ jobs:
           short-description: Composer is a tool for collaboration powered by the DXOS developer platform.
           readme-filepath: packages/apps/composer-app/README.md
       - name: Update agent Docker Hub repo description
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'nf/agent-docker'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

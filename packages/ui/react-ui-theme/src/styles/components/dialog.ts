@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, surfaceElevation, dialogMotion, groupBorder, chromeSurface } from '../fragments';
+import { descriptionText, focusRing, surfaceElevation, dialogMotion, groupBorder } from '../fragments';
 
 export type DialogStyleProps = {
   srOnly?: boolean;
@@ -16,7 +16,7 @@ export type DialogStyleProps = {
 const dialogLayoutFragment = 'overflow-auto grid place-items-center p-2 md:p-4 lg:p-8';
 
 export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('fixed z-20 inset-inline-0 block-start-0 bs-[100dvb]', dialogLayoutFragment, ...etc);
+  mx('fixed z-20 inset-inline-0 block-start-0 bs-[100dvb] surface-scrim', dialogLayoutFragment, ...etc);
 
 export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
   mx(
@@ -26,14 +26,14 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     'is-[95vw] md:is-full max-is-[24rem] border rounded-lg p-4',
     dialogMotion,
     surfaceElevation({ elevation }),
-    chromeSurface,
+    'surface-baseGlass backdrop-blur',
     groupBorder,
     focusRing,
     ...etc,
   );
 
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
-  mx('rounded shrink-0 text-xl font-medium text-neutral-900 dark:text-neutral-100', srOnly && 'sr-only', ...etc);
+  mx('rounded shrink-0 text-xl font-medium', srOnly && 'sr-only', ...etc);
 
 export const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('mlb-2', descriptionText, srOnly && 'sr-only', ...etc);
