@@ -3,7 +3,7 @@
 //
 
 import { UserCircle, X } from '@phosphor-icons/react';
-import format from 'date-fns/format';
+import { format } from 'date-fns/format';
 import React, { forwardRef, useId } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';

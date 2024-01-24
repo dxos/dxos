@@ -3,7 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
-import sub from 'date-fns/sub';
+import { sub } from 'date-fns/sub';
 
 import { Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/react-client';
