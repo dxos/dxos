@@ -24,8 +24,8 @@ export interface AwarenessProvider {
   open(): void;
   close(): void;
 
-  update(position: AwarenessPosition | undefined): void;
   getRemoteStates(): AwarenessState[];
+  update(position: AwarenessPosition | undefined): void;
 }
 
 const dummyProvider: AwarenessProvider = {
@@ -34,8 +34,8 @@ const dummyProvider: AwarenessProvider = {
   open: () => {},
   close: () => {},
 
-  update: () => {},
   getRemoteStates: () => [],
+  update: () => {},
 };
 
 export const AwarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({

@@ -29,6 +29,9 @@ export type AwarenessProviderParams = {
   info: AwarenessInfo;
 };
 
+/**
+ * Receives and broadcasts profile and cursor position.
+ */
 export class SpaceAwarenessProvider implements AwarenessProvider {
   private readonly _remoteStates = new Map<string, AwarenessState>();
 
@@ -93,6 +96,10 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
     this._postTask = undefined;
   }
 
+  getRemoteStates(): AwarenessState[] {
+    return Array.from(this._remoteStates.values());
+  }
+
   update(position: AwarenessPosition | undefined): void {
     invariant(this._postTask);
     this._localState = {
@@ -102,10 +109,6 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
     };
 
     this._postTask.schedule();
-  }
-
-  getRemoteStates(): AwarenessState[] {
-    return Array.from(this._remoteStates.values());
   }
 
   private _handleQueryMessage() {
