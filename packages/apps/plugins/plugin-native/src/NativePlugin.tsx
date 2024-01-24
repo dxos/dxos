@@ -119,6 +119,6 @@ export const safeParseJson = <T extends object>(data: string | undefined | null,
 export const NativePlugin = (): PluginDefinition => ({
   meta,
   ready: async (plugins) => {
-    void initializeNativeApp(plugins);
+    void (await initializeNativeApp(plugins));
   },
 });
