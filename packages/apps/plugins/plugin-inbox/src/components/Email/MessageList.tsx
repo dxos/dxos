@@ -7,7 +7,7 @@ import React, { type MouseEvent } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
-import { fixedBorder, getSize, ghostHover, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedBorder, getSize, ghostHover, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -27,7 +27,7 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
   const { t } = useTranslation(INBOX_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', styles.columnWidth, inputSurface)}>
+    <div className={mx('flex flex-col grow overflow-hidden', styles.columnWidth, attentionSurface)}>
       <div className='flex flex-col overflow-y-auto'>
         {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
         {messages?.map((message) => (

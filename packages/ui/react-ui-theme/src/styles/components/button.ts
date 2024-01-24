@@ -16,17 +16,17 @@ import {
 } from '../fragments';
 
 export const primaryButtonColors =
-  'bg-primary-550 dark:bg-primary-550 text-white aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 aria-pressed:text-primary-100 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 data-[state=open]:text-primary-100 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
+  'fg-inverse surface-accent hover:surface-accentHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
 
-export const staticDefaultButtonColors = 'text-neutral-800 dark:text-neutral-50 bg-white dark:bg-neutral-800';
+export const staticDefaultButtonColors = 'surface-input';
 
 export const defaultButtonColors =
   staticDefaultButtonColors +
-  ' text-neutral-800 dark:text-neutral-50 bg-white dark:bg-neutral-800 aria-pressed:text-primary-800 aria-pressed:bg-primary-100 dark:aria-pressed:text-primary-50 dark:aria-pressed:bg-primary-700 data-[state=open]:text-primary-800 data-[state=open]:bg-primary-100 dark:data-[state=open]:text-primary-50 dark:data-[state=open]:bg-primary-700 aria-checked:text-primary-800 aria-checked:bg-primary-100 dark:aria-checked:text-primary-50 dark:aria-checked:bg-primary-700';
+  ' data-[state=open]:surface-input aria-pressed:fg-accent aria-pressed:surface-base aria-checked:fg-accent aria-checked:surface-base';
 
 export const ghostButtonColors =
   ghostHover +
-  ' hover:text-inherit dark:hover:text-inherit aria-pressed:bg-neutral-450/5 dark:aria-pressed:bg-neutral-25/5 data-[state=open]:bg-neutral-450/5 dark:data-[state=open]:bg-neutral-25/5 aria-checked:bg-neutral-450/5 dark:aria-checked:bg-neutral-25/5';
+  ' hover:text-inherit data-[state=open]:surface-input aria-pressed:fg-accent aria-pressed:surface-base aria-checked:fg-accent aria-checked:surface-base';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
@@ -55,8 +55,7 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) =
     resolvedVariant === 'default' && defaultButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
     resolvedVariant === 'primary' && primaryButtonColors,
-    resolvedVariant === 'outline' &&
-      'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
+    resolvedVariant === 'outline' && 'border separator-base',
     !props.disabled && focusRing,
     // Register all radix states
     'group',

@@ -7,7 +7,7 @@ import React, { type ForwardedRef, forwardRef } from 'react';
 import { type Thread as ThreadType } from '@braneframe/types';
 import type { PublicKey } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
-import { fixedBorder, inputSurface, mx } from '@dxos/react-ui-theme';
+import { fixedBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_PLUGIN } from '../../meta';
 import { MessageCard } from '../MessageCard';
@@ -45,7 +45,12 @@ export const CommentsThread = forwardRef(
 
     return (
       <div
-        className={mx('flex flex-col rounded shadow divide-y', inputSurface, fixedBorder, onCreate ? '' : 'opacity-60')}
+        className={mx(
+          'flex flex-col rounded shadow divide-y',
+          attentionSurface,
+          fixedBorder,
+          onCreate ? '' : 'opacity-60',
+        )}
         onClick={() => {
           onFocus?.();
         }}
