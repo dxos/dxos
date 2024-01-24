@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { configColors } from '../config';
+import { physicalColors } from '../config/colors';
 
-const hexadecimalPaletteSeries: (keyof typeof configColors)[] = [
+const hexadecimalPaletteSeries: (keyof typeof physicalColors)[] = [
   'red' as const,
   'orange' as const,
   'amber' as const,
@@ -61,8 +61,8 @@ export const getColorForValue = ({
   }
 
   return type === 'color'
-    ? configColors[hexadecimalPaletteSeries[colorDigit]][shadeKeys.color]
-    : configColors[hexadecimalPaletteSeries[colorDigit]][
+    ? physicalColors[hexadecimalPaletteSeries[colorDigit]][shadeKeys.color]
+    : physicalColors[hexadecimalPaletteSeries[colorDigit]][
         shadeKeys[themeMode === 'dark' ? 'highlightDark' : 'highlightLight']
       ];
 };
