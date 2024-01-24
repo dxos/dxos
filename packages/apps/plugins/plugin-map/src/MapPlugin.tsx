@@ -15,10 +15,6 @@ import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
 import { MapAction, type MapPluginProvides, isMap } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[MapType.name] = MapType;
-
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
     meta,

@@ -28,10 +28,6 @@ import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[ThreadType.name] = ThreadType;
-
 type ThreadState = {
   active?: string | undefined;
   threads?: { id: string; y: number }[];
