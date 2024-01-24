@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { TextObject } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider } from '@dxos/react-ui';
-import { inputSurface } from '@dxos/react-ui-theme';
+import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerRootProps } from './Outliner';
@@ -64,7 +64,7 @@ const Story = ({
   return (
     <DensityProvider density='fine'>
       <Outliner.Root
-        className={inputSurface}
+        className={attentionSurface}
         root={root}
         placeholder='Enter text...'
         onCreate={handleCreate}

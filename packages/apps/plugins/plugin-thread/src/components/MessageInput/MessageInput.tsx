@@ -9,7 +9,7 @@ import React, { useRef, useState } from 'react';
 import { setTextContent, TextObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { listener, TextEditor, useTextModel } from '@dxos/react-ui-editor';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { command } from './extension';
 
@@ -48,7 +48,7 @@ export const MessageInput = ({
   }
 
   return (
-    <div className={mx('flex w-full', inputSurface, className)}>
+    <div className={mx('flex w-full', attentionSurface, className)}>
       <TextEditor
         ref={ref}
         model={model}

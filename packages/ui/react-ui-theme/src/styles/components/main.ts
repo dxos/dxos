@@ -71,7 +71,7 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (
   ...etc
 ) =>
   mx(
-    'fixed inset-0 z-[9] bg-transparent',
+    'fixed inset-0 z-[9] surface-scrim',
     'transition-opacity duration-200 ease-in-out',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'opacity-100' : 'opacity-0',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'block' : 'hidden',

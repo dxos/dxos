@@ -12,7 +12,7 @@ import { type Expando, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM } from '../../meta';
 import { type MessagePropertiesProvider, safeParseJson } from '../util';
@@ -29,7 +29,7 @@ export type MessageCardProps = {
 };
 
 export const MessageCard = ({
-  className = mx(inputSurface, 'rounded shadow'),
+  className = mx(attentionSurface, 'rounded shadow'),
   message,
   propertiesProvider,
   onDelete,
