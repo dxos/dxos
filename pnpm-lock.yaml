@@ -3052,6 +3052,9 @@ importers:
 
   packages/apps/plugins/plugin-thread:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@codemirror/language':
         specifier: ^6.10.0
         version: 6.10.0
@@ -3064,6 +3067,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
