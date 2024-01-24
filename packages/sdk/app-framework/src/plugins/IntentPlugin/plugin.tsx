@@ -12,6 +12,8 @@ import { type IntentPluginProvides, type IntentResolverProvides, parseIntentReso
 import type { PluginDefinition } from '../PluginHost';
 import { filterPlugins, findPlugin } from '../helpers';
 
+const EXECUTION_LIMIT = 1000;
+
 /**
  * Allows plugins to register intent handlers and routes sent intents to the appropriate plugin.
  * Inspired by https://developer.android.com/reference/android/content/Intent.
@@ -58,7 +60,15 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       };
 
       // Sequentially dispatch array of invents.
-      const dispatchChain = async (intentOrArray: Intent | Intent[]) => {
+      const dispatchChain = async (intentOrArray: Intent | Intent[], depth = 0) => {
+        if (depth > EXECUTION_LIMIT) {
+          return {
+            error: new Error(
+              `Intent execution limit exceeded (${EXECUTION_LIMIT} iterations). This is likely due to an infinite loop within intent resolvers.`,
+            ),
+          };
+        }
+
         let result: IntentResult | undefined;
         for (const intent of Array.isArray(intentOrArray) ? intentOrArray : [intentOrArray]) {
           const data = intent.data ? { result: result?.data, ...intent.data } : result?.data;
@@ -69,7 +79,7 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           }
 
           result?.intents?.forEach((intents) => {
-            void dispatchChain(intents);
+            void dispatchChain(intents, depth + 1);
           });
         }
 
