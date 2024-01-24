@@ -5,6 +5,8 @@
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
+import { log } from '@dxos/log';
+
 import { type IntentContext, IntentProvider } from './IntentContext';
 import type { Intent, IntentResolver, IntentResult } from './intent';
 import IntentMeta from './meta';
@@ -57,6 +59,8 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
             return result;
           }
         }
+
+        log.warn('No plugin found to handle intent', intent);
       };
 
       // Sequentially dispatch array of invents.
