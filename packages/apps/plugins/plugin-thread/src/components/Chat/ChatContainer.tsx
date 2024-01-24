@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import differenceInSeconds from 'date-fns/differenceInSeconds';
+import { differenceInSeconds } from 'date-fns/differenceInSeconds';
 import React from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
