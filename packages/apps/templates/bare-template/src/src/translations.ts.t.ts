@@ -14,7 +14,6 @@ export default template.define.text({
         'en-US': {
           '${name}': {
             'current app name': '${name}',
-            'loading label': 'Loading...',
             'need refresh label': 'Refresh now to get app updates',
             'need refresh description': 'You’ll need these updates to continue without interruption.',
             'refresh label': 'Refresh',
