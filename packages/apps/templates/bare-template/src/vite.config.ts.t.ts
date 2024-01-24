@@ -19,7 +19,7 @@ export default template.define.script({
       force: true,
       include: [
         '@dxos/client',
-        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/react-ui', '@dxos/react-ui-theme'," : ''}
+        ${react ? "'@dxos/react-client', '@dxos/react-ui', '@dxos/react-ui-theme'," : ''}
         '@dxos/config'
       ],
       esbuildOptions: {
@@ -93,8 +93,7 @@ export default template.define.script({
             dxosUi &&
             plate`
           ${resolve}(__dirname, 'node_modules/@dxos/react-ui/dist/**/*.mjs'),
-          ${resolve}(__dirname, 'node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
-          ${resolve}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
+          ${resolve}(__dirname, 'node_modules/@dxos/react-ui-theme/dist/**/*.mjs')`
           }
         ]
       }),`

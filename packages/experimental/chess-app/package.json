@@ -45,7 +45,6 @@
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/chess.js": "^0.13.4",
     "@types/react": "^18.0.21",

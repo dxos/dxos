@@ -57,9 +57,6 @@
       "path": "../packages/sdk/shell"
     },
     {
-      "path": "../packages/ui/react-appkit"
-    },
-    {
       "path": "../packages/ui/react-ui"
     },
     {
