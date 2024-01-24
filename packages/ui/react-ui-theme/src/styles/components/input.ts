@@ -59,10 +59,10 @@ const textInputSurfaceHover =
   'hover:bg-[--input-bg-hover] dark:hover:bg-[--input-bg-hover] focus:hover:surface-attention';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors surface-input aria-checked:surface-accent aria-[checked=mixed]:surface-accent';
+  'shadow-inner transition-colors surface-unAccent aria-checked:surface-accent aria-[checked=mixed]:surface-accent';
 
 const booleanInputSurfaceHover =
-  'hover:surface-hover hover:aria-checked:surface-accentHover hover:aria-[checked=mixed]:surface-accentHover';
+  'hover:surface-unAccentHover hover:aria-checked:surface-accentHover hover:aria-[checked=mixed]:surface-accentHover';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {

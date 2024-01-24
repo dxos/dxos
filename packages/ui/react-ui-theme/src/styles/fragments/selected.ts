@@ -15,7 +15,7 @@ export const ghostSelectedCurrent =
 export const ghostHighlighted =
   'data-[highlighted]:bg-primary-100 dark:data-[highlighted]:bg-primary-850 hover:data-[highlighted]:bg-primary-150 hover:dark:data-[highlighted]:bg-primary-800';
 
-export const ghostSelected = 'aria-selected:bg-primary-100 dark:aria-selected:bg-primary-850';
+export const ghostSelected = 'aria-selected:surface-base aria-selected:fg-accent aria-selected:font-semibold';
 
 export type SelectedStyleProps = {
   current?: boolean;

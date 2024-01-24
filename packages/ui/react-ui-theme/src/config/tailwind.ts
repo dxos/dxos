@@ -253,6 +253,14 @@ export const tailwindConfig = ({
         light: configColors.primary['600'],
         dark: configColors.primary['500'],
       },
+      unAccent: {
+        light: configColors.neutral['500'],
+        dark: configColors.neutral['400'],
+      },
+      unAccentHover: {
+        light: configColors.neutral['400'],
+        dark: configColors.neutral['500'],
+      },
       separator: {
         light: configColors.neutral['75'],
         dark: configColors.neutral['750'],
