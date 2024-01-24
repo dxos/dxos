@@ -97,13 +97,14 @@ export const createDiagnostics = async (
   }
 
   if (typeof navigator !== 'undefined' && navigator.storage) {
-    const dir = await navigator.storage.getDirectory();
     const map = new Map();
-    for await (const filename of dir.keys()) {
+    const dir = await navigator.storage.getDirectory();
+    for await (const filename of (dir as any)?.keys()) {
       const idx = filename.indexOf('-', filename.indexOf('-') + 1);
       if (idx === -1) {
         continue;
       }
+
       map.set(filename.slice(0, idx), (map.get(filename.slice(0, idx)) ?? 0) + 1);
     }
 

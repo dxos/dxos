@@ -252,11 +252,13 @@ export class Client {
     );
 
     let removed = 0;
-    const dir = await navigator.storage.getDirectory();
-    for await (const filename of dir.keys()) {
-      if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
-        await dir.removeEntry(filename);
-        removed++;
+    if (typeof navigator !== 'undefined' && navigator.storage) {
+      const dir = await navigator.storage.getDirectory();
+      for await (const filename of (dir as any)?.keys()) {
+        if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
+          await dir.removeEntry(filename);
+          removed++;
+        }
       }
     }
 
