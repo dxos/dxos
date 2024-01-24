@@ -2,20 +2,15 @@ import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.text({
-  content: ({ input: { react } }) =>
+  content: ({ input: { react, dxosUi } }) =>
     react &&
     plate`
       import React, { Component, FC, PropsWithChildren } from 'react';
 
-      type Props = PropsWithChildren<{
-        fallback: FC<{ error: Error }>
-      }>
-
       type State = { error: Error | null }
 
-      export class ErrorBoundary extends Component<Props, State> {
-        constructor(props: Props) {
-          super(props);
+      export class ErrorBoundary extends Component<{}, State> {
+        constructor() {
           this.state = { error: null }
         }
 
@@ -25,11 +20,27 @@ export default template.define.text({
 
         override render() {
           if (this.state.error) {
-            const { fallback: Fallback } = this.props;
             return <Fallback error={this.state.error} />;
           }
 
           return this.props.children;
         }
-      }`,
+      }
+      
+      const Fallback = ({ error }: { error: Error }) => {
+        return (
+          ${dxosUi ? plate`
+          <div className='p-4'>
+            <h1 className='text-lg font-bold my-2'>{error.message}</h1>
+            <pre>{error.stack}</pre>
+          </div>
+          ` : plate`
+          <div style={{ padding: '1rem' }}>
+            <h1 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0.5rem 0' }}>{error.message}</h1>
+            <pre>{error.stack}</pre>
+          </div>
+          `}
+        );
+      };
+    `,
 });
