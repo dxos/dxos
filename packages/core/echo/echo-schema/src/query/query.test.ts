@@ -269,9 +269,9 @@ test('map over refs in query result', async () => {
   for (const object of objects) {
     folder.objects.push(object);
   }
-  
+
   const query = peer.db.query({ name: 'folder' });
-  const result = query.objects.flatMap(({ objects }) => Array.from(objects));
+  const result = query.objects.flatMap(({ objects }) => objects);
 
   for (const i in objects) {
     expect(result[i]).to.eq(objects[i]);

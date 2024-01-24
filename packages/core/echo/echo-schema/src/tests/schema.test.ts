@@ -154,7 +154,7 @@ describe('static schema', () => {
     expect(org.__schema?.[immutable]).to.eq(false);
     expect(org.__typename).to.eq('example.Org');
 
-    expect(database.query(Filter.typename('example.Org')).objects).to.deep.eq([org]);
+    expect([...database.query(Filter.typename('example.Org')).objects]).to.deep.eq([org]);
   });
 
   test('restart with static schema', async () => {
