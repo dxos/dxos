@@ -24,7 +24,7 @@ export const createAutomergeModel = ({ space, identity, text }: UseTextModelProp
       space,
       channel: `automerge.awareness.${obj.id}`,
       info: {
-        displayName: identity?.profile?.displayName ?? generateName(identity?.identityKey.toHex()),
+        displayName: identity ? identity.profile?.displayName ?? generateName(identity.identityKey.toHex()) : undefined,
         color: cursorColor.color,
         lightColor: cursorColor.light,
       },
