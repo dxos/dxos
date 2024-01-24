@@ -76,6 +76,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
         </Button>
       </SettingsValue>
 
+      {/* TODO(burdon): Move to layout? */}
       {toast && (
         <Toast.Root>
           <Toast.Body>
