@@ -34,9 +34,6 @@
     },
     {
       "path": "../../../ui/storybook-utils"
-    },
-    {
-      "path": "../plugin-space"
     }
   ]
 }

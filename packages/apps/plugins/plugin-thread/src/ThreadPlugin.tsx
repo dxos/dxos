@@ -3,6 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
@@ -20,13 +21,14 @@ import {
   parseGraphPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { type TypedObject, SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
-import { ChatContainer, CommentsSidebar, ThreadMain } from './components';
+import { ChatContainer, CommentsSidebar, ThreadMain, ThreadSettings } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { ThreadAction, type ThreadPluginProvides, isThread } from './types';
+import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
   active?: string | undefined;
@@ -39,16 +41,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let layoutPlugin: Plugin<LayoutProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
+  const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = deepSignal<ThreadState>({});
 
   return {
     meta,
     ready: async (plugins) => {
+      settings.prop(settings.values.$standalone!, 'standalone', LocalStorageStore.bool);
+
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
     },
     provides: {
+      settings: settings.values,
       metadata: {
         records: {
           [ThreadType.schema.typename]: {
@@ -76,27 +82,33 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             return;
           }
 
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${THREAD_PLUGIN}/create`,
-            label: ['create thread label', { ns: THREAD_PLUGIN }],
-            icon: (props) => <Chat {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
-                  plugin: THREAD_PLUGIN,
-                  action: ThreadAction.CREATE,
+          return effect(() => {
+            if (settings.values.standalone) {
+              parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+                id: `${THREAD_PLUGIN}/create`,
+                label: ['create thread label', { ns: THREAD_PLUGIN }],
+                icon: (props) => <Chat {...props} />,
+                invoke: () =>
+                  intentPlugin?.provides.intent.dispatch([
+                    {
+                      plugin: THREAD_PLUGIN,
+                      action: ThreadAction.CREATE,
+                    },
+                    {
+                      action: SpaceAction.ADD_OBJECT,
+                      data: { target: parent.data },
+                    },
+                    {
+                      action: LayoutAction.ACTIVATE,
+                    },
+                  ]),
+                properties: {
+                  testId: 'threadPlugin.createObject',
                 },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: LayoutAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'threadPlugin.createObject',
-            },
+              });
+            } else {
+              parent.actionsMap[`${SPACE_PLUGIN}/create`]?.removeAction(`${THREAD_PLUGIN}/create`);
+            }
           });
         },
       },
@@ -105,6 +117,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           switch (role) {
             case 'main': {
               return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
+            }
+
+            case 'settings': {
+              return data.plugin === meta.id ? <ThreadSettings settings={settings.values} /> : null;
             }
 
             case 'context-thread': {
