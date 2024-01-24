@@ -41,7 +41,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   async createSpace(): Promise<Space> {
     if (!this._identityManager.identity) {
-      throw new Error('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
+      throw new Error('This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo');
     }
 
     const dataSpaceManager = await this._getDataSpaceManager();

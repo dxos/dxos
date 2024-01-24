@@ -37,8 +37,11 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
  * Utility component for Storybook stories which sets up clients for n peers.
  * The `Component` property is rendered n times, once for each peer.
  */
+// NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
+//   This seems primarily due to the fact that it required top-level await for the clients to initialize.
+//   Storybook seemed to handle it alright, but Chromatic had a lot of trouble with it.
+//   There was also a question of whether or not calling the story function multiple times was a good idea.
 // TODO(wittjosiah): Rename.
-// TODO(burdon): This should be a decorator?
 export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
   const {
     count = 1,
