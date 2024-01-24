@@ -12,16 +12,11 @@ import {
   type ViewUpdate,
   WidgetType,
 } from '@codemirror/view';
-import { useEffect } from 'react';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { generateName } from '@dxos/display-name';
-import { useThemeContext } from '@dxos/react-ui';
-import { getColorForValue } from '@dxos/react-ui-theme';
 
 import { Cursor, type CursorConverter } from './cursor';
-import { type EditorModel } from '../hooks';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;
@@ -29,8 +24,8 @@ export interface AwarenessProvider {
   open(): void;
   close(): void;
 
-  update(position: AwarenessPosition | undefined): void;
   getRemoteStates(): AwarenessState[];
+  update(position: AwarenessPosition | undefined): void;
 }
 
 const dummyProvider: AwarenessProvider = {
@@ -39,8 +34,8 @@ const dummyProvider: AwarenessProvider = {
   open: () => {},
   close: () => {},
 
-  update: () => {},
   getRemoteStates: () => [],
+  update: () => {},
 };
 
 export const AwarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
@@ -79,19 +74,6 @@ export const awareness = (provider = dummyProvider): Extension => {
     }),
     styles,
   ];
-};
-
-export const useAwareness = ({ awareness, peer }: EditorModel) => {
-  const { themeMode } = useThemeContext();
-  useEffect(() => {
-    if (awareness && peer) {
-      awareness.setLocalStateField('user', {
-        name: peer.name ?? generateName(peer.id),
-        color: getColorForValue({ value: peer.id, type: 'color' }),
-        colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-      });
-    }
-  }, [awareness, peer, themeMode]);
 };
 
 /**

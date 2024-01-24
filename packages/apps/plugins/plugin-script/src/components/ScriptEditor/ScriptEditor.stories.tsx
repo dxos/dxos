@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { type YText } from '@dxos/text-model';
 
 import { ScriptEditor } from './ScriptEditor';
 
@@ -21,18 +20,14 @@ const code = [
 ].join('\n');
 
 const Story = () => {
-  const [content, setContent] = useState<TextObject>();
+  const [source, setSource] = useState<TextObject>();
   useEffect(() => {
-    setContent(new TextObject(code, TextKind.PLAIN));
+    setSource(new TextObject(code, TextKind.PLAIN));
   }, []);
-
-  if (!content) {
-    return null;
-  }
 
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptEditor id='test' content={content.content as YText} />
+      <ScriptEditor id='test' source={source} />
     </div>
   );
 };
