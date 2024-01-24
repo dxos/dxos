@@ -276,7 +276,7 @@ export class AutomergeStorageAdapter extends StorageAdapter {
     // TODO(dmaretskyi): Better deletion.
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
-    await file.truncate?.(0);
+    await file.destroy();
   }
 
   override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
@@ -304,8 +304,8 @@ export class AutomergeStorageAdapter extends StorageAdapter {
       entries
         .filter((entry) => entry.startsWith(filename))
         .map(async (entry): Promise<void> => {
-          const file = this._directory.getOrCreateFile(filename);
-          await file.truncate?.(0);
+          const file = this._directory.getOrCreateFile(entry);
+          await file.destroy();
         }),
     );
   }
