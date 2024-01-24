@@ -172,7 +172,7 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
 /**
  * Used to replicate with other peers over the network.
  */
-class MeshNetworkAdapter extends NetworkAdapter {
+export class MeshNetworkAdapter extends NetworkAdapter {
   private readonly _extensions: Map<string, AutomergeReplicator> = new Map();
 
   /**
@@ -233,10 +233,13 @@ class MeshNetworkAdapter extends NetworkAdapter {
           this.emit('message', message);
         },
         onClose: async () => {
-          peerInfo &&
-            this.emit('peer-disconnected', {
-              peerId: peerInfo.id as PeerId,
-            });
+          if (!peerInfo) {
+            return;
+          }
+          this.emit('peer-disconnected', {
+            peerId: peerInfo.id as PeerId,
+          });
+          this._extensions.delete(peerInfo.id);
         },
       },
     );
@@ -273,7 +276,7 @@ export class AutomergeStorageAdapter extends StorageAdapter {
     // TODO(dmaretskyi): Better deletion.
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
-    await file.truncate?.(0);
+    await file.destroy();
   }
 
   override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
@@ -301,8 +304,8 @@ export class AutomergeStorageAdapter extends StorageAdapter {
       entries
         .filter((entry) => entry.startsWith(filename))
         .map(async (entry): Promise<void> => {
-          const file = this._directory.getOrCreateFile(filename);
-          await file.truncate?.(0);
+          const file = this._directory.getOrCreateFile(entry);
+          await file.destroy();
         }),
     );
   }

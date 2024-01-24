@@ -13,6 +13,7 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
+  type LinkOptions,
   type ListenerOptions,
   autocomplete,
   code,
@@ -23,7 +24,6 @@ import {
   table,
   tasklist,
   typewriter,
-  type LinkOptions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -119,7 +119,7 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
             void dispatch([
               {
                 action: ThreadAction.SELECT,
-                data: { active: thread.id, threads: [{ id: thread.id }] },
+                data: { active: thread.id, threads: [{ id: thread.id }], focus: true },
               },
               {
                 action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
@@ -130,13 +130,19 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
             return thread.id;
           },
           onSelect: (state) => {
-            const { active, ranges } = state;
+            const {
+              comments,
+              selection: { current, closest },
+            } = state;
+
             void dispatch([
               {
                 action: ThreadAction.SELECT,
                 data: {
-                  active,
-                  threads: ranges?.map(({ id, location }) => ({ id, y: location?.top })) ?? [{ id: active }],
+                  active: current ?? closest,
+                  threads: comments?.map(({ comment: { id }, location }) => ({ id, y: location?.top })) ?? [
+                    { id: current },
+                  ],
                 },
               },
             ]);

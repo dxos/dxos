@@ -100,6 +100,14 @@ export class InvalidInvitationError extends DatabaseError {
 
 registerErrorMessageContext('INVALID_INVITATION', InvalidInvitationError);
 
+export class AlreadyJoinedError extends DatabaseError {
+  constructor(message?: string, context?: Record<string, any>) {
+    super('ALREADY_JOINED', message, context);
+  }
+}
+
+registerErrorMessageContext('ALREADY_JOINED', AlreadyJoinedError);
+
 export class ConnectionResetError extends BaseError {
   constructor(message?: string, context?: any) {
     super('CONNECTION_RESET', message, context);

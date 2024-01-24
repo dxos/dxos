@@ -20,4 +20,3 @@ export * from './outliner';
 export * from './table';
 export * from './tasklist';
 export * from './typewriter';
-export * from './yjs';

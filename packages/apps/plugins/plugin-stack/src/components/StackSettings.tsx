@@ -13,7 +13,6 @@ import { type StackSettingsProps } from '../types';
 export const StackSettings = ({ settings }: { settings: StackSettingsProps }) => {
   const { t } = useTranslation(STACK_PLUGIN);
 
-  // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
     <>
       <SettingsValue label={t('settings separation label')}>

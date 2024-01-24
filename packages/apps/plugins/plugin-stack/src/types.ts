@@ -35,7 +35,7 @@ type StackSectionAction = {
 };
 
 export type StackSectionCreator = StackSectionAction & {
-  intent: Intent;
+  intent: Intent | Intent[];
 };
 
 export type StackProvides = {
