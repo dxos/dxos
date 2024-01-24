@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -46,6 +47,7 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
