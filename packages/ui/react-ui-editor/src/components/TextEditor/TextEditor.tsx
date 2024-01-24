@@ -20,7 +20,7 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
-import { inputSurface, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { basicBundle, markdownBundle, useAwareness } from '../../extensions';
 import { type EditorModel } from '../../hooks';
@@ -53,10 +53,10 @@ export type TextEditorSlots = {
 
 // TODO(burdon): Spellcheck?
 export type TextEditorProps = {
-  model: EditorModel;
+  model: EditorModel; // TODO(burdon): Optional (e.g., just provide content if readonly).
   readonly?: boolean; // TODO(burdon): Move into model.
-  autofocus?: boolean;
-  multiline?: boolean;
+  autoFocus?: boolean;
+  lineWrapping?: boolean;
   scrollTo?: StateEffect<any>; // TODO(burdon): Restore scroll position: scrollTo EditorView.scrollSnapshot().
   selection?: { anchor: number; head?: number };
   editorMode?: EditorMode; // TODO(burdon): Factor out.
@@ -64,6 +64,7 @@ export type TextEditorProps = {
   theme?: ThemeStyles;
   slots?: TextEditorSlots;
   extensions?: Extension[];
+  debug?: boolean;
 };
 
 /**
@@ -71,7 +72,18 @@ export type TextEditorProps = {
  */
 export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   (
-    { model, readonly, autofocus, scrollTo, selection, editorMode, theme, slots = defaultSlots, extensions = [] },
+    {
+      model,
+      readonly,
+      autoFocus,
+      scrollTo,
+      selection,
+      editorMode,
+      theme,
+      slots = defaultSlots,
+      extensions = [],
+      debug,
+    },
     forwardedRef,
   ) => {
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -86,10 +98,10 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     // Set focus.
     useEffect(() => {
-      if (autofocus) {
+      if (autoFocus) {
         view?.focus();
       }
-    }, [view, autofocus]);
+    }, [view, autoFocus]);
 
     // Monitor awareness.
     useAwareness(model);
@@ -148,11 +160,10 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
         dispatchTransactions: (trs, view) => {
-          view.update(trs);
-          const debug = false;
           if (debug) {
             logChanges(trs);
           }
+          view.update(trs);
         },
       });
 
@@ -203,14 +214,14 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
 // TODO(burdon): Single-line/scroll.
 export const TextEditor = forwardRef<EditorView, TextEditorProps>(
-  ({ readonly, placeholder, multiline, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
+  ({ readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const updatedSlots = defaultsDeep({}, slots, defaultTextSlots);
     return (
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[basicBundle({ themeMode, placeholder, multiline }), ...extensions]}
+        extensions={[basicBundle({ themeMode, placeholder, lineWrapping }), ...extensions]}
         theme={theme}
         slots={updatedSlots}
         {...props}
@@ -239,7 +250,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 export const defaultSlots: TextEditorSlots = {
   root: {
     // TODO(burdon): Add focusRing by default/as property?
-    className: mx('flex flex-col grow overflow-y-auto', inputSurface),
+    className: mx('flex flex-col grow overflow-y-auto', attentionSurface),
   },
   editor: {
     className: 'h-full p-2',

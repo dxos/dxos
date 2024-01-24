@@ -172,7 +172,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   sidebar: {
                     data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
-                  complementary: {
+                  context: {
                     data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
                   },
                   main: { data: { active: layout.activeNode.data } },

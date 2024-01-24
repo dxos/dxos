@@ -70,6 +70,10 @@ export class InvitationsManager extends ScopedShellManager {
     return this.peer(id).getByTestId('space-list-item').nth(nth).textContent();
   }
 
+  async getSpaceMembersCount(id: number) {
+    return this.peer(id).getByTestId('space-members-list').locator('li').count();
+  }
+
   async getAuthCode(): Promise<string> {
     return await this._authCode.wait();
   }

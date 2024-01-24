@@ -15,10 +15,6 @@ import meta, { OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
 import { OutlinerAction, type OutlinerPluginProvides, isObject } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TreeType.name] = TreeType;
-
 export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
   return {
     meta,
