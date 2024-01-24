@@ -277,7 +277,11 @@ export class AutomergeArray<T> implements Array<T> {
     callback: (this: This, value: T, index: number, array: T[]) => U | readonly U[],
     thisArg?: This | undefined,
   ): U[] {
-    return Array.from(this.values()).flatMap(callback, thisArg);
+    const array = Array.from(this.values());
+    return array.flatMap(function (this: This, value, index, arr) {
+      const result = callback.call(thisArg as This, value, index, arr);
+      return result instanceof AutomergeArray ? [...(result as AutomergeArray<U>)] : result;
+    }, thisArg);
   }
 
   flat<A, D extends number = 1>(this: A, depth?: D | undefined): FlatArray<A, D>[] {

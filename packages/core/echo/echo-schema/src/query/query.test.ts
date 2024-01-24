@@ -254,26 +254,26 @@ testWithAutomerge(() => {
       }
     });
   });
-});
 
-test('map over refs in query result', async () => {
-  const testBuilder = new TestBuilder();
-  const peer = await testBuilder.createPeer();
+  test('map over refs in query result', async () => {
+    const testBuilder = new TestBuilder();
+    const peer = await testBuilder.createPeer();
 
-  const folder = peer.db.add(new TypedObject({ name: 'folder', objects: [] }));
-  const objects = [
-    new TypedObject({ idx: 0, title: 'Task 0' }),
-    new TypedObject({ idx: 1, title: 'Task 1' }),
-    new TypedObject({ idx: 2, title: 'Task 2' }),
-  ];
-  for (const object of objects) {
-    folder.objects.push(object);
-  }
+    const folder = peer.db.add(new TypedObject({ name: 'folder', objects: [] }));
+    const objects = [
+      new TypedObject({ idx: 0, title: 'Task 0' }),
+      new TypedObject({ idx: 1, title: 'Task 1' }),
+      new TypedObject({ idx: 2, title: 'Task 2' }),
+    ];
+    for (const object of objects) {
+      folder.objects.push(object);
+    }
 
-  const query = peer.db.query({ name: 'folder' });
-  const result = query.objects.flatMap(({ objects }) => objects);
+    const query = peer.db.query({ name: 'folder' });
+    const result = query.objects.flatMap(({ objects }) => objects);
 
-  for (const i in objects) {
-    expect(result[i]).to.eq(objects[i]);
-  }
+    for (const i in objects) {
+      expect(result[i]).to.eq(objects[i]);
+    }
+  });
 });
