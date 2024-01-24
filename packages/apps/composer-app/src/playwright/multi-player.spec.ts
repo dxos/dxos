@@ -111,12 +111,8 @@ test.describe('Collaboration tests', () => {
     await host.getMarkdownTextbox().focus();
     await guest.getMarkdownTextbox().focus();
     await waitForExpect(async () => {
-      expect(await host.getCollaboratorCursors().count()).to.equal(1);
-      expect(await guest.getCollaboratorCursors().count()).to.equal(1);
-
-      // TODO(wittjosiah): Cursors are missing display names. https://github.com/dxos/dxos/issues/5363
-      // expect(await host.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
-      // expect(await guest.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
+      expect(await host.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
+      expect(await guest.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
     });
   });
 

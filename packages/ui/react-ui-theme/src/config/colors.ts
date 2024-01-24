@@ -3,7 +3,9 @@
 //
 
 import { curvePathFromPalette, paletteShadesFromCurve } from '@fluent-blocks/colors';
-import { hex_to_LCH as hexToLch, Lab_to_hex as labToHex } from '@fluent-blocks/colors/types/lib/palettes';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { hex_to_LCH as hexToLch, Lab_to_hex as labToHex } from '@fluent-blocks/colors/cjs/lib/palettes';
 
 export type PaletteConfig = {
   keyColor: string;
