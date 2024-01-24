@@ -4,6 +4,7 @@
 
 import get from 'lodash.get';
 
+import { generateName } from '@dxos/display-name';
 import { type AutomergeTextCompat, getRawDoc } from '@dxos/echo-schema';
 import { isNotNullOrUndefined } from '@dxos/util';
 
@@ -23,7 +24,7 @@ export const createAutomergeModel = ({ space, identity, text }: UseTextModelProp
       space,
       channel: `automerge.awareness.${obj.id}`,
       info: {
-        displayName: identity?.profile?.displayName ?? '',
+        displayName: identity?.profile?.displayName ?? generateName(identity?.identityKey.toHex()),
         color: cursorColor.color,
         lightColor: cursorColor.light,
       },
