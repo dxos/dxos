@@ -25,7 +25,7 @@ import {
 import { type Comment, useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
-const content = 'Heading\n\nThis is some **sample** text!\n\nSome more.\n';
+const content = 'Heading\n\nThis is some **sample** text!\n\nSome more.\n\n';
 
 const Story = () => {
   const [item] = useState({ text: new TextObject(content) });
