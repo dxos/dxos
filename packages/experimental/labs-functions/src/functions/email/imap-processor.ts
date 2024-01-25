@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import sub from 'date-fns/sub';
+import { sub } from 'date-fns/sub';
 import { type Config as ImapConfig } from 'imap';
 import imaps, { type Message as ImapMessage, type ImapSimple } from 'imap-simple';
 import { simpleParser, type EmailAddress } from 'mailparser';

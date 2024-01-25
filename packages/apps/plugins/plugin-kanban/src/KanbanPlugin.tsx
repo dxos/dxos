@@ -74,7 +74,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              return { object: new KanbanType() };
+              return { data: new KanbanType() };
             }
           }
         },

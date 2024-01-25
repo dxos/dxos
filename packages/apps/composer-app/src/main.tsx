@@ -58,7 +58,16 @@ import translations from './translations';
 
 const main = async () => {
   const config = await setupConfig();
-  const services = await createClientServices(config);
+  const services = await createClientServices(
+    config,
+    config.values.runtime?.app?.env?.DX_HOST
+      ? undefined
+      : () =>
+          new SharedWorker(new URL('@dxos/client/shared-worker', import.meta.url), {
+            type: 'module',
+            name: 'dxos-client-worker',
+          }),
+  );
 
   const isSocket = !!(globalThis as any).__args;
   if (isSocket) {
@@ -139,13 +148,6 @@ const main = async () => {
         services,
         types,
         shell: './shell.html',
-        createWorker: config.values.runtime?.app?.env?.DX_HOST
-          ? undefined
-          : () =>
-              new SharedWorker(new URL('@dxos/client/shared-worker', import.meta.url), {
-                type: 'module',
-                name: 'dxos-client-worker',
-              }),
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),

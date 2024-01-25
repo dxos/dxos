@@ -149,7 +149,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
                       id={id}
                       data-testid={testId}
                       onClick={async () => {
-                        const { object: nextSection } = await dispatch(intent);
+                        const { data: nextSection } = (await dispatch(intent)) ?? {};
                         handleAdd(nextSection);
                       }}
                     >
