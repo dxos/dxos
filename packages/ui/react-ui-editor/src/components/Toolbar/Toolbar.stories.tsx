@@ -15,7 +15,7 @@ import { bold, formatting } from '../../extensions';
 import { useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
-const content = 'This is some **sample** text!';
+const content = 'Heading\n\nThis is some **sample** text!\nSome more.\n';
 
 const Story = () => {
   const [item] = useState({ text: new TextObject(content) });
@@ -29,8 +29,11 @@ const Story = () => {
   }
 
   const handleAction: ToolbarProps['onAction'] = (action) => {
+    console.log(action);
     if (view.current) {
-      switch (action) {
+      switch (action.type) {
+        case 'heading':
+          break;
         case 'bold':
           bold(view.current);
           break;
@@ -41,7 +44,7 @@ const Story = () => {
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px]'>
+        <div className='flex flex-col h-full w-[800px] gap-4'>
           <Toolbar onAction={handleAction} />
           <MarkdownEditor ref={view} model={model} extensions={extensions} />
         </div>
