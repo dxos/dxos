@@ -1,6 +1,4 @@
 {
-  "name": "plugin-telemetry",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-telemetry/src",
   "projectType": "library",
   "targets": {
@@ -12,10 +10,16 @@
           "packages/apps/plugins/plugin-telemetry/src/meta.ts",
           "packages/apps/plugins/plugin-telemetry/src/observability/index.ts"
         ],
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-telemetry"
 }

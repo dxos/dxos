@@ -1,13 +1,14 @@
 {
-  "name": "observability",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/observability/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/sdk/observability/src/datadog/index.ts", "packages/sdk/observability/src/index.ts"]
+        "entryPoints": [
+          "packages/sdk/observability/src/datadog/index.ts",
+          "packages/sdk/observability/src/index.ts"
+        ]
       }
     },
     "lint": {},
@@ -35,8 +36,14 @@
       "options": {
         "script": "api-keys"
       },
-      "outputs": ["{projectRoot}/src/cli-observability-secrets.json"]
+      "outputs": [
+        "{projectRoot}/src/cli-observability-secrets.json"
+      ]
     }
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "observability"
 }

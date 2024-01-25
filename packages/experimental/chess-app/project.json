@@ -1,6 +1,4 @@
 {
-  "name": "chess-app",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/experimental/chess-app/src",
   "projectType": "application",
   "targets": {
@@ -19,7 +17,9 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": ["{projectRoot}/src/proto/gen"]
+      "outputs": [
+        "{projectRoot}/src/proto/gen"
+      ]
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
@@ -29,9 +29,15 @@
     },
     "test": {
       "options": {
-        "ciEnvironments": ["nodejs"]
+        "ciEnvironments": [
+          "nodejs"
+        ]
       }
     }
   },
-  "implicitDependencies": ["test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "test"
+  ],
+  "name": "chess-app"
 }

@@ -1,6 +1,4 @@
 {
-  "name": "echo-schema",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/echo/echo-schema/src",
   "projectType": "library",
   "targets": {
@@ -19,9 +17,14 @@
       "executor": "nx:run-script",
       "options": {
         "script": "prebuild",
-        "transformers": ["@dxos/log-hook/transformer"]
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
-      "outputs": ["{projectRoot}/src/proto/gen", "{projectRoot}/src/tests/proto/gen"]
+      "outputs": [
+        "{projectRoot}/src/proto/gen",
+        "{projectRoot}/src/tests/proto/gen"
+      ]
     },
     "test": {
       "options": {
@@ -29,5 +32,10 @@
       }
     }
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "echo-schema"
 }

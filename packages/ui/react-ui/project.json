@@ -1,21 +1,29 @@
 {
-  "name": "react-ui",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-ui/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/ui/react-ui/src/index.ts"],
-        "platforms": ["browser"]
+        "entryPoints": [
+          "packages/ui/react-ui/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {
       "options": {
-        "lintFilePatterns": ["packages/ui/react-ui/src/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": [
+          "packages/ui/react-ui/src/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "react-ui"
 }

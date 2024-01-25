@@ -1,45 +1,71 @@
 {
-  "name": "protocols",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
     "compile": {
-      "dependsOn": ["compile-lib", "compile-node"],
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["true"]
+        "commands": [
+          "true"
+        ]
       }
     },
     "compile-lib": {
-      "dependsOn": ["^compile", "prebuild"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
         "outputPath": "packages/core/protocols/dist/esm",
-        "transformers": ["@dxos/log-hook/transformer"],
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "packages/core/protocols/tsconfig.json"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "compile-node": {
-      "dependsOn": ["^compile", "prebuild"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "tsc-cjs"
       },
-      "outputs": ["{projectRoot}/dist/cjs"]
+      "outputs": [
+        "{projectRoot}/dist/cjs"
+      ]
     },
     "lint": {},
     "prebuild": {
-      "dependsOn": ["^build", "^compile"],
+      "dependsOn": [
+        "^build",
+        "^compile"
+      ],
       "executor": "@dxos/nx-protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto"
       },
-      "outputs": ["{options.basePath}/gen", "{projectRoot}/proto"]
+      "outputs": [
+        "{options.basePath}/gen",
+        "{projectRoot}/proto"
+      ]
     },
     "test": {}
   },
-  "implicitDependencies": ["nx-protobuf-compiler", "test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "nx-protobuf-compiler",
+    "test"
+  ],
+  "name": "protocols"
 }

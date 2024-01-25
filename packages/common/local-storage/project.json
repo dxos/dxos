@@ -1,17 +1,22 @@
 {
-  "name": "local-storage",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/local-storage/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/common/local-storage/src/index.ts"],
+        "entryPoints": [
+          "packages/common/local-storage/src/index.ts"
+        ],
         "injectGlobals": true
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "local-storage"
 }

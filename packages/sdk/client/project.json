@@ -1,6 +1,4 @@
 {
-  "name": "client",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/client/src",
   "projectType": "library",
   "targets": {
@@ -35,5 +33,10 @@
       }
     }
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "client"
 }

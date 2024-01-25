@@ -1,6 +1,4 @@
 {
-  "name": "hello-template",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/templates/hello-template/src",
   "projectType": "library",
   "targets": {
@@ -20,9 +18,13 @@
       ],
       "options": {
         "checkLeaks": false,
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "forceExit": true
       }
     }
-  }
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "hello-template"
 }

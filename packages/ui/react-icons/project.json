@@ -1,17 +1,23 @@
 {
-  "name": "react-icons",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-icons/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/ui/react-icons/src/index.ts"],
-        "platforms": ["browser"]
+        "entryPoints": [
+          "packages/ui/react-icons/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "react-icons"
 }

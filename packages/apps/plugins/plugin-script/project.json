@@ -1,6 +1,4 @@
 {
-  "name": "plugin-script",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-script/src",
   "projectType": "library",
   "targets": {
@@ -11,7 +9,9 @@
           "packages/apps/plugins/plugin-script/src/index.ts",
           "packages/apps/plugins/plugin-script/src/meta.tsx"
         ],
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       }
     },
     "lint": {},
@@ -21,5 +21,9 @@
       }
     }
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "plugin-script"
 }

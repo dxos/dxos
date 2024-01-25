@@ -1,16 +1,20 @@
 {
-  "name": "rpc-tunnel",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/mesh/rpc-tunnel/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/core/mesh/rpc-tunnel/src/index.ts"]
+        "entryPoints": [
+          "packages/core/mesh/rpc-tunnel/src/index.ts"
+        ]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild"
+  ],
+  "name": "rpc-tunnel"
 }

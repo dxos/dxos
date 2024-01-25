@@ -1,6 +1,4 @@
 {
-  "name": "echo-typegen",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/echo/echo-typegen/src",
   "projectType": "library",
   "targets": {
@@ -13,12 +11,18 @@
     },
     "compile": {
       "options": {
-        "entryPoints": ["packages/core/echo/echo-typegen/src/main.ts"],
+        "entryPoints": [
+          "packages/core/echo/echo-typegen/src/main.ts"
+        ],
         "injectGlobals": true,
-        "platforms": ["node"]
+        "platforms": [
+          "node"
+        ]
       }
     },
     "lint": {},
     "test": {}
-  }
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "echo-typegen"
 }

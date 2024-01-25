@@ -1,6 +1,4 @@
 {
-  "name": "hypercore",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/hypercore/src",
   "projectType": "library",
   "targets": {
@@ -63,12 +61,19 @@
           "xsalsa20",
           "xsalsa20-universal"
         ],
-        "entryPoints": ["packages/common/hypercore/src/index.ts"],
+        "entryPoints": [
+          "packages/common/hypercore/src/index.ts"
+        ],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ],
+  "name": "hypercore"
 }

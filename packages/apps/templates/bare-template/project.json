@@ -1,6 +1,4 @@
 {
-  "name": "bare-template",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/templates/bare-template/src",
   "projectType": "library",
   "targets": {
@@ -16,15 +14,21 @@
       "options": {
         "script": "gen"
       },
-      "outputs": ["{projectRoot}/test/variants"]
+      "outputs": [
+        "{projectRoot}/test/variants"
+      ]
     },
     "lint": {},
     "test": {
       "options": {
         "checkLeaks": false,
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "forceExit": true
       }
     }
-  }
+  },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "bare-template"
 }

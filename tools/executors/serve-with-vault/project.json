@@ -1,6 +1,4 @@
 {
-  "name": "serve-with-vault",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/executors/serve-with-vault/src",
   "targets": {
     "compile": {
@@ -8,11 +6,17 @@
       "options": {
         "main": "tools/executors/serve-with-vault/src/index.ts",
         "outputPath": "tools/executors/serve-with-vault/dist",
-        "transformers": ["@dxos/log-hook/transformer"],
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "tools/executors/serve-with-vault/tsconfig.json"
       }
     },
     "lint": {}
   },
-  "implicitDependencies": ["log-hook"]
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "log-hook"
+  ],
+  "name": "serve-with-vault"
 }
