@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Range } from '@codemirror/state';
+import { syntaxTree } from '@codemirror/language';
+import { RangeSetBuilder } from '@codemirror/state';
 import {
   ViewPlugin,
   type DecorationSet,
@@ -10,38 +11,37 @@ import {
   type ViewUpdate,
   Decoration,
   type BlockInfo,
+  WidgetType,
 } from '@codemirror/view';
 
 import { mx } from '@dxos/react-ui-theme';
 
 import { getToken } from '../../styles';
 
-const CODE_REGEX = /```[\s\S]*?```/gs;
-
 // TODO(burdon): Reconcile with theme.
+// [aria-readonly="true"]
 const styles = EditorView.baseTheme({
-  '& .cm-codeblock': {
+  '& .cm-code': {
+    paddingInline: '1rem !important',
     fontFamily: getToken('fontFamily.mono', []).join(','),
   },
-  '&light [aria-readonly="true"] .cm-codeblock': {
+  '& .cm-codeblock': {
+    display: 'inline-block',
+    width: '100%',
+  },
+  '&light .cm-codeblock, &light .cm-codeblock.cm-activeLine': {
     background: getToken('extend.colors.neutral.50'),
   },
-  '&dark [aria-readonly="true"] .cm-codeblock': {
+  '&dark .cm-codeblock, &dark .cm-codeblock.cm-activeLine': {
     background: getToken('extend.colors.neutral.850'),
   },
-  '& [aria-readonly="true"] .cm-codeblock': {
-    display: 'block',
-    paddingInline: '4px !important',
+  '& .cm-codeblock-first': {
+    borderTopLeftRadius: '.5rem',
+    borderTopRightRadius: '.5rem',
   },
-  '& [aria-readonly="true"] .cm-codeblock-first': {
-    paddingTop: '4px !important',
-    borderTopLeftRadius: '4px',
-    borderTopRightRadius: '4px',
-  },
-  '& [aria-readonly="true"] .cm-codeblock-last': {
-    paddingBottom: '4px !important',
-    borderBottomLeftRadius: '4px',
-    borderBottomRightRadius: '4px',
+  '& .cm-codeblock-last': {
+    borderBottomLeftRadius: '.5rem',
+    borderBottomRightRadius: '.5rem',
   },
 });
 
@@ -52,48 +52,70 @@ const getLineRange = (lines: BlockInfo[], from: number, to: number) => {
   return [start, end];
 };
 
-// TODO(burdon): Hide marks.
+class LineWidget extends WidgetType {
+  constructor(private readonly _className: string) {
+    super();
+  }
+
+  override toDOM() {
+    const el = document.createElement('span');
+    el.innerHTML = '&nbsp;';
+    el.className = mx('cm-code cm-codeblock', this._className);
+    return el;
+  }
+}
+
+const top = new LineWidget('cm-codeblock-first');
+const bottom = new LineWidget('cm-codeblock-last');
+
+const buildDecorations = (view: EditorView): DecorationSet => {
+  const builder = new RangeSetBuilder<Decoration>();
+  const { state } = view;
+  const blocks = view.viewportLineBlocks;
+  const cursor = state.selection.main.head;
+
+  // TODO(burdon): Add copy to clipboard widget.
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(state).iterate({
+      enter: (node) => {
+        if (node.name === 'FencedCode') {
+          const edit = !view.state.readOnly && cursor >= node.from && cursor <= node.to;
+          const range = getLineRange(blocks, node.from, node.to);
+          for (let i = range[0]; i <= range[1]; i++) {
+            const block = blocks[i];
+            if (!edit && (i === range[0] || i === range[1])) {
+              builder.add(block.from, block.to, Decoration.replace({ widget: i === range[0] ? top : bottom }));
+            } else {
+              builder.add(
+                block.from,
+                block.from,
+                Decoration.line({
+                  class: mx('cm-code cm-codeblock'),
+                }),
+              );
+            }
+          }
+        }
+      },
+      from,
+      to,
+    });
+  }
+
+  return builder.finish();
+};
+
 export const code = () => {
-  const buildDecorations = (view: EditorView) => {
-    const decorations: Range<Decoration>[] = [];
-    const text = view.state.doc.sliceString(0);
-    const matches = text.matchAll(CODE_REGEX);
-    const blocks = view.viewportLineBlocks;
-    for (const match of matches) {
-      const range = getLineRange(blocks, match.index!, match.index! + match[0].length);
-      for (let i = range[0]; i <= range[1]; i++) {
-        const block = blocks[i];
-        decorations.push(
-          Decoration.line({
-            class: mx('cm-codeblock', i === range[0] && 'cm-codeblock-first', i === range[1] && 'cm-codeblock-last'),
-          }).range(block.from),
-        );
-      }
-    }
-
-    return Decoration.set(decorations);
-  };
-
   return [
     ViewPlugin.fromClass(
       class {
-        hasFocus = false;
         decorations: DecorationSet;
         constructor(view: EditorView) {
           this.decorations = buildDecorations(view);
         }
 
         update(update: ViewUpdate) {
-          if (
-            // TODO(burdon): Generalize for other extensions.
-            this.hasFocus !== update.view.hasFocus ||
-            update.startState.readOnly !== update.view.state.readOnly ||
-            update.docChanged ||
-            update.viewportChanged
-          ) {
-            this.hasFocus = update.view.hasFocus;
-            this.decorations = buildDecorations(update.view);
-          }
+          this.decorations = buildDecorations(update.view);
         }
       },
       {
