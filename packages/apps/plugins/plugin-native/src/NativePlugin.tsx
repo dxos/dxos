@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import meta from './meta';
 
 // TODO(burdon): Reconcile with other properties.
-const KEY_WINDOW_SIZE = 'dxos.org/composer/settings/window/size';
+const KEY_WINDOW_SIZE = 'dxos.org/plugin/native/window-size';
 
 /**
  * Native code for socketsupply app.
@@ -22,13 +22,6 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   const app = await import(/* @vite-ignore */ module);
   const { meta_title: appName } = app.config;
   const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-  const handleNavigate = (id: string) => {
-    void intentPlugin?.provides.intent.dispatch({
-      action: LayoutAction.ACTIVATE,
-      data: { id },
-    });
-  };
 
   //
   // Window size.
@@ -92,14 +85,13 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
     }
   });
 
-  window.addEventListener('applicationurl', (event: any) => {
-    const slug = event.url.host;
-
-    if (slug.match(/^[a-z0-9]{64}$/)) {
-      handleNavigate(slug);
-    } else {
-      alert('URL is not supported\nPlease check that it was copied or entered correctly.');
-    }
+  // applicationurl is a custom event fired by the Socket Supply Runtime:
+  // https://github.com/socketsupply/socket/blob/ef7fb5559876e41062d5896aafb7b79989fc96e5/api/internal/events.js#L6
+  window.addEventListener('applicationurl', ({ url }: any) => {
+    void intentPlugin?.provides.intent.dispatch({
+      action: LayoutAction.ACTIVATE,
+      data: { id: url.host },
+    });
   });
 
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
