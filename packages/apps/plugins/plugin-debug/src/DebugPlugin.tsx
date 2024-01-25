@@ -182,7 +182,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               }
 
               window.open(`${devtoolsUrl}?target=${vaultUrl}`, '_blank');
-              return true;
+              return { data: true };
             }
           }
         },

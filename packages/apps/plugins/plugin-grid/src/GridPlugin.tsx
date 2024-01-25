@@ -86,7 +86,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case GridAction.CREATE: {
-              return { object: new GridType() };
+              return { data: new GridType() };
             }
           }
         },
