@@ -43,7 +43,6 @@ export const heading = () => {
     ViewPlugin.fromClass(
       class {
         decorations: DecorationSet;
-
         constructor(view: EditorView) {
           this.decorations = buildDecorations(view);
         }
