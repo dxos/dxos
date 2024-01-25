@@ -4,6 +4,7 @@
 
 export * from './bundle';
 export * from './code';
+export * from './heading';
 export * from './highlight';
 export * from './hr';
 export * from './image';
