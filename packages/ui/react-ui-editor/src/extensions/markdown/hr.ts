@@ -6,7 +6,7 @@ import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { getToken } from '../styles';
+import { getToken } from '../../styles';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
