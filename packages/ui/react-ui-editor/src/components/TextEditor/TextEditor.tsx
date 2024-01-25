@@ -235,7 +235,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[markdownBundle({ themeMode, readonly, placeholder }), ...extensions]}
+        extensions={[markdownBundle({ themeMode, placeholder }), ...extensions]}
         theme={theme}
         slots={updatedSlots}
         {...props}

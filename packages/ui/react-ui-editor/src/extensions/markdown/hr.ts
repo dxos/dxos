@@ -51,11 +51,9 @@ const buildDecorations = (view: EditorView): DecorationSet => {
 
 export const hr = () => {
   return [
-    styles,
     ViewPlugin.fromClass(
       class {
         decorations: DecorationSet;
-
         constructor(view: EditorView) {
           this.decorations = buildDecorations(view);
         }
@@ -65,8 +63,9 @@ export const hr = () => {
         }
       },
       {
-        decorations: (v) => v.decorations,
+        decorations: (value) => value.decorations,
       },
     ),
+    styles,
   ];
 };
