@@ -30,7 +30,7 @@ const styles = EditorView.baseTheme({
     width: '100%',
   },
   '&light .cm-codeblock, &light .cm-codeblock.cm-activeLine': {
-    background: getToken('extend.colors.neutral.50'),
+    background: getToken('extend.colors.neutral.25'),
   },
   '&dark .cm-codeblock, &dark .cm-codeblock.cm-activeLine': {
     background: getToken('extend.colors.neutral.850'),
