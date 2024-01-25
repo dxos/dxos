@@ -290,7 +290,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   override _itemUpdate(): void {
-    if (this._updateDepth === 1) {
+    if (this._updateDepth <= 1) {
       super._itemUpdate();
       this._signal.notifyWrite();
     }

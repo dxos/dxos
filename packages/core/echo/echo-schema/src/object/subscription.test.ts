@@ -83,6 +83,18 @@ describe('create subscription', () => {
       task.nested.title = 'New title';
       expect(counter.value).to.equal(2);
     });
+
+    test('updates for array objects', async () => {
+      const { db } = await createDatabase();
+      const task = new Expando({ array: ['Test value'] });
+      db.add(task);
+
+      const counter = createUpdateCounter(task);
+
+      expect(counter.value).to.equal(1);
+      task.array[0] = 'New value';
+      expect(counter.value).to.equal(2);
+    });
   });
 });
 
