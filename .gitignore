@@ -136,6 +136,10 @@ build
 
 .nx
 
+# IntelliJ Plugin
+tools/intellij-plugin/.idea/
+tools/intellij-plugin/.gradle/
+tools/intellij-plugin/build/
+
 # Obsidian
 **/.obsidian**
-

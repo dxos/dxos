@@ -103,7 +103,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (intent.action) {
             case SketchAction.CREATE: {
               return {
-                object: new SketchType({
+                data: new SketchType({
                   data: getGlobalAutomergePreference() ? (new Expando() as any) : undefined,
                 }),
               };

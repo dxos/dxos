@@ -23,6 +23,7 @@ export default [
         'settings editor mode vim label': 'Vim',
         'settings markdown experimental label': 'Enable experimental features.',
         'settings markdown debug label': 'Enable debugging features.',
+        'settings markdown debug placeholder': 'Typewriter script...',
         'toggle view mode label': 'Toggle read-only',
       },
     },
