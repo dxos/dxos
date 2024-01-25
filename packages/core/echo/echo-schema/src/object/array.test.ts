@@ -99,6 +99,11 @@ describe('Arrays', () => {
       expect(task.tags.length).toEqual(0);
     });
 
+    test('isArray check passes', async () => {
+      const array = new EchoArray();
+      expect(Array.isArray(array)).toBeTruthy();
+    });
+
     test('importing arrays into a database', async () => {
       const { db } = await createDatabase();
 
