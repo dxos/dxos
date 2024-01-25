@@ -11,7 +11,14 @@ import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { type FC, type ReactNode, useState } from 'react';
 
-import { getSize, ghostHover, ghostSelected, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import {
+  getSize,
+  ghostHover,
+  ghostSelected,
+  ghostSelectedTrackingInterFromNormal,
+  mx,
+  surfaceElevation,
+} from '@dxos/react-ui-theme';
 
 import { List, ListItem, type ListProps, type ListScopedProps } from './List';
 import { withTheme } from '../../testing';
@@ -211,11 +218,11 @@ export const SelectableListbox = {
           <ListItem.Root
             key={id}
             selected={selectedId === id}
-            classNames={mx('items-center', ghostHover, selectedId === id && ghostSelected)}
+            classNames={mx('items-center', ghostHover, ghostSelected, ghostSelectedTrackingInterFromNormal)}
             onClick={() => setSelectedId(id)}
             onKeyUp={handleKeyUp}
           >
-            <ListItem.Heading classNames='grow'>{text}</ListItem.Heading>
+            <ListItem.Heading classNames='grow'>Lorem ipsum dolor sit amet</ListItem.Heading>
           </ListItem.Root>
         ))}
       </List>
