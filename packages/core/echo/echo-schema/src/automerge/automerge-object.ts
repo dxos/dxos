@@ -188,7 +188,7 @@ export class AutomergeObject implements TypedObjectProperties {
 
   [subscribe](callback: (value: AutomergeObject) => void): () => void {
     const listener = (event: DocHandleChangePayload<DocStructure>) => {
-      if (objectIsUpdated(this[base]._id, event)) {
+      if (objectIsUpdated(this._id, event)) {
         callback(this);
       }
     };
@@ -232,7 +232,7 @@ export class AutomergeObject implements TypedObjectProperties {
     this._database = options.db;
     this._docHandle = options.docHandle;
     this._docHandle.on('change', async (event) => {
-      if (objectIsUpdated(this[base]._id, event)) {
+      if (objectIsUpdated(this._id, event)) {
         // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
         //       Without it there was race condition in SpacePlugin on Folder creation.
         //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
@@ -603,6 +603,7 @@ const isValidKey = (key: string | symbol) => {
     key === 'toString' ||
     key === 'toJSON' ||
     key === 'id' ||
+    key === '_id' ||
     key === '__meta' ||
     key === '__schema' ||
     key === '__typename' ||
