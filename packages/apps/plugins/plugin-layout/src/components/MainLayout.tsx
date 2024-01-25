@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
-import { baseSurface, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
+import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { ContentFallback } from './ContentFallback';
 import { Fallback } from './Fallback';
@@ -16,10 +16,11 @@ import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
   fullscreen?: boolean;
+  showHintsFooter?: boolean;
   showComplementarySidebar?: boolean;
 };
 
-export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: MainLayoutProps) => {
+export const MainLayout = ({ fullscreen, showHintsFooter, showComplementarySidebar }: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
@@ -34,6 +35,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
 
   return (
     <Popover.Root
+      modal
       open={!!(popoverAnchorId && popoverOpen)}
       onOpenChange={(nextOpen) => {
         if (nextOpen && popoverAnchorId) {
@@ -64,7 +66,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface role='context' name='complementary' />
+            <Surface role='complementary' name='context' />
           </Main.ComplementarySidebar>
         )}
 
@@ -82,11 +84,9 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
                   <MenuIcon weight='light' className={getSize(4)} />
                 </Button>
 
-                <Surface role='heading' limit={2} />
+                <Surface role='navbar-start' />
                 <div role='none' className='grow' />
-
-                {/* TODO(burdon): Too specific? status? contentinfo? */}
-                <Surface role='presence' limit={1} />
+                <Surface role='navbar-end' direction='inline-reverse' />
 
                 {complementarySidebarOpen !== null && showComplementarySidebar && (
                   <Button
@@ -106,21 +106,27 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
           </div>
         </Main.Content>
 
-        {/* Status info. */}
-        {/* TODO(burdon): Currently covered by complementary sidebar. */}
-        <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]')}>
-          <Surface role='status' />
-        </div>
-
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
         {/* Main content surface. */}
-        {/* TODO(wittjosiah): Check if anything fulfills this Surface, if not, show 404. */}
         <Surface role='main' limit={1} fallback={Fallback} contentFallback={ContentFallback} />
 
+        {/* Status info. */}
+        {/* TODO(burdon): Currently obscured by complementary sidebar. */}
+        <div role='none' aria-label={t('status label')} className='fixed bottom-0 right-0 z-[1]'>
+          <Surface role='status' limit={1} />
+        </div>
+
+        {/* Help hints. */}
+        {/* TODO(burdon): Make surface roles/names fully-qualified. */}
+        {showHintsFooter && (
+          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
+            <Surface role='hints' limit={1} />
+          </div>
+        )}
+
         {/* Global popovers. */}
-        {/* TODO(burdon): Doesn't allow client to control the popover. */}
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'
@@ -135,30 +141,11 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
-
         {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
           <DensityProvider density='fine'>
             <Dialog.Overlay>
-              {/* TODO(burdon): Move (thure)[ProfileSettings dialog in particular] dialog to settings-plugin. */}
-              {dialogContent.component === 'dxos.org/plugin/layout/ProfileSettings' ? (
-                <Dialog.Content classNames='max-is-[32rem]'>
-                  <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
-                  {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
-                  <div className='mlb-4 space-b-4'>
-                    <Surface role='settings' data={dialogContent} />
-                  </div>
-                  <Dialog.Close asChild>
-                    <Button variant='primary' classNames='mbs-2'>
-                      {t('done label', { ns: 'os' })}
-                    </Button>
-                  </Dialog.Close>
-                </Dialog.Content>
-              ) : (
-                <Dialog.Content>
-                  <Surface role='dialog' data={dialogContent} />
-                </Dialog.Content>
-              )}
+              <Surface role='dialog' data={dialogContent} />
             </Dialog.Overlay>
           </DensityProvider>
         </Dialog.Root>

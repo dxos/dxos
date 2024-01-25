@@ -133,9 +133,14 @@ message SignPresentationRequest {
   optional bytes nonce = 2;
 }
 
+message CreateIdentityRequest {
+  optional halo.credentials.ProfileDocument profile = 1;
+  optional bool use_automerge = 2;
+}
+
 // TODO(wittjosiah): Align pluralization with other services.
 service IdentityService {
-  rpc CreateIdentity(halo.credentials.ProfileDocument) returns (Identity);
+  rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
@@ -200,10 +205,10 @@ message SpaceMember {
 /// Runtime state of the space object.
 enum SpaceState {
   ///
-  /// Persitent states.
+  /// Persistent states.
   ///
 
-  /// Space is inactive. No swarming or repication will be done.
+  /// Space is inactive. No swarming or replication will be done.
   INACTIVE = 2;
 
   /// Space is active. Swarming and replication will be done.
@@ -433,6 +438,9 @@ message Invitation {
 
   /// Authentication code created by host (only present if auth_method is SHARED_SECRET).
   optional string auth_code = 10;
+
+  /// Path or identifier to navigate to after successful authentication.
+  optional string target = 11;
 }
 
 message AuthenticationRequest {

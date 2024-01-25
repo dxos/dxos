@@ -1,13 +1,13 @@
 {
+  "name": "echo-generator",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/echo/echo-generator/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/core/echo/echo-generator/src/index.ts"
-        ],
+        "entryPoints": ["packages/core/echo/echo-generator/src/index.ts"],
         "injectGlobals": true
       }
     },
@@ -24,8 +24,5 @@
       }
     }
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

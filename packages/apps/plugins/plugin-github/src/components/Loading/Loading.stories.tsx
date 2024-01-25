@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { Loading } from './Loading';
 
 export default {
+  title: 'plugin-github/Loading',
   component: Loading,
   argTypes: {
     size: {

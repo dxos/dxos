@@ -1,4 +1,6 @@
 {
+  "name": "gravity-dashboard",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/gravity/gravity-dashboard/src",
   "projectType": "application",
   "targets": {

@@ -48,6 +48,9 @@
       "path": "../../../sdk/react-client"
     },
     {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../plugin-client"
     },
     {

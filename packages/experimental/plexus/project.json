@@ -1,25 +1,21 @@
 {
+  "name": "plexus",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/experimental/plexus/src",
   "projectType": "application",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/experimental/plexus/src/index.ts"
-        ]
+        "entryPoints": ["packages/experimental/plexus/src/index.ts"]
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
   },
-  "implicitDependencies": [
-    "test"
-  ]
+  "implicitDependencies": ["test"]
 }

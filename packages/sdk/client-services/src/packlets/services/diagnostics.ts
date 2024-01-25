@@ -49,6 +49,7 @@ export type Diagnostics = {
   swarms?: SwarmInfo[];
   feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
   metrics?: Metrics;
+  storage?: { file: string; count: number }[];
 };
 
 // TODO(burdon): Normalize for ECHO/HALO.
@@ -94,6 +95,23 @@ export const createDiagnostics = async (
     diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
       timeout: DEFAULT_TIMEOUT,
     }).catch(() => undefined);
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.storage) {
+    const map = new Map();
+    const dir = await navigator.storage.getDirectory();
+    for await (const filename of (dir as any)?.keys()) {
+      const idx = filename.indexOf('-', filename.indexOf('-') + 1);
+      if (idx === -1) {
+        continue;
+      }
+
+      map.set(filename.slice(0, idx), (map.get(filename.slice(0, idx)) ?? 0) + 1);
+    }
+
+    diagnostics.storage = Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([file, count]) => ({ file, count }));
   }
 
   const identity = serviceContext.identityManager.identity;

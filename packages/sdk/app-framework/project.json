@@ -1,25 +1,21 @@
 {
+  "name": "app-framework",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/app-framework/src",
   "projectType": "application",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/sdk/app-framework/src/index.ts"
-        ]
+        "entryPoints": ["packages/sdk/app-framework/src/index.ts"]
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
   },
-  "implicitDependencies": [
-    "test"
-  ]
+  "implicitDependencies": ["test"]
 }

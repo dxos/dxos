@@ -1,4 +1,6 @@
 {
+  "name": "examples",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "targets": {
     "build": {},
@@ -7,16 +9,12 @@
       "options": {
         "outputPath": "packages/sdk/examples/out/demo"
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "lint": {
       "options": {
         "format": "unix",
-        "lintFilePatterns": [
-          "packages/sdk/examples/**/*.{ts,tsx,js,jsx}"
-        ],
+        "lintFilePatterns": ["packages/sdk/examples/**/*.{ts,tsx,js,jsx}"],
         "quiet": true
       }
     },
@@ -25,9 +23,7 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": [
-        "packages/sdk/examples/src/proto/gen"
-      ]
+      "outputs": ["{projectRoot}/src/proto/gen"]
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
@@ -35,7 +31,5 @@
         "buildTarget": "examples:bundle"
       }
     }
-  },
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "root": "packages/sdk/examples"
+  }
 }

@@ -1,11 +1,11 @@
 {
+  "name": "cli",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/devtools/cli/src",
   "projectType": "application",
   "targets": {
     "bin": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "executor": "nx:run-script",
       "options": {
         "script": "bin"
@@ -15,9 +15,7 @@
       "options": {
         "main": "packages/devtools/cli/src/index.ts",
         "outputPath": "packages/devtools/cli/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/devtools/cli/tsconfig.json"
       }
     },
@@ -25,14 +23,9 @@
     "test": {
       "options": {
         "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

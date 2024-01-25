@@ -10,6 +10,7 @@ import {
   Agent,
   ChainPlugin,
   DashboardPlugin,
+  DiscordPlugin,
   EchoProxyPlugin,
   EpochMonitorPlugin,
   FunctionsPlugin,
@@ -17,9 +18,11 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
+import { getGlobalAutomergePreference } from '@dxos/client/echo';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
@@ -75,7 +78,7 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    // TODO(burdon): Option to start metrics recording (via config).
+    log.info('agent automerge preference', { automerge: getGlobalAutomergePreference() });
 
     this._agent = new Agent({
       config: this.clientConfig,
@@ -88,6 +91,7 @@ export default class Start extends BaseCommand<typeof Start> {
       plugins: [
         new ChainPlugin(),
         new DashboardPlugin(),
+        new DiscordPlugin(),
         new EchoProxyPlugin(),
         new EpochMonitorPlugin(),
         new FunctionsPlugin(),

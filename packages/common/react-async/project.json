@@ -1,13 +1,13 @@
 {
+  "name": "react-async",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/react-async/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/react-async/src/index.ts"
-        ]
+        "entryPoints": ["packages/common/react-async/src/index.ts"]
       }
     },
     "lint": {},
@@ -18,8 +18,5 @@
       }
     }
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

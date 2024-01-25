@@ -30,6 +30,9 @@
       "path": "../../../common/local-storage"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -57,6 +60,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../../types"
     },
     {
@@ -67,6 +73,9 @@
     },
     {
       "path": "../plugin-layout"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

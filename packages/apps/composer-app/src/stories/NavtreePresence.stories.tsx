@@ -1,12 +1,14 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Minus, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { ObjectPresence } from '@braneframe/plugin-space';
+import { SmallPresence } from '@braneframe/plugin-space';
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { GraphBuilder, isGraphNode, type ActionArg } from '@dxos/app-graph';
 import { buildGraph } from '@dxos/app-graph/testing';
@@ -97,7 +99,7 @@ export const Demo = {
                 // @ts-ignore
                 presence: ({ data: { object } }: { data: { object: any } }) => {
                   return (
-                    <ObjectPresence size={2} viewers={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
+                    <SmallPresence size={2} members={object?.viewers ?? []} classNames={[fineBlockSize, 'is-6']} />
                   );
                 },
               },
@@ -111,7 +113,9 @@ export const Demo = {
   },
 };
 
+// TODO(burdon): Move to react-ui-navtree?
 export default {
+  title: 'composer-app/StorybookNavtreePresence',
   component: StorybookNavtreePresence,
   decorators: [withTheme],
   parameters: { translations },

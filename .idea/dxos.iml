@@ -6,6 +6,9 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/core/protocols/proto" />
       <excludeFolder url="file://$MODULE_DIR$/coverage" />
       <excludeFolder url="file://$MODULE_DIR$/test-results" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/apps/composer-app/build" />
+      <excludeFolder url="file://$MODULE_DIR$/.nx" />
+      <excludeFolder url="file://$MODULE_DIR$/.swc" />
       <excludePattern pattern="gen" />
       <excludePattern pattern="out" />
       <excludePattern pattern="tmp" />

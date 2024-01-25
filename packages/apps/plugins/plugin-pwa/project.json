@@ -1,4 +1,6 @@
 {
+  "name": "plugin-pwa",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-pwa/src",
   "projectType": "library",
   "targets": {
@@ -9,17 +11,11 @@
           "packages/apps/plugins/plugin-pwa/src/index.ts",
           "packages/apps/plugins/plugin-pwa/src/meta.ts"
         ],
-        "ignorePackages": [
-          "virtual:pwa-register"
-        ],
-        "platforms": [
-          "browser"
-        ]
+        "ignorePackages": ["virtual:pwa-register"],
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

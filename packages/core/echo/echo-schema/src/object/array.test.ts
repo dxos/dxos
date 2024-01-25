@@ -7,8 +7,9 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
-import { Expando, TypedObject, getGlobalAutomergePreference } from './typed-object';
+import { Expando, TypedObject } from './typed-object';
 import { AutomergeArray } from '../automerge';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 import { createDatabase, testWithAutomerge } from '../testing';
 
 describe('Arrays', () => {
@@ -96,6 +97,11 @@ describe('Arrays', () => {
       task.tags = [];
       expect(task.tags instanceof ArrayConstructor).toBeTruthy();
       expect(task.tags.length).toEqual(0);
+    });
+
+    test('isArray check passes', async () => {
+      const array = new EchoArray();
+      expect(Array.isArray(array)).toBeTruthy();
     });
 
     test('importing arrays into a database', async () => {

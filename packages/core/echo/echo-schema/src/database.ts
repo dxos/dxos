@@ -61,7 +61,7 @@ export class EchoDatabase {
   }
 
   get objects(): EchoObject[] {
-    return Array.from(this._objects.values());
+    return [...this._objects.values(), ...this.automerge._objects.values()];
   }
 
   get graph() {
@@ -268,12 +268,12 @@ export class EchoDatabase {
     if (item.modelType === DocumentModel.meta.type) {
       const state = item.state as DocumentModelState;
       if (!state.type) {
-        return new TypedObject(undefined, { useAutomergeBackend: false });
+        return new TypedObject(undefined, { automerge: false });
       } else {
-        return new TypedObject(undefined, { type: state.type, useAutomergeBackend: false });
+        return new TypedObject(undefined, { type: state.type, automerge: false });
       }
     } else if (item.modelType === TextModel.meta.type) {
-      return new TextObject(undefined, undefined, undefined, { useAutomergeBackend: false });
+      return new TextObject(undefined, undefined, undefined, { automerge: false });
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;

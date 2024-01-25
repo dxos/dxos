@@ -10,7 +10,7 @@ import React, { type FC } from 'react';
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
-import { getSize, mx, inputSurface, focusRing } from '@dxos/react-ui-theme';
+import { getSize, mx, attentionSurface, focusRing } from '@dxos/react-ui-theme';
 
 import { KANBAN_PLUGIN } from '../meta';
 
@@ -44,18 +44,18 @@ export const KanbanCardComponent: FC<{
       style={{ transform: CSS.Transform.toString(tx), transition }}
       className={mx('flex grow', isDragging && 'border border-neutral-400 dark:border-neutral-800')}
     >
-      <div className={mx('flex items-start grow p-1', inputSurface, isDragging && 'opacity-10')}>
+      <div className={mx('flex items-start grow p-1', attentionSurface, isDragging && 'opacity-10')}>
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
         </button>
-        <div className='flex flex-col grow'>
+        <div className='flex flex-col grow pt-1'>
           {model && (
             <MarkdownEditor
               model={model}
+              placeholder={t('item title placeholder')}
               slots={{
                 root: { className: mx(focusRing, 'p-1') },
-                editor: { placeholder: t('item title placeholder') },
               }}
             />
           )}

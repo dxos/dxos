@@ -12,12 +12,12 @@ import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import {
-  type Hypergraph,
   EchoDatabase,
   forceUpdate,
   setStateFromSnapshot,
-  type TypedObject,
   type AutomergeContext,
+  type Hypergraph,
+  type TypedObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -35,6 +35,7 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 
 import { InvitationsProxy } from '../invitations';
 
+// TODO(burdon): This should not be used as part of the API (don't export).
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
 

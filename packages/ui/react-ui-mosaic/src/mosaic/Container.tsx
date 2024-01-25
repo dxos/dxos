@@ -11,6 +11,8 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
+
 import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
 import { type MosaicDataItem, type MosaicDraggedItem } from './types';
@@ -26,15 +28,15 @@ export const DEFAULT_TYPE = 'unknown';
 export type MosaicTileOverlayProps = {
   grow?: boolean;
   debug?: boolean;
+  itemContext?: Record<string, unknown>;
 };
 
 /**
- * Possible operations when dropping a tile.
- *
- * * `transfer` - Remove the tile from it's current path and move to a new path.
- * * `copy` - Add a clone of the tile at a new path.
- * * `rearrange` - Change the order of the tile within it's current path.
- * * `reject` - The tile is not allowed where it was dropped.
+ * Possible operations when dropping a tile:
+ * - `transfer` - Remove the tile from it's current path and move to a new path.
+ * - `copy` - Add a clone of the tile at a new path.
+ * - `rearrange` - Change the order of the tile within it's current path.
+ * - `reject` - The tile is not allowed where it was dropped.
  */
 // TODO(wittjosiah): Add 'delete'. Consider adding 'swap'.
 export const MosaicOperations = ['transfer', 'copy', 'rearrange', 'reject'] as const;
@@ -49,9 +51,8 @@ export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & 
   operation: MosaicOperation;
 };
 
-export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
-  HTMLAttributes<HTMLDivElement>,
-  'className'
+export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = ThemedClassName<
+  Omit<HTMLAttributes<HTMLElement>, 'onDrop'>
 > &
   PropsWithChildren<{
     id: string;

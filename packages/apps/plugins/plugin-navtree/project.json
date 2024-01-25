@@ -1,4 +1,6 @@
 {
+  "name": "plugin-navtree",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-navtree/src",
   "projectType": "library",
   "targets": {
@@ -9,14 +11,10 @@
           "packages/apps/plugins/plugin-navtree/src/index.ts",
           "packages/apps/plugins/plugin-navtree/src/meta.ts"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

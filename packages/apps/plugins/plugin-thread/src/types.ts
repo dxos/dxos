@@ -7,6 +7,7 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -24,7 +25,10 @@ export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides &
   TranslationsProvides;
+
+export type ThreadSettingsProps = { standalone?: boolean };
 
 export interface ThreadModel {
   root: ThreadType;

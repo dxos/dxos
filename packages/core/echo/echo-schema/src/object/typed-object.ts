@@ -25,7 +25,8 @@ import {
   type TypedObjectProperties,
   debug,
 } from './types';
-import { AutomergeObject } from '../automerge';
+import { AutomergeObject, REFERENCE_TYPE_TAG } from '../automerge';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 
@@ -47,6 +48,20 @@ const isValidKey = (key: string | symbol) => {
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
+
+/**
+ * @deprecated Temporary.
+ */
+export const isActualTypedObject = (object: unknown): object is TypedObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
+};
+
+/**
+ * @deprecated Temporary.
+ */
+export const isAutomergeObject = (object: unknown): object is AutomergeObject => {
+  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
+};
 
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
@@ -75,7 +90,7 @@ export type TypedObjectOptions = {
 } & AutomergeOptions;
 
 export type AutomergeOptions = {
-  useAutomergeBackend?: boolean;
+  automerge?: boolean;
 };
 
 /**
@@ -86,7 +101,7 @@ export type AutomergeOptions = {
  */
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
   static [Symbol.hasInstance](instance: any) {
-    return !!instance?.[base] && (isActualTypedObject(instance) || isActualAutomergeObject(instance));
+    return !!instance?.[base] && (isActualTypedObject(instance) || isAutomergeObject(instance));
   }
 
   /**
@@ -101,7 +116,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    if (opts?.automerge ?? getGlobalAutomergePreference()) {
       return new AutomergeObject(initialProps, opts) as any;
     }
 
@@ -132,7 +147,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
     if (this._schema) {
       for (const field of this._schema.props) {
         if (field.repeated) {
-          this._set(field.id!, new EchoArray([], { useAutomergeBackend: false }));
+          this._set(field.id!, new EchoArray([], { automerge: false }));
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { TextObject } = require('./text-object');
@@ -235,7 +250,12 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description
    */
   toJSON() {
-    return this[base]._convert();
+    return this[base]._convert({
+      onRef: (id, obj) => ({
+        '@type': REFERENCE_TYPE_TAG,
+        itemId: id,
+      }),
+    });
   }
 
   /**
@@ -301,11 +321,20 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   private _convert(visitors: ConvertVisitors = {}) {
+    const typeRef = this[base]._getState().type;
     return {
+      // TODO(mykola): Delete backend (for debug).
+      '@backend': 'hypercore',
       '@id': this.id,
       // TODO(mykola): Secondary path is non reachable.
-      '@type': this.__typename ?? (this.__schema ? { '@id': this.__schema!.id } : undefined),
-      // '@schema': this.__schema,
+      '@type': typeRef
+        ? {
+            '@type': REFERENCE_TYPE_TAG,
+            itemId: typeRef.itemId,
+            protocol: typeRef.protocol,
+            host: typeRef.host,
+          }
+        : undefined,
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
@@ -349,7 +378,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray([], { useAutomergeBackend: false })._attach(this[base], key, meta);
+        return new EchoArray([], { automerge: false })._attach(this[base], key, meta);
       default:
         return value;
     }
@@ -384,7 +413,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
           if (item instanceof AbstractEchoObject) {
             return this._linkObject(item);
           } else if (isReferenceLike(item)) {
+            // Old reference format.
             return new Reference(item['@id']);
+          } else if (typeof item === 'object' && item !== null && item['@type'] === REFERENCE_TYPE_TAG) {
+            return new Reference(item.itemId, item.protocol, item.host);
           } else {
             return item;
           }
@@ -398,7 +430,13 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       } else if (typeof value === 'object' && value !== null) {
         if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
           // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+          // Old reference format.
           this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
+        } else if (value['@type'] === REFERENCE_TYPE_TAG) {
+          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+          this._mutate(
+            this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
+          );
         } else {
           const sub = this._createProxy({}, key);
           this._mutate(this._model.builder().set(key, {}).build(meta));
@@ -645,40 +683,4 @@ const getSchemaProto = (): typeof Schema => {
   }
 
   return schemaProto;
-};
-
-// TODO(dmaretskyi): Remove once migration is complete.
-let globalAutomergePreference: boolean | undefined;
-
-/**
- * @deprecated Temporary.
- */
-export const setGlobalAutomergePreference = (useAutomerge: boolean) => {
-  globalAutomergePreference = useAutomerge;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const getGlobalAutomergePreference = () => {
-  return (
-    globalAutomergePreference ??
-    (globalThis as any).DXOS_FORCE_AUTOMERGE ??
-    (globalThis as any).process?.env?.DXOS_FORCE_AUTOMERGE ??
-    false
-  );
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isActualTypedObject = (object: unknown): object is TypedObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === TypedObject.prototype;
-};
-
-/**
- * @deprecated Temporary.
- */
-export const isActualAutomergeObject = (object: unknown): object is AutomergeObject => {
-  return !!(object as any)?.[base] && Object.getPrototypeOf((object as any)[base]) === AutomergeObject.prototype;
 };

@@ -1,4 +1,6 @@
 {
+  "name": "plugin-grid",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-grid/src",
   "projectType": "library",
   "targets": {
@@ -9,14 +11,10 @@
           "packages/apps/plugins/plugin-grid/src/index.ts",
           "packages/apps/plugins/plugin-grid/src/meta.tsx"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

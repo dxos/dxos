@@ -1,9 +1,10 @@
 {
+  "name": "process",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/process/src",
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/process/src/index.ts",
         "outputPath": "packages/common/process/dist",
@@ -11,17 +12,12 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
       "options": {
         "format": "unix",
-        "lintFilePatterns": [
-          "packages/common/process/src/**/*.{ts,js,tsx,jsx}"
-        ],
+        "lintFilePatterns": ["packages/common/process/src/**/*.{ts,js,tsx,jsx}"],
         "quiet": true
       },
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

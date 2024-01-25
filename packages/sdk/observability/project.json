@@ -1,39 +1,16 @@
 {
+  "name": "observability",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/observability/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "options": {
-        "main": "packages/sdk/observability/src/index.ts",
-        "outputPath": "packages/sdk/observability/dist/types",
-        "tsConfig": "packages/sdk/observability/tsconfig.json"
-      }
-    },
+    "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/sdk/observability/src/datadog/index.ts",
-          "packages/sdk/observability/src/index.ts"
-        ],
-        "outputPath": "packages/sdk/observability/dist/lib",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/sdk/observability/tsconfig.json"
+        "entryPoints": ["packages/sdk/observability/src/datadog/index.ts", "packages/sdk/observability/src/index.ts"]
       }
     },
-    "lint": {
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/sdk/observability/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "inputs": [
@@ -58,13 +35,8 @@
       "options": {
         "script": "api-keys"
       },
-      "outputs": [
-        "packages/sdk/observability/src/cli-observability-secrets.json"
-      ]
+      "outputs": ["{projectRoot}/src/cli-observability-secrets.json"]
     }
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

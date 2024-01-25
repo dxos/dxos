@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { type IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
 
 //
@@ -13,17 +14,19 @@ import type { Plugin } from '../PluginHost';
 /**
  * Basic state provided by a layout plugin.
  */
+// TODO(burdon): Josiah: why do we use zod here?
 export const Layout = z.object({
   fullscreen: z.boolean(),
   sidebarOpen: z.boolean(),
   complementarySidebarOpen: z.boolean(),
 
-  dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
+  // TODO(burdon): Why do we have a single root?
   dialogOpen: z.boolean(),
+  dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
 
-  popoverAnchorId: z.string().optional(),
-  popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
   popoverOpen: z.boolean(),
+  popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
+  popoverAnchorId: z.string().optional(),
 
   // TODO(wittjosiah): Array?
   active: z.string().optional().describe('Id of the currently active item.'),
@@ -52,7 +55,7 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 // Intents
 //
 
-const LAYOUT_ACTION = 'dxos.org/plugin/intent';
+const LAYOUT_ACTION = 'dxos.org/plugin/layout';
 // TODO(wittjosiah): Consider consolidating some action types (e.g. toggle).
 export enum LayoutAction {
   TOGGLE_FULLSCREEN = `${LAYOUT_ACTION}/toggle-fullscreen`,
@@ -63,40 +66,41 @@ export enum LayoutAction {
   OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
   CLOSE_POPOVER = `${LAYOUT_ACTION}/close-popover`,
   ACTIVATE = `${LAYOUT_ACTION}/activate`,
+  FOCUS = `${LAYOUT_ACTION}/focus`,
 }
 
 /**
  * Expected payload for layout actions.
  */
 export namespace LayoutAction {
-  export type ToggleFullscreen = {
+  export type ToggleFullscreen = IntentData<{
     state?: boolean;
-  };
+  }>;
 
-  export type ToggleSidebar = {
+  export type ToggleSidebar = IntentData<{
     state?: boolean;
-  };
+  }>;
 
-  export type ToggleComplementarySidebar = {
+  export type ToggleComplementarySidebar = IntentData<{
     state?: boolean;
-  };
+  }>;
 
-  export type OpenDialog = {
+  export type OpenDialog = IntentData<{
     component: string;
     subject: any;
-  };
+  }>;
 
-  export type CloseDialog = {};
+  export type CloseDialog = IntentData<{}>;
 
-  export type OpenPopover = {
+  export type OpenPopover = IntentData<{
     anchorId: string;
     component: string;
     subject: any;
-  };
+  }>;
 
-  export type ClosePopover = {};
+  export type ClosePopover = IntentData<{}>;
 
-  export type Activate = {
+  export type Activate = IntentData<{
     id: string;
-  };
+  }>;
 }

@@ -1,4 +1,6 @@
 {
+  "name": "client-services",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/sdk/client-services/src",
   "projectType": "library",
   "targets": {
@@ -16,11 +18,7 @@
     "test": {
       "options": {
         "checkLeaks": false,
-        "ciEnvironments": [
-          "chromium",
-          "firefox",
-          "nodejs"
-        ],
+        "ciEnvironments": ["chromium", "firefox", "nodejs"],
         "envVariables": {
           "SIGNAL_PORT": 12004
         },
@@ -32,8 +30,5 @@
       }
     }
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

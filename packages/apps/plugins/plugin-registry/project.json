@@ -1,4 +1,6 @@
 {
+  "name": "plugin-registry",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-registry/src",
   "projectType": "library",
   "targets": {
@@ -9,9 +11,7 @@
           "packages/apps/plugins/plugin-registry/src/index.ts",
           "packages/apps/plugins/plugin-registry/src/meta.ts"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {},
@@ -21,7 +21,5 @@
       }
     }
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

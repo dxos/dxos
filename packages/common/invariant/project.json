@@ -1,19 +1,16 @@
 {
+  "name": "invariant",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/common/invariant/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/invariant/src/index.ts"
-        ]
+        "entryPoints": ["packages/common/invariant/src/index.ts"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

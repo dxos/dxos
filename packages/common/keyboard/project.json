@@ -1,0 +1,18 @@
+{
+  "name": "keyboard",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/common/keyboard/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": ["packages/common/keyboard/src/index.ts"],
+        "injectGlobals": true
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": ["esbuild", "test"]
+}

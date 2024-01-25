@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FC } from 'react';
+import { type FC, type RefAttributes } from 'react';
 
 import {
   MosaicContainer,
@@ -24,6 +24,7 @@ import {
   type MosaicTileProps as NaturalMosaicTileProps,
   type MosaicTileComponent as NaturalMosaicTileComponent,
   type MosaicActiveType as NaturalMosaicActiveType,
+  type MosaicTileComponentProps as NaturalMosaicTileComponentProps,
 } from './Tile';
 import { type MosaicDataItem } from './types';
 
@@ -46,7 +47,7 @@ export const Mosaic = {
   DragOverlay: FC<MosaicOverlayProps>;
   SortableContext: FC<MosaicSortableProps>;
   DraggableTile: FC<MosaicTileProps<any, any>>;
-  DroppableTile: FC<MosaicTileProps<any, any>>;
+  DroppableTile: FC<RefAttributes<HTMLDivElement> & MosaicTileProps<any, any>>;
   SortableTile: FC<MosaicTileProps<any, number>>;
 
   DefaultComponent: MosaicTileComponent;
@@ -74,7 +75,11 @@ export type MosaicTileProps<
 export type MosaicTileComponent<
   TData extends MosaicDataItem = MosaicDataItem,
   TElement extends HTMLElement = HTMLDivElement,
-> = NaturalMosaicTileComponent<TData, TElement>;
+  TProps = {},
+> = NaturalMosaicTileComponent<TData, TElement, TProps>;
+
+export type MosaicTileComponentProps<TData extends MosaicDataItem = MosaicDataItem> =
+  NaturalMosaicTileComponentProps<TData>;
 
 export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosition>;
 export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;

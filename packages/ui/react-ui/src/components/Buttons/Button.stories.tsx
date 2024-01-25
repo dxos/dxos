@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { type PropsWithChildren } from 'react';
 
-import { chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { modalSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
 import { withTheme } from '../../testing';
@@ -15,7 +15,7 @@ import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 
 export default {
-  title: 'DXOS UI/Button',
+  title: 'react-ui/Button',
   component: Button,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
@@ -46,7 +46,7 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
       role='group'
       className={mx(
         'flex flex-col gap-4 mbe-4 p-4 rounded-lg',
-        chromeSurface,
+        modalSurface,
         surfaceElevation({ elevation: 'chrome' }),
       )}
     >

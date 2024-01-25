@@ -1,21 +1,26 @@
 {
+  "name": "react-ui-stack",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/ui/react-ui-stack/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/ui/react-ui-stack/src/index.ts"
-        ],
-        "platforms": [
-          "browser"
-        ]
+        "entryPoints": ["packages/ui/react-ui-stack/src/index.ts", "packages/ui/react-ui-stack/src/testing/index.ts"],
+        "platforms": ["browser"]
+      }
+    },
+    "e2e": {
+      "options": {
+        "playwrightConfigPath": "packages/ui/react-ui-stack/src/playwright/playwright.config.ts",
+        "serve": "stories:storybook-e2e",
+        "testPatterns": ["packages/ui/react-ui-stack/src/playwright/**/*.spec.{ts,js}"],
+        "timeout": 60000,
+        "watchPatterns": ["packages/ui/react-ui-stack/src/**/*"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

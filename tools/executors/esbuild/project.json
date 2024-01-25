@@ -1,4 +1,6 @@
 {
+  "name": "esbuild",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
     "compile": {
@@ -6,15 +8,11 @@
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",
         "outputPath": "tools/executors/esbuild/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "tools/executors/esbuild/tsconfig.json"
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "log-hook"
-  ]
+  "implicitDependencies": ["log-hook"]
 }

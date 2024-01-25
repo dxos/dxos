@@ -4,6 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type AdmissionRequest,
@@ -46,6 +47,17 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
+  checkInvitation(invitation: Partial<Invitation>) {
+    try {
+      const identity = this._getIdentity();
+      if (identity) {
+        return new AlreadyJoinedError('Currently only one identity per client is supported.');
+      }
+    } catch {
+      // No identity.
+    }
+  }
+
   createIntroduction(): IntroductionRequest {
     return {};
   }
@@ -70,6 +82,8 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
 
     invariant(request.device);
     const { deviceKey, controlFeedKey, dataFeedKey } = request.device;
+
+    // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
 
     await this._acceptIdentity({
       identityKey,

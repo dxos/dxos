@@ -1,7 +1,14 @@
 {
+  "name": "create",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/devtools/initializers/create/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "options": {
+        "outputPath": "packages/devtools/initializers/create/dist"
+      }
+    },
     "lint": {}
   }
 }

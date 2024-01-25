@@ -2,5 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './awareness-provider';
+export * from './defs';
+
+export * from './useTextEditor';
 export * from './useTextModel';
-export * from './yjs';

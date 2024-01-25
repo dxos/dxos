@@ -1,4 +1,6 @@
 {
+  "name": "tasks-template",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/templates/tasks-template/src",
   "projectType": "library",
   "targets": {
@@ -11,11 +13,14 @@
     },
     "lint": {},
     "test": {
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ],
+        "ciEnvironments": ["nodejs"],
         "forceExit": true
       }
     }

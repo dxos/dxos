@@ -19,7 +19,7 @@ export default template.define.script({
       force: true,
       include: [
         '@dxos/client',
-        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/react-ui', '@dxos/react-ui-theme'," : ''}
+        ${react ? "'@dxos/react-client', '@dxos/react-ui', '@dxos/react-ui-theme'," : ''}
         '@dxos/config'
       ],
       esbuildOptions: {
@@ -45,25 +45,28 @@ export default template.define.script({
         ]
       }
     },
+    worker: {
+      format: 'es',
+      plugins: () => [topLevelAwait(), wasm()],
+    },
     `;
     // TODO(wittjosiah): Why is target esnext needed here but not composer?
     //  Why does dev server target need to be set to the default?
     //  https://github.com/vitejs/vite/issues/13756#issuecomment-1646981372
     const basicConfig = plate`
-    optimizeDeps: {
-      esbuildOptions: {
-        target: 'esnext',
-      },
-    },
     build: {
-      target: 'esnext',
       outDir: 'out/${name}'
+    },
+    worker: {
+      format: 'es',
+      plugins: () => [topLevelAwait(), wasm()],
     },
     `;
     return /* javascript */ plate`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
-  import { VaultPlugin } from '@dxos/vault/vite-plugin';
+  import topLevelAwait from 'vite-plugin-top-level-await';
+  import wasm from 'vite-plugin-wasm';
   ${imports}
 
   // https://vitejs.dev/config/
@@ -73,8 +76,9 @@ export default template.define.script({
     },
     ${input.monorepo ? monorepoConfig : basicConfig}
     plugins: [
-      VaultPlugin(),
       ConfigPlugin(),
+      topLevelAwait(),
+      wasm(),
       ${react
         // https://github.com/preactjs/signals/issues/269
         ?`${reactPlugin()}({ jsxRuntime: 'classic' }),`
@@ -89,8 +93,7 @@ export default template.define.script({
             dxosUi &&
             plate`
           ${resolve}(__dirname, 'node_modules/@dxos/react-ui/dist/**/*.mjs'),
-          ${resolve}(__dirname, 'node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
-          ${resolve}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
+          ${resolve}(__dirname, 'node_modules/@dxos/react-ui-theme/dist/**/*.mjs')`
           }
         ]
       }),`

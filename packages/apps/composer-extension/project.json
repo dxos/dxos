@@ -1,4 +1,6 @@
 {
+  "name": "composer-extension",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/composer-extension/src",
   "projectType": "application",
   "targets": {
@@ -42,15 +44,11 @@
       "options": {
         "script": "bundle"
       },
-      "outputs": [
-        "packages/apps/composer-extension/out/composer-extension"
-      ]
+      "outputs": ["{projectRoot}/out/composer-extension"]
     },
     "lint": {},
     "serve": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [

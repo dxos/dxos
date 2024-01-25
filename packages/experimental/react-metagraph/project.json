@@ -1,19 +1,16 @@
 {
+  "name": "react-metagraph",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/experimental/react-metagraph/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/experimental/react-metagraph/src/index.ts"
-        ]
+        "entryPoints": ["packages/experimental/react-metagraph/src/index.ts"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

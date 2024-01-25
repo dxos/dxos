@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import type { TypedObject } from '@dxos/react-client/echo';
+import { type TypedObject, getTextContent } from '@dxos/react-client/echo';
 import { DropdownMenu, Input } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -20,7 +20,7 @@ export type WildcardProps = {
 //  JSON view can be an advanced secondary view behind an info button.
 export const Wildcard: MosaicTileComponent<any> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, object }, grow, debug, onSelect, onAction },
+    { classNames, isDragging, draggableStyle, draggableProps, item: { id, object }, grow, debug, onSelect, onAction },
     forwardRef,
   ) => {
     if (!object) {
@@ -28,7 +28,9 @@ export const Wildcard: MosaicTileComponent<any> = forwardRef(
     }
 
     // TODO(burdon): Parse schema.
-    const label = object.title ?? object.label ?? object.name ?? object.id;
+    const label = getTextContent(object.title ?? object.label ?? object.name);
+    const content = getTextContent(object.description ?? object.content);
+
     const handleSetLabel = (label: string) => {
       if (object.title) {
         object.title = label;
@@ -39,11 +41,9 @@ export const Wildcard: MosaicTileComponent<any> = forwardRef(
       }
     };
 
-    const content = object.description?.text ?? object.content?.text;
-
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
-        <Card.Root classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')} grow={grow}>
+        <Card.Root classNames={mx('w-full snap-center', isDragging && 'opacity-20', classNames)} grow={grow}>
           <Card.Header onDoubleClick={() => onSelect?.()}>
             <Card.DragHandle {...draggableProps} />
             {label && (

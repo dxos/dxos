@@ -1,4 +1,6 @@
 {
+  "name": "composer-app",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/composer-app/src",
   "projectType": "library",
   "targets": {
@@ -6,9 +8,7 @@
       "options": {
         "main": "packages/apps/composer-app/src/index.ts",
         "outputPath": "packages/apps/composer-app/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/apps/composer-app/tsconfig.json"
       }
     },
@@ -17,23 +17,14 @@
       "options": {
         "outputPath": "packages/apps/composer-app/out/composer"
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
-        "serve": "composer-app:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
-        "testPatterns": [
-          "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/composer-app/src/**/*"
-        ]
+        "serve": "composer-app:preview",
+        "testPatterns": ["packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"],
+        "watchPatterns": ["packages/apps/composer-app/src/**/*"]
       }
     },
     "lint": {},
@@ -50,11 +41,18 @@
         "buildTarget": "composer-app:bundle"
       }
     },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
-    }
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/composer-app/.storybook"
+      }
+    },
+    "test": {}
   },
-  "implicitDependencies": [
-    "serve-with-vault"
-  ]
+  "implicitDependencies": ["test"]
 }

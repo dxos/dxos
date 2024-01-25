@@ -15,5 +15,13 @@ DATADOG_API_KEY:
   type: string
 
 DATADOG_PROXY:
-  path: runtime.app.env.DX_DATADOG_PROXY
+  path: runtime.app.env.DX_DATADOG_P
+  type: string
+
+AGENT_HOSTING_TYPE:
+  path: runtime.services.agentHosting.type
+  type: string
+
+AGENT_HOSTING_SERVER:
+  path: runtime.services.agentHosting.server
   type: string

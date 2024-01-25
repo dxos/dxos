@@ -45,17 +45,17 @@ pnpm watch
 
 > Run watch alongside a vite dev server to get monorepo-wide hot module reloading
 
-## Run commands:
+## Run commands
 
 Examples of ways to start up different workloads in dev mode:
 | Command | Description |
 | :-- | :-- |
 | `pnpm nx serve halo-app` | Runs the `halo` app in dev mode |
-| `pnpm nx serve-with-vault tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
-| `pnpm nx serve-with-vault composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
+| `pnpm nx serve tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
+| `pnpm nx serve composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
 | `pnpm nx serve docs` | Runs the `docs` vuepress app in dev mode |
 
-## Test commands:
+## Test commands
 
 Examples of ways to run different test workloads:
 | Command | Description |
@@ -68,6 +68,14 @@ Examples of ways to run different test workloads:
 | `pnpm nx e2e halo-app` | Runs the playwright tests for `halo-app` |
 | `pnpm nx e2e halo-app --inspect` | Runs tests with playwright inspector |
 
+## Storybooks
+
+The following command generates storybooks across the individual packages:
+
+```bash
+pnpm nx storybook stories
+```
+
 ### Playwright
 
 Playwright tests are written using these [guidelines](./tools/executors/test/PLAYWRIGHT.md).
@@ -78,6 +86,14 @@ Currently, you must manually edit the individual `package.json` files to add pac
 When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.
 
 Once the required changes have been made, re-run `pnpm i`.
+
+## Updating dependencies
+
+Run `pnpm up` to update dependencies from the root directory. For example:
+
+```bash
+pnpm up --latest -i -r "@codemirror/*"
+```
 
 ## Tasks in `nx` targets
 
@@ -195,7 +211,6 @@ Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branc
 | `rc-*`       | release branches created from main and to merge with `production` or `stating`        |
 | `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
 
-
 ## Formatting and linting
 
 Formatting is done by `prettier` and linting by `eslint`. Passing lint is required to merge to `main`.
@@ -229,28 +244,6 @@ More custom shell aliases can be included in your shell config via:
 ```bash
 source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
 ```
-
-## Storybook
-
-Start a storybook dev server for any project:
-
-```bash
-pnpm nx run project:storybook
-```
-
-If you see the following error:
-
-```
-Cannot GET /` when running 'pnpm nx run project:storybook'
-```
-
-Solution:
-
-```bash
-pnpm nx run project:storybook --no-manager-cache
-```
-
-[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
 
 ## Mobile development
 

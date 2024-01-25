@@ -137,7 +137,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         resolver: (intent, plugins) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { object: new ScriptType({ source: new TextObject(example) }) };
+              return { data: new ScriptType({ source: new TextObject(example) }) };
             }
           }
         },

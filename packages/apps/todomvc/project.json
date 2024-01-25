@@ -1,4 +1,6 @@
 {
+  "name": "todomvc",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/todomvc/src",
   "projectType": "library",
   "targets": {
@@ -6,34 +8,24 @@
       "options": {
         "main": "packages/apps/todomvc/src/index.ts",
         "outputPath": "packages/apps/todomvc/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/apps/todomvc/tsconfig.json"
       }
     },
     "bundle": {
+      "dependsOn": ["^build", "^bundle", "prebuild"],
       "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/todomvc/out/todomvc"
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
-        "serve": "todomvc:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
-        "testPatterns": [
-          "packages/apps/todomvc/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/todomvc/src/**/*"
-        ]
+        "serve": "todomvc:preview",
+        "testPatterns": ["packages/apps/todomvc/src/playwright/**/*.spec.{ts,js}"],
+        "watchPatterns": ["packages/apps/todomvc/src/**/*"]
       }
     },
     "lint": {},
@@ -42,9 +34,7 @@
       "options": {
         "script": "prebuild"
       },
-      "outputs": [
-        "packages/apps/todomvc/src/proto/gen"
-      ]
+      "outputs": ["{projectRoot}/src/proto/gen"]
     },
     "preview": {
       "executor": "@nx/web:file-server",
@@ -58,12 +48,6 @@
       "options": {
         "buildTarget": "todomvc:bundle"
       }
-    },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
     }
-  },
-  "implicitDependencies": [
-    "serve-with-vault"
-  ]
+  }
 }

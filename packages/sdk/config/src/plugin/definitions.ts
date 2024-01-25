@@ -47,12 +47,18 @@ export const definitions = ({
 
         if (key === '__CONFIG_DEFAULTS__') {
           // Load app environment variables into default config.
-          env?.map((key) => set(content, ['runtime', 'app', 'env', key], process.env[key]));
+          Object.entries(process.env).forEach(([key, value]) => {
+            if (key.startsWith('DX_') || env?.includes(key)) {
+              set(content, ['runtime', 'app', 'env', key], value);
+            }
+          });
 
           // Set build info automatically if available.
           try {
             const timestamp = new Date().toISOString();
-            const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).replace('\n', '');
+            const commitHash =
+              process.env.DX_COMMIT_HASH ??
+              execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).replace('\n', '');
             const packagePath = pkgUp.sync();
             const packageJson = packagePath && JSON.parse(readFileSync(packagePath, 'utf-8'));
             set(content, ['runtime', 'app', 'build', 'timestamp'], timestamp);

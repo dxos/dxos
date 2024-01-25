@@ -1,4 +1,6 @@
 {
+  "name": "plugin-presenter",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/plugins/plugin-presenter/src",
   "projectType": "library",
   "targets": {
@@ -9,14 +11,10 @@
           "packages/apps/plugins/plugin-presenter/src/index.ts",
           "packages/apps/plugins/plugin-presenter/src/meta.tsx"
         ],
-        "platforms": [
-          "browser"
-        ]
+        "platforms": ["browser"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

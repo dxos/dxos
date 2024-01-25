@@ -1,30 +1,22 @@
 {
+  "name": "teleport-extension-automerge-replicator",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/core/mesh/teleport-extension-automerge-replicator/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/core/mesh/teleport-extension-automerge-replicator/src/index.ts"
-        ],
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "entryPoints": ["packages/core/mesh/teleport-extension-automerge-replicator/src/index.ts"],
+        "platforms": ["browser", "node"]
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
     }
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
@@ -32,7 +32,7 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@faker-js/faker": "^8.0.2"
+    "@faker-js/faker": "^8.3.1"
   },
   "publishConfig": {
     "access": "public"

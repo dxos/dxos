@@ -6,10 +6,12 @@ import { File as FileIcon, FloppyDisk, Folder, Plugs, X } from '@phosphor-icons/
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type DispatchIntent } from '@dxos/app-framework';
+import { type IntentDispatcher } from '@dxos/app-framework';
 
-import { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID } from './meta';
+import { FILES_PLUGIN } from './meta';
 import { type LocalDirectory, type LocalEntity, type LocalFile, LocalFilesAction } from './types';
+
+export const PREFIX = 'fs';
 
 export const isLocalFile = (data: unknown): data is LocalFile =>
   data && typeof data === 'object' ? 'title' in data && 'handle' in data : false;
@@ -22,7 +24,7 @@ export const handleToLocalDirectory = async (
   const childrenPath = path.length > 0 ? `${path}:${handle.name}` : handle.name;
   const children = permission === 'granted' ? await getDirectoryChildren(handle, childrenPath) : [];
   return {
-    id: `${FILES_PLUGIN_SHORT_ID}:${path}${handle.name.replaceAll(/\./g, '-')}`,
+    id: `${PREFIX}:${path}${handle.name.replaceAll(/\./g, '-')}`,
     title: handle.name,
     handle,
     permission,
@@ -35,7 +37,7 @@ export const handleToLocalFile = async (handle: any /* FileSystemFileHandle */, 
   const text = permission === 'granted' ? await handle.getFile().then((file: any) => file.text()) : undefined;
   path = path.length > 0 ? `${path}:` : path;
   return {
-    id: `${FILES_PLUGIN_SHORT_ID}:${path}${handle.name.replaceAll(/\./g, '-')}`,
+    id: `${PREFIX}:${path}${handle.name.replaceAll(/\./g, '-')}`,
     title: handle.name,
     handle,
     permission,
@@ -54,7 +56,7 @@ export const legacyFileToLocalFile = async (file: File): Promise<LocalFile> => {
   });
 
   return {
-    id: `${FILES_PLUGIN_SHORT_ID}:${file.name.replaceAll(/\.| /g, '-')}`,
+    id: `${PREFIX}:${file.name.replaceAll(/\.| /g, '-')}`,
     title: file.name,
     handle: false,
     permission: 'granted',
@@ -113,7 +115,7 @@ const handleLegacySave = (file: LocalFile) => {
   document.body.removeChild(a);
 };
 
-export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispatch: DispatchIntent) => {
+export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispatch: IntentDispatcher) => {
   if ('children' in entity) {
     return localDirectoryToGraphNode(entity, parent, dispatch);
   } else {
@@ -124,7 +126,7 @@ export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispat
 const localDirectoryToGraphNode = (
   directory: LocalDirectory,
   parent: Node<LocalDirectory>,
-  dispatch: DispatchIntent,
+  dispatch: IntentDispatcher,
 ) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: directory.id,
@@ -168,7 +170,7 @@ const localDirectoryToGraphNode = (
   return node;
 };
 
-const localFileToGraphNode = (file: LocalFile, parent: Node<LocalDirectory>, dispatch: DispatchIntent) => {
+const localFileToGraphNode = (file: LocalFile, parent: Node<LocalDirectory>, dispatch: IntentDispatcher) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: file.id,
     label: file.title,

@@ -5,11 +5,14 @@
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { withLogical } from './withLogical';
+import { semanticColors } from '../config/colors';
+
+const semanticColorClasses = Object.keys(semanticColors);
 
 export const mx = extendTailwindMerge(
   {
     classGroups: {
-      fontFamily: ['font-body', 'font-display', 'font-mono'],
+      fontFamily: ['font-body', 'font-mono'],
       fontWeight: [
         // App weights
         'font-thin',
@@ -21,19 +24,12 @@ export const mx = extendTailwindMerge(
         'font-bold',
         'font-extrabold',
         'font-black',
-        // OS weights
-        'font-system-thin',
-        'font-system-extralight',
-        'font-system-light',
-        'font-system-normal',
-        'font-system-medium',
-        'font-system-semibold',
-        'font-system-bold',
-        'font-system-extrabold',
-        'font-system-black',
         // Arbitrary numbers
         validators.isArbitraryNumber,
       ],
+      foreground: semanticColorClasses.map((value) => `fg-${value}`),
+      surface: semanticColorClasses.map((value) => `surface-${value}`),
+      separator: semanticColorClasses.map((value) => `separator-${value}`),
     },
   },
   withLogical,

@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -42,7 +45,13 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

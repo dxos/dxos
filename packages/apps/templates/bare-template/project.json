@@ -1,9 +1,10 @@
 {
+  "name": "bare-template",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/apps/templates/bare-template/src",
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/apps/templates/bare-template/src/config.t.ts",
         "outputPath": "packages/apps/templates/bare-template/dist",
@@ -15,17 +16,13 @@
       "options": {
         "script": "gen"
       },
-      "outputs": [
-        "packages/apps/templates/bare-template/test/variants"
-      ]
+      "outputs": ["{projectRoot}/test/variants"]
     },
     "lint": {},
     "test": {
       "options": {
         "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ],
+        "ciEnvironments": ["nodejs"],
         "forceExit": true
       }
     }

@@ -1,54 +1,36 @@
 {
+  "name": "stories",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/stories/src",
   "projectType": "library",
   "targets": {
     "chromatic": {
-      "dependsOn": [
-        "chromatic-shell",
-        "chromatic-ui"
-      ],
+      "dependsOn": ["chromatic-examples", "chromatic-shell", "chromatic-ui"],
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "true"
-        ]
+        "commands": ["true"]
       }
     },
     "chromatic-examples": {
-      "dependsOn": [
-        "storybook-build-examples"
-      ],
+      "dependsOn": ["storybook-build-examples"],
       "executor": "nx:run-script",
-      "inputs": [
-        "^production",
-        "production"
-      ],
+      "inputs": ["^production", "production"],
       "options": {
         "script": "chromatic-examples"
       }
     },
     "chromatic-shell": {
-      "dependsOn": [
-        "storybook-build-shell"
-      ],
+      "dependsOn": ["storybook-build-shell"],
       "executor": "nx:run-script",
-      "inputs": [
-        "^production",
-        "production"
-      ],
+      "inputs": ["^production", "production"],
       "options": {
         "script": "chromatic-shell"
       }
     },
     "chromatic-ui": {
-      "dependsOn": [
-        "storybook-build-ui"
-      ],
+      "dependsOn": ["storybook-build-ui"],
       "executor": "nx:run-script",
-      "inputs": [
-        "^production",
-        "production"
-      ],
+      "inputs": ["^production", "production"],
       "options": {
         "script": "chromatic-ui"
       }
@@ -101,17 +83,13 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "examples:compile"
-      ],
+      "dependsOn": ["examples:prebuild"],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/examples-stories",
         "outputDir": "tools/stories/out/examples"
       },
-      "outputs": [
-        "{options.outputDir}"
-      ]
+      "outputs": ["{options.outputDir}"]
     },
     "storybook-build-shell": {
       "configurations": {
@@ -119,17 +97,13 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "react-shell:compile"
-      ],
+      "dependsOn": ["react-shell:compile"],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/shell-stories",
         "outputDir": "tools/stories/out/shell"
       },
-      "outputs": [
-        "{options.outputDir}"
-      ]
+      "outputs": ["{options.outputDir}"]
     },
     "storybook-build-ui": {
       "configurations": {
@@ -137,17 +111,13 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "react-ui:compile"
-      ],
+      "dependsOn": ["react-ui:compile"],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/ui-stories",
         "outputDir": "tools/stories/out/ui"
       },
-      "outputs": [
-        "{options.outputDir}"
-      ]
+      "outputs": ["{options.outputDir}"]
     },
     "storybook-e2e": {
       "configurations": {
@@ -155,13 +125,22 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "react-client:compile",
-        "react-shell:compile"
-      ],
+      "dependsOn": ["react-client:compile", "react-shell:compile", "react-ui-stack:compile"],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "tools/stories/e2e-stories"
+      }
+    },
+    "storybook-examples": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": ["react-client:compile"],
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/stories/examples-stories"
       }
     }
   }

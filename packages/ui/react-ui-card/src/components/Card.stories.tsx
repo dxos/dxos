@@ -11,7 +11,7 @@ import { faker } from '@faker-js/faker';
 import React, { type FC, type PropsWithChildren, useState } from 'react';
 
 import { DensityProvider, DropdownMenu, Input, ScrollArea } from '@dxos/react-ui';
-import { chromeSurface, mx } from '@dxos/react-ui-theme';
+import { modalSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Card } from './Card';
@@ -195,11 +195,12 @@ const EditableCardStory = () => {
 };
 
 export default {
+  title: 'react-ui-card/Card',
   component: Card,
   decorators: [
     withTheme,
     (Story: any) => (
-      <div className={mx('flex h-screen w-full justify-center overflow-hidden', chromeSurface)}>
+      <div className={mx('flex h-screen w-full justify-center overflow-hidden', modalSurface)}>
         <div className='flex flex-col w-[360px] overflow-hidden'>
           {/* TODO(burdon): Story for different densities. */}
           <DensityProvider density='fine'>
