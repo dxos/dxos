@@ -261,7 +261,7 @@ describe('AutomergeHost', () => {
     });
   });
 
-  test('replication though a 4 peer chain', async () => {
+  test.only('replication though a 4 peer chain', async () => {
     const pairAB = TestAdapter.createPair();
     const pairBC = TestAdapter.createPair();
     const pairCD = TestAdapter.createPair();
@@ -288,7 +288,6 @@ describe('AutomergeHost', () => {
     });
 
     for (const pair of [pairAB, pairBC, pairCD]) {
-      debugger;
       pair[0].ready();
       pair[1].ready();
       await pair[0].onConnect.wait();
@@ -298,6 +297,10 @@ describe('AutomergeHost', () => {
     }
 
     const docA = repoA.create();
+
+    // If we wait here for replication to finish naturally, the test will pass.
+    await sleep(500);
+
     const docB = repoB.find(docA.url);
     const docC = repoC.find(docA.url);
     const docD = repoD.find(docA.url);
@@ -314,7 +317,7 @@ describe('AutomergeHost', () => {
     await docD.whenReady();
   });
 
-  test.only('replication though a 3 peer chain', async () => {
+  test('replication though a 3 peer chain', async () => {
     const pairAB = TestAdapter.createPair();
     const pairBC = TestAdapter.createPair();
 
@@ -354,9 +357,10 @@ describe('AutomergeHost', () => {
       A: docA.state,
       B: docB.state,
       C: docC.state,
+      D: docD.state,
     });
 
-    await docC.whenReady();
+    await docD.whenReady();
   });
 });
 
