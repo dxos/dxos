@@ -163,3 +163,18 @@ html {
 .sticky-top-from-topbar-bottom {
   --sticky-top: var(--topbar-size);
 }
+
+.attention-within {
+  --surface-bg: transparent;
+  --surface-separator: transparent;
+}
+
+.attention-within:focus-within {
+  --surface-bg: white;
+  --surface-separator: theme(colors.neutral.75);
+}
+
+.dark .attention-within:focus-within {
+  --surface-bg: theme(colors.neutral.900);
+  --surface-separator: theme(colors.neutral.750);
+}

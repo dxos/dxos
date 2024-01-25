@@ -6,12 +6,9 @@ import React, { useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 import { type PublicKey } from '@dxos/client';
-import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { THREAD_PLUGIN } from '../../meta';
-import { Message } from '../MessageCard';
-import { MessageInput, type MessageInputProps } from '../MessageInput';
+import { Message, MessageTextbox, type MessageTextboxProps } from '../Message';
 import { type MessagePropertiesProvider } from '../util';
 
 export type ChatThreadProps = {
@@ -20,9 +17,9 @@ export type ChatThreadProps = {
   propertiesProvider: MessagePropertiesProvider;
   fullWidth?: boolean;
   onFocus?: () => void;
-  onCreate?: MessageInputProps['onMessage'];
+  onCreate?: MessageTextboxProps['onSend'];
   onDelete?: (blockId: string, idx: number) => void;
-} & Pick<MessageInputProps, 'processing'>;
+} & Pick<MessageTextboxProps, 'pending'>;
 
 export const ChatThread = ({
   thread,
@@ -34,7 +31,6 @@ export const ChatThread = ({
   onDelete,
   ...props
 }: ChatThreadProps) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (text: string) => {
@@ -70,7 +66,7 @@ export const ChatThread = ({
 
       {handleSubmit && (
         <div className='flex px-2 py-2'>
-          <MessageInput placeholder={t('message placeholder')} onFocus={onFocus} onMessage={handleSubmit} {...props} />
+          <MessageTextbox asIdentityKey={identityKey.toHex()} disposition='message' onSend={handleSubmit} {...props} />
         </div>
       )}
     </div>

@@ -33,14 +33,14 @@ const Story = () => {
   );
 
   return (
-    <div className='flex w-[400px]'>
+    <div className='grid grid-cols-[3rem_1fr]'>
       <Message message={message} propertiesProvider={getBlockProperties} />
     </div>
   );
 };
 
 export default {
-  title: 'plugin-thread/MessageCard',
+  title: 'plugin-thread/Message',
   component: Message,
   render: Story,
   decorators: [withTheme],
