@@ -14,7 +14,7 @@ import {
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { getToken } from '../styles';
+import { getToken } from '../../styles';
 
 const CODE_REGEX = /```[\s\S]*?```/gs;
 

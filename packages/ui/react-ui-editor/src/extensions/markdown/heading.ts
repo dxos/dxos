@@ -4,27 +4,7 @@
 
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
-
-import { getToken } from '../styles';
-
-// TODO(burdon): Reconcile with theme.
-const styles = EditorView.baseTheme({
-  '& .cm-hr': {
-    // Note that block-level decorations should not have vertical margins,
-    borderTop: `1px solid ${getToken('extend.colors.neutral.200')}`,
-  },
-});
-
-class HorizontalRuleWidget extends WidgetType {
-  override toDOM() {
-    const el = document.createElement('div');
-    el.className = 'cm-hr';
-    return el;
-  }
-}
-
-const decoration = Decoration.replace({ widget: new HorizontalRuleWidget() });
+import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 const buildDecorations = (view: EditorView): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
@@ -34,10 +14,19 @@ const buildDecorations = (view: EditorView): DecorationSet => {
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(state).iterate({
       enter: (node) => {
-        if (node.name === 'HorizontalRule') {
-          // Check if cursor is inside text.
-          if (cursor <= node.from || cursor >= node.to) {
-            builder.add(node.from, node.to, decoration);
+        switch (node.name) {
+          case 'ATXHeading1':
+          case 'ATXHeading2':
+          case 'ATXHeading3':
+          case 'ATXHeading4':
+          case 'ATXHeading5':
+          case 'ATXHeading6': {
+            const mark = node.node.getChild('HeaderMark');
+
+            // Check if cursor is inside text.
+            if (mark && (cursor < node.from || cursor > node.to)) {
+              builder.add(mark.from, mark.to + 1, Decoration.replace({}));
+            }
           }
         }
       },
@@ -49,9 +38,8 @@ const buildDecorations = (view: EditorView): DecorationSet => {
   return builder.finish();
 };
 
-export const hr = () => {
+export const heading = () => {
   return [
-    styles,
     ViewPlugin.fromClass(
       class {
         decorations: DecorationSet;
