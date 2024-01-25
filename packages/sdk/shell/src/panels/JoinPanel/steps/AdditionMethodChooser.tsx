@@ -35,7 +35,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
           before={<Plus className={getSize(6)} />}
           onClick={() => send({ type: 'createIdentity' })}
           data-autofocus='choosingAuthMethod'
-          data-testid='create-identity'
+          data-testid='identity-chooser.create-identity'
         >
           {t('create identity label')}
         </CompoundButton>
@@ -44,7 +44,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
           description={t('join identity description')}
           before={<QrCode className={getSize(6)} />}
           onClick={() => send({ type: 'acceptHaloInvitation' })}
-          data-testid='join-identity'
+          data-testid='identity-chooser.join-identity'
         >
           {t('join identity label')}
         </CompoundButton>
@@ -55,7 +55,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
           description={t('recover identity description')}
           before={<Textbox className={getSize(6)} />}
           onClick={() => send({ type: 'recoverIdentity' })}
-          data-testid='recover-identity'
+          data-testid='identity-chooser.recover-identity'
         >
           {t('recover identity label')}
         </CompoundButton>

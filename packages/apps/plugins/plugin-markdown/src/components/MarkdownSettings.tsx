@@ -42,13 +42,16 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
       <SettingsValue
         label={t('settings markdown debug label')}
         secondary={
-          <Input.Root>
-            <Input.TextArea
-              rows={5}
-              value={settings.typewriter}
-              onChange={({ target: { value } }) => (settings.typewriter = value)}
-            />
-          </Input.Root>
+          settings.debug ? (
+            <Input.Root>
+              <Input.TextArea
+                rows={5}
+                value={settings.typewriter}
+                onChange={({ target: { value } }) => (settings.typewriter = value)}
+                placeholder={t('settings markdown debug placeholder')}
+              />
+            </Input.Root>
+          ) : undefined
         }
       >
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />

@@ -15,6 +15,7 @@ export default [
         'create thread label': 'Create thread',
         'message placeholder': 'Enter message...',
         'comment placeholder': 'Enter comment...',
+        'settings standalone label': 'Enable standalone thread creation',
       },
     },
   },

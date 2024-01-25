@@ -65,7 +65,7 @@ export const Mermaid = {
         'C-->D;',
         '```',
         '',
-        "It's pretty cool",
+        'Inside a markdown document.',
         '',
       )}
       extensions={[code(), mermaid()]}

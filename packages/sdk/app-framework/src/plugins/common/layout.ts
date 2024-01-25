@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { type IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
 
 //
@@ -72,34 +73,34 @@ export enum LayoutAction {
  * Expected payload for layout actions.
  */
 export namespace LayoutAction {
-  export type ToggleFullscreen = {
+  export type ToggleFullscreen = IntentData<{
     state?: boolean;
-  };
+  }>;
 
-  export type ToggleSidebar = {
+  export type ToggleSidebar = IntentData<{
     state?: boolean;
-  };
+  }>;
 
-  export type ToggleComplementarySidebar = {
+  export type ToggleComplementarySidebar = IntentData<{
     state?: boolean;
-  };
+  }>;
 
-  export type OpenDialog = {
+  export type OpenDialog = IntentData<{
     component: string;
     subject: any;
-  };
+  }>;
 
-  export type CloseDialog = {};
+  export type CloseDialog = IntentData<{}>;
 
-  export type OpenPopover = {
+  export type OpenPopover = IntentData<{
     anchorId: string;
     component: string;
     subject: any;
-  };
+  }>;
 
-  export type ClosePopover = {};
+  export type ClosePopover = IntentData<{}>;
 
-  export type Activate = {
+  export type Activate = IntentData<{
     id: string;
-  };
+  }>;
 }

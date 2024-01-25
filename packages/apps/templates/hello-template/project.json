@@ -11,6 +11,11 @@
     },
     "lint": {},
     "test": {
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [

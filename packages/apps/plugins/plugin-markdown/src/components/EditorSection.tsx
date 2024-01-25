@@ -6,7 +6,7 @@ import React, { type HTMLAttributes } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import { MarkdownEditor, type TextEditorProps } from '@dxos/react-ui-editor';
-import { focusRing, inputSurface, mx } from '@dxos/react-ui-theme';
+import { focusRing, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -20,7 +20,7 @@ export const EditorSection = (props: EditorSectionProps) => {
       placeholder={t('editor placeholder')}
       slots={{
         root: {
-          className: mx('flex flex-col grow m-0.5', inputSurface, focusRing),
+          className: mx('flex flex-col grow m-0.5', attentionSurface, focusRing),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {

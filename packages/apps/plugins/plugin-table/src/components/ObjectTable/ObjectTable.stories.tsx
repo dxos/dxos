@@ -17,7 +17,6 @@ import { ObjectTable } from './ObjectTable';
 
 faker.seed(1);
 
-// TODO(burdon): Move into ClientSpaceDecorator callback.
 const Story = () => {
   const client = useClient();
   const [table, setTable] = useState<TableType>();
@@ -42,7 +41,8 @@ const Story = () => {
 export default {
   title: 'plugin-table/ObjectTable',
   component: ObjectTable,
-  render: () => <ClientRepeater Component={Story} createSpace />,
+  // TODO(burdon): createIdentity doesn't work.
+  render: () => <ClientRepeater Component={Story} createIdentity createSpace />,
   decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

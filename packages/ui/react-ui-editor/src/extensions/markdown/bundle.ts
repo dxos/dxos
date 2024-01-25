@@ -27,7 +27,7 @@ import { type TextEditorProps } from '../../components';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
-} & Pick<TextEditorProps, 'readonly' | 'placeholder'>;
+} & Pick<TextEditorProps, 'placeholder'>;
 
 /**
  * Markdown bundle.
@@ -36,11 +36,7 @@ export type MarkdownBundleOptions = {
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
 // TODO(burdon): Add Composer here: https://codemirror.net/docs/community
-export const markdownBundle = ({
-  readonly,
-  themeMode,
-  placeholder: _placeholder,
-}: MarkdownBundleOptions): Extension[] => {
+export const markdownBundle = ({ themeMode, placeholder: _placeholder }: MarkdownBundleOptions): Extension[] => {
   return [
     EditorState.allowMultipleSelections.of(true),
     EditorState.tabSize.of(2),
@@ -82,7 +78,7 @@ export const markdownBundle = ({
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
 
     // Custom styles.
-    syntaxHighlighting(markdownHighlightStyle(readonly)),
+    syntaxHighlighting(markdownHighlightStyle()),
 
     keymap.of([
       // https://codemirror.net/docs/ref/#commands.indentWithTab

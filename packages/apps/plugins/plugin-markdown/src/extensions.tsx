@@ -18,6 +18,8 @@ import {
   autocomplete,
   code,
   comments,
+  heading,
+  hr,
   image,
   link,
   listener,
@@ -49,6 +51,8 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
     // Common.
     //
     code(),
+    heading(),
+    hr(),
     image(),
     table(),
     tasklist(),
@@ -132,15 +136,16 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
           onSelect: (state) => {
             const {
               comments,
-              selection: { active, closest },
+              selection: { current, closest },
             } = state;
+
             void dispatch([
               {
                 action: ThreadAction.SELECT,
                 data: {
-                  active: active ?? closest,
+                  active: current ?? closest,
                   threads: comments?.map(({ comment: { id }, location }) => ({ id, y: location?.top })) ?? [
-                    { id: active },
+                    { id: current },
                   ],
                 },
               },
