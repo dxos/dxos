@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import {
   Repo,
   NetworkAdapter,
@@ -44,7 +45,7 @@ export class AutomergeHost {
         ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
         : new AutomergeStorageAdapter(storageDirectory);
     this._repo = new Repo({
-      // TODO(dmaretskyi): peer id from device.
+      peerId: `host-${PublicKey.random().toHex()}` as PeerId,
       network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
@@ -109,7 +110,7 @@ export class AutomergeHost {
     return this._clientNetwork.sendSyncMessage(request);
   }
 
-  getHostInfo(): HostInfo {
+  async getHostInfo(): Promise<HostInfo> {
     return this._clientNetwork.getHostInfo();
   }
 
@@ -149,8 +150,11 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
     });
   }
 
+  onConnected = new Trigger();
+
   override connect(peerId: PeerId): void {
     this.peerId = peerId;
+    this.onConnected.wake();
     // No-op. Client always connects first
   }
 
@@ -203,7 +207,8 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
     this.emit('message', message);
   }
 
-  getHostInfo(): HostInfo {
+  async getHostInfo(): Promise<HostInfo> {
+    await this.onConnected.wait({ timeout: 1_000 });
     invariant(this.peerId, 'Peer id not set.');
     return {
       peerId: this.peerId,

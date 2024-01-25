@@ -63,6 +63,8 @@ describe('AutomergeHost', () => {
     });
     hostAdapter.ready();
     clientAdapter.ready();
+    await hostAdapter.onConnect.wait();
+    await clientAdapter.onConnect.wait();
     hostAdapter.peerCandidate(clientAdapter.peerId!);
     clientAdapter.peerCandidate(hostAdapter.peerId!);
 
@@ -96,6 +98,8 @@ describe('AutomergeHost', () => {
     // Establish connection.
     hostAdapter.ready();
     clientAdapter.ready();
+    await hostAdapter.onConnect.wait();
+    await clientAdapter.onConnect.wait();
     hostAdapter.peerCandidate(clientAdapter.peerId!);
     clientAdapter.peerCandidate(hostAdapter.peerId!);
 
@@ -261,7 +265,7 @@ describe('AutomergeHost', () => {
     });
   });
 
-  test.only('replication though a 4 peer chain', async () => {
+  test('replication though a 4 peer chain', async () => {
     const pairAB = TestAdapter.createPair();
     const pairBC = TestAdapter.createPair();
     const pairCD = TestAdapter.createPair();
@@ -274,12 +278,12 @@ describe('AutomergeHost', () => {
     const repoB = new Repo({
       peerId: 'B' as any,
       network: [pairAB[1], pairBC[0]],
-      sharePolicy: async () => false,
+      sharePolicy: async () => true,
     });
     const repoC = new Repo({
       peerId: 'C' as any,
       network: [pairBC[1], pairCD[0]],
-      sharePolicy: async () => false,
+      sharePolicy: async () => true,
     });
     const repoD = new Repo({
       peerId: 'D' as any,
@@ -297,6 +301,7 @@ describe('AutomergeHost', () => {
     }
 
     const docA = repoA.create();
+    // NOTE: Doesn't work if the doc is empty.
     docA.change((doc: any) => {
       doc.text = 'Hello world';
     });
@@ -304,18 +309,17 @@ describe('AutomergeHost', () => {
     // If we wait here for replication to finish naturally, the test will pass.
     // await sleep(500);
 
-    const docB = repoB.find(docA.url);
-    const docC = repoC.find(docA.url);
+    const _docB = repoB.find(docA.url);
+    const _docC = repoC.find(docA.url);
     const docD = repoD.find(docA.url);
 
-    await sleep(500);
-
-    log.info('states', {
-      A: docA.state,
-      B: docB.state,
-      C: docC.state,
-      D: docD.state,
-    });
+    // await sleep(100);
+    // log.info('states', {
+    //   A: docA.state,
+    //   B: docB.state,
+    //   C: docC.state,
+    //   D: docD.state,
+    // });
 
     await docD.whenReady();
   });
@@ -350,16 +354,20 @@ describe('AutomergeHost', () => {
     }
 
     const docA = repoA.create();
-    const docB = repoB.find(docA.url);
+    // NOTE: Doesn't work if the doc is empty.
+    docA.change((doc: any) => {
+      doc.text = 'Hello world';
+    });
+
+    const _docB = repoB.find(docA.url);
     const docC = repoC.find(docA.url);
 
-    await sleep(500);
-
-    log.info('states', {
-      A: docA.state,
-      B: docB.state,
-      C: docC.state,
-    });
+    // await sleep(100);
+    // log.info('states', {
+    //   A: docA.state,
+    //   B: docB.state,
+    //   C: docC.state,
+    // });
 
     await docC.whenReady();
   });
@@ -405,7 +413,7 @@ class TestAdapter extends NetworkAdapter {
   }
 
   override send(message: Message) {
-    log.info('send', { from: message.senderId, to: message.targetId, type: message.type });
+    log('send', { from: message.senderId, to: message.targetId, type: message.type });
     this._params.send(message);
   }
 
