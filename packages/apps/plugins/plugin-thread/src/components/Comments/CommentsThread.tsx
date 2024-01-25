@@ -5,7 +5,8 @@
 import React, { type ForwardedRef, forwardRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import type { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
+import { useInMemoryTextModel } from '@dxos/react-ui-editor';
 
 import { Message, MessageTextbox, type MessageTextboxProps } from '../Message';
 import { type MessagePropertiesProvider } from '../util';
@@ -27,6 +28,7 @@ export const CommentsThread = forwardRef(
     { thread, processing, identityKey, propertiesProvider, onCreate, onDelete }: CommentsThreadProps,
     ref: ForwardedRef<HTMLDivElement>,
   ) => {
+    const nextMessageModel = useInMemoryTextModel({ id: `${thread.id}__next` });
     return (
       <div role='none' className='grid grid-cols-[3rem_1fr]' id={thread.id} ref={ref}>
         {/* TODO(burdon): Don't show avatar/display name if same as previous. */}
@@ -38,6 +40,7 @@ export const CommentsThread = forwardRef(
           disposition='comment'
           pending={processing}
           onSend={onCreate}
+          model={nextMessageModel}
         />
       </div>
     );

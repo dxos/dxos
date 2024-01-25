@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Message } from './Message';
+import translations from '../../translations';
 import { type MessageProperties } from '../util';
 
 const getBlockProperties = (identityKey: PublicKey | undefined): MessageProperties => ({
@@ -44,6 +45,7 @@ export default {
   component: Message,
   render: Story,
   decorators: [withTheme],
+  parameters: { translations },
 };
 
 export const Default = {};

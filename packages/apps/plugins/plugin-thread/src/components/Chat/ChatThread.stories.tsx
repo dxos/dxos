@@ -15,6 +15,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ChatThread } from './ChatThread';
+import translations from '../../translations';
 import { createChatThread } from '../testing';
 import { createPropertiesProvider } from '../util';
 
@@ -92,6 +93,7 @@ export default {
   component: ChatThread,
   render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
+  parameters: { translations },
 };
 
 export const Default = {};

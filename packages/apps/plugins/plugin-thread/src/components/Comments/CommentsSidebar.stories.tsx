@@ -15,6 +15,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { CommentsSidebar } from './CommentsSidebar';
+import translations from '../../translations';
 import { createCommentThread } from '../testing';
 
 faker.seed(1);
@@ -63,6 +64,7 @@ export default {
   component: CommentsSidebar,
   render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
+  parameters: { translations },
 };
 
 export const Default = {};

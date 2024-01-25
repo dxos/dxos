@@ -31,6 +31,11 @@ export const useTextModel = (props: UseTextModelProps): EditorModel | undefined 
   return model;
 };
 
+export const useInMemoryTextModel = ({ id, defaultContent }: { id: string; defaultContent?: string }): EditorModel => {
+  const [content, _setContent] = useState(defaultContent ?? '');
+  return { id, content, text: () => content };
+};
+
 const createModel = ({ space, identity, text }: UseTextModelProps) => {
   invariant(isAutomergeObject(text));
   const obj = text as any as AutomergeTextCompat;

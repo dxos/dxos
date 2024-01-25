@@ -15,6 +15,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { CommentsThread } from './CommentsThread';
+import translations from '../../translations';
 import { createCommentThread } from '../testing';
 import { createPropertiesProvider } from '../util';
 
@@ -91,6 +92,7 @@ export default {
   component: CommentsThread,
   render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
+  parameters: { translations },
 };
 
 export const Default = {};

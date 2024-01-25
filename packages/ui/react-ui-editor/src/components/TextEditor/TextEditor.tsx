@@ -20,7 +20,7 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
-import { attentionSurface, mx } from '@dxos/react-ui-theme';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { basicBundle, markdownBundle } from '../../extensions';
 import { type EditorModel } from '../../hooks';
@@ -247,10 +247,10 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
 export const defaultSlots: TextEditorSlots = {
   root: {
     // TODO(burdon): Add focusRing by default/as property?
-    className: mx('flex flex-col grow overflow-y-auto', attentionSurface),
+    className: mx('grow', focusRing),
   },
   editor: {
-    className: 'h-full p-2',
+    className: 'bs-full',
   },
 };
 

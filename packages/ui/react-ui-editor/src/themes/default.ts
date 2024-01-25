@@ -77,8 +77,11 @@ export const defaultTheme: ThemeStyles = {
   '&dark .cm-cursor, &dark .cm-dropCursor': {
     borderLeft: '2px solid white',
   },
-  '.cm-placeholder': {
-    fontWeight: 100,
+  '&light .cm-placeholder': {
+    color: get(tokens, 'extend.semanticColors.description.light', 'rgba(0,0,0,.2)'),
+  },
+  '&dark .cm-placeholder': {
+    color: get(tokens, 'extend.semanticColors.description.dark', 'rgba(255,255,255,.2)'),
   },
 
   //

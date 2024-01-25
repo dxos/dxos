@@ -9,9 +9,16 @@ import React, { type ComponentPropsWithRef, forwardRef, useId } from 'react';
 import { type Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent } from '@dxos/react-client/echo';
-import { Avatar, Button, Input, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { TextEditor, type TextEditorProps } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import {
+  focusRing,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM, THREAD_PLUGIN } from '../../meta';
 import { type MessageProperties, type MessagePropertiesProvider, safeParseJson } from '../util';
@@ -146,23 +153,30 @@ export type MessageTextboxProps = {
   disposition?: 'comment' | 'message';
   onSend?: (text: string) => boolean | void;
   pending?: boolean;
-} & Pick<MessageProperties, 'profileImgSrc' | 'displayName'>;
+} & Pick<MessageProperties, 'profileImgSrc' | 'displayName'> &
+  Pick<TextEditorProps, 'model'>;
 
-export const MessageTextbox = ({ asIdentityKey, profileImgSrc, displayName, disposition }: MessageTextboxProps) => {
+export const MessageTextbox = ({
+  asIdentityKey,
+  profileImgSrc,
+  displayName,
+  disposition,
+  model,
+}: MessageTextboxProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
-  // TODO(thure): Refactor to use TextEditor.
   return (
-    <Input.Root>
-      <MessageMeta
-        status='active'
-        fromIdentityKey={asIdentityKey}
-        profileImgSrc={profileImgSrc}
-        displayName={displayName}
-        continues={false}
-      >
-        <Input.Label srOnly>{t(disposition === 'comment' ? 'comment placeholder' : 'message placeholder')}</Input.Label>
-        <Input.TextInput placeholder={t(disposition === 'comment' ? 'comment placeholder' : 'message placeholder')} />
-      </MessageMeta>
-    </Input.Root>
+    <MessageMeta
+      status='active'
+      fromIdentityKey={asIdentityKey}
+      profileImgSrc={profileImgSrc}
+      displayName={displayName}
+      continues={false}
+    >
+      <TextEditor
+        model={model}
+        placeholder={t(disposition === 'comment' ? 'comment placeholder' : 'message placeholder')}
+        slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }}
+      />
+    </MessageMeta>
   );
 };
