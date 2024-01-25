@@ -34,6 +34,7 @@ import {
   type CommentsOptions,
   type LinkOptions,
   useComments,
+  heading,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 
@@ -82,7 +83,7 @@ const text = {
     '## Code',
     '',
     '```',
-    'const x = 100;',
+    '$ ls -las',
     '```',
     '',
     '```tsx',
@@ -248,6 +249,7 @@ const defaults = [
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   code(),
+  heading(),
   hr(),
   image(),
   link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
@@ -290,11 +292,11 @@ export const Links = {
 };
 
 export const Code = {
-  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
+  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} />,
 };
 
 export const Image = {
-  render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
+  render: () => <Story text={str(text.image, text.footer)} extensions={[image()]} />,
 };
 
 export const Lists = {

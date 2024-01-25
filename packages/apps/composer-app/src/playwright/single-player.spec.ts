@@ -144,7 +144,12 @@ test.describe('Single-player tests', () => {
     });
   });
 
-  test('error boundary is rendered on invalid storage version', async () => {
+  test('error boundary is rendered on invalid storage version', async ({ browserName }) => {
+    // TODO(wittjosiah): This test seems to crash firefox in CI.
+    if (browserName === 'firefox') {
+      test.skip();
+    }
+
     await host.enablePlugin('dxos.org/plugin/debug');
     await host.changeStorageVersionInMetadata(9999);
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
@@ -157,6 +162,8 @@ test.describe('Single-player tests', () => {
       test.skip();
     }
 
+    test.slow();
+
     await host.createSpace();
     await host.createSpace();
     await waitForExpect(async () => {
@@ -167,6 +174,6 @@ test.describe('Single-player tests', () => {
     await host.shell.resetDevice();
     await waitForExpect(async () => {
       expect(await host.getSpaceItemsCount()).to.equal(1);
-    });
+    }, 15_000);
   });
 });

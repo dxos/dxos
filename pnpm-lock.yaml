@@ -1060,6 +1060,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      ipfs-http-client:
+        specifier: ^56.0.3
+        version: 56.0.3(node-fetch@2.6.7)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2805,7 +2808,7 @@ importers:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
       ipfs-http-client:
-        specifier: ~56.0.1
+        specifier: ^56.0.3
         version: 56.0.3(node-fetch@2.6.7)
       node-fetch:
         specifier: ^2.6.0
@@ -5910,7 +5913,7 @@ importers:
         specifier: ^8.2.0
         version: 8.2.4
       ipfs-http-client:
-        specifier: ~56.0.1
+        specifier: ^56.0.3
         version: 56.0.3(node-fetch@2.6.7)
       isomorphic-ws:
         specifier: ^4.0.1
@@ -7294,6 +7297,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -30544,7 +30550,7 @@ packages:
     resolution: {integrity: sha512-AmCS+9CT34pp2u0QQVXjKztkuq3y5T+BIciuiHDDtDZucZD8VudosnSdUyXJV6IsRkN5jc4RFDhCk1O6Q3Gxjg==}
     dependencies:
       interface-store: 2.0.2
-      nanoid: 3.3.6
+      nanoid: 3.3.7
       uint8arrays: 3.1.1
     dev: false
 
@@ -30653,7 +30659,7 @@ packages:
       multiaddr: 10.0.1(node-fetch@2.6.7)
       multiaddr-to-uri: 8.0.0(node-fetch@2.6.7)
       multiformats: 9.9.0
-      nanoid: 3.3.6
+      nanoid: 3.3.7
       parse-duration: 1.0.2
       timeout-abort-controller: 3.0.0
       uint8arrays: 3.1.1
@@ -30715,7 +30721,7 @@ packages:
       it-glob: 1.0.2
       it-to-stream: 1.0.0
       merge-options: 3.0.4
-      nanoid: 3.3.6
+      nanoid: 3.3.7
       native-fetch: 3.0.0(node-fetch@2.7.0)
       node-fetch: 2.7.0
       react-native-fetch-api: 3.0.0
