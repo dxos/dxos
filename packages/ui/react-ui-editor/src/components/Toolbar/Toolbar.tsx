@@ -4,6 +4,7 @@
 
 import {
   type Icon,
+  CaretRight,
   ChatText,
   Code,
   Image,
@@ -22,6 +23,7 @@ import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-u
 import { getSize } from '@dxos/react-ui-theme';
 
 export type Action =
+  | 'blockquote'
   | 'bold'
   | 'code'
   | 'comment'
@@ -85,6 +87,7 @@ export const Toolbar = ({ onAction }: ToolbarProps) => {
           <IconButton Icon={ListChecks} title='Task list' onClick={() => onAction?.({ type: 'list-tasks' })} />
         </div>
         <div>
+          <IconButton Icon={CaretRight} title='Block quite' onClick={() => onAction?.({ type: 'blockquote' })} />
           <IconButton Icon={Code} title='Code block' onClick={() => onAction?.({ type: 'code' })} />
           <IconButton Icon={Table} title='Table' onClick={() => onAction?.({ type: 'table' })} />
         </div>

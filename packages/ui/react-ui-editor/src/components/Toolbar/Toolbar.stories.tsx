@@ -48,7 +48,6 @@ const Story = () => {
 
   useComments(view.current, _comments);
 
-  // TODO(burdon): Restore cursor position after clicking toolbar.
   const handleAction: ToolbarProps['onAction'] = (action) => {
     if (view.current) {
       switch (action.type) {
@@ -73,6 +72,8 @@ const Story = () => {
           break;
       }
     }
+
+    view.current?.focus();
   };
 
   if (!model) {
