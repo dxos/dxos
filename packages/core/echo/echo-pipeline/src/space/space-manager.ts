@@ -42,7 +42,7 @@ export type ConstructSpaceParams = {
   /**
    * Called when connection auth passed successful.
    */
-  onNetworkConnection: (session: Teleport) => void;
+  onAuthorizedConnection: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
 };
 
@@ -93,7 +93,7 @@ export class SpaceManager {
   async constructSpace({
     metadata,
     swarmIdentity,
-    onNetworkConnection,
+    onAuthorizedConnection: onNetworkConnection,
     onAuthFailure,
     memberKey,
   }: ConstructSpaceParams) {

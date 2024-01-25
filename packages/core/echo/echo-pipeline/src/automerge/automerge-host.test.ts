@@ -274,12 +274,12 @@ describe('AutomergeHost', () => {
     const repoB = new Repo({
       peerId: 'B' as any,
       network: [pairAB[1], pairBC[0]],
-      sharePolicy: async () => true,
+      sharePolicy: async () => false,
     });
     const repoC = new Repo({
       peerId: 'C' as any,
       network: [pairBC[1], pairCD[0]],
-      sharePolicy: async () => true,
+      sharePolicy: async () => false,
     });
     const repoD = new Repo({
       peerId: 'D' as any,
@@ -297,9 +297,12 @@ describe('AutomergeHost', () => {
     }
 
     const docA = repoA.create();
+    docA.change((doc: any) => {
+      doc.text = 'Hello world';
+    });
 
     // If we wait here for replication to finish naturally, the test will pass.
-    await sleep(500);
+    // await sleep(500);
 
     const docB = repoB.find(docA.url);
     const docC = repoC.find(docA.url);
@@ -357,10 +360,9 @@ describe('AutomergeHost', () => {
       A: docA.state,
       B: docB.state,
       C: docC.state,
-      D: docD.state,
     });
 
-    await docD.whenReady();
+    await docC.whenReady();
   });
 });
 
@@ -395,7 +397,7 @@ class TestAdapter extends NetworkAdapter {
 
   peerCandidate(peerId: PeerId) {
     invariant(peerId, 'PeerId is required');
-    this.emit('peer-candidate', { peerId });
+    this.emit('peer-candidate', { peerId, peerMetadata: {} });
   }
 
   peerDisconnected(peerId: PeerId) {

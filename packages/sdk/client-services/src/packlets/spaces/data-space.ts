@@ -38,6 +38,7 @@ import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
+import { failedInvariant } from '@dxos/invariant';
 
 export type DataSpaceCallbacks = {
   /**
@@ -365,7 +366,21 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     log.info('loading automerge root doc for space', { space: this.key, rootUrl });
-    this._automergeHost.repo.find(rootUrl as any);
+    const handle = this._automergeHost.repo.find(rootUrl as any);
+
+    queueMicrotask(async () => {
+      try {
+        await handle.whenReady();
+        const doc = handle.docSync() ?? failedInvariant();
+        if (!doc.experimental_spaceKey) {
+          handle.change((doc: any) => {
+            doc.experimental_spaceKey = this.key.toHex();
+          });
+        }
+      } catch (err) {
+        log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
+      }
+    });
   }
 
   // TODO(dmaretskyi): Use profile from signing context.
