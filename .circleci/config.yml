@@ -203,6 +203,8 @@ jobs:
       - checkout
       - *cache_restore
       - run: rm -rf $(pnpm store path) && mkdir -p $(pnpm store path)
+      # Ensure a new cache key is generated that a cache miss will fallback to.
+      - run: date +%s > "pnpm-lock.yaml"
       - *cache_save
 
 workflows:
