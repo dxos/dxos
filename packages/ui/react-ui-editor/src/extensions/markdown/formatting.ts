@@ -16,7 +16,7 @@ import {
 
 export type FormattingOptions = {};
 
-export const bold: Command = (view) => {
+export const toggleBold: Command = (view) => {
   const { ranges } = view.state.selection;
   for (const range of ranges) {
     // TODO(burdon): Detect if already bold.
@@ -26,7 +26,8 @@ export const bold: Command = (view) => {
           from: range.to,
           insert: '__',
         },
-        // TODO(burdon): Second mutation has error if using automerge.
+        // TODO(burdon): Second mutation has error if using automerge (need to be batched).
+        //  Currently model.extension is commented out in TextEditor.
         {
           from: range.from,
           insert: '__',
@@ -43,7 +44,7 @@ export const formatting = (options: FormattingOptions = {}): Extension => {
     keymap.of([
       {
         key: 'meta-b',
-        run: bold,
+        run: toggleBold,
       },
     ]),
     styling(),

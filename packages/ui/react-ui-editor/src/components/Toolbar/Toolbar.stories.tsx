@@ -11,11 +11,11 @@ import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar, type ToolbarProps } from './Toolbar';
-import { bold, formatting } from '../../extensions';
+import { toggleBold, formatting } from '../../extensions';
 import { useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
-const content = 'Heading\n\nThis is some **sample** text!\nSome more.\n';
+const content = 'Heading\n\nThis is some **sample** text!\n\nSome more.\n';
 
 const Story = () => {
   const [item] = useState({ text: new TextObject(content) });
@@ -35,7 +35,7 @@ const Story = () => {
         case 'heading':
           break;
         case 'bold':
-          bold(view.current);
+          toggleBold(view.current);
           break;
       }
     }
