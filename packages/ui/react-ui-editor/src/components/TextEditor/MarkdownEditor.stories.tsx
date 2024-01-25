@@ -22,7 +22,6 @@ import {
   autocomplete,
   blast,
   code,
-  comments,
   defaultOptions,
   hr,
   image,
@@ -35,6 +34,7 @@ import {
   type LinkOptions,
   useComments,
   heading,
+  comments,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 
@@ -347,18 +347,18 @@ export const Mention = {
 
 export const Comments = {
   render: () => {
-    const [commentRanges, setCommentRanges] = useState<Comment[]>([]);
+    const [_comments, setComments] = useState<Comment[]>([]);
 
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}
-        comments={commentRanges}
+        comments={_comments}
         extensions={[
           comments({
             onHover: onCommentsHover,
             onCreate: (range) => {
               const id = PublicKey.random().toHex();
-              setCommentRanges((commentRanges) => [...commentRanges, { id, cursor: range }]);
+              setComments((commentRanges) => [...commentRanges, { id, cursor: range }]);
               return id;
             },
             onSelect: (state) => {

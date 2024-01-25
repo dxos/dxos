@@ -136,7 +136,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
           // Storage and replication.
           // NOTE: This must come before user extensions.
-          model.extension,
+          // model.extension,
 
           // TODO(burdon): Factor out (requires special handling for Escape/focus).
           editorMode === 'vim' && vim(),
