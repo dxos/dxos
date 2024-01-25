@@ -264,19 +264,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: ({ action, data }) => {
           switch (action) {
             case LayoutAction.FOCUS: {
-              state.activeComment = data.object;
-              break;
+              state.activeComment = data?.object;
+              return { data: true };
             }
 
             case MarkdownAction.CREATE: {
-              return { object: new DocumentType() };
+              return { data: new DocumentType() };
             }
 
             // TODO(burdon): Generalize for every object.
             case MarkdownAction.TOGGLE_VIEW: {
-              const { objectId } = data;
+              const objectId = data?.objectId;
               settings.values.viewMode[objectId as string] = !settings.values.viewMode[objectId];
-              break;
+              return { data: true };
             }
           }
         },

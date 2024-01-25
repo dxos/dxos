@@ -53,7 +53,7 @@ export const heading = () => {
         }
       },
       {
-        decorations: (v) => v.decorations,
+        decorations: (value) => value.decorations,
       },
     ),
   ];

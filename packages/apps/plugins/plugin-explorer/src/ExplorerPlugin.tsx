@@ -74,7 +74,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ExplorerAction.CREATE: {
-              return { object: new ViewType() };
+              return { data: new ViewType() };
             }
           }
         },
