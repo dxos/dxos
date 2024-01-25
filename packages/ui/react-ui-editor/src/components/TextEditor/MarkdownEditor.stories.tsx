@@ -34,6 +34,7 @@ import {
   type CommentsOptions,
   type LinkOptions,
   useComments,
+  heading,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
 
@@ -248,6 +249,7 @@ const defaults = [
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   code(),
+  heading(),
   hr(),
   image(),
   link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
