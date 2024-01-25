@@ -18,6 +18,8 @@ import {
   autocomplete,
   code,
   comments,
+  heading,
+  hr,
   image,
   link,
   listener,
@@ -49,6 +51,8 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
     // Common.
     //
     code(),
+    heading(),
+    hr(),
     image(),
     table(),
     tasklist(),
