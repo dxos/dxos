@@ -28,6 +28,10 @@ export const toggleStyle =
   (view) => {
     const { ranges } = view.state.selection;
     for (const range of ranges) {
+      if (range.from === range.to) {
+        return false;
+      }
+
       // TODO(burdon): Detect if already bold.
       console.log(JSON.stringify({ range }));
       view.dispatch({
