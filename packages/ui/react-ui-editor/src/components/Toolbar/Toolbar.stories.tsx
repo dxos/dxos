@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import type { EditorView } from '@codemirror/view';
 import React, { useMemo, useRef, useState } from 'react';
 
