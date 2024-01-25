@@ -8,7 +8,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Filter } from './filter';
-import { EchoArray, type EchoObject, type TypedObject } from '../object';
+import { type EchoObject, type TypedObject } from '../object';
 import { compositeRuntime } from '../util';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -98,8 +98,8 @@ export class Query<T extends TypedObject = TypedObject> {
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<Query<T>>();
 
-  private _resultCache: EchoArray<QueryResult<T>> | undefined = undefined;
-  private _objectCache: EchoArray<T> | undefined = undefined;
+  private _resultCache: QueryResult<T>[] | undefined = undefined;
+  private _objectCache: T[] | undefined = undefined;
 
   constructor(private readonly _queryContext: QueryContext, filter: Filter) {
     this._filter = filter;
@@ -126,13 +126,13 @@ export class Query<T extends TypedObject = TypedObject> {
     return this._filter;
   }
 
-  get results(): EchoArray<QueryResult<T>> {
+  get results(): QueryResult<T>[] {
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._resultCache!;
   }
 
-  get objects(): EchoArray<T> {
+  get objects(): T[] {
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._objectCache!;
@@ -149,12 +149,8 @@ export class Query<T extends TypedObject = TypedObject> {
 
   private _ensureCachePresent() {
     if (!this._resultCache) {
-      this._resultCache = new EchoArray(
-        Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[],
-      );
-      this._objectCache = new EchoArray(
-        this._resultCache.map((result) => result.object!).filter((object): object is T => !!object),
-      );
+      this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
+      this._objectCache = this._resultCache.map((result) => result.object!).filter((object): object is T => !!object);
     }
   }
 
