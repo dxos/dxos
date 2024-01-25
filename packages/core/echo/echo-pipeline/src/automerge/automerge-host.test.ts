@@ -15,6 +15,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost, AutomergeStorageAdapter, MeshNetworkAdapter } from './automerge-host';
+import { log } from '@dxos/log';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
@@ -259,9 +260,70 @@ describe('AutomergeHost', () => {
       }
     });
   });
+
+  test.only('replication though a peer chain', async () => {
+    const pairAB = TestAdapter.createPair();
+    const pairBC = TestAdapter.createPair();
+    const pairCD = TestAdapter.createPair();
+
+    const repoA = new Repo({
+      peerId: 'A' as any,
+      network: [pairAB[0]],
+      sharePolicy: async () => true,
+    });
+    const repoB = new Repo({
+      peerId: 'B' as any,
+      network: [pairAB[1], pairBC[0]],
+      sharePolicy: async () => false,
+    });
+    const repoC = new Repo({
+      peerId: 'C' as any,
+      network: [pairBC[1], pairCD[0]],
+      sharePolicy: async () => false,
+    });
+    const repoD = new Repo({
+      peerId: 'D' as any,
+      network: [pairCD[1]],
+      sharePolicy: async () => true,
+    });
+
+    for (const pair of [pairAB, pairBC, pairCD]) {
+      pair[0].ready();
+      pair[1].ready();
+      pair[0].peerCandidate(pair[1].peerId!);
+      pair[1].peerCandidate(pair[0].peerId!);
+    }
+
+    const docA = repoA.create();
+    const docB = repoB.find(docA.url);
+    const docC = repoC.find(docA.url);
+    const docD = repoD.find(docA.url);
+
+    await sleep(500);
+
+    log.info('states', {
+      A: docA.state,
+      B: docB.state,
+      C: docC.state,
+      D: docD.state,
+    });
+
+    await docD.whenReady();
+  });
 });
 
 class TestAdapter extends NetworkAdapter {
+  static createPair() {
+    const adapter1: TestAdapter = new TestAdapter({
+      send: (message: Message) => sleep(10).then(() => adapter2.receive(message)),
+    });
+    const adapter2: TestAdapter = new TestAdapter({
+      send: (message: Message) => sleep(10).then(() => adapter1.receive(message)),
+    });
+
+    return [adapter1, adapter2];
+  }
+
   constructor(private readonly _params: { send: (message: Message) => void }) {
     super();
   }
@@ -287,6 +349,7 @@ class TestAdapter extends NetworkAdapter {
   }
 
   override send(message: Message) {
+    log.info('send', { from: message.senderId, to: message.targetId, type: message.type });
     this._params.send(message);
   }
 
