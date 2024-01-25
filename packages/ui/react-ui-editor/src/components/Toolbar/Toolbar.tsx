@@ -18,20 +18,33 @@ import {
 } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { Button, DensityProvider, Select } from '@dxos/react-ui';
+import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
+export type Action =
+  | 'bold'
+  | 'code'
+  | 'comment'
+  | 'heading'
+  | 'image'
+  | 'italic'
+  | 'link'
+  | 'list'
+  | 'list-ordered'
+  | 'list-tasks'
+  | 'strikethrough'
+  | 'table';
+
 export type ToolbarProps = {
-  // TODO(burdon): Event type?
-  onAction?: (action: { type: string; data?: any }) => void;
+  onAction?: (action: { type: Action; data?: any }) => void;
 };
 
-const IconButton: FC<{ Icon: Icon; title: string } & NonNullable<Pick<ToolbarProps, 'onAction'>>> = ({
+const IconButton: FC<{ Icon: Icon; title: string } & NonNullable<Pick<ButtonProps, 'onClick'>>> = ({
   Icon,
   title,
-  onAction,
+  onClick,
 }) => (
-  <Button variant='ghost' classNames='p-2' onClick={onAction} title={title}>
+  <Button variant='ghost' classNames='p-2' onClick={onClick} title={title}>
     <Icon className={getSize(5)} />
   </Button>
 );
@@ -58,30 +71,30 @@ export const Toolbar = ({ onAction }: ToolbarProps) => {
           </Select.Root>
         </div>
         <div>
-          <IconButton Icon={TextB} title='Bold' onAction={() => onAction?.({ type: 'bold' })} />
-          <IconButton Icon={TextItalic} title='Italic' onAction={() => onAction?.({ type: 'italic' })} />
+          <IconButton Icon={TextB} title='Bold' onClick={() => onAction?.({ type: 'bold' })} />
+          <IconButton Icon={TextItalic} title='Italic' onClick={() => onAction?.({ type: 'italic' })} />
           <IconButton
             Icon={TextStrikethrough}
             title='Strike-through'
-            onAction={() => onAction?.({ type: 'strikethrough' })}
+            onClick={() => onAction?.({ type: 'strikethrough' })}
           />
         </div>
         <div>
-          <IconButton Icon={ListBullets} title='Bullet list' onAction={() => onAction?.({ type: 'list' })} />
-          <IconButton Icon={ListNumbers} title='Numbered list' onAction={() => onAction?.({ type: 'list-ordered' })} />
-          <IconButton Icon={ListChecks} title='Task list' onAction={() => onAction?.({ type: 'list-tasks' })} />
+          <IconButton Icon={ListBullets} title='Bullet list' onClick={() => onAction?.({ type: 'list' })} />
+          <IconButton Icon={ListNumbers} title='Numbered list' onClick={() => onAction?.({ type: 'list-ordered' })} />
+          <IconButton Icon={ListChecks} title='Task list' onClick={() => onAction?.({ type: 'list-tasks' })} />
         </div>
         <div>
-          <IconButton Icon={Code} title='Code block' onAction={() => onAction?.({ type: 'code' })} />
-          <IconButton Icon={Table} title='Table' onAction={() => onAction?.({ type: 'table' })} />
+          <IconButton Icon={Code} title='Code block' onClick={() => onAction?.({ type: 'code' })} />
+          <IconButton Icon={Table} title='Table' onClick={() => onAction?.({ type: 'table' })} />
         </div>
         <div>
-          <IconButton Icon={Link} title='Link' onAction={() => onAction?.({ type: 'link' })} />
-          <IconButton Icon={Image} title='Image' onAction={() => onAction?.({ type: 'image' })} />
+          <IconButton Icon={Link} title='Link' onClick={() => onAction?.({ type: 'link' })} />
+          <IconButton Icon={Image} title='Image' onClick={() => onAction?.({ type: 'image' })} />
         </div>
         <div className='grow' />
         <div>
-          <IconButton Icon={ChatText} title='Create comment' onAction={() => onAction?.({ type: 'comment' })} />
+          <IconButton Icon={ChatText} title='Create comment' onClick={() => onAction?.({ type: 'comment' })} />
         </div>
       </div>
     </DensityProvider>

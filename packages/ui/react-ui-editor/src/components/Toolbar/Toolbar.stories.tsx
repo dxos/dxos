@@ -7,39 +7,77 @@ import type { EditorView } from '@codemirror/view';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar, type ToolbarProps } from './Toolbar';
-import { toggleBold, formatting } from '../../extensions';
-import { useTextModel } from '../../hooks';
+import {
+  comments,
+  createComment,
+  formatting,
+  setHeading,
+  toggleBold,
+  toggleItalic,
+  toggleStrikethrough,
+  useComments,
+} from '../../extensions';
+import { type Comment, useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
 const content = 'Heading\n\nThis is some **sample** text!\n\nSome more.\n';
 
 const Story = () => {
   const [item] = useState({ text: new TextObject(content) });
-  // const [comments, setComments] = useState<Comment[]>([]);
+  const [_comments, setComments] = useState<Comment[]>([]);
   const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
-  const extensions = useMemo(() => [formatting()], []);
-  // useComments(view.current, comments);
-  if (!model) {
-    return null;
-  }
+  const extensions = useMemo(
+    () => [
+      comments({
+        onCreate: (cursor) => {
+          const id = PublicKey.random().toHex();
+          setComments((comments) => [...comments, { id, cursor }]);
+          return id;
+        },
+      }),
+      formatting(),
+    ],
+    [],
+  );
+
+  useComments(view.current, _comments);
 
   const handleAction: ToolbarProps['onAction'] = (action) => {
     console.log(action);
     if (view.current) {
       switch (action.type) {
         case 'heading':
+          setHeading(parseInt(action.data))(view.current);
           break;
+
         case 'bold':
           toggleBold(view.current);
+          break;
+        case 'italic':
+          toggleItalic(view.current);
+          break;
+        case 'strikethrough':
+          toggleStrikethrough(view.current);
+          break;
+
+        // TODO(burdon): Other actions.
+
+        case 'comment':
+          createComment(view.current);
           break;
       }
     }
   };
+
+  if (!model) {
+    return null;
+  }
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>

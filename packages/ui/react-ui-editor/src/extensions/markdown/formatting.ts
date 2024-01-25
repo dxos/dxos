@@ -16,27 +16,40 @@ import {
 
 export type FormattingOptions = {};
 
-export const toggleBold: Command = (view) => {
-  const { ranges } = view.state.selection;
-  for (const range of ranges) {
-    // TODO(burdon): Detect if already bold.
-    console.log(JSON.stringify({ range }));
-    view.dispatch({
-      changes: [
-        {
-          from: range.from,
-          insert: '__',
-        },
-        {
-          from: range.to,
-          insert: '__',
-        },
-      ],
-    });
-  }
+// TODO(burdon): Set heading for line.
+export const setHeading =
+  (level: number): Command =>
+  (view: EditorView) => {
+    return true;
+  };
 
-  return true;
-};
+export const toggleStyle =
+  (mark: string): Command =>
+  (view) => {
+    const { ranges } = view.state.selection;
+    for (const range of ranges) {
+      // TODO(burdon): Detect if already bold.
+      console.log(JSON.stringify({ range }));
+      view.dispatch({
+        changes: [
+          {
+            from: range.from,
+            insert: mark,
+          },
+          {
+            from: range.to,
+            insert: mark,
+          },
+        ],
+      });
+    }
+
+    return true;
+  };
+
+export const toggleBold = toggleStyle('**');
+export const toggleItalic = toggleStyle('_');
+export const toggleStrikethrough = toggleStyle('~~');
 
 export const formatting = (options: FormattingOptions = {}): Extension => {
   return [
