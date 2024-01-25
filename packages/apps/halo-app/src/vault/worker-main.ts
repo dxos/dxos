@@ -20,7 +20,6 @@ void initializeAppObservability({
   config: new Config(Defaults()),
   tracingEnable: false,
   replayEnable: false,
-  telemetryEnable: false,
 });
 
 let releaseLock: () => void;

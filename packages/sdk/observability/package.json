@@ -24,17 +24,31 @@
       "import": "./dist/lib/browser/segment/index.mjs",
       "require": "./dist/lib/node/segment/index.cjs",
       "node": "./dist/lib/node/segment/index.cjs"
+    },
+    "./sentry": {
+      "browser": "./dist/lib/browser/sentry/index.mjs",
+      "import": "./dist/lib/browser/sentry/index.mjs",
+      "require": "./dist/lib/node/sentry/index.cjs",
+      "node": "./dist/lib/node/sentry/index.cjs"
     }
   },
   "browser": {
     "./src/datadog/node.ts": "./src/datadog/browser.ts",
-    "./src/segment/node.ts": "./src/segment/browser.ts"
+    "./src/segment/node.ts": "./src/segment/browser.ts",
+    "./src/sentry/node.ts": "./src/sentry/browser.ts",
+    "./testing/testkit/index.ts": "./testing/testkit/browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "datadog": [
         "dist/types/src/datadog/index.d.ts"
+      ],
+      "segment": [
+        "dist/types/src/segment/index.d.ts"
+      ],
+      "sentry": [
+        "dist/types/src/sentry/index.d.ts"
       ]
     }
   },
@@ -58,16 +72,21 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@segment/snippet": "^4.15.3",
+    "@sentry/browser": "^7.98.0",
+    "@sentry/integrations": "7.98.0",
+    "@sentry/node": "^7.98.0",
+    "@sentry/tracing": "^7.98.0",
     "analytics-node": "^6.2.0",
     "datadog-metrics": "^0.11.1",
     "debug": "^4.3.4"
   },
   "devDependencies": {
+    "@sentry/types": "^7.98.0",
     "@types/analytics-node": "^3.1.9",
-    "@types/debug": "^4.1.10"
+    "@types/debug": "^4.1.10",
+    "sentry-testkit": "^5.0.5"
   },
   "publishConfig": {
     "access": "public"

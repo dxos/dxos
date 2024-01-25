@@ -48,7 +48,6 @@
     "@dxos/process": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/sentry": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^2.9.4",

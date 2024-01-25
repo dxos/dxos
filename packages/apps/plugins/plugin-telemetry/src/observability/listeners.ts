@@ -18,7 +18,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     }
 
     setTimeout(() =>
-      observability.telemetryEvent({
+      observability.event({
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.click`,
         properties: {
@@ -38,7 +38,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
   const focusCallback = () => {
     const now = new Date();
     setTimeout(() =>
-      observability.telemetryEvent({
+      observability.event({
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.focus`,
         properties: {
@@ -55,7 +55,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     const now = new Date();
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     setTimeout(() =>
-      observability.telemetryEvent({
+      observability.event({
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.blur`,
         properties: {
@@ -71,7 +71,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
 
   const unloadCallback = () => {
     setTimeout(() =>
-      observability.telemetryEvent({
+      observability.event({
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.page.unload`,
         properties: {
@@ -85,7 +85,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
 
   const errorCallback = (event: ErrorEvent) => {
     setTimeout(() =>
-      observability.telemetryEvent({
+      observability.event({
         identityId: getTelemetryIdentifier(client),
         name: `${namespace}.window.error`,
         properties: {

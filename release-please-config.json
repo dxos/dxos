@@ -354,11 +354,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/sentry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },

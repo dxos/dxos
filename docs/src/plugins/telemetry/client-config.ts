@@ -21,11 +21,11 @@ export default defineClientConfig({
       namespace: 'docs',
       secrets: { TELEMETRY_API_KEY },
     });
-    observability.initTelemetry();
+    observability.initialize();
 
     router.afterEach((to, from, failure) => {
       if (!isNavigationFailure(failure)) {
-        observability.telemetryPage({
+        observability.page({
           properties: {
             environment: DX_ENVIRONMENT,
             release: DX_RELEASE,

@@ -5,9 +5,9 @@
 import snippet from '@segment/snippet';
 
 import { log } from '@dxos/log';
-import { captureException } from '@dxos/sentry';
 
-import { type EventOptions, type SegmentTelemetryOptions, type PageOptions } from './types';
+import type { EventOptions, SegmentTelemetryOptions, PageOptions } from './types';
+import { captureException } from '../sentry';
 
 export class SegmentTelemetry {
   private _getTags: () => Map<string, string>;
@@ -28,7 +28,7 @@ export class SegmentTelemetry {
     }
   }
 
-  public page({ identityId: userId, ...options }: PageOptions = {}) {
+  page({ identityId: userId, ...options }: PageOptions = {}) {
     try {
       (window as any).analytics?.page({
         ...options,
@@ -39,7 +39,7 @@ export class SegmentTelemetry {
     }
   }
 
-  public event({ identityId: userId, name: event, ...options }: EventOptions) {
+  event({ identityId: userId, name: event, ...options }: EventOptions) {
     try {
       (window as any).analytics?.track({
         context: Object.fromEntries(this._getTags().entries()),
@@ -51,7 +51,7 @@ export class SegmentTelemetry {
     }
   }
 
-  public async flush() {
+  async flush() {
     try {
       await (window as any).analytics?.flush((err: any) => {
         captureException(err);

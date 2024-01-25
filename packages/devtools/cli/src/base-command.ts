@@ -226,20 +226,21 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (this.id === 'agent:start') {
       namespace = 'agent';
     }
-    this._observability = new Observability({ namespace, group, mode });
-
-    this._observability.initSentry(
-      {
+    this._observability = new Observability({
+      namespace,
+      group,
+      mode,
+      errors: {
         installationId,
         environment,
         release,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
       },
-      true,
-    );
+      logProcessor: true,
+    });
 
-    this._observability.initTelemetry();
+    this._observability.initialize();
 
     this.addToTelemetryContext({ command: this.id });
 
@@ -354,7 +355,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async finally() {
     const endTime = new Date();
-    this._observability?.telemetryEvent({
+    this._observability?.event({
       installationId: this._telemetryContext?.installationId,
       name: 'cli.command.run',
       properties: {

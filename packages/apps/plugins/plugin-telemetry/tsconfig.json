@@ -30,9 +30,6 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/sentry"
-    },
-    {
       "path": "../../../common/util"
     },
     {

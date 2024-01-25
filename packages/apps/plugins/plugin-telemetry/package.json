@@ -34,7 +34,6 @@
     "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "localforage": "^1.10.0"
   },

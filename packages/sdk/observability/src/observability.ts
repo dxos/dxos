@@ -10,6 +10,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/network-manager';
 import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { isNode } from '@dxos/util';
+
+import buildSecrets from './cli-observability-secrets.json';
+import { DatadogMetrics } from './datadog';
+import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import {
   captureException as sentryCaptureException,
   enableSentryLogProcessor,
@@ -17,12 +22,7 @@ import {
   init as sentryInit,
   type InitOptions,
   setTag as sentrySetTag,
-} from '@dxos/sentry';
-import { isNode } from '@dxos/util';
-
-import buildSecrets from './cli-observability-secrets.json';
-import { DatadogMetrics } from './datadog';
-import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
+} from './sentry';
 import { mapSpaces } from './util';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
@@ -30,11 +30,11 @@ const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 const DATADOG_IDLE_INTERVAL = 1000 * 60 * 1;
 
 // TODO(nf): add allowlist for telemetry tags?
-const SENTRY_TAGS = ['identityKey', 'username', 'deviceKey', 'group'];
+const ERROR_TAGS = ['identityKey', 'username', 'deviceKey', 'group'];
 
 // Secrets? EnvironmentConfig?
 
-export type ObservabilityConfig = {
+export type ObservabilitySecrets = {
   DX_ENVIRONMENT: string | null;
   DX_RELEASE: string | null;
   SENTRY_DESTINATION: string | null;
@@ -44,44 +44,59 @@ export type ObservabilityConfig = {
   DATADOG_APP_KEY: string | null;
 };
 
-export type ObservabilityRuntimeConfig = {
+export type Mode = 'basic' | 'full' | 'disabled';
+
+export type ObservabilityOptions = {
   /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
   namespace: string;
   // TODO(nf): make platform a required extension?
   // platform: Platform;
   config?: Config;
-  secrets?: any;
+  secrets?: Record<string, string>;
   group?: string;
-  mode?: 'basic' | 'full' | 'disabled';
+  mode?: Mode;
+
+  telemetry?: {
+    batchSize?: number;
+  };
+
+  errors?: InitOptions;
+  logProcessor?: boolean;
 };
 
 /*
  * Observability provides a common interface for error logging, metrics, and telemetry.
  * It currently provides these capabilities using Sentry, Datadog, and Segment.
  */
-
 export class Observability {
-  private _datadogmetrics?: DatadogMetrics;
-  private _segmentTelemetry?: SegmentTelemetry;
-  private config: ObservabilityConfig;
+  // TODO(wittjosiah): Generic metrics interface.
+  private _metrics?: DatadogMetrics;
+  // TODO(wittjosiah): Generic telemetry interface.
+  private _telemetryBatchSize: number;
+  private _telemetry?: SegmentTelemetry;
+  // TODO(wittjosiah): Generic error logging interface.
+  private _errorReportingOptions?: InitOptions;
+  private _errorLogProcessor: boolean;
+
+  private _secrets: ObservabilitySecrets;
   private _namespace: string;
-  private _runtimeConfig?: Config;
-  private _mode: 'basic' | 'full' | 'disabled' = 'disabled';
+  private _config?: Config;
+  private _mode: Mode = 'disabled';
   private _group?: string;
   // TODO(nf): accept upstream context?
   private _ctx = new Context();
   private _tags = new Map<string, string>();
-  private _sentryEnabled = false;
-  private _telemetryEnabled = false;
-  private _metricsEnabled = false;
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode }: ObservabilityRuntimeConfig) {
+  constructor({ namespace, config, secrets, group, mode, telemetry, errors, logProcessor }: ObservabilityOptions) {
     this._namespace = namespace;
-    this._runtimeConfig = config;
+    this._config = config;
     this._mode = mode ?? 'disabled';
     this._group = group;
-    this.config = secrets ?? this._loadSecrets(config);
+    this._secrets = this._loadSecrets(config, secrets);
+    this._telemetryBatchSize = telemetry?.batchSize ?? 30;
+    this._errorReportingOptions = errors;
+    this._errorLogProcessor = logProcessor ?? false;
 
     if (this._group) {
       this.setTag('group', this._group);
@@ -93,11 +108,12 @@ export class Observability {
     }
   }
 
-  private _loadSecrets(config: Config | undefined, secrets?: any) {
+  private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
     if (isNode()) {
-      return buildSecrets as ObservabilityConfig;
+      return buildSecrets as ObservabilitySecrets;
     } else {
       invariant(config, 'runtime config is required');
+      log('config', { rtc: this._secrets, config });
       return {
         DX_ENVIRONMENT: config.get('runtime.app.env.DX_ENVIRONMENT'),
         DX_RELEASE: config.get('runtime.app.env.DX_RELEASE'),
@@ -106,46 +122,52 @@ export class Observability {
         IPDATA_API_KEY: config.get('runtime.app.env.DX_IPDATA_API_KEY'),
         DATADOG_API_KEY: config.get('runtime.app.env.DX_DATADOG_API_KEY'),
         DATADOG_APP_KEY: config.get('runtime.app.env.DX_DATADOG_APP_KEY'),
+        ...secrets,
       };
-      log('config', { rtc: this.config, config });
     }
   }
 
-  /**
-   * global kill switch
-   */
-  public disable() {
-    this._mode = 'disabled';
-    // TODO(nf): use attributes to indicate enablement?
-    this._sentryEnabled = false;
-    this._telemetryEnabled = false;
-    // TODO(nf): fix?
-    this._datadogmetrics = undefined;
+  initialize() {
+    this._initMetrics();
+    this._initTelemetry();
+    this._initErrorLogs();
+  }
+
+  async close() {
+    await this._ctx.dispose();
+
+    // TODO(wittjosiah): Remove telemetry, etc. scripts.
+  }
+
+  setMode(mode: Mode) {
+    this._mode = mode;
+  }
+
+  get mode() {
+    return this._mode;
   }
 
   get enabled() {
     return this._mode !== 'disabled';
   }
 
-  public async close() {
-    await this._ctx.dispose();
-  }
+  //
+  // Tags
+  //
 
-  /******
-   * Tags
-   ******/
   /**
    * Set a tag for all observability services.
    */
-  public setTag(k: string, v: string) {
-    if (this._sentryEnabled && SENTRY_TAGS.includes(k)) {
-      sentrySetTag(k, v);
+  setTag(key: string, value: string) {
+    if (this.enabled && ERROR_TAGS.includes(key)) {
+      sentrySetTag(key, value);
     }
-    this._tags.set(k, v);
+
+    this._tags.set(key, value);
   }
 
-  // TODO(nf): combine with setDeviceTags?
-  public async setIdentityTags(client: Client) {
+  // TODO(nf): Combine with setDeviceTags.
+  async setIdentityTags(client: Client) {
     client.services.services.IdentityService!.queryIdentity().subscribe((idqr) => {
       if (!idqr?.identity?.identityKey) {
         log('empty response from identity service', { idqr });
@@ -161,7 +183,7 @@ export class Observability {
     });
   }
 
-  public async setDeviceTags(client: Client) {
+  async setDeviceTags(client: Client) {
     client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
       if (!dqr || !dqr.devices || dqr.devices.length === 0) {
         log('empty response from device service', { device: dqr });
@@ -181,38 +203,35 @@ export class Observability {
     });
   }
 
-  /*******
-   Metrics
-   *******/
+  //
+  // Metrics
+  //
 
-  public initMetrics() {
-    if (this.config.DATADOG_API_KEY && this._mode !== 'disabled') {
-      this._datadogmetrics = new DatadogMetrics({
-        apiKey: this.config.DATADOG_API_KEY,
+  private _initMetrics() {
+    if (this.enabled && this._secrets.DATADOG_API_KEY) {
+      this._metrics = new DatadogMetrics({
+        apiKey: this._secrets.DATADOG_API_KEY,
         getTags: () => this._tags,
         // TODO(nf): move/refactor from telementryContext, needed to read CORS proxy
-        config: this._runtimeConfig!,
+        config: this._config!,
       });
-      this._metricsEnabled = true;
     } else {
       log('datadog disabled');
     }
   }
 
-  get metricsEnabled() {
-    return this._metricsEnabled;
-  }
-
   /**
-   * Gauge metric
+   * Gauge metric.
+   *
+   * The default implementation uses Datadog.
    */
   gauge(name: string, value: number | any, extraTags?: any) {
-    this._datadogmetrics?.gauge(name, value, extraTags);
+    this._metrics?.gauge(name, value, extraTags);
   }
 
-  // TODO(nf): refactor into ObservabilityExtensions?
+  // TODO(nf): Refactor into ObservabilityExtensions.
 
-  public startNetworkMetrics(client: Client) {
+  startNetworkMetrics(client: Client) {
     const updateSignalMetrics = new Event<NetworkStatus>();
 
     // const lcsh = (csp as LocalClientServices).host;
@@ -262,7 +281,7 @@ export class Observability {
     // scheduleTaskInterval(ctx, async () => updateSignalMetrics.emit(), DATADOG_IDLE_INTERVAL);
   }
 
-  public startSpacesMetrics(client: Client) {
+  startSpacesMetrics(client: Client) {
     let spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
@@ -304,7 +323,7 @@ export class Observability {
     scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), DATADOG_IDLE_INTERVAL);
   }
 
-  public async startRuntimeMetrics(client: Client, frequency: number = DATADOG_IDLE_INTERVAL) {
+  async startRuntimeMetrics(client: Client, frequency: number = DATADOG_IDLE_INTERVAL) {
     const platform = await client.services.services.SystemService?.getPlatform();
     invariant(platform, 'platform is required');
 
@@ -340,81 +359,81 @@ export class Observability {
     );
   }
 
-  /*********
-   Telemetry
-   *********/
+  //
+  // Telemetry
+  //
 
-  public initTelemetry(batchSize = 30) {
-    if (this.config.TELEMETRY_API_KEY && this._mode !== 'disabled') {
-      this._segmentTelemetry = new SegmentTelemetry({
-        apiKey: this.config.TELEMETRY_API_KEY,
-        batchSize,
+  private _initTelemetry() {
+    if (this._secrets.TELEMETRY_API_KEY && this._mode !== 'disabled') {
+      this._telemetry = new SegmentTelemetry({
+        apiKey: this._secrets.TELEMETRY_API_KEY,
+        batchSize: this._telemetryBatchSize,
         getTags: () => this._tags,
       });
-      this._telemetryEnabled = true;
     } else {
       log('segment disabled');
     }
   }
 
-  get telemetryEnabled() {
-    return this._telemetryEnabled;
+  /**
+   * A telemetry event.
+   *
+   * The default implementation uses Segment.
+   */
+  event(options: EventOptions) {
+    this._telemetry?.event(options);
   }
 
-  public telemetryEvent(eo: EventOptions) {
-    this._segmentTelemetry?.event(eo);
+  /**
+   * A telemetry page view.
+   *
+   * The default implementation uses Segment.
+   */
+  page(options: PageOptions) {
+    this._telemetry?.page(options);
   }
 
-  public telemetryPage(po: PageOptions) {
-    this._segmentTelemetry?.page(po);
-  }
+  //
+  // Error Logs
+  //
 
-  /**********
-   Error Logs
-   **********/
-
-  // TODO(nf): rename?
-
-  public initSentry(options: Partial<InitOptions>, enableLogProcessor = false) {
-    if (this.config.SENTRY_DESTINATION && this._mode !== 'disabled') {
+  private _initErrorLogs() {
+    if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
       // TODO(nf): refactor package into this one?
       log.info('Initializing Sentry', {
-        dest: this.config.SENTRY_DESTINATION,
-        options,
+        dest: this._secrets.SENTRY_DESTINATION,
+        options: this._errorReportingOptions,
       });
       sentryInit({
-        ...options,
-        destination: this.config.SENTRY_DESTINATION,
+        ...this._errorReportingOptions,
+        destination: this._secrets.SENTRY_DESTINATION,
         scrubFilenames: this._mode !== 'full',
       });
-      if (options.tracing) {
+      if (this._errorReportingOptions?.tracing) {
         sentryConfigureTracing();
       }
       // TODO(nf): set platform at instantiation? needed for node.
-      if (enableLogProcessor) {
+      if (this._errorLogProcessor) {
         enableSentryLogProcessor();
       }
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
-        if (SENTRY_TAGS.includes(k)) {
+        if (ERROR_TAGS.includes(k)) {
           sentrySetTag(k, v);
         }
       });
-      this._sentryEnabled = true;
     } else {
       log('sentry disabled');
     }
   }
 
-  get sentryEnabled() {
-    return this._telemetryEnabled;
-  }
-
   /**
    * Manually capture an exception.
+   *
+   * The default implementation uses Sentry.
    */
-  public captureException(err: any) {
-    if (this._sentryEnabled) {
+  captureException(err: any) {
+    if (this.enabled) {
       sentryCaptureException(err);
     }
   }

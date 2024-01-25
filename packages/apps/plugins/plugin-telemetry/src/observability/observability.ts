@@ -78,8 +78,6 @@ export type AppObservabilityOptions = {
   config: Config;
   tracingEnable?: boolean;
   replayEnable?: boolean;
-  // enable Segment Telemetry
-  telemetryEnable?: boolean;
   // TODO(nf): options for providers?
 };
 
@@ -89,10 +87,10 @@ type IPData = { city: string; region: string; country: string; latitude: number;
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
 export const initializeAppObservability = async (
-  { namespace, config, tracingEnable = true, replayEnable = true, telemetryEnable = true }: AppObservabilityOptions,
+  { namespace, config, tracingEnable = true, replayEnable = true }: AppObservabilityOptions,
   client?: Client,
 ): Promise<Observability> => {
-  log.info('initializeAppObservability', { config });
+  log('initializeAppObservability', { config });
 
   /*
     const platform = (await client.services.services.SystemService?.getPlatform()) as Platform;
@@ -115,11 +113,26 @@ export const initializeAppObservability = async (
   const { Observability } = await import('@dxos/observability');
 
   // TODO(nf): configure mode
-  const observability = new Observability({ namespace, group, mode: 'full', config });
+  const observability = new Observability({
+    namespace,
+    group,
+    mode: 'full',
+    config,
+    errors: {
+      environment,
+      release,
+      tracing: tracingEnable,
+      replay: replayEnable,
+      // TODO(wittjosiah): Configure these.
+      sampleRate: 1.0,
+      replaySampleRate: 0.1,
+      replaySampleRateOnError: 1.0,
+    },
+  });
 
   // global kill switch
   if (observabilityDisabled) {
-    observability.disable();
+    observability.setMode('disabled');
     log.info('observability disabled');
     return observability;
   }
@@ -159,25 +172,6 @@ export const initializeAppObservability = async (
       }
     };
 
-    // TODO(nf): plugin state?
-
-    // TODO(nf): should provide capability to init Sentry earlier in booting process to capture errors during initialization.
-
-    observability.initSentry({
-      environment,
-      release,
-      tracing: tracingEnable,
-      replay: replayEnable,
-      // TODO(wittjosiah): Configure these.
-      sampleRate: 1.0,
-      replaySampleRate: 0.1,
-      replaySampleRateOnError: 1.0,
-    });
-
-    if (telemetryEnable) {
-      observability.initTelemetry();
-    }
-
     const ipData = await getIPData(config);
     if (ipData && ipData.city) {
       BASE_TELEMETRY_PROPERTIES.city = ipData.city;
@@ -187,10 +181,15 @@ export const initializeAppObservability = async (
       BASE_TELEMETRY_PROPERTIES.longitude = ipData.longitude;
     }
 
+    // TODO(nf): plugin state?
+
+    // TODO(nf): should provide capability to init Sentry earlier in booting process to capture errors during initialization.
+
+    observability.initialize();
+
     // Start client observability (i.e. not running as shared worker)
     // TODO(nf): how to prevent multiple instances for single shared worker?
     if (client) {
-      observability.initMetrics();
       await observability.setIdentityTags(client);
       await observability.setDeviceTags(client);
       await observability.startNetworkMetrics(client);
@@ -200,5 +199,6 @@ export const initializeAppObservability = async (
   } catch (err: any) {
     log.error('Failed to initialize app observability', err);
   }
+
   return observability;
 };

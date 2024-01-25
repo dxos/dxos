@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaptureConsole } from '@sentry/integrations';
+import { captureConsoleIntegration } from '@sentry/integrations';
 import {
   init as naturalInit,
   setTag,
@@ -39,7 +39,7 @@ export const init = (options: InitOptions) => {
       serverName: options.installationId,
       release: options.release,
       environment: options.environment ?? process.env.DX_ENVIRONMENT,
-      integrations: [new CaptureConsole({ levels: ['error', 'warn'] })],
+      integrations: [captureConsoleIntegration({ levels: ['error', 'warn'] })],
       tracesSampleRate: options.sampleRate,
       transport: options.transport,
       beforeSend: (event) => {

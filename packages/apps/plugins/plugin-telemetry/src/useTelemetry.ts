@@ -26,7 +26,7 @@ export const useTelemetry = ({ namespace, observability }: UseTelemetryOptions) 
     return;
   }
   useEffect(() => {
-    observability.telemetryEvent({
+    observability.event({
       identityId: getTelemetryIdentifier(client),
       name: `${namespace}.page.load`,
       properties: {
@@ -40,7 +40,7 @@ export const useTelemetry = ({ namespace, observability }: UseTelemetryOptions) 
   }, []);
 
   useEffect(() => {
-    observability.telemetryPage({
+    observability.page({
       identityId: getTelemetryIdentifier(client),
       properties: BASE_TELEMETRY_PROPERTIES,
     });

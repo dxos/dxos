@@ -6,9 +6,9 @@ import Analytics from 'analytics-node';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { captureException } from '@dxos/sentry';
 
-import { type EventOptions, type SegmentTelemetryOptions, type PageOptions } from './types';
+import type { EventOptions, SegmentTelemetryOptions, PageOptions } from './types';
+import { captureException } from '../sentry';
 
 export class SegmentTelemetry {
   private _analytics?: Analytics;
@@ -29,15 +29,16 @@ export class SegmentTelemetry {
   }
 
   /**
-   *
+   * Track a page view.
    */
-  public page({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) {
+  page({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'page' });
+      return;
     }
 
     try {
-      this._analytics?.page({
+      this._analytics.page({
         ...options,
         userId,
         anonymousId: anonymousId!,
@@ -48,16 +49,17 @@ export class SegmentTelemetry {
   }
 
   /**
-   *
+   * Track an event.
    */
-  public event({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) {
+  event({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) {
     log('sending event to telemetry', { event, options, tags: Object.fromEntries(this._getTags().entries()) });
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'event' });
+      return;
     }
 
     try {
-      this._analytics?.track({
+      this._analytics.track({
         ...options,
         context: Object.fromEntries(this._getTags().entries()),
         userId,
@@ -70,15 +72,16 @@ export class SegmentTelemetry {
   }
 
   /**
-   *
+   * Flush the event queue.
    */
-  public async flush() {
+  async flush() {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'flush' });
+      return;
     }
 
     try {
-      await this._analytics?.flush((err) => {
+      await this._analytics.flush((err) => {
         captureException(err);
       });
     } catch (err) {

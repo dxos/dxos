@@ -39,11 +39,17 @@
       "outputs": [
         "{projectRoot}/src/cli-observability-secrets.json"
       ]
+    },
+    "test": {
+      "options": {
+        "checkLeaks": false
+      }
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ],
   "name": "observability"
 }
