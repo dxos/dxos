@@ -15,6 +15,7 @@ import {
   type AutomergeHost,
 } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
+import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -38,7 +39,6 @@ import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
-import { failedInvariant } from '@dxos/invariant';
 
 export type DataSpaceCallbacks = {
   /**

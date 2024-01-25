@@ -4,7 +4,7 @@
 
 import { Trigger, sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, schema } from '@dxos/protocols';
 import {

@@ -9,13 +9,13 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost, AutomergeStorageAdapter, MeshNetworkAdapter } from './automerge-host';
-import { log } from '@dxos/log';
 
 describe('AutomergeHost', () => {
   test('can create documents', () => {
@@ -341,7 +341,6 @@ describe('AutomergeHost', () => {
     });
 
     for (const pair of [pairAB, pairBC]) {
-      debugger;
       pair[0].ready();
       pair[1].ready();
       await pair[0].onConnect.wait();
