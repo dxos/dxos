@@ -7,7 +7,7 @@
 import { StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { type Prop, next as A } from '@dxos/automerge/automerge';
+import { type Prop, next as _automerge } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 import { cursorConverter } from './cursor';
@@ -24,7 +24,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
   const state = StateField.define<State>({
     create: () => ({
       path: path.slice(),
-      lastHeads: A.getHeads(handle.docSync()!),
+      lastHeads: _automerge.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
     }),
 
@@ -79,7 +79,6 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     // Reconcile local updates.
     EditorView.updateListener.of(({ view, changes }) => {
       if (!changes.empty) {
-        // TODO(burdon): Loses cursor position if auto closing brackets. Call explicitly?
         semaphore.reconcile(view);
       }
     }),

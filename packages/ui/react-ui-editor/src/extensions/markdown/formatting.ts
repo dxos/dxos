@@ -20,16 +20,15 @@ export const toggleBold: Command = (view) => {
   const { ranges } = view.state.selection;
   for (const range of ranges) {
     // TODO(burdon): Detect if already bold.
+    console.log(JSON.stringify({ range }));
     view.dispatch({
       changes: [
         {
-          from: range.to,
+          from: range.from,
           insert: '__',
         },
-        // TODO(burdon): Second mutation has error if using automerge (need to be batched).
-        //  Currently model.extension is commented out in TextEditor.
         {
-          from: range.from,
+          from: range.to,
           insert: '__',
         },
       ],
