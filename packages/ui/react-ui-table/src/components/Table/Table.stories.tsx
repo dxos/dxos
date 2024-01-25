@@ -11,6 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider, AnchoredOverflow } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
@@ -127,6 +128,7 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[
 //
 
 export default {
+  title: 'react-ui-table/Table',
   component: Table,
   args: {
     header: true,
@@ -168,6 +170,7 @@ export default {
     },
   },
   decorators: [
+    withTheme,
     (Story: any) => (
       <DensityProvider density='fine'>
         <Story />

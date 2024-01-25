@@ -28,6 +28,8 @@ export interface DevtoolsHook {
   openClientRpcServer: () => Promise<boolean>;
 
   openDevtoolsApp?: () => void;
+
+  reset: () => void;
 }
 
 export type MountOptions = {
@@ -69,6 +71,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       log('Opened devtools client RPC server.');
       return true;
     },
+
+    reset,
   };
 
   if (client) {
@@ -124,7 +128,18 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   }
 
   ((globalThis as any).__DXOS__ as DevtoolsHook) = hook;
-  ((globalThis as any).dxos as DevtoolsHook) = hook;
+
+  let warningShown = false;
+  Object.defineProperty(globalThis, 'dxos', {
+    get: () => {
+      if (!warningShown) {
+        warningShown = true;
+        console.warn('globalThis.dxos is an undocumented API and may changed or removed entirely without notice.');
+      }
+      return hook;
+    },
+    configurable: true,
+  });
 };
 
 export const unmountDevtoolsHooks = () => {
@@ -213,4 +228,38 @@ const port: RpcPort = {
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
   },
+};
+
+/**
+ * Delete all data in the browser without depending on other packages.
+ */
+const reset = async () => {
+  console.log(`Deleting all data from ${typeof window.localStorage !== 'undefined' ? window.location?.origin : ''}`);
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.clear();
+    console.log('Cleared local storage');
+  }
+
+  if (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.storage !== 'undefined' &&
+    typeof navigator.storage.getDirectory === 'function'
+  ) {
+    const root = await navigator.storage.getDirectory();
+    for await (const entry of (root as any).keys() as Iterable<string>) {
+      try {
+        await root.removeEntry(entry, { recursive: true });
+      } catch (err) {
+        console.error(`Failed to delete ${entry}: ${err}`);
+      }
+    }
+    console.log('Cleared OPFS');
+
+    if (typeof location !== 'undefined' && typeof location.reload === 'function') {
+      location.reload();
+    } else if (typeof close === 'function') {
+      close(); // For web workers.
+    }
+  }
 };

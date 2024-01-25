@@ -4,7 +4,7 @@
 
 import { Event, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocumentId, type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -13,15 +13,10 @@ import { log } from '@dxos/log';
 import { type AutomergeContext } from './automerge-context';
 import { AutomergeObject } from './automerge-object';
 import { type DocStructure } from './types';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
-import {
-  type EchoObject,
-  base,
-  getGlobalAutomergePreference,
-  isActualTypedObject,
-  isActualAutomergeObject,
-} from '../object';
+import { type EchoObject, base, isActualTypedObject, isAutomergeObject, TextObject } from '../object';
 import { type Schema } from '../proto';
 
 export type SpaceState = {
@@ -55,26 +50,42 @@ export class AutomergeDb {
     this._echoDatabase = echoDatabase;
   }
 
+  get spaceKey() {
+    return this._echoDatabase._backend.spaceKey;
+  }
+
   @synchronized
   async open(spaceState: SpaceState) {
+    const start = performance.now();
     if (this._ctx) {
       log.info('Already open');
       return;
     }
     this._ctx = new Context();
 
-    if (spaceState.rootUrl) {
+    log.info('begin opening', { indexDocId: spaceState.rootUrl, automergePreference: getGlobalAutomergePreference() });
+    if (!spaceState.rootUrl) {
+      if (getGlobalAutomergePreference()) {
+        log.error('Database opened with no rootUrl');
+      }
+      await this._fallbackToNewDoc();
+    } else {
       try {
-        this._docHandle = this.automerge.repo.find(spaceState.rootUrl as DocumentId);
-        await asyncTimeout(this._docHandle.whenReady(), 500);
-        const ojectIds = Object.keys((await this._docHandle.doc()).objects ?? {});
+        await this._initDocHandle(spaceState.rootUrl);
+
+        const doc = this._docHandle.docSync();
+        invariant(doc);
+
+        const ojectIds = Object.keys(doc.objects ?? {});
         this._createObjects(ojectIds);
       } catch (err) {
-        log('Error opening document', err);
-        await this._fallbackToNewDoc();
+        log.catch(err);
+        if (getGlobalAutomergePreference()) {
+          throw err;
+        } else {
+          await this._fallbackToNewDoc();
+        }
       }
-    } else {
-      await this._fallbackToNewDoc();
     }
 
     const update = (event: DocHandleChangePayload<DocStructure>) => {
@@ -87,21 +98,57 @@ export class AutomergeDb {
     this._ctx.onDispose(() => {
       this._docHandle.off('change', update);
     });
+
+    log.info('db opened', { indexDocId: spaceState.rootUrl, duration: performance.now() - start });
   }
 
+  // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
     if (!this._ctx) {
       return;
     }
+
     void this._ctx.dispose();
     this._ctx = undefined;
   }
 
-  private async _fallbackToNewDoc() {
+  private async _initDocHandle(rootUrl: string) {
+    this._docHandle = this.automerge.repo.find(rootUrl as DocumentId);
+    // TODO(mykola): Remove check for global preference or timeout?
     if (getGlobalAutomergePreference()) {
-      log.error("Automerge is falling back to creating a new document for the space. Changed won't be persisted.");
+      // Loop on timeout.
+      while (true) {
+        try {
+          await asyncTimeout(cancelWithContext(this._ctx!, this._docHandle.whenReady(['ready'])), 5_000); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+          break;
+        } catch (err) {
+          if (err instanceof ContextDisposedError) {
+            return;
+          }
+
+          if (`${err}`.includes('Timeout')) {
+            log.info('wraparound', { id: this._docHandle.documentId, state: this._docHandle.state });
+            continue;
+          }
+
+          throw err;
+        }
+      }
+    } else {
+      await asyncTimeout(
+        this._docHandle.whenReady(['ready']),
+        1_000,
+        'short doc ready timeout with automerge disabled',
+      );
     }
+
+    if (this._docHandle.state === 'unavailable') {
+      throw new Error('Automerge document is unavailable');
+    }
+  }
+
+  private async _fallbackToNewDoc() {
     this._docHandle = this.automerge.repo.create();
     this._ctx!.onDispose(() => {
       this._docHandle.delete();
@@ -110,10 +157,10 @@ export class AutomergeDb {
 
   getObjectById(id: string): EchoObject | undefined {
     const obj = this._objects.get(id) ?? this._echoDatabase._objects.get(id);
-
     if (!obj) {
       return undefined;
     }
+
     if ((obj as any).__deleted === true) {
       return undefined;
     }
@@ -122,7 +169,7 @@ export class AutomergeDb {
   }
 
   add<T extends EchoObject>(obj: T): T {
-    if (isActualTypedObject(obj)) {
+    if (isActualTypedObject(obj) || obj instanceof TextObject) {
       return this._echoDatabase.add(obj);
     }
 
@@ -130,7 +177,7 @@ export class AutomergeDb {
       return obj;
     }
 
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(!this._objects.has(obj.id));
     this._objects.set(obj.id, obj);
     (obj[base] as AutomergeObject)._bind({
@@ -138,18 +185,19 @@ export class AutomergeDb {
       docHandle: this._docHandle,
       path: ['objects', obj.id],
     });
+
     return obj;
   }
 
   remove<T extends EchoObject>(obj: T) {
-    invariant(isActualAutomergeObject(obj));
+    invariant(isAutomergeObject(obj));
     invariant(this._objects.has(obj.id));
     (obj[base] as AutomergeObject).__system!.deleted = true;
   }
 
   private _emitUpdateEvent(itemsUpdated: string[]) {
     this._updateEvent.emit({
-      spaceKey: this._echoDatabase._backend.spaceKey,
+      spaceKey: this.spaceKey,
       itemsUpdated: itemsUpdated.map((id) => ({ id })),
     });
   }

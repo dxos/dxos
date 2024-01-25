@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Kanban } from './Kanban';
 import { DemoKanban, type DemoKanbanProps } from './testing';
 import { Mosaic } from '../../mosaic';
@@ -15,6 +17,7 @@ import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
+  title: 'react-ui-mosaic/Kanban',
   component: Kanban,
   render: (args: DemoKanbanProps) => {
     return (
@@ -24,7 +27,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

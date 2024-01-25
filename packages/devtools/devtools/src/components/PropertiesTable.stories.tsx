@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable';
 
@@ -45,6 +46,7 @@ const TestStory = () => {
 
 export default {
   component: TestStory,
+  decorators: [withTheme],
 };
 
 export const Default = {

@@ -87,7 +87,7 @@ DXOS apps enable users to control their data and identity by storing it in a [va
 
 ### React Helpers
 
-The other wrapper components are part of the DXOS [UI system](./react/ui.md):
+The other wrapper components are part of the DXOS [UI system](./react/aurora.md):
 
 *   The `<ServiceWorkerToastContainer>` pops a toast with a reload prompt whenever a new version of the PWA is ready to go.
 *   `<ErrorBoundary>` catches errors that bubble up from the application and `<ResetDialog>` provides a user-friendly way to reset the application in the event of a crash.

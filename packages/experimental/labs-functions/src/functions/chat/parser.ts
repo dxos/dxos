@@ -4,36 +4,54 @@
 
 import { invariant } from '@dxos/invariant';
 
+import { safeParseJson } from '../../util';
+
 export type ParseResult = {
+  timestamp: string;
+  type: string;
+  kind?: 'fenced'; // TODO(burdon): ???
   pre?: string;
   post?: string;
-  type: string;
   content: string;
   data?: any;
 };
 
-export const parseMessage = (content: string, type = '\\w+'): ParseResult | undefined => {
+export const parseMessage = (content: string, type?: string): ParseResult => {
   invariant(content);
+  const timestamp = new Date().toISOString();
 
-  // Check for embedded block content.
-  const regexp1 = new RegExp('(.+)?```(' + type + ')?\\s+(.+)```', 's');
-  const match = regexp1.exec(content);
+  // Check if raw JSON.
+  if (!type || type === 'json') {
+    const value = safeParseJson(content);
+    if (value) {
+      return {
+        timestamp,
+        type: 'json',
+        content,
+        data: value,
+      };
+    }
+  }
+
+  // Check for fenced content.
+  const regexp = new RegExp('(.+)?```\\s*(' + (type ?? '\\w+') + ')?\\s+(.+)```', 's');
+  const match = regexp.exec(content);
   if (match) {
     const [_, pre, type, content, post] = match;
     return {
+      timestamp,
+      type,
       pre,
       post,
-      type,
       content,
-      data: type === 'json' ? parseJson(content) : undefined,
+      data: type === 'json' ? safeParseJson(content) : undefined,
+      kind: 'fenced',
     };
   }
-};
 
-export const parseJson = (content: string) => {
-  try {
-    return JSON.parse(content);
-  } catch (err) {
-    return null;
-  }
+  return {
+    timestamp,
+    type: 'text',
+    content,
+  };
 };

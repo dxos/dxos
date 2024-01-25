@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Stack } from './Stack';
 import { DemoStack, type DemoStackProps } from './testing';
 import { Mosaic } from '../../mosaic';
@@ -15,7 +17,7 @@ import { FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'Views/Stack/Columns',
+  title: 'react-ui-mosaic/Stack',
   component: Stack,
   render: (args: DemoStackProps) => {
     return (
@@ -30,7 +32,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

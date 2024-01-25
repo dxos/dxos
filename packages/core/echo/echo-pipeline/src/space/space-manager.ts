@@ -39,6 +39,9 @@ export type ConstructSpaceParams = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
   memberKey: PublicKey;
+  /**
+   * Called when connection auth passed successful.
+   */
   onNetworkConnection: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
 };

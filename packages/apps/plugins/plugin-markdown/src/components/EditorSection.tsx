@@ -2,36 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type HTMLAttributes, useRef } from 'react';
+import React, { type HTMLAttributes } from 'react';
 
-import { type EditorModel, MarkdownEditor, type MarkdownEditorRef } from '@dxos/react-ui-editor';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { MarkdownEditor, type TextEditorProps } from '@dxos/react-ui-editor';
+import { focusRing, attentionSurface, mx } from '@dxos/react-ui-theme';
 
-export const EditorSection = ({ content: document }: { content: EditorModel }) => {
-  const editorRef = useRef<MarkdownEditorRef>(null);
+import { MARKDOWN_PLUGIN } from '../meta';
+
+type EditorSectionProps = Pick<TextEditorProps, 'model' | 'editorMode' | 'extensions'>;
+
+export const EditorSection = (props: EditorSectionProps) => {
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
 
   return (
     <MarkdownEditor
-      ref={editorRef}
-      model={document}
+      placeholder={t('editor placeholder')}
       slots={{
         root: {
-          role: 'none',
-          className: mx(focusRing, 'm-0.5 is-[calc(100%-4px)]'),
+          className: mx('flex flex-col grow m-0.5', attentionSurface, focusRing),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {
-          markdownTheme: {
-            '&, & .cm-scroller': {
-              inlineSize: '100%',
-            },
-            '& .cm-content': {
-              paddingBlock: '1rem',
-            },
-            '& .cm-line': { paddingInline: '0' },
-          },
+          className: 'h-full py-4',
         },
       }}
+      {...props}
     />
   );
 };

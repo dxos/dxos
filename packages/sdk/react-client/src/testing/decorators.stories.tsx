@@ -7,15 +7,15 @@ import '@dxosTheme';
 import React from 'react';
 
 import { type PublicKey } from '@dxos/client';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { ClientDecorator } from './ClientDecorator';
-import { setupPeersInSpace } from './ClientSpaceDecorator';
-import { ToggleNetworkDecorator } from './ToggleNetworkDecorator';
+import { ClientRepeater } from './ClientRepeater';
 import { useClient } from '../client';
 import { useSpace } from '../echo';
 
 export default {
   title: 'testing/decorators',
+  decorators: [withTheme],
 };
 
 const JsonPanel = ({ value }: { value: any }) => (
@@ -39,8 +39,7 @@ const ClientStory = () => {
 };
 
 export const WithClient = {
-  render: () => <ClientStory />,
-  decorators: [ClientDecorator({ count: 2 })],
+  render: () => <ClientRepeater Component={ClientStory} count={2} />,
 };
 
 const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
@@ -59,14 +58,10 @@ const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
   );
 };
 
-const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
-
 export const WithClientSpace = {
-  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients })],
+  render: () => <ClientRepeater Component={ClientSpace} count={2} createSpace />,
 };
 
 export const WithNetworkToggle = {
-  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients }), ToggleNetworkDecorator({ clients })],
+  render: () => <ClientRepeater Component={ClientSpace} count={2} createSpace networkToggle />,
 };

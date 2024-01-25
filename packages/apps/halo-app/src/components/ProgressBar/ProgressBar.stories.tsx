@@ -6,10 +6,14 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { ProgressBar } from './ProgressBar';
 
 export default {
+  title: 'halo-app/ProgressBar',
   component: ProgressBar,
+  decorators: [withTheme],
   actions: { argTypesRegex: '^on.*' },
 };
 

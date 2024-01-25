@@ -8,14 +8,16 @@ import React, { type PropsWithChildren } from 'react';
 
 import {
   baseSurface,
-  chromeSurface,
+  modalSurface,
   groupSurface,
   mx,
   surfaceElevation,
   fixedSurface,
   fixedBorder,
-  inputSurface,
+  attentionSurface,
 } from '@dxos/react-ui-theme';
+
+import { withTheme } from '../testing';
 
 const Surface = ({
   children,
@@ -23,11 +25,11 @@ const Surface = ({
 }: PropsWithChildren & { level: 'base' | 'group' | 'chrome' | 'fixed' | 'input' }) => {
   const surface =
     level === 'chrome'
-      ? [chromeSurface, surfaceElevation({ elevation: 'chrome' })]
+      ? [modalSurface, surfaceElevation({ elevation: 'chrome' })]
       : level === 'group'
       ? [groupSurface, surfaceElevation({ elevation: 'group' })]
       : level === 'input'
-      ? [inputSurface, surfaceElevation({ elevation: 'group' })]
+      ? [attentionSurface, surfaceElevation({ elevation: 'group' })]
       : level === 'fixed'
       ? [fixedSurface, fixedBorder, 'border', surfaceElevation({ elevation: 'chrome' })]
       : [baseSurface];
@@ -56,7 +58,10 @@ const SurfacesStory = () => {
 };
 
 export default {
+  title: 'react-ui/Scenarios/Surfaces',
   component: SurfacesStory,
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

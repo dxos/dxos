@@ -26,6 +26,7 @@ export type ObjectSystem = {
   /**
    * Object type. Reference to the schema.
    */
+  // TODO(mykola): It is not used right now.
   schema: Schema;
 
   /**

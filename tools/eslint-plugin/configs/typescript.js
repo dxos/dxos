@@ -36,5 +36,6 @@ module.exports = {
         fixMixedExportsWithInlineTypeSpecifier: true,
       },
     ],
+    '@typescript-eslint/no-this-alias': 'off',
   },
 };

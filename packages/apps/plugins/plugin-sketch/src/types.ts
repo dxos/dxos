@@ -34,10 +34,9 @@ export interface SketchModel {
   store: TLStore;
 }
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[SketchType.name] = SketchType;
-
 export const isSketch = (data: unknown): data is SketchType => {
   return isTypedObject(data) && SketchType.schema.typename === data.__typename;
 };
+
+// TODO(burdon): Factor out.
+export type Unsubscribe = () => void;

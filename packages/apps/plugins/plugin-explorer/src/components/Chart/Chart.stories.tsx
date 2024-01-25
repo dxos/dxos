@@ -8,7 +8,7 @@ import * as Plot from '@observablehq/plot';
 import React, { useEffect, useState } from 'react';
 
 import { types } from '@braneframe/types';
-import { ClientSpaceDecorator, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 
 import { Chart } from './Chart';
 
@@ -16,16 +16,13 @@ import { Chart } from './Chart';
 // TODO(burdon): How to provide geo service via agent?
 
 export default {
+  title: 'plugin-explorer/Chart',
   component: Plot,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
+  decorators: [FullscreenDecorator()],
 };
 
-export const Default = () => {
+export const Default = () => <ClientRepeater Component={DefaultStory} types={types} />;
+const DefaultStory = () => {
   const [data, setData] = useState<{ cities: any }>();
   useEffect(() => {
     setTimeout(async () => {

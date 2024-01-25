@@ -73,6 +73,7 @@ build
 out
 tmp
 .vite-inspect
+*.tsbuildinfo
 
 # Web Extensions
 web-ext-artifacts
@@ -139,3 +140,6 @@ build
 tools/intellij-plugin/.idea/
 tools/intellij-plugin/.gradle/
 tools/intellij-plugin/build/
+
+# Obsidian
+**/.obsidian**

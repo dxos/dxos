@@ -47,7 +47,7 @@
         "script": "api-keys"
       },
       "outputs": [
-        "packages/devtools/cli/src/util/telemetryrc.json"
+        "{projectRoot}/src/util/telemetryrc.json"
       ]
     },
     "test": {
@@ -59,8 +59,10 @@
       }
     }
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ]
+  ],
+  "name": "cli"
 }

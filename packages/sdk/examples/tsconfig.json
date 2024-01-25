@@ -20,7 +20,13 @@
       "path": "../../apps/types"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-signals"
     },
     {
       "path": "../../core/echo/echo-typegen"
@@ -33,6 +39,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/storybook-utils"
     },
     {
       "path": "../react-client"

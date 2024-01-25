@@ -5,7 +5,7 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, Surface, useIntent } from '@dxos/app-framework';
+import { LayoutAction, SettingsAction, Surface, useIntent } from '@dxos/app-framework';
 import { type Node, type Graph, isGraphNode } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -182,6 +182,8 @@ export const TreeViewContainer = ({
         <DensityProvider density='coarse'>
           {identity && (
             <>
+              {/* TODO(wittjosiah): HALO button and settings button are not specific to the navtree plugin.
+                    They should probably be rendered via surfaces or exposed as root graph actions instead. */}
               <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 plb-1 bs-[--topbar-size]'>
                 <HaloButton
                   size={6}
@@ -191,24 +193,22 @@ export const TreeViewContainer = ({
                 <div role='none' className='grow' />
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
+                    {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
                     <Button
+                      data-joyride='welcome/settings'
                       variant='ghost'
                       classNames='pli-2.5'
+                      data-testid='treeView.openSettings'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                      onClick={() => {
-                        void dispatch({
-                          action: LayoutAction.OPEN_DIALOG,
-                          data: { component: 'dxos.org/plugin/layout/ProfileSettings' },
-                        });
-                      }}
+                      onClick={() => dispatch({ action: SettingsAction.OPEN })}
                     >
-                      <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>
+                      <span className='sr-only'>{t('open settings label', { ns: NAVTREE_PLUGIN })}</span>
                       <GearSix className={mx(getSize(4), 'rotate-90')} />
                     </Button>
                   </Tooltip.Trigger>
                   <Tooltip.Portal>
                     <Tooltip.Content classNames='z-[70]'>
-                      {t('settings dialog title', { ns: 'os' })}
+                      {t('open settings label', { ns: NAVTREE_PLUGIN })}
                       <Tooltip.Arrow />
                     </Tooltip.Content>
                   </Tooltip.Portal>
@@ -219,12 +219,12 @@ export const TreeViewContainer = ({
                       variant='ghost'
                       classNames='lg:hidden pli-2 pointer-fine:pli-1'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                      onClick={() => {
-                        void dispatch({
+                      onClick={() =>
+                        dispatch({
                           action: LayoutAction.TOGGLE_SIDEBAR,
                           data: { state: false },
-                        });
-                      }}
+                        })
+                      }
                     >
                       <span className='sr-only'>{t('close sidebar label', { ns: 'os' })}</span>
                       <CaretDoubleLeft className={getSize(4)} />

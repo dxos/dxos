@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Mailbox as MailboxType } from '@braneframe/types';
+import { AddressBook as AddressBookType, Calendar as CalendarType, Mailbox as MailboxType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -16,7 +16,9 @@ import { INBOX_PLUGIN } from './meta';
 
 const INBOX_ACTION = `${INBOX_PLUGIN}/action`;
 export enum InboxAction {
-  CREATE = `${INBOX_ACTION}/create`,
+  CREATE_MAILBOX = `${INBOX_ACTION}/create-mailbox`,
+  CREATE_ADDRESSBOOK = `${INBOX_ACTION}/create-addressbook`,
+  CREATE_CALENDAR = `${INBOX_ACTION}/create-calendar`,
 }
 
 export type InboxPluginProvides = SurfaceProvides &
@@ -25,6 +27,14 @@ export type InboxPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides;
 
-export const isInbox = (data: unknown): data is MailboxType => {
+export const isMailbox = (data: unknown): data is MailboxType => {
   return isTypedObject(data) && MailboxType.schema.typename === data.__typename;
+};
+
+export const isAddressBook = (data: unknown): data is AddressBookType => {
+  return isTypedObject(data) && AddressBookType.schema.typename === data.__typename;
+};
+
+export const isCalendar = (data: unknown): data is CalendarType => {
+  return isTypedObject(data) && CalendarType.schema.typename === data.__typename;
 };

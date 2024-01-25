@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { Document as DocumentType, File as FileType } from '@braneframe/types';
-import { hasType, type TypedObject } from '@dxos/echo-schema';
+import { getTextContent, hasType, type TypedObject } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -19,11 +19,12 @@ import { getKey } from '../../util';
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
   const { space, objects } = event;
-  if (!space || !objects?.length) {
-    return response.status(400);
-  }
-  invariant(dataDir);
+  // TODO(burdon): Option to process all spaces.
+  // if (!space || !objects?.length) {
+  //   return response.status(400);
+  // }
 
+  invariant(dataDir);
   const docs: ChainDocument[] = [];
   const addDocuments =
     (space: PublicKey | undefined = undefined) =>
@@ -33,7 +34,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
         log.info('processing', { object: { id: object.id, type: object.__typename } });
         switch (object.__typename) {
           case DocumentType.schema.typename: {
-            pageContent = object.content?.text.trim();
+            pageContent = !!object.content ? getTextContent(object.content).trim() : undefined;
             break;
           }
 
@@ -44,11 +45,11 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
               log.info('fetching', { url });
               const res = await fetch(url);
               const buffer = await res.arrayBuffer();
-              const pageContent = (await promisify(textract.fromBufferWithMime)(
+              pageContent = (await promisify(textract.fromBufferWithMime)(
                 res.headers.get('content-type')!,
                 Buffer.from(buffer),
               )) as string;
-              log.info('parsed', { cid: object.cid, text: pageContent?.length });
+              log.info('parsed', { cid: object.cid, pageContent: pageContent?.length });
             }
             break;
           }
@@ -66,11 +67,11 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       }
     };
 
-  const spaces = client.spaces.get();
   if (space) {
     const add = addDocuments(space.key);
-    if (event.objects?.length) {
+    if (objects?.length) {
       await add(objects.filter(hasType(DocumentType.schema)));
+      await add(objects.filter(hasType(FileType.schema)));
     } else {
       const { objects: documents } = space.db.query(DocumentType.filter());
       await add(documents);
@@ -78,6 +79,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       await add(files);
     }
   } else {
+    const spaces = client.spaces.get();
     for (const space of spaces) {
       const { objects: documents } = space.db.query(DocumentType.filter());
       await addDocuments(space.key)(documents);
@@ -93,13 +95,17 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       apiKey: getKey(config, 'openai.com/api_key'),
     });
 
-    await resources.store.initialize();
+    try {
+      await resources.store.initialize();
 
-    // TODO(burdon): Remove deleted docs.
-    await resources.store.addDocuments(docs);
-    await resources.store.save();
+      // TODO(burdon): Remove deleted docs.
+      await resources.store.addDocuments(docs);
+      await resources.store.save();
 
-    log.info('embedding', resources.info);
+      log.info('embedding', resources.info);
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   return response.status(200);

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import {
   DX_RUNTIME,
   ENV_DX_PROFILE,
@@ -32,6 +33,8 @@ export const fromAgent = ({
 };
 
 export class AgentClientServiceProvider implements ClientServicesProvider {
+  // TODO(wittjosiah): Fire an event if the socket disconnects.
+  readonly closed = new Event<Error | undefined>();
   private _client?: WebsocketRpcClient<ClientServices, {}>;
 
   constructor(private readonly _profile: string) {}

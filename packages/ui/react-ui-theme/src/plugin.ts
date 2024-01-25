@@ -8,7 +8,8 @@ import tailwindcss from 'tailwindcss';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 import { type Plugin } from 'vite';
 
-import { resolveKnownPeers, tailwindConfig } from './config';
+import { tailwindConfig } from './config';
+import { resolveKnownPeers } from './config/resolveContent';
 
 export interface VitePluginTailwindOptions {
   jit?: boolean;
@@ -26,7 +27,7 @@ export const ThemePlugin = (
   const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
-    virtualFileId: '@dxosTheme',
+    virtualFileId: '@dxosTheme', // TODO(burdon): import '@dxos-theme'?
     ...options,
   };
 

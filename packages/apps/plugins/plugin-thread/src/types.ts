@@ -7,6 +7,7 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -17,13 +18,17 @@ import { THREAD_PLUGIN } from './meta';
 const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 export enum ThreadAction {
   CREATE = `${THREAD_ACTION}/create`,
+  SELECT = `${THREAD_ACTION}/select`,
 }
 
 export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SettingsProvides &
   TranslationsProvides;
+
+export type ThreadSettingsProps = { standalone?: boolean };
 
 export interface ThreadModel {
   root: ThreadType;

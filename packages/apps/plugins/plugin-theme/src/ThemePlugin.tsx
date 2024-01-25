@@ -19,9 +19,9 @@ export type ThemePluginOptions = {
 };
 
 export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
-  let modeQuery: MediaQueryList | undefined;
   const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  let modeQuery: MediaQueryList | undefined;
 
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
     document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
@@ -46,7 +46,10 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
         return (
           <ThemeProvider {...{ tx: propsTx ?? defaultTx, themeMode: state.themeMode, resourceExtensions: resources }}>
             <Toast.Provider>
-              <Tooltip.Provider>{children}</Tooltip.Provider>
+              {/* TODO(burdon): Add option to disable tooltips. */}
+              <Tooltip.Provider delayDuration={1000} skipDelayDuration={100} disableHoverableContent>
+                {children}
+              </Tooltip.Provider>
               <Toast.Viewport />
             </Toast.Provider>
           </ThemeProvider>

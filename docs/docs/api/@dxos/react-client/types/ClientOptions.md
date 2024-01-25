@@ -23,4 +23,10 @@ Type: <code>MaybePromise&lt;[ClientServicesProvider](/api/@dxos/react-client/int
 Custom services provider.
 
 
+### [types]()
+Type: <code>TypeCollection</code>
+
+Types.
+
+
 

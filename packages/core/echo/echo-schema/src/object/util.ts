@@ -8,7 +8,7 @@ import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/docum
 import { type TextSnapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { type AbstractEchoObject } from './object';
-import { isActualAutomergeObject } from './typed-object';
+import { isAutomergeObject } from './typed-object';
 import { base, type EchoObject, type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
 
@@ -22,7 +22,7 @@ export const forceUpdate = (obj: AbstractEchoObject) => {
 };
 
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
-  if (isActualAutomergeObject(obj)) {
+  if (isAutomergeObject(obj)) {
     return obj[base]._database._echoDatabase;
   }
   return obj[base]._database;
@@ -30,7 +30,7 @@ export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined
 
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
   const db = getDatabaseFromObject(obj);
-  return db && new Reference(obj.id, undefined, db._backend.spaceKey.toHex());
+  return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
 };
 
 export const matchKeys = (a: ForeignKey[], b: ForeignKey[]): boolean =>

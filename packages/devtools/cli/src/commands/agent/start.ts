@@ -10,6 +10,7 @@ import {
   Agent,
   ChainPlugin,
   DashboardPlugin,
+  DiscordPlugin,
   EchoProxyPlugin,
   EpochMonitorPlugin,
   FunctionsPlugin,
@@ -17,8 +18,10 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
+import { getGlobalAutomergePreference } from '@dxos/client/echo';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
@@ -73,6 +76,8 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
+    log.info('agent automerge preference', { automerge: getGlobalAutomergePreference() });
+
     const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
@@ -84,6 +89,7 @@ export default class Start extends BaseCommand<typeof Start> {
       plugins: [
         new ChainPlugin(),
         new DashboardPlugin(),
+        new DiscordPlugin(),
         new EchoProxyPlugin(),
         new EpochMonitorPlugin(),
         new FunctionsPlugin(),

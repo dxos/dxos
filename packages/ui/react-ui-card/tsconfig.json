@@ -24,6 +24,9 @@
     },
     {
       "path": "../react-ui-theme"
+    },
+    {
+      "path": "../storybook-utils"
     }
   ]
 }

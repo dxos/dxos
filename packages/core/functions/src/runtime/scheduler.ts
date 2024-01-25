@@ -116,6 +116,7 @@ export class Scheduler {
       });
     });
 
+    // TODO(burdon): Don't fire initially.
     // TODO(burdon): Standardize subscription handles.
     const subscriptions: (() => void)[] = [];
     const subscription = createSubscription(({ added, updated }) => {
@@ -130,6 +131,8 @@ export class Scheduler {
     });
     subscriptions.push(() => subscription.unsubscribe());
 
+    // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
+    // TODO(burdon): Disable trigger if keeps failing.
     const { type, props, deep, delay } = triggerSubscription;
     const update = ({ objects }: Query) => {
       subscription.update(objects);

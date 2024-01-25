@@ -2,51 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type RefObject, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
-import { type MarkdownEditorRef } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
-import type { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
+import type { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../types';
 
-export const ImportDialog = ({
-  docGhId,
-  editorRef,
-}: {
-  docGhId: GhIdentifier;
-  editorRef: RefObject<MarkdownEditorRef>;
-}) => {
+export const ImportDialog = ({ docGhId, onUpdate }: { docGhId: GhIdentifier; onUpdate: (content: string) => void }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { octokit } = useOctokitContext();
 
   const importGhIssueContent = useCallback(async () => {
-    if (octokit && docGhId && 'issueNumber' in docGhId && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (octokit && docGhId && 'issueNumber') {
       try {
         const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
         const { data } = await octokit.rest.issues.get({ owner, repo, issue_number: issueNumber });
-        editorRef.current.view.dispatch({
-          changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: data.body ?? '' },
-        });
+        onUpdate(data.body ?? '');
       } catch (err) {
         log.error('Failed to import from Github issue', err);
       }
     } else {
       log.error('Not prepared to import from Github issue when requested.');
     }
-  }, [octokit, docGhId, editorRef.current]);
+  }, [octokit, docGhId]);
 
   const importGhFileContent = useCallback(async () => {
-    if (octokit && docGhId && 'path' in docGhId && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (octokit && docGhId && 'path' in docGhId) {
       try {
         const { owner, repo, path } = docGhId as GhFileIdentifier;
         const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
         if (!Array.isArray(data) && data.type === 'file') {
-          editorRef.current.view.dispatch({
-            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: atob(data.content) },
-          });
+          onUpdate(atob(data.content));
         } else {
           log.error('Did not receive file with content from Github.');
         }
@@ -56,7 +45,7 @@ export const ImportDialog = ({
     } else {
       log.error('Not prepared to import from Github file when requested.');
     }
-  }, [octokit, docGhId, editorRef.current]);
+  }, [octokit, docGhId]);
 
   const handleGhImport = useCallback(() => {
     return (
@@ -65,7 +54,7 @@ export const ImportDialog = ({
   }, [importGhIssueContent, importGhFileContent, docGhId]);
 
   return (
-    <>
+    <Dialog.Content>
       <Dialog.Title>{t('confirm import title')}</Dialog.Title>
       <p className='plb-2'>{t('confirm import body')}</p>
       <div role='none' className='flex justify-end gap-2'>
@@ -78,6 +67,6 @@ export const ImportDialog = ({
           </Button>
         </Dialog.Close>
       </div>
-    </>
+    </Dialog.Content>
   );
 };

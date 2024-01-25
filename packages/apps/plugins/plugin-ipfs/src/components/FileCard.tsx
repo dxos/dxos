@@ -18,7 +18,7 @@ export type FileCardProps = {
 
 export const FileCard: MosaicTileComponent<FileCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, object: file }, grow, onSelect, onAction },
+    { classNames, isDragging, draggableStyle, draggableProps, item: { id, object: file }, grow, onSelect, onAction },
     forwardRef,
   ) => {
     const config = useConfig();
@@ -26,7 +26,7 @@ export const FileCard: MosaicTileComponent<FileCardProps> = forwardRef(
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
-        <Card.Root classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')} grow={grow}>
+        <Card.Root classNames={mx('w-full snap-center', isDragging && 'opacity-20', classNames)} grow={grow}>
           <Card.Header onDoubleClick={() => onSelect?.()} floating={!!url}>
             <Card.DragHandle {...draggableProps} position='left' />
             <Card.Menu position='right'>

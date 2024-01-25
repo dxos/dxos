@@ -42,7 +42,7 @@
         "script": "tsc-cjs"
       },
       "outputs": [
-        "packages/core/protocols/dist/cjs"
+        "{projectRoot}/dist/cjs"
       ]
     },
     "lint": {},
@@ -56,14 +56,16 @@
         "basePath": "packages/core/protocols/src/proto"
       },
       "outputs": [
-        "packages/core/protocols/proto",
-        "{options.basePath}/gen"
+        "{options.basePath}/gen",
+        "{projectRoot}/proto"
       ]
     },
     "test": {}
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "nx-protobuf-compiler",
     "test"
-  ]
+  ],
+  "name": "protocols"
 }

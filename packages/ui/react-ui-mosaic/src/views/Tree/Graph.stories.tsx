@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Tree } from './Tree';
 import { GraphTree } from './testing';
 import { Mosaic } from '../../mosaic';
@@ -15,7 +17,7 @@ import { FullscreenDecorator } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'Views/Tree',
+  title: 'react-ui-mosaic/Tree',
   component: Tree,
   render: ({ id = 'tree', debug }: { id: string; debug: boolean }) => {
     return (
@@ -25,7 +27,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

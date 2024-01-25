@@ -9,9 +9,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { AbstractEchoObject } from './object';
-import { getGlobalAutomergePreference, type AutomergeOptions, type TypedObject } from './typed-object';
+import { type AutomergeOptions, type TypedObject, isAutomergeObject } from './typed-object';
 import { base } from './types';
-import { AutomergeArray } from '../automerge';
+import { AutomergeArray, REFERENCE_TYPE_TAG } from '../automerge';
+import { getGlobalAutomergePreference } from '../automerge-preference';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -47,7 +48,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   constructor(items: T[] = [], opts?: AutomergeOptions) {
-    if (opts?.useAutomergeBackend ?? getGlobalAutomergePreference()) {
+    if (opts?.automerge ?? getGlobalAutomergePreference()) {
       return new AutomergeArray(items) as any;
     }
 
@@ -356,7 +357,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof AbstractEchoObject) {
+    if (value instanceof AbstractEchoObject || isAutomergeObject(value)) {
       return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&
@@ -365,6 +366,8 @@ export class EchoArray<T> implements Array<T> {
       (value as any)['@id']
     ) {
       return new Reference((value as any)['@id']);
+    } else if (typeof value === 'object' && value !== null && (value as any)['@type'] === REFERENCE_TYPE_TAG) {
+      return new Reference((value as any).itemId, (value as any).protocol, (value as any).host);
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       log('Freezing object before encoding', value);
       Object.freeze(value);

@@ -9,26 +9,23 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
-  Surface,
   findPlugin,
-  resolvePlugin,
-  useIntent,
-  usePlugins,
   parseGraphPlugin,
   parseIntentPlugin,
   parseSurfacePlugin,
+  resolvePlugin,
+  useIntent,
+  usePlugins,
   LayoutAction,
+  Surface,
+  type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
-  type LayoutProvides,
-  type IntentResolverProvides,
   type GraphProvides,
-  type GraphBuilderProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
   type SurfaceProps,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -37,20 +34,19 @@ import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings } from './compon
 import { activeToUri, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
-
-export type LayoutPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  LayoutProvides;
+import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
 export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
+  // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+
+  const state = new LocalStorageStore<LayoutState & LayoutSettingsProps>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
-    enableComplementarySidebar: false,
+    enableComplementarySidebar: true,
+    showFooter: false,
 
     dialogContent: 'never',
     dialogOpen: false,
@@ -61,6 +57,8 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
     active: undefined,
     previous: undefined,
+
+    // TODO(burdon): Should not be on this object.
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
       return this.active && graphPlugin.provides.graph.findNode(this.active);
@@ -74,23 +72,28 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-
       state
         .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
         .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool)
-        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool);
+        .prop(state.values.$enableComplementarySidebar!, 'enable-complementary-sidebar', LocalStorageStore.bool)
+        .prop(state.values.$showFooter!, 'show-footer', LocalStorageStore.bool);
+
+      // TODO(burdon): Create context and plugin.
+      Keyboard.singleton.initialize();
     },
     unload: async () => {
+      Keyboard.singleton.destroy();
       state.close();
     },
     provides: {
+      // TODO(wittjosiah): Does this need to be provided twice? Does it matter?
       layout: state.values as RevertDeepSignal<LayoutState>,
+      settings: state.values,
       translations,
-      // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
-        builder: ({ parent, plugins }) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+        builder: ({ parent }) => {
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
@@ -101,7 +104,7 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: LAYOUT_PLUGIN,
-                  action: 'toggle-fullscreen',
+                  action: LayoutAction.TOGGLE_FULLSCREEN,
                 }),
             });
           }
@@ -169,13 +172,13 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
                   sidebar: {
                     data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
-                  complementary: {
+                  context: {
                     data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
                   },
                   main: { data: { active: layout.activeNode.data } },
-                  presence: { data: { object: layout.activeNode.data } },
+                  'navbar-start': { data: { activeNode: layout.activeNode, popoverAnchorId: layout.popoverAnchorId } },
+                  'navbar-end': { data: { object: layout.activeNode.data } },
                   status: { data: { active: layout.activeNode.data } },
-                  heading: { data: { activeNode: layout.activeNode } },
                   documentTitle: { data: { activeNode: layout.activeNode } },
                 },
               }
@@ -202,14 +205,11 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          if (role === 'settings') {
-            return <LayoutSettings />;
-          }
-
           switch (data.component) {
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
+                  showHintsFooter={state.values.showFooter}
                   fullscreen={state.values.fullscreen}
                   showComplementarySidebar={state.values.enableComplementarySidebar}
                 />
@@ -220,10 +220,14 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextPanel />;
-
-            default:
-              return null;
           }
+
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <LayoutSettings settings={state.values} /> : null;
+          }
+
+          return null;
         },
       },
       intent: {
@@ -231,40 +235,40 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
           switch (intent.action) {
             // TODO(wittjosiah): Remove this.
             case 'dxos.org/plugin/layout/enable-complementary-sidebar': {
-              state.values.enableComplementarySidebar = intent.data.state ?? !state.values.enableComplementarySidebar;
-              return true;
+              state.values.enableComplementarySidebar = intent.data?.state ?? !state.values.enableComplementarySidebar;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_FULLSCREEN: {
               state.values.fullscreen =
                 (intent.data as LayoutAction.ToggleFullscreen)?.state ?? !state.values.fullscreen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_SIDEBAR: {
               state.values.sidebarOpen =
                 (intent.data as LayoutAction.ToggleSidebar)?.state ?? !state.values.sidebarOpen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR: {
               state.values.complementarySidebarOpen =
                 (intent.data as LayoutAction.ToggleComplementarySidebar).state ??
                 !state.values.complementarySidebarOpen;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.OPEN_DIALOG: {
               const { component, subject } = intent.data as LayoutAction.OpenDialog;
               state.values.dialogOpen = true;
               state.values.dialogContent = { component, subject };
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.CLOSE_DIALOG: {
               state.values.dialogOpen = false;
               state.values.dialogContent = null;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.OPEN_POPOVER: {
@@ -272,22 +276,30 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
               state.values.popoverOpen = true;
               state.values.popoverContent = { component, subject };
               state.values.popoverAnchorId = anchorId;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.CLOSE_POPOVER: {
               state.values.popoverOpen = false;
               state.values.popoverContent = null;
               state.values.popoverAnchorId = undefined;
-              return true;
+              return { data: true };
             }
 
             case LayoutAction.ACTIVATE: {
+              const id = intent.data?.id ?? intent.data?.result?.id;
+              console.log(intent.data, id);
+              const path = id && graphPlugin?.provides.graph.getPath(id);
+              if (path) {
+                Keyboard.singleton.setCurrentContext(path.join('/'));
+              }
+
               batch(() => {
                 state.values.previous = state.values.active;
-                state.values.active = (intent.data as LayoutAction.Activate).id;
+                state.values.active = id;
               });
-              return true;
+
+              return { data: true };
             }
           }
         },

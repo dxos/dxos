@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "exclude": [
+    "dist",
+    "node_modules",
+    "out"
+  ],
+  "include": [
+    "*-stories/*.mts",
+    ".storybook-shared/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/ui/react-ui-theme"
+    }
+  ]
+}

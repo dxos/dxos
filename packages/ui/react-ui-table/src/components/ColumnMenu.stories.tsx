@@ -6,11 +6,15 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { ColumnPanel } from './ColumnMenu';
 import { type ColumnProps } from '../schema';
 
 export default {
+  title: 'react-ui-table/ColumnPanel',
   component: ColumnPanel,
+  decorators: [withTheme],
 };
 
 export const Default = {

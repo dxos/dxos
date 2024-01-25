@@ -9,6 +9,7 @@ import { Bug, Compass, GithubLogo, Kanban, Gear, Table } from '@phosphor-icons/r
 import React, { useState } from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { PluginList } from './PluginList';
 
@@ -45,8 +46,10 @@ const Story = () => {
 };
 
 export default {
+  title: 'plugin-registry/PluginList',
   component: PluginList,
   render: Story,
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },

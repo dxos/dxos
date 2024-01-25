@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Tree } from './Tree';
 import { DemoTree, type DemoTreeProps } from './testing';
 import { Mosaic } from '../../mosaic';
@@ -68,6 +70,7 @@ const testItems2 = [
 ];
 
 export default {
+  title: 'react-ui-mosaic/Tree',
   component: Tree,
   render: (args: DemoTreeProps) => {
     return (
@@ -77,7 +80,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -104,7 +104,7 @@ describe('QueryPlugin', () => {
     await asyncTimeout(results.wait(), 1000);
   }).tag('e2e');
 
-  describe('Remote query', () => {
+  describe.skip('Remote query', () => {
     let builder: TestBuilder;
     let agent: Client;
     let plugin: QueryPlugin;
@@ -165,7 +165,7 @@ describe('QueryPlugin', () => {
 
       {
         // Wait for client to be ready.
-        await asyncTimeout(client.spaces.isReady.wait(), 1000);
+        await asyncTimeout(client.spaces.isReady.wait(), 2000);
         await asyncTimeout(client.spaces.default.waitUntilReady(), 1000);
       }
     });

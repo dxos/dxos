@@ -6,10 +6,11 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { baseSurface, chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { baseSurface, modalSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import { Input } from './Input';
+import { withTheme } from '../../testing';
 
 type StoryInputProps = Partial<{
   label: string;
@@ -63,7 +64,7 @@ const StoryInput = (props: StoryInputProps) => {
       <div className={mx(groupSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'group' }))}>
         <StoryInputContent {...props} />
       </div>
-      <div className={mx(chromeSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'chrome' }))}>
+      <div className={mx(modalSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'chrome' }))}>
         <StoryInputContent {...props} />
       </div>
     </div>
@@ -71,6 +72,7 @@ const StoryInput = (props: StoryInputProps) => {
 };
 
 export default {
+  title: 'react-ui/Input',
   component: StoryInput,
   // TODO(thure): Refactor
   argTypes: {
@@ -86,6 +88,8 @@ export default {
       options: ['default', 'textarea', 'pin'],
     },
   },
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {

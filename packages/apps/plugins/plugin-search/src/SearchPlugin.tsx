@@ -5,8 +5,19 @@
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
+import { getActiveSpace } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  type PluginDefinition,
+  type LayoutProvides,
+  type GraphProvides,
+  type Plugin,
+  resolvePlugin,
+  parseIntentPlugin,
+  parseGraphPlugin,
+  parseLayoutPlugin,
+  LayoutAction,
+} from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
@@ -17,8 +28,15 @@ import translations from './translations';
 import { SearchAction, type SearchPluginProvides } from './types';
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
+  let layoutPlugin: Plugin<LayoutProvides> | undefined;
+  let graphPlugin: Plugin<GraphProvides> | undefined;
+
   return {
     meta,
+    ready: async (plugins) => {
+      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+    },
     provides: {
       translations,
       metadata: {
@@ -45,7 +63,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
               id: SearchAction.SEARCH,
               label: ['search action label', { ns: SEARCH_PLUGIN }],
               icon: (props) => <MagnifyingGlass {...props} />,
-              keyBinding: 'shift+meta+s',
+              keyBinding: 'shift+meta+f',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: SEARCH_PLUGIN,
@@ -61,9 +79,12 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       surface: {
         component: ({ role }) => {
+          const layout = layoutPlugin?.provides.layout;
+          const graph = graphPlugin?.provides.graph;
+          const space = graph && layout ? getActiveSpace(graph, layout.active) : undefined;
           switch (role) {
             case 'context-search':
-              return <SearchMain />;
+              return space ? <SearchMain space={space} /> : null;
           }
 
           return null;

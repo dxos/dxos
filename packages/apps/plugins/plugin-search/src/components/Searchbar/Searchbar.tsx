@@ -5,8 +5,8 @@
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, Input, type TextInputProps } from '@dxos/react-ui';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { Input, type TextInputProps } from '@dxos/react-ui';
+import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
   classes?: {
@@ -14,7 +14,7 @@ export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
     input?: string;
   };
   value?: string;
-  onChange?: (text: string) => void;
+  onChange?: (text?: string) => void;
   delay?: number;
 };
 
@@ -24,32 +24,33 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
   useEffect(() => {
     setText(value);
   }, [value]);
-  const handleChange = (text: string) => {
+  const handleChange = (text?: string) => {
     setText(text);
     onChange?.(text);
   };
 
   const handleReset = () => {
-    handleChange('');
+    handleChange(undefined);
     inputRef.current?.focus();
   };
 
   return (
-    <div className={mx('flex w-full items-center', inputSurface, classes?.root)}>
+    <div className={mx('flex w-full items-center', attentionSurface, classes?.root)}>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
           placeholder={placeholder}
           variant={variant}
           value={text ?? ''}
-          classNames={mx('pl-3 pr-[40px]', classes?.input)}
+          classNames={mx('pl-3 pr-10', classes?.input)}
           onChange={({ target }) => handleChange(target.value)}
           onKeyDown={({ key }) => key === 'Escape' && handleReset()}
         />
 
-        <Button variant='ghost' classNames='-ml-8 p-0 cursor-pointer' onClick={handleReset}>
+        {/* TODO(burdon): Margin should be density specific. */}
+        <div role='button' className='-ml-7 p-0 cursor-pointer' onClick={handleReset}>
           <MagnifyingGlass className={getSize(5)} />
-        </Button>
+        </div>
       </Input.Root>
     </div>
   );

@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -39,7 +42,16 @@
       "path": "../../../sdk/react-client"
     },
     {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-settings"
     }
   ]
 }

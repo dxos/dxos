@@ -13,21 +13,11 @@
         ]
       }
     },
-    "lint": {},
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/ui/react-icons/.storybook",
-        "uiFramework": "@storybook/react"
-      }
-    }
+    "lint": {}
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ]
+  ],
+  "name": "react-icons"
 }

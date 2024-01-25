@@ -12,38 +12,48 @@ import {
   type StorageKey,
   cbor,
 } from '@dxos/automerge/automerge-repo';
+import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
-import { type Directory } from '@dxos/random-access-storage';
+import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
+import { StorageType, type Directory } from '@dxos/random-access-storage';
+import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
   private readonly _clientNetwork: LocalHostNetworkAdapter;
-  private readonly _storage: AutomergeStorageAdapter;
+  private readonly _storage: StorageAdapter;
 
   constructor(storageDirectory: Directory) {
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
-    this._storage = new AutomergeStorageAdapter(storageDirectory);
-    this._repo = new Repo({
-      network: [
-        // this._meshNetwork,
-        this._clientNetwork,
-      ],
 
+    // TODO(mykola): Delete specific handling of IDB storage.
+    this._storage =
+      storageDirectory.type === StorageType.IDB
+        ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
+        : new AutomergeStorageAdapter(storageDirectory);
+    this._repo = new Repo({
+      network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
       sharePolicy: async (peerId, documentId) => true, // Share everything.
     });
     this._clientNetwork.ready();
+    this._meshNetwork.ready();
   }
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  async close() {
+    await this._clientNetwork.close();
   }
 
   //
@@ -60,6 +70,14 @@ export class AutomergeHost {
 
   getHostInfo(): HostInfo {
     return this._clientNetwork.getHostInfo();
+  }
+
+  //
+  // Mesh replication.
+  //
+
+  createExtension(): AutomergeReplicator {
+    return this._meshNetwork.createExtension();
   }
 }
 
@@ -97,8 +115,14 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
     peer.send(message);
   }
 
-  override disconnect(): void {
+  async close() {
     this._peers.forEach((peer) => peer.disconnect());
+    this.emit('close');
+  }
+
+  override disconnect(): void {
+    // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
+    // No-op
   }
 
   syncRepo({ id, syncMessage }: SyncRepoRequest): Stream<SyncRepoResponse> {
@@ -148,21 +172,82 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
 /**
  * Used to replicate with other peers over the network.
  */
-class MeshNetworkAdapter extends NetworkAdapter {
+export class MeshNetworkAdapter extends NetworkAdapter {
+  private readonly _extensions: Map<string, AutomergeReplicator> = new Map();
+
+  /**
+   * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
+   */
+  ready() {
+    // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
+    //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
+    this.emit('ready', {
+      network: this,
+    });
+  }
+
   override connect(peerId: PeerId): void {
-    throw new Error('Method not implemented.');
+    this.peerId = peerId;
   }
 
   override send(message: Message): void {
-    throw new Error('Method not implemented.');
+    const receiverId = message.targetId;
+    const extension = this._extensions.get(receiverId);
+    invariant(extension, 'Extension not found.');
+    extension.sendSyncMessage({ payload: cbor.encode(message) }).catch((err) => log.catch(err));
   }
 
   override disconnect(): void {
-    throw new Error('Method not implemented.');
+    // No-op
+  }
+
+  createExtension(): AutomergeReplicator {
+    invariant(this.peerId, 'Peer id not set.');
+
+    let peerInfo: PeerInfo;
+    const extension = new AutomergeReplicator(
+      {
+        peerId: this.peerId,
+      },
+      {
+        onStartReplication: async (info) => {
+          // Note: We store only one extension per peer.
+          //       There can be a case where two connected peers have more than one teleport connection between them
+          //       and each of them uses different teleport connections to send messages.
+          //       It works because we receive messages from all teleport connections and Automerge Repo dedup them.
+          // TODO(mykola): Use only one teleport connection per peer.
+          if (this._extensions.has(info.id)) {
+            return;
+          }
+
+          peerInfo = info;
+          // TODO(mykola): Fix race condition?
+          this._extensions.set(info.id, extension);
+          this.emit('peer-candidate', {
+            peerId: info.id as PeerId,
+          });
+        },
+        onSyncMessage: async ({ payload }) => {
+          const message = cbor.decode(payload) as Message;
+          // Note: automerge Repo dedup messages.
+          this.emit('message', message);
+        },
+        onClose: async () => {
+          if (!peerInfo) {
+            return;
+          }
+          this.emit('peer-disconnected', {
+            peerId: peerInfo.id as PeerId,
+          });
+          this._extensions.delete(peerInfo.id);
+        },
+      },
+    );
+    return extension;
   }
 }
 
-class AutomergeStorageAdapter extends StorageAdapter {
+export class AutomergeStorageAdapter extends StorageAdapter {
   constructor(private readonly _directory: Directory) {
     super();
   }
@@ -191,7 +276,7 @@ class AutomergeStorageAdapter extends StorageAdapter {
     // TODO(dmaretskyi): Better deletion.
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
-    await file.truncate?.(0);
+    await file.destroy();
   }
 
   override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
@@ -219,8 +304,8 @@ class AutomergeStorageAdapter extends StorageAdapter {
       entries
         .filter((entry) => entry.startsWith(filename))
         .map(async (entry): Promise<void> => {
-          const file = this._directory.getOrCreateFile(filename);
-          await file.truncate?.(0);
+          const file = this._directory.getOrCreateFile(entry);
+          await file.destroy();
         }),
     );
   }

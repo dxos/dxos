@@ -38,10 +38,10 @@
       "path": "../react-ui-theme"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../react-ui-types"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../storybook-utils"
     }
   ]
 }

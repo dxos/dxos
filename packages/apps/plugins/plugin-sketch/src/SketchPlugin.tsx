@@ -8,16 +8,12 @@ import React from 'react';
 import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Sketch as SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { Expando, SpaceProxy, getGlobalAutomergePreference } from '@dxos/react-client/echo';
 
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchPluginProvides, isSketch } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[SketchType.name] = SketchType;
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
@@ -71,10 +67,16 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             testId: 'sketchPlugin.createSectionSpaceSketch',
             label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
-            intent: {
-              plugin: SKETCH_PLUGIN,
-              action: SketchAction.CREATE,
-            },
+            intent: [
+              {
+                plugin: SKETCH_PLUGIN,
+                action: SketchAction.CREATE,
+              },
+              // TODO(burdon): Navigate directly (but return result to caller).
+              // {
+              //   action: LayoutAction.ACTIVATE,
+              // },
+            ],
           },
         ],
       },
@@ -100,7 +102,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SketchAction.CREATE: {
-              return { object: new SketchType() };
+              return {
+                data: new SketchType({
+                  data: getGlobalAutomergePreference() ? (new Expando() as any) : undefined,
+                }),
+              };
             }
           }
         },

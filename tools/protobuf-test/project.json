@@ -11,8 +11,10 @@
         ]
       },
       "outputs": [
-        "tools/protobuf-test/dist"
+        "{projectRoot}/dist"
       ]
     }
-  }
+  },
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "protobuf-test"
 }

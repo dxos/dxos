@@ -7,10 +7,14 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Status } from './Status';
+import { withTheme } from '../../testing';
 
 export default {
+  title: 'react-ui/Status',
   component: Status,
   actions: { argTypesRegex: '^on.*' },
+  decorators: [withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Normal = (props: any) => {

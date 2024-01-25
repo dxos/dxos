@@ -234,7 +234,19 @@ export class AutomergeArray<T> implements Array<T> {
   }
 
   entries(): IterableIterator<[number, T]> {
-    throw new Error('Method not implemented.');
+    if (this._object) {
+      invariant(this._object?.[base] instanceof AutomergeObject);
+
+      const array = this._getArray();
+      if (!array) {
+        return [][Symbol.iterator]();
+      }
+
+      return (array.filter(Boolean) as T[]).entries();
+    } else {
+      invariant(this._uninitialized);
+      return this._uninitialized.entries();
+    }
   }
 
   keys(): IterableIterator<number> {

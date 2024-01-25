@@ -2,19 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { syntaxHighlighting } from '@codemirror/language';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Chain as ChainType } from '@braneframe/types';
-import { TextObject } from '@dxos/react-client/echo';
+import { TextObject, getTextContent } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
 import { TextEditor, useTextModel } from '@dxos/react-ui-editor';
 import { groupBorder, mx } from '@dxos/react-ui-theme';
 
-import { nameRegex, promptLanguage, promptHighlightStyles } from './syntax';
+import { nameRegex, promptExtension } from './extension';
 import { CHAIN_PLUGIN } from '../../meta';
-
-// TODO(burdon): Schema.
 
 const inputTypes = [
   {
@@ -37,6 +34,14 @@ const inputTypes = [
   //   value: ChainType.Input.Type.QUERY,
   //   label: 'Query',
   // },
+  {
+    value: ChainType.Input.Type.RESOLVER,
+    label: 'Resolver',
+  },
+  {
+    value: ChainType.Input.Type.CONTEXT,
+    label: 'Context',
+  },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
@@ -49,7 +54,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: prompt.source });
 
-  const text = prompt.source?.text ?? '';
+  const text = getTextContent(prompt.source) ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -87,6 +92,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     }
   }, [text]);
 
+  if (!model) {
+    return null;
+  }
+
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
@@ -107,21 +116,10 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <TextEditor
-            model={model}
-            extensions={[promptLanguage, syntaxHighlighting(promptHighlightStyles)]}
-            slots={{
-              root: {
-                className: 'w-full p-2',
-              },
-              editor: {
-                placeholder: t('template placeholder'),
-              },
-            }}
-          />
+          <TextEditor model={model} placeholder={t('template placeholder')} extensions={[promptExtension]} />
         </Section>
 
-        {prompt.inputs?.length && (
+        {prompt.inputs?.length > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
@@ -153,7 +151,11 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3 py-1.5'>
-                        {input.type === ChainType.Input.Type.VALUE && <ValueEditor input={input} />}
+                        {[
+                          ChainType.Input.Type.VALUE,
+                          ChainType.Input.Type.CONTEXT,
+                          ChainType.Input.Type.RESOLVER,
+                        ].includes(input.type) && <ValueEditor input={input} />}
                       </td>
                     </tr>
                   ))}
@@ -170,27 +172,30 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 const ValueEditor = ({ input }: { input: ChainType.Input }) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const model = useTextModel({ text: input.value });
+  if (!model) {
+    return null;
+  }
 
   return (
     <TextEditor
       model={model}
-      extensions={[promptLanguage]}
+      placeholder={t('value placeholder')}
+      lineWrapping={false}
       slots={{
         root: {
           className: mx('w-full border-b', groupBorder),
-        },
-        editor: {
-          placeholder: t('value placeholder'),
         },
       }}
     />
   );
 };
 
-const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
+export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
   return (
-    <div className='border border-neutral-100 rounded-md'>
-      <div className='flex h-[32px] items-center bg-neutral-50 rounded-t border-b'>
+    <div className={mx('border rounded-md', groupBorder)}>
+      <div
+        className={mx('flex h-[32px] items-center bg-neutral-50 dark:bg-neutral-800 rounded-t border-b', groupBorder)}
+      >
         <h2 className='px-2 text-xs'>{title}</h2>
         <div className='grow' />
         {actions}

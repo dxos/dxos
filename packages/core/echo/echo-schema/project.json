@@ -22,8 +22,8 @@
         ]
       },
       "outputs": [
-        "packages/core/echo/echo-schema/src/proto/gen",
-        "packages/core/echo/echo-schema/src/tests/proto/gen"
+        "{projectRoot}/src/proto/gen",
+        "{projectRoot}/src/tests/proto/gen"
       ]
     },
     "test": {
@@ -32,8 +32,10 @@
       }
     }
   },
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ]
+  ],
+  "name": "echo-schema"
 }

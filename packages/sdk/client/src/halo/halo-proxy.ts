@@ -15,6 +15,7 @@ import {
 } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
+import { getGlobalAutomergePreference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -118,6 +119,7 @@ export class HaloProxy implements Halo {
         });
       this._identityChanged.emit(data.identity ?? null);
     });
+    this._subscriptions.add(() => identityStream.close());
 
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices();
@@ -131,15 +133,13 @@ export class HaloProxy implements Halo {
         });
       }
     });
-
-    this._subscriptions.add(() => identityStream.close());
+    this._subscriptions.add(() => devicesStream.close());
 
     // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
     // contactsStream.subscribe(data => {
     //   this._contacts = data.contacts as SpaceMember[];
     //   this._contactsChanged.emit();
     // });
-
     // this._subscriptions.add(() => contactsStream.close());
 
     log.trace('dxos.sdk.halo-proxy.open', trace.end({ id: this._instanceId }));
@@ -174,7 +174,10 @@ export class HaloProxy implements Halo {
    */
   async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
+    const identity = await this._serviceProvider.services.IdentityService.createIdentity({
+      profile,
+      useAutomerge: getGlobalAutomergePreference(),
+    });
     this._identityChanged.emit(identity);
     return identity;
   }

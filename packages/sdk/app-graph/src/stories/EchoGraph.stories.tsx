@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
@@ -11,9 +12,10 @@ import React, { useEffect, useState } from 'react';
 import { EventSubscriptions } from '@dxos/async';
 import { Client } from '@dxos/react-client';
 import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
-import { ClientDecorator, TestBuilder } from '@dxos/react-client/testing';
+import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
@@ -21,7 +23,8 @@ import { GraphBuilder } from '../graph-builder';
 import { type Node } from '../node';
 
 export default {
-  title: 'Echo Graph',
+  title: 'app-graph/EchoGraph',
+  decorators: [withTheme],
 };
 
 const DEFAULT_PERIOD = 500;
@@ -227,7 +230,6 @@ const EchoGraphStory = () => {
   );
 };
 
-export const EchoGraph = {
-  render: () => <EchoGraphStory />,
-  decorators: [ClientDecorator({ clients: [client], className: 'flex flex-col' })],
+export const Default = {
+  render: () => <ClientRepeater Component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
 };

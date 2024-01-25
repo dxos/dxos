@@ -15,23 +15,30 @@ import {
   parseIntentPlugin,
   LayoutAction,
 } from '@dxos/app-framework';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
-import { StackMain } from './components';
+import { StackMain, StackSettings } from './components';
 import meta, { STACK_PLUGIN } from './meta';
 import translations from './translations';
-import { StackAction, isStack, type StackPluginProvides, type StackProvides, type StackState } from './types';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[StackType.name] = StackType;
+import {
+  StackAction,
+  isStack,
+  type StackPluginProvides,
+  type StackProvides,
+  type StackState,
+  type StackSettingsProps,
+} from './types';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
+  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN);
   const stackState: StackState = deepSignal({ creators: [] });
 
   return {
     meta,
     ready: async (plugins) => {
+      settings.prop(settings.values.$separation!, 'separation', LocalStorageStore.bool);
+
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {
           continue;
@@ -43,6 +50,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       }
     },
     provides: {
+      settings: settings.values,
       metadata: {
         records: {
           [StackType.schema.typename]: {
@@ -98,13 +106,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          if (!isStack(data.active)) {
-            return null;
-          }
-
           switch (role) {
             case 'main':
-              return <StackMain stack={data.active} />;
+              return isStack(data.active) ? (
+                <StackMain stack={data.active} separation={settings.values.separation} />
+              ) : null;
+            case 'settings': {
+              return data.plugin === meta.id ? <StackSettings settings={settings.values} /> : null;
+            }
             default:
               return null;
           }
@@ -114,7 +123,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { object: new StackType() };
+              return { data: new StackType() };
             }
           }
         },

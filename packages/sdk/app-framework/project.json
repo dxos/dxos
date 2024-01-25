@@ -11,17 +11,6 @@
       }
     },
     "lint": {},
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/sdk/app-framework/.storybook"
-      }
-    },
     "test": {
       "options": {
         "ciEnvironments": [
@@ -30,7 +19,9 @@
       }
     }
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ]
+  ],
+  "name": "app-framework"
 }

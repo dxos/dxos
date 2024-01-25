@@ -18,25 +18,13 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/experimental/chess-app/src/proto/gen"
+        "{projectRoot}/src/proto/gen"
       ]
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "kai:bundle"
-      }
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nx/storybook:storybook",
-      "options": {
-        "configDir": "packages/experimental/chess-app/.storybook",
-        "uiFramework": "@storybook/react"
       }
     },
     "test": {
@@ -47,7 +35,9 @@
       }
     }
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ]
+  ],
+  "name": "chess-app"
 }

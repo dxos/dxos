@@ -10,10 +10,13 @@ export type Provider<T> = () => T;
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export const isNotNullOrUndefined = <T>(x: T): x is Exclude<T, null | undefined> => x != null;
+// TODO(burdon): Reconcile with nonNullable.
+export const isNotNullOrUndefined = <T>(value: T): value is Exclude<T, null | undefined> => value != null;
 
 /**
  * Use with filter chaining instead of filter(Boolean) to preserve type.
+ * NOTE: To filter by type:
+ * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
  */
 export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
 

@@ -45,6 +45,9 @@
       "path": "../../../core/echo/echo-generator"
     },
     {
+      "path": "../../../core/echo/echo-pipeline"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
@@ -60,7 +63,7 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/client-services"
     },
     {
       "path": "../../../sdk/react-client"
@@ -73,6 +76,9 @@
     },
     {
       "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../../ui/storybook-utils"
     },
     {
       "path": "../../types"
@@ -88,6 +94,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"
