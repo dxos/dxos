@@ -261,7 +261,7 @@ describe('AutomergeHost', () => {
     });
   });
 
-  test.only('replication though a peer chain', async () => {
+  test('replication though a 4 peer chain', async () => {
     const pairAB = TestAdapter.createPair();
     const pairBC = TestAdapter.createPair();
     const pairCD = TestAdapter.createPair();
@@ -312,6 +312,51 @@ describe('AutomergeHost', () => {
     });
 
     await docD.whenReady();
+  });
+
+  test.only('replication though a 3 peer chain', async () => {
+    const pairAB = TestAdapter.createPair();
+    const pairBC = TestAdapter.createPair();
+
+    const repoA = new Repo({
+      peerId: 'A' as any,
+      network: [pairAB[0]],
+      sharePolicy: async () => true,
+    });
+    const repoB = new Repo({
+      peerId: 'B' as any,
+      network: [pairAB[1], pairBC[0]],
+      sharePolicy: async () => true,
+    });
+    const repoC = new Repo({
+      peerId: 'C' as any,
+      network: [pairBC[1]],
+      sharePolicy: async () => true,
+    });
+
+    for (const pair of [pairAB, pairBC]) {
+      debugger;
+      pair[0].ready();
+      pair[1].ready();
+      await pair[0].onConnect.wait();
+      await pair[1].onConnect.wait();
+      pair[0].peerCandidate(pair[1].peerId!);
+      pair[1].peerCandidate(pair[0].peerId!);
+    }
+
+    const docA = repoA.create();
+    const docB = repoB.find(docA.url);
+    const docC = repoC.find(docA.url);
+
+    await sleep(500);
+
+    log.info('states', {
+      A: docA.state,
+      B: docB.state,
+      C: docC.state,
+    });
+
+    await docC.whenReady();
   });
 });
 
