@@ -128,13 +128,13 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       // Markdown marks.
       {
         tag: [markdownTags.CodeMark, markdownTags.HeaderMark, markdownTags.QuoteMark, markdownTags.EmphasisMark],
-        class: readonly ? 'hidden' : mark,
+        class: mark,
       },
 
       // E.g., code block language (after ```).
       {
         tag: [tags.function(tags.variableName), tags.labelName],
-        class: readonly ? 'hidden' : codeMark,
+        class: codeMark,
       },
 
       {

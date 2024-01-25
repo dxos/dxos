@@ -52,6 +52,7 @@ const getLineRange = (lines: BlockInfo[], from: number, to: number) => {
   return [start, end];
 };
 
+// TODO(burdon): Hide marks.
 export const code = () => {
   const buildDecorations = (view: EditorView) => {
     const decorations: Range<Decoration>[] = [];
