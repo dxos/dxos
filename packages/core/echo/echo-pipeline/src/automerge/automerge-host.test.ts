@@ -274,12 +274,12 @@ describe('AutomergeHost', () => {
     const repoB = new Repo({
       peerId: 'B' as any,
       network: [pairAB[1], pairBC[0]],
-      sharePolicy: async () => false,
+      sharePolicy: async () => true,
     });
     const repoC = new Repo({
       peerId: 'C' as any,
       network: [pairBC[1], pairCD[0]],
-      sharePolicy: async () => false,
+      sharePolicy: async () => true,
     });
     const repoD = new Repo({
       peerId: 'D' as any,
