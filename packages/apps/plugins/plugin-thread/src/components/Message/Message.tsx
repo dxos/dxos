@@ -4,21 +4,21 @@
 
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { forwardRef, type PropsWithChildren, useId } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useId } from 'react';
 
 import { type Message as MessageType } from '@braneframe/types';
 import { PublicKey } from '@dxos/react-client';
 import { type Expando, getTextContent } from '@dxos/react-client/echo';
-import { Avatar, Button, Input, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Input, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
-import { hoverableControlItem, hoverableControls, mx } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_ITEM, THREAD_PLUGIN } from '../../meta';
 import { type MessageProperties, type MessagePropertiesProvider, safeParseJson } from '../util';
 
-export type MessageMetaProps = PropsWithChildren<
-  MessageProperties & Partial<{ fromIdentityKey: string; continues: boolean }>
->;
+export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
+  MessageProperties &
+  Partial<{ fromIdentityKey: string; continues: boolean }>;
 
 export type ThreadProps = {
   message: MessageType;
@@ -28,41 +28,36 @@ export type ThreadProps = {
 
 const avatarSize = 7;
 
-export const MessageMeta = ({
-  profileImgSrc,
-  status,
-  fromIdentityKey,
-  continues = true,
-  children,
-}: MessageMetaProps) => {
-  const jdenticon = useJdenticonHref(fromIdentityKey ?? '', avatarSize);
+const messageCell = 'plb-1 bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be';
 
-  return (
-    <div role='none' className='contents attention-within'>
-      <Avatar.Root status={status ?? 'inactive'} size={avatarSize}>
-        <div
-          role='none'
-          className='flex flex-col items-center gap-2 bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be'
-        >
-          <Avatar.Frame>
-            <Avatar.Fallback href={fromIdentityKey ? jdenticon : ''} />
-            {profileImgSrc && <Avatar.Image href={profileImgSrc} />}
-          </Avatar.Frame>
-          {continues && <div role='none' className='is-px grow surface-separator' />}
-        </div>
-        <div role='none' className='bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be'>
-          {children}
-        </div>
-      </Avatar.Root>
-    </div>
-  );
-};
+export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
+  ({ profileImgSrc, status, fromIdentityKey, continues = true, children, classNames, ...rootProps }, forwardedRef) => {
+    const jdenticon = useJdenticonHref(fromIdentityKey ?? '', avatarSize);
+
+    return (
+      <div role='none' {...rootProps} className={mx('contents attention-within', classNames)} ref={forwardedRef}>
+        <Avatar.Root status={status ?? 'inactive'} size={avatarSize}>
+          <div role='none' className={'flex flex-col items-center gap-2 ' + messageCell}>
+            <Avatar.Frame>
+              <Avatar.Fallback href={fromIdentityKey ? jdenticon : ''} />
+              {profileImgSrc && <Avatar.Image href={profileImgSrc} />}
+            </Avatar.Frame>
+            {continues && <div role='none' className='is-px grow surface-separator' />}
+          </div>
+          <div role='none' className={messageCell}>
+            {children}
+          </div>
+        </Avatar.Root>
+      </div>
+    );
+  },
+);
 
 const MessageBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?: () => void }) => {
   const id = useId();
 
   return (
-    <div role='none' className={mx('contents', hoverableControls)}>
+    <div role='none' className={mx('contents', hoverableControls, hoverableFocusedWithinControls)}>
       {block.object ? (
         <Mosaic.Container id={id} Component={MessageObjectBlock}>
           <Mosaic.DraggableTile
@@ -82,7 +77,11 @@ const MessageBlock = ({ block, onDelete }: { block: MessageType.Block; onDelete?
         <p>{block.text ?? ''}</p>
       )}
       {onDelete && (
-        <Button variant='ghost' classNames={['p-1', hoverableControlItem]} onClick={onDelete}>
+        <Button
+          variant='ghost'
+          classNames={['p-1 min-bs-0 mie-1 place-self-start transition-opacity', hoverableControlItem]}
+          onClick={onDelete}
+        >
           <X />
         </Button>
       )}
@@ -121,15 +120,15 @@ export const Message = ({ message, propertiesProvider, onDelete }: ThreadProps) 
 
   return (
     <MessageMeta {...messageProperties} fromIdentityKey={fromIdentityKey} continues>
-      <p className='grid grid-cols-[1fr_max-content] gap-2'>
+      <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
         <Avatar.Label classNames={['truncate font-semibold', !messageProperties.displayName && 'fg-description']}>
           {messageProperties.displayName ?? t('anonymous label')}
         </Avatar.Label>
-        <span className='fg-description text-xs'>
+        <time className='fg-description text-xs pbs-1' dateTime={dt?.toISOString()}>
           {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
-        </span>
+        </time>
       </p>
-      <div role='none' className={onDelete ? 'grid grid-cols-[1fr_max-content]' : 'grid grid-cols-1'}>
+      <div role='none' className={onDelete ? 'grid grid-cols-[1fr_max-content] gap-y-1' : 'grid grid-cols-1 gap-y-1'}>
         {message.blocks.map((block, i) => (
           <MessageBlock
             key={block.object?.id ?? i}
