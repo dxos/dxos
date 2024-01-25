@@ -9,69 +9,88 @@ import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
 import { Expando } from './typed-object';
-import { createDatabase } from '../testing';
+import { createDatabase, testWithAutomerge } from '../testing';
 
 describe('create subscription', () => {
-  test('updates are propagated', async () => {
-    const { db } = await createDatabase();
-    const task = new Expando();
-    db.add(task);
+  testWithAutomerge(() => {
+    test('updates are propagated', async () => {
+      const { db } = await createDatabase();
+      const task = new Expando();
+      db.add(task);
 
-    let counter = 0;
-    const selection = createSubscription(() => {
-      counter++;
+      const counter = createUpdateCounter(task);
+
+      task.title = 'Test title';
+      expect(counter.value).to.equal(2);
+
+      task.title = 'Test title revision';
+      expect(counter.value).to.equal(3);
     });
-    selection.update([task]);
 
-    task.title = 'Test title';
-    expect(counter).to.equal(2);
+    test('updates are synchronous', async () => {
+      const { db } = await createDatabase();
+      const task = new Expando();
+      db.add(task);
 
-    task.title = 'Test title revision';
-    expect(counter).to.equal(3);
-  });
+      const actions: string[] = [];
+      const selection = createSubscription(() => {
+        actions.push('update');
+      });
+      selection.update([task]);
+      // Initial update caused by changed selection.
+      expect(actions).to.deep.equal(['update']);
 
-  test('updates are synchronous', async () => {
-    const { db } = await createDatabase();
-    const task = new Expando();
-    db.add(task);
+      actions.push('before');
+      task.title = 'Test title';
+      actions.push('after');
 
-    const actions: string[] = [];
-    const selection = createSubscription(() => {
-      actions.push('update');
+      // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
+      expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
     });
-    selection.update([task]);
-    // Initial update caused by changed selection.
-    expect(actions).to.deep.equal(['update']);
 
-    actions.push('before');
-    task.title = 'Test title';
-    actions.push('after');
+    test('latest value is available in subscription', async () => {
+      const { db } = await createDatabase();
+      const task = new Expando();
+      db.add(task);
 
-    // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
-    expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
-  });
+      let counter = 0;
+      const title = new Trigger<string>();
+      const selection = createSubscription(() => {
+        if (counter === 1) {
+          title.wake(task.title);
+        }
+        counter++;
+      });
+      selection.update([task]);
 
-  test('latest value is available in subscription', async () => {
-    const { db } = await createDatabase();
-    const task = new Expando();
-    db.add(task);
-
-    let counter = 0;
-    const title = new Trigger<string>();
-    const selection = createSubscription(() => {
-      if (counter === 1) {
-        title.wake(task.title);
-      }
-      counter++;
+      task.title = 'Test title';
+      expect(await title.wait()).to.equal('Test title');
     });
-    selection.update([task]);
 
-    task.title = 'Test title';
-    expect(await title.wait()).to.equal('Test title');
-  });
+    test('accepts arbitrary selection', async () => {
+      const selection = createSubscription(() => {});
+      selection.update(['example', null, -1]);
+    });
 
-  test('accepts arbitrary selection', async () => {
-    const selection = createSubscription(() => {});
-    selection.update(['example', null, -1]);
+    test('updates for nested objects', async () => {
+      const { db } = await createDatabase();
+      const task = new Expando({ nested: { title: 'Test title' } });
+      db.add(task);
+
+      const counter = createUpdateCounter(task);
+
+      expect(counter.value).to.equal(1);
+      task.nested.title = 'New title';
+      expect(counter.value).to.equal(2);
+    });
   });
 });
+
+const createUpdateCounter = (object: any) => {
+  const counter = { value: 0 };
+  const selection = createSubscription(() => {
+    counter.value++;
+  });
+  selection.update([object]);
+  return counter;
+};
