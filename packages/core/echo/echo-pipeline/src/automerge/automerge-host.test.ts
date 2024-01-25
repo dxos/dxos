@@ -6,7 +6,7 @@ import { randomBytes } from 'crypto';
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -288,8 +288,11 @@ describe('AutomergeHost', () => {
     });
 
     for (const pair of [pairAB, pairBC, pairCD]) {
+      debugger;
       pair[0].ready();
       pair[1].ready();
+      await pair[0].onConnect.wait();
+      await pair[1].onConnect.wait();
       pair[0].peerCandidate(pair[1].peerId!);
       pair[1].peerCandidate(pair[0].peerId!);
     }
@@ -324,6 +327,8 @@ class TestAdapter extends NetworkAdapter {
     return [adapter1, adapter2];
   }
 
+  public onConnect = new Trigger();
+
   constructor(private readonly _params: { send: (message: Message) => void }) {
     super();
   }
@@ -336,6 +341,7 @@ class TestAdapter extends NetworkAdapter {
 
   override connect(peerId: PeerId) {
     this.peerId = peerId;
+    this.onConnect.wake();
   }
 
   peerCandidate(peerId: PeerId) {
