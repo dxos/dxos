@@ -22,10 +22,10 @@ const buildDecorations = (view: EditorView): DecorationSet => {
           case 'ATXHeading5':
           case 'ATXHeading6': {
             const mark = node.node.getChild('HeaderMark');
-
-            // Check if cursor is inside text.
-            if (mark && (cursor < node.from || cursor > node.to)) {
-              builder.add(mark.from, mark.to + 1, Decoration.replace({}));
+            if (mark) {
+              if (view.state.readOnly || cursor < node.from || cursor > node.to) {
+                builder.add(mark.from, mark.to + 1, Decoration.replace({}));
+              }
             }
           }
         }
@@ -43,7 +43,6 @@ export const heading = () => {
     ViewPlugin.fromClass(
       class {
         decorations: DecorationSet;
-
         constructor(view: EditorView) {
           this.decorations = buildDecorations(view);
         }
@@ -53,7 +52,7 @@ export const heading = () => {
         }
       },
       {
-        decorations: (v) => v.decorations,
+        decorations: (value) => value.decorations,
       },
     ),
   ];
