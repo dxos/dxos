@@ -70,6 +70,10 @@ export class InvitationsManager extends ScopedShellManager {
     return this.peer(id).getByTestId('space-list-item').nth(nth).textContent();
   }
 
+  async getSpaceMembersCount(id: number) {
+    return this.peer(id).getByTestId('space-members-list').locator('li').count();
+  }
+
   async getAuthCode(): Promise<string> {
     return await this._authCode.wait();
   }
@@ -147,7 +151,7 @@ export class InvitationsManager extends ScopedShellManager {
     const peer = this.peer(id);
     // TODO(wittjosiah): Update ids.
     if (type === 'device') {
-      await peer.getByTestId('join-identity').click();
+      await peer.getByTestId('identity-chooser.join-identity').click();
     }
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).waitFor({ timeout: 500 });
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).fill(invitation);

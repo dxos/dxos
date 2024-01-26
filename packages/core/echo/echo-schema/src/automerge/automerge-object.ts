@@ -603,6 +603,7 @@ const isValidKey = (key: string | symbol) => {
     key === 'toString' ||
     key === 'toJSON' ||
     key === 'id' ||
+    key === '_id' ||
     key === '__meta' ||
     key === '__schema' ||
     key === '__typename' ||

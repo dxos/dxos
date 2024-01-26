@@ -22,14 +22,14 @@ const styles = EditorView.baseTheme({
   '& .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
-  '& .cm-comment-active': {
+  '& .cm-comment-current': {
     backgroundColor: getToken('extend.colors.yellow.100'),
   },
 });
 
 const marks = {
   highlight: Decoration.mark({ class: 'cm-comment' }),
-  highlightActive: Decoration.mark({ class: 'cm-comment-active' }),
+  highlightActive: Decoration.mark({ class: 'cm-comment-current' }),
 };
 
 type CommentState = {
@@ -39,7 +39,7 @@ type CommentState = {
 };
 
 type SelectionState = {
-  active?: string;
+  current?: string;
   closest?: string;
 };
 
@@ -61,7 +61,7 @@ export const setFocus = (view: EditorView, id: string, center = true) => {
       effects: [
         //
         EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined),
-        setSelection.of({ active: id }),
+        setSelection.of({ current: id }),
       ],
     });
   }
@@ -118,7 +118,7 @@ const commentsState = StateField.define<CommentsState>({
  */
 const highlightDecorations = EditorView.decorations.compute([commentsState], (state) => {
   const {
-    selection: { active },
+    selection: { current },
     comments,
   } = state.field(commentsState);
 
@@ -130,7 +130,7 @@ const highlightDecorations = EditorView.decorations.compute([commentsState], (st
         return undefined;
       }
 
-      if (comment.comment.id === active) {
+      if (comment.comment.id === current) {
         return marks.highlightActive.range(range.from, range.to);
       } else {
         return marks.highlight.range(range.from, range.to);
@@ -326,7 +326,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       if (id) {
         // Update range.
         view.dispatch({
-          effects: setSelection.of({ active: id }),
+          effects: setSelection.of({ current: id }),
           selection: { anchor: from },
         });
 
@@ -418,10 +418,10 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     //
     // Track selection/proximity.
     //
-    EditorView.updateListener.of(({ view, state, changes }) => {
+    EditorView.updateListener.of(({ view, state }) => {
       let min = Infinity;
       const {
-        selection: { active, closest },
+        selection: { current, closest },
         comments,
       } = state.field(commentsState);
 
@@ -429,11 +429,11 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       const selection: SelectionState = {};
       comments.forEach(({ comment, range }) => {
         if (head >= range.from && head <= range.to) {
-          selection.active = comment.id;
+          selection.current = comment.id;
           selection.closest = undefined;
         }
 
-        if (!selection.active) {
+        if (!selection.current) {
           const d = Math.min(Math.abs(head - range.from), Math.abs(head - range.to));
           if (d < min) {
             selection.closest = comment.id;
@@ -442,7 +442,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
         }
       });
 
-      if (selection.active !== active || selection.closest !== closest) {
+      if (selection.current !== current || selection.closest !== closest) {
         view.dispatch({ effects: setSelection.of(selection) });
 
         // Update callback.
@@ -462,11 +462,11 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 };
 
 /**
- * Update state field.
+ * Update comments state field.
  */
-export const useComments = (view?: EditorView | null, comments?: Comment[]) => {
+export const useComments = (view: EditorView | null, comments: Comment[] = []) => {
   useEffect(() => {
-    if (view && comments) {
+    if (view) {
       view.dispatch({
         effects: setComments.of(comments),
       });

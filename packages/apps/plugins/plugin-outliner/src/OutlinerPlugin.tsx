@@ -15,10 +15,6 @@ import meta, { OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
 import { OutlinerAction, type OutlinerPluginProvides, isObject } from './types';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TreeType.name] = TreeType;
-
 export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
   return {
     meta,
@@ -105,7 +101,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           switch (intent.action) {
             case OutlinerAction.CREATE: {
               return {
-                object: new TreeType({
+                data: new TreeType({
                   root: new TreeType.Item({
                     items: [new TreeType.Item()],
                   }),
@@ -114,7 +110,10 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             }
 
             case OutlinerAction.TOGGLE_CHECKBOX: {
-              (intent.data.object as TreeType).checkbox = !(intent.data.object as TreeType).checkbox;
+              if (intent.data?.object instanceof TreeType) {
+                intent.data.object.checkbox = !intent.data.object.checkbox;
+                return { data: true };
+              }
               break;
             }
           }

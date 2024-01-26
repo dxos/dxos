@@ -12,16 +12,11 @@ import {
   type ViewUpdate,
   WidgetType,
 } from '@codemirror/view';
-import { useEffect } from 'react';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { generateName } from '@dxos/display-name';
-import { useThemeContext } from '@dxos/react-ui';
-import { getColorForValue } from '@dxos/react-ui-theme';
 
 import { Cursor, type CursorConverter } from './cursor';
-import { type EditorModel } from '../hooks';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;
@@ -29,8 +24,8 @@ export interface AwarenessProvider {
   open(): void;
   close(): void;
 
-  update(position: AwarenessPosition | undefined): void;
   getRemoteStates(): AwarenessState[];
+  update(position: AwarenessPosition | undefined): void;
 }
 
 const dummyProvider: AwarenessProvider = {
@@ -39,8 +34,8 @@ const dummyProvider: AwarenessProvider = {
   open: () => {},
   close: () => {},
 
-  update: () => {},
   getRemoteStates: () => [],
+  update: () => {},
 };
 
 export const AwarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
@@ -79,19 +74,6 @@ export const awareness = (provider = dummyProvider): Extension => {
     }),
     styles,
   ];
-};
-
-export const useAwareness = ({ awareness, peer }: EditorModel) => {
-  const { themeMode } = useThemeContext();
-  useEffect(() => {
-    if (awareness && peer) {
-      awareness.setLocalStateField('user', {
-        name: peer.name ?? generateName(peer.id),
-        color: getColorForValue({ value: peer.id, type: 'color' }),
-        colorLight: getColorForValue({ value: peer.id, themeMode, type: 'highlight' }),
-      });
-    }
-  }, [awareness, peer, themeMode]);
 };
 
 /**
@@ -268,7 +250,6 @@ class RemoteCaretWidget extends WidgetType {
   }
 }
 
-// TODO(burdon): Mixed case?
 const styles = EditorView.baseTheme({
   '.cm-collab-selection': {},
   '.cm-collab-selectionLine': {
@@ -283,38 +264,40 @@ const styles = EditorView.baseTheme({
     marginRight: '-1px',
     boxSizing: 'border-box',
     display: 'inline',
+    cursor: 'pointer',
   },
   '.cm-collab-selectionCaretDot': {
     borderRadius: '50%',
     position: 'absolute',
-    width: '.4em',
-    height: '.4em',
-    top: '-.2em',
-    left: '-.2em',
+    width: '.5em',
+    height: '.5em',
+    top: '-.25em',
+    left: '-.25em',
     backgroundColor: 'inherit',
     transition: 'transform .3s ease-in-out',
     boxSizing: 'border-box',
   },
   '.cm-collab-selectionCaret:hover > .cm-collab-selectionCaretDot': {
-    transformOrigin: 'bottom center',
     transform: 'scale(0)',
+    transformOrigin: 'center',
   },
   '.cm-collab-selectionInfo': {
     position: 'absolute',
-    top: '-1.05em',
-    left: '-1px',
+    transform: 'translate(-50%, 0)',
+    top: '-20px',
+    left: 0,
     fontSize: '.75em',
-    fontFamily: 'serif',
+    fontFamily: 'sans-serif',
     fontStyle: 'normal',
     fontWeight: 'normal',
     lineHeight: 'normal',
     userSelect: 'none',
     color: 'white',
-    paddingLeft: '2px',
-    paddingRight: '2px',
+    padding: '2px',
     zIndex: 101,
     transition: 'opacity .3s ease-in-out',
     backgroundColor: 'inherit',
+    borderRadius: '2px',
     // These should be separate.
     opacity: 0,
     transitionDelay: '0s',

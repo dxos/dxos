@@ -118,7 +118,7 @@ importers:
         version: 17.2.8(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(eslint@8.49.0)(nx@17.2.8)(typescript@5.2.2)
       '@nx/vite':
         specifier: 17.2.8
-        version: 17.2.8(patch_hash=3ip7xsi2sfpizr3t7qijx55cxe)(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.11)(vitest@1.2.1)
+        version: 17.2.8(patch_hash=3ip7xsi2sfpizr3t7qijx55cxe)(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.12)(vitest@1.2.1)
       '@nx/web':
         specifier: 17.2.8
         version: 17.2.8(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)
@@ -306,14 +306,14 @@ importers:
         specifier: ^8.3.2
         version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
       vitest:
         specifier: ^1.2.1
         version: 1.2.1(@types/node@18.11.9)(jsdom@20.0.1)
@@ -353,9 +353,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../packages/core/protocols
-      '@dxos/react-appkit':
-        specifier: workspace:*
-        version: link:../packages/ui/react-appkit
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../packages/sdk/react-client
@@ -397,7 +394,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       '@vuepress/bundler-vite':
         specifier: 2.0.0-rc.0
         version: 2.0.0-rc.0(@types/node@18.11.9)(ts-node@10.9.1)(typescript@5.2.2)
@@ -456,8 +453,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vue:
         specifier: ^3.3.12
         version: 3.3.13(typescript@5.2.2)
@@ -677,22 +674,22 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       robotjs:
         specifier: ^0.6.0
         version: 0.6.0
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-pwa:
         specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.11)(workbox-window@7.0.0)
+        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -706,8 +703,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-web-extension:
         specifier: ^4.1.1
         version: 4.1.1(@types/node@18.11.9)
@@ -795,22 +792,22 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-pwa:
         specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.11)(workbox-window@7.0.0)
+        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -888,8 +885,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-chess:
     dependencies:
@@ -943,8 +940,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-client:
     dependencies:
@@ -998,8 +995,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-debug:
     dependencies:
@@ -1061,8 +1058,11 @@ importers:
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
+      ipfs-http-client:
+        specifier: ^56.0.3
+        version: 56.0.3(node-fetch@2.6.7)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1128,8 +1128,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-explorer:
     dependencies:
@@ -1222,8 +1222,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-files:
     dependencies:
@@ -1283,8 +1283,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-github:
     dependencies:
@@ -1371,8 +1371,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-graph:
     dependencies:
@@ -1405,8 +1405,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-grid:
     dependencies:
@@ -1481,8 +1481,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-help:
     dependencies:
@@ -1548,8 +1548,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-inbox:
     dependencies:
@@ -1566,8 +1566,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1615,8 +1615,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-ipfs:
     dependencies:
@@ -1673,8 +1673,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-kanban:
     dependencies:
@@ -1740,8 +1740,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-layout:
     dependencies:
@@ -1804,8 +1804,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-map:
     dependencies:
@@ -1831,6 +1831,9 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1862,8 +1865,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-markdown:
     dependencies:
@@ -1956,8 +1959,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-mermaid:
     dependencies:
@@ -2020,8 +2023,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-metadata:
     dependencies:
@@ -2042,8 +2045,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-navtree:
     dependencies:
@@ -2087,8 +2090,8 @@ importers:
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -2133,8 +2136,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-outliner:
     dependencies:
@@ -2203,8 +2206,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-presenter:
     dependencies:
@@ -2282,8 +2285,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-pwa:
     dependencies:
@@ -2322,8 +2325,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
     dependencies:
@@ -2371,8 +2374,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-script:
     dependencies:
@@ -2406,6 +2409,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../../core/mesh/rpc
@@ -2427,12 +2433,6 @@ importers:
       monaco-editor:
         specifier: ^0.44.0
         version: 0.44.0
-      y-monaco:
-        specifier: ^0.1.0
-        version: 0.1.4(monaco-editor@0.44.0)(yjs@13.6.10)
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -2486,8 +2486,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-search:
     dependencies:
@@ -2541,8 +2541,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-settings:
     dependencies:
@@ -2572,8 +2572,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-sketch:
     dependencies:
@@ -2657,8 +2657,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-space:
     dependencies:
@@ -2781,8 +2781,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-stack:
     dependencies:
@@ -2808,7 +2808,7 @@ importers:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
       ipfs-http-client:
-        specifier: ~56.0.1
+        specifier: ^56.0.3
         version: 56.0.3(node-fetch@2.6.7)
       node-fetch:
         specifier: ^2.6.0
@@ -2854,8 +2854,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-table:
     dependencies:
@@ -2918,8 +2918,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-telemetry:
     dependencies:
@@ -2961,8 +2961,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-template:
     dependencies:
@@ -3013,8 +3013,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-theme:
     dependencies:
@@ -3050,11 +3050,14 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-thread:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@codemirror/language':
         specifier: ^6.10.0
         version: 6.10.0
@@ -3067,6 +3070,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -3083,8 +3089,8 @@ importers:
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -3135,8 +3141,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-undo:
     dependencies:
@@ -3181,8 +3187,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-wildcard:
     dependencies:
@@ -3227,8 +3233,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/tasks:
     dependencies:
@@ -3274,7 +3280,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       autoprefixer:
         specifier: ^10.4.12
         version: 10.4.13(postcss@8.4.24)
@@ -3288,14 +3294,14 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -3455,16 +3461,16 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
 
   packages/apps/types:
     dependencies:
@@ -4472,8 +4478,8 @@ importers:
         specifier: workspace:*
         version: link:../mesh/websocket-rpc
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       express:
         specifier: ^4.17.1
         version: 4.18.2
@@ -5883,8 +5889,8 @@ importers:
         specifier: ^3.11.2
         version: 3.12.0
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       do-wrapper:
         specifier: ^4.5.1
         version: 4.5.1
@@ -5907,7 +5913,7 @@ importers:
         specifier: ^8.2.0
         version: 8.2.4
       ipfs-http-client:
-        specifier: ~56.0.1
+        specifier: ^56.0.3
         version: 56.0.3(node-fetch@2.6.7)
       isomorphic-ws:
         specifier: ^4.0.1
@@ -6057,8 +6063,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -6137,7 +6143,7 @@ importers:
         version: 1.11.11
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       postcss:
         specifier: ^8.4.21
         version: 8.4.24
@@ -6148,20 +6154,20 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.0.11)
+        version: 0.7.0(vite@5.0.12)
       vite-plugin-pwa:
         specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.11)(workbox-window@7.0.0)
+        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -6234,7 +6240,7 @@ importers:
         version: 7.21.3
       '@crxjs/vite-plugin':
         specifier: ^1.0.14
-        version: 1.0.14(vite@5.0.11)
+        version: 1.0.14(vite@5.0.12)
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -6258,7 +6264,7 @@ importers:
         version: 0.10.0
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       body-parser:
         specifier: 1.19.0
         version: 1.19.0
@@ -6290,17 +6296,17 @@ importers:
         specifier: ~3.3.2
         version: 3.3.2(ts-node@10.9.1)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.0.11)
+        version: 0.7.0(vite@5.0.12)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
 
   packages/devtools/initializers/create:
     dependencies:
@@ -6399,8 +6405,8 @@ importers:
         specifier: ^18.0.6
         version: 18.0.6
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/experimental/chess-app:
     dependencies:
@@ -6435,9 +6441,6 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
-      '@dxos/react-appkit':
-        specifier: workspace:*
-        version: link:../../ui/react-appkit
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -6454,8 +6457,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/experimental/discord-bot:
     dependencies:
@@ -6671,8 +6674,8 @@ importers:
         specifier: ^5.3.6
         version: 5.5.2
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
       discord.js:
         specifier: ^14.14.1
         version: 14.14.1
@@ -6879,7 +6882,7 @@ importers:
         version: 1.1.1
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       postcss:
         specifier: ^8.4.21
         version: 8.4.24
@@ -6893,17 +6896,17 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.0.11)
+        version: 0.7.0(vite@5.0.12)
       vite-plugin-inspect:
         specifier: ^0.8.1
-        version: 0.8.1(rollup@3.23.0)(vite@5.0.11)
+        version: 0.8.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-pwa:
         specifier: ^0.17.4
-        version: 0.17.4(vite@5.0.11)(workbox-window@7.0.0)
+        version: 0.17.4(vite@5.0.12)(workbox-window@7.0.0)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -7294,6 +7297,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -7381,8 +7387,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/sdk/client:
     dependencies:
@@ -7758,7 +7764,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7772,17 +7778,17 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.4.1(rollup@3.23.0)(vite@5.0.11)
+        version: 1.4.1(rollup@3.23.0)(vite@5.0.12)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.3.0(vite@5.0.11)
+        version: 3.3.0(vite@5.0.12)
 
   packages/sdk/migrations:
     dependencies:
@@ -7974,7 +7980,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7982,8 +7988,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8089,115 +8095,6 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
-
-  packages/ui/react-appkit:
-    dependencies:
-      '@dnd-kit/core':
-        specifier: ^6.0.5
-        version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5)(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.0
-        version: 3.2.0(react@18.2.0)
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/sentry':
-        specifier: workspace:*
-        version: link:../../common/sentry
-      '@dxos/telemetry':
-        specifier: workspace:*
-        version: link:../../common/telemetry
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-navigation-menu':
-        specifier: ^1.1.2
-        version: 1.1.2(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-popover':
-        specifier: ^1.0.6
-        version: 1.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-portal':
-        specifier: ^1.0.3
-        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-select':
-        specifier: ^1.2.1
-        version: 1.2.1(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-toolbar':
-        specifier: ^1.0.3
-        version: 1.0.3(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
-      localforage:
-        specifier: ^1.10.0
-        version: 1.10.0
-      lodash.merge:
-        specifier: ^4.6.2
-        version: 4.6.2
-      lodash.throttle:
-        specifier: ^4.1.1
-        version: 4.1.1
-      qrcode.react:
-        specifier: ^3.1.0
-        version: 3.1.0(react@18.2.0)
-      url-join:
-        specifier: ^5.0.0
-        version: 5.0.0
-    devDependencies:
-      '@dxos/echo-typegen':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-typegen
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.throttle':
-        specifier: ^4.1.7
-        version: 4.1.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      '@vitejs/plugin-react':
-        specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-router-dom:
-        specifier: ^6.4.0
-        version: 6.4.2(react-dom@18.2.0)(react@18.2.0)
-      vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
 
   packages/ui/react-icons:
     devDependencies:
@@ -8315,6 +8212,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.3.1
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
@@ -8359,8 +8259,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8411,8 +8311,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8527,15 +8427,6 @@ importers:
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
-      y-codemirror.next:
-        specifier: ^0.3.2
-        version: 0.3.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.0)(yjs@13.6.10)
-      y-protocols:
-        specifier: ^1.0.5
-        version: 1.0.5
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
     devDependencies:
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: ^1.0.19
@@ -8698,8 +8589,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8756,8 +8647,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8802,8 +8693,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8854,8 +8745,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8902,8 +8793,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(react-dom@18.2.0)(react@18.2.0)
       date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
+        specifier: ^3.3.1
+        version: 3.3.1
     devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
@@ -8930,8 +8821,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8997,8 +8888,8 @@ importers:
         specifier: ^0.19.6
         version: 0.19.6
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
 
   packages/ui/react-ui-types: {}
 
@@ -9472,7 +9363,7 @@ importers:
         version: 8.0.0-alpha.11(react@18.2.0)
       '@storybook/builder-vite':
         specifier: 8.0.0-alpha.11
-        version: 8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.11)
+        version: 8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.12)
       '@storybook/core-server':
         specifier: 8.0.0-alpha.11
         version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
@@ -9481,7 +9372,7 @@ importers:
         version: 8.0.0-alpha.11
       '@storybook/html-vite':
         specifier: 8.0.0-alpha.11
-        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.0.11)
+        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.0.12)
       '@storybook/mdx2-csf':
         specifier: ^1.1.0
         version: 1.1.0
@@ -9490,7 +9381,7 @@ importers:
         version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
       '@storybook/react-vite':
         specifier: 8.0.0-alpha.11
-        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.0.11)
+        version: 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.0.12)
       '@types/lodash.flatten':
         specifier: ^4.4.6
         version: 4.4.7
@@ -9502,7 +9393,7 @@ importers:
         version: 18.0.6
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.11)
+        version: 4.2.1(vite@5.0.12)
       chromatic:
         specifier: ^10.1.0
         version: 10.1.0
@@ -9516,8 +9407,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
-        version: 5.0.11(@types/node@18.11.9)
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
         version: 1.0.2
@@ -12195,6 +12086,12 @@ packages:
       regenerator-runtime: 0.14.0
     dev: true
 
+  /@babel/runtime@7.23.8:
+    resolution: {integrity: sha512-Y7KbAP984rn1VGMbGqKmBLio9V7y5Je9GvU4rQPCPinCyNfUcToxIXl06d59URp/F3LwinvODxab5N/G6qggkw==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      regenerator-runtime: 0.14.1
+
   /@babel/template@7.20.7:
     resolution: {integrity: sha512-8SegXApWe6VoNw0r9JHpSteLKTpTiLZ4rMlGIm9JQ18KiCtyQiAMEazujAHrUS5flrcqYZa75ukev3P6QmUwUw==}
     engines: {node: '>=6.9.0'}
@@ -12648,7 +12545,7 @@ packages:
     dev: true
     optional: true
 
-  /@crxjs/vite-plugin@1.0.14(vite@5.0.11):
+  /@crxjs/vite-plugin@1.0.14(vite@5.0.12):
     resolution: {integrity: sha512-emOueVCqFRFmpcfT80Xsm4mfuFw9VSp5GY4eh5qeLDeiP81g0hddlobVQCo0pE2ZvNnWbyhLrXEYAaMAXjNL6A==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -12668,9 +12565,9 @@ packages:
       picocolors: 1.0.0
       react-refresh: 0.13.0
       rollup: 2.79.1
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     optionalDependencies:
-      '@vitejs/plugin-react': 4.2.1(vite@5.0.11)
+      '@vitejs/plugin-react': 4.2.1(vite@5.0.12)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -14186,7 +14083,7 @@ packages:
       chalk: 4.1.2
     dev: true
 
-  /@joshwooding/vite-plugin-react-docgen-typescript@0.3.0(typescript@5.2.2)(vite@5.0.11):
+  /@joshwooding/vite-plugin-react-docgen-typescript@0.3.0(typescript@5.2.2)(vite@5.0.12):
     resolution: {integrity: sha512-2D6y7fNvFmsLmRt6UCOFJPvFoPMJGT0Uh1Wg0RaigUp7kdQPs6yYn8Dmx6GZkOH/NW0yMTwRz/p0SRMMRo50vA==}
     peerDependencies:
       typescript: '>= 4.3.x'
@@ -14200,7 +14097,7 @@ packages:
       magic-string: 0.27.0
       react-docgen-typescript: 2.2.2(typescript@5.2.2)
       typescript: 5.2.2
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     dev: true
 
   /@jridgewell/gen-mapping@0.1.1:
@@ -15182,10 +15079,10 @@ packages:
       - debug
     dev: true
 
-  /@nrwl/vite@17.2.8(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.11)(vitest@1.2.1):
+  /@nrwl/vite@17.2.8(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.12)(vitest@1.2.1):
     resolution: {integrity: sha512-j0VBt+euPvpuHZ0thR3J7hkWrh90G0jmKJbT/yvECzcoFWhUvgsR3NJ0Y6a+EEediWbKHhmIeDZWMvWceOebLw==}
     dependencies:
-      '@nx/vite': 17.2.8(patch_hash=3ip7xsi2sfpizr3t7qijx55cxe)(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.11)(vitest@1.2.1)
+      '@nx/vite': 17.2.8(patch_hash=3ip7xsi2sfpizr3t7qijx55cxe)(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.12)(vitest@1.2.1)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -15554,20 +15451,20 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/vite@17.2.8(patch_hash=3ip7xsi2sfpizr3t7qijx55cxe)(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.11)(vitest@1.2.1):
+  /@nx/vite@17.2.8(patch_hash=3ip7xsi2sfpizr3t7qijx55cxe)(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.12)(vitest@1.2.1):
     resolution: {integrity: sha512-EGRNRtJOG/zA3mtN29+KO5jh3MeAjD0En6Ab9rMOmc46FWf6uxb5BfzdVGHKk6MXEwXYv0d7AHe2qBiCk7TCWQ==}
     peerDependencies:
       vite: ^5.0.0
       vitest: '>=0.34.6'
     dependencies:
-      '@nrwl/vite': 17.2.8(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.11)(vitest@1.2.1)
+      '@nrwl/vite': 17.2.8(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)(vite@5.0.12)(vitest@1.2.1)
       '@nx/devkit': 17.2.8(nx@17.2.8)
       '@nx/js': 17.2.8(patch_hash=it3utd2f3jzjizg3zqjuz4vsbi)(@swc-node/register@1.6.8)(@swc/core@1.3.104)(@types/node@18.11.9)(nx@17.2.8)(typescript@5.2.2)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.2.2)
       '@swc/helpers': 0.5.1
       enquirer: 2.3.6
       tsconfig-paths: 4.1.2
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
       vitest: 1.2.1(@types/node@18.11.9)(jsdom@20.0.1)
     transitivePeerDependencies:
       - '@babel/traverse'
@@ -16922,31 +16819,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-remove-scroll: 2.5.5(@types/react@18.0.21)(react@18.2.0)
-    dev: false
-
-  /@radix-ui/react-navigation-menu@1.1.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-1fSjOAGTThYSgJ5pENG2V8we7+6KDbfbiyt66HmLTeo0W3PAmmciclm0o97VlcVZW7q5Vg2hN7Cbj4XKo5u2sw==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.21.0
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-collection': 1.0.2(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
-      '@radix-ui/react-context': 1.0.0(react@18.2.0)
-      '@radix-ui/react-direction': 1.0.0(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.3(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-id': 1.0.0(react@18.2.0)
-      '@radix-ui/react-presence': 1.0.0(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-use-callback-ref': 1.0.0(react@18.2.0)
-      '@radix-ui/react-use-controllable-state': 1.0.0(react@18.2.0)
-      '@radix-ui/react-use-layout-effect': 1.0.0(react@18.2.0)
-      '@radix-ui/react-use-previous': 1.0.0(react@18.2.0)
-      '@radix-ui/react-visually-hidden': 1.0.2(react-dom@18.2.0)(react@18.2.0)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /@radix-ui/react-popover@1.0.6(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
@@ -18919,7 +18791,7 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/builder-vite@8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.11):
+  /@storybook/builder-vite@8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.12):
     resolution: {integrity: sha512-Ql+RREqFUR/wGdFJkpireiy4HEjUchNtVkUs59hPunCjTxXVKbdFtCXQ8PxDL3l0Zx802o/6pNVATjCQvBeTgQ==}
     peerDependencies:
       '@preact/preset-vite': '*'
@@ -18950,7 +18822,7 @@ packages:
       fs-extra: 11.1.1
       magic-string: 0.30.5
       typescript: 5.2.2
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -19188,11 +19060,11 @@ packages:
     resolution: {integrity: sha512-FcOqPAXACP0I3oJ/ws6/rrPT9WGhu915Cg8D02a9YxLo0DE9zI+a9A5gRGvmQ09fiWPukqI8ZAEoQEdWUKMQdQ==}
     dev: true
 
-  /@storybook/html-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.0.11):
+  /@storybook/html-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)(vite@5.0.12):
     resolution: {integrity: sha512-49yN4gK9zd79dJPE4ZAHmcWHEbIkUfYATTfJReUpwShLn3Z9Fwwl1rKgNIvuGXeD8HOBc5l8Eba09cQFvi9jfA==}
     engines: {node: '>=18.0.0'}
     dependencies:
-      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.11)
+      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.12)
       '@storybook/core-server': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
       '@storybook/html': 8.0.0-alpha.11
       '@storybook/node-logger': 8.0.0-alpha.11
@@ -19347,7 +19219,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: true
 
-  /@storybook/react-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.0.11):
+  /@storybook/react-vite@8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(rollup@3.23.0)(typescript@5.2.2)(vite@5.0.12):
     resolution: {integrity: sha512-u47kykqugO4U6fck1TOl/Du1iYWysDWyomBQANWdhBXvTLfF3QyZ5Of9G2U+nFXf5Xxd3Qs/iWVyXiOnn0jWUg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -19355,15 +19227,15 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
       vite: ^4.0.0 || ^5.0.0
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.3.0(typescript@5.2.2)(vite@5.0.11)
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.3.0(typescript@5.2.2)(vite@5.0.12)
       '@rollup/pluginutils': 5.0.2(rollup@3.23.0)
-      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.11)
+      '@storybook/builder-vite': 8.0.0-alpha.11(typescript@5.2.2)(vite@5.0.12)
       '@storybook/react': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
       magic-string: 0.30.5
       react: 18.2.0
       react-docgen: 7.0.1
       react-dom: 18.2.0(react@18.2.0)
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - encoding
@@ -21042,12 +20914,6 @@ packages:
       '@types/lodash': 4.14.191
     dev: true
 
-  /@types/lodash.throttle@4.1.7:
-    resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
-    dependencies:
-      '@types/lodash': 4.14.191
-    dev: true
-
   /@types/lodash.toarray@4.4.7:
     resolution: {integrity: sha512-8cMZKAuMyngqE0ffoPXRg0pEVn660Mklzb13iVYoyfexWKTzDnscsTmivMF+Y5l0EzpQZsNt0yK/S1kg4sxdTw==}
     dependencies:
@@ -21851,7 +21717,7 @@ packages:
       react: 18.2.0
     dev: false
 
-  /@vitejs/plugin-react@4.2.1(vite@5.0.11):
+  /@vitejs/plugin-react@4.2.1(vite@5.0.12):
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -21862,18 +21728,18 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.23.7)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     transitivePeerDependencies:
       - supports-color
 
-  /@vitejs/plugin-vue@4.5.2(vite@5.0.11)(vue@3.3.13):
+  /@vitejs/plugin-vue@4.5.2(vite@5.0.12)(vue@3.3.13):
     resolution: {integrity: sha512-UGR3DlzLi/SaVBPX0cnSyE37vqxU3O6chn8l0HJNzQzDia6/Au2A4xKv+iIJW8w2daf80G7TYHhi1pAUjdZ0bQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.0.0 || ^5.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
       vue: 3.3.13(typescript@5.2.2)
     dev: true
 
@@ -22015,7 +21881,7 @@ packages:
   /@vuepress/bundler-vite@2.0.0-rc.0(@types/node@18.11.9)(ts-node@10.9.1)(typescript@5.2.2):
     resolution: {integrity: sha512-rX8S8IYpqqlJfNPstS/joorpxXx/4WuE7+gDM31i2HUrxOKGZVzq8ZsRRRU2UdoTwHZSd3LpUS4sMtxE5xLK1A==}
     dependencies:
-      '@vitejs/plugin-vue': 4.5.2(vite@5.0.11)(vue@3.3.13)
+      '@vitejs/plugin-vue': 4.5.2(vite@5.0.12)(vue@3.3.13)
       '@vuepress/client': 2.0.0-rc.0(typescript@5.2.2)
       '@vuepress/core': 2.0.0-rc.0(typescript@5.2.2)
       '@vuepress/shared': 2.0.0-rc.0
@@ -22025,7 +21891,7 @@ packages:
       postcss: 8.4.32
       postcss-load-config: 4.0.1(postcss@8.4.32)(ts-node@10.9.1)
       rollup: 4.9.1
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
       vue: 3.3.13(typescript@5.2.2)
       vue-router: 4.2.5(vue@3.3.13)
     transitivePeerDependencies:
@@ -25254,7 +25120,7 @@ packages:
     hasBin: true
     dependencies:
       chalk: 4.1.2
-      date-fns: 2.29.3
+      date-fns: 2.30.0
       lodash: 4.17.21
       rxjs: 7.8.1
       shell-quote: 1.7.4
@@ -26152,9 +26018,16 @@ packages:
       whatwg-mimetype: 3.0.0
       whatwg-url: 11.0.0
 
-  /date-fns@2.29.3:
-    resolution: {integrity: sha512-dDCnyH2WnnKusqvZZ6+jA1O51Ibt8ZMRNkDZdyAyK4YfbDwa/cEmuztzG5pk6hqlp9aSBPYcjOlktquahGwGeA==}
+  /date-fns@2.30.0:
+    resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
     engines: {node: '>=0.11'}
+    dependencies:
+      '@babel/runtime': 7.23.8
+    dev: true
+
+  /date-fns@3.3.1:
+    resolution: {integrity: sha512-y8e109LYGgoQDveiEBD3DYXKba1jWf5BA8YU1FL5Tvm0BTdEfy54WLCwnuYWZNnzzvALy/QQ4Hov+Q9RVRv+Zw==}
+    dev: false
 
   /dateformat@4.6.3:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
@@ -30677,7 +30550,7 @@ packages:
     resolution: {integrity: sha512-AmCS+9CT34pp2u0QQVXjKztkuq3y5T+BIciuiHDDtDZucZD8VudosnSdUyXJV6IsRkN5jc4RFDhCk1O6Q3Gxjg==}
     dependencies:
       interface-store: 2.0.2
-      nanoid: 3.3.6
+      nanoid: 3.3.7
       uint8arrays: 3.1.1
     dev: false
 
@@ -30786,7 +30659,7 @@ packages:
       multiaddr: 10.0.1(node-fetch@2.6.7)
       multiaddr-to-uri: 8.0.0(node-fetch@2.6.7)
       multiformats: 9.9.0
-      nanoid: 3.3.6
+      nanoid: 3.3.7
       parse-duration: 1.0.2
       timeout-abort-controller: 3.0.0
       uint8arrays: 3.1.1
@@ -30848,7 +30721,7 @@ packages:
       it-glob: 1.0.2
       it-to-stream: 1.0.0
       merge-options: 3.0.4
-      nanoid: 3.3.6
+      nanoid: 3.3.7
       native-fetch: 3.0.0(node-fetch@2.7.0)
       node-fetch: 2.7.0
       react-native-fetch-api: 3.0.0
@@ -37184,7 +37057,7 @@ packages:
     engines: {node: '>=10.0'}
     dependencies:
       camelcase-css: 2.0.1
-      postcss: 8.4.24
+      postcss: 8.4.32
     dev: false
 
   /postcss-js@4.0.1(postcss@8.4.24):
@@ -37752,14 +37625,6 @@ packages:
 
   /qrcode-generator@1.4.4:
     resolution: {integrity: sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==}
-    dev: false
-
-  /qrcode.react@3.1.0(react@18.2.0):
-    resolution: {integrity: sha512-oyF+Urr3oAMUG/OiOuONL3HXM+53wvuH3mtIWQrYmsXoAq0DkvZp2RYUWFSMFtbdOpuS++9v+WAkzNVkMlNW6Q==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      react: 18.2.0
     dev: false
 
   /qrcode@1.5.3:
@@ -38682,7 +38547,7 @@ packages:
   /redux@4.2.0:
     resolution: {integrity: sha512-oSBmcKKIuIR4ME29/AeNUnl5L+hvBq7OaJWzaptTQJAntaPvxIJqfnjbaEiCzzaIz+XmVILfqAM3Ob0aXLPfjA==}
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.8
     dev: false
 
   /reflect.getprototypeof@1.0.4:
@@ -38719,10 +38584,13 @@ packages:
   /regenerator-runtime@0.14.0:
     resolution: {integrity: sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==}
 
+  /regenerator-runtime@0.14.1:
+    resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
+
   /regenerator-transform@0.15.0:
     resolution: {integrity: sha512-LsrGtPmbYg19bcPHwdtmXwbW+TqNvtY4riE3P83foeHRroMbH6/2ddFBfab3t7kbzc7v7p4wbkIecHImqt0QNg==}
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.8
 
   /regenerator-transform@0.15.2:
     resolution: {integrity: sha512-hfMp2BoF0qOk3uc5V20ALGDS2ddjQaLrdl7xrGXvAIow7qeWRM2VA2HuCHkUKk9slq3VwEwLNK3DFBqDfPGYtg==}
@@ -39332,7 +39200,7 @@ packages:
   /rtl-css-js@1.16.1:
     resolution: {integrity: sha512-lRQgou1mu19e+Ya0LsTvKrVJ5TYUbqCVPAiImX3UfLTenarvPUl1QFdvu5Z3PYmHT9RCcwIfbjRQBntExyj3Zg==}
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.8
     dev: false
 
   /run-applescript@5.0.0:
@@ -42559,7 +42427,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -42571,17 +42439,17 @@ packages:
       - terser
     dev: true
 
-  /vite-plugin-fonts@0.7.0(vite@5.0.11):
+  /vite-plugin-fonts@0.7.0(vite@5.0.12):
     resolution: {integrity: sha512-fisKirkQrA2RFwcyI96SENLu1FyRYNIiC/l5DGdD8oV3OsAWGrYKs0e7/VZF6l0rm0QiYA2sOVTzYfrLAzP9cw==}
     deprecated: renamed to `unplugin-fonts`, see https://github.com/cssninjaStudio/unplugin-fonts/releases/tag/v1.0.0
     peerDependencies:
       vite: ^5.0.0
     dependencies:
       fast-glob: 3.2.12
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     dev: true
 
-  /vite-plugin-inspect@0.8.1(rollup@3.23.0)(vite@5.0.11):
+  /vite-plugin-inspect@0.8.1(rollup@3.23.0)(vite@5.0.12):
     resolution: {integrity: sha512-oPBPVGp6tBd5KdY/qY6lrbLXqrbHRG0hZLvEaJfiZ/GQfDB+szRuLHblQh1oi1Hhh8GeLit/50l4xfs2SA+TCA==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -42599,13 +42467,13 @@ packages:
       open: 9.1.0
       picocolors: 1.0.0
       sirv: 2.0.4
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     transitivePeerDependencies:
       - rollup
       - supports-color
     dev: true
 
-  /vite-plugin-pwa@0.17.4(vite@5.0.11)(workbox-window@7.0.0):
+  /vite-plugin-pwa@0.17.4(vite@5.0.12)(workbox-window@7.0.0):
     resolution: {integrity: sha512-j9iiyinFOYyof4Zk3Q+DtmYyDVBDAi6PuMGNGq6uGI0pw7E+LNm9e+nQ2ep9obMP/kjdWwzilqUrlfVRj9OobA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
@@ -42615,7 +42483,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       fast-glob: 3.3.2
       pretty-bytes: 6.1.1
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
       workbox-build: 7.0.0
       workbox-window: 7.0.0
     transitivePeerDependencies:
@@ -42623,7 +42491,7 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-top-level-await@1.4.1(rollup@3.23.0)(vite@5.0.11):
+  /vite-plugin-top-level-await@1.4.1(rollup@3.23.0)(vite@5.0.12):
     resolution: {integrity: sha512-hogbZ6yT7+AqBaV6lK9JRNvJDn4/IJvHLu6ET06arNfo0t2IsyCaon7el9Xa8OumH+ESuq//SDf8xscZFE0rWw==}
     peerDependencies:
       vite: '>=2.8'
@@ -42631,7 +42499,7 @@ packages:
       '@rollup/plugin-virtual': 3.0.2(rollup@3.23.0)
       '@swc/core': 1.3.104
       uuid: 9.0.1
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
@@ -42639,12 +42507,12 @@ packages:
   /vite-plugin-turbosnap@1.0.2:
     resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
 
-  /vite-plugin-wasm@3.3.0(vite@5.0.11):
+  /vite-plugin-wasm@3.3.0(vite@5.0.12):
     resolution: {integrity: sha512-tVhz6w+W9MVsOCHzxo6SSMSswCeIw4HTrXEi6qL3IRzATl83jl09JVO1djBqPSwfjgnpVHNLYcaMbaDX5WB/pg==}
     peerDependencies:
       vite: ^2 || ^3 || ^4 || ^5
     dependencies:
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
 
   /vite-plugin-web-extension@4.1.1(@types/node@18.11.9):
     resolution: {integrity: sha512-YUObXUXilgYuNGLdn5v+VUCcIQY4Aodo/1tgv6DrNAeZTLnvfa0fKSXjq86FB+XTplbumVZ6UANLrOxZItWOvw==}
@@ -42658,7 +42526,7 @@ packages:
       lodash.uniq: 4.5.0
       lodash.uniqby: 4.7.0
       md5: 2.3.0
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
       web-ext-run: 0.1.1
       webextension-polyfill: 0.10.0
       yaml: 2.3.4
@@ -42675,8 +42543,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /vite@5.0.11(@types/node@18.11.9):
-    resolution: {integrity: sha512-XBMnDjZcNAw/G1gEiskiM1v6yzM4GE5aMGvhWTlHAYYhxb7S3/V1s3m2LDHa8Vh6yIWYYB0iJwsEaS523c4oYA==}
+  /vite@5.0.12(@types/node@18.11.9):
+    resolution: {integrity: sha512-4hsnEkG3q0N4Tzf1+t6NdN9dg/L3BM+q8SWgbSPnJvrgH2kgdyzfVJwbR1ic69/4uMJJ/3dqDZZE5/WwqW8U1w==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -42755,7 +42623,7 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.6.0
       tinypool: 0.8.2
-      vite: 5.0.11(@types/node@18.11.9)
+      vite: 5.0.12(@types/node@18.11.9)
       vite-node: 1.2.1(@types/node@18.11.9)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
@@ -44368,36 +44236,6 @@ packages:
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
-
-  /y-codemirror.next@0.3.2(@codemirror/state@6.4.0)(@codemirror/view@6.23.0)(yjs@13.6.10):
-    resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
-    peerDependencies:
-      '@codemirror/state': ^6.0.0
-      '@codemirror/view': ^6.0.0
-      yjs: ^13.5.6
-    dependencies:
-      '@codemirror/state': 6.4.0
-      '@codemirror/view': 6.23.0
-      lib0: 0.2.87
-      yjs: 13.6.10
-    dev: false
-
-  /y-monaco@0.1.4(monaco-editor@0.44.0)(yjs@13.6.10):
-    resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
-    peerDependencies:
-      monaco-editor: '>=0.20.0'
-      yjs: ^13.3.1
-    dependencies:
-      lib0: 0.2.78
-      monaco-editor: 0.44.0
-      yjs: 13.6.10
-    dev: false
-
-  /y-protocols@1.0.5:
-    resolution: {integrity: sha512-Wil92b7cGk712lRHDqS4T90IczF6RkcvCwAD0A2OPg+adKmOe+nOiT/N2hvpQIWS3zfjmtL4CPaH5sIW1Hkm/A==}
-    dependencies:
-      lib0: 0.2.78
-    dev: false
 
   /y18n@3.2.2:
     resolution: {integrity: sha512-uGZHXkHnhF0XeeAPgnKfPv1bgKAYyVvmNL1xlKsPYZPaIHxGti2hHqvOCQv71XMsLxu1QjergkqogUnms5D3YQ==}

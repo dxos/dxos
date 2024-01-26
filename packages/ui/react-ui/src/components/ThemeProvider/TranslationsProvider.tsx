@@ -28,6 +28,8 @@ void i18Next.use(initReactI18next).init({
 
 export interface TranslationsProviderProps {
   children?: ReactNode;
+  // TODO(wittjosiah): Rename to `placeholder` to match ClientProvider?
+  //   Placeholder => loading, fallback => error.
   fallback?: ReactNode;
   resourceExtensions?: Resource[];
   appNs?: string;

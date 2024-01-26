@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
+import { type CID } from 'ipfs-http-client';
 import { join } from 'path';
 import { promisify } from 'util';
 
@@ -40,7 +41,10 @@ interface PublishArgs {
   config?: string;
 }
 
-export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { log, config, module }: PublishParams) => {
+export const publish = async (
+  { verbose, timeout, path, pin }: PublishArgs,
+  { log, config, module }: PublishParams,
+): Promise<CID> => {
   invariant(module.name, 'Module name is required to publish.');
   log(`Publishing module ${chalk.bold(module.name)} ...`);
   const moduleOut = `out/${encodeName(module.name)}`;
@@ -49,10 +53,12 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { lo
   if (!fs.existsSync(publishFolder)) {
     throw new Error(`Publish failed. Build output folder does not exist: ${publishFolder}.`);
   }
+
   const total = await getFolderSize(publishFolder);
   if (verbose) {
     log(`Publishing from: ${publishFolder}`);
   }
+
   log('Uploading...');
   const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
   verbose && bar.start(total, 0);
@@ -67,6 +73,5 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { lo
   verbose && bar.stop();
 
   log(`Published module ${chalk.bold(module.name)}. IPFS cid: ${cid.toString()}`);
-
   return cid;
 };

@@ -23,6 +23,11 @@
       }
     },
     "test": {
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "environments": [
           "nodejs"
