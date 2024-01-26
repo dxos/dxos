@@ -62,7 +62,7 @@ export class AutomergeHost {
 
         const doc = this._repo.handles[documentId]?.docSync();
         if (!doc) {
-          log.warn('doc not found for share policy check', { peerId, documentId });
+          log('doc not found for share policy check', { peerId, documentId });
           return false;
         }
 
