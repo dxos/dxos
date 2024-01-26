@@ -19,7 +19,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { getToken } from '../../styles';
 
 // TODO(burdon): Reconcile with theme.
-// [aria-readonly="true"]
 const styles = EditorView.baseTheme({
   '& .cm-code': {
     paddingInline: '1rem !important',
@@ -28,20 +27,36 @@ const styles = EditorView.baseTheme({
   '& .cm-codeblock': {
     display: 'inline-block',
     width: '100%',
+    position: 'relative',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      inset: 0,
+    },
   },
-  '&light .cm-codeblock, &light .cm-codeblock.cm-activeLine': {
-    background: getToken('extend.colors.neutral.25'),
+  '&light .cm-codeblock': {
+    '&::after': {
+      background: getToken('extend.semanticColors.input.light'),
+      mixBlendMode: 'darken',
+    },
   },
-  '&dark .cm-codeblock, &dark .cm-codeblock.cm-activeLine': {
-    background: getToken('extend.colors.neutral.850'),
+  '&dark .cm-codeblock': {
+    '&::after': {
+      background: getToken('extend.semanticColors.input.dark'),
+      mixBlendMode: 'lighten',
+    },
   },
   '& .cm-codeblock-first': {
-    borderTopLeftRadius: '.5rem',
-    borderTopRightRadius: '.5rem',
+    '&::after': {
+      borderTopLeftRadius: '.5rem',
+      borderTopRightRadius: '.5rem',
+    },
   },
   '& .cm-codeblock-last': {
-    borderBottomLeftRadius: '.5rem',
-    borderBottomRightRadius: '.5rem',
+    '&::after': {
+      borderBottomLeftRadius: '.5rem',
+      borderBottomRightRadius: '.5rem',
+    },
   },
 });
 
