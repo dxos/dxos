@@ -18,7 +18,6 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
-import { getGlobalAutomergePreference } from '@dxos/client/echo';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -78,9 +77,7 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    log.info('agent automerge preference', { automerge: getGlobalAutomergePreference() });
-
-    this._agent = new Agent({
+    const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
       metrics: this.flags.metrics,

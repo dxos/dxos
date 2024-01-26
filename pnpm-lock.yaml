@@ -8,9 +8,6 @@ overrides:
   ipfs-utils: 9.0.14
 
 patchedDependencies:
-  '@automerge/automerge-repo@1.0.19':
-    hash: nvpryxq2zb6q2byifzjmzcheaq
-    path: patches/@automerge__automerge-repo@1.0.19.patch
   '@nx/js@17.2.8':
     hash: it3utd2f3jzjizg3zqjuz4vsbi
     path: patches/@nx__js@17.2.8.patch
@@ -306,7 +303,7 @@ importers:
         specifier: ^8.3.2
         version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
@@ -450,7 +447,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vue:
         specifier: ^3.3.12
@@ -587,6 +584,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../devtools/devtools
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -676,7 +676,7 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-pwa:
         specifier: ^0.17.4
@@ -700,7 +700,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-web-extension:
         specifier: ^4.1.1
@@ -794,7 +794,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-pwa:
         specifier: ^0.17.4
@@ -882,7 +882,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-chess:
@@ -937,7 +937,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-client:
@@ -992,7 +992,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-debug:
@@ -1125,7 +1125,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-explorer:
@@ -1219,7 +1219,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-files:
@@ -1280,7 +1280,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-github:
@@ -1368,7 +1368,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-graph:
@@ -1402,7 +1402,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-grid:
@@ -1478,7 +1478,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-help:
@@ -1545,7 +1545,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-inbox:
@@ -1612,7 +1612,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-ipfs:
@@ -1670,7 +1670,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-kanban:
@@ -1737,7 +1737,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-layout:
@@ -1801,7 +1801,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-map:
@@ -1862,7 +1862,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-markdown:
@@ -1956,7 +1956,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-mermaid:
@@ -2020,7 +2020,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-metadata:
@@ -2042,7 +2042,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-navtree:
@@ -2133,7 +2133,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-outliner:
@@ -2203,7 +2203,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-presenter:
@@ -2282,7 +2282,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-pwa:
@@ -2322,7 +2322,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-registry:
@@ -2371,7 +2371,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-script:
@@ -2483,7 +2483,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-search:
@@ -2538,7 +2538,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-settings:
@@ -2569,7 +2569,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-sketch:
@@ -2654,7 +2654,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-space:
@@ -2778,7 +2778,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-stack:
@@ -2851,7 +2851,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-table:
@@ -2915,7 +2915,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-telemetry:
@@ -2964,7 +2964,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-template:
@@ -3016,7 +3016,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-theme:
@@ -3053,7 +3053,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-thread:
@@ -3144,7 +3144,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-undo:
@@ -3190,7 +3190,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-wildcard:
@@ -3236,7 +3236,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/tasks:
@@ -3297,7 +3297,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
@@ -3466,7 +3466,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.12)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
@@ -4487,10 +4487,10 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10
       '@automerge/automerge-repo':
-        specifier: ^1.0.19
-        version: 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.0
+        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: ^1.0.19
+        specifier: ^1.1.0
         version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-wasm':
         specifier: ^0.9.0
@@ -4612,8 +4612,8 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10
       '@automerge/automerge-repo':
-        specifier: ^1.0.19
-        version: 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.0
+        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -6083,7 +6083,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
@@ -6222,7 +6222,7 @@ importers:
         specifier: ~3.3.2
         version: 3.3.2(ts-node@10.9.1)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
@@ -6331,7 +6331,7 @@ importers:
         specifier: ^18.0.6
         version: 18.0.6
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/experimental/chess-app:
@@ -6383,7 +6383,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/experimental/discord-bot:
@@ -6822,7 +6822,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-fonts:
         specifier: ^0.7.0
@@ -7027,8 +7027,8 @@ importers:
   packages/gravity/kube-testing:
     dependencies:
       '@automerge/automerge-repo-network-websocket':
-        specifier: ^1.0.19
-        version: 1.0.19(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.0
+        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7313,7 +7313,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/sdk/client:
@@ -7704,7 +7704,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
@@ -7993,7 +7993,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8264,7 +8264,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8316,7 +8316,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8434,8 +8434,8 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: ^1.0.19
-        version: 1.0.19(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.0
+        version: 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -8594,7 +8594,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8652,7 +8652,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8698,7 +8698,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8750,7 +8750,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8826,7 +8826,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -8893,7 +8893,7 @@ importers:
         specifier: ^0.19.6
         version: 0.19.6
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/ui/react-ui-types: {}
@@ -9412,7 +9412,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
       vite-plugin-turbosnap:
         specifier: ^1.0.2
@@ -9561,10 +9561,10 @@ packages:
       leven: 3.1.0
     dev: true
 
-  /@automerge/automerge-repo-network-broadcastchannel@1.0.19(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-Qb5+i+huCnOuriyVwuusHUXzUWdgOqslhSa/wAQEvJ+nOPkwhDDhDTgdvjnQjK5/grJCQzcmlwh+oQ55/3IPcg==}
+  /@automerge/automerge-repo-network-broadcastchannel@1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-eYd8DnJI8UIcc8lXlRkKueSQ7njeHVzE/lviu5vno+oVIR920K4KZ3QHroO4W1X1UrDxxlc7oSXNEndLJT8w9g==}
     dependencies:
-      '@automerge/automerge-repo': 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -9573,11 +9573,12 @@ packages:
       - typescript
     dev: true
 
-  /@automerge/automerge-repo-network-websocket@1.0.19(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-he/cRcZ9byNHZN0ws/c7rwjT6ocbAdPr2EGvTUp6QeIhRlcICqyTuIJjUSG0MyxckO8FbqcBKnfsiaTRCx/b3Q==}
+  /@automerge/automerge-repo-network-websocket@1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-D3k/RKI5xVPb+ZEmEmL/MiuGiu2vzujOloyHveLmd1R9BL2JakbKk1s4G2MhTBT1qF8Io02pIa1+lsaG9HlULA==}
     dependencies:
-      '@automerge/automerge-repo': 1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
       cbor-x: 1.5.4
+      debug: 4.3.4(supports-color@8.1.1)
       eventemitter3: 5.0.1
       isomorphic-ws: 5.0.0(ws@8.14.2)
       ws: 8.14.2
@@ -9603,27 +9604,6 @@ packages:
       - typescript
     dev: false
 
-  /@automerge/automerge-repo@1.0.19(patch_hash=nvpryxq2zb6q2byifzjmzcheaq)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-IcfX9xkbk+YY7IhG+ZCoUVccou2MmHGXvu/XGOICFmUIaG1mkQAPzZU2u5r2JUX0cpr/2PcIPOeCletJMssnWw==}
-    dependencies:
-      '@automerge/automerge': 2.1.10
-      bs58check: 3.0.1
-      cbor-x: 1.5.4
-      debug: 4.3.4(supports-color@8.1.1)
-      eventemitter3: 5.0.1
-      fast-sha256: 1.3.0
-      tiny-typed-emitter: 2.1.0
-      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2)
-      uuid: 9.0.0
-      xstate: 4.37.1
-    transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - supports-color
-      - typescript
-    patched: true
-
   /@automerge/automerge-repo@1.1.0(@swc/core@1.3.104)(@types/node@18.11.9)(typescript@5.2.2):
     resolution: {integrity: sha512-QRSt2s89Uhrlofbkipsb/9Alyp65/e1PocNzY+L4J7yDDXD7fbEW5uThXey2lSb1m98Fe0+NtzyKD1we6lvAkA==}
     dependencies:
@@ -9643,7 +9623,6 @@ packages:
       - '@types/node'
       - supports-color
       - typescript
-    dev: false
 
   /@automerge/automerge-wasm@0.9.0:
     resolution: {integrity: sha512-wTPcW3wVk20D1x0DOko/RsfZV1mlc8HJynqgTRhVocOxFIU/RCilnYRfJmSb8LwCG2uZzfqg0DLsEBqQZ53KBQ==}
@@ -37173,7 +37152,7 @@ packages:
     engines: {node: '>=10.0'}
     dependencies:
       camelcase-css: 2.0.1
-      postcss: 8.4.24
+      postcss: 8.4.33
     dev: false
 
   /postcss-js@4.0.1(postcss@8.4.24):
@@ -42393,6 +42372,7 @@ packages:
   /uuid@9.0.0:
     resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
     hasBin: true
+    dev: false
 
   /uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
