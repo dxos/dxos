@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     global: true,
     environment: 'happy-dom',
+    include: ['**/*.spec.tsx'],
   },
   plugins: [topLevelAwait(), wasm()],
   // worker: {
