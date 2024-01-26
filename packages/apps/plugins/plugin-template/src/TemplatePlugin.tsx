@@ -79,7 +79,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           switch (intent.action) {
             case TemplateAction.CREATE: {
               // TODO(burdon): Set typename.
-              return { object: new Expando({ type: 'template' }) };
+              return { data: new Expando({ type: 'template' }) };
             }
           }
         },

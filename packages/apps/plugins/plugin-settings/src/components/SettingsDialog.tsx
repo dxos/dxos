@@ -37,7 +37,7 @@ export const SettingsDialogContent = () => {
       <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
       <div className='grow mlb-4 overflow-hidden grid grid-cols-[minmax(min-content,1fr)_3fr] gap-1'>
-        <div className='surface-input rounded p-1 place-self-start max-bs-[100%] is-full overflow-y-auto'>
+        <div className='flex flex-col p-1 gap-4 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto'>
           <PluginList
             title='Options'
             plugins={core.map((id) => plugins.find((p) => p.meta.id === id)!.meta)}
@@ -79,7 +79,7 @@ const PluginList = ({
   onSelect: (plugin: string) => void;
 }) => {
   return (
-    <>
+    <div role='none'>
       <h2 className='mlb-1 pli-2 text-sm text-neutral-500'>{title}</h2>
       <List selectable>
         {plugins.map((plugin) => (
@@ -93,6 +93,6 @@ const PluginList = ({
           </ListItem.Root>
         ))}
       </List>
-    </>
+    </div>
   );
 };

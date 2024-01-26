@@ -37,7 +37,6 @@ export const link = (options: LinkOptions = {}): Extension => {
     ViewPlugin.fromClass(
       class {
         decorations: DecorationSet;
-
         constructor(view: EditorView) {
           this.decorations = buildDecorations(view, options);
         }
@@ -49,7 +48,7 @@ export const link = (options: LinkOptions = {}): Extension => {
         }
       },
       {
-        decorations: (v) => v.decorations,
+        decorations: (value) => value.decorations,
       },
     ),
   ];

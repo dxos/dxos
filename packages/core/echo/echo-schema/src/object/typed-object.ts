@@ -113,6 +113,8 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
   private _schema?: Schema;
   private readonly _immutable;
 
+  private _updateDepth = 0;
+
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
@@ -288,8 +290,10 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   override _itemUpdate(): void {
-    super._itemUpdate();
-    this._signal.notifyWrite();
+    if (this._updateDepth <= 1) {
+      super._itemUpdate();
+      this._signal.notifyWrite();
+    }
   }
 
   private _transform(value: any, visitors: ConvertVisitors = {}) {
@@ -404,50 +408,55 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
    * @internal
    */
   private _set(key: string, value: any, meta?: boolean) {
-    this._inBatch(() => {
-      if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
-        const ref = this._linkObject(value);
-        this._mutate(this._model.builder().set(key, ref).build(meta));
-      } else if (value instanceof EchoArray) {
-        const values = value.map((item) => {
-          if (item instanceof AbstractEchoObject) {
-            return this._linkObject(item);
-          } else if (isReferenceLike(item)) {
+    try {
+      this._updateDepth++;
+      this._inBatch(() => {
+        if (value instanceof AbstractEchoObject || value instanceof AutomergeObject) {
+          const ref = this._linkObject(value);
+          this._mutate(this._model.builder().set(key, ref).build(meta));
+        } else if (value instanceof EchoArray) {
+          const values = value.map((item) => {
+            if (item instanceof AbstractEchoObject) {
+              return this._linkObject(item);
+            } else if (isReferenceLike(item)) {
+              // Old reference format.
+              return new Reference(item['@id']);
+            } else if (typeof item === 'object' && item !== null && item['@type'] === REFERENCE_TYPE_TAG) {
+              return new Reference(item.itemId, item.protocol, item.host);
+            } else {
+              return item;
+            }
+          });
+          this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build(meta));
+          value._attach(this[base], key);
+        } else if (Array.isArray(value)) {
+          // TODO(dmaretskyi): Make a single mutation.
+          this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build(meta));
+          this._get(key, meta).push(...value);
+        } else if (typeof value === 'object' && value !== null) {
+          if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
+            // Special case for assigning unresolved references in the form of { '@id': '0x123' }
             // Old reference format.
-            return new Reference(item['@id']);
-          } else if (typeof item === 'object' && item !== null && item['@type'] === REFERENCE_TYPE_TAG) {
-            return new Reference(item.itemId, item.protocol, item.host);
+            this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
+          } else if (value['@type'] === REFERENCE_TYPE_TAG) {
+            // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+            this._mutate(
+              this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
+            );
           } else {
-            return item;
+            const sub = this._createProxy({}, key);
+            this._mutate(this._model.builder().set(key, {}).build(meta));
+            for (const [subKey, subValue] of Object.entries(value)) {
+              sub[subKey] = subValue;
+            }
           }
-        });
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build(meta));
-        value._attach(this[base], key);
-      } else if (Array.isArray(value)) {
-        // TODO(dmaretskyi): Make a single mutation.
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build(meta));
-        this._get(key, meta).push(...value);
-      } else if (typeof value === 'object' && value !== null) {
-        if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
-          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-          // Old reference format.
-          this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
-        } else if (value['@type'] === REFERENCE_TYPE_TAG) {
-          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-          this._mutate(
-            this._model.builder().set(key, new Reference(value.itemId, value.protocol, value.host)).build(meta),
-          );
         } else {
-          const sub = this._createProxy({}, key);
-          this._mutate(this._model.builder().set(key, {}).build(meta));
-          for (const [subKey, subValue] of Object.entries(value)) {
-            sub[subKey] = subValue;
-          }
+          this._mutate(this._model.builder().set(key, value).build(meta));
         }
-      } else {
-        this._mutate(this._model.builder().set(key, value).build(meta));
-      }
-    });
+      });
+    } finally {
+      this._updateDepth--;
+    }
   }
 
   private _inBatch(cb: () => void) {

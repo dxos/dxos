@@ -75,7 +75,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ChessAction.CREATE: {
-              return { object: new Game() };
+              return { data: new Game() };
             }
           }
         },

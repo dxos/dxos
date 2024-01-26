@@ -123,7 +123,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { object: new StackType() };
+              return { data: new StackType() };
             }
           }
         },

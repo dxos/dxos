@@ -101,7 +101,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           switch (intent.action) {
             case OutlinerAction.CREATE: {
               return {
-                object: new TreeType({
+                data: new TreeType({
                   root: new TreeType.Item({
                     items: [new TreeType.Item()],
                   }),
@@ -110,7 +110,10 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             }
 
             case OutlinerAction.TOGGLE_CHECKBOX: {
-              (intent.data.object as TreeType).checkbox = !(intent.data.object as TreeType).checkbox;
+              if (intent.data?.object instanceof TreeType) {
+                intent.data.object.checkbox = !intent.data.object.checkbox;
+                return { data: true };
+              }
               break;
             }
           }

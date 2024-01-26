@@ -190,14 +190,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { object: new ThreadType() };
+              return { data: new ThreadType() };
             }
 
             case ThreadAction.SELECT: {
               state.threads = intent.data?.threads;
               state.active = intent.data?.active;
               state.focus = intent.data?.focus;
-              break;
+              return { data: true };
             }
           }
         },

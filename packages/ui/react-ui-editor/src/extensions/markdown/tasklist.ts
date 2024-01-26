@@ -6,7 +6,7 @@ import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, WidgetType, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 
-import { getToken } from '../styles';
+import { getToken } from '../../styles';
 
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
@@ -91,7 +91,6 @@ export const tasklist = (options: TasklistOptions = {}) => {
     ViewPlugin.fromClass(
       class {
         decorations: DecorationSet;
-
         constructor(view: EditorView) {
           this.decorations = buildDecorations(view);
         }
@@ -103,7 +102,7 @@ export const tasklist = (options: TasklistOptions = {}) => {
         }
       },
       {
-        decorations: (v) => v.decorations,
+        decorations: (value) => value.decorations,
       },
     ),
     styles,

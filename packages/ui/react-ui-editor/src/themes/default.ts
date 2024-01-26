@@ -89,8 +89,6 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-line': {
     paddingInline: 0,
-    // TODO(burdon): Other values leave gaps between lines when highlighted.
-    // lineHeight: 'normal',
   },
   '.cm-activeLine': {
     background: 'inherit',
