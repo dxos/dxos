@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type GossipMessage } from '@dxos/react-client/mesh';
 
-import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from '../extensions';
+import { type AwarenessInfo, type AwarenessPosition, type awarenessProvider, type AwarenessState } from '../extensions';
 
 type ProtocolMessage =
   | {
@@ -32,7 +32,7 @@ export type AwarenessProviderParams = {
 /**
  * Receives and broadcasts profile and cursor position.
  */
-export class SpaceAwarenessProvider implements AwarenessProvider {
+export class SpaceAwarenessProvider implements awarenessProvider {
   private readonly _remoteStates = new Map<string, AwarenessState>();
 
   private readonly _space: Space;

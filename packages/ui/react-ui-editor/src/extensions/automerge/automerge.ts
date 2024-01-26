@@ -8,7 +8,7 @@ import { invertedEffects } from '@codemirror/commands';
 import { StateField, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { type Prop, next as A } from '@dxos/automerge/automerge';
+import { type Prop, next as am } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 import { cursorConverter } from './cursor';
@@ -25,7 +25,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
   const syncState = StateField.define<State>({
     create: () => ({
       path: path.slice(),
-      lastHeads: A.getHeads(handle.docSync()!),
+      lastHeads: am.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
     }),
 
