@@ -24,9 +24,9 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/sentry": "workspace:*"
+    "@dxos/react-ui-theme": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
