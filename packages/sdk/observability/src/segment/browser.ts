@@ -31,6 +31,7 @@ export class SegmentTelemetry {
   page({ identityId: userId, ...options }: PageOptions = {}) {
     try {
       (window as any).analytics?.page({
+        context: Object.fromEntries(this._getTags().entries()),
         ...options,
         userId,
       });
@@ -41,8 +42,11 @@ export class SegmentTelemetry {
 
   event({ identityId: userId, name: event, ...options }: EventOptions) {
     try {
+      options.properties = {
+        ...options.properties,
+        ...Object.fromEntries(this._getTags().entries()),
+      };
       (window as any).analytics?.track({
-        context: Object.fromEntries(this._getTags().entries()),
         ...options,
         event,
       });
