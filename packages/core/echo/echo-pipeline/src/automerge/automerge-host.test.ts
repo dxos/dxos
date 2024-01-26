@@ -275,12 +275,12 @@ describe('AutomergeHost', () => {
       network: [pairAB[0]],
       sharePolicy: async () => true,
     });
-    const repoB = new Repo({
+    const _repoB = new Repo({
       peerId: 'B' as any,
       network: [pairAB[1], pairBC[0]],
       sharePolicy: async () => true,
     });
-    const repoC = new Repo({
+    const _repoC = new Repo({
       peerId: 'C' as any,
       network: [pairBC[1], pairCD[0]],
       sharePolicy: async () => true,
@@ -307,19 +307,8 @@ describe('AutomergeHost', () => {
     });
 
     // If we wait here for replication to finish naturally, the test will pass.
-    // await sleep(500);
 
-    const _docB = repoB.find(docA.url);
-    const _docC = repoC.find(docA.url);
     const docD = repoD.find(docA.url);
-
-    // await sleep(100);
-    // log.info('states', {
-    //   A: docA.state,
-    //   B: docB.state,
-    //   C: docC.state,
-    //   D: docD.state,
-    // });
 
     await docD.whenReady();
   });
@@ -361,13 +350,6 @@ describe('AutomergeHost', () => {
 
     const _docB = repoB.find(docA.url);
     const docC = repoC.find(docA.url);
-
-    // await sleep(100);
-    // log.info('states', {
-    //   A: docA.state,
-    //   B: docB.state,
-    //   C: docC.state,
-    // });
 
     await docC.whenReady();
   });
