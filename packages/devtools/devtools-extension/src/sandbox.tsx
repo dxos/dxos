@@ -10,10 +10,10 @@ import { createRoot } from 'react-dom/client';
 import { asyncTimeout } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
+import * as Sentry from '@dxos/observability/sentry';
 import { useAsyncEffect } from '@dxos/react-async';
 import { Client, ClientServicesProxy, type ClientServices, Defaults, Config } from '@dxos/react-client';
 import { type RpcPort } from '@dxos/rpc';
-import * as Sentry from '@dxos/sentry';
 
 // NOTE: Sandbox runs in an iframe which is sandboxed from the web extension.
 //  As such, it cannot import any modules which import from the web extension polyfill.

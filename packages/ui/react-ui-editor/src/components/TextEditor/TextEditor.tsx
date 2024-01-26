@@ -133,6 +133,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           EditorView.contentAttributes.of({ class: slots.content?.className ?? '' }),
 
           // State.
+          EditorView.editable.of(!readonly),
           EditorState.readOnly.of(!!readonly),
 
           // Storage and replication.
