@@ -7,14 +7,14 @@ import '@dxosTheme';
 import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
+import { initializeAppObservability } from '@braneframe/plugin-telemetry/headless';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { type ClientServices, createClientServices, Client, Remote, Config, Defaults } from '@dxos/react-client';
 
 const namespace = 'devtools';
 
-void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
+void initializeAppObservability({ namespace, config: new Config(Defaults()) });
 
 const App = () => {
   const [client, setClient] = useState<Client>();
