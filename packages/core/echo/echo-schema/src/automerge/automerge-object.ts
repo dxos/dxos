@@ -228,7 +228,7 @@ export class AutomergeObject implements TypedObjectProperties {
    * @internal
    */
   _bind(options: BindOptions) {
-    const binded = new Trigger();
+    const bound = new Trigger();
     this._database = options.db;
     this._docHandle = options.docHandle;
     this._docHandle.on('change', async (event) => {
@@ -236,7 +236,7 @@ export class AutomergeObject implements TypedObjectProperties {
         // Note: We need to notify listeners only after _docHandle initialization with cached _doc.
         //       Without it there was race condition in SpacePlugin on Folder creation.
         //       Folder was being accessed during bind process before _docHandle was initialized and after _doc was set to undefined.
-        await binded.wait();
+        await bound.wait();
         this._notifyUpdate();
       }
     });
@@ -259,7 +259,7 @@ export class AutomergeObject implements TypedObjectProperties {
       this._doc = undefined;
       this._set([], doc);
     }
-    binded.wake();
+    bound.wake();
   }
 
   private _createProxy(path: string[]): any {
@@ -603,6 +603,7 @@ const isValidKey = (key: string | symbol) => {
     key === 'toString' ||
     key === 'toJSON' ||
     key === 'id' ||
+    key === '_id' ||
     key === '__meta' ||
     key === '__schema' ||
     key === '__typename' ||

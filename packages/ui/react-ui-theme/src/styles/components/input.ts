@@ -138,7 +138,8 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
     getSizeWidth(computeSize(sizeValue(size) * 1.75, 9)),
     booleanInputSurface,
     !disabled && booleanInputSurfaceHover,
-    'cursor-pointer shrink-0 rounded-full pli-1 relative',
+    // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.
+    'cursor-pointer shrink-0 rounded-full pli-1 mx-1 relative',
     focusRing,
     ...etc,
   );

@@ -237,7 +237,35 @@ export class Client {
         ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
         : undefined,
     });
+
     return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
+  }
+
+  /**
+   * Test and repair database.
+   */
+  async repair(): Promise<any> {
+    // TODO(burdon): Factor out.
+    const spaces = this.spaces.get();
+    const docs = spaces
+      .map((space) =>
+        (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
+      )
+      .filter(Boolean);
+
+    let removed = 0;
+    if (typeof navigator !== 'undefined' && navigator.storage) {
+      const dir = await navigator.storage.getDirectory();
+      for await (const filename of (dir as any)?.keys()) {
+        if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
+          await dir.removeEntry(filename);
+          removed++;
+        }
+      }
+    }
+
+    log.info('Repair succeeded', { removed });
+    return { removed };
   }
 
   /**

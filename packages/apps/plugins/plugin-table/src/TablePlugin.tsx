@@ -78,7 +78,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              return { object: new TableType() };
+              return { data: new TableType() };
             }
           }
         },

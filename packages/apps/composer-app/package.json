@@ -86,7 +86,7 @@
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^4.2.1",
     "robotjs": "^0.6.0",
-    "vite": "^5.0.11",
+    "vite": "^5.0.12",
     "vite-plugin-pwa": "^0.17.4",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",

@@ -204,7 +204,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 const file = await handleToLocalFile(handle);
                 state.files = [file, ...state.files];
 
-                return [file.id];
+                return { data: [file.id] };
               }
 
               const input = document.createElement('input');
@@ -220,18 +220,18 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 }
               };
               input.click();
-              return await result;
+              return { data: await result };
             }
 
             case LocalFilesAction.OPEN_DIRECTORY: {
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               const directory = await handleToLocalDirectory(handle);
               state.files = [...state.files, directory];
-              return [directory.id, directory.children[0]?.id];
+              return { data: [directory.id, directory.children[0]?.id] };
             }
 
             case LocalFilesAction.RECONNECT: {
-              const entity = state.files.find((entity) => entity.id === intent.data.id);
+              const entity = state.files.find((entity) => entity.id === intent.data?.id);
               if (!entity) {
                 break;
               }
@@ -253,24 +253,24 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 }
               }
 
-              return true;
+              return { data: true };
             }
 
             case LocalFilesAction.SAVE: {
-              const file = findFile(state.files, intent.data.id);
+              const file = findFile(state.files, intent.data?.id);
               if (file) {
                 await handleSave(file);
                 onFilesUpdate?.();
-                return true;
+                return { data: true };
               }
               break;
             }
 
             case LocalFilesAction.CLOSE: {
-              if (typeof intent.data.id === 'string') {
-                state.files = state.files.filter((f) => f.id !== intent.data.id);
+              if (typeof intent.data?.id === 'string') {
+                state.files = state.files.filter((f) => f.id !== intent.data?.id);
                 onFilesUpdate?.();
-                return true;
+                return { data: true };
               }
               break;
             }

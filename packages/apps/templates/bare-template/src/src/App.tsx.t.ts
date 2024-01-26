@@ -14,11 +14,12 @@ export default template.define
         '@dxos/react-client',
       );
       const { Status, ThemeProvider }  = imports.use(['Status', 'ThemeProvider'], '@dxos/react-ui');
+      const defaultTx = imports.use('defaultTx', '@dxos/react-ui-theme');
       const useRegisterSW = imports.use('useRegisterSW', 'virtual:pwa-register/react');
 
       const types = imports.use('types', './proto');
       const ServiceWorkerToast = imports.use('ServiceWorkerToast', './ServiceWorkerToast');
-      const translations = imports.use('translations', './translations');
+      const translations = imports.use('translations', './translations', { isDefault: true });
 
       const swToast = () => plate`<${ServiceWorkerToast} {...serviceWorker} />`;
 
@@ -42,7 +43,7 @@ export default template.define
       </ErrorBoundary>`;
 
       const themeProvider = (content: string) => plate`
-      <${ThemeProvider} appNs='${name}' resourceExtensions={[${translations}]} fallback={<Loader />}>
+      <${ThemeProvider} appNs='${name}' tx={${defaultTx}} resourceExtensions={[${translations}]} fallback={<Loader />}>
         ${content}
       </${ThemeProvider}>
       `;
@@ -65,17 +66,11 @@ export default template.define
           });
 
         ${dxosUi && plate`
-        const Loader = () => {
-          const { t } = useTranslation('${name}');
-          return (
-            <div className='py-8 flex flex-col gap-4' aria-live='polite'>
-              <${Status} indeterminate aria-label='Initializing' />
-              <p className='text-lg font-light text-center'>
-                {t('loading label')}
-              </p>
-            </div>
-          );
-        };`}
+        const Loader = () => (
+          <div className='flex bs-[100dvh] justify-center items-center'>
+            <${Status} indeterminate aria-label='Initializing' />
+          </div>
+        );`}
 
         export const App = () => {
           ${pwa && plate`const serviceWorker = ${useRegisterSW}();`}

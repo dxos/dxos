@@ -87,7 +87,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                object: new ChainType(),
+                data: new ChainType(),
               };
             }
           }

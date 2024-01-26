@@ -48,6 +48,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
                 rows={5}
                 value={settings.typewriter}
                 onChange={({ target: { value } }) => (settings.typewriter = value)}
+                placeholder={t('settings markdown debug placeholder')}
               />
             </Input.Root>
           ) : undefined

@@ -39,7 +39,7 @@ export const EditorMain = ({ comments, ...props }: EditorMainProps) => {
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.FOCUS: {
-        const { object } = data;
+        const object = data?.object;
         if (editorView) {
           setFocus(editorView, object);
         }
