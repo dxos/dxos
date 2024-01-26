@@ -247,9 +247,11 @@ export class Client {
   async repair(): Promise<any> {
     // TODO(burdon): Factor out.
     const spaces = this.spaces.get();
-    const docs = spaces.map((space) =>
-      (space as any)._data.pipeline.currentEpoch.subject.assertion.automergeRoot.slice('automerge:'.length),
-    );
+    const docs = spaces
+      .map((space) =>
+        (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
+      )
+      .filter(Boolean);
 
     let removed = 0;
     if (typeof navigator !== 'undefined' && navigator.storage) {

@@ -2,18 +2,22 @@
   "json.schemas": [
     {
       "fileMatch": ["packages/wallet/extension/public/manifest.json"],
-      "url": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json",
+      "url": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json"
     }
   ],
   "cSpell.words": [
     "Automerge",
     "bitfield",
     "burdon",
+    "cbor",
+    "CRDT",
+    "dedup",
     "dxos",
     "DXOS",
     "Expando",
     "Faas",
     "Hypergraph",
+    "mykola",
     "protobuf",
     "testutils"
   ],
@@ -30,28 +34,19 @@
     "artifactory.json": "jsonc",
     "experiments.json": "jsonc",
     "build-cache.json": "jsonc",
-    "command-versions.json": "jsonc",
+    "command-versions.json": "jsonc"
   },
   "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
   "editor.tabSize": 2,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "hediet.vscode-drawio.theme": "Kennedy",
-  "eslint.workingDirectories": [
-    { "mode": "auto" }
-  ],
+  "eslint.workingDirectories": [{ "mode": "auto" }],
   "typescript.tsdk": "node_modules/typescript/lib",
   "[proto3]": {
     "editor.defaultFormatter": "zxh404.vscode-proto3"
   },
   "debug.javascript.terminalOptions": {
-    "skipFiles": [
-      "<node_internals>/**",
-      "internal/*",
-      "**/stream.ts",
-      "**/events.ts",
-      "**/wtfnode.js",
-      "**/context.ts"
-    ]
-}
+    "skipFiles": ["<node_internals>/**", "internal/*", "**/stream.ts", "**/events.ts", "**/wtfnode.js", "**/context.ts"]
+  }
 }
