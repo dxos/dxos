@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-export type InitOptions = {
+export type SegmentTelemetryOptions = {
   apiKey?: string;
   batchSize?: number;
   enable?: boolean;
+  getTags: () => Map<string, string>;
 };
 
 type CommonOptions = {

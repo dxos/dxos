@@ -4,13 +4,13 @@
 
 import {
   init as naturalInit,
-  Replay,
   setTag,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
+  BrowserTracing,
+  replayIntegration,
 } from '@sentry/browser';
-import { CaptureConsole, HttpClient } from '@sentry/integrations';
-import { BrowserTracing } from '@sentry/tracing';
+import { captureConsoleIntegration, httpClientIntegration } from '@sentry/integrations';
 
 import { log } from '@dxos/log';
 
@@ -37,10 +37,10 @@ export const init = (options: InitOptions) => {
       release: options.release,
       environment: options.environment,
       integrations: [
-        new CaptureConsole({ levels: ['error', 'warn'] }),
-        new HttpClient({ failedRequestStatusCodes: [[400, 599]] }),
+        captureConsoleIntegration({ levels: ['error', 'warn'] }),
+        httpClientIntegration({ failedRequestStatusCodes: [[400, 599]] }),
         ...(options.tracing ? [new BrowserTracing()] : []),
-        ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : []),
+        ...(options.replay ? [replayIntegration({ blockAllMedia: true, maskAllText: true })] : []),
       ],
       replaysSessionSampleRate: options.replaySampleRate,
       replaysOnErrorSampleRate: options.replaySampleRateOnError,
@@ -95,3 +95,6 @@ export const captureException: typeof naturalCaptureException = (exception, capt
     return 'unknown';
   }
 };
+
+// Not needed for browser.
+export const enableSentryLogProcessor = () => {};
