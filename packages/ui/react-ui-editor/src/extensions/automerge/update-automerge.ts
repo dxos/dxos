@@ -32,15 +32,16 @@ export const updateAutomerge = (
   }
 
   const newHeads = handle.changeAt(lastHeads, (doc: A.Doc<unknown>) => {
+    const t: any[] = [];
     for (const tr of transactions) {
       tr.changes.iterChanges((fromA, toA, _fromB, _toB, insert) => {
         t.push({ fromA, toA, insert });
       });
     }
 
-    // Apply in reverse order to properly apply range.
+    // TODO(burdon): Hack to apply in reverse order to properly apply range.
     t.reverse().forEach(({ fromA, toA, insert }) => {
-      automerge.splice(doc, path.slice(), fromA, toA - fromA, insert.toString());
+      A.splice(doc, path.slice(), fromA, toA - fromA, insert.toString());
     });
   });
 
