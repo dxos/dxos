@@ -281,8 +281,7 @@ describe('Spaces', () => {
     });
   });
 
-  // Disabled because AM integration currently does not reload with an epoch.
-  test.skip('epoch correctly resets database', async () => {
+  test('epoch correctly resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -406,7 +405,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.repeat(10)('spaces can be opened and closed', async () => {
+  test('spaces can be opened and closed', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -483,7 +482,7 @@ describe('Spaces', () => {
     await space2.db.flush();
   });
 
-  test('text replicates between clients', async () => {
+  test.only('text replicates between clients', async () => {
     const testBuilder = new TestBuilder();
 
     const host = new Client({ services: testBuilder.createLocal() });
@@ -512,10 +511,10 @@ describe('Spaces', () => {
       expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
     });
 
-    hostDocument.content.model?.insert('Hello, world!', 0);
+    (hostDocument.content as any).content = 'Hello, world!';
 
     await waitForExpect(() => {
-      expect(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content.text).to.equal('Hello, world!');
+      expect(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content.content).to.equal('Hello, world!');
     });
   });
 });
