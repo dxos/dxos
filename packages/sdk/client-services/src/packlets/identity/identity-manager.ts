@@ -274,7 +274,7 @@ export class IdentityManager {
         genesisFeedKey: spaceRecord.genesisFeedKey,
       },
       swarmIdentity,
-      onNetworkConnection: () => {},
+      onAuthorizedConnection: () => {},
       onAuthFailure: () => {
         log.warn('auth failure');
       },
