@@ -23,7 +23,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/sentry": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
