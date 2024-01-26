@@ -5,6 +5,7 @@
 import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type HostInfo, type DataService, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -20,7 +21,9 @@ export class AutomergeContext {
     if (dataService) {
       this._adapter = new LocalClientNetworkAdapter(dataService);
       this._repo = new Repo({
+        peerId: `client-${PublicKey.random().toHex()}` as PeerId,
         network: [this._adapter],
+        sharePolicy: async () => true,
       });
       this._adapter.ready();
     } else {
@@ -93,6 +96,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       .then((hostInfo) => {
         this._hostInfo = hostInfo;
         this.emit('peer-candidate', {
+          peerMetadata: {},
           peerId: this._hostInfo.peerId as PeerId,
         });
       })

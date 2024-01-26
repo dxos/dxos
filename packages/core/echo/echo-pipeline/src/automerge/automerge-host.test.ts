@@ -6,9 +6,10 @@ import { randomBytes } from 'crypto';
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
@@ -62,6 +63,8 @@ describe('AutomergeHost', () => {
     });
     hostAdapter.ready();
     clientAdapter.ready();
+    await hostAdapter.onConnect.wait();
+    await clientAdapter.onConnect.wait();
     hostAdapter.peerCandidate(clientAdapter.peerId!);
     clientAdapter.peerCandidate(hostAdapter.peerId!);
 
@@ -95,6 +98,8 @@ describe('AutomergeHost', () => {
     // Establish connection.
     hostAdapter.ready();
     clientAdapter.ready();
+    await hostAdapter.onConnect.wait();
+    await clientAdapter.onConnect.wait();
     hostAdapter.peerCandidate(clientAdapter.peerId!);
     clientAdapter.peerCandidate(hostAdapter.peerId!);
 
@@ -259,9 +264,111 @@ describe('AutomergeHost', () => {
       }
     });
   });
+
+  test('replication though a 4 peer chain', async () => {
+    const pairAB = TestAdapter.createPair();
+    const pairBC = TestAdapter.createPair();
+    const pairCD = TestAdapter.createPair();
+
+    const repoA = new Repo({
+      peerId: 'A' as any,
+      network: [pairAB[0]],
+      sharePolicy: async () => true,
+    });
+    const _repoB = new Repo({
+      peerId: 'B' as any,
+      network: [pairAB[1], pairBC[0]],
+      sharePolicy: async () => true,
+    });
+    const _repoC = new Repo({
+      peerId: 'C' as any,
+      network: [pairBC[1], pairCD[0]],
+      sharePolicy: async () => true,
+    });
+    const repoD = new Repo({
+      peerId: 'D' as any,
+      network: [pairCD[1]],
+      sharePolicy: async () => true,
+    });
+
+    for (const pair of [pairAB, pairBC, pairCD]) {
+      pair[0].ready();
+      pair[1].ready();
+      await pair[0].onConnect.wait();
+      await pair[1].onConnect.wait();
+      pair[0].peerCandidate(pair[1].peerId!);
+      pair[1].peerCandidate(pair[0].peerId!);
+    }
+
+    const docA = repoA.create();
+    // NOTE: Doesn't work if the doc is empty.
+    docA.change((doc: any) => {
+      doc.text = 'Hello world';
+    });
+
+    // If we wait here for replication to finish naturally, the test will pass.
+
+    const docD = repoD.find(docA.url);
+
+    await docD.whenReady();
+  });
+
+  test('replication though a 3 peer chain', async () => {
+    const pairAB = TestAdapter.createPair();
+    const pairBC = TestAdapter.createPair();
+
+    const repoA = new Repo({
+      peerId: 'A' as any,
+      network: [pairAB[0]],
+      sharePolicy: async () => true,
+    });
+    const repoB = new Repo({
+      peerId: 'B' as any,
+      network: [pairAB[1], pairBC[0]],
+      sharePolicy: async () => true,
+    });
+    const repoC = new Repo({
+      peerId: 'C' as any,
+      network: [pairBC[1]],
+      sharePolicy: async () => true,
+    });
+
+    for (const pair of [pairAB, pairBC]) {
+      pair[0].ready();
+      pair[1].ready();
+      await pair[0].onConnect.wait();
+      await pair[1].onConnect.wait();
+      pair[0].peerCandidate(pair[1].peerId!);
+      pair[1].peerCandidate(pair[0].peerId!);
+    }
+
+    const docA = repoA.create();
+    // NOTE: Doesn't work if the doc is empty.
+    docA.change((doc: any) => {
+      doc.text = 'Hello world';
+    });
+
+    const _docB = repoB.find(docA.url);
+    const docC = repoC.find(docA.url);
+
+    await docC.whenReady();
+  });
 });
 
 class TestAdapter extends NetworkAdapter {
+  static createPair() {
+    const adapter1: TestAdapter = new TestAdapter({
+      send: (message: Message) => sleep(10).then(() => adapter2.receive(message)),
+    });
+    const adapter2: TestAdapter = new TestAdapter({
+      send: (message: Message) => sleep(10).then(() => adapter1.receive(message)),
+    });
+
+    return [adapter1, adapter2];
+  }
+
+  public onConnect = new Trigger();
+
   constructor(private readonly _params: { send: (message: Message) => void }) {
     super();
   }
@@ -274,11 +381,12 @@ class TestAdapter extends NetworkAdapter {
 
   override connect(peerId: PeerId) {
     this.peerId = peerId;
+    this.onConnect.wake();
   }
 
   peerCandidate(peerId: PeerId) {
     invariant(peerId, 'PeerId is required');
-    this.emit('peer-candidate', { peerId });
+    this.emit('peer-candidate', { peerId, peerMetadata: {} });
   }
 
   peerDisconnected(peerId: PeerId) {
@@ -287,6 +395,7 @@ class TestAdapter extends NetworkAdapter {
   }
 
   override send(message: Message) {
+    log('send', { from: message.senderId, to: message.targetId, type: message.type });
     this._params.send(message);
   }
 
