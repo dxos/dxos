@@ -6,15 +6,8 @@ import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import type { AvatarStatus } from '@dxos/react-ui';
 
-export type MessageProperties = {
-  displayName?: string;
-  profileImgSrc?: string;
-  status?: AvatarStatus;
-};
-
-export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageProperties;
+export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
 
 export const createPropertiesProvider = (identity: Identity, members: SpaceMember[]): MessagePropertiesProvider => {
   return (identityKey: PublicKey | undefined) => {
@@ -46,12 +39,4 @@ const colors = [
 const colorHash = (key: PublicKey) => {
   const num = Number('0x' + key.toHex().slice(0, 8));
   return colors[num % colors.length];
-};
-
-export const safeParseJson = (data: string) => {
-  try {
-    return JSON.parse(data);
-  } catch (err) {
-    return data;
-  }
 };
