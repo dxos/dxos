@@ -150,11 +150,11 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
     });
   }
 
-  onConnected = new Trigger();
+  private _connected = new Trigger();
 
   override connect(peerId: PeerId): void {
     this.peerId = peerId;
-    this.onConnected.wake();
+    this._connected.wake();
     // No-op. Client always connects first
   }
 
@@ -195,20 +195,26 @@ class LocalHostNetworkAdapter extends NetworkAdapter {
         },
       });
 
-      this.emit('peer-candidate', {
-        peerMetadata: {},
-        peerId,
-      });
+      this._connected
+        .wait({ timeout: 1_000 })
+        .then(() => {
+          this.emit('peer-candidate', {
+            peerMetadata: {},
+            peerId,
+          });
+        })
+        .catch((err) => log.catch(err));
     });
   }
 
   async sendSyncMessage({ id, syncMessage }: SyncRepoRequest): Promise<void> {
+    await this._connected.wait({ timeout: 1_000 });
     const message = cbor.decode(syncMessage!) as Message;
     this.emit('message', message);
   }
 
   async getHostInfo(): Promise<HostInfo> {
-    await this.onConnected.wait({ timeout: 1_000 });
+    await this._connected.wait({ timeout: 1_000 });
     invariant(this.peerId, 'Peer id not set.');
     return {
       peerId: this.peerId,
