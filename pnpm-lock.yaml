@@ -587,6 +587,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../devtools/devtools
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
