@@ -4,7 +4,8 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { StateField, type Extension } from '@codemirror/state';
+import { invertedEffects } from '@codemirror/commands';
+import { StateField, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { type Prop, next as A } from '@dxos/automerge/automerge';
@@ -21,7 +22,7 @@ export type AutomergeOptions = {
 };
 
 export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
-  const state = StateField.define<State>({
+  const syncState = StateField.define<State>({
     create: () => ({
       path: path.slice(),
       lastHeads: A.getHeads(handle.docSync()!),
@@ -55,10 +56,12 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     },
   });
 
-  const semaphore = new PatchSemaphore(handle, state);
+  const semaphore = new PatchSemaphore(handle, syncState);
 
   return [
+    syncState,
     Cursor.converter.of(cursorConverter(handle, path)),
+
     // Reconcile external updates.
     ViewPlugin.fromClass(
       class {
@@ -76,13 +79,27 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
         }
       },
     ),
+
     // Reconcile local updates.
     EditorView.updateListener.of(({ view, changes }) => {
       if (!changes.empty) {
-        // TODO(burdon): Loses cursor position if auto closing brackets. Call explicitly?
         semaphore.reconcile(view);
       }
     }),
-    state,
+
+    // TODO(burdon): Record undo transactions.
+    //  See https://github.com/yjs/y-codemirror.next/tree/main
+    // https://codemirror.net/examples/inverted-effect
+    invertedEffects.of((tr) => {
+      // Each change results it three transactions: insert, delete, insert.
+      const effects: StateEffect<any>[] = [];
+      if (!tr.changes.empty) {
+        tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+          // effects.push(effectType.of({});
+        });
+      }
+
+      return effects;
+    }),
   ];
 };

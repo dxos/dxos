@@ -26,14 +26,14 @@ export const updateCodeMirror = (view: EditorView, selection: EditorSelection, t
       selection = selection.map(changeSet, 1);
       view.dispatch({
         changes: changeSet,
-        annotations: reconcileAnnotationType.of({}),
+        annotations: reconcileAnnotationType.of(false),
       });
     }
   }
 
   view.dispatch({
     selection,
-    annotations: reconcileAnnotationType.of({}),
+    annotations: reconcileAnnotationType.of(false),
   });
 };
 

@@ -21,7 +21,7 @@ export type UpdateHeads = {
 
 export const effectType = StateEffect.define<UpdateHeads>({});
 
-export const reconcileAnnotationType = Annotation.define<unknown>();
+export const reconcileAnnotationType = Annotation.define<any>();
 
 export const getPath = (state: EditorState, field: StateField<State>): Prop[] => state.field(field).path;
 
@@ -29,7 +29,11 @@ export const getLastHeads = (state: EditorState, field: StateField<State>): Head
 
 export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
 
-export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
+export const isReconcileTx = (tr: Transaction): boolean => {
+  const x = !!tr.annotation(reconcileAnnotationType);
+  console.log('::::', tr.annotation(reconcileAnnotationType), x);
+  return x;
+};
 
 export type IDocHandle<T = any> = {
   docSync(): Doc<T> | undefined;

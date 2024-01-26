@@ -27,10 +27,8 @@ const styles = EditorView.baseTheme({
   },
 });
 
-const marks = {
-  highlight: Decoration.mark({ class: 'cm-comment' }),
-  highlightActive: Decoration.mark({ class: 'cm-comment-current' }),
-};
+const commentMark = Decoration.mark({ class: 'cm-comment' });
+const commentCurrentMark = Decoration.mark({ class: 'cm-comment-current' });
 
 type CommentState = {
   comment: Comment;
@@ -116,7 +114,7 @@ const commentsState = StateField.define<CommentsState>({
 /**
  * Decorate ranges.
  */
-const highlightDecorations = EditorView.decorations.compute([commentsState], (state) => {
+const commentsDecorations = EditorView.decorations.compute([commentsState], (state) => {
   const {
     selection: { current },
     comments,
@@ -131,9 +129,9 @@ const highlightDecorations = EditorView.decorations.compute([commentsState], (st
       }
 
       if (comment.comment.id === current) {
-        return marks.highlightActive.range(range.from, range.to);
+        return commentCurrentMark.range(range.from, range.to);
       } else {
-        return marks.highlight.range(range.from, range.to);
+        return commentMark.range(range.from, range.to);
       }
     })
     .filter(nonNullable);
@@ -212,7 +210,6 @@ const trackPastedComments = (onUpdate: NonNullable<CommentsOptions['onUpdate']>)
           range: { from, to },
         } of comments) {
           if (from < to && from >= fromA && to <= toA) {
-            console.log('deleted', id);
             effects.push(restoreCommentEffect.of({ id, from, to }));
           }
         }
@@ -339,7 +336,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
   return [
     commentsState,
-    highlightDecorations,
+    commentsDecorations,
     styles,
 
     //

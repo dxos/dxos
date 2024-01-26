@@ -33,13 +33,15 @@ export class PatchSemaphore {
     private readonly _state: StateField<State>
   ) {}
 
-  // NOTE: Cannot destruct view.state.
   reconcile(view: EditorView) {
-    if (this._inReconcile) {
-      return;
+    if (!this._inReconcile) {
+      this._inReconcile = true;
+      this.doReconcile(view);
+      this._inReconcile = false;
     }
-    this._inReconcile = true;
+  }
 
+  private doReconcile(view: EditorView) {
     const path = getPath(view.state, this._state);
 
     // Get the heads before the unreconciled transactions are applied.
@@ -49,8 +51,8 @@ export class PatchSemaphore {
     // First undo all the unreconciled transactions.
     const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
     const toInvert = transactions.slice().reverse();
-    for (const tx of toInvert) {
-      const inverted = tx.changes.invert(tx.startState.doc);
+    for (const tr of toInvert) {
+      const inverted = tr.changes.invert(tr.startState.doc);
       selection = selection.map(inverted);
       view.dispatch({
         changes: inverted,
@@ -75,9 +77,7 @@ export class PatchSemaphore {
     // Update automerge state.
     view.dispatch({
       effects: updateHeads(newHeads),
-      annotations: reconcileAnnotationType.of({}),
+      annotations: reconcileAnnotationType.of(false),
     });
-
-    this._inReconcile = false;
   }
 }
