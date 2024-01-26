@@ -70,6 +70,7 @@ export class AutomergeHost {
           const spaceKey = PublicKey.from(doc.experimental_spaceKey);
           const authorizedDevices = this._authorizedDevices.get(spaceKey);
 
+          // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
           if (!deviceKeyHex) {
             log.warn('device key not found for share policy check', { peerId, documentId });
@@ -282,6 +283,7 @@ export class MeshNetworkAdapter extends NetworkAdapter {
           // TODO(mykola): Fix race condition?
           this._extensions.set(info.id, extension);
           this.emit('peer-candidate', {
+            // TODO(mykola): Hack, stop abusing `peerMetadata` field.
             peerMetadata: {
               dxos_deviceKey: remotePeerId.toHex(),
             } as any,
