@@ -8841,6 +8841,9 @@ importers:
       '@fontsource-variable/jetbrains-mono':
         specifier: ^5.0.16
         version: 5.0.19
+      '@fontsource/k2d':
+        specifier: ^5.0.18
+        version: 5.0.18
       '@tailwindcss/forms':
         specifier: ^0.5.3
         version: 0.5.3(tailwindcss@3.3.2)
@@ -13535,6 +13538,10 @@ packages:
 
   /@fontsource-variable/jetbrains-mono@5.0.19:
     resolution: {integrity: sha512-7PTG1Kp3B/FgoNVPT8da4humj5JxQYxTtO08ZPS2IfanS37Yb/WShbgScnG/iupuFwiRnHVkIuC/2czxItxmyg==}
+    dev: false
+
+  /@fontsource/k2d@5.0.18:
+    resolution: {integrity: sha512-MVcwXx0d8vAC8U9hdHyYbcP7oy234FJfdMwpuM5kXkiIDradVu9WSW1TYG3z4rQKvZbiIzCOgBovCmxcqR1aCg==}
     dev: false
 
   /@gar/promisify@1.1.3:
