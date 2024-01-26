@@ -2058,7 +2058,7 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/app-framework
       vite:
-        specifier: ^5.0.11
+        specifier: ^5.0.12
         version: 5.0.12(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-navtree:
