@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",

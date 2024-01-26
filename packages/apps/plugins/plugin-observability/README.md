@@ -1,6 +1,6 @@
-# @braneframe/plugin-telemetry
+# @braneframe/plugin-observability
 
-DXOS Surface plugin for hooking up app telemetry.
+DXOS app framework plugin for hooking up app observability.
 
 ## DXOS Resources
 

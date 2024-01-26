@@ -14,6 +14,7 @@ import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
 import { DatadogMetrics } from './datadog';
+import { mapSpaces } from './helpers';
 import { SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import {
   captureException as sentryCaptureException,
@@ -23,7 +24,6 @@ import {
   type InitOptions,
   setTag as sentrySetTag,
 } from './sentry';
-import { mapSpaces } from './util';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 // const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
@@ -166,7 +166,7 @@ export class Observability {
     this._tags.set(key, value);
   }
 
-  // TODO(nf): Combine with setDeviceTags.
+  // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
   async setIdentityTags(client: Client) {
     client.services.services.IdentityService!.queryIdentity().subscribe((idqr) => {
       if (!idqr?.identity?.identityKey) {
@@ -174,16 +174,9 @@ export class Observability {
         return;
       }
 
-      // TODO(nf): check mode
-      // TODO(nf): cardinality
-      this.setTag('identityKey', idqr?.identity?.identityKey.truncate());
-      if (idqr?.identity?.profile?.displayName) {
-        this.setTag('username', idqr?.identity?.profile?.displayName);
-      }
+      this.setTag('identityKey', idqr.identity.identityKey.toHex());
     });
-  }
 
-  async setDeviceTags(client: Client) {
     client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
       if (!dqr || !dqr.devices || dqr.devices.length === 0) {
         log('empty response from device service', { device: dqr });
@@ -196,7 +189,7 @@ export class Observability {
         log('no current device', { device: dqr });
         return;
       }
-      this.setTag('deviceKey', thisDevice.deviceKey.truncate());
+      this.setTag('deviceKey', thisDevice.deviceKey.toHex());
       if (thisDevice.profile?.label) {
         this.setTag('deviceProfile', thisDevice.profile.label);
       }

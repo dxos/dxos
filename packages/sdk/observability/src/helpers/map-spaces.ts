@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space } from '@dxos/client-protocol';
+import type { Space } from '@dxos/client-protocol';
 
 export type MapSpacesOptions = {
   verbose?: boolean;

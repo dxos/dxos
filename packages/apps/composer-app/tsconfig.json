@@ -49,6 +49,9 @@
       "path": "../../sdk/migrations"
     },
     {
+      "path": "../../sdk/observability"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -136,6 +139,9 @@
       "path": "../plugins/plugin-navtree"
     },
     {
+      "path": "../plugins/plugin-observability"
+    },
+    {
       "path": "../plugins/plugin-outliner"
     },
     {
@@ -167,9 +173,6 @@
     },
     {
       "path": "../plugins/plugin-table"
-    },
-    {
-      "path": "../plugins/plugin-telemetry"
     },
     {
       "path": "../plugins/plugin-template"

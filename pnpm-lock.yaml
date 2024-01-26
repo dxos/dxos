@@ -527,6 +527,9 @@ importers:
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
+      '@braneframe/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugins/plugin-observability
       '@braneframe/plugin-outliner':
         specifier: workspace:*
         version: link:../plugins/plugin-outliner
@@ -560,9 +563,6 @@ importers:
       '@braneframe/plugin-table':
         specifier: workspace:*
         version: link:../plugins/plugin-table
-      '@braneframe/plugin-telemetry':
-        specifier: workspace:*
-        version: link:../plugins/plugin-telemetry
       '@braneframe/plugin-template':
         specifier: workspace:*
         version: link:../plugins/plugin-template
@@ -593,6 +593,9 @@ importers:
       '@dxos/migrations':
         specifier: workspace:*
         version: link:../../sdk/migrations
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -714,12 +717,12 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugins/plugin-client
+      '@braneframe/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugins/plugin-observability
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
-      '@braneframe/plugin-telemetry':
-        specifier: workspace:*
-        version: link:../plugins/plugin-telemetry
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugins/plugin-theme
@@ -747,6 +750,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -2050,6 +2056,9 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -2132,6 +2141,64 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.0.11
+        version: 5.0.12(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-observability:
+    dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../../sdk/observability
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
+    devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
       vite:
         specifier: ^5.0.11
         version: 5.0.12(@types/node@18.11.9)
@@ -2918,55 +2985,6 @@ importers:
         specifier: ^5.0.11
         version: 5.0.12(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-telemetry:
-    dependencies:
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/observability':
-        specifier: workspace:*
-        version: link:../../../sdk/observability
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      localforage:
-        specifier: ^1.10.0
-        version: 1.10.0
-    devDependencies:
-      '@braneframe/plugin-layout':
-        specifier: workspace:*
-        version: link:../plugin-layout
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      vite:
-        specifier: ^5.0.11
-        version: 5.0.12(@types/node@18.11.9)
-
   packages/apps/plugins/plugin-template:
     dependencies:
       '@braneframe/types':
@@ -3404,9 +3422,6 @@ importers:
 
   packages/apps/todomvc:
     dependencies:
-      '@braneframe/plugin-telemetry':
-        specifier: workspace:*
-        version: link:../plugins/plugin-telemetry
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -3416,6 +3431,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -5904,9 +5922,6 @@ importers:
 
   packages/devtools/devtools:
     dependencies:
-      '@braneframe/plugin-telemetry':
-        specifier: workspace:*
-        version: link:../../apps/plugins/plugin-telemetry
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
@@ -7793,6 +7808,9 @@ importers:
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
     devDependencies:
       '@sentry/types':
         specifier: ^7.98.0

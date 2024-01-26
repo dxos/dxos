@@ -4,10 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { initializeAppObservability } from '@braneframe/plugin-telemetry/headless';
 import { createClientServices, Remote } from '@dxos/client/services';
 import { log } from '@dxos/log';
-import { type Observability } from '@dxos/observability';
+import { type Observability, initializeAppObservability } from '@dxos/observability';
 import { useAsyncEffect } from '@dxos/react-async';
 import { Client, type ClientServices, Config, Defaults, DEFAULT_VAULT_ORIGIN } from '@dxos/react-client';
 
