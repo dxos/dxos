@@ -173,11 +173,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async init(): Promise<void> {
     await super.init();
-<<<<<<< HEAD
-    await this._initObservability();
-
-=======
->>>>>>> main
     const { args, flags } = await this.parse({
       flags: this.ctor.flags,
       baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
@@ -229,24 +224,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (this.id === 'agent:start') {
       namespace = 'agent';
     }
-<<<<<<< HEAD
-=======
     const release = `${namespace}@${this.clientConfig.get('runtime.app.build.version')}`;
     const environment = this.clientConfig.get('runtime.app.env.DX_ENVIRONMENT');
 
->>>>>>> main
     this._observability = new Observability({
       namespace,
       group,
       mode,
-<<<<<<< HEAD
-      errors: {
-        installationId,
-        environment,
-        release,
-        // TODO(wittjosiah): Configure this.
-        sampleRate: 1.0,
-=======
       errorLog: {
         sentryInitOptions: {
           installationId,
@@ -255,7 +239,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           // TODO(wittjosiah): Configure this.
           sampleRate: 1.0,
         },
->>>>>>> main
       },
       logProcessor: true,
     });

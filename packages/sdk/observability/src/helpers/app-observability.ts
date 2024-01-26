@@ -125,15 +125,17 @@ export const initializeAppObservability = async ({
     group,
     mode: 'full',
     config,
-    errors: {
-      environment,
-      release,
-      tracing: tracingEnable,
-      replay: replayEnable,
-      // TODO(wittjosiah): Configure these.
-      sampleRate: 1.0,
-      replaySampleRate: 0.1,
-      replaySampleRateOnError: 1.0,
+    errorLog: {
+      sentryInitOptions: {
+        environment,
+        release,
+        tracing: tracingEnable,
+        replay: replayEnable,
+        // TODO(wittjosiah): Configure these.
+        sampleRate: 1.0,
+        replaySampleRate: 0.1,
+        replaySampleRateOnError: 1.0,
+      },
     },
   });
 
