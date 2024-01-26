@@ -9,7 +9,6 @@ import os from 'node:os';
 import { join } from 'node:path';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
-
 // read API keys from file generated on publish or deploy
 
 // TODO(nf): read initial values from config or seed file
