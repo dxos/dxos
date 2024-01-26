@@ -18,11 +18,9 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
-import { getGlobalAutomergePreference } from '@dxos/client/echo';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
@@ -77,8 +75,6 @@ export default class Start extends BaseCommand<typeof Start> {
       const { path } = parseAddress(socket);
       rmSync(path, { force: true });
     }
-
-    log.info('agent automerge preference', { automerge: getGlobalAutomergePreference() });
 
     this._agent = new Agent({
       config: this.clientConfig,

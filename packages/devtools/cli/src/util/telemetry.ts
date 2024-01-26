@@ -9,14 +9,7 @@ import os from 'node:os';
 import { join } from 'node:path';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
-import config from './telemetryrc.json';
-
 // read API keys from file generated on publish or deploy
-export const DX_ENVIRONMENT = config.DX_ENVIRONMENT ?? undefined;
-export const DX_RELEASE = config.DX_RELEASE ?? undefined;
-export const SENTRY_DESTINATION = config.SENTRY_DESTINATION ?? undefined;
-export const TELEMETRY_API_KEY = config.TELEMETRY_API_KEY ?? undefined;
-export const IPDATA_API_KEY = config.IPDATA_API_KEY ?? undefined;
 
 // TODO(nf): read initial values from config or seed file
 const DX_TELEMETRY_GROUP = process.env.DX_TELEMETRY_GROUP ?? undefined;
@@ -27,8 +20,6 @@ export type TelemetryContext = {
   mode: 'disabled' | 'basic' | 'full';
   installationId?: string;
   group?: string;
-  environment?: string;
-  release?: string;
   timezone: string;
   runtime: string;
   os: string;
@@ -39,8 +30,6 @@ export type TelemetryContext = {
 
 const DEFAULTS: TelemetryContext = {
   mode: 'basic',
-  environment: DX_ENVIRONMENT,
-  release: DX_RELEASE,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   runtime: `node ${process.version}`,
   os: os.platform(),
@@ -53,15 +42,13 @@ const DEFAULTS: TelemetryContext = {
 /**
  * Print telemetry banner once per installation.
  */
+// TODO(nf): move to Observability
 export const showTelemetryBanner = async (configDir: string) => {
-  if (!TELEMETRY_API_KEY) {
-    return;
-  }
   const path = join(configDir, '.telemetry-banner-printed');
   if (await exists(path)) {
     return;
   }
-  console.log(
+  process.stderr.write(
     chalk`{bold {magenta DXOS collects anonymous telemetry data to improve the CLI. To disable it add DX_DISABLE_TELEMETRY=true to your environment.}}`,
   );
   await writeFile(path, '', 'utf-8');

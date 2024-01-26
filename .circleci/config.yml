@@ -194,9 +194,24 @@ jobs:
           command: ./.circleci/scripts/publish-extension.sh
           environment:
             NODE_ENV: production
+  clean_pnpm_cache:
+    docker:
+      - *docker_image_default
+    environment:
+      DX_ENVIRONMENT: circleci
+    steps:
+      - checkout
+      - *cache_restore
+      - run: rm -rf $(pnpm store path) && mkdir -p $(pnpm store path)
+      # Ensure a new cache key is generated that a cache miss will fallback to.
+      - run: date +%s > "pnpm-lock.yaml"
+      - *cache_save
 
 workflows:
   default:
+    when:
+      not:
+        equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
     jobs:
       - check:
           context:
@@ -218,13 +233,20 @@ workflows:
             - Github
 
   e2e:
-    when: << pipeline.parameters.e2e >>
+    when:
+      and:
+        - << pipeline.parameters.e2e >>
+        - not:
+          equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
     jobs:
       - e2e:
           context:
             - Github
 
   deploy:
+    when:
+      not:
+        equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - publish:
           filters:
@@ -235,5 +257,13 @@ workflows:
                 - staging
           context:
             - Github
-
+  clear_pnpm_cache:
+    when:
+      and:
+        - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+        - equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+    jobs:
+      - clean_pnpm_cache:
+          context:
+            - Github
 # VS Code Extension Version: 1.5.1
