@@ -93,7 +93,7 @@ export class SpaceManager {
   async constructSpace({
     metadata,
     swarmIdentity,
-    onAuthorizedConnection: onNetworkConnection,
+    onAuthorizedConnection,
     onAuthFailure,
     memberKey,
   }: ConstructSpaceParams) {
@@ -108,7 +108,7 @@ export class SpaceManager {
       topic: spaceKey,
       swarmIdentity,
       networkManager: this._networkManager,
-      onSessionAuth: onNetworkConnection,
+      onSessionAuth: onAuthorizedConnection,
       onAuthFailure,
       blobStore: this._blobStore,
     });
