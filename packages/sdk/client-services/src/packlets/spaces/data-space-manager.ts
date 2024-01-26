@@ -143,6 +143,9 @@ export class DataSpaceManager {
     const space = await this._constructSpace(metadata);
 
     const automergeRoot = this._automergeHost.repo.create();
+    automergeRoot.change((doc: any) => {
+      doc.experimental_spaceKey = spaceKey.toHex();
+    });
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, automergeRoot.url);
     await this._metadataStore.addSpace(metadata);
@@ -222,12 +225,13 @@ export class DataSpaceManager {
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
-      onNetworkConnection: (session) => {
+      onAuthorizedConnection: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',
           gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+        this._automergeHost.authorizeDevice(space.key, session.remotePeerId);
         session.addExtension('dxos.mesh.teleport.automerge', this._automergeHost.createExtension());
       },
       onAuthFailure: () => {

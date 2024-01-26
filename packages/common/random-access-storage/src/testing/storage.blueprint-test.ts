@@ -139,6 +139,36 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
     });
 
+    test('double destroy file', async function () {
+      if (testGroupName !== StorageType.NODE) {
+        this.skip();
+      }
+      const fileName = randomText();
+      let firstHandle: File;
+      let secondHandle: File;
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        const buffer = Buffer.from(randomText());
+        await writeAndCheck(file, buffer);
+        firstHandle = file;
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(fileName);
+        const buffer = Buffer.from(randomText());
+        await writeAndCheck(file, buffer);
+        secondHandle = file;
+      }
+
+      await firstHandle.destroy();
+      await expect(secondHandle.destroy()).to.be.rejected;
+    });
+
     test('sub-directories', async () => {
       // 1. Create storage and two subdirectories
       const storage = createStorage();
