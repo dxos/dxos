@@ -19,10 +19,14 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type TextEditorProps } from './TextEditor';
 import {
+  type CommentsOptions,
+  type LinkOptions,
   autocomplete,
   blast,
   code,
+  comments,
   defaultOptions,
+  heading,
   hr,
   image,
   link,
@@ -30,17 +34,10 @@ import {
   table,
   tasklist,
   typewriter,
-  type CommentsOptions,
-  type LinkOptions,
   useComments,
-  heading,
-  comments,
+  formatting,
 } from '../../extensions';
 import { type Comment, useTextModel } from '../../hooks';
-
-// Extensions:
-// TODO(burdon): Table of contents.
-// TODO(burdon): Front-matter
 
 faker.seed(101);
 
@@ -249,13 +246,11 @@ const defaults = [
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
   code(),
+  formatting(),
   heading(),
   hr(),
   image(),
   link({ onRender: onRenderLink, onHover: onHoverLinkTooltip }),
-  // mention({
-  //   onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
-  // }),
   table(),
   tasklist(),
 ];

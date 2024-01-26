@@ -13,6 +13,7 @@ import {
   ViewPlugin,
   type ViewUpdate,
 } from '@codemirror/view';
+import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 
 export type FormattingOptions = {};
 
@@ -32,8 +33,7 @@ export const toggleStyle =
         return false;
       }
 
-      // TODO(burdon): Detect if already bold.
-      console.log(JSON.stringify({ range }));
+      // TODO(burdon): Detect if already styled (or nested).
       view.dispatch({
         changes: [
           {
@@ -76,23 +76,30 @@ const styling = (): Extension => {
     const { state } = view;
     const cursor = state.selection.main.head;
 
+    // TODO(burdon): Bug if '***foo***' (since StrongEmphasis is nested inside EmphasisMark).
+    //  Ranges must be added sorted by `from` position and `startSide`.
+    const replace = (node: SyntaxNodeRef, marks: SyntaxNode[]) => {
+      if (cursor <= node.from || cursor >= node.to) {
+        for (const mark of marks) {
+          builder.add(mark.from, mark.to, Decoration.replace({}));
+        }
+      }
+    };
+
     for (const { from, to } of view.visibleRanges) {
       syntaxTree(state).iterate({
         enter: (node) => {
-          // console.log(node.name);
           switch (node.name) {
             case 'Emphasis':
             case 'StrongEmphasis': {
-              // TODO(burdon): Bug if '***foo***' (since StrongEmphasis is nested inside EmphasisMark).
-              //  Ranges must be added sorted by `from` position and `startSide`.
               const marks = node.node.getChildren('EmphasisMark');
+              replace(node, marks);
+              break;
+            }
 
-              // Check if cursor is inside text.
-              if (cursor <= node.from || cursor >= node.to) {
-                for (const mark of marks) {
-                  builder.add(mark.from, mark.to, Decoration.replace({}));
-                }
-              }
+            case 'Strikethrough': {
+              const marks = node.node.getChildren('StrikethroughMark');
+              replace(node, marks);
               break;
             }
           }

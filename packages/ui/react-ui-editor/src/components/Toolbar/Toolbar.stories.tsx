@@ -4,37 +4,29 @@
 
 import '@dxosTheme';
 
-import type { EditorView } from '@codemirror/view';
-import React, { useMemo, useRef, useState } from 'react';
+import { faker } from '@faker-js/faker';
+import React, { type FC, useMemo, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Toolbar, type ToolbarProps } from './Toolbar';
-import {
-  comments,
-  createComment,
-  formatting,
-  setHeading,
-  toggleBold,
-  toggleItalic,
-  toggleStrikethrough,
-  useComments,
-} from '../../extensions';
-import { type Comment, useTextModel } from '../../hooks';
+import { Toolbar } from './Toolbar';
+import { code, comments, formatting, heading, image, table, tasklist, useComments } from '../../extensions';
+import { type Comment, useActionHandler, useTextEditor, useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
-const content = 'Heading\n\nThis is some **sample** text!\n\nSome more.\n\n';
+faker.seed(101);
 
-const Story = () => {
+const Story: FC<{ content: string }> = ({ content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
-  const view = useRef<EditorView>(null);
+  const [editorRef, editorView] = useTextEditor();
   const model = useTextModel({ text: item.text });
   const extensions = useMemo(
     () => [
+      code(),
       comments({
         onCreate: (cursor) => {
           const id = PublicKey.random().toHex();
@@ -43,39 +35,16 @@ const Story = () => {
         },
       }),
       formatting(),
+      heading(),
+      image(),
+      table(),
+      tasklist(),
     ],
     [],
   );
 
-  useComments(view.current, _comments);
-
-  const handleAction: ToolbarProps['onAction'] = (action) => {
-    if (view.current) {
-      switch (action.type) {
-        case 'heading':
-          setHeading(parseInt(action.data))(view.current);
-          break;
-
-        case 'bold':
-          toggleBold(view.current);
-          break;
-        case 'italic':
-          toggleItalic(view.current);
-          break;
-        case 'strikethrough':
-          toggleStrikethrough(view.current);
-          break;
-
-        // TODO(burdon): Other actions.
-
-        case 'comment':
-          createComment(view.current);
-          break;
-      }
-    }
-
-    view.current?.focus();
-  };
+  useComments(editorView, _comments);
+  const handleAction = useActionHandler(editorView);
 
   if (!model) {
     return null;
@@ -84,9 +53,9 @@ const Story = () => {
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex h-full justify-center'>
-        <div className='flex flex-col h-full w-[800px] gap-4'>
+        <div className='flex flex-col h-full w-[800px]'>
           <Toolbar onAction={handleAction} />
-          <MarkdownEditor ref={view} model={model} extensions={extensions} />
+          <MarkdownEditor ref={editorRef} model={model} extensions={extensions} />
         </div>
       </div>
     </div>
@@ -96,8 +65,22 @@ const Story = () => {
 export default {
   title: 'react-ui-editor/Toolbar',
   component: Toolbar,
-  render: Story,
+  render: (args: any) => <Story {...args} />,
   decorators: [withTheme],
 };
 
-export const Default = {};
+const content = [
+  'Demo',
+  '',
+  'The editor supports **Markdown** styles.',
+  '',
+  faker.lorem.paragraph({ min: 5, max: 8 }),
+  '',
+  '',
+].join('\n');
+
+export const Default = {
+  args: {
+    content,
+  },
+};

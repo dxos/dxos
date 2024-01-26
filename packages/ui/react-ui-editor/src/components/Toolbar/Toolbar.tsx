@@ -4,6 +4,8 @@
 
 import {
   type Icon,
+  At,
+  Brain,
   CaretRight,
   ChatText,
   Code,
@@ -34,6 +36,8 @@ export type Action =
   | 'list'
   | 'list-ordered'
   | 'list-tasks'
+  | 'mention'
+  | 'prompt'
   | 'strikethrough'
   | 'table';
 
@@ -57,11 +61,15 @@ export const Toolbar = ({ onAction }: ToolbarProps) => {
     <DensityProvider density='fine'>
       <div role='toolbar' className='flex w-full p-2 items-center gap-4'>
         <div>
-          <Select.Root onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}>
-            <Select.TriggerButton classNames='w-[8rem]' placeholder='Heading' />
+          <Select.Root
+            defaultValue='0'
+            onValueChange={(value) => onAction?.({ type: 'heading', data: parseInt(value) })}
+          >
+            <Select.TriggerButton classNames='w-[8rem]' />
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
+                  <Select.Option value='0'>Paragraph</Select.Option>
                   {[1, 2, 3, 4, 5, 6].map((level) => (
                     <Select.Option key={level} value={String(level)}>
                       Heading {level}
@@ -93,10 +101,12 @@ export const Toolbar = ({ onAction }: ToolbarProps) => {
         </div>
         <div>
           <IconButton Icon={Link} title='Link' onClick={() => onAction?.({ type: 'link' })} />
+          <IconButton Icon={At} title='Mention' onClick={() => onAction?.({ type: 'mention' })} />
           <IconButton Icon={Image} title='Image' onClick={() => onAction?.({ type: 'image' })} />
         </div>
         <div className='grow' />
         <div>
+          <IconButton Icon={Brain} title='AI prompt' onClick={() => onAction?.({ type: 'prompt' })} />
           <IconButton Icon={ChatText} title='Create comment' onClick={() => onAction?.({ type: 'comment' })} />
         </div>
       </div>
