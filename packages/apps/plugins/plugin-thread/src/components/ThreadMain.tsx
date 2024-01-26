@@ -9,7 +9,7 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { ChatContainer } from './Chat';
+import { ThreadContainer } from './ThreadContainer';
 
 export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   const space = getSpaceForObject(thread);
@@ -20,7 +20,7 @@ export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   // TODO(burdon): Factor out Main container across plugins?
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <ChatContainer space={space} thread={thread} fullWidth={false} />
+      <ThreadContainer space={space} thread={thread} fullWidth={false} />
     </Main.Content>
   );
 };

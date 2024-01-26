@@ -12,12 +12,13 @@ import { useClient } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { Thread } from '@dxos/react-ui-thread';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { CommentsThread } from './CommentsThread';
-import translations from '../../translations';
-import { createCommentThread } from '../testing';
-import { createPropertiesProvider } from '../util';
+import { MessageContainer } from './MessageContainer';
+import { createCommentThread } from './testing';
+import { useMessageMetadata } from '../hooks';
+import translations from '../translations';
 
 faker.seed(1);
 
@@ -70,18 +71,16 @@ const Story = () => {
     );
   };
 
+  const threadMetadata = useMessageMetadata(thread.id, identity);
+
   return (
     <div className='flex w-full justify-center'>
       <div className='flex w-[400px] overflow-x-hidden'>
-        <CommentsThread
-          thread={thread}
-          identityKey={identity.identityKey}
-          propertiesProvider={createPropertiesProvider(identity, members)}
-          active={true}
-          autoFocus={true}
-          onCreate={handleSubmit}
-          onDelete={handleDelete}
-        />
+        <Thread {...threadMetadata} onCreate={handleSubmit} onDelete={handleDelete}>
+          {thread.messages.map((message) => (
+            <MessageContainer key={message.id} message={message} members={members} />
+          ))}
+        </Thread>
       </div>
     </div>
   );
@@ -89,7 +88,7 @@ const Story = () => {
 
 export default {
   title: 'plugin-thread/CommentsThread',
-  component: CommentsThread,
+  component: Thread,
   render: () => <ClientRepeater Component={Story} types={types} createIdentity createSpace />,
   decorators: [withTheme],
   parameters: { translations },

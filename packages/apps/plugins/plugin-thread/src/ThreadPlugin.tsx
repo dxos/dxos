@@ -25,7 +25,8 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type TypedObject, SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
-import { ChatContainer, CommentsSidebar, ThreadMain, ThreadSettings } from './components';
+import { ThreadContainer, ThreadMain, ThreadSettings } from './components';
+import { CommentsCollection } from './components/CommentsCollection';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, isThread, type ThreadSettingsProps } from './types';
@@ -144,22 +145,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(nonNullable);
 
                 return (
-                  <CommentsSidebar
+                  <CommentsCollection
                     space={space}
                     threads={threads}
-                    active={state.active}
-                    focus={state.focus}
-                    onFocus={(thread: ThreadType) => {
-                      if (state.active !== thread.id) {
-                        state.active = thread.id;
-                        void intentPlugin?.provides.intent.dispatch({
-                          action: LayoutAction.FOCUS,
-                          data: {
-                            object: thread.id,
-                          },
-                        });
-                      }
-                    }}
+                    // onFocus={(thread: ThreadType) => {
+                    //   if (state.active !== thread.id) {
+                    //     state.active = thread.id;
+                    //     void intentPlugin?.provides.intent.dispatch({
+                    //       action: LayoutAction.FOCUS,
+                    //       data: {
+                    //         object: thread.id,
+                    //       },
+                    //     });
+                    //   }
+                    // }}
                   />
                 );
               }
@@ -176,7 +175,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return <ChatContainer space={space} thread={thread} activeObjectId={layout?.active} fullWidth={true} />;
+                return (
+                  <ThreadContainer space={space} thread={thread} activeObjectId={layout?.active} fullWidth={true} />
+                );
               }
 
               break;

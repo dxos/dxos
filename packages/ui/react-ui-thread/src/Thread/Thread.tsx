@@ -16,7 +16,7 @@ export type CommentsThreadProps = ThreadEntity & {
   onDelete?: (messageId: string, idx: number) => void;
 } & ComponentPropsWithRef<'div'>;
 
-export const CommentsThread = forwardRef(
+export const Thread = forwardRef(
   ({ onFocus, onCreate, onDelete, children, id, ...props }: CommentsThreadProps, ref: ForwardedRef<HTMLDivElement>) => {
     const nextMessageId = `${id}__next`;
     const nextMessageModel = useInMemoryTextModel({ id: nextMessageId });

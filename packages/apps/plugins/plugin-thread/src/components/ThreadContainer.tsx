@@ -9,11 +9,12 @@ import { type Thread as ThreadType, Message as MessageType } from '@braneframe/t
 import { PublicKey } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ChatThread, Message } from '@dxos/react-ui-thread';
+import { Thread } from '@dxos/react-ui-thread';
 
+import { MessageContainer } from './MessageContainer';
 import { useStatus, useMessageMetadata } from '../hooks';
 
-export type ChatContainerProps = {
+export type ThreadContainerProps = {
   space: Space;
   thread: ThreadType;
   activeObjectId?: string;
@@ -21,15 +22,7 @@ export type ChatContainerProps = {
   onFocus?: () => void;
 };
 
-const ChatMessage = ({ message, members }: { message: MessageType; members: ReturnType<typeof useMembers> }) => {
-  const identity = members.find(
-    (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
-  )?.identity;
-  const messageMetadata = useMessageMetadata(message.id, identity);
-  return <Message {...messageMetadata} blocks={message.blocks ?? []} />;
-};
-
-export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ChatContainerProps) => {
+export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
   const processing = useStatus(space, thread.id);
@@ -78,16 +71,10 @@ export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocu
   const threadMetadata = useMessageMetadata(thread.id, identity);
 
   return (
-    <ChatThread
-      {...threadMetadata}
-      pending={processing}
-      onFocus={onFocus}
-      onCreate={handleCreate}
-      onDelete={handleDelete}
-    >
+    <Thread {...threadMetadata} pending={processing} onFocus={onFocus} onCreate={handleCreate} onDelete={handleDelete}>
       {thread.messages.map((message) => (
-        <ChatMessage key={message.id} message={message} members={members} />
+        <MessageContainer key={message.id} message={message} members={members} />
       ))}
-    </ChatThread>
+    </Thread>
   );
 };
