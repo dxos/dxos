@@ -48,7 +48,7 @@ export const showTelemetryBanner = async (configDir: string) => {
   if (await exists(path)) {
     return;
   }
-  console.log(
+  process.stderr.write(
     chalk`{bold {magenta DXOS collects anonymous telemetry data to improve the CLI. To disable it add DX_DISABLE_TELEMETRY=true to your environment.}}`,
   );
   await writeFile(path, '', 'utf-8');
