@@ -21,6 +21,7 @@ import React, {
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { basicBundle, markdownBundle } from '../../extensions';
 import { type EditorModel } from '../../hooks';
@@ -143,7 +144,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
           // Custom.
           ...extensions,
-        ].filter(Boolean) as Extension[],
+        ].filter(nonNullable) as Extension[], // TODO(burdon): ???
       });
 
       //

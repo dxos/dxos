@@ -8,7 +8,7 @@ import { invertedEffects } from '@codemirror/commands';
 import { StateField, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { type Prop, next as am } from '@dxos/automerge/automerge';
+import { next as am, type Prop } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 import { cursorConverter } from './cursor';
