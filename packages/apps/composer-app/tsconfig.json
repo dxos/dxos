@@ -34,6 +34,9 @@
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
+      "path": "../../devtools/devtools"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
