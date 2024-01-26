@@ -12,7 +12,7 @@ import { type Prop, next as A } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 import { cursorConverter } from './cursor';
-import { effectType, type IDocHandle, isReconcileTx, type State } from './defs';
+import { updateHeadsEffect, type IDocHandle, isReconcile, type State } from './defs';
 import { PatchSemaphore } from './semaphore';
 import { Cursor } from '../cursor';
 
@@ -38,7 +38,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
 
       let clearUnreconciled = false;
       for (const effect of tr.effects) {
-        if (effect.is(effectType)) {
+        if (effect.is(updateHeadsEffect)) {
           result.lastHeads = effect.value.newHeads;
           clearUnreconciled = true;
         }
@@ -47,7 +47,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
       if (clearUnreconciled) {
         result.unreconciledTransactions = [];
       } else {
-        if (!isReconcileTx(tr)) {
+        if (!isReconcile(tr)) {
           result.unreconciledTransactions.push(tr);
         }
       }

@@ -16,7 +16,7 @@ import {
   type SpliceTextPatch,
 } from '@dxos/automerge/automerge';
 
-import { reconcileAnnotationType } from './defs';
+import { reconcileAnnotation } from './defs';
 
 export const updateCodeMirror = (view: EditorView, selection: EditorSelection, target: Prop[], patches: Patch[]) => {
   for (const patch of patches) {
@@ -26,14 +26,14 @@ export const updateCodeMirror = (view: EditorView, selection: EditorSelection, t
       selection = selection.map(changeSet, 1);
       view.dispatch({
         changes: changeSet,
-        annotations: reconcileAnnotationType.of(false),
+        annotations: reconcileAnnotation.of(false),
       });
     }
   }
 
   view.dispatch({
     selection,
-    annotations: reconcileAnnotationType.of(false),
+    annotations: reconcileAnnotation.of(false),
   });
 };
 

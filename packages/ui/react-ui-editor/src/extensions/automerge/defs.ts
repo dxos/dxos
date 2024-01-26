@@ -8,31 +8,27 @@ import { Annotation, StateEffect, type StateField, type EditorState, type Transa
 
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, type Prop } from '@dxos/automerge/automerge';
 
-// TODO(burdon): Rename.
 export type State = {
   path: Prop[];
   lastHeads: Heads;
   unreconciledTransactions: Transaction[];
 };
 
+export const getPath = (state: EditorState, field: StateField<State>): Prop[] => state.field(field).path;
+export const getLastHeads = (state: EditorState, field: StateField<State>): Heads => state.field(field).lastHeads;
+
 export type UpdateHeads = {
   newHeads: Heads;
 };
 
-export const effectType = StateEffect.define<UpdateHeads>({});
+export const updateHeadsEffect = StateEffect.define<UpdateHeads>({});
 
-export const reconcileAnnotationType = Annotation.define<any>();
+export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => updateHeadsEffect.of({ newHeads });
 
-export const getPath = (state: EditorState, field: StateField<State>): Prop[] => state.field(field).path;
+export const reconcileAnnotation = Annotation.define<boolean>();
 
-export const getLastHeads = (state: EditorState, field: StateField<State>): Heads => state.field(field).lastHeads;
-
-export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
-
-export const isReconcileTx = (tr: Transaction): boolean => {
-  const x = !!tr.annotation(reconcileAnnotationType);
-  console.log('::::', tr.annotation(reconcileAnnotationType), x);
-  return x;
+export const isReconcile = (tr: Transaction): boolean => {
+  return !!tr.annotation(reconcileAnnotation);
 };
 
 export type IDocHandle<T = any> = {

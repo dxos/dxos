@@ -12,8 +12,8 @@ import { next as automerge } from '@dxos/automerge/automerge';
 import {
   getLastHeads,
   getPath,
-  isReconcileTx,
-  reconcileAnnotationType,
+  isReconcile,
+  reconcileAnnotation,
   updateHeads,
   type IDocHandle,
   type State,
@@ -49,14 +49,14 @@ export class PatchSemaphore {
     let selection = view.state.selection;
 
     // First undo all the unreconciled transactions.
-    const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
+    const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcile(tx));
     const toInvert = transactions.slice().reverse();
     for (const tr of toInvert) {
       const inverted = tr.changes.invert(tr.startState.doc);
       selection = selection.map(inverted);
       view.dispatch({
         changes: inverted,
-        annotations: reconcileAnnotationType.of(true),
+        annotations: reconcileAnnotation.of(true),
       });
     }
 
@@ -77,7 +77,7 @@ export class PatchSemaphore {
     // Update automerge state.
     view.dispatch({
       effects: updateHeads(newHeads),
-      annotations: reconcileAnnotationType.of(false),
+      annotations: reconcileAnnotation.of(false),
     });
   }
 }
