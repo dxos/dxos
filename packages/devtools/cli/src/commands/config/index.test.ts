@@ -24,6 +24,12 @@ describe('config', () => {
     .stdout()
     .command(['config', '--json', '--config', configPath])
     .it('runs config', (ctx) => {
-      expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
+      try {
+        expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
+      } catch (err) {
+        console.log(ctx.stdout);
+        console.error(err);
+        throw err;
+      }
     });
 });
