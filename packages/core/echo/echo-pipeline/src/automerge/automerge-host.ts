@@ -28,7 +28,7 @@ export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
   private readonly _clientNetwork: LocalHostNetworkAdapter;
-  private readonly _storage: AutomergeStorageAdapter | IndexedDBStorageAdapter;
+  private readonly _storage: StorageAdapter;
 
   /**
    * spaceKey -> deviceKey[]
@@ -95,7 +95,7 @@ export class AutomergeHost {
   }
 
   async close() {
-    await this._storage?.close();
+    this._storage instanceof AutomergeStorageAdapter && (await this._storage.close());
     await this._clientNetwork.close();
   }
 
@@ -309,7 +309,7 @@ export class MeshNetworkAdapter extends NetworkAdapter {
 }
 
 export class AutomergeStorageAdapter extends StorageAdapter {
-  // TODO(mykola): Hack for restricting automerge Repo to access storage if Host is `closed`. 
+  // TODO(mykola): Hack for restricting automerge Repo to access storage if Host is `closed`.
   //               Automerge Repo do not have any lifetime management.
   private _state: 'opened' | 'closed' = 'opened';
 
