@@ -83,7 +83,7 @@ const text = {
     '## Code',
     '',
     '```',
-    'const x = 100;',
+    '$ ls -las',
     '```',
     '',
     '```tsx',
@@ -292,11 +292,11 @@ export const Links = {
 };
 
 export const Code = {
-  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} readonly />,
+  render: () => <Story text={str(text.code, text.footer)} extensions={[code()]} />,
 };
 
 export const Image = {
-  render: () => <Story text={str(text.image, text.footer)} readonly extensions={[image()]} />,
+  render: () => <Story text={str(text.image, text.footer)} extensions={[image()]} />,
 };
 
 export const Lists = {
