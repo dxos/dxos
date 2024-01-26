@@ -88,7 +88,7 @@ const handlePut = (target: Prop[], patch: PutPatch, state: EditorState): Array<C
 
   const length = state.doc.length;
   if (typeof patch.value !== 'string') {
-    return []; // TODO(dmaretskyi): How to handle non string values?
+    return []; // TODO(dmaretskyi): How to handle non-string values?
   }
 
   return [{ from: 0, to: length, insert: patch.value as any }];

@@ -22,7 +22,7 @@ import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
 /**
- * Implements three-way merge (on each mutation/keystroke).
+ * Implements three-way merge (on each mutation).
  */
 export class PatchSemaphore {
   private _inReconcile = false;
