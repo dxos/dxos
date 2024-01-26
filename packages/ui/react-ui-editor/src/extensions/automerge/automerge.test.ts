@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-// import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { EditorState, type Extension } from '@codemirror/state';
 import { expect } from 'chai';
 import get from 'lodash.get';
@@ -12,45 +11,45 @@ import { describe, test } from '@dxos/test';
 
 import { automerge } from './automerge';
 
-const createExtension = (content: string): readonly [EditorState, Extension] => {
-  const repo = new Repo({
-    network: [],
-    // network: [new BroadcastChannelNetworkAdapter()],
-  });
-
-  const path = ['text'];
-  const object = repo.create();
-  const extension = automerge({ handle: object, path });
-  const str = get(object.docSync()!, path);
-
-  const state = EditorState.create({ doc: str, extensions: [extension] });
-  return [state, extension] as const;
+type TestObject = {
+  text: string;
 };
 
+const path = ['text'];
+
+const createState = (content: string): [EditorState, Extension] => {
+  const repo = new Repo({ network: [] });
+  const handle = repo.create<TestObject>();
+  handle.change((doc: TestObject) => {
+    doc.text = content;
+  });
+  const extension = automerge({ handle, path });
+  const state = EditorState.create({ doc: get(handle.docSync()!, path), extensions: [extension] });
+  return [state, extension];
+};
+
+// TODO(burdon): vitest.
+// const view = new EditorView({ state });
+
 describe('Automerge', () => {
-  test('create', () => {
+  test('create', async () => {
     const content = 'hello world!';
-    const [state] = createExtension(content);
+    const [state] = createState(content);
     expect(state.doc.toString()).to.eq(content);
   });
 
-  // TODO(burdon): Sim browser (vitest).
-  test('CM mutations', () => {
-    const content = 'hello world!';
-    // const [text, state] = createExtension(content);
-    // const view = new EditorView({ state });
-    // view.dispatch({});
+  test('CM update', () => {
+    const content = 'hello!';
+    const [state] = createState(content);
+    const {
+      state: { doc },
+    } = state.update({
+      changes: {
+        from: 5,
+        insert: ' world',
+      },
+    });
 
-    // const t = state.update({
-    //   changes: {
-    //     from: 0,
-    //     insert: 'xx',
-    //   },
-    // });
-
-    // console.log(t);
-    // console.log(state.doc.toString());
-
-    // expect(state.doc.toString()).to.eq(content);
+    expect(doc.toString()).to.eq('hello world!');
   });
 });

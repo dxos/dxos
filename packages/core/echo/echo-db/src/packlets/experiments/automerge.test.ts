@@ -73,7 +73,6 @@ describe.only('Automerge', () => {
 
     const heads = A.getHeads(doc);
     const diff = A.diff(doc, heads, heads);
-
     console.log(diff);
   });
 
@@ -86,11 +85,10 @@ describe.only('Automerge', () => {
       // storage: new IndexedDBStorageAdapter(),
       sharePolicy: async (peerId: any, documentId: any) => true, // this is the default
     });
-    const handle = repo.create();
 
+    const handle = repo.create();
     handle.change((doc: any) => {
       doc.text = 'hello world';
-
       console.log(doc.text);
     });
   });
