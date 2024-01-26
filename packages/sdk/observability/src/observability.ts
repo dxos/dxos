@@ -62,8 +62,8 @@ export type ObservabilityOptions = {
 
   errorLog?: {
     sentryInitOptions?: InitOptions;
+    logProcessor?: boolean;
   };
-  logProcessor?: boolean;
 };
 
 /*
@@ -90,7 +90,7 @@ export class Observability {
   private _tags = new Map<string, string>();
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog, logProcessor }: ObservabilityOptions) {
+  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog }: ObservabilityOptions) {
     this._namespace = namespace;
     this._config = config;
     this._mode = mode ?? 'disabled';
@@ -98,7 +98,7 @@ export class Observability {
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
     this._errorReportingOptions = errorLog?.sentryInitOptions;
-    this._errorLogProcessor = logProcessor ?? false;
+    this._errorLogProcessor = errorLog?.logProcessor ?? false;
 
     if (this._group) {
       this.setTag('group', this._group);
