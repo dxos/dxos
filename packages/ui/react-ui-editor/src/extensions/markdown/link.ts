@@ -65,10 +65,12 @@ export const link = (options: LinkOptions = {}): Extension => {
         for (let i = 0, node: SyntaxNode | null = syntax; !link && node && i < 5; node = node.parent, i++) {
           link = node.name === 'Link' ? node : null;
         }
+
         const url = link && link.getChild('URL');
         if (!url || !link) {
           return null;
         }
+
         const urlText = view.state.sliceDoc(url.from, url.to);
         return {
           pos: link.from,
@@ -158,6 +160,7 @@ const buildDecorations = (view: EditorView, options: LinkOptions): DecorationSet
             return false;
           }
 
+          // TODO(burdon): Don't expand if moving cursor up/down.
           if (!view.hasFocus || state.readOnly || cursor < node.from || cursor > node.to) {
             builder.add(
               node.from,

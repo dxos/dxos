@@ -5,7 +5,7 @@
 import type { EditorView } from '@codemirror/view';
 
 import type { ToolbarProps } from '../components/Toolbar/Toolbar';
-import { createComment, setHeading, toggleBold, toggleItalic, toggleStrikethrough } from '../extensions';
+import { createComment, setHeading, toggleBold, toggleItalic, toggleList, toggleStrikethrough } from '../extensions';
 
 export const useActionHandler = (view: EditorView | null): ToolbarProps['onAction'] => {
   return (action) => {
@@ -28,13 +28,18 @@ export const useActionHandler = (view: EditorView | null): ToolbarProps['onActio
         toggleStrikethrough(view);
         break;
 
-      // TODO(burdon): Other actions.
+      case 'list':
+        toggleList(view);
+        break;
 
       case 'comment':
         createComment(view);
         break;
     }
 
-    view.focus();
+    // TODO(burdon): Hack since otherwise focus doesn't leave heading selector.
+    setTimeout(() => {
+      view.focus();
+    });
   };
 };

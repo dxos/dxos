@@ -17,10 +17,35 @@ import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 
 export type FormattingOptions = {};
 
-// TODO(burdon): Set heading for line.
 export const setHeading =
   (level: number): Command =>
   (view: EditorView) => {
+    const {
+      selection: { ranges },
+      doc,
+    } = view.state;
+    const changes = [];
+    for (const range of ranges) {
+      const { number } = doc.lineAt(range.anchor);
+      const { from } = doc.line(number);
+
+      // Check heading doesn't already exist.
+      const line = doc.sliceString(from, from + 7);
+      const [_, marks, spaces] = line.match(/(#+)(\s+)/) ?? [];
+      const current = marks?.length ?? 0;
+      if (level !== current) {
+        changes.push({
+          from,
+          to: from + current + (spaces?.length ?? 0),
+          insert: '#'.repeat(level) + (level > 0 ? ' ' : ''),
+        });
+      }
+    }
+
+    if (changes.length) {
+      view.dispatch({ changes });
+    }
+
     return true;
   };
 
@@ -54,6 +79,8 @@ export const toggleStyle =
 export const toggleBold = toggleStyle('**');
 export const toggleItalic = toggleStyle('_');
 export const toggleStrikethrough = toggleStyle('~~');
+
+export const toggleList = (view: EditorView) => {};
 
 export const formatting = (options: FormattingOptions = {}): Extension => {
   return [
