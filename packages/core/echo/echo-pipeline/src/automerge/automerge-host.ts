@@ -28,7 +28,7 @@ export class AutomergeHost {
   private readonly _repo: Repo;
   private readonly _meshNetwork: MeshNetworkAdapter;
   private readonly _clientNetwork: LocalHostNetworkAdapter;
-  private readonly _storage: StorageAdapter;
+  private readonly _storage: AutomergeStorageAdapter | IndexedDBStorageAdapter;
 
   /**
    * spaceKey -> deviceKey[]
@@ -95,6 +95,7 @@ export class AutomergeHost {
   }
 
   async close() {
+    await this._storage?.close();
     await this._clientNetwork.close();
   }
 
@@ -308,11 +309,18 @@ export class MeshNetworkAdapter extends NetworkAdapter {
 }
 
 export class AutomergeStorageAdapter extends StorageAdapter {
+  // TODO(mykola): Hack for restricting automerge Repo to access storage if Host is `closed`. 
+  //               Automerge Repo do not have any lifetime management.
+  private _state: 'opened' | 'closed' = 'opened';
+
   constructor(private readonly _directory: Directory) {
     super();
   }
 
   override async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
     const { size } = await file.stat();
@@ -324,6 +332,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async save(key: StorageKey, data: Uint8Array): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
     await file.write(0, arrayToBuffer(data));
@@ -333,6 +344,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async remove(key: StorageKey): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     // TODO(dmaretskyi): Better deletion.
     const filename = this._getFilename(key);
     const file = this._directory.getOrCreateFile(filename);
@@ -340,6 +354,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    if (this._state !== 'opened') {
+      return [];
+    }
     const filename = this._getFilename(keyPrefix);
     const entries = await this._directory.list();
     return Promise.all(
@@ -358,6 +375,9 @@ export class AutomergeStorageAdapter extends StorageAdapter {
   }
 
   override async removeRange(keyPrefix: StorageKey): Promise<void> {
+    if (this._state !== 'opened') {
+      return undefined;
+    }
     const filename = this._getFilename(keyPrefix);
     const entries = await this._directory.list();
     await Promise.all(
@@ -368,6 +388,10 @@ export class AutomergeStorageAdapter extends StorageAdapter {
           await file.destroy();
         }),
     );
+  }
+
+  async close(): Promise<void> {
+    this._state = 'closed';
   }
 
   private _getFilename(key: StorageKey): string {
