@@ -111,6 +111,8 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         return;
       }
 
+      console.log(extensions.length);
+
       //
       // EditorState
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
@@ -138,14 +140,14 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
           // Storage and replication.
           // NOTE: This must come before user extensions.
-          model.extension,
+          // model.extension,
 
           // TODO(burdon): Factor out (requires special handling for Escape/focus).
           editorMode === 'vim' && vim(),
 
           // Custom.
-          ...extensions,
-        ].filter(nonNullable) as Extension[], // TODO(burdon): ???
+          // ...extensions,
+        ].filter(nonNullable) as Extension[],
       });
 
       //
