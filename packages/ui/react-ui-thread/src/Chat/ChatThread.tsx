@@ -4,18 +4,34 @@
 
 import React, { useRef } from 'react';
 
-import { AnchoredOverflow } from '@dxos/react-ui';
+import { AnchoredOverflow, type AnchoredOverflowRootProps } from '@dxos/react-ui';
+import { useInMemoryTextModel } from '@dxos/react-ui-editor';
 
-import { Message, MessageTextbox, type MessageTextboxProps } from '../Message';
+import { MessageTextbox, type MessageTextboxProps } from '../Message';
 import { type ThreadEntity } from '../types';
 
 export type ChatThreadProps = ThreadEntity & {
   onFocus?: () => void;
   onCreate?: MessageTextboxProps['onSend'];
   onDelete?: (blockId: string, idx: number) => void;
-} & Pick<MessageTextboxProps, 'pending' | 'model'>;
+} & Pick<MessageTextboxProps, 'pending'> &
+  AnchoredOverflowRootProps;
 
-export const ChatThread = ({ onFocus, onCreate, onDelete, messages, ...props }: ChatThreadProps) => {
+export const ChatThread = ({
+  id,
+  onFocus,
+  onCreate,
+  onDelete,
+  authorName,
+  authorStatus,
+  authorId,
+  authorImgSrc,
+  pending,
+  children,
+  ...rootProps
+}: ChatThreadProps) => {
+  const nextMessageId = `${id}__next`;
+  const nextMessageModel = useInMemoryTextModel({ id: nextMessageId });
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (text: string) => {
@@ -29,12 +45,23 @@ export const ChatThread = ({ onFocus, onCreate, onDelete, messages, ...props }: 
   };
 
   return (
-    <AnchoredOverflow.Root>
-      {(messages ?? []).map((message) => (
-        <Message key={message.id} {...message} onDelete={onDelete} />
-      ))}
+    <AnchoredOverflow.Root {...rootProps}>
+      {children}
       <AnchoredOverflow.Anchor />
-      {handleSubmit && <MessageTextbox {...props} disposition='message' onSend={handleSubmit} />}
+      {handleSubmit && (
+        <MessageTextbox
+          id={`${id}__next`}
+          {...{
+            authorId,
+            authorName,
+            authorImgSrc,
+            authorStatus,
+            model: nextMessageModel,
+            disposition: 'message',
+            onSend: handleSubmit,
+          }}
+        />
+      )}
     </AnchoredOverflow.Root>
   );
 };

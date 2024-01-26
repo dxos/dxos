@@ -9,10 +9,9 @@ import { type Thread as ThreadType, Message as MessageType } from '@braneframe/t
 import { PublicKey } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { ChatThread, Message } from '@dxos/react-ui-thread';
 
-import { ChatThread } from './ChatThread';
-import { useStatus } from '../../hooks';
-import { createPropertiesProvider } from '../util';
+import { useStatus, useMessageMetadata } from '../hooks';
 
 export type ChatContainerProps = {
   space: Space;
@@ -20,6 +19,14 @@ export type ChatContainerProps = {
   activeObjectId?: string;
   fullWidth?: boolean;
   onFocus?: () => void;
+};
+
+const ChatMessage = ({ message, members }: { message: MessageType; members: ReturnType<typeof useMembers> }) => {
+  const identity = members.find(
+    (member) => message.from.identityKey && PublicKey.equals(member.identity.identityKey, message.from.identityKey),
+  )?.identity;
+  const messageMetadata = useMessageMetadata(message.id, identity);
+  return <Message {...messageMetadata} blocks={message.blocks ?? []} />;
 };
 
 export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocus }: ChatContainerProps) => {
@@ -68,16 +75,19 @@ export const ChatContainer = ({ space, thread, activeObjectId, fullWidth, onFocu
     }
   };
 
+  const threadMetadata = useMessageMetadata(thread.id, identity);
+
   return (
     <ChatThread
-      identityKey={identity.identityKey}
-      propertiesProvider={createPropertiesProvider(identity, members)}
-      thread={thread}
-      processing={processing}
-      fullWidth={fullWidth}
+      {...threadMetadata}
+      pending={processing}
       onFocus={onFocus}
       onCreate={handleCreate}
       onDelete={handleDelete}
-    />
+    >
+      {thread.messages.map((message) => (
+        <ChatMessage key={message.id} message={message} members={members} />
+      ))}
+    </ChatThread>
   );
 };

@@ -13,9 +13,8 @@ export type MessageMetadata = {
 };
 
 export type MessageEntityBlock = {
-  id: string;
-  timestamp: string;
-  text: string;
+  timestamp?: string;
+  text?: string;
   data?: any;
   [key: string]: any;
 };
@@ -25,7 +24,6 @@ export type MessageEntity = MessageMetadata & {
 };
 
 export type ThreadEntity = MessageMetadata & {
-  messages: MessageEntity[];
   topicId?: string;
   topicTitle?: string;
 };
