@@ -21,41 +21,56 @@ type TestObject = {
 
 const path = ['text'];
 
-const createObject = (repo: Repo, content: string): DocHandle<TestObject> => {
-  const handle = repo.create<TestObject>();
-  handle.change((doc: TestObject) => {
-    doc.text = content;
-  });
+class Generator {
+  constructor(private readonly _handle: DocHandle<TestObject>) {}
+  update(text: string) {
+    this._handle.change((doc: TestObject) => {
+      doc.text = text;
+    });
+  }
+}
 
-  return handle;
-};
-
-const Test: FC<{ handle: DocHandle<TestObject> }> = ({ handle }) => {
+const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ handle, generator }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<EditorView>();
   useEffect(() => {
-    const state = EditorState.create({ doc: get(handle.docSync()!, path), extensions: [automerge({ handle, path })] });
-    const view = new EditorView({ state, parent: ref.current! });
+    const extensions = [
+      automerge({ handle, path }),
+      EditorView.updateListener.of((update) => {
+        if (view.state.doc.toString() === 'hello!') {
+          // Update editor.
+          update.view.dispatch({ changes: { from: view.state.doc.length - 1, insert: ' world' } });
+        }
+      }),
+    ];
+
+    const view = new EditorView({
+      state: EditorState.create({ doc: get(handle.docSync()!, path), extensions }),
+      parent: ref.current!,
+    });
+
     setView(view);
   }, []);
 
-  useEffect(() => {
-    if (view) {
-      view.dispatch({ changes: { from: view.state.doc.length - 1, insert: ' world' } });
-    }
-  }, [view]);
+  useEffect(() => {}, [view]);
 
-  return <div ref={ref}></div>;
+  return <div ref={ref} />;
 };
 
 chai.use(chaiDom);
 
 describe('Automerge', () => {
-  test('EditorView', () => {
+  test('basic sync', () => {
     const repo = new Repo({ network: [] });
-    const handle = createObject(repo, 'hello!');
-    render(<Test handle={handle} />);
+    const handle = repo.create<TestObject>();
+    const generator = new Generator(handle);
+    render(<Test handle={handle} generator={generator} />);
+    expect(screen.getByRole('textbox')).to.have.text('');
+
+    generator.update('hello!');
     expect(screen.getByRole('textbox')).to.have.text('hello world!');
-    expect(handle.docSync()!.text).to.equal('hello world!');
   });
+
+  // TODO(burdon): Test history/undo.
+  // TODO(burdon): https://testing-library.com/docs/react-testing-library/example-intro/
 });

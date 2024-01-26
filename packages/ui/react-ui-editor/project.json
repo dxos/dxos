@@ -14,7 +14,13 @@
       }
     },
     "lint": {},
-    "test": {}
+    "test": {
+      "options": {
+        "testPatterns": [
+          "{projectRoot}/{src,test}/**/*.test.ts"
+        ]
+      }
+    }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
