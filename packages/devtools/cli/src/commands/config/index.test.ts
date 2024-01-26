@@ -20,7 +20,16 @@ describe('config', () => {
   const configPath = path.join(__dirname, '../../../config/config-default.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
-  test.command(['config', '--json', '--config', configPath]).it('runs config', (ctx) => {
-    expect(JSON.stringify(JSON.parse('nothing'))).to.equal(JSON.stringify(config));
-  });
+  test
+    .stdout()
+    .command(['config', '--json', '--config', configPath])
+    .it('runs config', (ctx) => {
+      try {
+        expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
+      } catch (err) {
+        console.log(ctx.stdout);
+        console.error(err);
+        throw err;
+      }
+    });
 });
