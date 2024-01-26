@@ -7,7 +7,7 @@
 import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
-import { next as am } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 
 import {
   getLastHeads,
@@ -65,11 +65,11 @@ export class PatchSemaphore {
     let newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
     if (newHeads === null || newHeads === undefined) {
       // TODO(alexjg): this is the call that's resetting the editor state on click.
-      newHeads = am.getHeads(this._handle.docSync()!);
+      newHeads = A.getHeads(this._handle.docSync()!);
     }
 
     // Now get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
-    const diff = am.equals(oldHeads, newHeads) ? [] : am.diff(this._handle.docSync()!, oldHeads, newHeads);
+    const diff = A.equals(oldHeads, newHeads) ? [] : A.diff(this._handle.docSync()!, oldHeads, newHeads);
     updateCodeMirror(view, selection, path, diff);
 
     // Update automerge state.

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as automerge } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import * as Y from 'yjs';
 
 import { describe, test } from '@dxos/test';
@@ -15,18 +15,18 @@ describe.only('Automerge', () => {
   test('example', () => {
     const diffSizes: number[] = [];
 
-    let doc1 = automerge.init<any>();
+    let doc1 = A.init<any>();
     for (let i = 0; i < CHANGE_COUNT; i++) {
-      doc1 = automerge.change(doc1, (d) => {
+      doc1 = A.change(doc1, (d) => {
         for (const j of range(PROP_COUNT)) {
           d[`prop${j}`] = i + j;
         }
       });
 
-      diffSizes.push(automerge.saveIncremental(doc1)?.length);
+      diffSizes.push(A.saveIncremental(doc1)?.length);
     }
     console.log('automerge', { CHANGE_COUNT, PROP_COUNT });
-    console.log('full', automerge.save(doc1).length);
+    console.log('full', A.save(doc1).length);
     console.log(
       'diff',
       numericalValues(diffSizes, (x) => x),
@@ -61,18 +61,18 @@ describe.only('Automerge', () => {
   });
 
   test.skip('diff', () => {
-    let doc = automerge.init<any>();
-    const before = automerge.getHeads(doc);
+    let doc = A.init<any>();
+    const before = A.getHeads(doc);
 
-    doc = automerge.change(doc, (d) => {
+    doc = A.change(doc, (d) => {
       d.text = 'foo';
     });
 
-    const { newDoc } = automerge.changeAt(doc, before, (d) => {});
+    const { newDoc } = A.changeAt(doc, before, (d) => {});
     doc = newDoc;
 
-    const heads = automerge.getHeads(doc);
-    const diff = automerge.diff(doc, heads, heads);
+    const heads = A.getHeads(doc);
+    const diff = A.diff(doc, heads, heads);
 
     console.log(diff);
   });

@@ -8,8 +8,7 @@ import { invertedEffects } from '@codemirror/commands';
 import { StateField, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { next as am, type Prop } from '@dxos/automerge/automerge';
-import { invariant } from '@dxos/invariant';
+import { next as A, type Prop } from '@dxos/automerge/automerge';
 
 import { cursorConverter } from './cursor';
 import { updateHeadsEffect, type IDocHandle, isReconcile, type State } from './defs';
@@ -25,7 +24,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
   const syncState = StateField.define<State>({
     create: () => ({
       path: path.slice(),
-      lastHeads: am.getHeads(handle.docSync()!),
+      lastHeads: A.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
     }),
 
@@ -59,14 +58,13 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
   const semaphore = new PatchSemaphore(handle, syncState);
 
   return [
-    syncState,
     Cursor.converter.of(cursorConverter(handle, path)),
+    syncState,
 
     // Reconcile external updates.
     ViewPlugin.fromClass(
       class {
         constructor(private readonly _view: EditorView) {
-          invariant(this._view);
           handle.addListener('change', this._handleChange.bind(this));
         }
 
