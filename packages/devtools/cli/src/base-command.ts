@@ -42,7 +42,6 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
 import {
-  IPDATA_API_KEY,
   getTelemetryContext,
   showTelemetryBanner,
   PublisherRpcPeer,
@@ -174,8 +173,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async init(): Promise<void> {
     await super.init();
-    await this._initObservability();
-
     const { args, flags } = await this.parse({
       flags: this.ctor.flags,
       baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
@@ -188,6 +185,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // Load user config file.
     await this._loadConfig();
+    await this._initObservability();
   }
 
   async readStdin(): Promise<string> {
@@ -207,7 +205,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   private async _initObservability() {
     this._telemetryContext = await getTelemetryContext(DX_DATA);
-    const { mode, installationId, group, environment, release } = this._telemetryContext;
+    const { mode, installationId, group } = this._telemetryContext;
 
     if (mode === 'disabled') {
       this.log('telemetry disabled by config');
@@ -226,16 +224,21 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (this.id === 'agent:start') {
       namespace = 'agent';
     }
+    const release = `${namespace}@${this.clientConfig.get('runtime.app.build.version')}`;
+    const environment = this.clientConfig.get('runtime.app.env.DX_ENVIRONMENT');
+
     this._observability = new Observability({
       namespace,
       group,
       mode,
-      errors: {
-        installationId,
-        environment,
-        release,
-        // TODO(wittjosiah): Configure this.
-        sampleRate: 1.0,
+      errorLog: {
+        sentryInitOptions: {
+          installationId,
+          environment,
+          release,
+          // TODO(wittjosiah): Configure this.
+          sampleRate: 1.0,
+        },
       },
       logProcessor: true,
     });
@@ -244,6 +247,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     this.addToTelemetryContext({ command: this.id });
 
+    // TODO(nf): move to observability
+    const IPDATA_API_KEY = this.clientConfig.get('runtime.app.env.DX_IPDATA_API_KEY');
     try {
       const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
       const data = await res.json();

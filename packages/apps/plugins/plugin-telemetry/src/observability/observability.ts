@@ -118,15 +118,17 @@ export const initializeAppObservability = async (
     group,
     mode: 'full',
     config,
-    errors: {
-      environment,
-      release,
-      tracing: tracingEnable,
-      replay: replayEnable,
-      // TODO(wittjosiah): Configure these.
-      sampleRate: 1.0,
-      replaySampleRate: 0.1,
-      replaySampleRateOnError: 1.0,
+    errorLog: {
+      sentryInitOptions: {
+        environment,
+        release,
+        tracing: tracingEnable,
+        replay: replayEnable,
+        // TODO(wittjosiah): Configure these.
+        sampleRate: 1.0,
+        replaySampleRate: 0.1,
+        replaySampleRateOnError: 1.0,
+      },
     },
   });
 
@@ -137,6 +139,7 @@ export const initializeAppObservability = async (
     return observability;
   }
 
+  // TODO(nf): dedupe with CLI and move to observability
   try {
     const getIPData = async (config: Config): Promise<IPData | void> => {
       const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours

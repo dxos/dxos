@@ -60,7 +60,9 @@ export type ObservabilityOptions = {
     batchSize?: number;
   };
 
-  errors?: InitOptions;
+  errorLog?: {
+    sentryInitOptions?: InitOptions;
+  };
   logProcessor?: boolean;
 };
 
@@ -88,14 +90,14 @@ export class Observability {
   private _tags = new Map<string, string>();
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode, telemetry, errors, logProcessor }: ObservabilityOptions) {
+  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog, logProcessor }: ObservabilityOptions) {
     this._namespace = namespace;
     this._config = config;
     this._mode = mode ?? 'disabled';
     this._group = group;
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
-    this._errorReportingOptions = errors;
+    this._errorReportingOptions = errorLog?.sentryInitOptions;
     this._errorLogProcessor = logProcessor ?? false;
 
     if (this._group) {
