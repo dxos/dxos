@@ -67,6 +67,11 @@ export class AutomergeHost {
         }
 
         try {
+          if (!doc.experimental_spaceKey) {
+            log.warn('space key not found for share policy check', { peerId, documentId });
+            return false;
+          }
+
           const spaceKey = PublicKey.from(doc.experimental_spaceKey);
           const authorizedDevices = this._authorizedDevices.get(spaceKey);
 
