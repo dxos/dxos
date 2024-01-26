@@ -6,7 +6,7 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { expect } from 'chai';
 import get from 'lodash.get';
 
-import { Repo } from '@dxos/automerge/automerge-repo';
+import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
 import { describe, test } from '@dxos/test';
 
 import { automerge } from './automerge';
@@ -17,7 +17,7 @@ type TestObject = {
 
 const path = ['text'];
 
-const createState = (content: string): [EditorState, Extension] => {
+const createState = (content: string): [EditorState, DocHandle<TestObject>, Extension] => {
   const repo = new Repo({ network: [] });
   const handle = repo.create<TestObject>();
   handle.change((doc: TestObject) => {
@@ -25,20 +25,18 @@ const createState = (content: string): [EditorState, Extension] => {
   });
   const extension = automerge({ handle, path });
   const state = EditorState.create({ doc: get(handle.docSync()!, path), extensions: [extension] });
-  return [state, extension];
+  return [state, handle, extension];
 };
-
-// TODO(burdon): vitest.
-// const view = new EditorView({ state });
 
 describe('Automerge', () => {
   test('create', async () => {
     const content = 'hello world!';
-    const [state] = createState(content);
+    const [state, handle] = createState(content);
     expect(state.doc.toString()).to.eq(content);
+    expect(handle.docSync()?.text).to.eq(content);
   });
 
-  test('CM update', () => {
+  test('CodeMirror update', () => {
     const content = 'hello!';
     const [state] = createState(content);
     const {
@@ -52,4 +50,8 @@ describe('Automerge', () => {
 
     expect(doc.toString()).to.eq('hello world!');
   });
+
+  // TODO(burdon): vitest.
+  // const view = new EditorView({ state });
+  // test('', () => {});
 });
