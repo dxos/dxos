@@ -11,10 +11,11 @@ import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type Comment, useTextModel, type Extension } from '@dxos/react-ui-editor';
 
-import { EditorMain, MainLayout } from './EditorMain';
+import EditorMain from './EditorMain';
+import { MainLayout } from './Layout';
 import type { MarkdownSettingsProps } from '../types';
 
-export const DocumentMain: FC<{
+const DocumentMain: FC<{
   document: DocumentType;
   readonly?: boolean;
   editorMode: MarkdownSettingsProps['editorMode'];
@@ -50,3 +51,7 @@ export const DocumentMain: FC<{
     </MainLayout>
   );
 };
+
+export default DocumentMain;
+
+export type DocumentMain = typeof DocumentMain;

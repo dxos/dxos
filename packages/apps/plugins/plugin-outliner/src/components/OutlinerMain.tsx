@@ -18,7 +18,7 @@ import {
 
 import { Outliner } from './Outliner';
 
-export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
+const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
   const space = getSpaceForObject(tree);
   if (!space) {
     return null;
@@ -45,22 +45,4 @@ export const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
   );
 };
 
-export const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
-  const space = getSpaceForObject(tree);
-  if (!space) {
-    return null;
-  }
-
-  return (
-    <Outliner.Root
-      className='w-full plb-4'
-      isTasklist={tree.checkbox}
-      root={tree.root}
-      onCreate={() => new TreeType.Item()}
-      onDelete={({ id }) => {
-        const item = space.db.getObjectById(id);
-        item && space.db.remove(item);
-      }}
-    />
-  );
-};
+export default OutlinerMain;

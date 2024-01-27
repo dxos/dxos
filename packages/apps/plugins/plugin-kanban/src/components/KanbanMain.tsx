@@ -12,7 +12,7 @@ import { topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-th
 import { KanbanBoard } from './KanbanBoard';
 import { type KanbanModel } from '../types';
 
-export const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
+const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // const { t } = useTranslation(KANBAN_PLUGIN);
   const space = getSpaceForObject(kanban);
   if (!space) {
@@ -33,3 +33,5 @@ export const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
     </Main.Content>
   );
 };
+
+export default KanbanMain;

@@ -34,7 +34,7 @@ export type ContactsMainProps = {
   contacts: AddressBookType;
 };
 
-export const ContactsMain = ({ contacts }: ContactsMainProps) => {
+const ContactsMain = ({ contacts }: ContactsMainProps) => {
   const [selected, setSelected] = useState<ContactType>();
   const space = getSpaceForObject(contacts);
   const objects = useQuery(space, ContactType.filter());
@@ -48,3 +48,5 @@ export const ContactsMain = ({ contacts }: ContactsMainProps) => {
     </Main.Content>
   );
 };
+
+export default ContactsMain;
