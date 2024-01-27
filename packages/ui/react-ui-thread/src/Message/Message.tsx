@@ -2,11 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
+import { PaperPlaneRight, X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef } from 'react';
 
-import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Button,
+  type ButtonProps,
+  type ThemedClassName,
+  useJdenticonHref,
+  useTranslation,
+} from '@dxos/react-ui';
 import { TextEditor, type TextEditorProps } from '@dxos/react-ui-editor';
 import {
   focusRing,
@@ -120,7 +127,7 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
 };
 
 export type MessageTextboxProps = {
-  onSend?: (model: TextEditorProps['model']) => boolean | void;
+  onSend?: ButtonProps['onClick'];
 } & Omit<MessageMetadata, 'id' | 'authorStatus'> &
   TextEditorProps;
 
@@ -133,6 +140,9 @@ export const MessageTextbox = ({ onSend, authorId, authorName, authorImgSrc, ...
       continues={false}
     >
       <TextEditor slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }} {...editorProps} />
+      <Button onClick={onSend}>
+        <PaperPlaneRight />
+      </Button>
     </MessageMeta>
   );
 };

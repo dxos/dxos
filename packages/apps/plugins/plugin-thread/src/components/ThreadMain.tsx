@@ -20,7 +20,7 @@ export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   // TODO(burdon): Factor out Main container across plugins?
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <ThreadContainer space={space} thread={thread} fullWidth={false} />
+      <ThreadContainer space={space} thread={thread} />
     </Main.Content>
   );
 };

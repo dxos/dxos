@@ -175,9 +175,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { objects: threads } = space.db.query(ThreadType.filter((thread) => !thread.context));
               if (threads.length) {
                 const thread = threads[0];
-                return (
-                  <ThreadContainer space={space} thread={thread} activeObjectId={layout?.active} fullWidth={true} />
-                );
+                return <ThreadContainer space={space} thread={thread} activeObjectId={layout?.active} />;
               }
 
               break;

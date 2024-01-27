@@ -35,7 +35,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'plugin-thread/Message',
+  title: 'react-ui-thread/Message',
   component: Message,
   render: Story,
   decorators: [withTheme],
