@@ -26,6 +26,7 @@ import {
   table,
   tasklist,
   typewriter,
+  formatting,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -51,6 +52,7 @@ export const getExtensions = ({ settings, document, dispatch, onChange }: Extens
     // Common.
     //
     code(),
+    formatting(),
     heading(),
     hr(),
     image(),

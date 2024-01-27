@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { snippet } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import {
@@ -27,10 +28,10 @@ export const setHeading =
     const changes = [];
     for (const range of ranges) {
       const { number } = doc.lineAt(range.anchor);
-      const { from } = doc.line(number);
+      const { from, to } = doc.line(number);
 
       // Check heading doesn't already exist.
-      const line = doc.sliceString(from, from + 7);
+      const line = doc.sliceString(from, to);
       const [_, marks, spaces] = line.match(/(#+)(\s+)/) ?? [];
       const current = marks?.length ?? 0;
       if (level !== current) {
@@ -75,6 +76,34 @@ export const toggleStyle =
 
     return true;
   };
+
+// TODO(burdon): Define and trigger snippets for codeblock, table, etc.
+const snippets = {
+  codeblock: snippet(['```#{lang}', '\t#{}', '```'].join('\n')),
+  table: snippet(
+    ['| #{col1} | #{col2} |', '| ---- | ---- |', '| #{val1} | #{val2} |', '| #{val3} | #{val4} |'].join('\n'),
+  ),
+};
+
+export const insertCodeblock = (view: EditorView) => {
+  const {
+    selection: { main },
+    doc,
+  } = view.state;
+  const { number } = doc.lineAt(main.anchor);
+  const { from } = doc.line(number);
+  snippets.codeblock(view, null, from, from);
+};
+
+export const insertTable = (view: EditorView) => {
+  const {
+    selection: { main },
+    doc,
+  } = view.state;
+  const { number } = doc.lineAt(main.anchor);
+  const { from } = doc.line(number);
+  snippets.table(view, null, from, from);
+};
 
 export const toggleBold = toggleStyle('**');
 export const toggleItalic = toggleStyle('_');

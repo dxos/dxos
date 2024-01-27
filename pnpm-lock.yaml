@@ -8408,6 +8408,9 @@ importers:
       '@lezer/markdown':
         specifier: ^1.2.0
         version: 1.2.0
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@replit/codemirror-vim':
         specifier: ^6.0.14
         version: 6.0.14(@codemirror/commands@6.3.3)(@codemirror/language@6.10.0)(@codemirror/search@6.5.5)(@codemirror/state@6.4.0)(@codemirror/view@6.23.1)
@@ -16526,7 +16529,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.15
+      '@babel/runtime': 7.23.4
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false

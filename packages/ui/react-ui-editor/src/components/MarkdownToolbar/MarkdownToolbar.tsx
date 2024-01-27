@@ -5,7 +5,7 @@
 import {
   type Icon,
   At,
-  Brain,
+  // Brain,
   CaretRight,
   ChatText,
   Code,
@@ -24,10 +24,11 @@ import React, { type FC } from 'react';
 import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
+// TODO(burdon): Revert to string to make extensible?
 export type Action =
   | 'blockquote'
   | 'bold'
-  | 'code'
+  | 'codeblock'
   | 'comment'
   | 'heading'
   | 'image'
@@ -41,10 +42,6 @@ export type Action =
   | 'strikethrough'
   | 'table';
 
-export type ToolbarProps = {
-  onAction?: (action: { type: Action; data?: any }) => void;
-};
-
 const IconButton: FC<{ Icon: Icon; title: string } & NonNullable<Pick<ButtonProps, 'onClick'>>> = ({
   Icon,
   title,
@@ -55,8 +52,12 @@ const IconButton: FC<{ Icon: Icon; title: string } & NonNullable<Pick<ButtonProp
   </Button>
 );
 
+export type ToolbarProps = {
+  onAction?: (action: { type: Action; data?: any }) => void;
+};
+
 // TODO(burdon): Update state based on current selection?
-export const Toolbar = ({ onAction }: ToolbarProps) => {
+export const MarkdownToolbar = ({ onAction }: ToolbarProps) => {
   return (
     <DensityProvider density='fine'>
       <div role='toolbar' className='flex w-full p-2 items-center gap-4'>
@@ -96,7 +97,7 @@ export const Toolbar = ({ onAction }: ToolbarProps) => {
         </div>
         <div>
           <IconButton Icon={CaretRight} title='Block quite' onClick={() => onAction?.({ type: 'blockquote' })} />
-          <IconButton Icon={Code} title='Code block' onClick={() => onAction?.({ type: 'code' })} />
+          <IconButton Icon={Code} title='Code block' onClick={() => onAction?.({ type: 'codeblock' })} />
           <IconButton Icon={Table} title='Table' onClick={() => onAction?.({ type: 'table' })} />
         </div>
         <div>
@@ -106,7 +107,7 @@ export const Toolbar = ({ onAction }: ToolbarProps) => {
         </div>
         <div className='grow' />
         <div>
-          <IconButton Icon={Brain} title='AI prompt' onClick={() => onAction?.({ type: 'prompt' })} />
+          {/* <IconButton Icon={Brain} title='AI prompt' onClick={() => onAction?.({ type: 'prompt' })} /> */}
           <IconButton Icon={ChatText} title='Create comment' onClick={() => onAction?.({ type: 'comment' })} />
         </div>
       </div>

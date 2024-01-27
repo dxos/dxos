@@ -9,25 +9,23 @@ import { type Document as DocumentType } from '@braneframe/types';
 import { useIntent } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Comment, useTextModel, type Extension } from '@dxos/react-ui-editor';
+import { type Comment, useTextModel } from '@dxos/react-ui-editor';
 
-import { EditorMain, MainLayout } from './EditorMain';
-import type { MarkdownSettingsProps } from '../types';
+import { EditorMain, type EditorMainProps } from './EditorMain';
 
-export const DocumentMain: FC<{
-  document: DocumentType;
-  readonly?: boolean;
-  editorMode: MarkdownSettingsProps['editorMode'];
-  extensions: Extension[];
-}> = ({ document, readonly, editorMode, extensions }) => {
-  const { dispatch } = useIntent();
+export const DocumentMain: FC<
+  { document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'editorMode' | 'extensions'>
+> = ({ document, ...props }) => {
   const identity = useIdentity();
   const space = getSpaceForObject(document);
   const model = useTextModel({ identity, space, text: document.content });
+
   const comments = useMemo<Comment[]>(() => {
     return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
   }, [document.comments]);
 
+  // TODO(burdon): Move into EditorMain?
+  const { dispatch } = useIntent();
   useEffect(() => {
     void dispatch({
       action: ThreadAction.SELECT,
@@ -38,15 +36,5 @@ export const DocumentMain: FC<{
     return null;
   }
 
-  return (
-    <MainLayout>
-      <EditorMain
-        model={model}
-        comments={comments}
-        readonly={readonly}
-        editorMode={editorMode}
-        extensions={extensions}
-      />
-    </MainLayout>
-  );
+  return <EditorMain model={model} comments={comments} {...props} />;
 };
