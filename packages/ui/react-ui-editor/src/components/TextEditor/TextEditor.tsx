@@ -178,6 +178,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     // Handles tab/focus.
     // Pressing Escape focuses the outer div (to support tab navigation); pressing Enter refocuses the editor.
+    // TODO(burdon): Convert to keymap?
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
@@ -189,7 +190,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
           case 'Escape': {
             if (editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey)) {
-              rootRef.current?.focus();
+              view?.focus();
             }
             break;
           }
