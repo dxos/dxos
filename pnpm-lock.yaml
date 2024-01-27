@@ -7926,7 +7926,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.16.1
+        specifier: ^9.17.4
         version: 9.17.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-accordion':
         specifier: ^1.1.1
@@ -8152,7 +8152,7 @@ importers:
         specifier: workspace:*
         version: link:../react-ui-types
       '@fluentui/react-tabster':
-        specifier: ^9.16.1
+        specifier: ^9.17.4
         version: 9.17.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-alert-dialog':
         specifier: ^1.0.3
@@ -8397,7 +8397,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.16.1
+        specifier: ^9.17.4
         version: 9.17.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@lezer/common':
         specifier: ^1.2.1
@@ -8752,7 +8752,7 @@ importers:
         specifier: workspace:*
         version: link:../react-ui-theme
       '@fluentui/react-tabster':
-        specifier: ^9.16.1
+        specifier: ^9.17.4
         version: 9.17.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       react-resize-detector:
         specifier: ^7.1.2
@@ -8819,7 +8819,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: ^9.16.1
+        specifier: ^9.17.4
         version: 9.17.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
