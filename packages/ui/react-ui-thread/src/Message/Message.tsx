@@ -2,19 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PaperPlaneRight, X } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef } from 'react';
 
-import {
-  Avatar,
-  Button,
-  type ButtonProps,
-  type ThemedClassName,
-  useJdenticonHref,
-  useTranslation,
-} from '@dxos/react-ui';
-import { TextEditor, type TextEditorProps } from '@dxos/react-ui-editor';
+import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { TextEditor, type TextEditorProps, keymap } from '@dxos/react-ui-editor';
 import {
   focusRing,
   hoverableControlItem,
@@ -130,22 +123,36 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
 };
 
 export type MessageTextboxProps = {
-  onSend?: ButtonProps['onClick'];
+  onSend?: () => void;
 } & Omit<MessageMetadata, 'id' | 'authorStatus'> &
   TextEditorProps;
 
 export const MessageTextbox = ({ onSend, authorId, authorName, authorImgSrc, ...editorProps }: MessageTextboxProps) => {
   // TODO(thure): Handle `onSend`.
+  const { t } = useTranslation(translationKey);
   return (
     <MessageMeta
       {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
       authorStatus='active'
       continues={false}
+      classNames={[hoverableControls, hoverableFocusedWithinControls]}
     >
-      <TextEditor slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }} {...editorProps} />
-      <Button onClick={onSend}>
-        <PaperPlaneRight />
-      </Button>
+      <TextEditor
+        slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }}
+        extensions={[
+          keymap.of([
+            {
+              key: 'Enter',
+              run: () => {
+                onSend?.();
+                return true;
+              },
+            },
+          ]),
+        ]}
+        {...editorProps}
+      />
+      <p className={mx('fg-description text-end', hoverableControlItem)}>{t('enter to send message')}</p>
     </MessageMeta>
   );
 };
