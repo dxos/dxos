@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -25,6 +25,8 @@ import { createModelExtensions, createThemeExtensions, useTextEditor } from '../
 import { markdownTheme } from '../../themes';
 
 // TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
+// TODO(burdon): Remove BaseTextEditor.
+// TODO(burdon): Move scrolling container layout/logic into TextEditor/MarkdownEditor components.
 
 type StoryProps = {
   autoFocus?: boolean;
@@ -35,14 +37,15 @@ type StoryProps = {
 
 const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  const { parentRef, view } = useTextEditor({
+  const { parentRef } = useTextEditor({
     autoFocus,
     doc,
     extensions: [
       //
       createThemeExtensions({ themeMode, theme: markdownTheme }),
-      createMarkdownExtensions({ placeholder }),
       createModelExtensions({ readonly }),
+      createMarkdownExtensions({ placeholder }),
+      // TODO(burdon): Move into markdown bundle (with React callbacks).
       code(),
       formatting(),
       heading(),
@@ -53,10 +56,6 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       tasklist(),
     ],
   });
-
-  useEffect(() => {
-    view?.focus();
-  }, [view]);
 
   return (
     <div className='absolute inset-0 flex flex-col bg-white dark:bg-black'>
