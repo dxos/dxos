@@ -4,7 +4,7 @@
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useFocusableGroup } from '@fluentui/react-tabster';
+// import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
@@ -87,8 +87,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     },
     forwardedRef,
   ) => {
-    // TODO(burdon): Cannot read properties of undefined (reading 'relatedTarget').
-    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
+    // TODO(burdon): Hook causes error even if properties are not spread into div.
+    //  Uncaught TypeError: Cannot read properties of undefined (reading 'relatedTarget')
+    //  Uses event.detail, which is deprecated (not event.details). At runtime the event has a property `details`.
+    //  https://github.com/microsoft/tabster/blob/master/src/State/FocusedElement.ts#L348 (e.detail.relatedTarget)
+    //  https://github.com/microsoft/keyborg/blob/49e49b2c3ba0a5f6cc518ac46825d7551def8109/src/FocusEvent.ts#L58
+    // const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
 
     const rootRef = useRef<HTMLDivElement>(null);
@@ -205,7 +209,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         role='none'
         tabIndex={0}
         {...slots.root}
-        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        // {...(editorMode !== 'vim' && tabsterDOMAttribute)}
         onKeyUp={handleKeyUp}
         ref={rootRef}
       />
