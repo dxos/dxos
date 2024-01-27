@@ -3,7 +3,7 @@
 //
 
 import { differenceInSeconds } from 'date-fns/differenceInSeconds';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { type Thread as ThreadType, Message as MessageType } from '@braneframe/types';
 import { TextObject } from '@dxos/echo-schema';
@@ -28,8 +28,8 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
   const members = useMembers(space.key);
   const pending = useStatus(space, thread.id);
 
-  const nextMessage = new TextObject();
-  const nextMessageModel = useTextModel({ text: nextMessage });
+  const [nextMessage] = useState({ text: new TextObject() });
+  const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
 
   // TODO(burdon): Change to model.
   const handleCreate: MessageTextboxProps['onSend'] = () => {
