@@ -36,7 +36,10 @@ export type MarkdownBundleOptions = {
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
 // TODO(burdon): Add Composer here: https://codemirror.net/docs/community
-export const markdownBundle = ({ themeMode, placeholder: _placeholder }: MarkdownBundleOptions = {}): Extension[] => {
+export const createMarkdownExtensions = ({
+  themeMode,
+  placeholder: _placeholder,
+}: MarkdownBundleOptions = {}): Extension[] => {
   return [
     EditorState.allowMultipleSelections.of(true),
     EditorState.tabSize.of(2),

@@ -17,7 +17,7 @@ export type BasicBundleOptions = {
   themeMode?: ThemeMode;
 } & Pick<TextEditorProps, 'placeholder' | 'lineWrapping'>;
 
-export const basicBundle = ({
+export const createBasicBundle = ({
   themeMode,
   placeholder: _placeholder,
   lineWrapping = true,

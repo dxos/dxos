@@ -3,24 +3,54 @@
 //
 
 import '@dxosTheme';
-import { EditorView } from '@codemirror/view';
+
 import React, { useEffect } from 'react';
 
+import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor } from './TextEditor';
-import { markdownBundle } from '../../extensions';
-import { useTextEditor } from '../../hooks';
-import { defaultTheme } from '../../themes';
+import {
+  code,
+  createMarkdownExtensions,
+  formatting,
+  heading,
+  hr,
+  image,
+  link,
+  table,
+  tasklist,
+} from '../../extensions';
+import { createModelExtensions, createThemeExtensions, useTextEditor } from '../../hooks';
+import { markdownTheme } from '../../themes';
 
 // TODO(burdon): Build components from hooks and adapters for model/extensions, etc.
 
-const Story = () => {
+type StoryProps = {
+  autoFocus?: boolean;
+  placeholder?: string;
+  doc?: string;
+  readonly?: boolean;
+};
+
+const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
+  const { themeMode } = useThemeContext();
   const { parentRef, view } = useTextEditor({
+    autoFocus,
+    doc,
     extensions: [
       //
-      EditorView.baseTheme(defaultTheme),
-      markdownBundle({ placeholder: 'Text...' }),
+      createThemeExtensions({ themeMode, theme: markdownTheme }),
+      createMarkdownExtensions({ placeholder }),
+      createModelExtensions({ readonly }),
+      code(),
+      formatting(),
+      heading(),
+      hr(),
+      image(),
+      link(),
+      table(),
+      tasklist(),
     ],
   });
 
@@ -28,15 +58,24 @@ const Story = () => {
     view?.focus();
   }, [view]);
 
-  return <div role='none' ref={parentRef} />;
+  return (
+    <div className='absolute inset-0 flex flex-col bg-white dark:bg-black'>
+      <div role='none' className='px-20 py-2' ref={parentRef} />
+    </div>
+  );
 };
 
 export default {
   title: 'react-ui-editor/useTextEditor',
   component: TextEditor,
   decorators: [withTheme],
+  render: (args: StoryProps) => <Story {...args} />,
 };
 
 export const Default = {
-  render: () => <Story />,
+  args: {
+    autoFocus: true,
+    placeholder: 'Text...',
+    doc: '# Demo\n\nThis is a document.\n\n',
+  },
 };
