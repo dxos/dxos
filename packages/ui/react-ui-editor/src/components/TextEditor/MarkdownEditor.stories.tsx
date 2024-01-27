@@ -211,11 +211,10 @@ const onRenderLink: LinkOptions['onRender'] = (el, url) => {
 type StoryProps = {
   text?: string;
   comments?: Comment[];
-  automerge?: boolean;
 } & Pick<TextEditorProps, 'readonly' | 'placeholder' | 'slots' | 'extensions'>;
 
-const Story = ({ text, comments, automerge, placeholder = 'New document.', ...props }: StoryProps) => {
-  const [item] = useState({ text: new TextObject(text, undefined, undefined, { automerge }) });
+const Story = ({ text, comments, placeholder = 'New document.', ...props }: StoryProps) => {
+  const [item] = useState({ text: new TextObject(text) });
   const view = useRef<EditorView>(null);
   const model = useTextModel({ text: item.text });
   useComments(view.current, comments);

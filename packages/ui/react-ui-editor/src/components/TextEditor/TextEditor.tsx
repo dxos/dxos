@@ -4,7 +4,7 @@
 
 import { EditorState, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useFocusableGroup } from '@fluentui/react-tabster';
+// import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, {
@@ -21,7 +21,7 @@ import React, {
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
+import { isNotFalsy } from '@dxos/util';
 
 import { basicBundle, markdownBundle } from '../../extensions';
 import { type EditorModel } from '../../hooks';
@@ -87,7 +87,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     },
     forwardedRef,
   ) => {
-    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
+    // TODO(burdon): Hook causes error even if properties are not spread into div.
+    //  Uncaught TypeError: Cannot read properties of undefined (reading 'relatedTarget')
+    //  Uses event.detail, which is deprecated (not event.details). At runtime the event has a property `details`.
+    //  https://github.com/microsoft/tabster/blob/master/src/State/FocusedElement.ts#L348 (e.detail.relatedTarget)
+    //  https://github.com/microsoft/keyborg/blob/49e49b2c3ba0a5f6cc518ac46825d7551def8109/src/FocusEvent.ts#L58
+    // const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
 
     const rootRef = useRef<HTMLDivElement>(null);
@@ -140,12 +145,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           // NOTE: This must come before user extensions.
           model.extension,
 
-          // TODO(burdon): Factor out (requires special handling for Escape/focus).
+          // TODO(burdon): Factor out? (Requires special handling for Escape/Enter below).
           editorMode === 'vim' && vim(),
 
           // Custom.
           ...extensions,
-        ].filter(nonNullable) as Extension[], // TODO(burdon): ???
+        ].filter(isNotFalsy),
       });
 
       //
@@ -177,6 +182,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     // Handles tab/focus.
     // Pressing Escape focuses the outer div (to support tab navigation); pressing Enter refocuses the editor.
+    // TODO(burdon): Convert to keymap?
     const handleKeyUp = useCallback(
       (event: KeyboardEvent) => {
         const { key, altKey, shiftKey, metaKey, ctrlKey } = event;
@@ -188,7 +194,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
           case 'Escape': {
             if (editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey)) {
-              rootRef.current?.focus();
+              view?.focus();
             }
             break;
           }
@@ -202,16 +208,15 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         key={model.id}
         role='none'
         tabIndex={0}
-        onKeyUp={handleKeyUp}
         {...slots.root}
-        {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        // {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        onKeyUp={handleKeyUp}
         ref={rootRef}
       />
     );
   },
 );
 
-// TODO(burdon): Single-line/scroll.
 export const TextEditor = forwardRef<EditorView, TextEditorProps>(
   ({ readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
