@@ -3,13 +3,12 @@
 //
 
 import { invertedEffects } from '@codemirror/commands';
-import { type Extension, StateEffect, StateField, type Text, type ChangeDesc } from '@codemirror/state';
+import { type Extension, Facet, StateEffect, StateField, type Text, type ChangeDesc } from '@codemirror/state';
 import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
 import { debounce } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
@@ -280,6 +279,48 @@ const mapTrackedComment = (comment: TrackedComment, changes: ChangeDesc) => ({
 // that were deleted by the original changes.
 const restoreCommentEffect = StateEffect.define<TrackedComment>({ map: mapTrackedComment });
 
+const optionsFacet = Facet.define<CommentsOptions, CommentsOptions>({
+  combine: (providers) => providers[0],
+});
+
+/**
+ * Create comment thread action.
+ */
+export const createComment: Command = (view) => {
+  const options = view.state.facet(optionsFacet);
+  const { from, to } = view.state.selection.main;
+  if (from === to) {
+    return false;
+  }
+
+  // Don't allow selection at end of document.
+  if (to === view.state.doc.length) {
+    view.dispatch({
+      changes: {
+        from: to,
+        insert: '\n',
+      },
+    });
+  }
+
+  const cursor = Cursor.getCursorFromRange(view.state, { from, to });
+  if (cursor) {
+    // Create thread via callback.
+    const id = options.onCreate?.(cursor, view.coordsAtPos(from));
+    if (id) {
+      // Update range.
+      view.dispatch({
+        effects: setSelection.of({ current: id }),
+        selection: { anchor: from },
+      });
+
+      return true;
+    }
+  }
+
+  return false;
+};
+
 /**
  * Comment threads.
  * 1). Updates the EditorModel to store relative selections for a set of comments threads.
@@ -296,45 +337,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
   const handleSelect = debounce((state: CommentsState) => options.onSelect?.(state), 200);
 
-  /**
-   * Create comment thread action.
-   */
-  const createCommentThread: Command = (view) => {
-    invariant(options.onCreate);
-    const { from, to } = view.state.selection.main;
-    if (from === to) {
-      return false;
-    }
-
-    // Don't allow selection at end of document.
-    if (to === view.state.doc.length) {
-      view.dispatch({
-        changes: {
-          from: to,
-          insert: '\n',
-        },
-      });
-    }
-
-    const cursor = Cursor.getCursorFromRange(view.state, { from, to });
-    if (cursor) {
-      // Create thread via callback.
-      const id = options.onCreate?.(cursor, view.coordsAtPos(from));
-      if (id) {
-        // Update range.
-        view.dispatch({
-          effects: setSelection.of({ current: id }),
-          selection: { anchor: from },
-        });
-
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   return [
+    optionsFacet.of(options),
     commentsState,
     commentsDecorations,
     styles,
@@ -346,7 +350,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       ? keymap.of([
           {
             key: shortcut,
-            run: callbackWrapper(createCommentThread),
+            run: callbackWrapper(createComment),
           },
         ])
       : [],

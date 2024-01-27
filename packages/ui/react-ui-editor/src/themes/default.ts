@@ -88,7 +88,7 @@ export const defaultTheme: ThemeStyles = {
     paddingInline: 0,
   },
   '.cm-activeLine': {
-    background: 'inherit',
+    background: 'transparent',
   },
 
   //
