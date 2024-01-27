@@ -43,7 +43,10 @@ export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   Partial<{ continues: boolean }>;
 
 export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
-  ({ authorImgSrc, authorStatus, authorId, continues = true, children, classNames, ...rootProps }, forwardedRef) => {
+  (
+    { authorImgSrc, authorStatus, authorId, authorName, continues = true, children, classNames, ...rootProps },
+    forwardedRef,
+  ) => {
     const jdenticon = useJdenticonHref(authorId ?? '', avatarSize);
 
     return (
@@ -102,13 +105,13 @@ export type MessageProps<BlockValue> = MessageEntity<BlockValue> & {
 export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
   const { t, dtLocale } = useTranslation(translationKey);
 
-  const { authorName, onDelete, blocks, id, MessageBlockComponent = DefaultMessageBlock } = props;
+  const { authorName, onDelete, blocks, id, MessageBlockComponent = DefaultMessageBlock, ...metaProps } = props;
 
   const firstBlock = blocks[0];
   const dt = firstBlock.timestamp ? new Date(firstBlock.timestamp) : undefined;
 
   return (
-    <MessageMeta {...props} continues>
+    <MessageMeta {...metaProps} id={id} continues>
       <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
         <Avatar.Label classNames={['truncate font-semibold', !authorName && 'fg-description']}>
           {authorName ?? t('anonymous label')}
