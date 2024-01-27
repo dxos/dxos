@@ -12,18 +12,15 @@ export type MessageMetadata = {
   authorStatus?: AvatarStatus;
 };
 
-export type MessageEntityBlock = {
+export type MessageEntityBlock<BlockValue> = BlockValue & {
   timestamp?: string;
-  text?: string;
-  data?: any;
-  [key: string]: any;
 };
 
-export type MessageEntity = MessageMetadata & {
-  blocks: MessageEntityBlock[];
+export type MessageEntity<BlockValue> = MessageMetadata & {
+  blocks: MessageEntityBlock<BlockValue>[];
 };
 
-export type ThreadEntity = MessageMetadata & {
+export type ThreadEntity = {
   topicId?: string;
   topicTitle?: string;
 };

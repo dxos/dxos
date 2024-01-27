@@ -58,9 +58,12 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
   },
 );
 
-export type MessageBlockProps = { block: MessageEntityBlock; onDelete?: () => void };
+export type MessageBlockProps<BlockValue> = {
+  block: MessageEntityBlock<BlockValue>;
+  onDelete?: () => void;
+};
 
-const MessageBlock = ({ block, onDelete }: MessageBlockProps) => {
+const DefaultMessageBlock = ({ block, onDelete }: MessageBlockProps<{ data?: any; text?: string }>) => {
   return (
     <div role='none' className={mx('contents', hoverableControls, hoverableFocusedWithinControls)}>
       {block.data ? (
@@ -84,15 +87,15 @@ const MessageBlock = ({ block, onDelete }: MessageBlockProps) => {
   );
 };
 
-export type MessageProps = MessageEntity & {
+export type MessageProps<BlockValue> = MessageEntity<BlockValue> & {
   onDelete?: (messageId: string, blockIndex: number) => void;
-  MessageBlockComponent?: FC<MessageBlockProps>;
+  MessageBlockComponent?: FC<MessageBlockProps<BlockValue>>;
 };
 
-export const Message = (props: MessageProps) => {
+export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
   const { t, dtLocale } = useTranslation(translationKey);
 
-  const { authorName, onDelete, blocks, id, MessageBlockComponent = MessageBlock } = props;
+  const { authorName, onDelete, blocks, id, MessageBlockComponent = DefaultMessageBlock } = props;
 
   const firstBlock = blocks[0];
   const dt = firstBlock.timestamp ? new Date(firstBlock.timestamp) : undefined;
@@ -109,11 +112,7 @@ export const Message = (props: MessageProps) => {
       </p>
       <div role='none' className={onDelete ? 'grid grid-cols-[1fr_max-content] gap-y-1' : 'grid grid-cols-1 gap-y-1'}>
         {blocks.map((block, i) => (
-          <MessageBlockComponent
-            key={block.object?.id ?? i}
-            block={block}
-            onDelete={onDelete && (() => onDelete(id, i))}
-          />
+          <MessageBlockComponent key={i} block={block} onDelete={onDelete && (() => onDelete(id, i))} />
         ))}
       </div>
     </MessageMeta>
@@ -121,21 +120,22 @@ export const Message = (props: MessageProps) => {
 };
 
 export type MessageTextboxProps = {
-  disposition?: 'comment' | 'message';
-  onSend?: (text: string) => boolean | void;
-  pending?: boolean;
-} & Pick<MessageMetadata, 'id' | 'authorId' | 'authorImgSrc' | 'authorName'> &
-  Pick<TextEditorProps, 'model'>;
+  onSend?: (model: TextEditorProps['model']) => boolean | void;
+} & MessageMetadata &
+  TextEditorProps;
 
-export const MessageTextbox = (props: MessageTextboxProps) => {
-  const { t } = useTranslation(translationKey);
+export const MessageTextbox = ({
+  id,
+  authorId,
+  authorStatus,
+  authorName,
+  authorImgSrc,
+  ...editorProps
+}: MessageTextboxProps) => {
+  // TODO(thure): Handle `onSend`.
   return (
-    <MessageMeta {...props} authorStatus='active' continues={false}>
-      <TextEditor
-        model={props.model}
-        placeholder={t(props.disposition === 'comment' ? 'comment placeholder' : 'message placeholder')}
-        slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }}
-      />
+    <MessageMeta {...{ id, authorId, authorStatus, authorName, authorImgSrc }} authorStatus='active' continues={false}>
+      <TextEditor slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }} {...editorProps} />
     </MessageMeta>
   );
 };

@@ -15,7 +15,7 @@ import { type MessageEntity } from '../types';
 
 const Story = () => {
   const [identityKey] = useState(PublicKey.random());
-  const [message] = useState<MessageEntity>({
+  const [message] = useState<MessageEntity<{ id: string; text: string }>>({
     id: 'm1',
     authorId: identityKey.toHex(),
     blocks: [
