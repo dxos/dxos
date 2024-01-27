@@ -4,14 +4,14 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { StateField, type Extension } from '@codemirror/state';
+import { invertedEffects } from '@codemirror/commands';
+import { StateField, type Extension, type StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { type Prop, next as _automerge } from '@dxos/automerge/automerge';
-import { invariant } from '@dxos/invariant';
+import { next as A, type Prop } from '@dxos/automerge/automerge';
 
 import { cursorConverter } from './cursor';
-import { effectType, type IDocHandle, isReconcileTx, type State } from './defs';
+import { updateHeadsEffect, type IDocHandle, isReconcile, type State } from './defs';
 import { PatchSemaphore } from './semaphore';
 import { Cursor } from '../cursor';
 
@@ -21,10 +21,10 @@ export type AutomergeOptions = {
 };
 
 export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
-  const state = StateField.define<State>({
+  const syncState = StateField.define<State>({
     create: () => ({
       path: path.slice(),
-      lastHeads: _automerge.getHeads(handle.docSync()!),
+      lastHeads: A.getHeads(handle.docSync()!),
       unreconciledTransactions: [],
     }),
 
@@ -37,7 +37,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
 
       let clearUnreconciled = false;
       for (const effect of tr.effects) {
-        if (effect.is(effectType)) {
+        if (effect.is(updateHeadsEffect)) {
           result.lastHeads = effect.value.newHeads;
           clearUnreconciled = true;
         }
@@ -46,7 +46,7 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
       if (clearUnreconciled) {
         result.unreconciledTransactions = [];
       } else {
-        if (!isReconcileTx(tr)) {
+        if (!isReconcile(tr)) {
           result.unreconciledTransactions.push(tr);
         }
       }
@@ -55,15 +55,16 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
     },
   });
 
-  const semaphore = new PatchSemaphore(handle, state);
+  const semaphore = new PatchSemaphore(handle, syncState);
 
   return [
     Cursor.converter.of(cursorConverter(handle, path)),
+    syncState,
+
     // Reconcile external updates.
     ViewPlugin.fromClass(
       class {
         constructor(private readonly _view: EditorView) {
-          invariant(this._view);
           handle.addListener('change', this._handleChange.bind(this));
         }
 
@@ -76,12 +77,27 @@ export const automerge = ({ handle, path }: AutomergeOptions): Extension => {
         }
       },
     ),
+
     // Reconcile local updates.
     EditorView.updateListener.of(({ view, changes }) => {
       if (!changes.empty) {
         semaphore.reconcile(view);
       }
     }),
-    state,
+
+    // TODO(burdon): Record undo transactions.
+    //  See https://github.com/yjs/y-codemirror.next/tree/main
+    // https://codemirror.net/examples/inverted-effect
+    invertedEffects.of((tr) => {
+      // Each change results it three transactions: insert, delete, insert.
+      const effects: StateEffect<any>[] = [];
+      if (!tr.changes.empty) {
+        tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+          // effects.push(effectType.of({});
+        });
+      }
+
+      return effects;
+    }),
   ];
 };

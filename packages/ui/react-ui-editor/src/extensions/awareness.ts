@@ -38,7 +38,7 @@ const dummyProvider: AwarenessProvider = {
   update: () => {},
 };
 
-export const AwarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
+export const awarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
   combine: (providers) => providers[0] ?? dummyProvider,
 });
 
@@ -68,7 +68,7 @@ export type AwarenessState = {
  */
 export const awareness = (provider = dummyProvider): Extension => {
   return [
-    AwarenessProvider.of(provider),
+    awarenessProvider.of(provider),
     ViewPlugin.fromClass(RemoteSelectionsDecorator, {
       decorations: (value) => value.decorations,
     }),
@@ -91,7 +91,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
 
   constructor(view: EditorView) {
     this._cursorConverter = view.state.facet(Cursor.converter);
-    this._provider = view.state.facet(AwarenessProvider);
+    this._provider = view.state.facet(awarenessProvider);
     this._provider.open();
     this._provider.remoteStateChange.on(this._ctx, () => {
       view.dispatch({ annotations: [RemoteSelectionChangedAnnotation.of([])] });
