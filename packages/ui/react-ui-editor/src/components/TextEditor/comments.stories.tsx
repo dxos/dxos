@@ -150,7 +150,7 @@ const Thread: FC<{
         </div>
       ))}
 
-      <div ref={containerRef} onClick={() => onSelect()} className='flex'>
+      <div ref={containerRef} className='flex' onClick={() => onSelect()}>
         <TextEditor
           ref={editorRef}
           autoFocus={focus}

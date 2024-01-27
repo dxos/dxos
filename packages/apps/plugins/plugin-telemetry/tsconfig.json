@@ -24,25 +24,31 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/sentry"
-    },
-    {
-      "path": "../../../common/telemetry"
     },
     {
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/protocols"
+    },
+    {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/observability"
     },
     {
       "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-layout"

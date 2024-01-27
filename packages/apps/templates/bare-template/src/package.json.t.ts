@@ -108,7 +108,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
       typescript: '^5.0.4',
-      vite: '^5.0.11',
+      vite: '^5.0.12',
       'vite-plugin-top-level-await': '^1.4.1',
       'vite-plugin-wasm': '^3.3.0',
     },
