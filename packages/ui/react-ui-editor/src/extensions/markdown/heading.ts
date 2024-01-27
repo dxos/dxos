@@ -23,7 +23,7 @@ const buildDecorations = (view: EditorView): DecorationSet => {
           case 'ATXHeading6': {
             const mark = node.node.getChild('HeaderMark');
             if (mark) {
-              if (view.state.readOnly || cursor < node.from || cursor > node.to) {
+              if (!view.hasFocus || view.state.readOnly || cursor < node.from || cursor > node.to) {
                 builder.add(mark.from, mark.to + 1, Decoration.replace({}));
               }
             }

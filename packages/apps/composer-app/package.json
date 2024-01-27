@@ -53,6 +53,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/react-client": "workspace:*",

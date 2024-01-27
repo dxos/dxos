@@ -18,13 +18,14 @@ import {
   type Metrics,
   type NetworkStatus,
   type Space as SpaceProto,
+  type Platform,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getPlatform, type Platform } from './platform';
+import { getPlatform } from './platform';
 import { type ServiceContext } from './service-context';
 import { DXOS_VERSION } from '../../version';
 import { type DataSpace } from '../spaces';

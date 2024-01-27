@@ -359,16 +359,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/sentry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/telemetry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },
@@ -670,6 +660,11 @@
         {
           "type": "json",
           "path": "packages/sdk/migrations/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/observability/package.json",
           "jsonpath": "$.version"
         },
         {

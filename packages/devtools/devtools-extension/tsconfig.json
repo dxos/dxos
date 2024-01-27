@@ -29,9 +29,6 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/sentry"
-    },
-    {
       "path": "../../core/mesh/rpc"
     },
     {
