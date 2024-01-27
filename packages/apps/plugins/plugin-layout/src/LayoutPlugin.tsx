@@ -288,7 +288,6 @@ export const LayoutPlugin = (): PluginDefinition<LayoutPluginProvides> => {
 
             case LayoutAction.ACTIVATE: {
               const id = intent.data?.id ?? intent.data?.result?.id;
-              console.log(intent.data, id);
               const path = id && graphPlugin?.provides.graph.getPath(id);
               if (path) {
                 Keyboard.singleton.setCurrentContext(path.join('/'));
