@@ -311,7 +311,7 @@ export const createComment: Command = (view) => {
       // Update range.
       view.dispatch({
         effects: setSelection.of({ current: id }),
-        selection: { anchor: from },
+        selection: { anchor: to },
       });
 
       return true;

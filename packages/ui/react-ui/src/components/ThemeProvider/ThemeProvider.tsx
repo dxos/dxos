@@ -58,6 +58,7 @@ export const ThemeProvider = ({
       return () => kb.unsubscribe(handleInputModalityChange);
     }
   }, []);
+
   return (
     <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
       <TranslationsProvider
