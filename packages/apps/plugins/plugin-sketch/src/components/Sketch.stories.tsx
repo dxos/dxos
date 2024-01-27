@@ -10,7 +10,7 @@ import { Sketch as SketchType } from '@braneframe/types';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 
-import { SketchComponent } from './Sketch';
+import SketchComponent from './Sketch';
 
 const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(new SketchType());

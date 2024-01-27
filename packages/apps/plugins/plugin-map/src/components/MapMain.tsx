@@ -11,7 +11,7 @@ import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { MapControl } from './MapControl';
 
-export const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
+const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <MapContainer className='flex-1 w-full h-full border-t border-neutral-200 dark:border-neutral-800'>
@@ -21,13 +21,4 @@ export const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
   );
 };
 
-// TODO(burdon): Query stack for objects with location.
-export const MapSection: FC<{ map: TypedObject }> = ({ map }) => {
-  return (
-    <div className='bs-96 mlb-2 overflow-auto'>
-      <MapContainer className='flex-1 w-full h-full border-t border-neutral-200 dark:border-neutral-800 z-10'>
-        <MapControl />
-      </MapContainer>
-    </div>
-  );
-};
+export default MapMain;
