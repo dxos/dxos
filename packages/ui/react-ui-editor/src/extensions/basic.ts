@@ -21,7 +21,7 @@ export const basicBundle = ({
   themeMode,
   placeholder: _placeholder,
   lineWrapping = true,
-}: BasicBundleOptions): Extension[] => [
+}: BasicBundleOptions = {}): Extension[] => [
   lineWrapping ? EditorView.lineWrapping : [],
 
   // https://codemirror.net/docs/ref/#codemirror.minimalSetup

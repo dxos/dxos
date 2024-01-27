@@ -12,7 +12,7 @@ import {
   MarkdownEditor,
   setFocus,
   useComments,
-  useTextEditor,
+  useEditorView,
 } from '@dxos/react-ui-editor';
 import { focusRing, attentionSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
 
@@ -25,7 +25,7 @@ export type EditorMainProps = {
 const EditorMain = ({ comments, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
 
-  const [editorRef, editorView] = useTextEditor();
+  const [editorRef, editorView] = useEditorView();
   useComments(editorView, comments);
 
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {

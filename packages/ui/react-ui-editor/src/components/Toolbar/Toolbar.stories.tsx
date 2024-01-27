@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 import { code, comments, formatting, heading, image, table, tasklist, useComments } from '../../extensions';
-import { type Comment, useActionHandler, useTextEditor, useTextModel } from '../../hooks';
+import { type Comment, useActionHandler, useEditorView, useTextModel } from '../../hooks';
 import { MarkdownEditor } from '../TextEditor';
 
 faker.seed(101);
@@ -22,7 +22,7 @@ faker.seed(101);
 const Story: FC<{ content: string }> = ({ content }) => {
   const [item] = useState({ text: new TextObject(content) });
   const [_comments, setComments] = useState<Comment[]>([]);
-  const [editorRef, editorView] = useTextEditor();
+  const [editorRef, editorView] = useEditorView();
   const model = useTextModel({ text: item.text });
   const extensions = useMemo(
     () => [

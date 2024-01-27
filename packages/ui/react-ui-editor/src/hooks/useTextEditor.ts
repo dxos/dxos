@@ -2,28 +2,50 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
-import { type RefCallback, useState } from 'react';
+import { EditorState, type EditorStateConfig, type StateEffect } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { type RefObject, useEffect, useRef, useState } from 'react';
+
+export type UseTextEditorOptions = {
+  scrollTo?: StateEffect<any>;
+} & EditorStateConfig;
+
+export type UseTextEditor = {
+  parentRef: RefObject<HTMLDivElement>;
+  view?: EditorView;
+};
 
 /**
- * Hook for accessing the editor view.
- *
- * ```tsx
- * const Test = () => {
- *   const [editorRef, editorView] = useTextEditor();
- *   useEffect(() => {
- *     editorView?.focus();
- *   }, [editorView]);
- *   return <TextEditor ref={editorRef} />;
- * };
- * ```
+ * Hook for creating editor.
  */
-export const useTextEditor = (): [RefCallback<EditorView | null>, EditorView | null] => {
-  const [view, setView] = useState<EditorView | null>(null);
-  return [
-    (ref: EditorView | null) => {
-      setView(ref);
-    },
-    view,
-  ];
+export const useTextEditor = ({ doc, selection, extensions, scrollTo }: UseTextEditorOptions = {}): UseTextEditor => {
+  const [view, setView] = useState<EditorView>();
+  const parentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (parentRef.current) {
+      const view = new EditorView({
+        state: EditorState.create({ doc, selection, extensions }),
+        parent: parentRef.current,
+        scrollTo,
+      });
+
+      setView(view);
+    }
+
+    return () => {
+      view?.destroy();
+    };
+  }, [parentRef]);
+
+  useEffect(() => {
+    view?.dispatch({ selection });
+  }, [selection]);
+
+  useEffect(() => {
+    if (scrollTo) {
+      view?.dispatch({ effects: [scrollTo] });
+    }
+  }, [scrollTo]);
+
+  return { parentRef, view };
 };
