@@ -87,6 +87,7 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
     },
     forwardedRef,
   ) => {
+    // TODO(burdon): Cannot read properties of undefined (reading 'relatedTarget').
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
     const { themeMode } = useThemeContext();
 
@@ -110,8 +111,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
       if (!model || !rootRef.current) {
         return;
       }
-
-      console.log(extensions.length);
 
       //
       // EditorState
@@ -140,13 +139,13 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
           // Storage and replication.
           // NOTE: This must come before user extensions.
-          // model.extension,
+          model.extension,
 
           // TODO(burdon): Factor out (requires special handling for Escape/focus).
-          editorMode === 'vim' && vim(),
+          editorMode === 'vim' ? vim() : [],
 
           // Custom.
-          // ...extensions,
+          ...extensions,
         ].filter(nonNullable) as Extension[],
       });
 
@@ -204,9 +203,9 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
         key={model.id}
         role='none'
         tabIndex={0}
-        onKeyUp={handleKeyUp}
         {...slots.root}
         {...(editorMode !== 'vim' && tabsterDOMAttribute)}
+        onKeyUp={handleKeyUp}
         ref={rootRef}
       />
     );
