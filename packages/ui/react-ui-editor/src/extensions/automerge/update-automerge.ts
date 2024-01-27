@@ -6,7 +6,7 @@
 
 import { type EditorState, type StateField, type Transaction } from '@codemirror/state';
 
-import { next as automerge, type Heads } from '@dxos/automerge/automerge';
+import { next as A, type Heads } from '@dxos/automerge/automerge';
 
 import { type IDocHandle, type State } from './defs';
 
@@ -31,7 +31,7 @@ export const updateAutomerge = (
     return undefined;
   }
 
-  const newHeads = handle.changeAt(lastHeads, (doc: automerge.Doc<unknown>) => {
+  const newHeads = handle.changeAt(lastHeads, (doc: A.Doc<unknown>) => {
     const t: any[] = [];
     for (const tr of transactions) {
       tr.changes.iterChanges((fromA, toA, _fromB, _toB, insert) => {
@@ -41,7 +41,7 @@ export const updateAutomerge = (
 
     // Apply in reverse order to properly apply range.
     t.reverse().forEach(({ fromA, toA, insert }) => {
-      automerge.splice(doc, path.slice(), fromA, toA - fromA, insert.toString());
+      A.splice(doc, path.slice(), fromA, toA - fromA, insert.toString());
     });
   });
 
