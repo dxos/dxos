@@ -21,7 +21,7 @@ import React, {
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
+import { isNotFalsy } from '@dxos/util';
 
 import { basicBundle, markdownBundle } from '../../extensions';
 import { type EditorModel } from '../../hooks';
@@ -141,12 +141,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
           // NOTE: This must come before user extensions.
           model.extension,
 
-          // TODO(burdon): Factor out (requires special handling for Escape/focus).
-          editorMode === 'vim' ? vim() : [],
+          // TODO(burdon): Factor out? (Requires special handling for Escape/Enter below).
+          editorMode === 'vim' && vim(),
 
           // Custom.
           ...extensions,
-        ].filter(nonNullable) as Extension[],
+        ].filter(isNotFalsy),
       });
 
       //
@@ -212,7 +212,6 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
   },
 );
 
-// TODO(burdon): Single-line/scroll.
 export const TextEditor = forwardRef<EditorView, TextEditorProps>(
   ({ readonly, placeholder, lineWrapping, theme = textTheme, slots, extensions = [], ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
