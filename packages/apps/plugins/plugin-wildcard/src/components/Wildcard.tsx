@@ -18,7 +18,7 @@ export type WildcardProps = {
 // TODO(wittjosiah): Instead of title, look for first field with type string.
 // TODO(wittjosiah): Instead of JSON view, show some high-level info about the object (e.g. type/icon, description, etc)
 //  JSON view can be an advanced secondary view behind an info button.
-export const Wildcard: MosaicTileComponent<any> = forwardRef(
+const Wildcard: MosaicTileComponent<any> = forwardRef(
   (
     { classNames, isDragging, draggableStyle, draggableProps, item: { id, object }, grow, debug, onSelect, onAction },
     forwardRef,
@@ -81,3 +81,5 @@ export const Wildcard: MosaicTileComponent<any> = forwardRef(
     );
   },
 );
+
+export default Wildcard;

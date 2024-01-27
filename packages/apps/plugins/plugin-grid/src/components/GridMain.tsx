@@ -33,7 +33,7 @@ export const colors: Record<string, string> = {
 // TODO(burdon): Need lenses (which should be normalized outside of card).
 export const getObject = (item: any): TypedObject => item.node?.data ?? item.object ?? item;
 
-export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
+const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const space = getSpaceForObject(grid);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
 
@@ -100,5 +100,8 @@ const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props
   const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
   const content = parseData ? parseData(item, 'view-object') : item;
 
-  return <Surface role='card' ref={forwardRef} limit={1} data={{ content }} {...props} />;
+  // TODO(wittjosiah): Better card placeholder.
+  return <Surface role='card' ref={forwardRef} limit={1} placeholder={<></>} data={{ content }} {...props} />;
 });
+
+export default GridMain;
