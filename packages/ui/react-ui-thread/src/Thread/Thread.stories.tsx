@@ -49,7 +49,7 @@ const Story = () => {
       {messages.map((message) => (
         <Message key={message.id} {...message} />
       ))}
-      <MessageTextbox id='t1__next' authorId={identityKey1.toHex()} model={nextMessageModel} />
+      <MessageTextbox authorId={identityKey1.toHex()} model={nextMessageModel} />
     </Thread>
   );
 };

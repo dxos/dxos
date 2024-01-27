@@ -121,20 +121,17 @@ export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
 
 export type MessageTextboxProps = {
   onSend?: (model: TextEditorProps['model']) => boolean | void;
-} & MessageMetadata &
+} & Omit<MessageMetadata, 'id' | 'authorStatus'> &
   TextEditorProps;
 
-export const MessageTextbox = ({
-  id,
-  authorId,
-  authorStatus,
-  authorName,
-  authorImgSrc,
-  ...editorProps
-}: MessageTextboxProps) => {
+export const MessageTextbox = ({ onSend, authorId, authorName, authorImgSrc, ...editorProps }: MessageTextboxProps) => {
   // TODO(thure): Handle `onSend`.
   return (
-    <MessageMeta {...{ id, authorId, authorStatus, authorName, authorImgSrc }} authorStatus='active' continues={false}>
+    <MessageMeta
+      {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
+      authorStatus='active'
+      continues={false}
+    >
       <TextEditor slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }} {...editorProps} />
     </MessageMeta>
   );
