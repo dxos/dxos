@@ -23,7 +23,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { basicBundle, markdownBundle } from '../../extensions';
+import { createBasicBundle, createMarkdownExtensions } from '../../extensions';
 import { type EditorModel } from '../../hooks';
 import { type ThemeStyles } from '../../styles';
 import { defaultTheme, markdownTheme, textTheme } from '../../themes';
@@ -104,7 +104,12 @@ export const BaseTextEditor = forwardRef<EditorView, TextEditorProps>(
 
     // Set focus.
     useEffect(() => {
-      if (autoFocus) {
+      if (autoFocus && !view?.hasFocus) {
+        if (view?.state.selection.main?.from === 0) {
+          // Start at end of line.
+          const { to } = view.state.doc.lineAt(0);
+          view?.dispatch({ selection: { anchor: to } });
+        }
         view?.focus();
       }
     }, [view, autoFocus]);
@@ -225,7 +230,7 @@ export const TextEditor = forwardRef<EditorView, TextEditorProps>(
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[basicBundle({ themeMode, placeholder, lineWrapping }), ...extensions]}
+        extensions={[createBasicBundle({ themeMode, placeholder, lineWrapping }), ...extensions]}
         theme={theme}
         slots={updatedSlots}
         {...props}
@@ -242,7 +247,7 @@ export const MarkdownEditor = forwardRef<EditorView, TextEditorProps>(
       <BaseTextEditor
         ref={forwardedRef}
         readonly={readonly}
-        extensions={[markdownBundle({ themeMode, placeholder }), ...extensions]}
+        extensions={[createMarkdownExtensions({ themeMode, placeholder }), ...extensions]}
         theme={theme}
         slots={updatedSlots}
         {...props}
