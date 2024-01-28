@@ -19,7 +19,7 @@ import {
   TextItalic,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { Button, type ButtonProps, DensityProvider, Select } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -53,9 +53,24 @@ export type ToolbarProps = PropsWithChildren<{
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
-const ToolbarButton: FC<
-  { Icon: Icon; onClick: () => Action | undefined } & NonNullable<Pick<ButtonProps, 'title'>>
-> = ({ Icon, onClick, title }) => {
+const ToolbarRoot = ({ children, onAction }: ToolbarProps) => {
+  return (
+    <ToolbarContextProvider onAction={onAction}>
+      <DensityProvider density='fine'>
+        <div role='toolbar' className='flex w-full shrink-0 p-2 gap-4 items-center whitespace-nowrap overflow-hidden'>
+          {children}
+        </div>
+      </DensityProvider>
+    </ToolbarContextProvider>
+  );
+};
+
+type ToolbarButtonProps = {
+  Icon: Icon;
+  onClick: () => Action | undefined;
+} & NonNullable<Pick<ButtonProps, 'title'>>;
+
+const ToolbarButton = ({ Icon, onClick, title }: ToolbarButtonProps) => {
   const { onAction } = useToolbarContext('ToolbarButton');
   const handleClick = () => {
     const action = onClick();
@@ -68,18 +83,6 @@ const ToolbarButton: FC<
     <Button variant='ghost' classNames='p-2' onClick={handleClick} title={title}>
       <Icon className={getSize(5)} />
     </Button>
-  );
-};
-
-const ToolbarRoot = ({ children, onAction }: ToolbarProps) => {
-  return (
-    <ToolbarContextProvider onAction={onAction}>
-      <DensityProvider density='fine'>
-        <div role='toolbar' className='flex w-full shrink-0 p-2 gap-4 items-center whitespace-nowrap overflow-hidden'>
-          {children}
-        </div>
-      </DensityProvider>
-    </ToolbarContextProvider>
   );
 };
 
