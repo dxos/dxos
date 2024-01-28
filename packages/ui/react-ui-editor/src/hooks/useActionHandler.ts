@@ -4,10 +4,19 @@
 
 import type { EditorView } from '@codemirror/view';
 
-import type { ToolbarProps } from '../components/Toolbar/Toolbar';
-import { createComment, setHeading, toggleBold, toggleItalic, toggleList, toggleStrikethrough } from '../extensions';
+import type { ToolbarProps } from '../components';
+import {
+  createComment,
+  insertCodeblock,
+  insertTable,
+  setHeading,
+  toggleBold,
+  toggleItalic,
+  toggleList,
+  toggleStrikethrough,
+} from '../extensions';
 
-export const useActionHandler = (view: EditorView | null): ToolbarProps['onAction'] => {
+export const useActionHandler = (view?: EditorView | null): ToolbarProps['onAction'] => {
   return (action) => {
     if (!view) {
       return;
@@ -32,14 +41,22 @@ export const useActionHandler = (view: EditorView | null): ToolbarProps['onActio
         toggleList(view);
         break;
 
+      case 'codeblock':
+        insertCodeblock(view);
+        break;
+      case 'table':
+        insertTable(view);
+        break;
+
       case 'comment':
         createComment(view);
         break;
     }
 
-    // TODO(burdon): Hack since otherwise focus doesn't leave heading selector.
+    // TODO(burdon): Hack otherwise remains on heading selector.
     setTimeout(() => {
       view.focus();
+      view.dispatch({ selection: view.state.selection });
     });
   };
 };

@@ -45,7 +45,7 @@ export type CommentsState = {
   selection: SelectionState;
 };
 
-export const setFocus = (view: EditorView, id: string, center = true) => {
+export const focusComment = (view: EditorView, id: string, center = true) => {
   const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === id);
   if (!comment?.comment.cursor) {
     return;
