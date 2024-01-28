@@ -114,6 +114,19 @@ export const useTextEditor = ({
 
 // TODO(burdon): Factor out extension factories.
 
+export type DataExtensionsOptions = {
+  readonly?: boolean;
+};
+
+// TODO(burdon): Pass in TextObject (remove model).
+export const createDataExtensions = ({ readonly = false } = {}): Extension => {
+  return [
+    //
+    EditorState.readOnly.of(readonly),
+    EditorView.editable.of(!readonly),
+  ];
+};
+
 export type ThemeExtensionsOptions = {
   theme?: ThemeStyles;
   themeMode?: ThemeMode;
@@ -137,17 +150,4 @@ export const createThemeExtensions = ({ theme, themeMode, slots }: ThemeExtensio
     EditorView.editorAttributes.of({ class: slots?.editor?.className ?? '' }),
     EditorView.contentAttributes.of({ class: slots?.content?.className ?? '' }),
   ].filter(isNotFalsy);
-};
-
-export type ModelExtensionsOptions = {
-  readonly?: boolean;
-};
-
-// TODO(burdon): Pass in TextObject (remove model).
-export const createDataExtensions = ({ readonly = false } = {}): Extension => {
-  return [
-    //
-    EditorState.readOnly.of(readonly),
-    EditorView.editable.of(!readonly),
-  ];
 };

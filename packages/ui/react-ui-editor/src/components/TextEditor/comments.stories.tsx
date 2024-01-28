@@ -17,7 +17,7 @@ import { fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, TextEditor } from './TextEditor';
-import { comments, type CommentsOptions, setFocus, useComments } from '../../extensions';
+import { comments, type CommentsOptions, focusComment, useComments } from '../../extensions';
 import { type Comment, type Range, useTextModel } from '../../hooks';
 
 faker.seed(101);
@@ -50,7 +50,7 @@ const Editor: FC<{
     if (!view.current?.hasFocus && selectedValue !== selected) {
       setSelected(selectedValue);
       if (selectedValue) {
-        setFocus(view.current!, selectedValue);
+        focusComment(view.current!, selectedValue);
       }
     }
   }, [selected, commentRanges, selectedValue]);
