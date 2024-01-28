@@ -28,7 +28,7 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
   const members = useMembers(space.key);
   const pending = useStatus(space, thread.id);
 
-  const [nextMessage] = useState({ text: new TextObject() });
+  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
   const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
 
   // TODO(burdon): Change to model.
@@ -37,6 +37,11 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
       timestamp: new Date().toISOString(),
       text: nextMessageModel?.text(),
     };
+
+    setNextMessage(() => {
+      const result = new TextObject();
+      return { text: result };
+    });
 
     // Update current block if same user and time > 3m.
     const period = 3 * 60; // TODO(burdon): Config.
@@ -80,7 +85,13 @@ export const ThreadContainer = ({ space, thread, activeObjectId, onFocus }: Thre
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
       {nextMessageModel && (
-        <MessageTextbox readonly={pending} onSend={handleCreate} {...textboxMetadata} model={nextMessageModel} />
+        <MessageTextbox
+          autoFocus
+          readonly={pending}
+          onSend={handleCreate}
+          {...textboxMetadata}
+          model={nextMessageModel}
+        />
       )}
     </Thread>
   );

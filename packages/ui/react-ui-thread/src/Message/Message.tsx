@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type FC, forwardRef } from 'react';
 
 import { Avatar, Button, type ThemedClassName, useJdenticonHref, useTranslation } from '@dxos/react-ui';
-import { TextEditor, type TextEditorProps, keymap } from '@dxos/react-ui-editor';
+import { TextEditor, type TextEditorProps, keymap, type EditorView } from '@dxos/react-ui-editor';
 import {
   focusRing,
   hoverableControlItem,
@@ -127,32 +127,35 @@ export type MessageTextboxProps = {
 } & Omit<MessageMetadata, 'id' | 'authorStatus'> &
   TextEditorProps;
 
-export const MessageTextbox = ({ onSend, authorId, authorName, authorImgSrc, ...editorProps }: MessageTextboxProps) => {
-  // TODO(thure): Handle `onSend`.
-  const { t } = useTranslation(translationKey);
-  return (
-    <MessageMeta
-      {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
-      authorStatus='active'
-      continues={false}
-      classNames={[hoverableControls, hoverableFocusedWithinControls]}
-    >
-      <TextEditor
-        slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }}
-        extensions={[
-          keymap.of([
-            {
-              key: 'Enter',
-              run: () => {
-                onSend?.();
-                return true;
+export const MessageTextbox = forwardRef<EditorView, MessageTextboxProps>(
+  ({ onSend, authorId, authorName, authorImgSrc, ...editorProps }, forwardedRef) => {
+    // TODO(thure): Handle `onSend`.
+    const { t } = useTranslation(translationKey);
+    return (
+      <MessageMeta
+        {...{ id: editorProps.model.id, authorId, authorName, authorImgSrc }}
+        authorStatus='active'
+        continues={false}
+        classNames={[hoverableControls, hoverableFocusedWithinControls]}
+      >
+        <TextEditor
+          slots={{ root: { className: mx('plb-1 mie-1 rounded-sm', focusRing) } }}
+          extensions={[
+            keymap.of([
+              {
+                key: 'Enter',
+                run: () => {
+                  onSend?.();
+                  return true;
+                },
               },
-            },
-          ]),
-        ]}
-        {...editorProps}
-      />
-      <p className={mx('fg-description text-end', hoverableControlItem)}>{t('enter to send message')}</p>
-    </MessageMeta>
-  );
-};
+            ]),
+          ]}
+          {...editorProps}
+          ref={forwardedRef}
+        />
+        <p className={mx('fg-description text-end', hoverableControlItem)}>{t('enter to send message')}</p>
+      </MessageMeta>
+    );
+  },
+);
