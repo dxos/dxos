@@ -21,12 +21,11 @@ import { getToken } from '../../styles';
 // TODO(burdon): Reconcile with theme.
 const styles = EditorView.baseTheme({
   '& .cm-code': {
-    paddingInline: '1rem !important',
     fontFamily: getToken('fontFamily.mono', []).join(','),
   },
   '& .cm-codeblock': {
-    display: 'inline-block',
     width: '100%',
+    paddingInline: '1rem !important',
     position: 'relative',
     '&::after': {
       content: '""',
@@ -47,12 +46,14 @@ const styles = EditorView.baseTheme({
     },
   },
   '& .cm-codeblock-first': {
+    display: 'inline-block',
     '&::after': {
       borderTopLeftRadius: '.5rem',
       borderTopRightRadius: '.5rem',
     },
   },
   '& .cm-codeblock-last': {
+    display: 'inline-block',
     '&::after': {
       borderBottomLeftRadius: '.5rem',
       borderBottomRightRadius: '.5rem',
@@ -67,6 +68,7 @@ const getLineRange = (lines: BlockInfo[], from: number, to: number) => {
   return [start, end];
 };
 
+// TODO(burdon): Add copy to clipboard widget.
 class LineWidget extends WidgetType {
   constructor(private readonly _className: string) {
     super();
@@ -83,17 +85,19 @@ class LineWidget extends WidgetType {
 const top = new LineWidget('cm-codeblock-first');
 const bottom = new LineWidget('cm-codeblock-last');
 
+// TODO(burdon): Selection isn't visible unless multiline (e.g., can't highlight word).
+
 const buildDecorations = (view: EditorView): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   const { state } = view;
   const blocks = view.viewportLineBlocks;
   const cursor = state.selection.main.head;
 
-  // TODO(burdon): Add copy to clipboard widget.
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(state).iterate({
       enter: (node) => {
         if (node.name === 'FencedCode') {
+          // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
           const edit = !view.state.readOnly && cursor >= node.from && cursor <= node.to;
           const range = getLineRange(blocks, node.from, node.to);
           for (let i = range[0]; i <= range[1]; i++) {
@@ -105,7 +109,11 @@ const buildDecorations = (view: EditorView): DecorationSet => {
                 block.from,
                 block.from,
                 Decoration.line({
-                  class: mx('cm-code cm-codeblock'),
+                  class: mx(
+                    'cm-code cm-codeblock',
+                    i === range[0] && 'cm-codeblock-first',
+                    i === range[1] && 'cm-codeblock-last',
+                  ),
                 }),
               );
             }
